@@ -1,7 +1,9 @@
 ---
-title: About
+title: "About"
+description: "About Morten Victor Nordbye"
+showDate: false
+showAuthor: false
+showReadingTime: false
 ---
-
-# About
 
 Coming soon...
