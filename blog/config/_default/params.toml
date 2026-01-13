@@ -51,14 +51,7 @@ showTaxonomies = true
 showAuthorsBadges = false
 showWordCount = true
 showComments = true
-sharingLinks = [
-    "linkedin",
-    "twitter",
-    "reddit",
-    "pinterest",
-    "facebook",
-    "email",
-]
+sharingLinks = ["linkedin", "reddit"]
 
 [list]
 showHero = true
