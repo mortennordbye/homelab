@@ -1,48 +1,48 @@
 baseURL: "https://blog.nordbye.it/"
 languageCode: en-us
-title: My Homelab Docs
+title: My homelab Docs
 theme: hextra
 
-# Required for Hextra to work properly
 markup:
   goldmark:
     renderer:
       unsafe: true
-  highlight:
+highlight:
     noClasses: false
 
 menu:
   main:
     - identifier: documentation
-      name: Documentation
-      pageRef: /docs
-      weight: 1
-    - identifier: blog
-      name: Blog
-      pageRef: /blog
-      weight: 2
-    - identifier: about
-      name: About
-      pageRef: /about
-      weight: 3
+name: Documentation
+pageRef: /docs
+weight: 1
+- identifier: blog
+name: Blog
+pageRef: /blog
+weight: 2
+- identifier: about
+name: About
+pageRef: /about
+weight: 3
 
 params:
   description: "Tech notes and Kubernetes adventures"
 
-  # Search Configuration
-  search:
+search:
     enable: true
-    type: flexsearch
+type: flexsearch
 
-  # UI Customization
-  navbar:
+navbar:
     displayTitle: true
-    displayLogo: true
+displayLogo: true
 
-  footer:
+footer:
     displayCopyright: true
 
-  # Blog settings
-  blog:
+blog:
     list:
       displayTags: true
+# Required for Hextra to work properly
+# Search Configuration
+# UI Customization
+# Blog settings

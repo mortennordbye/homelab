@@ -6,7 +6,7 @@ metadata:
 spec:
   description: apps applications
   sourceRepos:
-    - "https://github.com/mortennordbye/Homelab.git"
+    - "https://github.com/mortennordbye/homelab.git"
   destinations:
     - namespace: "*"
       server: "*"
