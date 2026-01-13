@@ -5,6 +5,7 @@ showDate: false
 showAuthor: true
 showReadingTime: false
 showComments: false
+feature: "images/profile.png"
 ---
 
 Cloud engineer based in Norway. I work with Kubernetes, Azure, and infrastructure automation.
