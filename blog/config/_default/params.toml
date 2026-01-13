@@ -23,7 +23,7 @@ smartTOCHideUnfocusedChildren = true
 layout = "basic"
 
 [homepage]
-layout = "profile"
+layout = "background"
 homepageImage = "images/profile.png"
 showRecent = true
 showRecentItems = 5
@@ -126,6 +126,13 @@ google = ""
 bing = ""
 pinterest = ""
 yandex = ""
+
+[footer]
+showMenu = true
+showCopyright = true
+showThemeAttribution = true
+showAppearanceSwitcher = true
+showScrollToTop = true
 
 [comments]
 enabled = true
