@@ -1,6 +1,6 @@
 baseURL = "https://blog.nordbye.it/"
 languageCode = "en-us"
-title = "My homelab Docs"
+title = "Morten Victor Nordbye"
 theme = "hextra"
 
 [markup]
@@ -29,7 +29,15 @@ pageRef = "/about"
 weight = 3
 
 [params]
-description = "Tech notes and Kubernetes adventures"
+description = "Infrastructure notes and Kubernetes experiments"
+
+[params.footer]
+displayCopyright = true
+displayPoweredBy = false
+
+[params.theme]
+default = "system"
+displayToggle = true
 
 [params.comments]
 enable = true
@@ -47,8 +55,19 @@ type = "flexsearch"
 [params.navbar]
 displayTitle = true
 displayLogo = true
-[params.footer]
-displayCopyright = true
+[params.navbar.logo]
+path = "images/profile.png"
+width = 40
+height = 40
+
 [params.blog]
 [params.blog.list]
 displayTags = true
+
+[[params.navbar.customLinks]]
+name = "GitHub"
+url = "https://github.com/mortennordbye"
+
+[[params.navbar.customLinks]]
+name = "LinkedIn"
+url = "https://www.linkedin.com/in/morten-nordbye-325bb71bb"

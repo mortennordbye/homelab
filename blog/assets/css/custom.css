@@ -1,0 +1,50 @@
+/* Custom styles to match portfolio design */
+
+:root {
+  --accent-color: #149ddd;
+  --accent-color-hover: #1a7fb8;
+}
+
+/* Override Hextra's primary color with portfolio blue */
+[data-theme="light"] {
+  --primary-hue: 198deg;
+  --primary-saturation: 85%;
+  --primary-lightness: 48%;
+}
+
+[data-theme="dark"] {
+  --primary-hue: 199deg;
+  --primary-saturation: 89%;
+}
+
+/* Accent colors to match portfolio */
+:root {
+  --accent-color: #149ddd;
+}
+
+/* Links and interactive elements */
+a {
+  color: #149ddd;
+}
+
+a:hover {
+  color: #0d7ab8;
+}
+
+/* Button styles */
+.hextra-button {
+  background-color: #149ddd;
+}
+
+.hextra-button:hover {
+  background-color: #117ab8;
+}
+
+/* Custom footer */
+footer {
+  text-align: center;
+}
+
+footer .copyright {
+  color: #272829;
+}
