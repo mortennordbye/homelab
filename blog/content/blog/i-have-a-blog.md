@@ -5,6 +5,7 @@ draft: false
 tags: ["meta", "kubernetes", "hugo", "homelab", "argocd", "docker"]
 authors:
   - name: Morten Victor Nordbye
+feature: "images/hugo.png"
 ---
 
 # Yet Another Tech Blog (I'm Sorry)
@@ -48,4 +49,5 @@ Sometimes ArgoCD gets stuck syncing and I have to manually tell it to hurry up, 
 ## Final Thoughts
 
 ---
-Everything's open source at [github.com/mortennordbye/homelab](https://github.com/mortennordbye/homelab)._
+
+Everything's open source at [github.com/mortennordbye/homelab](https://github.com/mortennordbye/homelab).\_
