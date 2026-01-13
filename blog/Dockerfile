@@ -1,11 +1,20 @@
 # --- Stage 1: Build the Site ---
-# Using klakegg/hugo image with extended version
-FROM klakegg/hugo:ext-alpine AS builder
+# Using alpine and installing Hugo extended from GitHub releases
+FROM alpine:3.23 AS builder
 
 WORKDIR /src
 
-# Install Node.js/NPM (Required for Hextra/Tailwind CSS generation)
-RUN apk add --no-cache nodejs npm
+# Install Hugo extended, Node.js and other dependencies
+RUN apk add --no-cache \
+    wget \
+    ca-certificates \
+    nodejs \
+    npm \
+    && wget -O hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v0.154.5/hugo_extended_0.154.5_linux-amd64.tar.gz \
+    && tar -xzf hugo.tar.gz \
+    && mv hugo /usr/local/bin/ \
+    && rm hugo.tar.gz \
+    && chmod +x /usr/local/bin/hugo
 
 # Copy source files
 COPY . .
