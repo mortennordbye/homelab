@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://nordbye.it/</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>1.00</priority>
+  </url>
+
+  <!-- Portfolio Pages -->
+  <url>
+    <loc>https://nordbye.it/portfolio/homelabbing-project-1.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://nordbye.it/portfolio/homelabbing-project-2.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://nordbye.it/portfolio/homelabbing-project-3.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://nordbye.it/portfolio/professional-project-1.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://nordbye.it/portfolio/professional-project-2.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://nordbye.it/portfolio/professional-project-3.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- Service Pages -->
+  <url>
+    <loc>https://nordbye.it/services/gitops-ansible.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://nordbye.it/services/kubernetes-containerization.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://nordbye.it/services/technical-support-consulting.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- Error Pages -->
+  <url>
+    <loc>https://nordbye.it/errors/403.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.10</priority>
+  </url>
+  <url>
+    <loc>https://nordbye.it/errors/404.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.10</priority>
+  </url>
+  <url>
+    <loc>https://nordbye.it/errors/50x.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.10</priority>
+  </url>
+
+  <!-- Template Page -->
+  <url>
+    <loc>https://nordbye.it/starter-page.html</loc>
+    <lastmod>2024-07-05</lastmod>
+    <priority>0.50</priority>
+  </url>
+
+</urlset>
