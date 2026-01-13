@@ -4,6 +4,7 @@ image = "img/profile.png"
 headline = "Cloud engineer. Homelab enthusiast."
 bio = "I write about Kubernetes, infrastructure, and making things work."
 links = [
-    { github = "https://github.com/mortennordbye" },
     { linkedin = "https://www.linkedin.com/in/morten-nordbye-325bb71bb" },
+    { github = "https://github.com/mortennordbye" },
+    { link = "https://nordbye.it" },
 ]
