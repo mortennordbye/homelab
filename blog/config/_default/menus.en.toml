@@ -9,6 +9,11 @@ pageRef = "about"
 weight = 20
 
 [[main]]
+name = "Portfolio"
+url = "https://nordbye.it/"
+weight = 25
+
+[[main]]
 name = "GitHub"
 url = "https://github.com/mortennordbye"
 weight = 30
