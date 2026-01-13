@@ -1,6 +1,6 @@
 [author]
 name = "Morten Victor Nordbye"
-image = "images/profile.png"
+image = "img/profile.png"
 headline = "Cloud engineer. Homelab enthusiast."
 bio = "I write about Kubernetes, infrastructure, and making things work."
 links = [
