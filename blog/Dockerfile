@@ -19,10 +19,10 @@ RUN apk add --no-cache \
     && chmod +x /usr/bin/hugo \
     && hugo version
 
-# Copy source files
+# Copy source files including theme
 COPY . .
 
-# Install NPM dependencies if package.json exists (Hextra might use it)
+# Install NPM dependencies if package.json exists
 RUN if [ -f package.json ]; then npm install; fi
 
 # Build the site

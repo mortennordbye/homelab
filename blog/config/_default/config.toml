@@ -5,8 +5,10 @@ title = "Morten Victor Nordbye"
 theme = "blowfish"
 
 enableRobotsTXT = true
-paginate = 10
 summaryLength = 30
+
+[pagination]
+pagerSize = 10
 
 [outputs]
 home = ["HTML", "RSS", "JSON"]
