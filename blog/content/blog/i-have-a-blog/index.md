@@ -5,7 +5,6 @@ draft: false
 tags: ["meta", "kubernetes", "hugo", "homelab", "argocd", "docker"]
 authors:
   - name: Morten Victor Nordbye
-feature: "hugo.png"
 ---
 
 # Yet Another Tech Blog (I'm Sorry)
