@@ -23,8 +23,7 @@ smartTOCHideUnfocusedChildren = true
 layout = "basic"
 
 [homepage]
-layout = "background"
-homepageImage = "images/profile.png"
+layout = "profile"
 showRecent = true
 showRecentItems = 5
 showMoreLink = true
