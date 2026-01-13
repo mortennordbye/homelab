@@ -6,24 +6,30 @@ enableSearch = true
 enableCodeCopy = true
 
 mainSections = ["blog"]
-# robots = ""
 
 disableImageOptimization = false
-disableTextInHeader = false
-# backgroundImageWidth = 1200
-
 defaultBackgroundImage = "images/background.jpg"
-defaultFeaturedImage = "images/featured.jpg"
 
 highlightCurrentMenuArea = true
 smartTOC = true
 smartTOCHideUnfocusedChildren = true
 
+[author]
+name = "Morten Victor Nordbye"
+image = "images/profile.png"
+headline = "Cloud engineer. Homelab enthusiast."
+bio = "I write about Kubernetes, infrastructure, and making things work."
+links = [
+    { linkedin = "https://www.linkedin.com/in/morten-nordbye-325bb71bb" },
+    { github = "https://github.com/mortennordbye" },
+    { link = "https://nordbye.it" },
+]
+
 [header]
 layout = "basic"
 
 [homepage]
-layout = "profile"
+layout = "background"
 homepageImage = "images/background.jpg"
 showRecent = true
 showRecentItems = 5
@@ -91,41 +97,6 @@ showTableOfContents = true
 groupByYear = false
 cardView = true
 cardViewScreenWidth = false
-
-[firebase]
-apiKey = ""
-authDomain = ""
-projectId = ""
-storageBucket = ""
-messagingSenderId = ""
-appId = ""
-measurementId = ""
-
-[fathomAnalytics]
-site = ""
-domain = ""
-
-[umamiAnalytics]
-site = ""
-region = ""
-dataDomains = ""
-dataDoNotTrack = ""
-
-[selineAnalytics]
-token = ""
-
-[buymeacoffee]
-identifier = ""
-globalWidget = false
-globalWidgetMessage = ""
-globalWidgetColor = "#FFDD00"
-globalWidgetPosition = "Right"
-
-[verification]
-google = ""
-bing = ""
-pinterest = ""
-yandex = ""
 
 [footer]
 showMenu = true
