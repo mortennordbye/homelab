@@ -1,4 +1,4 @@
-colorScheme = "ocean"
+colorScheme = "github"
 defaultAppearance = "dark"
 autoSwitchAppearance = true
 
@@ -23,7 +23,8 @@ smartTOCHideUnfocusedChildren = true
 layout = "basic"
 
 [homepage]
-layout = "profile"
+layout = "background"
+homepageImage = "images/background.jpg"
 showRecent = true
 showRecentItems = 5
 showMoreLink = true
