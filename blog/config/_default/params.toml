@@ -1,0 +1,135 @@
+colorScheme = "ocean"
+defaultAppearance = "dark"
+autoSwitchAppearance = true
+
+enableSearch = true
+enableCodeCopy = true
+
+mainSections = ["blog"]
+# robots = ""
+
+disableImageOptimization = false
+disableTextInHeader = false
+# backgroundImageWidth = 1200
+
+defaultBackgroundImage = "images/background.jpg"
+defaultFeaturedImage = "images/featured.jpg"
+
+highlightCurrentMenuArea = true
+smartTOC = true
+smartTOCHideUnfocusedChildren = true
+
+[header]
+layout = "basic"
+
+[homepage]
+layout = "profile"
+homepageImage = "images/profile.png"
+showRecent = true
+showRecentItems = 5
+showMoreLink = true
+showMoreLinkDest = "/blog"
+cardView = false
+cardViewScreenWidth = false
+layoutBackgroundBlur = false
+
+[article]
+showDate = true
+showViews = false
+showLikes = false
+showDateUpdated = false
+showAuthor = true
+showHero = true
+heroStyle = "basic"
+layoutBackgroundBlur = true
+showBreadcrumbs = true
+showDraftLabel = true
+showEdit = false
+showSummary = true
+showTableOfContents = true
+showTaxonomies = true
+showAuthorsBadges = false
+showWordCount = true
+showComments = true
+sharingLinks = [
+    "linkedin",
+    "twitter",
+    "reddit",
+    "pinterest",
+    "facebook",
+    "email",
+]
+
+[list]
+showHero = true
+heroStyle = "background"
+layoutBackgroundBlur = true
+showBreadcrumbs = false
+showSummary = false
+showViews = false
+showLikes = false
+showTableOfContents = false
+showCards = true
+groupByYear = true
+cardView = true
+cardViewScreenWidth = false
+constrainItemsWidth = false
+
+[sitemap]
+excludedKinds = ["taxonomy", "term"]
+
+[taxonomy]
+showTermCount = true
+showHero = true
+heroStyle = "background"
+showBreadcrumbs = false
+showViews = false
+showLikes = false
+showTableOfContents = false
+cardView = false
+
+[term]
+showHero = true
+heroStyle = "background"
+showBreadcrumbs = false
+showViews = false
+showLikes = false
+showTableOfContents = true
+groupByYear = false
+cardView = true
+cardViewScreenWidth = false
+
+[firebase]
+apiKey = ""
+authDomain = ""
+projectId = ""
+storageBucket = ""
+messagingSenderId = ""
+appId = ""
+measurementId = ""
+
+[fathomAnalytics]
+site = ""
+domain = ""
+
+[umamiAnalytics]
+site = ""
+region = ""
+dataDomains = ""
+dataDoNotTrack = ""
+
+[selineAnalytics]
+token = ""
+
+[buymeacoffee]
+identifier = ""
+globalWidget = false
+globalWidgetMessage = ""
+globalWidgetColor = "#FFDD00"
+globalWidgetPosition = "Right"
+
+[verification]
+google = ""
+bing = ""
+pinterest = ""
+yandex = ""

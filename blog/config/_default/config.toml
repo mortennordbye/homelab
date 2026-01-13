@@ -1,0 +1,23 @@
+baseURL = "https://blog.nordbye.it/"
+languageCode = "en"
+defaultContentLanguage = "en"
+title = "Morten Victor Nordbye"
+theme = "blowfish"
+
+enableRobotsTXT = true
+paginate = 10
+summaryLength = 30
+
+[outputs]
+home = ["HTML", "RSS", "JSON"]
+
+[taxonomies]
+tag = "tags"
+category = "categories"
+author = "authors"
+series = "series"
+
+[sitemap]
+changefreq = "daily"
+filename = "sitemap.xml"
+priority = 0.5
