@@ -3,7 +3,7 @@ name: "Server Update Reminder (≈30 days)"
 on:
   schedule:
     # 16:00 UTC on the 15th of each month ≃ 18:00 Europe/Oslo
-    - cron: '0 16 15 * *'
+    - cron: "0 16 15 * *"
 
 jobs:
   notify:
@@ -23,7 +23,7 @@ jobs:
           now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           curl -sSL -H "Content-Type: application/json" -X POST \
                -d '{
-                 "username": "Homelab-Reminders",
+                 "username": "homelab-Reminders",
                  "embeds":[
                    {
                      "title":"🔔 Server Update Reminder",
@@ -39,7 +39,7 @@ jobs:
                          "value":"Every 15th of the month at 18:00 Oslo time"
                        }
                      ],
-                     "footer":{"text":"Automated Reminder • Homelab"},
+                     "footer":{"text":"Automated Reminder • homelab"},
                      "timestamp":"'"$now"'"
                    }
                  ]

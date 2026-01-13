@@ -52,9 +52,9 @@ persistence:
 config:
   bookmarks:
     - Resources:
-        - GitHub Homelab:
+        - GitHub homelab:
             - icon: github.png
-              href: https://github.com/mortennordbye/Homelab
+              href: https://github.com/mortennordbye/homelab
         - Notion:
             - icon: notion.png
               href: https://www.notion.so

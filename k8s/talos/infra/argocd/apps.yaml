@@ -6,7 +6,7 @@ metadata:
 spec:
   generators:
     - git:
-        repoURL: https://github.com/mortennordbye/Homelab.git
+        repoURL: https://github.com/mortennordbye/homelab.git
         revision: HEAD
         directories:
           - path: k8s/talos/apps/*
@@ -20,7 +20,7 @@ spec:
     spec:
       project: apps
       source:
-        repoURL: https://github.com/mortennordbye/Homelab.git
+        repoURL: https://github.com/mortennordbye/homelab.git
         targetRevision: HEAD
         path: "{{ path }}"
       destination:

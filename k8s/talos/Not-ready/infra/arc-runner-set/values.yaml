@@ -1,4 +1,4 @@
-githubConfigUrl: "https://github.com/mortennordbye/Homelab"
+githubConfigUrl: "https://github.com/mortennordbye/homelab"
 githubConfigSecret: arc-github-token
 
 minRunners: 1
