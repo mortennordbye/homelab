@@ -4,11 +4,6 @@ pageRef = "blog"
 weight = 10
 
 [[main]]
-name = "About"
-pageRef = "about"
-weight = 20
-
-[[main]]
 name = "Portfolio"
 url = "https://nordbye.it/"
 weight = 25
