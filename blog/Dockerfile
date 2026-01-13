@@ -1,6 +1,6 @@
 # --- Stage 1: Build the Site ---
-# We use the official Hugo image with "ext" (Extended) and "alpine"
-FROM hugo/hugo:ext-alpine as builder
+# Using klakegg/hugo image with extended version
+FROM klakegg/hugo:ext-alpine AS builder
 
 WORKDIR /src
 
