@@ -22,6 +22,11 @@ prometheus:
     # Scrape interval for minimal load
     scrapeInterval: 30s
     evaluationInterval: 30s
+    # Allow Prometheus to discover ServiceMonitors in all namespaces
+    serviceMonitorNamespaceSelector: {}
+    serviceMonitorSelector: {}
+    podMonitorNamespaceSelector: {}
+    podMonitorSelector: {}
 
 ## Grafana configuration
 grafana:
