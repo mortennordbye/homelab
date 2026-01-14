@@ -1,4 +1,4 @@
-name: Build Blog
+name: Build and Deploy Blog
 
 on:
   workflow_dispatch:
@@ -10,19 +10,24 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/blog
+  MANIFEST_PATH: k8s/talos/apps/blog/deployment.yaml
 
 jobs:
-  build:
+  build-and-update:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
+      contents: write # Required to push manifest updates
+      packages: write # Required to push Docker images
 
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive # CRITICAL for themes
+          submodules: recursive # Critical for themes
           fetch-depth: 0
+
+      - name: Get Short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - uses: docker/login-action@v3
         with:
@@ -34,4 +39,28 @@ jobs:
         with:
           context: ./blog
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          # Pushes both 'latest' and 'sha' (for gitops/argocd)
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+
+      - name: Update Deployment Manifest
+        run: |
+          # 1. Install yq (portable YAML processor)
+          wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && chmod +x /usr/local/bin/yq
+
+          # 2. Update image tag in deployment.yaml safely
+          NEW_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}"
+          yq -i ".spec.template.spec.containers[] | select(.name == \"blog\") | .image = \"$NEW_IMAGE\"" ${{ env.MANIFEST_PATH }}
+
+          # 3. Commit and Push change back to repo
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          if [[ -n $(git status -s) ]]; then
+            git add ${{ env.MANIFEST_PATH }}
+            git commit -m "chore(blog): update image tag to ${{ steps.vars.outputs.sha_short }}"
+            git push
+          else
+            echo "No changes detected in manifest."
+          fi
