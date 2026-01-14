@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
-      - prod
+      - main  # Pushing here updates STAGE
+      - prod  # Pushing here updates PROD
     paths:
       - "portfolio/**"
 
@@ -17,14 +17,13 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      packages: write
+      contents: write # Needed to update manifests
+      packages: write # Needed to push images
 
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
-          fetch-depth: 0
+          fetch-depth: 0 # We just need the history, no submodules
 
       - name: Determine Environment
         id: context
@@ -50,7 +49,7 @@ jobs:
         with:
           context: ./portfolio
           push: true
-          # We tag with the SHA (immutable) AND the branch name (moving target)
+          # Tags: Unique SHA (immutable) + Branch Name (mutable)
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.ENV }}
