@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik
+    release: kube-prometheus-stack # This label is important for Prometheus discovery
 spec:
   selector:
     matchLabels:
