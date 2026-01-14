@@ -65,6 +65,12 @@ ports:
     protocol: TCP
     expose:
       default: true
+  metrics:
+    port: 9100
+    expose:
+      default: false
+    exposedPort: 9100
+    protocol: TCP
 
 service:
   enabled: false
@@ -74,6 +80,14 @@ logs:
     level: INFO
   access:
     enabled: true
+
+metrics:
+  prometheus:
+    enabled: true
+    addEntryPointsLabels: true
+    addRoutersLabels: true
+    addServicesLabels: true
+    entryPoint: metrics
 
 experimental:
   kubernetesGateway:
