@@ -68,7 +68,7 @@ ports:
   metrics:
     port: 9100
     expose:
-      default: false
+      default: true
     exposedPort: 9100
     protocol: TCP
 
