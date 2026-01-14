@@ -8,7 +8,7 @@ enableCodeCopy = true
 mainSections = ["blog"]
 
 disableImageOptimization = false
-defaultBackgroundImage = "images/background.jpg"
+defaultBackgroundImage = "images/background.png"
 
 highlightCurrentMenuArea = true
 smartTOC = true
@@ -30,7 +30,7 @@ layout = "basic"
 
 [homepage]
 layout = "background"
-homepageImage = "images/background.jpg"
+homepageImage = "images/background.png"
 showRecent = true
 showRecentItems = 5
 showMoreLink = true
