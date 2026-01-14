@@ -1,21 +1,40 @@
-name: blog
-image: ghcr.io/mortennordbye/homelab/blog:1df276a
-imagePullPolicy: Always
-ports:
-  - name: http
-    containerPort: 80
-resources:
-  requests:
-    cpu: 10m
-    memory: 32Mi
-  limits:
-    cpu: 100m
-    memory: 64Mi
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog
+  namespace: blog
+  labels:
+    app.kubernetes.io/name: blog
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: blog
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: blog
+    spec:
+      containers:
+        - name: blog
+          image: ghcr.io/mortennordbye/homelab/blog:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
