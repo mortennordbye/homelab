@@ -10,6 +10,7 @@ resources:
   - gateway-private.yaml
   - service-public.yaml
   - service-private.yaml
+  - service-metrics.yaml
   - httproute-dashboard.yaml
   - servicemonitor.yaml
 
