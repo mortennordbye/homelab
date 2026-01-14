@@ -16,8 +16,8 @@ jobs:
   build-and-update:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required to push manifest updates
-      packages: write # Required to push Docker images
+      contents: write # Required to commit the new tag
+      packages: write # Required to push the image
 
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
           submodules: recursive # Critical for themes
           fetch-depth: 0
 
-      - name: Get Short SHA
+      - name: Generate Short SHA
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
@@ -39,28 +39,32 @@ jobs:
         with:
           context: ./blog
           push: true
-          # Pushes both 'latest' and 'sha' (for gitops/argocd)
+          # Pushes both 'latest' and the specific SHA
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
 
       - name: Update Deployment Manifest
         run: |
-          # 1. Install yq (portable YAML processor)
-          wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && chmod +x /usr/local/bin/yq
-
-          # 2. Update image tag in deployment.yaml safely
+          # Define new image tag
           NEW_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}"
-          yq -i ".spec.template.spec.containers[] | select(.name == \"blog\") | .image = \"$NEW_IMAGE\"" ${{ env.MANIFEST_PATH }}
 
-          # 3. Commit and Push change back to repo
+          # Use sed to replace ONLY the blog image line
+          # Preserves indentation, comments, and file structure
+          sed -i "s|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:.*|image: $NEW_IMAGE|g" ${{ env.MANIFEST_PATH }}
+
+          # Verify change in logs
+          grep "image:" ${{ env.MANIFEST_PATH }}
+
+          # Configure Git
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
+          # Commit and Push if changes exist
           if [[ -n $(git status -s) ]]; then
             git add ${{ env.MANIFEST_PATH }}
             git commit -m "chore(blog): update image tag to ${{ steps.vars.outputs.sha_short }}"
             git push
           else
-            echo "No changes detected in manifest."
+            echo "No changes detected."
           fi
