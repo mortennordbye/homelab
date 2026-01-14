@@ -1,0 +1,8 @@
+# Ignore build artifacts
+node_modules/
+dist/
+.env
+*.log
+
+# Ignore local Kubernetes configs
+.kube/
