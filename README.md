@@ -173,6 +173,23 @@ graph TB
 | Storage       | Proxmox CSI, Synology NFS                             |
 | Platform      | Proxmox VE, Talos Linux, Terraform, 6-node HA cluster |
 
+## 🔒 Security
+
+### Container Vulnerability Scanning
+
+Automated vulnerability scanning runs weekly and on every Dockerfile change using Trivy. Scans detect CRITICAL and HIGH severity vulnerabilities in both blog and portfolio containers, with results automatically uploaded to GitHub Security tab for tracking and remediation.
+
+## 🔄 CI/CD Workflows
+
+| Workflow                                                                                | Trigger                                   | Purpose                                                |
+| --------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------ |
+| [**Build and Deploy Blog**](.github/workflows/build-blog.yaml)                          | Push to `main` (blog changes)             | Builds Hugo blog, pushes to GHCR, updates k8s manifest |
+| [**Build and Deploy Portfolio**](.github/workflows/portfolio.yaml)                      | Push to `main`/`prod` (portfolio changes) | Multi-environment deployment (stage/prod) to k8s       |
+| [**Container Vulnerability Scan**](.github/workflows/container-vulnerability-scan.yaml) | Weekly, Dockerfile changes, manual        | Scans blog & portfolio containers with Trivy           |
+| [**K8s Update Reminder**](.github/workflows/30-days-k8s-update-reminder.yml)            | Monthly (1st)                             | Discord notification for Kubernetes maintenance        |
+| [**Server Update Reminder**](.github/workflows/30-days-server-update-reminder.yml)      | Monthly (15th)                            | Discord notification for server updates                |
+| [**Actions Runner Test**](.github/workflows/test-arc.yml)                               | Manual                                    | Tests self-hosted ARC runner functionality             |
+
 ## Hardware
 
 ### Compute Nodes
