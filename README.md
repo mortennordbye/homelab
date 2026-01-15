@@ -10,7 +10,7 @@ The repository is public by design. Transparency keeps me honest about following
 
 - 🌐 **Portfolio:** [nordbye.it](https://nordbye.it)
 - 📝 **Blog:** [blog.nordbye.it](https://blog.nordbye.it)
-- 💼 **LinkedIn:** [morten-nordbye](https://www.linkedin.com/in/morten-victor-nordbye/)
+- 💼 **LinkedIn:** [morten--victor-nordbye](https://www.linkedin.com/in/morten-victor-nordbye/)
 - 🐙 **GitHub:** [@mortennordbye](https://github.com/mortennordbye)
 
 Feel free to send me a DM, open a pull request, or steal code from here. The goal is to learn and make connections.
