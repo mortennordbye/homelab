@@ -1,12 +1,19 @@
 # Eden - Homelab Infrastructure
 
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io) [![Talos](https://img.shields.io/badge/Talos-FF6C2C?logo=linux&logoColor=white)](https://www.talos.dev) [![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-F05032?logo=argo&logoColor=white)](https://argoproj.github.io/cd/) [![Terraform](https://img.shields.io/badge/Terraform-IaC-844FBA?logo=terraform&logoColor=white)](https://www.terraform.io) [![Blog](https://github.com/mortennordbye/homelab/actions/workflows/build-blog.yaml/badge.svg)](https://github.com/mortennordbye/homelab/actions/workflows/build-blog.yaml) [![Portfolio](https://github.com/mortennordbye/homelab/actions/workflows/portfolio.yaml/badge.svg)](https://github.com/mortennordbye/homelab/actions/workflows/portfolio.yaml)
+
 My personal lab environment for experimenting with infrastructure and hosting self-hosted services. Professionally, I work with these technologies daily, but the homelab gives me freedom to explore ideas and patterns that don't always fit production constraints. This is where curiosity meets practicality, testing new tools, solving real problems at home, and yes, occasionally breaking things in the pursuit of learning.
 
 The repository is public by design. Transparency keeps me honest about following best practices, even when it's just for fun.
 
-Want to learn more about me or what I work with? Visit [nordbye.it](https://nordbye.it)
+## 🔗 Quick Links
 
-Feel free to send me a DM, open a pull request, or steal code from here—the goal is to learn and make connections.
+- 🌐 **Portfolio:** [nordbye.it](https://nordbye.it)
+- 📝 **Blog:** [blog.nordbye.it](https://blog.nordbye.it)
+- 💼 **LinkedIn:** [morten-nordbye](https://www.linkedin.com/in/morten-victor-nordbye/)
+- 🐙 **GitHub:** [@mortennordbye](https://github.com/mortennordbye)
+
+Feel free to send me a DM, open a pull request, or steal code from here. The goal is to learn and make connections.
 
 ## Network Overview
 
@@ -132,6 +139,40 @@ graph TB
     ARGO --> APPS
 ```
 
+## 📂 Repository Structure
+
+```
+📦 homelab
+├── k8s/talos/
+│   ├── apps/         # Application deployments
+│   └── infra/        # Infrastructure components
+├── terraform/
+│   ├── azure/
+│   │   └── state/    # Remote state backend
+│   └── proxmox/      # Proxmox cluster IaC
+│       └── hyper-cluster/
+│           └── k8s/  # K8s node provisioning
+├── blog/             # Hugo blog source
+│   ├── config/       # Site configuration
+│   ├── content/      # Blog posts & pages
+│   ├── layouts/      # Custom templates
+│   └── themes/       # Blowfish theme
+└── portfolio/        # Portfolio site source
+    ├── src/          # Frontend HTML/CSS/JS
+    └── nginx/        # Web server config
+```
+
+## ☸️ Kubernetes Tech Stack
+
+| Category      | Components                                            |
+| ------------- | ----------------------------------------------------- |
+| GitOps        | ArgoCD                                                |
+| Networking    | Cilium (CNI + eBPF), Traefik (Gateway API ingress)    |
+| Security      | Cert-manager, External Secrets Operator               |
+| Observability | Prometheus, Grafana, OpenTelemetry, Metrics-server    |
+| Storage       | Proxmox CSI, Synology NFS                             |
+| Platform      | Proxmox VE, Talos Linux, Terraform, 6-node HA cluster |
+
 ## Hardware
 
 ### Compute Nodes
@@ -172,3 +213,13 @@ graph TB
 | Nabu Casa Connect ZBT-2 | Zigbee Coordinator | Zigbee device coordination |
 | M5Stack Atom Lite       | Bluetooth Proxy    | Bluetooth range extension  |
 | UniFi G6 Instant        | Security Camera    | Indoor surveillance        |
+
+---
+
+<div align="center">
+
+### ⭐ Star this repo if you find it useful!
+
+Made with ☕ and ☸️ by [Morten Victor Nordbye](https://nordbye.it)
+
+</div>
