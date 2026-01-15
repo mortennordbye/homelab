@@ -105,7 +105,7 @@ config:
             description: Portfolio mirror
         - Portfolio (Staging):
             icon: mdi-web-clock
-            href: https://stage.nordbye.it
+            href: https://portfolio-stage.local.bigd.no
             description: Staging environment
 
     - Media Management:
