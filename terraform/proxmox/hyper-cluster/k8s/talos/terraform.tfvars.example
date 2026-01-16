@@ -1,82 +1,89 @@
-proxmox_endpoint     = "https://proxmox.example.com:8006"
-proxmox_api_token    = "user@pve!token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+# Proxmox Configuration
+proxmox_endpoint     = "https://proxmox.example.local:8006"
+proxmox_api_token    = "terraform-prov@pve!token=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 proxmox_insecure     = true
 proxmox_ssh_username = "root"
 
-cluster_name    = "genesis"
-cluster_vip     = "10.0.0.30"
-network_gateway = "10.0.0.1"
+# Cluster Configuration
+cluster_name         = "genesis"
+proxmox_cluster_name = "hyper-cluster"
+cluster_vip          = "10.0.10.30"     # Virtual IP for cluster endpoint
+network_gateway      = "10.0.10.1"      # Network gateway IP
 
+# Version Configuration
 talos_version      = "v1.11.6" # Latest: v1.11.6 | Previous: v1.10.8
-kubernetes_version = "v1.34.0" # Latest: v1.34.2 | Previous: v1.33.6
+kubernetes_version = "v1.34.2" # Latest: v1.34.2 | Previous: v1.33.6
 
+# Upgrade Flags
 enable_talos_upgrade      = false
 enable_kubernetes_upgrade = false
 
+# Node Definitions
+# Note: Adjust IPs, MAC addresses, and resource allocations based on your environment
 nodes = {
   "genesis-ctrl-01" = {
-    proxmox_node = "pve1"
-    ip           = "10.0.0.31"
-    mac_address  = "BC:24:11:2E:C8:00"
+    proxmox_node = "hyper1"
+    ip           = "10.0.10.31"
+    mac_address  = "BC:24:11:00:00:01"
     vmid         = 131
-    cpu_cores    = 2
-    memory_mb    = 4096
-    disk_size_gb = 10
+    cpu_cores    = 4
+    memory_mb    = 6144
+    disk_size_gb = 50
     datastore    = "local-lvm"
     node_type    = "controlplane"
   }
   "genesis-ctrl-02" = {
-    proxmox_node = "pve1"
-    ip           = "10.0.0.32"
-    mac_address  = "BC:24:11:2E:C8:01"
+    proxmox_node = "hyper1"
+    ip           = "10.0.10.32"
+    mac_address  = "BC:24:11:00:00:02"
     vmid         = 132
-    cpu_cores    = 2
-    memory_mb    = 4096
-    disk_size_gb = 10
+    cpu_cores    = 4
+    memory_mb    = 6144
+    disk_size_gb = 50
     datastore    = "local-lvm"
     node_type    = "controlplane"
   }
   "genesis-ctrl-03" = {
-    proxmox_node = "pve2"
-    ip           = "10.0.0.33"
-    mac_address  = "BC:24:11:2E:C8:02"
+    proxmox_node = "hyper2"
+    ip           = "10.0.10.33"
+    mac_address  = "BC:24:11:00:00:03"
     vmid         = 133
     cpu_cores    = 2
-    memory_mb    = 4096
-    disk_size_gb = 10
+    memory_mb    = 6144
+    disk_size_gb = 50
     datastore    = "local-lvm"
     node_type    = "controlplane"
   }
   "genesis-worker-01" = {
-    proxmox_node = "pve1"
-    ip           = "10.0.0.34"
-    mac_address  = "BC:24:11:2E:C8:03"
+    proxmox_node = "hyper1"
+    ip           = "10.0.10.34"
+    mac_address  = "BC:24:11:00:00:04"
     vmid         = 134
     cpu_cores    = 4
     memory_mb    = 6144
-    disk_size_gb = 40
+    disk_size_gb = 50
     datastore    = "local-lvm"
     node_type    = "worker"
   }
   "genesis-worker-02" = {
-    proxmox_node = "pve2"
-    ip           = "10.0.0.35"
-    mac_address  = "BC:24:11:2E:C8:04"
+    proxmox_node = "hyper2"
+    ip           = "10.0.10.35"
+    mac_address  = "BC:24:11:00:00:05"
     vmid         = 135
-    cpu_cores    = 4
+    cpu_cores    = 2
     memory_mb    = 6144
-    disk_size_gb = 40
+    disk_size_gb = 50
     datastore    = "local-lvm"
     node_type    = "worker"
   }
   "genesis-worker-03" = {
-    proxmox_node = "pve2"
-    ip           = "10.0.0.36"
-    mac_address  = "BC:24:11:2E:C8:05"
+    proxmox_node = "hyper2"
+    ip           = "10.0.10.36"
+    mac_address  = "BC:24:11:00:00:06"
     vmid         = 136
-    cpu_cores    = 4
+    cpu_cores    = 2
     memory_mb    = 6144
-    disk_size_gb = 40
+    disk_size_gb = 50
     datastore    = "local-lvm"
     node_type    = "worker"
   }

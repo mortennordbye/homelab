@@ -2,6 +2,18 @@
 
 ## Getting Started
 
+### Configuration
+
+1. Copy the example configuration file:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+
+2. Edit `terraform.tfvars` with your environment details:
+   - Proxmox endpoint and API token
+   - Network settings (IPs, gateway, VIP)
+   - Node configurations (adjust based on your hardware)
+
 ### Deploy
 
 ```bash
@@ -16,7 +28,7 @@ terraform apply
 # Talos
 terraform output -raw talosconfig > talosconfig
 export TALOSCONFIG=./talosconfig
-talosctl --endpoints 10.3.10.30 --nodes 10.3.10.30 health
+talosctl --endpoints <cluster_vip> --nodes <cluster_vip> health
 
 # Kubernetes
 export KUBECONFIG=./kubeconfig
