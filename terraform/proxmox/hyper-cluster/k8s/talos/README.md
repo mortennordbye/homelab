@@ -5,6 +5,7 @@
 ### Configuration
 
 1. Copy the example configuration file:
+
    ```bash
    cp terraform.tfvars.example terraform.tfvars
    ```
