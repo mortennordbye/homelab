@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main  # Pushing here updates STAGE
-      - prod  # Pushing here updates PROD
+      - main # Pushing here updates STAGE
+      - prod # Pushing here updates PROD
     paths:
       - "portfolio/**"
 
@@ -39,11 +39,18 @@ jobs:
             echo "MANIFEST=k8s/talos/apps/portfolio-stage/deployment.yaml" >> $GITHUB_OUTPUT
           fi
 
-      - uses: docker/login-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - uses: docker/build-push-action@v6
         with:
@@ -53,6 +60,10 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.ENV }}
+
+      - name: Logout from Docker Hub
+        if: always()
+        run: docker logout
 
       - name: Update Kubernetes Manifest
         run: |
