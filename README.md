@@ -1,19 +1,29 @@
-# Eden - Homelab Infrastructure
+<div align="center">
 
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io) [![Talos](https://img.shields.io/badge/Talos-FF6C2C?logo=linux&logoColor=white)](https://www.talos.dev) [![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-F05032?logo=argo&logoColor=white)](https://argoproj.github.io/cd/) [![Terraform](https://img.shields.io/badge/Terraform-IaC-844FBA?logo=terraform&logoColor=white)](https://www.terraform.io) [![Blog](https://github.com/mortennordbye/homelab/actions/workflows/build-blog.yaml/badge.svg)](https://github.com/mortennordbye/homelab/actions/workflows/build-blog.yaml) [![Portfolio](https://github.com/mortennordbye/homelab/actions/workflows/portfolio.yaml/badge.svg)](https://github.com/mortennordbye/homelab/actions/workflows/portfolio.yaml)
+# 🌿 Eden
+
+### Homelab Infrastructure
+
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io) [![Talos](https://img.shields.io/badge/Talos-FF6C2C?logo=linux&logoColor=white)](https://www.talos.dev) [![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-F05032?logo=argo&logoColor=white)](https://argoproj.github.io/cd/) [![Terraform](https://img.shields.io/badge/Terraform-IaC-844FBA?logo=terraform&logoColor=white)](https://www.terraform.io)
+
+[![Blog](https://github.com/mortennordbye/homelab/actions/workflows/build-blog.yaml/badge.svg)](https://github.com/mortennordbye/homelab/actions/workflows/build-blog.yaml) [![Portfolio](https://github.com/mortennordbye/homelab/actions/workflows/portfolio.yaml/badge.svg)](https://github.com/mortennordbye/homelab/actions/workflows/portfolio.yaml) [![Container Security](https://github.com/mortennordbye/homelab/actions/workflows/container-vulnerability-scan.yaml/badge.svg)](https://github.com/mortennordbye/homelab/actions/workflows/container-vulnerability-scan.yaml)
 
 My personal lab environment for experimenting with infrastructure and hosting self-hosted services. Professionally, I work with these technologies daily, but the homelab gives me freedom to explore ideas and patterns that don't always fit production constraints. This is where curiosity meets practicality, testing new tools, solving real problems at home, and yes, occasionally breaking things in the pursuit of learning.
 
 The repository is public by design. Transparency keeps me honest about following best practices, even when it's just for fun.
 
+</div>
+
 ## 🔗 Quick Links
 
 - 🌐 **Portfolio:** [nordbye.it](https://nordbye.it)
 - 📝 **Blog:** [blog.nordbye.it](https://blog.nordbye.it)
-- 💼 **LinkedIn:** [morten--victor-nordbye](https://www.linkedin.com/in/morten-victor-nordbye/)
+- 💼 **LinkedIn:** [morten-victor-nordbye](https://www.linkedin.com/in/morten-victor-nordbye/)
 - 🐙 **GitHub:** [@mortennordbye](https://github.com/mortennordbye)
 
 Feel free to send me a DM, open a pull request, or steal code from here. The goal is to learn and make connections.
+
+---
 
 ## Network Overview
 
@@ -92,6 +102,8 @@ graph TD
     HA_Box --> ZBT
 ```
 
+---
+
 ## Kubernetes Application Stack
 
 ```mermaid
@@ -139,45 +151,62 @@ graph TB
     ARGO --> APPS
 ```
 
+---
+
 ## 📂 Repository Structure
+
+> **Note:** This is a simplified view showing the main folders and key files. The actual repository contains additional directories and configurations.
 
 ```
 📦 homelab
-├── k8s/talos/
-│   ├── apps/         # Application deployments
-│   └── infra/        # Infrastructure components
-├── terraform/
-│   ├── azure/
-│   │   └── state/    # Remote state backend
-│   └── proxmox/      # Proxmox cluster IaC
-│       └── hyper-cluster/
-│           └── k8s/  # K8s node provisioning
-├── blog/             # Hugo blog source
-│   ├── config/       # Site configuration
-│   ├── content/      # Blog posts & pages
-│   ├── layouts/      # Custom templates
-│   └── themes/       # Blowfish theme
-└── portfolio/        # Portfolio site source
-    ├── src/          # Frontend HTML/CSS/JS
-    └── nginx/        # Web server config
+├── 📁 k8s/talos/
+│   ├── 📁 apps/                         # Application deployments
+│   │   ├── 📁 arr-stack/
+│   │   ├── 📁 blog/
+│   │   └── 📁 plex-media-stack/
+│   └── 📁 infra/                        # Infrastructure components
+│       ├── 📁 argocd/
+│       ├── 📁 cilium/
+│       └── 📁 traefik/
+├── 📁 terraform/
+│   ├── 📁 azure/
+│   │   └── 📁 state/                    # Remote state backend
+│   └── 📁 proxmox/                      # Proxmox cluster IaC
+│       └── 📁 hyper-cluster/
+│           └── 📁 k8s/
+├── 📁 blog/                             # Hugo blog source
+│   ├── Dockerfile
+│   ├── 📁 config/
+│   ├── 📁 content/
+│   └── 📁 themes/
+└── 📁 portfolio/                        # Portfolio site source
+    ├── Dockerfile
+    ├── 📁 nginx/
+    └── 📁 src/
 ```
+
+---
 
 ## ☸️ Kubernetes Tech Stack
 
-| Category      | Components                                            |
-| ------------- | ----------------------------------------------------- |
-| GitOps        | ArgoCD                                                |
-| Networking    | Cilium (CNI + eBPF), Traefik (Gateway API ingress)    |
-| Security      | Cert-manager, External Secrets Operator               |
-| Observability | Prometheus, Grafana, OpenTelemetry, Metrics-server    |
-| Storage       | Proxmox CSI, Synology NFS                             |
-| Platform      | Proxmox VE, Talos Linux, Terraform, 6-node HA cluster |
+| Category      | Components                                                                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitOps        | [ArgoCD](https://argoproj.github.io/cd/)                                                                                                                                               |
+| Networking    | [Cilium](https://cilium.io/) (CNI + eBPF), [Traefik](https://traefik.io/) ([Gateway API](https://gateway-api.sigs.k8s.io/))                                                            |
+| Security      | [Cert-manager](https://cert-manager.io/), [External Secrets Operator](https://external-secrets.io/)                                                                                    |
+| Observability | [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [OpenTelemetry](https://opentelemetry.io/), [Metrics-server](https://github.com/kubernetes-sigs/metrics-server) |
+| Storage       | [Proxmox CSI](https://github.com/sergelogvinov/proxmox-csi-plugin), [Synology](https://www.synology.com/) (NFS)                                                                        |
+| Platform      | [Proxmox VE](https://www.proxmox.com/) (6-node HA cluster), [Talos Linux](https://www.talos.dev/), [Terraform](https://www.terraform.io/)                                              |
+
+---
 
 ## 🔒 Security
 
 ### Container Vulnerability Scanning
 
 Automated vulnerability scanning runs weekly and on every Dockerfile change using Trivy. Scans detect CRITICAL and HIGH severity vulnerabilities in both blog and portfolio containers, with results automatically uploaded to GitHub Security tab for tracking and remediation.
+
+---
 
 ## 🔄 CI/CD Workflows
 
@@ -189,6 +218,8 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 | [**K8s Update Reminder**](.github/workflows/30-days-k8s-update-reminder.yml)            | Monthly (1st)                             | Discord notification for Kubernetes maintenance        |
 | [**Server Update Reminder**](.github/workflows/30-days-server-update-reminder.yml)      | Monthly (15th)                            | Discord notification for server updates                |
 | [**Actions Runner Test**](.github/workflows/test-arc.yml)                               | Manual                                    | Tests self-hosted ARC runner functionality             |
+
+---
 
 ## Hardware
 
