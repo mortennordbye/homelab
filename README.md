@@ -8,6 +8,8 @@
 
 [![Blog](https://github.com/mortennordbye/homelab/actions/workflows/build-blog.yaml/badge.svg)](https://github.com/mortennordbye/homelab/actions/workflows/build-blog.yaml) [![Portfolio](https://github.com/mortennordbye/homelab/actions/workflows/portfolio.yaml/badge.svg)](https://github.com/mortennordbye/homelab/actions/workflows/portfolio.yaml) [![Container Security](https://github.com/mortennordbye/homelab/actions/workflows/container-vulnerability-scan.yaml/badge.svg)](https://github.com/mortennordbye/homelab/actions/workflows/container-vulnerability-scan.yaml)
 
+[![License](https://img.shields.io/github/license/mortennordbye/homelab?style=flat-square)](LICENSE) [![Last Commit](https://img.shields.io/github/last-commit/mortennordbye/homelab?style=flat-square)](https://github.com/mortennordbye/homelab/commits/main) [![Issues](https://img.shields.io/github/issues/mortennordbye/homelab?style=flat-square)](https://github.com/mortennordbye/homelab/issues) [![Stars](https://img.shields.io/github/stars/mortennordbye/homelab?style=flat-square)](https://github.com/mortennordbye/homelab/stargazers)
+
 My personal lab environment for experimenting with infrastructure and hosting self-hosted services. Professionally, I work with these technologies daily, but the homelab gives me freedom to explore ideas and patterns that don't always fit production constraints. This is where curiosity meets practicality, testing new tools, solving real problems at home, and yes, occasionally breaking things in the pursuit of learning.
 
 The repository is public by design. Transparency keeps me honest about following best practices, even when it's just for fun.
