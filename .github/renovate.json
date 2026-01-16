@@ -118,9 +118,24 @@
       "matchDatasources": [
         "docker"
       ],
-      "automerge": false,
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "7 days",
       "addLabels": [
-        "minor-update"
+        "minor-update",
+        "automerge"
+      ]
+    },
+    {
+      "matchDepTypes": [
+        "vulnerabilities"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "7 days",
+      "addLabels": [
+        "security",
+        "automerge"
       ]
     },
     {
