@@ -123,17 +123,11 @@ kubectl create deployment whoami --image=ghcr.io/traefik/whoami:v1.11 --replicas
 
 This creates the YAML file without actually deploying anything. Open it, verify it looks right, then `kubectl apply -f whoami-deployment.yaml`.
 
-When to use what:
-
-- Learning or production: Declarative (`kubectl apply -f`)
-- Quick test or debugging: Imperative (`kubectl create`, `kubectl scale`)
-- Starting point for YAML: Imperative with `--dry-run=client -o yaml`
-
-We'll use the declarative approach. Stick with it for anything that matters.
+We'll use the declarative approach for this tutorial. Stick with it for anything that matters.
 
 ## Deploy Your First Application
 
-Let's deploy `whoami`, a tiny web service that returns information about the pod handling your request. It's perfect for learning Kubernetes because it shows which pod responded (via hostname), it's lightweight, it displays IP, headers, and request details, and most importantly, you can literally see different pods responding when you scale. Visual feedback is everything when learning.
+Let's deploy `whoami`, a tiny web service that returns information about the pod handling your request. Perfect for learning because you can literally see different pods responding when you scale—visual feedback is everything.
 
 Create a file called `whoami-deployment.yaml`:
 
@@ -270,7 +264,13 @@ Refresh again. Now you'll only see 2 hostnames.
 
 ## Update Your Application
 
-Let's change the whoami version. Edit your `whoami-deployment.yaml`:
+Let's change the whoami version. Open your `whoami-deployment.yaml` in vim:
+
+```bash
+vim whoami-deployment.yaml
+```
+
+Change the image version:
 
 ```yaml
 # Change this line:
@@ -278,6 +278,8 @@ image: ghcr.io/traefik/whoami:v1.11
 # To this:
 image: ghcr.io/traefik/whoami:v1.10
 ```
+
+Save and exit (`:wq`).
 
 Apply the change:
 
@@ -397,21 +399,7 @@ Kubernetes has three main ways to expose your applications:
 
 **1. ClusterIP (Default)**
 
-What we used above. Creates an internal IP address accessible only within the cluster.
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: whoami-service
-spec:
-  type: ClusterIP # This is the default
-  selector:
-    app: whoami
-  ports:
-    - port: 80
-      targetPort: 80
-```
+This is what we used for `whoami-service` earlier. Only accessible within the cluster.
 
 **When to use:**
 
@@ -671,29 +659,9 @@ Now `http://whoami.example.com` routes to your `whoami-service` without needing 
 
 See my [Traefik Gateway API config](https://github.com/mortennordbye/Homelab/tree/main/k8s/talos/infra/traefik) for real-world examples.
 
-### Networking Summary
+### Quick Takeaway
 
-**Development (kind):**
-
-- ClusterIP + `kubectl port-forward`
-- Or install Traefik for realistic testing
-
-**Production (cloud):**
-
-- ClusterIP for internal services
-- One LoadBalancer for Ingress controller
-- Ingress resources for HTTP routing
-
-**Production (bare metal / homelab):**
-
-- Install MetalLB or use Cilium LB
-- ClusterIP for internal services
-- LoadBalancer + Ingress controller for external access
-- Or LoadBalancer per service if you have IPs to spare
-
-**My recommendation:** Start with ClusterIP and port-forwarding. Add an Ingress controller when you need hostnames. Add MetalLB/Cilium when you go bare metal.
-
-Don't overthink it. ClusterIP gets you 90% of the way.
+Start with ClusterIP and port-forwarding. Add an Ingress controller when you need hostnames. Add MetalLB/Cilium when you go bare metal. Don't overthink it—ClusterIP gets you 90% of the way.
 
 ## Debug When Things Break
 
@@ -725,14 +693,6 @@ kind delete cluster --name quickstart
 
 This removes everything. To start fresh, just run `kind create cluster` again.
 
-## Homelab Tip: Single-Node Kind on a VM
-
-Running a homelab but not ready for a 6-node HA cluster? You don't need one. Run a single-node kind cluster on a VM instead.
-
-You get all the Kubernetes goodies (GitOps, monitoring, ingress) without the complexity of multi-node networking, distributed storage, or high availability. Storage is simple (local volumes work fine). Networking is simple (single node, no worries about pod-to-pod routing across nodes). And you can still run real workloads.
-
-Install Docker on a VM, create a kind cluster, and you're done. Same workflow as this tutorial, but it persists across reboots. When you're ready to scale, migrate to a proper cluster. Until then, keep it simple.
-
 ## Choosing Your Homelab Kubernetes Distribution
 
 Want to build your own homelab Kubernetes cluster? Here are your options, from simplest to most complex:
@@ -742,6 +702,8 @@ Want to build your own homelab Kubernetes cluster? Here are your options, from s
 #### kind
 
 [kind](https://kind.sigs.k8s.io/) is what we used in this tutorial. Runs Kubernetes in Docker containers. Perfect for learning and development. Single command to create a cluster. Limited networking options but gets you 90% of the way there.
+
+**For homelab use:** Running a homelab but not ready for a 6-node HA cluster? Run a single-node kind cluster on a VM instead. You get all the Kubernetes goodies (GitOps, monitoring, ingress) without the complexity of multi-node networking or distributed storage. Install Docker on a VM, create a kind cluster, and you're done. Same workflow as this tutorial, but it persists across reboots.
 
 #### MicroK8s
 
