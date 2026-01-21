@@ -9,6 +9,8 @@ authors:
 
 # Getting Started with Kubernetes: A Quick Start Guide
 
+![Kubernetes](/images/kubernetes-logo.png "Kubernetes Logo"){style="width:30%;"}
+
 People keep asking me, "How do I get started with Kubernetes?" And honestly, I never had a good answer to send them. So I wrote this post.
 
 _If you're looking for production-ready configs, check out my [Homelab repository](https://github.com/mortennordbye/Homelab) where I run a full Talos K8s cluster with ArgoCD, monitoring, and more. Or don't. I'm not your boss._
@@ -24,6 +26,8 @@ Think of it like this:
 **Docker** = running one container on your laptop
 
 **Kubernetes** = running hundreds of containers across multiple servers, with automatic restarts, load balancing, and zero downtime deployments
+
+![Kubernetes Architecture](/images/kubernetes-architecture.svg "Kubernetes Components"){style="width:70%;"}
 
 Is it overkill for your side project? Absolutely.
 
