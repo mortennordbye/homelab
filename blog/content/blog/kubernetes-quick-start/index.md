@@ -55,10 +55,26 @@ Once you have all three installed, you're ready to create a cluster.
 
 ## Create a Kind Cluster
 
-Create a cluster:
+We'll create a cluster with port mappings configured so NodePort services work properly. Create a file called `kind-config.yaml`:
+
+```yaml
+# kind-config.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP
+```
+
+This maps port 30080 inside the cluster to port 8080 on your localhost. We'll use this later for networking demos.
+
+Create the cluster:
 
 ```bash
-kind create cluster --name quickstart
+kind create cluster --name quickstart --config kind-config.yaml
 ```
 
 This takes about 1-2 minutes. Kind downloads a Kubernetes node image and runs it as a Docker container.
@@ -79,9 +95,9 @@ Kubernetes uses YAML files to describe what you want to run. The main objects yo
 
 **Deployments** - Manage multiple identical pods. Handles scaling and updates.
 
-**Services** - Handle networking. Exposes your pods so they can talk to each other or the outside world.
+**Services** - Handle networking between pods and external traffic.
 
-**Namespaces** - Provide logical separation. Like folders for organizing resources. By default, everything goes into the `default` namespace, but you should create separate namespaces for different environments (dev, staging, prod) or applications.
+**Namespaces** - Logical separation for organizing resources.
 
 You'll start with Deployments and Services. We'll cover namespaces and networking in detail below.
 
@@ -483,29 +499,7 @@ NAME        TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)
 whoami-lb   LoadBalancer   10.96.100.200   <pending>     80:31234/TCP
 ```
 
-You can access via NodePort (the `31234` above), but you need to map ports when creating the cluster:
-
-```yaml
-# kind-config.yaml
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-  - role: control-plane
-    extraPortMappings:
-      - containerPort: 30080
-        hostPort: 8080
-        protocol: TCP
-```
-
-**⚠️ Warning:** If you already created the `quickstart` cluster earlier in this tutorial, you must delete it first before creating a new one with this config. Run `kind delete cluster --name quickstart` before proceeding, or the command will fail.
-
-Create cluster with config:
-
-```bash
-kind create cluster --name quickstart --config kind-config.yaml
-```
-
-Now you can access NodePort 30080 via `http://localhost:8080`.
+You can access via NodePort (the `31234` above). Remember we configured port mappings when we created the cluster? That's why this works. You can access NodePort 30080 via `http://localhost:8080`.
 
 **Best practice for kind:**
 
@@ -602,7 +596,7 @@ spec:
     - cidr: 192.168.1.240/28 # 16 IPs
 ```
 
-See my [Cilium setup](https://github.com/mortennordbye/Homelab/tree/main/k8s/talos/infra/cilium) for the full config.
+Full config in my [Cilium setup](https://github.com/mortennordbye/Homelab/tree/main/k8s/talos/infra/cilium).
 
 **Why Cilium over MetalLB:**
 
@@ -654,10 +648,8 @@ Now `http://whoami.example.com` routes to your `whoami-service` without needing 
 
 **Popular options:**
 
-- [Traefik](https://doc.traefik.io/traefik/): Auto-discovery, built-in Let's Encrypt, supports both Ingress and Gateway API (what I use)
+- [Traefik](https://doc.traefik.io/traefik/): Auto-discovery, built-in Let's Encrypt, supports both Ingress and Gateway API ([my config](https://github.com/mortennordbye/Homelab/tree/main/k8s/talos/infra/traefik))
 - [Cilium Gateway API](https://docs.cilium.io/en/latest/network/servicemesh/gateway-api/): Modern Gateway API implementation, eBPF-powered
-
-See my [Traefik Gateway API config](https://github.com/mortennordbye/Homelab/tree/main/k8s/talos/infra/traefik) for real-world examples.
 
 ### Quick Takeaway
 
@@ -701,7 +693,7 @@ Want to build your own homelab Kubernetes cluster? Here are your options, from s
 
 #### kind
 
-[kind](https://kind.sigs.k8s.io/) is what we used in this tutorial. Runs Kubernetes in Docker containers. Perfect for learning and development. Single command to create a cluster. Limited networking options but gets you 90% of the way there.
+As you've seen above, [kind](https://kind.sigs.k8s.io/) runs Kubernetes in Docker containers. Perfect for learning and development. Limited networking options but gets you 90% of the way there.
 
 **For homelab use:** Running a homelab but not ready for a 6-node HA cluster? Run a single-node kind cluster on a VM instead. You get all the Kubernetes goodies (GitOps, monitoring, ingress) without the complexity of multi-node networking or distributed storage. Install Docker on a VM, create a kind cluster, and you're done. Same workflow as this tutorial, but it persists across reboots.
 
