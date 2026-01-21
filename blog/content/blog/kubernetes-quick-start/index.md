@@ -9,7 +9,7 @@ authors:
 
 # Getting Started with Kubernetes: A Quick Start Guide
 
-![Kubernetes](/images/kubernetes-logo.png "Kubernetes Logo"){style="width:30%;"}
+<img src="/images/kubernetes-logo.png" alt="Kubernetes" title="Kubernetes Logo" style="width:30%;" />
 
 People keep asking me, "How do I get started with Kubernetes?" And honestly, I never had a good answer to send them. So I wrote this post.
 
@@ -27,7 +27,7 @@ Think of it like this:
 
 **Kubernetes** = running hundreds of containers across multiple servers, with automatic restarts, load balancing, and zero downtime deployments
 
-![Kubernetes Architecture](/images/kubernetes-architecture.svg "Kubernetes Components"){style="width:70%;"}
+<img src="/images/kubernetes-architecture.svg" alt="Kubernetes Architecture" title="Kubernetes Components" style="width:70%;" />
 
 Is it overkill for your side project? Absolutely.
 
