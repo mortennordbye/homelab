@@ -2,7 +2,7 @@
 title: "Yet Another Tech Blog (I'm Sorry)"
 date: 2026-01-13
 draft: false
-tags: ["meta", "kubernetes", "hugo", "homelab", "argocd", "docker"]
+tags: ["kubernetes", "gitops", "argocd", "intermediate", "homelab"]
 authors:
   - name: Morten Victor Nordbye
 ---
