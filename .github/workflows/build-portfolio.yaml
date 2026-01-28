@@ -2,10 +2,18 @@ name: Build and Deploy Portfolio
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - stage
+          - prod
+        default: stage
   push:
     branches:
-      - main # Pushing here updates STAGE
-      - prod # Pushing here updates PROD
+      - main # Pushing here updates STAGE only
     paths:
       - "portfolio/**"
 
@@ -31,13 +39,23 @@ jobs:
           SHORT_SHA=$(git rev-parse --short HEAD)
           echo "TAG=${SHORT_SHA}" >> $GITHUB_OUTPUT
 
-          if [[ "${{ github.ref_name }}" == "prod" ]]; then
-            echo "ENV=prod" >> $GITHUB_OUTPUT
+          # Determine environment: workflow_dispatch input takes precedence, otherwise stage
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENV="${{ inputs.environment }}"
+          else
+            ENV="stage"
+          fi
+
+          echo "ENV=${ENV}" >> $GITHUB_OUTPUT
+
+          if [[ "${ENV}" == "prod" ]]; then
             echo "MANIFEST=k8s/talos/apps/portfolio/deployment.yaml" >> $GITHUB_OUTPUT
           else
-            echo "ENV=stage" >> $GITHUB_OUTPUT
             echo "MANIFEST=k8s/talos/apps/portfolio-stage/deployment.yaml" >> $GITHUB_OUTPUT
           fi
+
+          echo "Deploying to environment: ${ENV}"
+          echo "Using manifest: ${MANIFEST}"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -69,10 +87,24 @@ jobs:
         run: |
           MANIFEST="${{ steps.context.outputs.MANIFEST }}"
           TAG="${{ steps.context.outputs.TAG }}"
+          ENV="${{ steps.context.outputs.ENV }}"
           NEW_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
 
+          echo "Updating manifest: ${MANIFEST}"
+          echo "New image: ${NEW_IMAGE}"
+
+          # Verify manifest exists
+          if [[ ! -f "${MANIFEST}" ]]; then
+            echo "ERROR: Manifest file not found: ${MANIFEST}"
+            exit 1
+          fi
+
           # Update the manifest
-          sed -i "s|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:.*|image: $NEW_IMAGE|g" $MANIFEST
+          sed -i "s|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:.*|image: ${NEW_IMAGE}|g" $MANIFEST
+
+          # Show the changes
+          echo "Changes made:"
+          git diff $MANIFEST
 
           # Commit and Push
           git config --global user.name "GitHub Actions"
@@ -80,8 +112,8 @@ jobs:
 
           if [[ -n $(git status -s) ]]; then
             git add $MANIFEST
-            git commit -m "chore(portfolio): deploy $TAG to ${{ steps.context.outputs.ENV }}"
-            git push
+            git commit -m "chore(portfolio): deploy ${TAG} to ${ENV}"
+            git push origin HEAD:main
           else
             echo "Manifest already up to date."
           fi
