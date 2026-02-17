@@ -2,7 +2,7 @@
 title: "Surviving the NGINX Ingress EOL: A Zero-Downtime Migration to Traefik"
 date: 2026-02-17
 draft: false
-tags: ["kubernetes", "traefik", "nginx", "gateway-api", "ingress", "migration"]
+tags: ["kubernetes", "traefik", "nginx", "ingress", "gateway-api", "intermediate"]
 authors:
   - name: Morten Victor Nordbye
 ---
