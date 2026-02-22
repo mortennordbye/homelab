@@ -8,7 +8,7 @@ prometheus:
     storageSpec:
       volumeClaimTemplate:
         spec:
-          storageClassName: syno-nfs
+          storageClassName: syno-nfs-csi
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
@@ -40,7 +40,7 @@ grafana:
 
   persistence:
     enabled: true
-    storageClassName: syno-nfs
+    storageClassName: syno-nfs-csi
     size: 10Gi
 
   resources:
