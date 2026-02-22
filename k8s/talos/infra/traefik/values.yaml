@@ -30,8 +30,12 @@ ports:
     protocol: TCP
     expose:
       default: true
-    redirectTo:
-      port: websecure
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
   websecure:
     port: 8443
     exposedPort: 443
@@ -44,8 +48,12 @@ ports:
     protocol: TCP
     expose:
       default: true
-    redirectTo:
-      port: websecure-private
+    http:
+      redirections:
+        entryPoint:
+          to: websecure-private
+          scheme: https
+          permanent: true
   websecure-private:
     port: 8444
     exposedPort: 443
