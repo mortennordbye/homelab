@@ -4,7 +4,7 @@
 ## Prometheus configuration
 prometheus:
   prometheusSpec:
-    replicas: 0
+    replicas: 1
     retention: 7d
     storageSpec:
       volumeClaimTemplate:
@@ -32,7 +32,7 @@ prometheus:
 ## Grafana configuration
 grafana:
   enabled: true
-  replicas: 0
+  replicas: 1
 
   # Use ExternalSecret for admin credentials
   admin:
