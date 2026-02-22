@@ -4,8 +4,6 @@ kind: Kustomization
 commonAnnotations:
   argocd.argoproj.io/sync-wave: "-2"
 
-namespace: kube-system
-
 resources:
   - l2-announcement-policy.yaml
   - loadbalancer-ippool.yaml
