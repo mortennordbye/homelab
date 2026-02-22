@@ -1,0 +1,9 @@
+controller:
+  replicas: 1
+  strategyType: Recreate
+
+externalSnapshotter:
+  enabled: false
+
+storageClass:
+  create: false

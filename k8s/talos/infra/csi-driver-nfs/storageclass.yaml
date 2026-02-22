@@ -1,0 +1,13 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: syno-nfs-csi
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: nas.local.bigd.no
+  share: /volume1/k8s-volumes/talos
+  subDir: ${pvc.metadata.namespace}/${pvc.metadata.name}
+  onDelete: archive
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
