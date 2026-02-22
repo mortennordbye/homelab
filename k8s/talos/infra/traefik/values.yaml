@@ -1,6 +1,6 @@
-globalArguments:
-  - "--global.checknewversion=false"
-  - "--global.sendanonymoususage=false"
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
 
 deployment:
   replicas: 1
@@ -11,7 +11,6 @@ api:
 providers:
   kubernetesGateway:
     enabled: true
-    experimentalChannel: true
   kubernetesCRD:
     enabled: true
     allowCrossNamespace: true
@@ -31,11 +30,8 @@ ports:
     protocol: TCP
     expose:
       default: true
-    redirections:
-      entryPoint:
-        to: websecure
-        scheme: https
-        permanent: true
+    redirectTo:
+      port: websecure
   websecure:
     port: 8443
     exposedPort: 443
@@ -48,11 +44,8 @@ ports:
     protocol: TCP
     expose:
       default: true
-    redirections:
-      entryPoint:
-        to: websecure-private
-        scheme: https
-        permanent: true
+    redirectTo:
+      port: websecure-private
   websecure-private:
     port: 8444
     exposedPort: 443
