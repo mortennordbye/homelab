@@ -13,31 +13,21 @@
     "every weekend"
   ],
   "kubernetes": {
-    "managerFilePatterns": [
-      "/k8s/.*\\.ya?ml$/"
-    ]
+    "managerFilePatterns": ["/k8s/.*\\.ya?ml$/"]
   },
   "helm-values": {
-    "managerFilePatterns": [
-      "/k8s/.*/values\\.ya?ml$/"
-    ]
+    "managerFilePatterns": ["/k8s/.*/values\\.ya?ml$/"]
   },
   "kustomize": {
-    "managerFilePatterns": [
-      "/k8s/.*/kustomization\\.ya?ml$/"
-    ]
+    "managerFilePatterns": ["/k8s/.*/kustomization\\.ya?ml$/"]
   },
   "terraform": {
-    "managerFilePatterns": [
-      "/terraform/.*\\.tf$/"
-    ]
+    "managerFilePatterns": ["/terraform/.*\\.tf$/"]
   },
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "/\\.ya?ml$/"
-      ],
+      "managerFilePatterns": ["/\\.ya?ml$/"],
       "matchStrings": [
         "(?<currentValue>[\\w+\\.\\-]*)['\",;]*\\s*#\\s?renovate: (?<datasource>\\S+)=(?<depName>\\S+)\\s?(registry=(?<registryUrl>\\S+))?\\s?(versioning=(?<versioning>\\S+))?"
       ]
@@ -45,106 +35,58 @@
   ],
   "packageRules": [
     {
-      "matchManagers": [
-        "github-actions"
-      ],
+      "matchManagers": ["github-actions"],
       "groupName": "GitHub Actions",
       "groupSlug": "github-actions",
-      "addLabels": [
-        "dependencies",
-        "github-actions"
-      ]
+      "addLabels": ["dependencies", "github-actions"]
     },
     {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchFileNames": [
-        "k8s/talos/apps/arr-stack/**"
-      ],
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["k8s/talos/apps/arr-stack/**"],
       "groupName": "Arr Stack",
       "groupSlug": "arr-stack",
-      "addLabels": [
-        "dependencies",
-        "arr-stack"
-      ]
+      "addLabels": ["dependencies", "arr-stack"]
     },
     {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchFileNames": [
-        "k8s/talos/apps/plex-media-stack/**"
-      ],
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["k8s/talos/apps/plex-media-stack/**"],
       "groupName": "Plex Media Stack",
       "groupSlug": "plex-stack",
-      "addLabels": [
-        "dependencies",
-        "plex"
-      ]
+      "addLabels": ["dependencies", "plex"]
     },
     {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "ghcr.io/mortennordbye/portfolio"
-      ],
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/mortennordbye/portfolio"],
       "enabled": false
     },
     {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "ghcr.io/linuxserver/qbittorrent"
-      ],
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/linuxserver/qbittorrent"],
       "enabled": false
     },
     {
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "addLabels": [
-        "major-update"
-      ],
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major-update"],
       "automerge": false
     },
     {
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "matchDatasources": [
-        "docker"
-      ],
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchDatasources": ["docker"],
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "14 days",
+      "addLabels": ["minor-update", "automerge"]
+    },
+    {
+      "matchDepTypes": ["vulnerabilities"],
       "automerge": true,
       "automergeType": "pr",
       "minimumReleaseAge": "7 days",
-      "addLabels": [
-        "minor-update",
-        "automerge"
-      ]
+      "addLabels": ["security", "automerge"]
     },
     {
-      "matchDepTypes": [
-        "vulnerabilities"
-      ],
-      "automerge": true,
-      "automergeType": "pr",
-      "minimumReleaseAge": "7 days",
-      "addLabels": [
-        "security",
-        "automerge"
-      ]
-    },
-    {
-      "matchManagers": [
-        "terraform"
-      ],
-      "addLabels": [
-        "terraform"
-      ],
+      "matchManagers": ["terraform"],
+      "addLabels": ["terraform"],
       "groupName": "Terraform"
     }
   ]
