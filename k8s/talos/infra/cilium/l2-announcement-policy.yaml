@@ -5,7 +5,9 @@ metadata:
   namespace: kube-system
 spec:
   loadBalancerIPs: true
+  externalIPs: true
   interfaces:
-    - ^eth[0-9]+
+    - ^eth[0-9]+$
+    - ^tmp.*$
   nodeSelector:
     matchLabels: {}
