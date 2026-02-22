@@ -1,5 +1,8 @@
 replicaCount: 1
 
+leaderElection:
+  enabled: false
+
 nfs:
   server: "nas.local.bigd.no"
   path: "/volume1/k8s-volumes/talos"
