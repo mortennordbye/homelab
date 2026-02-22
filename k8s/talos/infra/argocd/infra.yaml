@@ -25,7 +25,6 @@ spec:
         path: "{{ path }}"
       destination:
         name: in-cluster
-        namespace: "{{ path.basename }}"
       syncPolicy:
         automated:
           prune: true
