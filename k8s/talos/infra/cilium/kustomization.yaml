@@ -5,6 +5,7 @@ commonAnnotations:
   argocd.argoproj.io/sync-wave: "-2"
 
 resources:
+  - namespace.yaml
   - l2-announcement-policy.yaml
   - loadbalancer-ippool.yaml
 
