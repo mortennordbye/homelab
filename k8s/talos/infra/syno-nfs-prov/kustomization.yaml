@@ -9,6 +9,32 @@ resources:
 
 namespace: syno-nfs-prov
 
+patches:
+  - patch: |-
+      - op: add
+        path: /metadata/namespace
+        value: syno-nfs-prov
+    target:
+      kind: ServiceAccount
+  - patch: |-
+      - op: add
+        path: /metadata/namespace
+        value: syno-nfs-prov
+    target:
+      kind: Deployment
+  - patch: |-
+      - op: add
+        path: /metadata/namespace
+        value: syno-nfs-prov
+    target:
+      kind: Role
+  - patch: |-
+      - op: add
+        path: /metadata/namespace
+        value: syno-nfs-prov
+    target:
+      kind: RoleBinding
+
 helmCharts:
   - name: nfs-subdir-external-provisioner
     repo: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
