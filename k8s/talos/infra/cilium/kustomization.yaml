@@ -14,6 +14,6 @@ helmCharts:
     repo: https://helm.cilium.io/
     includeCRDs: true
     namespace: kube-system
-    version: 1.19.0
+    version: 1.19.2
     releaseName: cilium
     valuesFile: ./values.yaml
