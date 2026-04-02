@@ -4,3 +4,7 @@ bitwarden-sdk-server:
 installCRDs: true
 
 replicaCount: 1
+
+serviceMonitor:
+  enabled: true
+  interval: 30s
