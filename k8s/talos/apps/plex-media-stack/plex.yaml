@@ -84,7 +84,7 @@ spec:
                       - hyper1
       containers:
         - name: plex
-          image: ghcr.io/linuxserver/plex:1.42.2
+          image: ghcr.io/linuxserver/plex:1.43.0
           env:
             - name: PUID
               value: "1000"
