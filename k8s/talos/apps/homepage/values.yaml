@@ -75,13 +75,13 @@ config:
             description: DNS and CDN
 
     - Public Sites:
-        - Overseerr:
+        - Seerr:
             icon: overseerr.png
-            href: https://overseerr.bigd.no
+            href: https://seerr.bigd.no
             description: Media requests
             widget:
               type: overseerr
-              url: http://overseerr.plex-media-stack:5055
+              url: http://seerr.plex-media-stack:5055
               key: "{{HOMEPAGE_VAR_OVERSEERR_API_KEY}}"
         - Audiobookshelf:
             icon: audiobookshelf.png
