@@ -89,6 +89,13 @@ metrics:
     addRoutersLabels: true
     addServicesLabels: true
     entryPoint: metrics
+    service:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      additionalLabels:
+        release: kube-prometheus-stack
 
 experimental:
   kubernetesGateway:
