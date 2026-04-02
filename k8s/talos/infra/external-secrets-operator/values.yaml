@@ -8,3 +8,5 @@ replicaCount: 1
 serviceMonitor:
   enabled: true
   interval: 30s
+  additionalLabels:
+    release: kube-prometheus-stack
