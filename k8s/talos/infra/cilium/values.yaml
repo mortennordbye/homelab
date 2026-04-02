@@ -1,29 +1,39 @@
 # Talos-specific Cilium configuration
+# Cluster identification
 cluster:
   name: hyper-cluster
   id: 1
 
-# KubePrism endpoint for Talos
+# KubePrism endpoint for accessing Kubernetes API via host networking
 k8sServiceHost: localhost
 k8sServicePort: 7445
 
+# CNI mode
 cni:
   exclusive: false
 
+# IPAM - Use Kubernetes Host Scope IPAM (Talos assigns PodCIDRs to nodes)
 ipam:
   mode: kubernetes
 
+# Replace kube-proxy
 kubeProxyReplacement: true
 
+# eBPF configuration
 bpf:
   masquerade: true
-  # REQUIRED for Talos 1.8+
+  # REQUIRED for Talos 1.8+: Host Legacy Routing must be enabled
+  # This is needed for Talos's "Forwarding kube-dns to Host DNS" feature
+  # Without this, DNS resolution will not work
   hostLegacyRouting: true
 
-# Security settings for Talos compatibility
+# Talos-specific security context and cgroup settings
 securityContext:
   capabilities:
     ciliumAgent:
+      # REQUIRED capabilities for Cilium on Talos
+      # NOTE: SYS_MODULE is intentionally EXCLUDED as Talos doesn't allow
+      # loading kernel modules by Kubernetes workloads
       - CHOWN
       - KILL
       - NET_ADMIN
@@ -41,14 +51,13 @@ securityContext:
       - SYS_RESOURCE
 
 # Cgroup configuration for Talos
+# Reuse the cgroupv2 mount that Talos already provides
 cgroup:
   autoMount:
-    enabled: false
-  hostRoot: /sys/fs/cgroup
+    enabled: false  # Talos manages cgroup mounting
+  hostRoot: /sys/fs/cgroup  # Talos cgroupv2 mount point
 
-# --- METRICS & OBSERVABILITY ---
-
-# Hubble (Optimized for Traefik visibility)
+# Hubble (observability)
 hubble:
   enabled: true
   metrics:
@@ -58,13 +67,20 @@ hubble:
       - tcp
       - flow
       - icmp
-      - httpV2 # Visibility for Traefik -> Pod traffic
+      - httpV2
     enableOpenMetrics: true
     port: 9965
     serviceMonitor:
       enabled: true
       additionalLabels:
         release: kube-prometheus-stack
+      # Relabeling to ensure node names show up correctly in Grafana
+      relabelings:
+        - sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: node
+          action: replace
+          replacement: ${1}
   dashboards:
     enabled: true
   ui:
@@ -74,12 +90,70 @@ hubble:
     enabled: true
     rollOutPods: true
 
-# Cilium Agent Metrics
+# Operator
+operator:
+  replicas: 1
+  rollOutPods: true
+  # CRITICAL: Allow operator to schedule during initial cluster bootstrap
+  # Without these tolerations, operator won't schedule until nodes are Ready
+  # But nodes can't become Ready until Cilium is working (circular dependency)
+  tolerations:
+    - operator: Exists  # Tolerate all taints to allow bootstrap
+  # Monitoring
+  prometheus:
+    enabled: true
+    metricsService: true
+    port: 9963
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: kube-prometheus-stack
+  dashboards:
+    enabled: true
+  # Resource limits for operator
+  resources:
+    limits:
+      cpu: 250m
+      memory: 128Mi
+    requests:
+      cpu: 25m
+      memory: 64Mi
+
+# Routing mode - Use native routing for best performance
+# Native routing is required for DSR mode and recommended for Talos
+routingMode: native
+autoDirectNodeRoutes: true
+ipv4NativeRoutingCIDR: 10.244.0.0/16  # Must match your cluster pod CIDR
+
+# Load Balancer configuration
+loadBalancer:
+  algorithm: maglev
+  mode: dsr  # Direct Server Return for better performance with native routing
+
+# L2 Announcements for LoadBalancer services
+# This handles LoadBalancer IP announcements on your local network
+l2announcements:
+  enabled: true
+
+# BGP Control Plane v2 - Disabled (not needed for homelab)
+# Enable this if you need to peer with external routers
+bgpControlPlane:
+  enabled: false
+
+# External IPs support
+externalIPs:
+  enabled: true
+
+# Gateway API support - Disabled, using Traefik instead
+gatewayAPI:
+  enabled: false
+
+# Monitoring
 prometheus:
   enabled: true
   metricsService: true
   port: 9962
-  # List of metrics for your dashboards
+  # Enabled specific agent metrics for dashboards
   metrics:
     - +cilium_agent_bootstrap_seconds_total
     - +cilium_agent_datapath_conntrack_gc_duration_seconds
@@ -94,67 +168,30 @@ prometheus:
     additionalLabels:
       release: kube-prometheus-stack
 
-# Cilium Operator
-operator:
-  replicas: 1
-  rollOutPods: true
-  prometheus:
-    enabled: true
-    metricsService: true
-    port: 9963
-    serviceMonitor:
-      enabled: true
-      additionalLabels:
-        release: kube-prometheus-stack
-  dashboards:
-    enabled: true
-  tolerations:
-    - operator: Exists
-  resources:
-    limits:
-      cpu: 250m
-      memory: 128Mi
-    requests:
-      cpu: 25m
-      memory: 64Mi
+# Grafana dashboards
+dashboards:
+  enabled: true
 
-# Envoy (Specifically fixed for your Kustomize error)
+# Auto-restart pods when ConfigMap changes
+rollOutCiliumPods: true
+
+# K8s API client rate limiting
+k8sClientRateLimit:
+  qps: 20
+  burst: 100
+
+# Envoy proxy configuration
 envoy:
   enabled: true
   prometheus:
     enabled: true
-    # FIX: Quoted string to satisfy schema "got number, want string"
-    port: "9964" 
+    port: "9964"  # Quoted as per schema requirement
     serviceMonitor:
       enabled: true
       additionalLabels:
         release: kube-prometheus-stack
 
-# --- ROUTING & PERFORMANCE ---
-
-routingMode: native
-autoDirectNodeRoutes: true
-ipv4NativeRoutingCIDR: 10.244.0.0/16
-
-loadBalancer:
-  algorithm: maglev
-  mode: dsr
-
-l2announcements:
-  enabled: true
-
-externalIPs:
-  enabled: true
-
-# Keep Gateway API disabled since you use Traefik
-gatewayAPI:
-  enabled: false
-
-# Global settings
-dashboards:
-  enabled: true
-rollOutCiliumPods: true
-
+# Resource limits for Cilium agent
 resources:
   limits:
     cpu: 500m
