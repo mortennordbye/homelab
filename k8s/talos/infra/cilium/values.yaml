@@ -72,9 +72,9 @@ hubble:
     port: 9965
     serviceMonitor:
       enabled: true
+      additionalLabels:
+        release: kube-prometheus-stack
     dashboards:
-      enabled: false
-  relay:
     enabled: true
     rollOutPods: true
     prometheus:
@@ -82,6 +82,8 @@ hubble:
       port: 9966
       serviceMonitor:
         enabled: true
+        additionalLabels:
+          release: kube-prometheus-stack
   ui:
     enabled: true
     rollOutPods: true
@@ -102,6 +104,8 @@ operator:
     port: 9963
     serviceMonitor:
       enabled: true
+      additionalLabels:
+        release: kube-prometheus-stack
   dashboards:
     enabled: false
   # Resource limits for operator
@@ -150,6 +154,8 @@ prometheus:
   serviceMonitor:
     enabled: true
     trustCRDsExist: true
+    additionalLabels:
+      release: kube-prometheus-stack
 
 # Grafana dashboards
 dashboards:
@@ -170,6 +176,8 @@ envoy:
     port: "9964"
     serviceMonitor:
       enabled: true
+      additionalLabels:
+        release: kube-prometheus-stack
 
 # Resource limits for Cilium agent
 resources:
