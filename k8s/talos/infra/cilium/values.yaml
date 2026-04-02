@@ -23,17 +23,12 @@ kubeProxyReplacement: true
 bpf:
   masquerade: true
   # REQUIRED for Talos 1.8+: Host Legacy Routing must be enabled
-  # This is needed for Talos's "Forwarding kube-dns to Host DNS" feature
-  # Without this, DNS resolution will not work
   hostLegacyRouting: true
 
 # Talos-specific security context and cgroup settings
 securityContext:
   capabilities:
     ciliumAgent:
-      # REQUIRED capabilities for Cilium on Talos
-      # NOTE: SYS_MODULE is intentionally EXCLUDED as Talos doesn't allow
-      # loading kernel modules by Kubernetes workloads
       - CHOWN
       - KILL
       - NET_ADMIN
@@ -51,53 +46,67 @@ securityContext:
       - SYS_RESOURCE
 
 # Cgroup configuration for Talos
-# Reuse the cgroupv2 mount that Talos already provides
 cgroup:
   autoMount:
-    enabled: false  # Talos manages cgroup mounting
-  hostRoot: /sys/fs/cgroup  # Talos cgroupv2 mount point
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+
+# --- METRICS & OBSERVABILITY SECTION ---
 
 # Hubble (observability)
 hubble:
   enabled: true
+  # Metrics for East-West traffic and Ingress-to-Pod traffic
   metrics:
     enabled:
-      - dns
+      - dns:query;answer
       - drop
       - tcp
       - flow
       - icmp
-      - httpV2
+      - httpV2 # Essential for Traefik L7 visibility
     enableOpenMetrics: true
     port: 9965
     serviceMonitor:
       enabled: true
       additionalLabels:
         release: kube-prometheus-stack
-    dashboards:
+  # Dashboard configuration (fixed indentation)
+  dashboards:
     enabled: true
-    rollOutPods: true
-    prometheus:
-      enabled: true
-      port: 9966
-      serviceMonitor:
-        enabled: true
-        additionalLabels:
-          release: kube-prometheus-stack
   ui:
     enabled: true
     rollOutPods: true
+  relay:
+    enabled: true
+    rollOutPods: true
 
-# Operator
+# Cilium Agent Prometheus Metrics
+prometheus:
+  enabled: true
+  metricsService: true
+  port: 9962
+  # Comprehensive list of metrics for health monitoring
+  metrics:
+    - +cilium_agent_bootstrap_seconds_total
+    - +cilium_agent_datapath_conntrack_gc_duration_seconds
+    - +cilium_agent_datapath_conntrack_gc_entries
+    - +cilium_forwarding_errors_total
+    - +cilium_unreachable_health_endpoints_total
+    - +cilium_unreachable_nodes_total
+    - +cilium_event_latency_seconds
+    - +cilium_endpoint_state
+    - +cilium_policy_verdict_total
+  serviceMonitor:
+    enabled: true
+    trustCRDsExist: true
+    additionalLabels:
+      release: kube-prometheus-stack
+
+# Cilium Operator Metrics
 operator:
   replicas: 1
   rollOutPods: true
-  # CRITICAL: Allow operator to schedule during initial cluster bootstrap
-  # Without these tolerations, operator won't schedule until nodes are Ready
-  # But nodes can't become Ready until Cilium is working (circular dependency)
-  tolerations:
-    - operator: Exists  # Tolerate all taints to allow bootstrap
-  # Monitoring
   prometheus:
     enabled: true
     metricsService: true
@@ -107,8 +116,9 @@ operator:
       additionalLabels:
         release: kube-prometheus-stack
   dashboards:
-    enabled: false
-  # Resource limits for operator
+    enabled: true
+  tolerations:
+    - operator: Exists
   resources:
     limits:
       cpu: 250m
@@ -117,69 +127,44 @@ operator:
       cpu: 25m
       memory: 64Mi
 
-# Routing mode - Use native routing for best performance
-# Native routing is required for DSR mode and recommended for Talos
-routingMode: native
-autoDirectNodeRoutes: true
-ipv4NativeRoutingCIDR: 10.244.0.0/16  # Must match your cluster pod CIDR
-
-# Load Balancer configuration
-loadBalancer:
-  algorithm: maglev
-  mode: dsr  # Direct Server Return for better performance with native routing
-
-# L2 Announcements for LoadBalancer services
-# This handles LoadBalancer IP announcements on your local network
-l2announcements:
-  enabled: true
-
-# BGP Control Plane v2 - Disabled (not needed for homelab)
-# Enable this if you need to peer with external routers
-bgpControlPlane:
-  enabled: false
-
-# External IPs support
-externalIPs:
-  enabled: true
-
-# Gateway API support - Disabled, using Traefik instead
-gatewayAPI:
-  enabled: false
-
-# Monitoring
-prometheus:
-  enabled: true
-  metricsService: true
-  port: 9962
-  serviceMonitor:
-    enabled: true
-    trustCRDsExist: true
-    additionalLabels:
-      release: kube-prometheus-stack
-
-# Grafana dashboards
-dashboards:
-  enabled: false
-
-# Auto-restart pods when ConfigMap changes
-rollOutCiliumPods: true
-
-# K8s API client rate limiting
-k8sClientRateLimit:
-  qps: 20
-  burst: 100
-
-# Envoy proxy configuration
+# Envoy Proxy Metrics (L7 visibility for Traefik flows)
 envoy:
+  enabled: true
   prometheus:
     enabled: true
-    port: "9964"
+    port: 9964
     serviceMonitor:
       enabled: true
       additionalLabels:
         release: kube-prometheus-stack
 
-# Resource limits for Cilium agent
+# --- ROUTING & PERFORMANCE ---
+
+routingMode: native
+autoDirectNodeRoutes: true
+ipv4NativeRoutingCIDR: 10.244.0.0/16
+
+loadBalancer:
+  algorithm: maglev
+  mode: dsr
+
+l2announcements:
+  enabled: true
+
+externalIPs:
+  enabled: true
+
+gatewayAPI:
+  enabled: false
+
+# Global dashboard and rollout settings
+dashboards:
+  enabled: true
+rollOutCiliumPods: true
+k8sClientRateLimit:
+  qps: 20
+  burst: 100
+
 resources:
   limits:
     cpu: 500m
