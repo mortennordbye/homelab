@@ -60,23 +60,28 @@ cgroup:
 # Hubble (observability)
 hubble:
   enabled: true
-  # Enhanced metrics - Disabled until Prometheus is installed
   metrics:
-    enabled: []
-    enableOpenMetrics: false
+    enabled:
+      - dns
+      - drop
+      - tcp
+      - flow
+      - icmp
+      - httpV2
+    enableOpenMetrics: true
     port: 9965
     serviceMonitor:
-      enabled: false
+      enabled: true
     dashboards:
       enabled: false
   relay:
     enabled: true
     rollOutPods: true
     prometheus:
-      enabled: false
+      enabled: true
       port: 9966
       serviceMonitor:
-        enabled: false
+        enabled: true
   ui:
     enabled: true
     rollOutPods: true
@@ -90,13 +95,13 @@ operator:
   # But nodes can't become Ready until Cilium is working (circular dependency)
   tolerations:
     - operator: Exists  # Tolerate all taints to allow bootstrap
-  # Monitoring - Disabled until Prometheus is installed
+  # Monitoring
   prometheus:
-    enabled: false
-    metricsService: false
+    enabled: true
+    metricsService: true
     port: 9963
     serviceMonitor:
-      enabled: false
+      enabled: true
   dashboards:
     enabled: false
   # Resource limits for operator
@@ -137,16 +142,16 @@ externalIPs:
 gatewayAPI:
   enabled: false
 
-# Monitoring - Disabled until Prometheus is installed
+# Monitoring
 prometheus:
-  enabled: false
-  metricsService: false
+  enabled: true
+  metricsService: true
   port: 9962
   serviceMonitor:
-    enabled: false
-    trustCRDsExist: false
+    enabled: true
+    trustCRDsExist: true
 
-# Grafana dashboards - Disabled until Prometheus/Grafana is installed
+# Grafana dashboards
 dashboards:
   enabled: false
 
@@ -161,10 +166,10 @@ k8sClientRateLimit:
 # Envoy proxy configuration
 envoy:
   prometheus:
-    enabled: false
+    enabled: true
     port: "9964"
     serviceMonitor:
-      enabled: false
+      enabled: true
 
 # Resource limits for Cilium agent
 resources:
