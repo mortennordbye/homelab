@@ -1,31 +1,26 @@
 # Talos-specific Cilium configuration
-# Cluster identification
 cluster:
   name: hyper-cluster
   id: 1
 
-# KubePrism endpoint for accessing Kubernetes API via host networking
+# KubePrism endpoint for Talos
 k8sServiceHost: localhost
 k8sServicePort: 7445
 
-# CNI mode
 cni:
   exclusive: false
 
-# IPAM - Use Kubernetes Host Scope IPAM (Talos assigns PodCIDRs to nodes)
 ipam:
   mode: kubernetes
 
-# Replace kube-proxy
 kubeProxyReplacement: true
 
-# eBPF configuration
 bpf:
   masquerade: true
-  # REQUIRED for Talos 1.8+: Host Legacy Routing must be enabled
+  # REQUIRED for Talos 1.8+
   hostLegacyRouting: true
 
-# Talos-specific security context and cgroup settings
+# Security settings for Talos compatibility
 securityContext:
   capabilities:
     ciliumAgent:
@@ -51,12 +46,11 @@ cgroup:
     enabled: false
   hostRoot: /sys/fs/cgroup
 
-# --- METRICS & OBSERVABILITY SECTION ---
+# --- METRICS & OBSERVABILITY ---
 
-# Hubble (observability)
+# Hubble (Optimized for Traefik visibility)
 hubble:
   enabled: true
-  # Metrics for East-West traffic and Ingress-to-Pod traffic
   metrics:
     enabled:
       - dns:query;answer
@@ -64,14 +58,13 @@ hubble:
       - tcp
       - flow
       - icmp
-      - httpV2 # Essential for Traefik L7 visibility
+      - httpV2 # Visibility for Traefik -> Pod traffic
     enableOpenMetrics: true
     port: 9965
     serviceMonitor:
       enabled: true
       additionalLabels:
         release: kube-prometheus-stack
-  # Dashboard configuration (fixed indentation)
   dashboards:
     enabled: true
   ui:
@@ -81,12 +74,12 @@ hubble:
     enabled: true
     rollOutPods: true
 
-# Cilium Agent Prometheus Metrics
+# Cilium Agent Metrics
 prometheus:
   enabled: true
   metricsService: true
   port: 9962
-  # Comprehensive list of metrics for health monitoring
+  # List of metrics for your dashboards
   metrics:
     - +cilium_agent_bootstrap_seconds_total
     - +cilium_agent_datapath_conntrack_gc_duration_seconds
@@ -95,15 +88,13 @@ prometheus:
     - +cilium_unreachable_health_endpoints_total
     - +cilium_unreachable_nodes_total
     - +cilium_event_latency_seconds
-    - +cilium_endpoint_state
-    - +cilium_policy_verdict_total
   serviceMonitor:
     enabled: true
     trustCRDsExist: true
     additionalLabels:
       release: kube-prometheus-stack
 
-# Cilium Operator Metrics
+# Cilium Operator
 operator:
   replicas: 1
   rollOutPods: true
@@ -127,12 +118,13 @@ operator:
       cpu: 25m
       memory: 64Mi
 
-# Envoy Proxy Metrics (L7 visibility for Traefik flows)
+# Envoy (Specifically fixed for your Kustomize error)
 envoy:
   enabled: true
   prometheus:
     enabled: true
-    port: 9964
+    # FIX: Quoted string to satisfy schema "got number, want string"
+    port: "9964" 
     serviceMonitor:
       enabled: true
       additionalLabels:
@@ -154,16 +146,14 @@ l2announcements:
 externalIPs:
   enabled: true
 
+# Keep Gateway API disabled since you use Traefik
 gatewayAPI:
   enabled: false
 
-# Global dashboard and rollout settings
+# Global settings
 dashboards:
   enabled: true
 rollOutCiliumPods: true
-k8sClientRateLimit:
-  qps: 20
-  burst: 100
 
 resources:
   limits:
