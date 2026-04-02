@@ -8,5 +8,5 @@ resources:
   - namespace.yaml
   - plex.yaml
   - tautulli.yaml
-  - overseerr.yaml
+  - seerr.yaml
   - httproutes.yaml

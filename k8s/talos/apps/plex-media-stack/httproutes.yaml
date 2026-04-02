@@ -26,7 +26,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: overseerr
+  name: seerr
   namespace: plex-media-stack
 spec:
   parentRefs:
@@ -35,12 +35,12 @@ spec:
       name: traefik-gateway-public
       namespace: traefik
   hostnames:
-    - overseerr.bigd.no
+    - seerr.bigd.no
   rules:
     - backendRefs:
         - group: ""
           kind: Service
-          name: overseerr
+          name: seerr
           port: 5055
           weight: 1
       matches:
