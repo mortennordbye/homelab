@@ -53,7 +53,7 @@ spec:
                       - hyper1
       containers:
         - name: overseerr
-          image: ghcr.io/seerr-team/seerr:latest
+          image: ghcr.io/seerr-team/seerr:develop
           env:
             - name: PUID
               value: "1000"
