@@ -7,6 +7,6 @@ commonAnnotations:
 resources:
   - namespace.yaml
   - externalsecret.yaml
-  - httproutes.yaml
   - postgres.yaml
   - app.yaml
+  - httproute.yaml
