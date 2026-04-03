@@ -2,18 +2,18 @@ alloy:
   configMap:
     create: true
     content: |
-      // 1. Discover all pods on this node
-      discovery.kubernetes.pods "all_pods" {
+      // 1. Discover pods (Note the corrected component name)
+      discovery.kubernetes "all_pods" {
         role = "pod"
       }
 
-      // 2. Tailing the log files from the host filesystem
+      // 2. Tailing logs via the Kubernetes API (Standard for Alloy)
       loki.source.kubernetes "pod_logs" {
-        targets    = discovery.kubernetes.pods.all_pods.targets
+        targets    = discovery.kubernetes.all_pods.targets
         forward_to = [loki.process.labels.receiver]
       }
 
-      // 3. Clean up labels so we can query easily (e.g., {pod="loki-0"})
+      // 3. Add metadata/labels
       loki.process "labels" {
         stage.static_labels {
           values = {
@@ -23,7 +23,7 @@ alloy:
         forward_to = [loki.write.local.receiver]
       }
 
-      // 4. Send to the Loki service we just deployed
+      // 4. Send to your Loki service
       loki.write "local" {
         endpoint {
           url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
