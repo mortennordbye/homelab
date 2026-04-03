@@ -24,7 +24,12 @@ loki:
         index:
           prefix: index_
           period: 24h
-
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
 # This maps to the SingleBinary StatefulSet
 singleBinary:
   replicas: 1
