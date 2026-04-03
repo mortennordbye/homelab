@@ -9,18 +9,26 @@ spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: traefik-gateway-private
+      name: traefik-gateway-public
       namespace: traefik
   hostnames:
-    - "workout.local.bigd.no"
+    - "workout.bigd.no"
   rules:
     - matches:
         - path:
             type: PathPrefix
             value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: workout-basicauth
       backendRefs:
         - group: ""
           kind: Service
           name: workout-app
           port: 3000
           weight: 1
+
+
