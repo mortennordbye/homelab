@@ -23,7 +23,7 @@ resource "talos_image_factory_schematic" "this" {
   })
 }
 
-resource "proxmox_virtual_environment_download_file" "talos_image" {
+resource "proxmox_download_file" "talos_image" {
   for_each = toset(distinct([for node in var.nodes : node.proxmox_node]))
 
   node_name               = each.key
