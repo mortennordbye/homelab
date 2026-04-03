@@ -40,7 +40,7 @@ resource "proxmox_virtual_environment_vm" "talos_nodes" {
     cache        = "writethrough"
     discard      = "on"
     ssd          = true
-    file_id      = proxmox_virtual_environment_download_file.talos_image[each.value.proxmox_node].id
+    file_id = proxmox_download_file.talos_image[each.value.proxmox_node].id
   }
 
   boot_order = ["scsi0"] # Boot from disk only
