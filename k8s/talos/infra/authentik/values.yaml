@@ -1,12 +1,9 @@
 deploymentMode: SingleBinary
 
 authentik:
-  # Pulls the 50-char secret key from our ExternalSecret
-  existingSecret: "authentik-secrets"
-  
-  # Redis is fully removed as a requirement in Authentik 2025.10+
-  redis:
-    enabled: false
+  existingSecret: 
+    secretName: "authentik-secrets"
+  secret_key: "" 
 
   postgresql:
     enabled: true
@@ -17,13 +14,15 @@ authentik:
         userPasswordKey: "postgres-password"
     persistence:
       enabled: true
-      storageClass: "syno-nfs-csi" # Allows DB to float between 6 nodes
+      storageClass: "syno-nfs-csi"
       size: 8Gi
       accessModes:
         - ReadWriteOnce
 
+  redis:
+    enabled: false
+
 server:
-  # Gateway API integration (Replaces Ingress)
   route:
     main:
       enabled: true
