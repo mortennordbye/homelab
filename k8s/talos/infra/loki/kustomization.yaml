@@ -11,3 +11,9 @@ helmCharts:
     releaseName: loki
     namespace: monitoring
     valuesFile: values.yaml
+  - name: alloy
+    repo: https://grafana.github.io/helm-charts
+    version: 1.7.0
+    releaseName: alloy
+    namespace: monitoring
+    valuesFile: alloy-values.yaml
