@@ -16,9 +16,7 @@ spec:
     spec:
       containers:
         - name: workout-app
-          # TODO: replace with your registry image after running scripts/build-prod.sh
-          # Example: image: ghcr.io/youruser/workout-app:v1
-          image: workout-app:latest
+          image: ghcr.io/mortennordbye/workout:sha-e0eb06b
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
