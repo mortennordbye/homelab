@@ -3,8 +3,21 @@ deploymentMode: SingleBinary
 authentik:
   existingSecret: 
     secretName: "authentik-secrets"
-  secret_key: "" 
   
+  secret_key: "" 
+
+  # Forces Authentik to use the correct service name instead of 127.0.0.1
+  env:
+    - name: AUTHENTIK_POSTGRESQL__HOST
+      value: "authentik-postgresql"
+    - name: AUTHENTIK_POSTGRESQL__USER
+      value: "authentik"
+    - name: AUTHENTIK_POSTGRESQL__NAME
+      value: "authentik"
+    - name: AUTHENTIK_POSTGRESQL__PORT
+      value: "5432"
+
+  # Redundant but helpful for the Helm template logic
   postgresql:
     host: "authentik-postgresql"
     name: "authentik"
