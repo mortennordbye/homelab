@@ -17,7 +17,7 @@ spec:
       containers:
         - name: workout-app
           image: ghcr.io/mortennordbye/workout:sha-e0eb06b
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
           env:
