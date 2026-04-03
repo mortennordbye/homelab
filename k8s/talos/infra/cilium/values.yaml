@@ -72,7 +72,7 @@ hubble:
     port: 9965
     serviceMonitor:
       enabled: true
-      additionalLabels:
+      labels:
         release: kube-prometheus-stack
       # Relabeling to ensure node names show up correctly in Grafana
       relabelings:
@@ -106,7 +106,7 @@ operator:
     port: 9963
     serviceMonitor:
       enabled: true
-      additionalLabels:
+      labels:
         release: kube-prometheus-stack
   dashboards:
     enabled: true
@@ -165,7 +165,7 @@ prometheus:
   serviceMonitor:
     enabled: true
     trustCRDsExist: true
-    additionalLabels:
+    labels:
       release: kube-prometheus-stack
 
 # Grafana dashboards
@@ -188,7 +188,7 @@ envoy:
     port: "9964"  # Quoted as per schema requirement
     serviceMonitor:
       enabled: true
-      additionalLabels:
+      labels:
         release: kube-prometheus-stack
 
 # Resource limits for Cilium agent
