@@ -73,5 +73,11 @@ test:
 monitoring:
   dashboards:
     enabled: true
+    labels:
+      grafana_dashboard: "1"
   serviceMonitor:
     enabled: true
+    labels:
+      release: kube-prometheus-stack 
+    interval: 30s
+    scrapeTimeout: 10s
