@@ -16,5 +16,5 @@ prometheus:
   enabled: true
   servicemonitor:
     enabled: true
-    additionalLabels:
+    labels:
       release: kube-prometheus-stack
