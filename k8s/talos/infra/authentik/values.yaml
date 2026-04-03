@@ -4,23 +4,28 @@ authentik:
   existingSecret: 
     secretName: "authentik-secrets"
   secret_key: "" 
-
+  
   postgresql:
-    enabled: true
-    auth:
-      existingSecret: "authentik-secrets"
-      secretKeys:
-        adminPasswordKey: "postgres-password"
-        userPasswordKey: "postgres-password"
-    persistence:
-      enabled: true
-      storageClass: "syno-nfs-csi"
-      size: 8Gi
-      accessModes:
-        - ReadWriteOnce
+    host: "authentik-postgresql"
+    name: "authentik"
+    user: "authentik"
 
   redis:
     enabled: false
+
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: "authentik-secrets"
+    secretKeys:
+      adminPasswordKey: "postgres-password"
+      userPasswordKey: "postgres-password"
+  persistence:
+    enabled: true
+    storageClass: "syno-nfs-csi"
+    size: 8Gi
+    accessModes:
+      - ReadWriteOnce
 
 server:
   route:
