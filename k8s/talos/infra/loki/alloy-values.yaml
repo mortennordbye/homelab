@@ -1,0 +1,49 @@
+alloy:
+  configMap:
+    create: true
+    content: |
+      // 1. Discover all pods on this node
+      discovery.kubernetes.pods "all_pods" {
+        role = "pod"
+      }
+
+      // 2. Tailing the log files from the host filesystem
+      loki.source.kubernetes "pod_logs" {
+        targets    = discovery.kubernetes.pods.all_pods.targets
+        forward_to = [loki.process.labels.receiver]
+      }
+
+      // 3. Clean up labels so we can query easily (e.g., {pod="loki-0"})
+      loki.process "labels" {
+        stage.static_labels {
+          values = {
+            cluster = "genesis",
+          }
+        }
+        forward_to = [loki.write.local.receiver]
+      }
+
+      // 4. Send to the Loki service we just deployed
+      loki.write "local" {
+        endpoint {
+          url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+        }
+      }
+
+  mounts:
+    # Essential for Kubernetes log collection
+    varlog: true
+    # Talos uses containerd; this ensures Alloy can reach the symlinks
+    dockercontainers: true
+
+controller:
+  # Ensure an agent runs on every node
+  type: 'daemonset'
+
+serviceAccount:
+  # RBAC is needed to let Alloy talk to the K8s API for pod discovery
+  create: true
+
+# Enable the ServiceMonitor so you can see Alloy's own metrics in your Grafana
+serviceMonitor:
+  enabled: true
