@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workout-app
+  namespace: workout
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workout-app
+  template:
+    metadata:
+      labels:
+        app: workout-app
+    spec:
+      containers:
+        - name: workout-app
+          # TODO: replace with your registry image after running scripts/build-prod.sh
+          # Example: image: ghcr.io/youruser/workout-app:v1
+          image: workout-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: NEXT_TELEMETRY_DISABLED
+              value: "1"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: workout-secret
+                  key: DATABASE_URL
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 45
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: workout-app
+  namespace: workout
+spec:
+  selector:
+    app: workout-app
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
