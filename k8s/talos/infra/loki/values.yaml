@@ -8,7 +8,9 @@ loki:
     ingestion_burst_size_mb: 40
     allow_structured_metadata: true
     reject_old_samples: true
-    reject_old_samples_max_age: 168h
+    reject_old_samples_max_age: 24h
+    retention_period: 24h
+    unordered_writes: true
   
   commonConfig:
     replication_factor: 1
@@ -33,6 +35,7 @@ loki:
 compactor:
   working_directory: /var/loki/compactor
   shared_store: filesystem
+  retention_enabled: true
 
 read:
   replicas: 0
