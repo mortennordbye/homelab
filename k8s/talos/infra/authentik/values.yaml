@@ -1,0 +1,42 @@
+deploymentMode: SingleBinary
+
+authentik:
+  # Pulls the 50-char secret key from our ExternalSecret
+  existingSecret: "authentik-secrets"
+  
+  # Redis is fully removed as a requirement in Authentik 2025.10+
+  redis:
+    enabled: false
+
+  postgresql:
+    enabled: true
+    auth:
+      existingSecret: "authentik-secrets"
+      secretKeys:
+        adminPasswordKey: "postgres-password"
+        userPasswordKey: "postgres-password"
+    persistence:
+      enabled: true
+      storageClass: "syno-nfs-csi" # Allows DB to float between 6 nodes
+      size: 8Gi
+      accessModes:
+        - ReadWriteOnce
+
+server:
+  # Gateway API integration (Replaces Ingress)
+  route:
+    main:
+      enabled: true
+      hostnames:
+        - "auth.local.bigd.no"
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: traefik-gateway-private
+          namespace: traefik
+
+worker:
+  replicas: 1
+
+error_reporting:
+  enabled: false
