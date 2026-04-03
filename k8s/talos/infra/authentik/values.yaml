@@ -4,6 +4,16 @@ authentik:
   existingSecret: 
     secretName: "authentik-secrets"
   secret_key: "" 
+  
+  postgresql:
+    host: "authentik-postgresql"
+    name: "authentik"
+    user: "authentik"
+
+  redis:
+    enabled: false
+
+server:
   env:
     - name: AUTHENTIK_POSTGRESQL__HOST
       value: "authentik-postgresql"
@@ -18,12 +28,31 @@ authentik:
         secretKeyRef:
           name: authentik-secrets
           key: postgres-password
-  postgresql:
-    host: "authentik-postgresql"
-    name: "authentik"
-    user: "authentik"
-  redis:
-    enabled: false
+  route:
+    main:
+      enabled: true
+      hostnames:
+        - "auth.local.bigd.no"
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: traefik-gateway-private
+          namespace: traefik
+
+worker:
+  replicas: 1
+  env:
+    - name: AUTHENTIK_POSTGRESQL__HOST
+      value: "authentik-postgresql"
+    - name: AUTHENTIK_POSTGRESQL__USER
+      value: "authentik"
+    - name: AUTHENTIK_POSTGRESQL__NAME
+      value: "authentik"
+    - name: AUTHENTIK_POSTGRESQL__PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: postgres-password
 
 postgresql:
   enabled: true
@@ -38,21 +67,6 @@ postgresql:
     size: 8Gi
     accessModes:
       - ReadWriteOnce
-
-server:
-  route:
-    main:
-      enabled: true
-      hostnames:
-        - "auth.local.bigd.no"
-      parentRefs:
-        - group: gateway.networking.k8s.io
-          kind: Gateway
-          name: traefik-gateway-private
-          namespace: traefik
-
-worker:
-  replicas: 1
 
 error_reporting:
   enabled: false
