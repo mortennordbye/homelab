@@ -27,11 +27,13 @@ spec:
               value: "0.0.0.0"
             - name: NEXT_TELEMETRY_DISABLED
               value: "1"
-            - name: DATABASE_URL
+            - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: workout-secret
-                  key: DATABASE_URL
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: "postgresql://postgres:$(POSTGRES_PASSWORD)@postgres.workout.svc.cluster.local:5432/workout_db"
           readinessProbe:
             httpGet:
               path: /api/health
