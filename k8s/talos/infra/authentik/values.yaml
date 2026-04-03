@@ -7,7 +7,7 @@ authentik:
   secret_key: "" 
 
   # Forces Authentik to use the correct service name instead of 127.0.0.1
-  env:
+env:
     - name: AUTHENTIK_POSTGRESQL__HOST
       value: "authentik-postgresql"
     - name: AUTHENTIK_POSTGRESQL__USER
@@ -16,6 +16,11 @@ authentik:
       value: "authentik"
     - name: AUTHENTIK_POSTGRESQL__PORT
       value: "5432"
+    - name: AUTHENTIK_POSTGRESQL__PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: postgres-password
 
   # Redundant but helpful for the Helm template logic
   postgresql:
