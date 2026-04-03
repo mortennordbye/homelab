@@ -1,0 +1,64 @@
+# Forces the chart into the efficient single-pod mode
+deploymentMode: SingleBinary
+
+loki:
+  auth_enabled: false
+  
+  commonConfig:
+    replication_factor: 1
+    path_prefix: /var/loki
+
+  # Tell Loki to use the local disk instead of S3
+  storage:
+    type: filesystem
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      rules_directory: /var/loki/rules
+
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+
+# This maps to the SingleBinary StatefulSet
+singleBinary:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+  persistence:
+    enabled: true
+    size: 20Gi
+    # Matches your default Proxmox CSI
+    storageClass: "proxmox-local"
+    # Prevents PVC from being deleted if the helm release is uninstalled
+    whenDeleted: Retain
+
+# Keeps the deployment lean for your 24GB fleet
+gateway:
+  enabled: false
+resultsCache:
+  enabled: false
+chunksCache:
+  enabled: false
+lokiCanary:
+  enabled: false
+test:
+  enabled: false
+
+# Standard integration with Prometheus Operator
+monitoring:
+  dashboards:
+    enabled: true
+  serviceMonitor:
+    enabled: true
