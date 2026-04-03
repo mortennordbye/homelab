@@ -153,6 +153,7 @@ enable_talos_upgrade = true
 ```
 
 ```bash
+talosctl --talosconfig ./talosconfig -e 10.3.10.31 -n 10.3.10.31 etcd snapshot snapshot_pre_upgrade.db
 terraform apply
 ```
 
