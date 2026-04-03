@@ -8,6 +8,7 @@ resources:
   - namespace.yaml
   - l2-announcement-policy.yaml
   - loadbalancer-ippool.yaml
+  - httproute-hubble.yaml
 
 helmCharts:
   - name: cilium
