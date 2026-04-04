@@ -27,6 +27,8 @@ spec:
               value: "0.0.0.0"
             - name: NEXT_TELEMETRY_DISABLED
               value: "1"
+            - name: BETTER_AUTH_URL
+              value: "https://workout.bigd.no"
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -34,18 +36,38 @@ spec:
                   key: POSTGRES_PASSWORD
             - name: DATABASE_URL
               value: "postgresql://postgres:$(POSTGRES_PASSWORD)@postgres.workout.svc.cluster.local:5432/workout_db"
+            - name: BETTER_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: workout-secret
+                  key: BETTER_AUTH_SECRET
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: workout-secret
+                  key: ADMIN_EMAIL
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: workout-secret
+                  key: ADMIN_PASSWORD
+            - name: ADMIN_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: workout-secret
+                  key: ADMIN_NAME
           readinessProbe:
             httpGet:
               path: /api/health
               port: 3000
-            initialDelaySeconds: 20
+            initialDelaySeconds: 45
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /api/health
               port: 3000
-            initialDelaySeconds: 20
+            initialDelaySeconds: 60
             periodSeconds: 30
             failureThreshold: 3
           resources:

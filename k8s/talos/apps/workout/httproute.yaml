@@ -18,12 +18,6 @@ spec:
         - path:
             type: PathPrefix
             value: /
-      filters:
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: workout-basicauth
       backendRefs:
         - group: ""
           kind: Service
