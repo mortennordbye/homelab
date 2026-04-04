@@ -9,5 +9,4 @@ resources:
   - externalsecret.yaml
   - postgres.yaml
   - app.yaml
-  - basicauth.yaml
   - httproute.yaml
