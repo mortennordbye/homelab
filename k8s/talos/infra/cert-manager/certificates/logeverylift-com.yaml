@@ -1,0 +1,16 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: logeverylift-com
+  namespace: cert-manager
+  annotations:
+    argocd.argoproj.io/sync-wave: "201"
+spec:
+  secretName: logeverylift-com-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.logeverylift.com"
+  dnsNames:
+    - "logeverylift.com"
+    - "*.logeverylift.com"
