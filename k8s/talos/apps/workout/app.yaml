@@ -28,7 +28,7 @@ spec:
             - name: NEXT_TELEMETRY_DISABLED
               value: "1"
             - name: BETTER_AUTH_URL
-              value: "https://workout.bigd.no"
+              value: "https://logeverylift.com"
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:

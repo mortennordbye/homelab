@@ -10,6 +10,7 @@ resources:
   - certificates/bigd-no.yaml
   - certificates/local-bigd-no.yaml
   - certificates/nordbye-it.yml
+  - certificates/logeverylift-com.yaml
   - issuers/letsencrypt-prod.yaml
   - reference-grant.yaml
 

@@ -53,3 +53,29 @@ spec:
             kind: Secret
             name: nordbye-it-tls
             namespace: cert-manager
+    - name: logeverylift-com
+      protocol: HTTPS
+      port: 8443
+      hostname: "logeverylift.com"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: logeverylift-com-tls
+            namespace: cert-manager
+    - name: logeverylift-com-wildcard
+      protocol: HTTPS
+      port: 8443
+      hostname: "*.logeverylift.com"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: logeverylift-com-tls
+            namespace: cert-manager
