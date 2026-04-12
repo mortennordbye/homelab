@@ -9,7 +9,7 @@ spec:
   storageClassName: proxmox-local
   resources:
     requests:
-      storage: 10Gi
+      storage: 30Gi
 ---
 apiVersion: v1
 kind: Service
