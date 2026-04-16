@@ -56,6 +56,11 @@ spec:
                 secretKeyRef:
                   name: workout-secret
                   key: ADMIN_NAME
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: workout-secret
+                  key: OPENROUTER_API_KEY
           readinessProbe:
             httpGet:
               path: /api/health
