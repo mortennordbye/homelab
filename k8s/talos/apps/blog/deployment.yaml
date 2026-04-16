@@ -17,24 +17,24 @@ spec:
         app.kubernetes.io/name: blog
     spec:
       containers:
-        - name: blog
-          image: ghcr.io/mortennordbye/homelab/blog:efb2131
-          imagePullPolicy: Always
-          ports:
-            - name: http
-              containerPort: 80
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-            limits:
-              cpu: 100m
-              memory: 64Mi
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
+      - name: blog
+        image: ghcr.io/mortennordbye/homelab/blog:efb2131
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 80
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
