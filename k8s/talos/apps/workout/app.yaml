@@ -61,6 +61,11 @@ spec:
                 secretKeyRef:
                   name: workout-secret
                   key: OPENROUTER_API_KEY
+            - name: GOOGLE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: workout-secret
+                  key: GOOGLE_API_KEY
           readinessProbe:
             httpGet:
               path: /api/health
