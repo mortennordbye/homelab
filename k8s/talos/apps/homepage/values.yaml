@@ -58,6 +58,18 @@ config:
         - Notion:
             - icon: notion.png
               href: https://www.notion.so
+        - Claude:
+            icon: claude.png
+            href: https://claude.ai/
+            description: Anthropic AI assistant
+        - OpenRouter:
+            icon: openrouter.png
+            href: https://openrouter.ai/
+            description: Unified LLM API and aggregator
+        - Google AI Studio:
+            icon: aistudio.png
+            href: https://aistudio.google.com/
+            description: Gemini developer playground
 
   services:
     - Network:
@@ -215,20 +227,6 @@ config:
             href: https://tautulli.local.bigd.no
             description: Plex monitoring
 
-    - AI Tools:
-        - Claude:
-            icon: claude.png
-            href: https://claude.ai/
-            description: Anthropic AI assistant
-        - OpenRouter:
-            icon: openrouter.png
-            href: https://openrouter.ai/
-            description: Unified LLM API and aggregator
-        - Google AI Studio:
-            icon: aistudio.png
-            href: https://aistudio.google.com/
-            description: Gemini developer playground
-            
   widgets:
     - kubernetes:
         cluster:
