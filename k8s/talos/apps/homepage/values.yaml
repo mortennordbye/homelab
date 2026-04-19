@@ -59,17 +59,17 @@ config:
             - icon: notion.png
               href: https://www.notion.so
         - Claude:
-            icon: si-claude
-            href: https://claude.ai/
-            description: Anthropic AI assistant
+            - icon: si-claude
+              href: https://claude.ai/
+              description: Anthropic AI assistant
         - OpenRouter:
-            icon: https://openrouter.ai/favicon.ico
-            href: https://openrouter.ai/
-            description: Unified LLM API and aggregator
+            - icon: https://openrouter.ai/favicon.ico
+              href: https://openrouter.ai/
+              description: Unified LLM API and aggregator
         - Google AI Studio:
-            icon: si-googlegemini
-            href: https://aistudio.google.com/
-            description: Gemini developer playground
+            - icon: si-googlegemini
+              href: https://aistudio.google.com/
+              description: Gemini developer playground
 
   services:
     - Network:
