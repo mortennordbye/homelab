@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headroom
+  namespace: headroom
+  labels:
+    app: headroom
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: headroom
+  template:
+    metadata:
+      labels:
+        app: headroom
+    spec:
+      containers:
+        - name: headroom
+          image: ghcr.io/mortennordbye/headroom:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3001
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources: {}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: headroom-data-pvc

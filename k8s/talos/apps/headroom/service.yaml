@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: headroom-service
+  namespace: headroom
+spec:
+  selector:
+    app: headroom
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 3001

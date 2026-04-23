@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: headroom-data-pvc
+  namespace: headroom
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: syno-nfs-csi
+  resources:
+    requests:
+      storage: 5Gi
