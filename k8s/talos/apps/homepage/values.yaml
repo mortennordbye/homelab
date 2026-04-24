@@ -119,6 +119,10 @@ config:
             icon: mdi-web-clock
             href: https://portfolio-stage.local.bigd.no
             description: Staging environment
+        - Headroom:
+            icon: mdi-head-cog
+            href: https://headroom.local.bigd.no
+            description: Self-hosted Headroom instance
 
     - Media Management:
         - Radarr:
