@@ -66,6 +66,11 @@ spec:
                 secretKeyRef:
                   name: workout-secret
                   key: GOOGLE_API_KEY
+            - name: NEXT_PRIVATE_SERVER_ACTIONS_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: workout-secret
+                  key: NEXT_PRIVATE_SERVER_ACTIONS_ENCRYPTION_KEY
           readinessProbe:
             httpGet:
               path: /api/health
