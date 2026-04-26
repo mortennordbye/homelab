@@ -196,7 +196,7 @@ config:
             description: Network storage
         - Home Assistant:
             icon: home-assistant.png
-            href: http://homeassistant.local:8123/
+            href: http://home.local.bigd.no:8123
             description: Home automation
 
     - Torrent Sites:
