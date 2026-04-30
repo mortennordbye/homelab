@@ -42,6 +42,8 @@ spec:
       labels:
         app: seerr
     spec:
+      securityContext:
+        fsGroup: 1000
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
