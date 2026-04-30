@@ -196,8 +196,12 @@ config:
             description: Network storage
         - Home Assistant:
             icon: home-assistant.png
-            href: http://home.local.bigd.no:8123
-            description: Home automation
+            href: https://ha.local.bigd.no
+            description: Home automation (Traefik TLS)
+        - Home Assistant (Direct):
+            icon: home-assistant.png
+            href: http://10.3.10.15:8123
+            description: Direct IP fallback (k8s-independent)
 
     - Torrent Sites:
         - IPTorrents:
