@@ -7,5 +7,5 @@ commonAnnotations:
 resources:
   - namespace.yaml
   - service.yaml
-  - endpointslice.yaml
+  - endpoints.yaml
   - httproute.yaml
