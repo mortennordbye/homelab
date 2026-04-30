@@ -10,6 +10,13 @@ configs:
   cm:
     kustomize.buildOptions: "--enable-helm"
     exec.enabled: "true"
+    resource.exclusions: |
+      - apiGroups:
+          - cilium.io
+        kinds:
+          - CiliumIdentity
+        clusters:
+          - "*"
 
 server:
   replicas: 1
