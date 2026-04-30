@@ -67,7 +67,7 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: config
-              mountPath: /config
+              mountPath: /app/config
           livenessProbe:
             httpGet:
               path: /api/v1/status
