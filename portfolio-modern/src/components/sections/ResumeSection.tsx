@@ -16,7 +16,6 @@ export function ResumeSection() {
     >
       <div className="mx-auto max-w-7xl px-5 py-28 md:px-8 md:py-36">
         <SectionHeading
-          eyebrow="resume"
           title="Resume."
           description="Highly skilled IT professional with extensive experience in system consulting and technical support. Proven expertise in managing cloud and on-premises infrastructures, implementing advanced automation solutions, and providing exceptional customer service. Committed to continuous learning and staying updated with the latest technologies to ensure optimal performance and strategic growth for clients."
           align="between"
