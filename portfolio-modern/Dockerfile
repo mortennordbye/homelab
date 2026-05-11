@@ -40,9 +40,12 @@ COPY tsconfig.json next.config.ts postcss.config.mjs eslint.config.mjs ./
 COPY public ./public
 COPY src ./src
 
-# Bake freshly-built PDFs into public/ so the static export includes them
-COPY --from=pdfbuild /work/latex/output/Morten-Nordbye-Resume.pdf ./public/resume.pdf
-COPY --from=pdfbuild /work/latex/output/Morten-Nordbye-CV.pdf ./public/cv.pdf
+# Bake freshly-built PDFs into public/ so the static export includes them.
+# xelatex writes output/<input>.pdf — the Makefile renames these to
+# Morten-Nordbye-{Resume,CV}.pdf on the host, but inside this Dockerfile
+# we copy them straight to their public/ destinations.
+COPY --from=pdfbuild /work/latex/output/resume.pdf ./public/resume.pdf
+COPY --from=pdfbuild /work/latex/output/cv.pdf ./public/cv.pdf
 
 # Surface the commit SHA into the bundle so the footer can show it
 ARG BUILD_SHA=dev
