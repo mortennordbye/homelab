@@ -19,7 +19,7 @@ const filters: { id: Filter; label: string }[] = [
 ];
 
 export function FeaturedWork({ items }: { items: WorkMeta[] }) {
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("professional");
 
   const visible = useMemo(
     () => (filter === "all" ? items : items.filter((w) => w.kind === filter)),
@@ -29,7 +29,6 @@ export function FeaturedWork({ items }: { items: WorkMeta[] }) {
   return (
     <section className="mx-auto max-w-7xl px-5 py-28 md:px-8 md:py-36">
       <SectionHeading
-        eyebrow="portfolio"
         title="Portfolio."
         description="Welcome to my portfolio. This collection showcases a diverse array of projects encompassing both my professional work and my personal homelabbing endeavors. Each project highlights my skills and dedication to IT, with detailed examples of my proficiency in various technologies and solutions."
         align="between"

@@ -6,10 +6,7 @@ export function CtaContact() {
     <section id="contact" className="scroll-mt-24 border-t border-line">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 py-28 md:grid-cols-12 md:gap-8 md:px-8 md:py-36">
         <div className="md:col-span-7">
-          <p className="font-display text-xs uppercase tracking-[0.2em] text-fg-3">
-            contact
-          </p>
-          <h2 className="mt-5 text-display-lg font-display text-fg leading-[1]">
+          <h2 className="text-display-lg font-display text-fg leading-[1]">
             Contact.
           </h2>
           <p className="mt-6 max-w-xl text-fg-2">
