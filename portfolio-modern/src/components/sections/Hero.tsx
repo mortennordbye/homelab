@@ -20,7 +20,7 @@ export function Hero() {
 
   const roles = site.hero.rotating;
   const [roleIndex, setRoleIndex] = useState(0);
-  const [text, setText] = useState(roles[0]);
+  const [text, setText] = useState<string>(roles[0]);
   type Phase = "pausing-full" | "deleting" | "pausing-empty" | "typing";
   const [phase, setPhase] = useState<Phase>("pausing-full");
 
