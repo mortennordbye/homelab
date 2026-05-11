@@ -1,0 +1,54 @@
+export const site = {
+  name: "Morten Nordbye",
+  firstName: "Morten Victor",
+  lastName: "Nordbye",
+  role: "Cloud Engineer & Architect",
+  location: "Oslo, Norway",
+  // CV-only: postal area shown on the printed CV. Never rendered on the website.
+  cvAddress: "0882 Oslo",
+  email: "morten@nordbye.it",
+  phone: "+4797902931",
+  phoneDisplay: "+47 97 90 29 31",
+  phoneLatex: "(+47) 979 02 931",
+  url: "https://nordbye.it",
+  homepage: "nordbye.it",
+  github: "mortennordbye",
+  linkedin: "morten-victor-nordbye",
+  twitter: "@mortennordbye",
+  description:
+    "Morten Victor Nordbye — Cloud Engineer and Architect in Oslo. Kubernetes, Azure, GitOps, and the platform work that keeps production running.",
+  keywords: [
+    "Cloud Engineer",
+    "Cloud Architect",
+    "Azure",
+    "Kubernetes",
+    "AKS",
+    "Terraform",
+    "GitOps",
+    "ArgoCD",
+    "Platform Engineering",
+    "Infrastructure as Code",
+    "Observability",
+    "OpenTelemetry",
+    "Oslo",
+  ],
+  hero: {
+    rotating: ["Cloud Engineer", "IT Specialist", "Homelabber", "Platform Engineer"],
+    headline: "I am a Cloud Engineer.",
+    sub: "Based in Oslo. I build and run Azure infrastructure for customer environments. Azure networking, AKS with GitOps, observability, and the platform pieces that keep a cluster running properly. Available through Orange Business and for direct engagements.",
+  },
+  socials: [
+    { label: "GitHub", href: "https://github.com/mortennordbye" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/morten-victor-nordbye" },
+    { label: "X / Twitter", href: "https://twitter.com/mortennordbye" },
+    { label: "Blog", href: "https://blog.nordbye.it" },
+  ],
+  nav: [
+    { label: "Work", href: "/work" },
+    { label: "Services", href: "/services" },
+    { label: "Resume", href: "/#resume" },
+    { label: "About", href: "/about" },
+  ],
+} as const;
+
+export type Site = typeof site;

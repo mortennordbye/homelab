@@ -1,0 +1,50 @@
+---
+title: "Healthcare Application: RHEL7 → RHEL9 Migration"
+slug: "healthcare-rhel-migration"
+kind: "professional"
+client: "Confidential healthcare provider"
+role: "Migration & automation lead"
+period: "2024 — 2025"
+summary: "Lifted a life-critical patient-facing application off RHEL7 before end-of-life, onto a hardened, automated RHEL9 platform — with zero downtime."
+stack: ["Ansible", "RHEL 9", "PostgreSQL", "Filebeat", "Logstash", "F5 WAF", "Mnemonic SIEM"]
+outcomes:
+  - "Cutover completed with no patient-facing downtime by running RHEL9 in parallel with RHEL7 until traffic flipped."
+  - "Logging consolidated through Filebeat → Logstash, giving operations a single pane of glass."
+  - "F5 WAF configuration standardised across environments — fewer one-off rules, fewer surprises."
+  - "SIEM integration with Mnemonic for end-to-end security monitoring and incident response."
+  - "Locked-down jumphost replaced ad-hoc admin paths."
+cover: "/images/work/healthcare-rhel-migration/front.webp"
+gallery:
+  - "/images/work/healthcare-rhel-migration/back-1.webp"
+  - "/images/work/healthcare-rhel-migration/back-2.webp"
+  - "/images/work/healthcare-rhel-migration/back-3.webp"
+  - "/images/work/healthcare-rhel-migration/back-4.webp"
+  - "/images/work/healthcare-rhel-migration/back-5.webp"
+featured: true
+order: 3
+---
+
+## The brief
+
+A patient-facing application was running on RHEL7. It was past its useful life and close to losing vendor support. The customer needed it on **RHEL9**, with stronger logging, a tighter security perimeter and automation good enough that the next migration would not take as long.
+
+The hard constraint was zero downtime. Patients depend on the service.
+
+## What I did
+
+I led the migration from start to finish.
+
+- **Audit first.** Mapped the existing test and production environments and noted where the documentation disagreed with the actual systems.
+- **Automation next.** Wrote Ansible roles to provision the new RHEL9 estate, both application servers and PostgreSQL, next to the existing infrastructure rather than on top of it.
+- **Cutover last.** Traffic only switched after the parallel environment was clearly equivalent.
+
+A few supporting pieces were rebuilt as part of the same move:
+
+- **Filebeat** reconfigured to forward into a fresh **Logstash** layer for centralised log analysis.
+- **F5 WAF** rules standardised and put under version control.
+- **SIEM** integration with **Mnemonic** for security event correlation.
+- **Jumphost** access path replaced with a controlled, audited one.
+
+## Why it mattered
+
+Healthcare infrastructure has a different cost curve from most things. Downtime here is not measured in lost revenue, it is measured in patients waiting. Getting this migration right also means the next one will be cheaper, faster and less stressful for everyone involved.

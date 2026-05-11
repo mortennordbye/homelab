@@ -1,0 +1,246 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
+  --color-accent-ink: var(--accent-ink);
+  --color-warn: var(--warn);
+
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+
+  --text-display-xl: clamp(3.5rem, 9vw, 7.5rem);
+  --text-display-lg: clamp(2.75rem, 6vw, 5rem);
+  --text-h1: clamp(2rem, 4vw, 3.25rem);
+  --text-h2: clamp(1.6rem, 2.6vw, 2.25rem);
+  --text-h3: clamp(1.2rem, 1.6vw, 1.5rem);
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-xs: 0.75rem;
+}
+
+html {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  /* Body prose at 17px — comfier reading; explicit text-sm/xs/lg utilities still override */
+  font-size: 1.0625rem;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--selection-fg);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-3);
+}
+
+/* Utilities */
+.text-display-xl { font-size: var(--text-display-xl); line-height: 0.9; letter-spacing: -0.04em; }
+.text-display-lg { font-size: var(--text-display-lg); line-height: 0.95; letter-spacing: -0.035em; }
+.text-h1 { font-size: var(--text-h1); line-height: 1.05; letter-spacing: -0.025em; }
+.text-h2 { font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em; }
+.text-h3 { font-size: var(--text-h3); line-height: 1.2; letter-spacing: -0.01em; }
+
+.font-display { font-family: var(--font-display), ui-monospace, monospace; }
+
+.hairline { border-color: var(--line); }
+.hairline-strong { border-color: var(--line-2); }
+
+.gradient-text {
+  background: linear-gradient(110deg, var(--fg) 25%, var(--accent) 55%, var(--accent-3) 80%, var(--accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glow-accent {
+  text-shadow: 0 0 60px rgba(var(--accent-rgb), 0.22);
+}
+
+.aurora-line {
+  background-image: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--accent-3) 55%, var(--accent-2) 80%, transparent 100%);
+}
+
+.bg-grain {
+  background-image: var(--grain);
+  opacity: var(--grain-opacity);
+  mix-blend-mode: var(--grain-mix);
+}
+
+/* Marquee animation */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+.animate-marquee:hover { animation-play-state: paused; }
+
+/* Reveal — runs on initial paint; works without JS */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.reveal {
+  animation: reveal 0.7s var(--ease-out) both;
+  /* Per-element offset via inline --d (seconds) */
+  animation-delay: var(--d, 0s);
+}
+
+/* Hero cluster-topology intro — edges draw, nodes pop, parent settles to ambient */
+@keyframes topo-draw-edge {
+  from { stroke-dashoffset: var(--edge-len); }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes topo-pop-node {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+@keyframes topo-settle {
+  from { opacity: 1; }
+  to   { opacity: 0.14; }
+}
+.topology-playing > g { animation: topo-settle 0.4s var(--ease-out) 0.85s forwards; opacity: 1; }
+.topology-playing .topo-edge {
+  animation: topo-draw-edge 0.45s var(--ease-out) var(--edge-delay, 0ms) both;
+}
+.topology-playing .topo-node {
+  transform-origin: 0 0;
+  animation: topo-pop-node 0.3s cubic-bezier(0.16, 1, 0.3, 1) var(--node-delay, 0ms) both;
+}
+.topology-settled > g { opacity: 0.14; }
+.topology-settled .topo-edge { stroke-dashoffset: 0; }
+
+/* Architecture diagram — opacity-only entrance for rectangular nodes */
+@keyframes arch-node-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.topology-playing .arch-node {
+  animation: arch-node-in 0.4s var(--ease-out) var(--node-delay, 0ms) both;
+}
+.arch-node:focus-visible rect {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ===========================================================================
+   Print stylesheet — force a clean light-on-paper layout no matter the theme
+   =========================================================================== */
+@media print {
+  :root,
+  :root.dark,
+  :root.light {
+    --bg: #ffffff;
+    --bg-2: #ffffff;
+    --surface: #ffffff;
+    --line: #d6dde5;
+    --line-2: #c0c8d2;
+    --fg: #0a1015;
+    --fg-2: #2c3845;
+    --fg-3: #5a6878;
+    --accent: #1f6fda;
+    --accent-2: #6552d8;
+    --accent-3: #1aa39a;
+    --accent-ink: #ffffff;
+    --grain-opacity: 0;
+    --grad-hero: none;
+  }
+
+  html, body { background: #fff !important; color: #0a1015 !important; }
+
+  /* Hide chrome that has no meaning on paper */
+  header, footer, nav,
+  .animate-marquee,
+  [class*="bg-grain"],
+  button[aria-label*="mode" i],
+  a[href="/cv.pdf"], a[href="/resume.pdf"] {
+    display: none !important;
+  }
+
+  /* Kill animation, gradients-as-text, and shadows */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  .gradient-text {
+    background: none !important;
+    -webkit-text-fill-color: currentColor !important;
+    color: var(--accent) !important;
+  }
+
+  /* Layout — let content flow, no fixed heights */
+  main { padding-top: 0 !important; }
+  section { break-inside: avoid; page-break-inside: avoid; }
+  h1, h2, h3 { break-after: avoid; }
+  img { max-width: 100% !important; height: auto !important; }
+
+  /* Surface external link URLs after the link text */
+  a[href^="http"]:not([href*="nordbye.it"])::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #5a6878;
+    word-break: break-all;
+  }
+
+  /* Make tags / borders quieter on paper */
+  [class*="border-line"] { border-color: #d6dde5 !important; }
+}
