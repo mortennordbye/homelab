@@ -1,0 +1,39 @@
+---
+title: "Home Lab Monitoring & Visualisation"
+slug: "tick-grafana-monitoring"
+kind: "homelab"
+client: "Personal project"
+role: "Engineer"
+period: "2022 — 2023"
+summary: "Built end-to-end OS observability for the home lab: TICK stack collects, Grafana visualises, Discord alerts."
+stack: ["Telegraf", "InfluxDB", "Chronograf", "Kapacitor", "Grafana", "Ansible", "GitLab CI"]
+outcomes:
+  - "OS-level metrics (CPU, memory, disk I/O, network) collected by Telegraf into InfluxDB."
+  - "Grafana dashboards covering the whole fleet."
+  - "Kapacitor-driven alerts piped into Discord via webhooks for low-friction notifications."
+  - "All deployments managed by Ansible and shipped through GitLab CI."
+cover: "/images/work/tick-grafana-monitoring/front.webp"
+gallery:
+  - "/images/work/tick-grafana-monitoring/back-1.webp"
+  - "/images/work/tick-grafana-monitoring/back-2.webp"
+  - "/images/work/tick-grafana-monitoring/back-3.webp"
+  - "/images/work/tick-grafana-monitoring/back-4.webp"
+featured: false
+order: 6
+---
+
+## The brief
+
+I wanted the homelab to tell me when something broke, instead of me finding out the slow way. The answer was the **TICK stack** plus Grafana, with alerts going into Discord because that is where I already am.
+
+## What I built
+
+- **Telegraf** agents on every host pushing metrics into InfluxDB.
+- **Chronograf** for quick data exploration. **Kapacitor** for alert logic.
+- **Grafana** for the dashboards I actually come back to.
+- **Discord webhooks** receiving alerts in a dedicated channel.
+- **Ansible** and **GitLab CI** handling deployment and config drift.
+
+## Why it mattered
+
+Building observability end to end teaches you how the production tools work below the surface. It comes in handy when you are debugging someone else's stack later. *(Observability has since been rebuilt around Prometheus, Loki and OpenTelemetry on the new Talos cluster. This case study covers the TICK era.)*

@@ -1,0 +1,117 @@
+name: Build and Deploy Portfolio (modern)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - stage
+          - prod
+        default: stage
+  push:
+    branches:
+      - main # Pushing here updates STAGE only
+    paths:
+      - "portfolio-modern/**"
+      - ".github/workflows/build-portfolio-modern.yaml"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/portfolio-modern
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine Environment
+        id: context
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "TAG=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENV="${{ inputs.environment }}"
+          else
+            ENV="stage"
+          fi
+
+          echo "ENV=${ENV}" >> $GITHUB_OUTPUT
+
+          if [[ "${ENV}" == "prod" ]]; then
+            echo "MANIFEST=k8s/talos/apps/portfolio/deployment.yaml" >> $GITHUB_OUTPUT
+          else
+            echo "MANIFEST=k8s/talos/apps/portfolio-stage/deployment.yaml" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Deploying to environment: ${ENV}"
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: ./portfolio-modern
+          push: true
+          build-args: |
+            BUILD_SHA=${{ steps.context.outputs.TAG }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.ENV }}
+
+      - name: Logout from Docker Hub
+        if: always()
+        run: docker logout
+
+      - name: Update Kubernetes Manifest
+        run: |
+          MANIFEST="${{ steps.context.outputs.MANIFEST }}"
+          TAG="${{ steps.context.outputs.TAG }}"
+          ENV="${{ steps.context.outputs.ENV }}"
+          NEW_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+
+          echo "Updating manifest: ${MANIFEST}"
+          echo "New image: ${NEW_IMAGE}"
+
+          if [[ ! -f "${MANIFEST}" ]]; then
+            echo "ERROR: Manifest file not found: ${MANIFEST}"
+            exit 1
+          fi
+
+          # Note: this regex matches both portfolio and portfolio-modern image lines.
+          # Until cutover the manifest may be using either.
+          sed -i "s|image: ${{ env.REGISTRY }}/${{ github.repository }}/portfolio[a-z-]*:.*|image: ${NEW_IMAGE}|g" $MANIFEST
+
+          echo "Changes made:"
+          git diff $MANIFEST
+
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          if [[ -n $(git status -s) ]]; then
+            git add $MANIFEST
+            git commit -m "chore(portfolio-modern): deploy ${TAG} to ${ENV}"
+            git push origin HEAD:main
+          else
+            echo "Manifest already up to date."
+          fi

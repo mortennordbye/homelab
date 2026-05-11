@@ -65,3 +65,10 @@ tmp/
 qbittorrent-vpn/
 kubernetes/
 blog/README.md
+
+# Local dev / tooling artifacts (must never be committed at repo root)
+.screenshots/
+.playwright-mcp/
+/node_modules/
+/package.json
+/package-lock.json

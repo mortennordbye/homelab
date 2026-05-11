@@ -1,0 +1,44 @@
+---
+title: "Kubernetes Home Lab — Era One"
+slug: "k8s-homelab"
+kind: "homelab"
+client: "Personal project"
+role: "Architect & operator"
+period: "2022 — 2024"
+summary: "First-generation home Kubernetes platform: K3s, self-hosted GitLab, ArgoCD, Traefik, MetalLB, cert-manager. The platform that hosted the previous version of this site."
+stack: ["k3s", "GitLab CE", "ArgoCD", "Helm", "Traefik", "cert-manager", "MetalLB"]
+outcomes:
+  - "Migration from Docker Compose to a real Kubernetes platform, with manageable scale."
+  - "Self-hosted GitLab driving CI/CD pipelines and acting as the source of truth for cluster state."
+  - "ArgoCD reconciling deployments, with Helm packaging the apps."
+  - "MetalLB providing internal load-balancing in the absence of a public LB."
+  - "cert-manager automating TLS for all internal and public services."
+cover: "/images/work/k8s-homelab/front.webp"
+gallery:
+  - "/images/work/k8s-homelab/back-1.webp"
+  - "/images/work/k8s-homelab/back-2.webp"
+  - "/images/work/k8s-homelab/back-3.webp"
+  - "/images/work/k8s-homelab/back-4.webp"
+featured: false
+order: 4
+---
+
+## The brief
+
+I wanted to stop running things on raw Docker. My own infrastructure should get the same care as customer infrastructure, and the homelab is where I figure things out before they reach clients.
+
+## What I built
+
+A K3s cluster, sized for my rack, with the platform pieces you would expect in production:
+
+- **GitLab CE** self-hosted, handling both source control and CI/CD.
+- **ArgoCD** as the GitOps controller. The cluster ends up being whatever the repo says it should be.
+- **Helm** for application packaging.
+- **Traefik** as the ingress controller, with **cert-manager** issuing certificates automatically.
+- **MetalLB** for L2 load balancing on the LAN, since there is no managed load balancer in a homelab.
+
+The previous version of this portfolio and its staging environment ran on this cluster. The stack was both a learning exercise and the thing keeping the lights on.
+
+## Why it mattered
+
+Running this setup at home meant I had already hit the failure modes before customers did. *(This homelab has since been retired in favour of a six-node Talos cluster running Cilium and ArgoCD. I am keeping this case study as a record of the era.)*
