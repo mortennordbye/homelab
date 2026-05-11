@@ -1,0 +1,19 @@
+services:
+  dev:
+    image: node:20-alpine
+    container_name: portfolio-modern-dev
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --hostname 0.0.0.0"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+    labels:
+      env: dev
+      app: portfolio-modern
+
+volumes:
+  node_modules:

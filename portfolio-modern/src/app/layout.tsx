@@ -1,0 +1,179 @@
+import type { Metadata, Viewport } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
+import "./globals.css";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { CommandPalette } from "@/components/CommandPalette";
+import { site } from "@/content/site";
+import { getAllWork } from "@/lib/work";
+import { services } from "@/content/services";
+
+// Inline before-paint script: read saved theme (or OS preference) and apply
+// the right class to <html> so we never flash the wrong palette.
+const themeBoot = `(function(){try{var s=localStorage.getItem('theme');var t=s||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');var c=document.documentElement.classList;c.remove('light','dark');c.add(t);document.documentElement.dataset.theme=t;}catch(e){document.documentElement.classList.add('dark');}})();`;
+
+const body = Inter({
+  variable: "--font-body",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const display = JetBrains_Mono({
+  variable: "--font-display",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "700"],
+});
+
+export const metadata: Metadata = {
+  metadataBase: new URL(site.url),
+  title: {
+    default: `${site.firstName} ${site.lastName} — ${site.role}`,
+    template: `%s — ${site.firstName} ${site.lastName}`,
+  },
+  description: site.description,
+  applicationName: `${site.firstName} ${site.lastName}`,
+  authors: [
+    { name: `${site.firstName} ${site.lastName}`, url: site.url },
+    { name: site.name, url: site.url },
+  ],
+  creator: `${site.firstName} ${site.lastName}`,
+  publisher: `${site.firstName} ${site.lastName}`,
+  keywords: [
+    `${site.firstName} ${site.lastName}`,
+    site.name,
+    "Morten V. Nordbye",
+    "Nordbye",
+    ...site.keywords,
+  ],
+  openGraph: {
+    type: "website",
+    locale: "en_GB",
+    url: site.url,
+    siteName: `${site.firstName} ${site.lastName}`,
+    title: `${site.firstName} ${site.lastName} — ${site.role}`,
+    description: site.description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    creator: site.twitter,
+  },
+  alternates: { canonical: "/" },
+  icons: {
+    icon: [
+      { url: "/favicon/favicon-32x32.png", sizes: "32x32" },
+      { url: "/favicon/favicon-16x16.png", sizes: "16x16" },
+    ],
+    apple: "/favicon/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
+  robots: { index: true, follow: true },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0a1015" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f8fb" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": `${site.url}/#person`,
+  name: `${site.firstName} ${site.lastName}`,
+  alternateName: [site.name, "Morten V. Nordbye"],
+  givenName: "Morten",
+  additionalName: "Victor",
+  familyName: site.lastName,
+  jobTitle: site.role,
+  description: site.description,
+  url: site.url,
+  image: `${site.url}/profile.webp`,
+  email: `mailto:${site.email}`,
+  nationality: { "@type": "Country", name: "Norway" },
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Oslo",
+    addressRegion: "Oslo",
+    addressCountry: "NO",
+  },
+  worksFor: {
+    "@type": "Organization",
+    name: "Orange Business",
+    url: "https://www.orange-business.com",
+  },
+  hasCredential: [
+    {
+      "@type": "EducationalOccupationalCredential",
+      name: "Certified Kubernetes Administrator (CKA)",
+      credentialCategory: "certification",
+      recognizedBy: { "@type": "Organization", name: "The Linux Foundation" },
+    },
+    {
+      "@type": "EducationalOccupationalCredential",
+      name: "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)",
+      credentialCategory: "certification",
+      recognizedBy: { "@type": "Organization", name: "Microsoft" },
+    },
+    {
+      "@type": "EducationalOccupationalCredential",
+      name: "Microsoft Certified: Azure Administrator Associate (AZ-104)",
+      credentialCategory: "certification",
+      recognizedBy: { "@type": "Organization", name: "Microsoft" },
+    },
+  ],
+  sameAs: site.socials.map((s) => s.href),
+  knowsAbout: site.keywords,
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${site.url}/#website`,
+  url: site.url,
+  name: `${site.firstName} ${site.lastName} — ${site.role}`,
+  inLanguage: "en-GB",
+  publisher: { "@id": `${site.url}/#person` },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  const workLite = getAllWork().map((w) => ({ slug: w.slug, title: w.title }));
+  const servicesLite = services.map((s) => ({ slug: s.slug, title: s.title }));
+  return (
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${body.variable} ${display.variable} antialiased`}
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
+      </head>
+      <body className="bg-bg text-fg min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <CommandPalette work={workLite} services={servicesLite} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        {/* Cloudflare Web Analytics — token preserved from previous portfolio */}
+        <Script
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          strategy="afterInteractive"
+          data-cf-beacon='{"token": "f5d3a5db1ee14b0688b52e1e0ad5f38c"}'
+        />
+      </body>
+    </html>
+  );
+}

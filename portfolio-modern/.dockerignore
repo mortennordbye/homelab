@@ -1,0 +1,21 @@
+.next
+node_modules
+out
+.git
+.github
+README.md
+*.md
+.env*
+.vscode
+.idea
+
+# Locally-built CV artifacts. The Dockerfile rebuilds these from
+# src/content inside its texgen + pdfbuild stages, so leaking a dev's
+# local copies into the build context would just overwrite work.
+public/resume.pdf
+public/cv.pdf
+latex/CV_2025/output
+latex/CV_2025/cv.tex
+latex/CV_2025/resume.tex
+latex/CV_2025/cv/*.tex
+latex/CV_2025/resume/*.tex
