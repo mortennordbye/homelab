@@ -35,7 +35,6 @@ export function AboutSection() {
     <section id="about" className="scroll-mt-24 border-t border-line">
       <div className="mx-auto max-w-7xl px-5 py-28 md:px-8 md:py-36">
         <SectionHeading
-          eyebrow="about"
           title="About me."
           description="The career arc, the stack I reach for, and what I do once the day is done."
         />
