@@ -4,10 +4,10 @@
  * Usage: `npx tsx scripts/build-cv.ts` (or `make cv:gen`).
  *
  * Reads `src/content/{site,resume,skills}.ts` and overwrites:
- *   latex/CV_2025/resume.tex
- *   latex/CV_2025/cv.tex
- *   latex/CV_2025/resume/{summary,experience,education,certifications}.tex
- *   latex/CV_2025/cv/{summary,skills,experience,education,certifications}.tex
+ *   latex/resume.tex
+ *   latex/cv.tex
+ *   latex/resume/{summary,experience,education,certifications}.tex
+ *   latex/cv/{summary,skills,experience,education,certifications}.tex
  *
  * Intentional design: TS data is single source of truth — any hand edits
  * to the listed .tex files will be replaced on every run.
@@ -32,7 +32,7 @@ const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-const LATEX_DIR = path.join(ROOT, "latex/CV_2025");
+const LATEX_DIR = path.join(ROOT, "latex");
 
 function write(rel: string, content: string) {
   const target = path.join(LATEX_DIR, rel);

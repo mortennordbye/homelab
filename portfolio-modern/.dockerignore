@@ -14,8 +14,8 @@ README.md
 # local copies into the build context would just overwrite work.
 public/resume.pdf
 public/cv.pdf
-latex/CV_2025/output
-latex/CV_2025/cv.tex
-latex/CV_2025/resume.tex
-latex/CV_2025/cv/*.tex
-latex/CV_2025/resume/*.tex
+latex/output
+latex/cv.tex
+latex/resume.tex
+latex/cv/*.tex
+latex/resume/*.tex
