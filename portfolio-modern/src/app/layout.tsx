@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { CommandPalette } from "@/components/CommandPalette";
 import { site } from "@/content/site";
 import { getAllWork } from "@/lib/work";
@@ -69,6 +70,11 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   robots: { index: true, follow: true },
+  verification: {
+    // Google Search Console site-ownership verification, carried over from the
+    // previous portfolio so the existing Search Console property keeps working.
+    google: "pW0Dln3ShXs7R0R610g7fo0jeDAkiSQfmzgLI_KJolE",
+  },
 };
 
 export const viewport: Viewport = {
@@ -158,6 +164,7 @@ export default function RootLayout({
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <ScrollToTop />
         <CommandPalette work={workLite} services={servicesLite} />
         <script
           type="application/ld+json"
@@ -167,11 +174,12 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
-        {/* Cloudflare Web Analytics — token preserved from previous portfolio */}
+        {/* Cloudflare Web Analytics — token carried over from the previous
+            portfolio so analytics continue on the same CF Analytics property. */}
         <Script
           src="https://static.cloudflareinsights.com/beacon.min.js"
           strategy="afterInteractive"
-          data-cf-beacon='{"token": "f5d3a5db1ee14b0688b52e1e0ad5f38c"}'
+          data-cf-beacon='{"token": "2451029669d244fe95bc0fb7635a985b"}'
         />
       </body>
     </html>
