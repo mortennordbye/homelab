@@ -9,7 +9,6 @@ export function ServicesGrid() {
     <section className="border-t border-line bg-bg-2/40">
       <div className="mx-auto max-w-7xl px-5 py-28 md:px-8 md:py-36">
         <SectionHeading
-          eyebrow="services"
           title="Services."
           description="Providing expert IT consulting services to optimize and secure your technological infrastructure."
         />
