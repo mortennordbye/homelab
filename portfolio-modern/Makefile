@@ -9,7 +9,7 @@ NODE_IMAGE ?= node:20-alpine
 NODE_VOL   ?= portfolio-modern_node_modules
 
 # CV / résumé pipeline
-LATEX_DIR  := latex/CV_2025
+LATEX_DIR  := latex
 TEX_IMAGE  ?= texlive/texlive:latest
 
 # Source files that should trigger a CV rebuild when changed

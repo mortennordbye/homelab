@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
-# Runs scripts/build-cv.ts (TypeScript). Output goes into latex/CV_2025/.
+# Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
 FROM node:20-alpine AS texgen
 WORKDIR /app
 
@@ -20,9 +20,9 @@ RUN npx tsx scripts/build-cv.ts
 FROM texlive/texlive:latest AS pdfbuild
 WORKDIR /work
 
-COPY --from=texgen /app/latex/CV_2025 ./latex/CV_2025
+COPY --from=texgen /app/latex ./latex
 
-WORKDIR /work/latex/CV_2025
+WORKDIR /work/latex
 RUN mkdir -p output && \
     xelatex -interaction=nonstopmode -output-directory=output resume.tex && \
     xelatex -interaction=nonstopmode -output-directory=output cv.tex
@@ -41,8 +41,8 @@ COPY public ./public
 COPY src ./src
 
 # Bake freshly-built PDFs into public/ so the static export includes them
-COPY --from=pdfbuild /work/latex/CV_2025/output/Morten-Nordbye-Resume.pdf ./public/resume.pdf
-COPY --from=pdfbuild /work/latex/CV_2025/output/Morten-Nordbye-CV.pdf ./public/cv.pdf
+COPY --from=pdfbuild /work/latex/output/Morten-Nordbye-Resume.pdf ./public/resume.pdf
+COPY --from=pdfbuild /work/latex/output/Morten-Nordbye-CV.pdf ./public/cv.pdf
 
 # Surface the commit SHA into the bundle so the footer can show it
 ARG BUILD_SHA=dev
