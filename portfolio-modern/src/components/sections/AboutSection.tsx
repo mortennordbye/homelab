@@ -36,7 +36,7 @@ export function AboutSection() {
       <div className="mx-auto max-w-7xl px-5 py-28 md:px-8 md:py-36">
         <SectionHeading
           title="About me."
-          description="The career arc, the stack I reach for, and what I do once the day is done."
+          description="How I got here, what I work with, and what I build after hours."
         />
 
         {/* Sub-block 1 — the path here (career timeline + prose + facts) */}
@@ -47,17 +47,17 @@ export function AboutSection() {
             <p className="text-fg-2 leading-relaxed">
               Skilled ICT Service Operator by trade. Started on the front
               line in an Operations Centre, monitoring alarms and running
-              incidents across customer environments, then slid into platform
-              and cloud engineering as the workloads followed. The route went
-              through scripting, then automation, then infrastructure as
-              code, then the realisation that the platform is the product
-              and the dashboards are the contract.
+              incidents across customer environments, then moved into
+              platform and cloud engineering as the workloads followed.
+              Scripting led to automation, automation led to infrastructure
+              as code, and the work shifted from reacting to alerts to
+              building the platforms that produce them.
             </p>
             <p className="mt-4 text-fg-2 leading-relaxed">
-              Today I work as a Cloud Engineer at Orange Business on Azure
-              platforms for customer environments — and on the side I run a
-              homelab cluster that doubles as my proving ground for anything
-              I want to try before it touches production.
+              Today I work as a Cloud Engineer at Orange Business, on Azure
+              platforms for customers across a range of regulated sectors.
+              On the side I run a homelab cluster that doubles as my proving
+              ground for anything I want to try before it touches production.
             </p>
           </div>
 
