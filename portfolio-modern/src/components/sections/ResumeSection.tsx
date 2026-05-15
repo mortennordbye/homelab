@@ -9,10 +9,7 @@ export function ResumeSection() {
       className="scroll-mt-24 border-t border-line bg-bg-2/40"
     >
       <div className="mx-auto max-w-7xl px-5 py-28 md:px-8 md:py-36">
-        <SectionHeading
-          title="Resume."
-          description="Cloud and infrastructure engineer working with regulated customers across healthcare, aviation, transport, public sector and finance. The work spans Kubernetes, Azure, automation and the platform pieces a production cluster relies on, with observability that catches problems before customers do."
-        />
+        <SectionHeading title="Resume." />
 
         <ResumePdfButtons className="mt-10" />
 
