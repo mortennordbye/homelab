@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { site } from "@/content/site";
 import { FooterStamp } from "@/components/FooterStamp";
 
@@ -9,7 +8,7 @@ export function Footer() {
   return (
     <footer className="mt-32 border-t border-line bg-bg-2">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 py-16 md:grid-cols-12 md:gap-8 md:px-8">
-        <div className="md:col-span-5">
+        <div className="md:col-span-7">
           <p className="font-display text-xs uppercase tracking-[0.2em] text-fg-3">
             colophon
           </p>
@@ -29,22 +28,7 @@ export function Footer() {
           </p>
         </div>
 
-        <div className="md:col-span-3">
-          <p className="font-display text-xs uppercase tracking-[0.2em] text-fg-3">
-            Sitemap
-          </p>
-          <ul className="mt-4 space-y-2">
-            {site.nav.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href} className="text-fg-2 hover:text-fg">
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="md:col-span-4">
+        <div className="md:col-span-5">
           <p className="font-display text-xs uppercase tracking-[0.2em] text-fg-3">
             Elsewhere
           </p>

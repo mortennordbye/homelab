@@ -10,7 +10,7 @@ export function CtaContact() {
             Contact.
           </h2>
           <p className="mt-6 max-w-xl text-fg-2">
-            If you have any questions or would like to get in touch, feel free to reach out to me. I&apos;m always excited to connect with new people and discuss potential opportunities. Please use the contact information below to get in touch, and I&apos;ll get back to you as soon as possible.
+            Reach out about cloud engineering, platform work or consulting engagements. I read everything that lands in the inbox and reply within a couple of working days.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a

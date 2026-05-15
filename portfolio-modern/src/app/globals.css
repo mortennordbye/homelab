@@ -210,7 +210,7 @@ a {
   .animate-marquee,
   [class*="bg-grain"],
   button[aria-label*="mode" i],
-  a[href="/cv.pdf"], a[href="/resume.pdf"] {
+  [data-pdf-download] {
     display: none !important;
   }
 

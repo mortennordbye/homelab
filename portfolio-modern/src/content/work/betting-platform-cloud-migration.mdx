@@ -1,0 +1,51 @@
+---
+title: "Enterprise Cloud Migration to Azure AKS"
+slug: "betting-platform-cloud-migration"
+kind: "professional"
+client: "Confidential enterprise customer"
+role: "Cloud engineer, acting architect"
+period: "Jan 2026 - Present"
+summary: "Migrated a 30-service .NET estate from Orange-hosted Windows to AKS on Azure, took over architect responsibility on the Orange side mid-project, and drove the handover to Managed Services."
+stack:
+  - "Azure"
+  - "AKS"
+  - "Terraform"
+  - "ArgoCD"
+  - "Helm"
+  - "Front Door + WAF"
+  - "vWAN"
+  - "ExpressRoute"
+  - "Azure Monitor"
+  - "Managed Grafana"
+  - "Traefik"
+outcomes:
+  - "Roughly 30 microservices migrated service-by-service onto AKS, leaving each predecessor in place until its successor was verified in production. Service-by-service was the route because production peaks above 33 million requests per day on betting days and a big-bang cutover was not acceptable risk."
+  - "Full Azure monitoring stack built from scratch on Azure Monitor Workspace, Log Analytics Workspaces and Managed Grafana, with all alerts implemented as Terraform code against the AMBA baseline."
+  - "Upstream contribution to Traefik Gateway API for multi-certificate listener support, merged and released in v3.7.0, replacing a workaround the customer had been running on NGINX-style listener-per-cert."
+  - "Cold-redeploy disaster recovery plan for regional failure, with KEDA and cluster-autoscaler tuned to the customer's load profile."
+cover: "/images/work/betting-platform-cloud-migration/front.webp"
+featured: true
+order: 4
+---
+
+## The brief
+
+The customer ran a 30-service .NET estate on Orange-hosted Windows Server behind F5, with production peaks above 33 million requests per day on betting days. The customer wanted onto Azure with AKS, in a microservice architecture they could operate themselves over time. They rewrote the application code as part of the move. Orange's job was the platform, landing the new architecture in Azure, getting traffic over without disrupting production at that scale, and then handing it cleanly to Managed Services. A big-bang cutover was never an option at this load profile, so service-by-service migration was the route, leaving each predecessor service in place until its successor was verified in production.
+
+## What I did
+
+I came in as a Cloud engineer on a three-person Orange-side team. The previous architect set the direction; I owned most of the code that changed. When that architect rolled off in April 2026, I took over architect responsibility on the Orange side; all technical decisions on the account now go through me.
+
+The platform runs on AKS with a Terraform module library covering everything from vWAN spokes to private endpoints. ArgoCD reconciles workloads through ApplicationSets, mixing Helm, Kustomize and raw manifests where each fits. Core services are External Secrets Operator, cert-manager, OpenTelemetry Collector and Traefik. I rewrote large parts of the module library as the architecture evolved (AKS, vWAN, Front Door, ACR, Log Analytics, Managed Grafana, ArgoCD core services), and built the observability stack from scratch.
+
+Traffic comes in through Front Door with the WAF in front, hits an internal load balancer, then Traefik ingress on AKS. Backend connectivity rides vWAN with a managed firewall and ExpressRoute back to the Orange data centre, plus a point-to-site VPN for operator access. The customer moved off NGINX Ingress Controller onto Traefik with Gateway API as part of the migration.
+
+The monitoring stack is mine end-to-end. Azure Monitor Workspace and Log Analytics, plus Azure Managed Grafana. All production alerts are Terraform code against the AMBA baseline rather than click-ops in the portal. Alarms route through Orange's Operations Centre and escalate to the customer team when first-line triage hits a wall.
+
+Post-takeover, I drove the post-migration architecture across ServiceBus migration into the customer's new subscription, policy-as-code rollout via EPAC, and a cold-redeploy DR plan for Azure region failure with runbooks for first-line. Worked alongside the customer's team to stabilise production after migration, where a recurring .NET thread-pool starvation pattern was surfaced via observability, reproduced in a replication harness built from the customer's components, and resolved through an async refactor led by the customer's developers.
+
+Two open-source spin-offs from the engagement are written up as separate case studies. An upstream patch to Traefik that taught Gateway API to support multiple TLS certificates on one listener, merged and released in v3.7.0 (see traefik-gateway-api-pr). And the .NET thread-pool root-cause analysis (see dotnet-thread-pool-rca).
+
+## Why it mattered
+
+A clean exit from Orange-hosted Windows and .NET onto a cloud-native Azure architecture the customer can grow into. Managed Services takes over a platform that runs production load at peak demand without surprise.

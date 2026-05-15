@@ -4,13 +4,13 @@ slug: "ansible-server-mgmt"
 kind: "homelab"
 client: "Personal project"
 role: "Engineer"
-period: "2022 — 2024"
+period: "2022 - 2024"
 summary: "Ended manual Linux installs in the home lab. Every server bootstrap and service deploy now runs through Ansible roles, executed by GitLab CI."
 stack: ["Ansible", "GitLab CI", "BIND9", "Linux"]
 outcomes:
   - "Reusable Ansible roles for new-host bootstrap and BIND DNS deployment."
   - "Self-hosted GitLab handling source control and pipeline execution for every Ansible run."
-  - "CI pipelines triggering Ansible playbooks on change — no more ad-hoc SSH-and-edit."
+  - "CI pipelines triggering Ansible playbooks on change, no more ad-hoc SSH-and-edit."
   - "Faster, more consistent rebuilds when hardware changes."
 cover: "/images/work/ansible-server-mgmt/front.webp"
 gallery:
@@ -18,7 +18,7 @@ gallery:
   - "/images/work/ansible-server-mgmt/back-2.webp"
   - "/images/work/ansible-server-mgmt/back-3.webp"
 featured: false
-order: 5
+order: 12
 ---
 
 ## The brief
@@ -27,10 +27,10 @@ The homelab was growing past what I wanted to maintain by hand. Every reinstall 
 
 ## What I built
 
-- **Bootstrap role** that takes a freshly installed Linux host to a known-good baseline: users, hardening, packages, monitoring agents.
-- **BIND DNS role** for the internal authoritative name servers.
-- **GitLab CI** running every change through pipelines that lint, dry-run and then apply.
+- Bootstrap role that takes a freshly installed Linux host to a known-good baseline, covering users, hardening, packages and monitoring agents.
+- BIND DNS role for the internal authoritative name servers.
+- GitLab CI running every change through pipelines that lint, dry-run and then apply.
 
 ## Why it mattered
 
-Version-controlled, pipeline-driven configuration is the same pattern I want to see at work. Practising it at home made me better at building it for customers.
+The discipline of writing idempotent roles that produce a known-good state, every time, regardless of what was on the host before, is the same discipline that matters when you are doing Ansible-driven config management on a PCI fleet with an active audit cycle. The homelab is where I built that muscle before it had consequences.

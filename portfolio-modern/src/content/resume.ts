@@ -42,11 +42,10 @@ const certsRaw: Cert[] = [
 const educationRaw: Education[] = [
   {
     title: "Trade Certificate — Skilled ICT Service Operator",
-    institution:
-      "Royal Norwegian Ministry of Education & Research · Basefarm / Orange Business",
+    institution: "Royal Norwegian Ministry of Education & Research",
     period: "Issued Aug 2023",
     detail:
-      "Two-year programme culminating in nationally recognised trade certificate. Passed with distinction.",
+      "Apprenticeship hosted by Basefarm / Orange Business. Two-year programme culminating in nationally recognised trade certificate. Passed with distinction.",
   },
   {
     title: "ICT Service Operator (vocational)",
@@ -72,9 +71,12 @@ const experienceRaw: Experience[] = [
     period: "Jan 2026 — Present",
     current: true,
     description: [
-      "Cloud Engineer in the Public Cloud Transformation team, working directly with customers to build Azure infrastructure for their environments. Terraform and CI/CD pipelines for the deployments, with the goal of keeping the production setup boring and predictable.",
-      "Running AKS and cloud-native platforms with ArgoCD for GitOps. Apps delivered through Helm and Kustomize. Platform pieces include Traefik, External Secrets Operator, cert-manager, Prometheus and OpenTelemetry.",
-      "Azure networking and connectivity (Virtual WAN, ExpressRoute, Private Link, DNS), and Front Door + WAF for traffic. Observability through Azure Monitor, Managed Grafana, Log Analytics Workspaces and Azure Monitor Workspaces.",
+      "Cloud engineer in Orange's engagement team, placed onto customer accounts under a consultancy delivery model. Currently on two engagements in parallel, a betting-platform customer's Azure migration and an internal Orange department's Azure platform I architect solo.",
+      "On the betting-platform engagement, took over architect responsibility on the Orange side in April 2026 when the previous architect exited; all technical decisions on the account now go through me. Did the bulk of the Terraform module work across the platform (AKS, vWAN, Front Door, ACR, Log Analytics, Managed Grafana, ArgoCD core services), rewriting large parts as the architecture evolved, and built the observability stack from scratch with production alerts in Terraform against the AMBA baseline. Executed the service-by-service migration of roughly 30 microservices from Orange-hosted Windows Server and .NET onto AKS, with peaks above 33 million requests per day on betting days.",
+      "Drove the post-migration architecture, including the ServiceBus migration into the customer's new subscription, policy-as-code rollout via EPAC, and a cold-redeploy DR plan for Azure region failure with runbooks for first-line. Also worked alongside the customer's team to stabilise production after migration, where a recurring .NET thread-pool starvation pattern was surfaced via observability, reproduced in a replication harness built from the customer's components, and resolved through an async refactor led by the customer's developers.",
+      "During the migration, the betting-platform customer was moved off NGINX Ingress Controller onto Traefik with Gateway API. Serving multiple TLS certificates on a single listener required a hack (one listener name per cert), so I contributed the upstream patch that taught Gateway API to resolve multiple cert secrets on one listener natively. Merged and released in Traefik v3.7.0.",
+      "For the internal Orange department, designed and delivered the Azure platform under their IAM and Microsoft 365 automation app, covering the WAF Application Landing Zone subscription layout, ACR and Container Apps for hosting, Azure DNS, and the GitHub repository with Terraform pipelines so the receiving team runs it themselves.",
+      "Daily stack: Azure (AKS, vWAN, Front Door, Key Vault, ACR, AMW, LAW, Managed Grafana), Terraform, ArgoCD, Helm, Kustomize, External Secrets Operator, cert-manager, OpenTelemetry Collector, Traefik.",
     ],
     timeline: {
       note: "Azure platforms, Terraform, GitOps, observability.",
@@ -86,9 +88,10 @@ const experienceRaw: Experience[] = [
     location: "Oslo",
     period: "Aug 2025 — Jan 2026",
     description: [
-      "Came back from military service as Technical Account Manager in the Service Delivery team. Focus on Kubernetes platforms and RHEL-based environments in regulated industries.",
-      "For healthcare customers I ran on-prem Kubernetes clusters with ArgoCD for GitOps, GitLab for CI/CD, Fluent Bit for logs, Traefik for ingress, Cilium for networking and Postgres as the main data service. F5 WAF, SIEM and IDS integrations on top to meet compliance and availability requirements.",
-      "I also managed PCI-compliant RHEL environments for aviation customers and other regulated sectors. Automation via Ansible and GitLab CI/CD, vulnerability management with Wazuh and Nessus, security operations through Splunk and IPA.",
+      "Returned to Orange Service Delivery 3 in the same System Consultant and TAM role after national service, working a parallel portfolio of managed customers. Carried TAM on a B2B SaaS customer and a patient-facing healthcare customer, de facto technical owner of the aviation customer's RHEL fleet where the assigned TAM was Windows-focused, and team-member responsibilities on two healthcare Kubernetes clusters.",
+      "On the aviation customer's PCI fleet, owned the RHEL major-version programme. ClamAV reaching end-of-life on RHEL7 (under extended support) while the application could not be redeployed within the available window forced an in-place upgrade of the roughly 40-host PCI fleet to RHEL8. IPA does not survive in-place, so the IPA nodes were rebuilt as a fresh install on new VMs landing on RHEL9, with the auth layer switching from password sync to AD trust against the PCI Windows AD domain. Rebuilt CIS hardening as an Ansible role to restore the baseline that in-place upgrade had partially reset, and as a parallel track rolled out the Sumologic OpenTelemetry agent across all 150 RHEL hosts via Ansible.",
+      "On two healthcare customers, ran coordinated rolling upgrade programmes across three layers (Kubernetes, OS, and core services including Traefik and Fluent Bit) on stage and prod environments at each, while keeping NHN-connected clinical workloads online. Norsk Helsenett (NHN, the regulated clinical network with strict peering and compliance controls) was an active dependency at both customers.",
+      "Daily stack: RHEL 7/8/9, Kubernetes, Ansible, PostgreSQL, F5 BIG-IP, Sumologic with OpenTelemetry, IPA, Active Directory.",
     ],
     timeline: {
       role: "System Consultant",
@@ -101,9 +104,9 @@ const experienceRaw: Experience[] = [
     location: "KNM Tordenskjold",
     period: "Aug 2024 — Aug 2025",
     description: [
-      "Trained naval personnel at the Navy's Security Center in fire and accident response. Worked with smoke divers (røykdykkere) and specialised teams through realistic drills, live-fire exercises and accident simulations.",
-      "Also acted as the department's IT person. Wrote scripts and small automations for repetitive tasks the instructors had been doing by hand, so they could spend more time on actual instruction.",
-      "Got internal training in leadership and teaching methods. A lot of the same thinking applies to incident response: small actions in the right order, done calmly by people who knew their roles before anything went wrong.",
+      "Mandatory national service at the Royal Norwegian Navy's smoke-diving and damage-control school at KNM Tordenskjold. Certified as a solo instructor after a six-month qualification programme. Taught recruits, officers, coast-guard and naval-officer trainees through live-fire drills, smoke dives and damage-control simulations.",
+      "Designed and rolled out the security baseline for the unit's digital examination workstation fleet, which had been operating without centralised Group Policy and with end-user accounts running with local administrator rights. Implemented a GPO-driven hardening profile (privileged-access removal, account lockout enforcement, password policy enforcement) via PowerShell, bringing the fleet in line with standard workstation policy. Replaced manual account provisioning and status reporting with automated PowerShell tooling that the unit owns going forward.",
+      "Kept a self-hosted Kubernetes, GitOps and CI platform running across the conscript year as continued engineering practice, building the foundation the current Homelab platform sits on.",
     ],
     timeline: {
       role: "Navy Instructor",
@@ -117,9 +120,13 @@ const experienceRaw: Experience[] = [
     location: "Oslo",
     period: "Aug 2023 — Aug 2024",
     description: [
-      "Service Delivery team. Ran cloud and on-prem infrastructure for a broad customer base. Acted as Technical Account Manager for two of them alongside the project work.",
-      "Customers ranged from small businesses to large enterprises. The work was a mix of setting things up, keeping them running and improving them where it mattered.",
-      "Daily stack: Kubernetes, Linux (RHEL), GitLab, Ansible, SQL (Postgres, MySQL, MSSQL), Python / Bash / PowerShell, TICK (Telegraf, InfluxDB, Chronograf, Kapacitor), Grafana, F5 BIG-IP, AWS, Windows Server. Most of the time spent on automation and orchestration.",
+      "System Consultant on Orange Service Delivery 3, holding a parallel consulting portfolio across roughly seven clients in aviation (PCI and non-PCI), transport, healthcare (two), B2B SaaS and public sector. TAM on two of them, de facto technical owner on others where the engagement model required it. Consulting work centred on Linux and RHEL platforms, Kubernetes, automation and networking, extending to Windows Server and full infra-team scope where the customer required it. Norsk Helsenett (NHN, the regulated clinical network with strict peering and compliance controls) integrations for clinical data exchange were a recurring cross-customer dependency.",
+      "Migrated a transport-sector customer's production Kubernetes platform off a major public cloud provider to on-prem Kubernetes for GDPR and data-residency compliance. Chose a blue-green strategy with storage rebuilt on NetApp NFS, covering the two clusters (test and prod) that made up the internal developer platform and resulting in a clean cutover. The customer fleet under operational management was five clusters of six nodes each.",
+      "Ran a Puppet-to-Ansible configuration management migration at a B2B SaaS customer, writing all Ansible roles solo, stored in GitLab on-prem and deployed via Jenkins, replacing mail, application, jump-host and Postgres servers. Ran a parallel RHEL7-to-RHEL8/9 blue-green redeploy of the application fleet at the same time. Both tracks ran concurrently through the pre-service engagement.",
+      "At a patient-facing healthcare customer, built a custom Prometheus-to-TICK access-log bridge that fed the customer's preferred Prometheus data model into the centralised TICK stack. Also deployed eight new VMs alongside the existing fleet and redeployed the F5 WAF with policy migration onto a cleaner network segment.",
+      "On two other healthcare customers, owned the Postgres host stack with a full RHEL7-to-RHEL9 redeploy followed by a TLS connection-string migration with certificates, and ran the Kubernetes core services (Traefik, Fluent Bit) plus OS-level cluster operations (CoreDNS overrides, ulimit tuning) across their environments. NHN integration for clinical data exchange was an active dependency at both.",
+      "For a Norwegian public-sector customer, owned the self-hosted Atlassian platform (Jira, Confluence, MySQL), delivered major version upgrades, and ran the surrounding F5 and Cisco network edge with TICK-based monitoring.",
+      "Daily stack: Kubernetes, RHEL, Ansible, Jenkins, ArgoCD, Terraform, PostgreSQL, F5 BIG-IP, TICK (Telegraf, InfluxDB, Chronograf, Kapacitor), GitLab (on-prem). Python, Bash and PowerShell where needed.",
     ],
     timeline: {
       role: "System Consultant",
@@ -132,10 +139,12 @@ const experienceRaw: Experience[] = [
     location: "Oslo",
     period: "Aug 2021 — Aug 2023",
     description: [
-      "Operations Center role. First-line support for customer requests and the alarm gateway. Handled events, incidents, changes and service requests across the full OSI model, working inside ITIL.",
-      "Operational responsibility across hundreds of customers, which meant a lot of context-switching and quick problem-solving in environments I had not seen before.",
-      "Appointed team lead for the Incident Team (INO) and Change Team (CNO), coordinating operations with ITIL. Also part of the maintenance team, planning monthly upgrades so they would land without surprise downtime.",
-      "Worked the full shift rotation towards the end, including solo night shifts as 'senior'.",
+      "Operations Center role at Basefarm, later Orange Business. First line for around 250 customers across Norway, Sweden and the Netherlands, covering incidents, change requests, alarms, and the full ITIL event, incident, change and service-request flow across the OSI model.",
+      "Within five months of joining, took on the Incident Team (INO) lead role (a rotating internal role on the OC team), later also Change Team (CNO) lead. In the final phase of the role, moved into the senior shift rotation, which meant sole first-line responsibility overnight across all 250 customers.",
+      "Front-line operational exposure to customer environments spanning on-prem, Azure and AWS, covering platform monitoring, alarm response and change execution across the 250-customer estate.",
+      "Carried multiple internal responsibilities beyond the shift desk, including maintenance manager for larger CAB-approved infra changes overnight (roll-back decisions, escalation calls and hourly status reporting), CMDB administration, and onboarding plus CNO-team intro training for around 25 new hires.",
+      "Standalone deliverables across the period included an AWS-hosted shared-secret tool adopted across the operations centre (replacing a manual handoff process), a Squid forward proxy built from scratch via Ansible while on loan to an internal development department, and a fallback SMS provider sourced and integrated to remove a single-provider dependency on RSA-token delivery and password resets.",
+      "Daily stack: Linux and Windows Server, VMware ESXi, NetApp and Rubrik, Cisco firewalls and switches, F5 BIG-IP, SolidDNS, Digicert, Squid, Ansible, Azure and AWS. AWS Fundamentals certification during the period.",
     ],
     timeline: {
       note: "On-prem, alarm gateway, full shift rotation.",
@@ -147,7 +156,7 @@ const experienceRaw: Experience[] = [
     location: "Oslo",
     period: "2018 — 2019",
     description: [
-      "Taught school-age children block-based visual programming. First time teaching technology, and a lesson in how much explaining something simply actually helps.",
+      "Part-time programming instructor for Oslo Municipality's after-school programme (Utdanningsetaten), while still in lower-secondary school. Taught fifth-grade groups basic programming through guided game-building exercises at four schools across Oslo, paired with another instructor. First time teaching technology, and a lesson in how much explaining something simply actually helps.",
     ],
   },
 ];
@@ -190,4 +199,4 @@ export const careerPath: CareerStop[] = experience
  * available for the website /resume page header should we choose to render it.
  */
 export const summary =
-  "Cloud engineer working on automated, secure infrastructure in regulated industries. Focus on Azure-native platforms, Kubernetes (AKS and on-prem K3s and Talos), GitOps with ArgoCD, and Terraform-based CI/CD. Worked with healthcare and aviation customers where F5 WAF, SIEM and IDS integrations are needed to meet strict compliance and availability requirements. Day to day I work with the platform pieces a cluster relies on: Traefik, Cilium, External Secrets Operator, cert-manager, Prometheus and OpenTelemetry. I also run a six-node Talos cluster at home as an open lab. Configurations and experiments live on GitHub.";
+  "Cloud engineer working on automated, secure infrastructure in regulated industries. Focus on Azure-native platforms, Kubernetes (AKS and on-prem with Talos), GitOps with ArgoCD, and Terraform-based CI/CD. Worked with healthcare and aviation customers where F5 WAF, SIEM and IDS integrations are needed to meet strict compliance and availability requirements. Day to day I work with the platform pieces a cluster relies on, including Traefik, Cilium, External Secrets Operator, cert-manager, Prometheus and OpenTelemetry. I also run a six-node Talos cluster at home as an open lab. Configurations and experiments live on GitHub.";

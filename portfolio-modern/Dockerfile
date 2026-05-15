@@ -17,6 +17,8 @@ RUN npx tsx scripts/build-cv.ts
 
 # ---- Stage 2: compile LaTeX → PDFs ----
 # TeX Live image is large but layer-cached in CI between builds.
+# Compiles every entry point emitted by build-cv.ts: resume.tex + 16
+# cv-SCHP.tex variants (S/C/H/P = skills, clientProjects, homeLab, photo).
 FROM texlive/texlive:latest AS pdfbuild
 WORKDIR /work
 
@@ -24,8 +26,10 @@ COPY --from=texgen /app/latex ./latex
 
 WORKDIR /work/latex
 RUN mkdir -p output && \
-    xelatex -interaction=nonstopmode -output-directory=output resume.tex && \
-    xelatex -interaction=nonstopmode -output-directory=output cv.tex
+    for f in resume.tex cv-*.tex; do \
+      echo "→ xelatex $f"; \
+      xelatex -interaction=nonstopmode -output-directory=output "$f" >/dev/null; \
+    done
 
 # ---- Stage 3: build the Next.js static export ----
 FROM node:20-alpine AS build
@@ -40,12 +44,13 @@ COPY tsconfig.json next.config.ts postcss.config.mjs eslint.config.mjs ./
 COPY public ./public
 COPY src ./src
 
-# Bake freshly-built PDFs into public/ so the static export includes them.
-# xelatex writes output/<input>.pdf — the Makefile renames these to
-# Morten-Nordbye-{Resume,CV}.pdf on the host, but inside this Dockerfile
-# we copy them straight to their public/ destinations.
+# Bake freshly-built PDFs + customizer manifest into public/ so the static
+# export includes them. The frontend fetches the manifest at runtime, so
+# everything CV-related is a runtime asset under /. xelatex writes
+# output/<input>.pdf — copy résumé + all 16 CV variants into public/.
 COPY --from=pdfbuild /work/latex/output/resume.pdf ./public/resume.pdf
-COPY --from=pdfbuild /work/latex/output/cv.pdf ./public/cv.pdf
+COPY --from=pdfbuild /work/latex/output/cv-*.pdf ./public/
+COPY --from=texgen /app/public/cv-manifest.json ./public/cv-manifest.json
 
 # Surface the commit SHA into the bundle so the footer can show it
 ARG BUILD_SHA=dev
@@ -53,6 +58,23 @@ ENV NEXT_PUBLIC_BUILD_SHA=$BUILD_SHA
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
+
+# ---- Stage cv-bundle: dev-server volume populator ----
+# Merges the host's static public/ assets with the freshly-built CV
+# artifacts into /staging. A one-shot service in compose.yaml runs
+# this image and `cp`s /staging into a named volume, which the dev
+# container then mounts read-only at /app/public. The result: the
+# dev server serves the real CV without writing anything to the
+# host filesystem.
+#
+# Never built when targeting the production nginx image — CI's
+# `docker build .` skips this stage automatically.
+FROM alpine AS cv-bundle
+WORKDIR /staging
+COPY public/ ./
+COPY --from=pdfbuild /work/latex/output/resume.pdf ./resume.pdf
+COPY --from=pdfbuild /work/latex/output/cv-*.pdf ./
+COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 
 # ---- Stage 4: serve via hardened nginx ----
 FROM nginx:alpine
