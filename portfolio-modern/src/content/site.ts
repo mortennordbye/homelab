@@ -40,10 +40,10 @@ export const site = {
   socials: [
     { label: "GitHub", href: "https://github.com/mortennordbye" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/morten-victor-nordbye" },
-    { label: "X / Twitter", href: "https://twitter.com/mortennordbye" },
+    { label: "X", href: "https://x.com/mortennordbye" },
     { label: "Blog", href: "https://blog.nordbye.it" },
   ],
-  nav: [],
+  nav: [] as readonly { href: string; label: string }[],
 } as const;
 
 export type Site = typeof site;
