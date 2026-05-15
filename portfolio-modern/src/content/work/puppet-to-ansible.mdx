@@ -4,12 +4,12 @@ slug: "puppet-to-ansible"
 kind: "professional"
 client: "Confidential SaaS provider (20+ years in market)"
 role: "IT automation consultant"
-period: "Ongoing"
-summary: "Replacing a long-standing Puppet estate with idempotent Ansible roles — moving the customer off a tool their cloud provider was sunsetting and onto something their team can actually live with."
-stack: ["Ansible", "GitLab CI", "Linux", "Postfix"]
+period: "2023 - 2024"
+summary: "Replaced a long-standing Puppet estate with idempotent Ansible roles, moving the customer off a tool their hosting provider was sunsetting while running a parallel RHEL7-to-RHEL8/9 redeploy of the application fleet at the same time."
+stack: ["Ansible", "GitLab", "Jenkins", "Linux", "Postfix"]
 outcomes:
-  - "Puppet-managed servers progressively replaced by Ansible-driven equivalents — including mail and several other critical systems."
-  - "Lower complexity: agentless architecture removed an entire class of moving parts."
+  - "Puppet-managed servers progressively replaced by Ansible-driven equivalents, including mail and several other critical systems."
+  - "Lower complexity from the agentless architecture, removing an entire class of moving parts."
   - "Better integration with the customer's existing DevOps toolchain."
   - "Faster, more predictable rebuilds when servers need replacing."
 cover: "/images/work/puppet-to-ansible/front.webp"
@@ -23,18 +23,20 @@ order: 2
 
 ## The brief
 
-A SaaS provider with two decades of operating history had its infrastructure configured almost entirely with **Puppet**. Their hosting provider was phasing out Puppet support, so the estate had to move to something that would be supported long-term. They picked **Ansible**.
+A SaaS provider with two decades of operating history had its infrastructure configured almost entirely with Puppet. Their hosting provider was phasing out Puppet support, so the estate had to move to something that would be supported long-term. They picked Ansible.
 
 ## What I did
 
-I wrote the Ansible roles and playbooks that stand up the replacement servers. Mail servers and a few other critical systems were rebuilt against the new automation. The rollouts were set up so the customer could compare old and new side by side before switching traffic.
+I wrote all Ansible roles solo. Mail servers (Postfix), application servers, the jump-host and Postgres servers were all rebuilt against the new automation. Rollouts were set up so the customer could compare old and new side by side before switching traffic.
 
-Most of the actual work was at the seams:
+Most of the actual work was at the seams.
 
 - Translating the Puppet resource model into idempotent Ansible tasks that produce the same end state without surprising the people running them.
 - Standardising role layout and inventory so future engineers can find their way around quickly.
-- Running CI on every change to catch drift early.
+- Running deploys through Jenkins on every change, with roles stored in GitLab on-prem, to catch drift early and keep the delivery pipeline auditable.
+
+In parallel with the config-management work, the application server fleet was redeployed RHEL7 to RHEL8/9 via blue-green, the same low-risk pattern used on the transport-sector Kubernetes migration the year before. Both sides run in parallel; traffic flips only when the new side is verified. The two tracks ran concurrently through the engagement.
 
 ## Why it mattered
 
-Configuration management is rarely the most exciting topic, but it is the layer everything else relies on. Replacing it without breaking what runs on top of it is most of the job.
+Two large migrations ran in parallel (Puppet to Ansible and a RHEL major redeploy) and both completed without incidents. Configuration management is rarely the headline, but it is the layer everything else relies on, and replacing it while keeping production running is most of the job.

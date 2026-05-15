@@ -25,6 +25,8 @@ export function period(input: string): string {
   let s = input.trim();
   // Normalise dashes to LaTeX `--`.
   s = s.replace(/\s*[–—]\s*/g, " -- ");
+  // ASCII hyphen surrounded by spaces also becomes LaTeX `--`.
+  s = s.replace(/(\S)\s+-\s+(?=\S)/g, "$1 -- ");
   // Add a period after bare three-letter month abbreviations that aren't
   // already followed by ".".
   s = s.replace(/\b([A-Z][a-z]{2,4})\b(?!\.)/g, (m, mon) => {

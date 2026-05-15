@@ -7,11 +7,11 @@ const raw: Service[] = [
     blurb:
       "Cluster design, workload migration and platform hardening for teams running Kubernetes in production.",
     summary:
-      "I help teams design and run Kubernetes platforms that work in production. Whether you are moving your first app into containers or sorting out a cluster that has grown past its original design, the goal is the same: a platform that is stable, observable and stays out of the way of the people shipping code on top of it.",
+      "I help teams design and run Kubernetes platforms that work in production. Whether you are moving your first app into containers or sorting out a cluster that has grown past its original design, the goal is the same. A platform that is stable, observable and stays out of the way of the people shipping code on top of it.",
     bullets: [
       "Design Kubernetes setups sized to the workload and the compliance requirements.",
       "Move existing applications into containers with as little downtime as possible.",
-      "Set up clusters end to end: networking, storage, identity, ingress, autoscaling.",
+      "Set up clusters end to end, covering networking, storage, identity, ingress and autoscaling.",
       "Wire up CI/CD and GitOps so deployments are repeatable and reversible.",
       "Audit clusters against CIS and Pod Security baselines and fix what comes up.",
     ],
@@ -28,7 +28,7 @@ const raw: Service[] = [
       "Look at the current state and plan a GitOps rollout that fits your team size.",
       "Write and maintain Ansible roles and playbooks for the systems you actually run.",
       "Set up continuous delivery pipelines with rollbacks that work.",
-      "Apply IaC practices: module structure, state handling, secrets.",
+      "Apply IaC practices for module structure, state handling and secrets.",
       "Add security and compliance checks into the pipeline so they happen automatically.",
     ],
     cover: "/images/services/gitops-ansible.webp",

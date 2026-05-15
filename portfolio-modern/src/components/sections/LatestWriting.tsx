@@ -13,7 +13,7 @@ export async function LatestWriting() {
         <SectionHeading
           eyebrow="writing"
           title="From the blog."
-          description="Long-form notes from running cloud infrastructure — migrations, post-mortems, and the occasional hot take. Lives at blog.nordbye.it."
+          description="Long-form notes from running cloud infrastructure, including migrations, post-mortems and the occasional hot take. Lives at blog.nordbye.it."
           align="between"
           cta={
             <a
@@ -38,25 +38,38 @@ export async function LatestWriting() {
                 href={p.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative flex h-full flex-col gap-5 bg-bg p-8 transition-colors hover:bg-surface"
+                className="group relative flex h-full flex-col overflow-hidden bg-bg transition-colors hover:bg-surface"
               >
-                <p className="font-display text-xs uppercase tracking-[0.18em] text-fg-3">
-                  {p.date}
-                </p>
-                <h3 className="text-h3 font-display text-fg leading-tight transition-colors group-hover:text-accent">
-                  {p.title}
-                </h3>
-                <p className="flex-1 text-sm text-fg-2 leading-relaxed">{p.excerpt}</p>
-                <span className="inline-flex items-center gap-2 font-display text-sm text-fg-2 transition-colors group-hover:text-accent">
-                  Read post
-                  <ArrowUpRight
-                    size={14}
-                    className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                  />
-                </span>
+                {p.cover && (
+                  <figure className="relative aspect-[16/9] w-full overflow-hidden border-b border-line bg-surface/40">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={p.cover}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                    />
+                  </figure>
+                )}
+                <div className="flex flex-1 flex-col gap-5 p-8">
+                  <p className="font-display text-xs uppercase tracking-[0.18em] text-fg-3">
+                    {p.date}
+                  </p>
+                  <h3 className="text-h3 font-display text-fg leading-tight transition-colors group-hover:text-accent">
+                    {p.title}
+                  </h3>
+                  <p className="flex-1 text-sm text-fg-2 leading-relaxed">{p.excerpt}</p>
+                  <span className="inline-flex items-center gap-2 font-display text-sm text-fg-2 transition-colors group-hover:text-accent">
+                    Read post
+                    <ArrowUpRight
+                      size={14}
+                      className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                    />
+                  </span>
+                </div>
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute right-3 top-3 font-display text-fg-3/30 group-hover:text-accent/40 transition-colors"
+                  className="pointer-events-none absolute right-3 top-3 z-10 font-display text-fg-3/30 group-hover:text-accent/40 transition-colors"
                 >
                   +
                 </span>
