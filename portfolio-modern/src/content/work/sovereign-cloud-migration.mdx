@@ -4,11 +4,11 @@ slug: "sovereign-cloud-migration"
 kind: "professional"
 client: "Major public-transportation operator"
 role: "Infrastructure consulting lead"
-period: "Oct 2023 — Apr 2024"
-summary: "Migrated a critical production Kubernetes platform out of Amazon EKS and onto a sovereign on-premises K3s build, regulatory-compliant and operator-friendly."
-stack: ["Kubernetes (K3s)", "Traefik", "Terraform", "GitOps", "Harbor", "Telegraf", "Fluent Bit"]
+period: "Aug 2023 - Aug 2024"
+summary: "Owned the on-premises Kubernetes platform for a transport-sector customer throughout a year-long engagement, migrating 2 of 5 clusters (test and prod for the internal developer platform) from Amazon EKS to a self-hosted Kubernetes platform via a blue-green strategy, for GDPR and data-residency compliance. Total managed fleet of five clusters with six nodes each."
+stack: ["Kubernetes", "Traefik", "Terraform", "GitOps", "Harbor", "Telegraf", "Fluent Bit"]
 outcomes:
-  - "Workloads moved from EKS to a self-developed on-premises K3s platform without prolonged downtime."
+  - "Workloads moved from EKS to a self-developed on-premises Kubernetes platform with no service interruption across either migration track."
   - "Personal data of Norwegian citizens kept inside sovereign borders, satisfying GDPR and national requirements."
   - "Lower long-term cloud spend and stronger control over the operator surface."
   - "Container security baseline established with Harbor image scanning."
@@ -26,18 +26,18 @@ order: 1
 
 ## The brief
 
-A major public-transportation operator was running production workloads on Amazon EKS. New national regulation around personal data, combined with stricter GDPR enforcement, meant the platform had to run inside Norwegian borders, on hardware they controlled. The brief was easy to describe and harder to deliver: rebuild the platform on-premises without breaking the services running on top of it.
+A major public-transportation operator was running production workloads on Amazon EKS. New national regulation around personal data, combined with stricter GDPR enforcement, meant the platform had to run inside Norwegian borders, on hardware they controlled. The brief was easy to describe and harder to deliver, rebuild the platform on-premises without breaking the services running on top of it.
 
 ## What I did
 
-I led the design and delivery of the replacement platform. The new cluster runs on **K3s**, with **Traefik** for ingress and a per-node monitoring stack of **Telegraf** for metrics and **Fluent Bit** for logs. Anything that touched configuration went through **Terraform** and a **GitOps** delivery pipeline, so every change has a paper trail.
+I was the primary Linux resource on a four-person Orange consulting team, coordinating and executing the migration end-to-end. The new cluster runs on Kubernetes, with Traefik for ingress and a per-node monitoring stack of Telegraf for metrics and Fluent Bit for logs. Anything that touched configuration went through Terraform and a GitOps delivery pipeline, so every change has a paper trail.
 
-A few things mattered more than the choice of tools:
+A few things mattered more than the choice of tools.
 
-- **Image security.** All pulled images went through Harbor with vulnerability scanning before they could run on the cluster.
-- **Day-two operations.** I worked with the customer's engineers to clean up manifests and Helm releases as we went, so the platform was easier to run a month in than it was on the first day.
-- **Quiet cutover.** Migration happened one service at a time, with rollback paths committed to version control before each switch.
+- Image security. All pulled images went through Harbor with vulnerability scanning before they could run on the cluster.
+- Day-two operations. The customer's engineers wrote and owned their own workload manifests. My role was to review their Kubernetes patterns and onboard them to the platform, so the handoff was durable rather than dependent on me.
+- Quiet cutover. The blue-green migration covered the two clusters that made up the internal developer platform (test and prod). Both ran in parallel until the new side was verified, then traffic switched. The remaining three clusters (for a separate critical application) stayed under operational management throughout.
 
 ## Why it mattered
 
-For the customer, it was not only about compliance. It was about control: of the data, of the cost curve and of the failure modes. For me, it was a chance to do the full cycle, from design to handover, on infrastructure that real people rely on every morning.
+For the customer, this was not only about compliance. It was about control of the data, the cost curve and the failure modes. A 30-node, 960 GB fleet moved from a managed cloud provider to a self-operated Kubernetes platform on dedicated hardware, with customers depending on it every morning, and zero incidents across both parallel tracks.

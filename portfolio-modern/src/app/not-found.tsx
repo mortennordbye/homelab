@@ -12,8 +12,8 @@ export default function NotFound() {
         <span className="gradient-text">turn somewhere.</span>
       </h1>
       <p className="mt-6 max-w-xl text-fg-2">
-        Whatever this URL pointed at doesn&apos;t exist anymore — or never did.
-        Head back to the front page or browse the work index.
+        Whatever this URL pointed at does not exist anymore, or never did. The
+        whole site lives at the front page now.
       </p>
       <div className="mt-10 flex flex-wrap gap-4">
         <Link
@@ -22,12 +22,6 @@ export default function NotFound() {
         >
           Back home
           <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-        </Link>
-        <Link
-          href="/work/"
-          className="inline-flex items-center gap-2 rounded-full border border-line-2 bg-surface/40 px-6 py-3 font-display text-sm text-fg hover:border-accent hover:text-accent"
-        >
-          Browse work
         </Link>
       </div>
     </div>

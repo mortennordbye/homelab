@@ -1,4 +1,22 @@
 services:
+  # One-shot service: builds the cv-bundle image (which merges host's
+  # static public/ with freshly-baked CV artifacts), runs once to copy
+  # the result into the cv-bundle named volume, then exits. The dev
+  # service waits for this to complete before starting.
+  cv-bundle:
+    build:
+      context: .
+      target: cv-bundle
+    container_name: portfolio-modern-cv-bundle
+    volumes:
+      - cv-bundle:/dest
+    # Wipe the volume and copy fresh staging into it so that removed
+    # variants or stale files never linger across rebuilds.
+    command: sh -c "rm -rf /dest/* /dest/.[!.]* 2>/dev/null; cp -a /staging/. /dest/"
+    labels:
+      env: dev
+      app: portfolio-modern
+
   dev:
     image: node:20-alpine
     container_name: portfolio-modern-dev
@@ -8,12 +26,26 @@ services:
       - "3000:3000"
     volumes:
       - .:/app
+      # Overlay the cv-bundle volume on top of the bind-mounted public/.
+      # Inside the container, /app/public is the volume contents (host's
+      # static assets + CV artifacts merged). Host's public/ folder never
+      # gains the cv-*.pdf / resume.pdf / cv-manifest.json files.
+      - cv-bundle:/app/public:ro
       - node_modules:/app/node_modules
+      # Keep Turbopack's persistence cache (~1 GB after a while) off the
+      # host filesystem. Reset with `docker volume rm portfolio-modern_next-cache`
+      # if the dev container OOMs on cache load.
+      - next-cache:/app/.next
     environment:
       NEXT_TELEMETRY_DISABLED: "1"
+    depends_on:
+      cv-bundle:
+        condition: service_completed_successfully
     labels:
       env: dev
       app: portfolio-modern
 
 volumes:
   node_modules:
+  cv-bundle:
+  next-cache:

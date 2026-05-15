@@ -94,12 +94,18 @@ export function CommandPalette({ work, services }: Props) {
           }
         },
       },
-      ...work.map((w) => ({
-        id: `cd work/${w.slug}`,
-        label: `cd work/${w.slug}`,
-        hint: w.title,
-        run: () => router.push(`/work/${w.slug}/`),
-      })),
+      {
+        id: "cd portfolio",
+        label: "cd portfolio",
+        hint: "scroll to #portfolio",
+        run: () => {
+          if (pathname === "/") {
+            document.getElementById("portfolio")?.scrollIntoView({ behavior: "smooth" });
+          } else {
+            router.push("/#portfolio");
+          }
+        },
+      },
       {
         id: "ls work",
         label: "ls work",

@@ -1,0 +1,37 @@
+---
+title: ".NET Thread-Pool Starvation Root-Cause Analysis"
+slug: "dotnet-thread-pool-rca"
+kind: "professional"
+client: "Confidential enterprise customer"
+role: "Engineer"
+period: "2026"
+summary: "Traced a recurring production failure in a .NET application down to thread-pool starvation under sync-heavy workloads, by rebuilding the customer's components into a replication harness and identifying the saturation pattern."
+stack:
+  - ".NET"
+  - "AKS"
+  - "Kubernetes"
+  - "Observability"
+outcomes:
+  - "Reproduced the production failure in an isolated harness assembled from the customer's components."
+  - "Identified excessive synchronous calls as the root cause, saturating the thread pool under spike load."
+  - "Hill Climbing flag set on the .NET runtime so the pool-scaling algorithm could respond aggressively under spike conditions."
+  - "Async refactor of the synchronous call paths led by the customer's developers (with me on the diff review) to remove the saturation source."
+  - "Application stable since."
+cover: "/images/work/dotnet-thread-pool-rca/front.webp"
+featured: false
+order: 9
+---
+
+## The brief
+
+This came out of the betting-platform Azure migration (see betting-platform-cloud-migration). A .NET application surfaced a recurring production failure pattern over three months after the migration, with liveness and readiness probes triggering and the application unable to scale through spike load. Observability surfaced the symptom (saturation and container restarts in Log Analytics) but not the cause. The customer's developers had not been able to pinpoint it.
+
+## What I did
+
+Built a small replication harness from the customer's own components, using their libraries, their service shape and their wiring, so the failure could be reproduced outside production. With the failure in hand, the pattern became visible. Too many synchronous calls in the request path, the .NET thread pool unable to keep up, and the Hill Climbing scaling algorithm not given the signal it needed to widen the pool fast enough.
+
+Two fixes followed. A Hill Climbing flag set on the .NET runtime so the algorithm could scale the pool aggressively under spike conditions, and an async refactor led by the customer's developers, with me on the diff review.
+
+## Why it mattered
+
+Three months of recurring production incidents stopped. The customer's developers got both the answer and the pattern to recognise it next time. The redline is observability-driven root-cause analysis on platforms I operate, with a replication harness as the tool that bridges symptom and cause.

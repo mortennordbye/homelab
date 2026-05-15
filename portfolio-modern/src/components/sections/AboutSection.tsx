@@ -45,12 +45,13 @@ export function AboutSection() {
         <div className="mt-20 grid grid-cols-12 gap-8 md:gap-12">
           <div className="col-span-12 md:col-span-7">
             <p className="text-fg-2 leading-relaxed">
-              Skilled ICT Service Operator by trade. Started in IT operations
-              where the work was on-prem and the failures were physical, then
-              slid into platform and cloud engineering as the workloads
-              followed. The route went through scripting, then automation,
-              then infrastructure as code, then the realisation that the
-              platform is the product and the dashboards are the contract.
+              Skilled ICT Service Operator by trade. Started on the front
+              line in an Operations Centre, monitoring alarms and running
+              incidents across customer environments, then slid into platform
+              and cloud engineering as the workloads followed. The route went
+              through scripting, then automation, then infrastructure as
+              code, then the realisation that the platform is the product
+              and the dashboards are the contract.
             </p>
             <p className="mt-4 text-fg-2 leading-relaxed">
               Today I work as a Cloud Engineer at Orange Business on Azure

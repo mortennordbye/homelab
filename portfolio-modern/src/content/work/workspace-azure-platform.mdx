@@ -1,0 +1,39 @@
+---
+title: "Internal Azure Platform for an IAM Automation App"
+slug: "workspace-azure-platform"
+kind: "professional"
+client: "Internal Orange Business department"
+role: "Platform architect"
+period: "2026"
+summary: "Designed and built the Azure platform for another Orange department's IAM and Microsoft 365 automation app, covering landing zone, container hosting, DNS and the GitHub repo with pipelines."
+stack:
+  - "Azure"
+  - "ACR"
+  - "Container Apps"
+  - "Azure DNS"
+  - "Terraform"
+  - "GitHub Actions"
+  - "WAF Application Landing Zone"
+outcomes:
+  - "Subscription-management-group laid down in the WAF Application Landing Zone format."
+  - "Azure Container Registry and Azure Container Apps for hosting the application services."
+  - "Azure DNS and supporting services configured for the platform."
+  - "Full GitHub repository with pipelines for deploying and managing the infrastructure, so the receiving team runs it themselves."
+cover: "/images/work/workspace-azure-platform/front.webp"
+featured: false
+order: 7
+---
+
+## The brief
+
+Another Orange department had built an automation app for IAM and Microsoft 365 work that scaled to thousands of users. The app worked. What it needed was a real Azure home, covering subscription layout, container hosting, the supporting services, and the pipelines to run that home over time. They wrote the app; I built the platform under it.
+
+## What I did
+
+The landing zone followed Microsoft's WAF Application Landing Zone pattern, including subscription-management-group structure, network shape and policy guardrails. Container hosting on Azure Container Apps with images coming from Azure Container Registry. Azure DNS plus the surrounding cert and identity pieces.
+
+Everything is Terraform. The GitHub repository with the deployment pipelines is part of the deliverable; the receiving team operates the platform without me as a single point of failure.
+
+## Why it mattered
+
+A department that had been running their own automation without a proper Azure home now operates a landing-zone-compliant platform via Terraform, without needing to involve me. The team owns it end-to-end from day one.

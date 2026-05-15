@@ -1,11 +1,11 @@
 ---
-title: "Home Lab Monitoring & Visualisation"
+title: "Home Lab Monitoring and Visualisation"
 slug: "tick-grafana-monitoring"
 kind: "homelab"
 client: "Personal project"
 role: "Engineer"
-period: "2022 — 2023"
-summary: "Built end-to-end OS observability for the home lab: TICK stack collects, Grafana visualises, Discord alerts."
+period: "2022 - 2023"
+summary: "Built end-to-end OS observability for the home lab, with the TICK stack collecting, Grafana visualising and Discord receiving alerts."
 stack: ["Telegraf", "InfluxDB", "Chronograf", "Kapacitor", "Grafana", "Ansible", "GitLab CI"]
 outcomes:
   - "OS-level metrics (CPU, memory, disk I/O, network) collected by Telegraf into InfluxDB."
@@ -19,21 +19,21 @@ gallery:
   - "/images/work/tick-grafana-monitoring/back-3.webp"
   - "/images/work/tick-grafana-monitoring/back-4.webp"
 featured: false
-order: 6
+order: 13
 ---
 
 ## The brief
 
-I wanted the homelab to tell me when something broke, instead of me finding out the slow way. The answer was the **TICK stack** plus Grafana, with alerts going into Discord because that is where I already am.
+I wanted the homelab to tell me when something broke, instead of me finding out the slow way. The answer was the TICK stack plus Grafana, with alerts going into Discord because that is where I already am.
 
 ## What I built
 
-- **Telegraf** agents on every host pushing metrics into InfluxDB.
-- **Chronograf** for quick data exploration. **Kapacitor** for alert logic.
-- **Grafana** for the dashboards I actually come back to.
-- **Discord webhooks** receiving alerts in a dedicated channel.
-- **Ansible** and **GitLab CI** handling deployment and config drift.
+- Telegraf agents on every host pushing metrics into InfluxDB.
+- Chronograf for quick data exploration. Kapacitor for alert logic.
+- Grafana for the dashboards I actually come back to.
+- Discord webhooks receiving alerts in a dedicated channel.
+- Ansible and GitLab CI handling deployment and config drift.
 
 ## Why it mattered
 
-Building observability end to end teaches you how the production tools work below the surface. It comes in handy when you are debugging someone else's stack later. *(Observability has since been rebuilt around Prometheus, Loki and OpenTelemetry on the new Talos cluster. This case study covers the TICK era.)*
+The TICK stack is a real production tool, the same stack Orange runs as its centralised observability platform for managed customers. Building and operating it at home meant I understood how Telegraf agent config, InfluxDB retention policy and Kapacitor alert logic connect before I was tuning them in customer environments. The TICK era has since been replaced by Prometheus, Loki and OpenTelemetry, but the mental model for how metrics flow from host to alert carried across stacks.

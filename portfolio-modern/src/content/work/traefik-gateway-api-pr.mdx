@@ -1,0 +1,33 @@
+---
+title: "Traefik Gateway API: Multi-Certificate Listener Support"
+slug: "traefik-gateway-api-pr"
+kind: "professional"
+client: "Traefik (open source)"
+role: "Contributor"
+period: "2026"
+summary: "Upstream contribution to Traefik that added support for multiple TLS certificates on a single Gateway API listener. Merged and released in v3.7.0."
+stack:
+  - "Traefik"
+  - "Gateway API"
+  - "Go"
+  - "TLS"
+outcomes:
+  - "Patch merged upstream into Traefik and released in v3.7.0."
+  - "Customer unblocked, with production now running on the supported upstream path rather than a workaround."
+  - "Workaround pattern documented in case other Traefik users hit the same limit before they upgrade."
+cover: "/images/work/traefik-gateway-api-pr/front.webp"
+featured: false
+order: 8
+---
+
+## The brief
+
+This came out of the betting-platform Azure migration (see betting-platform-cloud-migration). The customer was being moved off NGINX Ingress Controller onto Traefik with Gateway API. They needed multiple TLS certificates served from the same listener, distinct hostnames bound to distinct certs, a routine real-world TLS setup. Gateway API in Traefik did not support that at the time; only one cert per listener was honoured. The customer had a workaround in place (multiple listener names, one cert each) but it was awkward and not the supported pattern.
+
+## What I did
+
+Wrote the upstream patch in Go that lets a single Gateway API listener resolve to multiple cert secrets, with hostname-based SNI selection choosing the right cert at TLS handshake. The patch touched the cert-secret resolution logic and the SNI matching path, both of which required careful review to avoid regressions on the single-cert path that already worked. Iterated with the Traefik maintainers through the review cycle. Released in v3.7.0.
+
+## Why it mattered
+
+The customer now runs on a supported upstream feature rather than a workaround they have to remember to explain to the next engineer. The Traefik community gets the same fix. The path from customer need to upstream contribution is the redline here, since it is the same one I expect to repeat as architecture decisions surface OSS gaps in future engagements.

@@ -94,7 +94,7 @@ export function Hero() {
         <div className="col-span-12 md:col-span-8">
           <p className="font-display text-xs uppercase tracking-[0.3em] text-fg-3">
             <span className="text-accent">●</span>{" "}
-            available — Oslo &amp; remote · {site.role}
+            available, Oslo &amp; remote · {site.role}
           </p>
 
           <motion.h1
@@ -133,7 +133,7 @@ export function Hero() {
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Link
-              href="/work/"
+              href="#portfolio"
               className="group inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-display text-sm text-accent-ink transition-all hover:shadow-[0_0_44px_-8px_var(--accent)]"
             >
               See selected work
@@ -183,7 +183,7 @@ function PortraitCard() {
     <figure className="relative overflow-hidden rounded-lg border border-line bg-surface/40 backdrop-blur-sm">
       <div className="relative aspect-[4/5] w-full overflow-hidden">
         <Image
-          src="/profile.webp"
+          src="/images/profile.webp"
           alt="Morten Nordbye, Cloud Engineer & Architect, Oslo"
           fill
           priority
