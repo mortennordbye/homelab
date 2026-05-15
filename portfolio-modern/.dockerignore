@@ -9,13 +9,13 @@ README.md
 .vscode
 .idea
 
-# Locally-built CV artifacts. The Dockerfile rebuilds these from
-# src/content inside its texgen + pdfbuild stages, so leaking a dev's
-# local copies into the build context would just overwrite work.
+# CV artifacts are produced fresh inside the Dockerfile every build.
+# Never inherit a stale host-side copy.
 public/resume.pdf
-public/cv.pdf
+public/cv-*.pdf
+public/cv-manifest.json
 latex/output
-latex/cv.tex
+latex/cv-*.tex
 latex/resume.tex
 latex/cv/*.tex
 latex/resume/*.tex

@@ -98,7 +98,7 @@ const jsonLd = {
   jobTitle: site.role,
   description: site.description,
   url: site.url,
-  image: `${site.url}/profile.webp`,
+  image: `${site.url}/images/profile.webp`,
   email: `mailto:${site.email}`,
   nationality: { "@type": "Country", name: "Norway" },
   address: {

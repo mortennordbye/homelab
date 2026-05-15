@@ -16,7 +16,7 @@ export const site = {
   linkedin: "morten-victor-nordbye",
   twitter: "@mortennordbye",
   description:
-    "Morten Victor Nordbye — Cloud Engineer and Architect in Oslo. Kubernetes, Azure, GitOps, and the platform work that keeps production running.",
+    "Morten Victor Nordbye, Cloud Engineer and Architect in Oslo. Kubernetes, Azure, GitOps, and the platform work that keeps production running.",
   keywords: [
     "Cloud Engineer",
     "Cloud Architect",
@@ -43,12 +43,7 @@ export const site = {
     { label: "X / Twitter", href: "https://twitter.com/mortennordbye" },
     { label: "Blog", href: "https://blog.nordbye.it" },
   ],
-  nav: [
-    { label: "Work", href: "/work" },
-    { label: "Services", href: "/services" },
-    { label: "Resume", href: "/#resume" },
-    { label: "About", href: "/about" },
-  ],
+  nav: [],
 } as const;
 
 export type Site = typeof site;

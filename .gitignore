@@ -14,6 +14,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Claude Code per-machine settings (agent definitions under .claude/agents/ stay tracked)
+.claude/settings.local.json
+
 # Logs
 logs/
 *.log

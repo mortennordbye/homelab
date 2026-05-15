@@ -1,0 +1,57 @@
+---
+title: "PCI-DSS RHEL Major Upgrade Under Audit Pressure"
+slug: "nas-pci-rhel-upgrade"
+kind: "professional"
+client: "Confidential aviation customer"
+role: "Solo upgrade lead and de-facto TAM"
+period: "Aug 2025 - Jan 2026"
+summary: "ClamAV reaching EOL on RHEL7 forced an in-place upgrade of a 40-host PCI-DSS fleet with no parallel infrastructure option and an active audit cycle to protect. Delivered the RHEL7-to-RHEL8 upgrade alongside a full auth-layer rebuild and a 150-host OpenTelemetry rollout."
+stack:
+  - "RHEL 7"
+  - "RHEL 8"
+  - "RHEL 9"
+  - "Ansible"
+  - "IPA / FreeIPA"
+  - "Active Directory"
+  - "RSA two-factor"
+  - "CIS hardening"
+  - "Sumologic"
+  - "OpenTelemetry"
+  - "Tenable"
+  - "Wazuh"
+  - "Splunk"
+  - "F5 BIG-IP"
+outcomes:
+  - "Roughly 40 PCI-DSS hosts migrated from RHEL7 to RHEL8 in place, with no break in audit cycle."
+  - "IPA auth layer rebuilt on fresh RHEL9 VMs and switched from password sync to AD trust against the PCI Windows AD domain, integrated with RSA two-factor on the jump host."
+  - "CIS hardening rebuilt as an Ansible role to restore the customer-specific baseline after the in-place reset."
+  - "Sumologic with OpenTelemetry agent rolled out to all 150 RHEL hosts via Ansible, covering host metrics and Java application metrics."
+  - "PCI-DSS evidence trail intact through annual audit, segmentation testing, Tenable vulnerability scanning and Wazuh file-integrity monitoring."
+cover: "/images/work/nas-pci-rhel-upgrade/front.webp"
+featured: true
+order: 5
+---
+
+## The brief
+
+ClamAV had end-of-lifed on RHEL7. The customer's application could not be redeployed onto fresh infrastructure inside the available window, so in-place upgrade was the only path. The customer ran a roughly 40-host PCI-DSS Linux fleet, an active audit cycle, and no parallel infrastructure to fall back on. Standing still was not an option, because without a supported antivirus path the audit evidence trail would have broken.
+
+I owned this on the Orange side as de facto TAM. The rest of the five-person Orange-side team were Windows-focused and were not involved in the RHEL work.
+
+## What I did
+
+The core move was an in-place upgrade of the PCI fleet from RHEL7 to RHEL8. In place means the host stays put while the OS comes up underneath the same applications. The risk surface is wide, covering subtle config drift, baseline regressions, and packages that were valid on 7 and invalid on 8.
+
+Three pieces of side-work fell out of the upgrade.
+
+First, CIS hardening as an Ansible role. In-place upgrade reset parts of the CIS baseline back to RHEL8 defaults. The fix was a new Ansible role that puts the customer-specific baseline back deterministically and provides evidence for audit.
+
+Second, the IPA auth layer. IPA does not support in-place upgrade, so the IPA nodes had to be rebuilt on fresh VMs. I took that as an opportunity to lift them all the way to RHEL9, and to switch the auth model from password sync against the PCI Windows AD domain to a proper AD trust. The new model integrates with RSA two-factor on the jump host, which was its own integration problem worth solving once.
+
+Third, the OpenTelemetry rollout. In parallel with the upgrade, I rolled out the Sumologic OpenTelemetry agent across all 150 RHEL hosts in the customer's estate (PCI plus non-PCI) over about two months. The agent covers host metrics and the customer's Java applications, giving them a single observability path across the fleet.
+
+Throughout the engagement, PCI-DSS evidence stayed clean. Annual audit, segmentation testing and ordinary pentest both passed; Tenable scans ran on schedule; Wazuh kept file-integrity monitoring in place; Splunk handled the credit-card and authentication-attempt searches that PCI calls for.
+
+## Why it mattered
+
+The customer kept their audit cycle and stayed compliant through an OS forced-march that, done wrong, could have torn through their evidence and broken auth simultaneously. Two security-critical migrations shipped together with the operational discipline a PCI audit demands.

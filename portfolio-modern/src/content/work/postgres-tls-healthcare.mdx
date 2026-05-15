@@ -1,0 +1,49 @@
+---
+title: "Healthcare Postgres TLS and Host Migration"
+slug: "postgres-tls-healthcare"
+kind: "professional"
+client: "Confidential healthcare customers (two)"
+role: "Linux and Postgres engineer"
+period: "2023 - 2024"
+summary: "Migrated the Postgres host stack for two healthcare customers from RHEL7 to RHEL9 and implemented TLS connection strings with certificates, on infrastructure that real patients depend on."
+stack:
+  - "RHEL 7"
+  - "RHEL 9"
+  - "PostgreSQL"
+  - "TLS"
+  - "Ansible"
+  - "Kubernetes"
+  - "Traefik"
+  - "Fluent Bit"
+  - "Norsk Helsenett"
+outcomes:
+  - "Postgres host stack migrated from RHEL7 to RHEL9 across two healthcare customers with patient-facing services."
+  - "TLS connection strings with certificates implemented for client-to-server traffic on both customers."
+  - "Kubernetes cluster upgrade risk contained by running sequential upgrades across test, stage and prod for each customer, keeping NHN-connected clinical workloads online throughout."
+  - "Norsk Helsenett integration for clinical data exchange kept stable through the migration."
+cover: "/images/work/postgres-tls-healthcare/front.webp"
+featured: true
+order: 6
+---
+
+## The brief
+
+Two healthcare customers ran their patient-facing applications on Kubernetes with a Postgres host stack alongside it. Both customers had the same shape of work. RHEL7 was about to age out, the database trafficked patient data over unencrypted connections, and they wanted both fixed without dropping clinical service.
+
+Each customer connected to Norsk Helsenett (NHN), the regulated clinical network with strict peering and compliance controls that carries live patient data exchange to hospitals. That link had to stay up throughout the migration.
+
+Orange was the infra team for both customers, not a punctual delivery shop. That meant we owned the cluster and the database host stack on their behalf for the long run, not just the move.
+
+## What I did
+
+Host migration first. The Postgres hosts moved from RHEL7 to RHEL9. Application teams kept working through it.
+
+TLS next. Once the new RHEL9 hosts were in place, I switched the connection strings to TLS with proper certificates. Client and server now negotiate encrypted, certificate-validated connections.
+
+Cluster operations on top. Beyond the database work, we ran the Kubernetes clusters end-to-end, covering Traefik for ingress, Fluent Bit for logs, and core-service upgrades on a recurring cadence (Kubernetes, OS, ingress, logging stack) across the customers' environments. One customer ran test, stage and prod; the other ran stage and prod.
+
+The hard part on NHN was keeping the clinical data link stable while the OS and database layers moved underneath it. Any misconfiguration in the network stack or certificate chain would have severed the hospital integration, which is not a failure mode that goes unnoticed. Each cutover was sequenced so the NHN link was verified before the old host was retired.
+
+## Why it mattered
+
+Two healthcare estates running patient-facing services moved off an end-of-life OS and onto an encrypted, certificate-validated database path without service interruption. The kind of work that does not show up in a feature backlog but underwrites everything that does.

@@ -11,7 +11,7 @@ export function ResumeBody() {
   return (
     <div className="grid grid-cols-12 gap-12">
       {/* Left column — Certifications + Education */}
-      <aside className="col-span-12 md:col-span-5 space-y-16">
+      <aside className="col-span-12 md:col-span-4 space-y-16">
         <SectionBlock
           title="Licenses & Certifications"
           icon={<Award size={14} />}
@@ -75,7 +75,7 @@ export function ResumeBody() {
       </aside>
 
       {/* Right column — Experience */}
-      <section className="col-span-12 md:col-span-7">
+      <section className="col-span-12 md:col-span-8">
         <SectionBlock
           title="Professional Experience"
           icon={<ExternalLink size={14} />}

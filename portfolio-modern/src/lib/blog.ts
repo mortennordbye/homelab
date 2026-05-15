@@ -14,6 +14,7 @@ export type BlogPost = {
   url: string;
   date: string;
   excerpt: string;
+  cover?: string;
 };
 
 let cached: BlogPost[] | null = null;
@@ -45,11 +46,16 @@ function parseItem(itemXml: string): BlogPost | null {
   const pub = pick(itemXml, "pubDate");
   const desc = pick(itemXml, "description");
   if (!title || !link) return null;
+  // Hugo's RSS template emits <media:content url="..."> for feature / cover /
+  // thumbnail images (see blog/themes/blowfish/layouts/_default/rss.xml).
+  const mediaMatch = itemXml.match(/<media:content[^>]*\burl="([^"]+)"/);
+  const cover = mediaMatch ? decode(mediaMatch[1]).trim() : undefined;
   return {
     title: decode(title).trim(),
     url: link.trim(),
     date: pub ? formatDate(pub) : "",
     excerpt: snippet(desc, 160),
+    cover,
   };
 }
 
