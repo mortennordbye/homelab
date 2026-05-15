@@ -147,7 +147,7 @@ const experienceRaw: Experience[] = [
       "Daily stack: Linux and Windows Server, VMware ESXi, NetApp and Rubrik, Cisco firewalls and switches, F5 BIG-IP, SolidDNS, Digicert, Squid, Ansible, Azure and AWS. AWS Fundamentals certification during the period.",
     ],
     timeline: {
-      note: "On-prem, alarm gateway, full shift rotation.",
+      note: "Hybrid estate, alarm gateway, full shift rotation.",
     },
   },
   {
