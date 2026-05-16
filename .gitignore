@@ -75,3 +75,7 @@ blog/README.md
 /node_modules/
 /package.json
 /package-lock.json
+
+# Kustomize helm chart cache — regenerated locally by `kustomize build --enable-helm`,
+# ArgoCD pulls the chart fresh on sync.
+k8s/**/charts/
