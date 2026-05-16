@@ -6,7 +6,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: proxmox-local
+  storageClassName: syno-nfs-csi
   resources:
     requests:
       storage: 1Gi
@@ -44,15 +44,6 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: topology.kubernetes.io/zone
-                    operator: In
-                    values:
-                      - hyper1
       containers:
         - name: seerr
           image: ghcr.io/seerr-team/seerr:develop
