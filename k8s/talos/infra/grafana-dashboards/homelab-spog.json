@@ -3770,6 +3770,7 @@
     },
     {
       "collapsed": true,
+      "description": "Talos node /var fill (the writable root that backs ephemeral storage, container images, proxmox-csi PVC mounts, etc.) plus a PVC inventory. Per-PVC fill % is not available: kubelet on K8s 1.34 / Talos 1.11 does not emit `kubelet_volume_stats_*` despite running the collection. For NFS-backed PVC fill watch the Synology directly; for proxmox-local watch the Proxmox host's LVM pool.",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -3783,7 +3784,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Highest PVC fill across the cluster. NFS-backed PVCs report the underlying NAS share size, so they will stay near 0%.",
+          "description": "Fullest Talos node /var across the cluster. /var is the writable root for the Talos VM — backs ephemeral storage, container images, emptyDir, and proxmox-csi PVC mounts on that node. NFS PVCs do NOT show here (NAS-side capacity).",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3796,7 +3797,7 @@
                 "mode": "absolute",
                 "steps": [
                   { "color": "green", "value": null },
-                  { "color": "yellow", "value": 75 },
+                  { "color": "yellow", "value": 70 },
                   { "color": "orange", "value": 85 },
                   { "color": "red", "value": 95 }
                 ]
@@ -3805,8 +3806,8 @@
             },
             "overrides": []
           },
-          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 101 },
-          "id": 701,
+          "gridPos": { "h": 8, "w": 6, "x": 0, "y": 101 },
+          "id": 8001,
           "options": {
             "colorMode": "background",
             "graphMode": "area",
@@ -3826,13 +3827,13 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max(100 * (1 - kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes))",
+              "expr": "max(100 * (1 - node_filesystem_avail_bytes{mountpoint=\"/var\"} / node_filesystem_size_bytes{mountpoint=\"/var\"}))",
               "instant": false,
-              "legendFormat": "Most-full PVC",
+              "legendFormat": "Fullest /var",
               "refId": "A"
             }
           ],
-          "title": "Most-full PVC",
+          "title": "Fullest Talos node /var",
           "type": "stat"
         },
         {
@@ -3840,12 +3841,10 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Per-PVC fill. Sorted descending by % used.",
+          "description": "PVC inventory across all namespaces. Requested = the `spec.resources.requests.storage` from the PVC. Actual fill is not shown — see panel notes for why.",
           "fieldConfig": {
             "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
+              "color": { "mode": "thresholds" },
               "custom": {
                 "align": "auto",
                 "cellOptions": { "type": "auto" },
@@ -3854,52 +3853,18 @@
               "mappings": [],
               "thresholds": {
                 "mode": "absolute",
-                "steps": [
-                  { "color": "green", "value": null }
-                ]
+                "steps": [{ "color": "green", "value": null }]
               }
             },
             "overrides": [
               {
-                "matcher": { "id": "byName", "options": "Used %" },
-                "properties": [
-                  { "id": "unit", "value": "percent" },
-                  { "id": "max", "value": 100 },
-                  { "id": "min", "value": 0 },
-                  {
-                    "id": "custom.cellOptions",
-                    "value": { "type": "gauge", "mode": "gradient" }
-                  },
-                  {
-                    "id": "thresholds",
-                    "value": {
-                      "mode": "absolute",
-                      "steps": [
-                        { "color": "green", "value": null },
-                        { "color": "yellow", "value": 75 },
-                        { "color": "orange", "value": 85 },
-                        { "color": "red", "value": 95 }
-                      ]
-                    }
-                  }
-                ]
-              },
-              {
-                "matcher": { "id": "byName", "options": "Capacity" },
-                "properties": [{ "id": "unit", "value": "decbytes" }]
-              },
-              {
-                "matcher": { "id": "byName", "options": "Used" },
-                "properties": [{ "id": "unit", "value": "decbytes" }]
-              },
-              {
-                "matcher": { "id": "byName", "options": "Available" },
+                "matcher": { "id": "byName", "options": "Requested" },
                 "properties": [{ "id": "unit", "value": "decbytes" }]
               }
             ]
           },
           "gridPos": { "h": 12, "w": 18, "x": 6, "y": 101 },
-          "id": 702,
+          "id": 8002,
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -3909,7 +3874,7 @@
               "show": false
             },
             "showHeader": true,
-            "sortBy": [{ "desc": true, "displayName": "Used %" }]
+            "sortBy": [{ "desc": true, "displayName": "Requested" }]
           },
           "pluginVersion": "12.4.3",
           "targets": [
@@ -3918,66 +3883,25 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "100 * (1 - kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes)",
+              "expr": "kube_persistentvolumeclaim_resource_requests_storage_bytes * on(namespace,persistentvolumeclaim) group_left(storageclass,volumename) kube_persistentvolumeclaim_info",
               "format": "table",
               "instant": true,
               "legendFormat": "__auto",
-              "refId": "Used %"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "kubelet_volume_stats_capacity_bytes",
-              "format": "table",
-              "instant": true,
-              "legendFormat": "__auto",
-              "refId": "Capacity"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "kubelet_volume_stats_used_bytes",
-              "format": "table",
-              "instant": true,
-              "legendFormat": "__auto",
-              "refId": "Used"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "kubelet_volume_stats_available_bytes",
-              "format": "table",
-              "instant": true,
-              "legendFormat": "__auto",
-              "refId": "Available"
+              "refId": "A"
             }
           ],
-          "title": "PVC usage",
+          "title": "PVC inventory",
           "transformations": [
-            {
-              "id": "joinByField",
-              "options": {
-                "byField": "persistentvolumeclaim",
-                "mode": "outer"
-              }
-            },
             {
               "id": "filterFieldsByName",
               "options": {
                 "include": {
                   "names": [
-                    "namespace 1",
+                    "namespace",
                     "persistentvolumeclaim",
-                    "Value #Used %",
-                    "Value #Capacity",
-                    "Value #Used",
-                    "Value #Available"
+                    "storageclass",
+                    "Value",
+                    "volumename"
                   ]
                 }
               }
@@ -3987,20 +3911,18 @@
               "options": {
                 "excludeByName": {},
                 "indexByName": {
-                  "namespace 1": 0,
+                  "namespace": 0,
                   "persistentvolumeclaim": 1,
-                  "Value #Used %": 2,
-                  "Value #Used": 3,
-                  "Value #Available": 4,
-                  "Value #Capacity": 5
+                  "storageclass": 2,
+                  "Value": 3,
+                  "volumename": 4
                 },
                 "renameByName": {
-                  "namespace 1": "Namespace",
+                  "namespace": "Namespace",
                   "persistentvolumeclaim": "PVC",
-                  "Value #Used %": "Used %",
-                  "Value #Used": "Used",
-                  "Value #Available": "Available",
-                  "Value #Capacity": "Capacity"
+                  "storageclass": "StorageClass",
+                  "Value": "Requested",
+                  "volumename": "PV"
                 }
               }
             }
@@ -4012,7 +3934,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Available free space per PVC over time. A drop trend means a volume is filling up.",
+          "description": "Free space on each Talos node's /var partition. A downward trend means the node's writable root is filling up (container images, ephemeral storage, proxmox-csi PVCs).",
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "palette-classic" },
@@ -4047,7 +3969,7 @@
             "overrides": []
           },
           "gridPos": { "h": 8, "w": 24, "x": 0, "y": 113 },
-          "id": 703,
+          "id": 8003,
           "options": {
             "legend": {
               "calcs": ["lastNotNull", "min"],
@@ -4064,12 +3986,12 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "kubelet_volume_stats_available_bytes",
-              "legendFormat": "{{namespace}}/{{persistentvolumeclaim}}",
+              "expr": "node_filesystem_avail_bytes{mountpoint=\"/var\"} * on(instance) group_left(nodename) node_uname_info",
+              "legendFormat": "{{nodename}}",
               "refId": "A"
             }
           ],
-          "title": "Free space per PVC",
+          "title": "Talos node /var free space",
           "type": "timeseries"
         }
       ],
@@ -4169,6 +4091,6 @@
   "timezone": "browser",
   "title": "Homelab-SPOG",
   "uid": "mns9wmn",
-  "version": 24,
+  "version": 25,
   "weekStart": ""
 }
