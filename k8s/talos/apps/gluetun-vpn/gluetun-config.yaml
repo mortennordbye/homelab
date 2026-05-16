@@ -6,7 +6,7 @@ metadata:
 data:
   VPN_SERVICE_PROVIDER: "private internet access"
   VPN_TYPE: "openvpn"
-  SERVER_REGIONS: "Switzerland"
+  SERVER_REGIONS: "Netherlands"
   # Allow cluster pod network and service network for internal communication
   FIREWALL_OUTBOUND_SUBNETS: "10.0.0.0/8"
   # Allow incoming connections for qBittorrent (8080) and Prowlarr (9696)
