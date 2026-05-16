@@ -11,7 +11,8 @@ data:
   FIREWALL_OUTBOUND_SUBNETS: "10.0.0.0/8"
   # Allow incoming connections for qBittorrent (8080) and Prowlarr (9696)
   FIREWALL_INPUT_PORTS: "8080,9696"
-  # Preserve Kubernetes DNS resolution
-  DNS_KEEP_NAMESERVER: "on"
+  # Route DNS through the VPN tunnel via gluetun's internal DoT resolver.
+  # Side effect: pod loses CoreDNS / *.cluster.local resolution.
+  DNS_KEEP_NAMESERVER: "off"
   DOT: "off"
   TZ: "Europe/Oslo"
