@@ -11,3 +11,4 @@ resources:
   - metadata-pvc.yaml
   - namespace.yaml
   - service.yaml
+  - ciliumnetworkpolicy.yaml

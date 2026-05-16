@@ -10,3 +10,4 @@ resources:
   - postgres.yaml
   - app.yaml
   - httproute.yaml
+  - ciliumnetworkpolicy.yaml
