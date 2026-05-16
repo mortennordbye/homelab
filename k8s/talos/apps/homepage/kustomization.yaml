@@ -6,6 +6,7 @@ resources:
   - httproute.yaml
   - secrets.yaml
   - basicauth.yaml
+  - ciliumnetworkpolicy.yaml
 
 helmCharts:
   - name: homepage

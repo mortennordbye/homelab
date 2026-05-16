@@ -19,6 +19,13 @@ ipam:
 # Replace kube-proxy
 kubeProxyReplacement: true
 
+# Policy audit mode — TEMPORARY.
+# When true, CiliumNetworkPolicies are evaluated but drops are *logged only*
+# (Hubble verdict: AUDIT) rather than enforced. Use to vet new policies
+# without risk of breakage. Flip back to false once Hubble shows zero AUDIT
+# events for normal workflows.
+policyAuditMode: true
+
 # eBPF configuration
 bpf:
   masquerade: true

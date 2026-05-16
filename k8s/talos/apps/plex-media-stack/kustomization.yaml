@@ -10,3 +10,4 @@ resources:
   - tautulli.yaml
   - seerr.yaml
   - httproutes.yaml
+  - ciliumnetworkpolicies.yaml

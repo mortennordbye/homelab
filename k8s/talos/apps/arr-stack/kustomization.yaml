@@ -12,3 +12,4 @@ resources:
  # - huntarr.yaml
  # - cleanuparr.yaml
   - httproutes.yaml
+  - ciliumnetworkpolicies.yaml

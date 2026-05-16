@@ -1,0 +1,83 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: plex-policy
+  namespace: plex-media-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: plex
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "32400"
+              protocol: TCP
+    # Tautulli/Seerr (intra-ns) + Sonarr/Radarr (arr-stack) library refresh.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": plex-media-stack
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": arr-stack
+      toPorts:
+        - ports:
+            - port: "32400"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: seerr-policy
+  namespace: plex-media-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: seerr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "5055"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: tautulli-policy
+  namespace: plex-media-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: tautulli
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "8181"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": plex-media-stack
+            app: plex
+      toPorts:
+        - ports:
+            - port: "8181"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health

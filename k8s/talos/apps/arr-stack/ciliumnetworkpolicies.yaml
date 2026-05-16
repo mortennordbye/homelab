@@ -1,0 +1,115 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: bazarr-policy
+  namespace: arr-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: bazarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "6767"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: flaresolverr-policy
+  namespace: arr-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: flaresolverr
+  ingress:
+    # Reached by *arr apps inside this namespace and by Prowlarr in gluetun-vpn.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": arr-stack
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": gluetun-vpn
+      toPorts:
+        - ports:
+            - port: "8191"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: radarr-policy
+  namespace: arr-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: radarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "7878"
+              protocol: TCP
+    # Bazarr (arr-stack) + Seerr (plex-media-stack) + Prowlarr "Sync App"
+    # (gluetun-vpn) all call Radarr's API.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": arr-stack
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": plex-media-stack
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": gluetun-vpn
+      toPorts:
+        - ports:
+            - port: "7878"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: sonarr-policy
+  namespace: arr-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: sonarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "8989"
+              protocol: TCP
+    # Bazarr (arr-stack) + Seerr (plex-media-stack) + Prowlarr "Sync App"
+    # (gluetun-vpn) all call Sonarr's API.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": arr-stack
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": plex-media-stack
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": gluetun-vpn
+      toPorts:
+        - ports:
+            - port: "8989"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
