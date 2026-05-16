@@ -9,3 +9,4 @@ resources:
   - service.yaml
   - httproute.yaml
   - namespace.yaml
+  - ciliumnetworkpolicy.yaml

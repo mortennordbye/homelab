@@ -234,6 +234,10 @@ config:
             icon: tautulli.png
             href: https://tautulli.local.bigd.no
             description: Plex monitoring
+        - Hubble:
+            icon: cilium.png
+            href: https://hubble.local.bigd.no
+            description: Cilium network observability
 
   widgets:
     - kubernetes:
