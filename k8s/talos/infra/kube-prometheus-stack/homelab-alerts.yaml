@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-alerts
+  namespace: monitoring
+  labels:
+    # Matches Prometheus ruleSelector (kube-prometheus-stack default).
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: homelab.workload
+      rules:
+        # Fires when a container inside an existing pod is restarted by the kubelet
+        # more than 3 times in a 15-minute window. Catches early flapping before
+        # CrashLoopBackOff (handled by upstream KubePodCrashLooping after 15m sustained).
+        # `kubectl delete pod` does NOT trigger this — only in-pod container restarts do.
+        - alert: ContainerRestartingFrequently
+          expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'Container {{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} restarted >3 times in 15m'
+            description: |
+              Container `{{ $labels.container }}` in pod `{{ $labels.namespace }}/{{ $labels.pod }}` restarted {{ $value | printf "%.0f" }} times in the last 15 minutes.
+              Check: kubectl -n {{ $labels.namespace }} logs {{ $labels.pod }} -c {{ $labels.container }} --previous
