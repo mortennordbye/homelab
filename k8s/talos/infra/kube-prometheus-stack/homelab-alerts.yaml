@@ -8,12 +8,14 @@ metadata:
     release: kube-prometheus-stack
 spec:
   groups:
+    # Workload-level: anything an app would expose as user-visible breakage.
     - name: homelab.workload
       rules:
-        # Fires when a container inside an existing pod is restarted by the kubelet
-        # more than 3 times in a 15-minute window. Catches early flapping before
-        # CrashLoopBackOff (handled by upstream KubePodCrashLooping after 15m sustained).
-        # `kubectl delete pod` does NOT trigger this — only in-pod container restarts do.
+        # Container restarted more than 3 times inside a 15-minute window.
+        # Catches early flapping before CrashLoopBackOff (upstream
+        # KubePodCrashLooping fires only after 15 min sustained).
+        # `kubectl delete pod` does NOT trigger this — only in-pod container
+        # restarts (e.g. container exits, kubelet restarts in place) do.
         - alert: ContainerRestartingFrequently
           expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
           for: 2m
@@ -24,3 +26,76 @@ spec:
             description: |
               Container `{{ $labels.container }}` in pod `{{ $labels.namespace }}/{{ $labels.pod }}` restarted {{ $value | printf "%.0f" }} times in the last 15 minutes.
               Check: kubectl -n {{ $labels.namespace }} logs {{ $labels.pod }} -c {{ $labels.container }} --previous
+
+        # Deployment desires >0 replicas but has 0 available for >5 min.
+        # Filters out deployments intentionally scaled to 0.
+        - alert: DeploymentUnavailable
+          expr: |
+            (kube_deployment_status_replicas_available == 0)
+              and on(namespace, deployment)
+            (kube_deployment_spec_replicas > 0)
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has 0 ready replicas'
+            description: |
+              Deployment `{{ $labels.namespace }}/{{ $labels.deployment }}` wants >0 replicas but has 0 available for over 5 minutes.
+              Check: kubectl -n {{ $labels.namespace }} describe deploy {{ $labels.deployment }}
+
+        # Any container OOMKilled in the last 10 minutes.
+        # Tells you to raise the memory request/limit before flapping kicks in.
+        - alert: ContainerOOMKilled
+          expr: increase(kube_pod_container_status_terminated_reason{reason="OOMKilled"}[10m]) > 0
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'Container {{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} OOMKilled'
+            description: |
+              Container `{{ $labels.container }}` in pod `{{ $labels.namespace }}/{{ $labels.pod }}` was OOMKilled at least once in the last 10 minutes.
+              Raise the memory request/limit. Check: kubectl -n {{ $labels.namespace }} describe pod {{ $labels.pod }}
+
+    # Platform-level: anything that breaks the control plane (deploys, secrets, certs).
+    - name: homelab.platform
+      rules:
+        # Any ArgoCD application not Healthy for >15 min.
+        # Would have caught the kube-prometheus-stack ComparisonError automatically.
+        - alert: ArgoCDAppDegraded
+          expr: argocd_app_info{health_status!="Healthy",health_status!=""} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'ArgoCD app {{ $labels.name }} health={{ $labels.health_status }} sync={{ $labels.sync_status }}'
+            description: |
+              ArgoCD application `{{ $labels.name }}` (project `{{ $labels.project }}`, dest `{{ $labels.dest_namespace }}`) has been in health_status `{{ $labels.health_status }}` / sync_status `{{ $labels.sync_status }}` for over 15 minutes.
+              Check: kubectl -n argocd describe application {{ $labels.name }}
+
+        # ExternalSecret has been NotReady for 30 min.
+        # Typical causes: Bitwarden API breakage, expired token, missing/renamed secret in the store, wrong remoteRef UUID.
+        - alert: ExternalSecretNotReady
+          expr: externalsecret_status_condition{status="False",condition="Ready"} == 1
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'ExternalSecret {{ $labels.namespace }}/{{ $labels.name }} not Ready'
+            description: |
+              ExternalSecret `{{ $labels.namespace }}/{{ $labels.name }}` has been NotReady for 30 minutes.
+              Check: kubectl -n {{ $labels.namespace }} describe externalsecret {{ $labels.name }}
+
+        # Any cert-manager certificate within 7 days of expiry.
+        # cert-manager normally auto-renews — if this fires the DNS-01 / HTTP-01
+        # challenge is failing silently.
+        - alert: CertificateExpiringSoon
+          expr: certmanager_certificate_expiration_timestamp_seconds - time() < 7 * 24 * 3600
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: 'Certificate {{ $labels.namespace }}/{{ $labels.name }} expires in {{ $value | humanizeDuration }}'
+            description: |
+              Certificate `{{ $labels.namespace }}/{{ $labels.name }}` expires in {{ $value | humanizeDuration }}.
+              cert-manager should be auto-renewing — if this fires, the renewal pipeline is broken.
+              Check: kubectl -n {{ $labels.namespace }} describe certificate {{ $labels.name }}
