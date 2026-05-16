@@ -3767,6 +3767,314 @@
       ],
       "title": "Node",
       "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 100
+      },
+      "id": 700,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Highest PVC fill across the cluster. NFS-backed PVCs report the underlying NAS share size, so they will stay near 0%.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 75 },
+                  { "color": "orange", "value": 85 },
+                  { "color": "red", "value": 95 }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 101 },
+          "id": 701,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max(100 * (1 - kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes))",
+              "instant": false,
+              "legendFormat": "Most-full PVC",
+              "refId": "A"
+            }
+          ],
+          "title": "Most-full PVC",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Per-PVC fill. Sorted descending by % used.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": { "type": "auto" },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "Used %" },
+                "properties": [
+                  { "id": "unit", "value": "percent" },
+                  { "id": "max", "value": 100 },
+                  { "id": "min", "value": 0 },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": { "type": "gauge", "mode": "gradient" }
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        { "color": "green", "value": null },
+                        { "color": "yellow", "value": 75 },
+                        { "color": "orange", "value": 85 },
+                        { "color": "red", "value": 95 }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": { "id": "byName", "options": "Capacity" },
+                "properties": [{ "id": "unit", "value": "decbytes" }]
+              },
+              {
+                "matcher": { "id": "byName", "options": "Used" },
+                "properties": [{ "id": "unit", "value": "decbytes" }]
+              },
+              {
+                "matcher": { "id": "byName", "options": "Available" },
+                "properties": [{ "id": "unit", "value": "decbytes" }]
+              }
+            ]
+          },
+          "gridPos": { "h": 12, "w": 18, "x": 6, "y": 101 },
+          "id": 702,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": ["sum"],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [{ "desc": true, "displayName": "Used %" }]
+          },
+          "pluginVersion": "12.4.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * (1 - kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes)",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "refId": "Used %"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "kubelet_volume_stats_capacity_bytes",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "refId": "Capacity"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "kubelet_volume_stats_used_bytes",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "refId": "Used"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "kubelet_volume_stats_available_bytes",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "refId": "Available"
+            }
+          ],
+          "title": "PVC usage",
+          "transformations": [
+            {
+              "id": "joinByField",
+              "options": {
+                "byField": "persistentvolumeclaim",
+                "mode": "outer"
+              }
+            },
+            {
+              "id": "filterFieldsByName",
+              "options": {
+                "include": {
+                  "names": [
+                    "namespace 1",
+                    "persistentvolumeclaim",
+                    "Value #Used %",
+                    "Value #Capacity",
+                    "Value #Used",
+                    "Value #Available"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {},
+                "indexByName": {
+                  "namespace 1": 0,
+                  "persistentvolumeclaim": 1,
+                  "Value #Used %": 2,
+                  "Value #Used": 3,
+                  "Value #Available": 4,
+                  "Value #Capacity": 5
+                },
+                "renameByName": {
+                  "namespace 1": "Namespace",
+                  "persistentvolumeclaim": "PVC",
+                  "Value #Used %": "Used %",
+                  "Value #Used": "Used",
+                  "Value #Available": "Available",
+                  "Value #Capacity": "Capacity"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Available free space per PVC over time. A drop trend means a volume is filling up.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": { "type": "linear" },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": { "group": "A", "mode": "none" },
+                "thresholdsStyle": { "mode": "off" }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{ "color": "green", "value": null }]
+              },
+              "unit": "decbytes"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 113 },
+          "id": 703,
+          "options": {
+            "legend": {
+              "calcs": ["lastNotNull", "min"],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": { "mode": "multi", "sort": "desc" }
+          },
+          "pluginVersion": "12.4.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "kubelet_volume_stats_available_bytes",
+              "legendFormat": "{{namespace}}/{{persistentvolumeclaim}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Free space per PVC",
+          "type": "timeseries"
+        }
+      ],
+      "title": "Storage",
+      "type": "row"
     }
   ],
   "preload": false,
@@ -3861,6 +4169,6 @@
   "timezone": "browser",
   "title": "Homelab-SPOG",
   "uid": "mns9wmn",
-  "version": 23,
+  "version": 24,
   "weekStart": ""
 }
