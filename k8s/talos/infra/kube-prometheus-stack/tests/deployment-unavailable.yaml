@@ -1,0 +1,33 @@
+# Triggers: DeploymentUnavailable
+#
+# Deployment with replicas=1 and an image that will never pull
+# (ghcr.io/nonexistent/...). Pod sits in ImagePullBackOff forever,
+# kube_deployment_status_replicas_available stays at 0, kube_deployment_spec_replicas=1,
+# alert fires after `for: 5m`.
+#
+# Expected timeline:
+#   t≈0       deploy created
+#   t≈30s     pod ImagePullBackOff
+#   t≈5min    alert pending → firing → Discord (group_wait: 30s)
+#   t≈6min    Discord receives [FIRING:1] DeploymentUnavailable (severity: critical)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-test-unavailable
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: homelab-alert-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alert-test-unavailable
+  template:
+    metadata:
+      labels:
+        app: alert-test-unavailable
+        app.kubernetes.io/managed-by: homelab-alert-test
+    spec:
+      containers:
+        - name: nope
+          image: ghcr.io/morten-homelab/this-image-will-never-exist:never

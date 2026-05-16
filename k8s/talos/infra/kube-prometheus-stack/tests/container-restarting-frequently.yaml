@@ -1,0 +1,32 @@
+# Triggers: ContainerRestartingFrequently
+#
+# Container exits every 20s; kubelet restarts in place; restart counter climbs.
+# Alert fires once increase(...[15m]) > 3 has held for `for: 2m`.
+#
+# Expected timeline:
+#   t≈0       pod starts
+#   t≈75s     restart #3
+#   t≈3min    restart >3 → alert state: pending
+#   t≈5min    `for: 2m` elapsed → firing → Discord (group_wait: 30s)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-test-restart
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: homelab-alert-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alert-test-restart
+  template:
+    metadata:
+      labels:
+        app: alert-test-restart
+        app.kubernetes.io/managed-by: homelab-alert-test
+    spec:
+      containers:
+        - name: crash
+          image: busybox:1.37.0
+          command: ["sh", "-c", "echo running; sleep 20; echo crashing; exit 1"]

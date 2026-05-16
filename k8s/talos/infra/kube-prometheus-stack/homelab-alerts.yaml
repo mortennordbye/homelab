@@ -43,17 +43,22 @@ spec:
               Deployment `{{ $labels.namespace }}/{{ $labels.deployment }}` wants >0 replicas but has 0 available for over 5 minutes.
               Check: kubectl -n {{ $labels.namespace }} describe deploy {{ $labels.deployment }}
 
-        # Any container OOMKilled in the last 10 minutes.
-        # Tells you to raise the memory request/limit before flapping kicks in.
+        # Any container whose last termination was OOMKilled within the last 10 min.
+        # last_terminated_reason is a persistent gauge (stays 1 forever after an OOM),
+        # so we AND it with a recency check on last_terminated_timestamp to ensure the
+        # alert auto-clears once the OOMs stop happening.
         - alert: ContainerOOMKilled
-          expr: increase(kube_pod_container_status_terminated_reason{reason="OOMKilled"}[10m]) > 0
+          expr: |
+            kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1
+            and on(namespace, pod, container)
+            (time() - kube_pod_container_status_last_terminated_timestamp) < 600
           for: 1m
           labels:
             severity: warning
           annotations:
             summary: 'Container {{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} OOMKilled'
             description: |
-              Container `{{ $labels.container }}` in pod `{{ $labels.namespace }}/{{ $labels.pod }}` was OOMKilled at least once in the last 10 minutes.
+              Container `{{ $labels.container }}` in pod `{{ $labels.namespace }}/{{ $labels.pod }}` was OOMKilled in the last 10 minutes.
               Raise the memory request/limit. Check: kubectl -n {{ $labels.namespace }} describe pod {{ $labels.pod }}
 
     # Platform-level: anything that breaks the control plane (deploys, secrets, certs).
