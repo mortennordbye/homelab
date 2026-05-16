@@ -1,0 +1,51 @@
+# Triggers: ContainerOOMKilled
+#
+# Python allocates 300 × 1 MiB byte strings (anonymous RSS) inside a container
+# with a 64 MiB memory limit. The kernel OOM killer reaps the container.
+# kubelet restarts it; OOMKilled again. Loop continues until the deployment is
+# deleted.
+#
+# Why anonymous allocation (not `dd` to /dev/shm)? K8s default /dev/shm tmpfs
+# size is bounded (~64 MiB), and oversized writes hit ENOSPC, exiting the
+# container with `StartError` instead of `OOMKilled`. Anonymous RSS allocations
+# are uncapped at userspace level but capped by the cgroup memory limit, so
+# they cleanly trip the OOM killer.
+#
+# Expected timeline:
+#   t≈0       pod starts
+#   t≈5s      Python allocation grows past 64 MiB → cgroup OOMKill
+#   t≈10s     kubelet restarts → OOMKilled again, loop
+#   t≈1min    rule expression true → alert pending
+#   t≈2min    `for: 1m` elapsed → firing → Discord (group_wait: 30s)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-test-oom
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: homelab-alert-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alert-test-oom
+  template:
+    metadata:
+      labels:
+        app: alert-test-oom
+        app.kubernetes.io/managed-by: homelab-alert-test
+    spec:
+      containers:
+        - name: hog
+          image: python:3.13-alpine
+          command:
+            - python
+            - -c
+            - |
+              l = [b'a' * (1024 * 1024) for _ in range(300)]
+              import time; time.sleep(60)
+          resources:
+            requests:
+              memory: "32Mi"
+            limits:
+              memory: "64Mi"
