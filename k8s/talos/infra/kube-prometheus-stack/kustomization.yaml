@@ -8,6 +8,7 @@ resources:
   - httproutes.yaml
   - grafana-admin-credentials-secret.yaml
   - alertmanager-discord-webhook-secret.yaml
+  - homelab-alerts.yaml
 
 helmCharts:
   - name: kube-prometheus-stack
