@@ -57,6 +57,15 @@ grafana:
     server:
       domain: grafana.local.bigd.no
 
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki
+      access: proxy
+      url: http://loki.monitoring:3100/
+      jsonData:
+        maxLines: 1000
+
 ## Alertmanager — routes Prometheus alerts to Discord
 alertmanager:
   enabled: true
