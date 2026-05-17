@@ -2,18 +2,45 @@ alloy:
   configMap:
     create: true
     content: |
-      // 1. Discover pods (Note the corrected component name)
+      // 1. Discover pods
       discovery.kubernetes "all_pods" {
         role = "pod"
       }
 
-      // 2. Tailing logs via the Kubernetes API (Standard for Alloy)
+      // 2. Map k8s discovery metadata to stream labels.
+      //    Keep this list short — every label here becomes part of Loki's index.
+      discovery.relabel "pod_logs" {
+        targets = discovery.kubernetes.all_pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label  = "app"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_k8s_app"]
+          target_label  = "k8s_app"
+        }
+      }
+
+      // 3. Tail logs from the relabeled targets
       loki.source.kubernetes "pod_logs" {
-        targets    = discovery.kubernetes.all_pods.targets
+        targets    = discovery.relabel.pod_logs.output
         forward_to = [loki.process.labels.receiver]
       }
 
-      // 3. Add metadata/labels
+      // 4. Add static labels
       loki.process "labels" {
         stage.static_labels {
           values = {
@@ -23,7 +50,7 @@ alloy:
         forward_to = [loki.write.local.receiver]
       }
 
-      // 4. Send to your Loki service
+      // 5. Send to Loki
       loki.write "local" {
         endpoint {
           url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"

@@ -4198,7 +4198,7 @@
             "type": "loki",
             "uid": "${loki_datasource}"
           },
-          "expr": "{namespace=\"kube-system\", app=\"cilium\"} |~ \"(?i)error|denied|drop|audit\"",
+          "expr": "{namespace=\"kube-system\", app=\"cilium-agent\"} |~ \"(?i)error|denied|drop|audit\"",
           "queryType": "range",
           "refId": "A"
         }
