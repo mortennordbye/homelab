@@ -500,6 +500,41 @@
             }
           ],
           "type": "table"
+        },
+        {
+          "type": "logs",
+          "title": "Recent errors (Loki)",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 17
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "loki",
+                "uid": "${loki_datasource}"
+              },
+              "expr": "{namespace=\"traefik\"} |~ \"(?i)error|warn|fail|timeout|refused\"",
+              "queryType": "range",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": false,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "sortOrder": "Descending"
+          }
         }
       ],
       "title": "Traefik",
@@ -873,6 +908,41 @@
           ],
           "title": "ACME Request Latency (P99)",
           "type": "timeseries"
+        },
+        {
+          "type": "logs",
+          "title": "Recent errors (Loki)",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 33
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "loki",
+                "uid": "${loki_datasource}"
+              },
+              "expr": "{namespace=\"cert-manager\"} |~ \"(?i)error|fail\"",
+              "queryType": "range",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": false,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "sortOrder": "Descending"
+          }
         }
       ],
       "title": "Cert-manager",
@@ -1244,7 +1314,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 26
       },
       "id": 205,
       "panels": [],
@@ -1294,7 +1364,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 19
+        "y": 27
       },
       "id": 301,
       "options": {
@@ -1391,7 +1461,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 19
+        "y": 27
       },
       "id": 302,
       "options": {
@@ -1503,7 +1573,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 19
+        "y": 27
       },
       "id": 303,
       "options": {
@@ -1574,7 +1644,7 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 35
       },
       "id": 304,
       "options": {
@@ -1615,7 +1685,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 40
       },
       "id": 405,
       "panels": [],
@@ -1688,7 +1758,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 33
+        "y": 41
       },
       "id": 501,
       "options": {
@@ -1757,7 +1827,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 33
+        "y": 41
       },
       "id": 502,
       "options": {
@@ -1855,7 +1925,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 33
+        "y": 41
       },
       "id": 503,
       "options": {
@@ -1923,7 +1993,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 49
       },
       "id": 504,
       "options": {
@@ -1973,7 +2043,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 47
+        "y": 63
       },
       "id": 103,
       "panels": [
@@ -2043,7 +2113,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 75
+            "y": 91
           },
           "id": 201,
           "options": {
@@ -2104,7 +2174,7 @@
             "h": 8,
             "w": 6,
             "x": 12,
-            "y": 75
+            "y": 91
           },
           "id": 202,
           "options": {
@@ -2185,7 +2255,7 @@
             "h": 8,
             "w": 6,
             "x": 18,
-            "y": 75
+            "y": 91
           },
           "id": 203,
           "options": {
@@ -2284,7 +2354,7 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 314
+            "y": 330
           },
           "id": 204,
           "options": {
@@ -2337,7 +2407,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 64
       },
       "id": 102,
       "panels": [
@@ -2407,7 +2477,7 @@
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 76
+            "y": 92
           },
           "id": 51,
           "options": {
@@ -2510,7 +2580,7 @@
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 76
+            "y": 92
           },
           "id": 53,
           "options": {
@@ -2613,7 +2683,7 @@
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 85
+            "y": 101
           },
           "id": 54,
           "options": {
@@ -2716,7 +2786,7 @@
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 85
+            "y": 101
           },
           "id": 55,
           "options": {
@@ -2763,7 +2833,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 65
       },
       "id": 101,
       "panels": [
@@ -2834,7 +2904,7 @@
             "h": 12,
             "w": 12,
             "x": 0,
-            "y": 77
+            "y": 93
           },
           "id": 80,
           "options": {
@@ -2939,7 +3009,7 @@
             "h": 12,
             "w": 12,
             "x": 12,
-            "y": 77
+            "y": 93
           },
           "id": 81,
           "options": {
@@ -2987,7 +3057,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 66
       },
       "id": 100,
       "panels": [
@@ -3057,7 +3127,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 78
+            "y": 94
           },
           "id": 1,
           "options": {
@@ -3154,7 +3224,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 78
+            "y": 94
           },
           "id": 2,
           "options": {
@@ -3269,7 +3339,7 @@
             "h": 8,
             "w": 18,
             "x": 0,
-            "y": 86
+            "y": 102
           },
           "id": 3,
           "options": {
@@ -3353,7 +3423,7 @@
             "h": 8,
             "w": 6,
             "x": 18,
-            "y": 86
+            "y": 102
           },
           "id": 4,
           "options": {
@@ -3452,7 +3522,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 94
+            "y": 110
           },
           "id": 5,
           "options": {
@@ -3527,7 +3597,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 94
+            "y": 110
           },
           "id": 6,
           "options": {
@@ -3635,7 +3705,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 102
+            "y": 118
           },
           "id": 7,
           "options": {
@@ -3732,7 +3802,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 102
+            "y": 118
           },
           "id": 8,
           "options": {
@@ -3774,7 +3844,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 100
+        "y": 116
       },
       "id": 700,
       "panels": [
@@ -3821,7 +3891,7 @@
             "h": 8,
             "w": 6,
             "x": 0,
-            "y": 101
+            "y": 117
           },
           "id": 8001,
           "options": {
@@ -3902,7 +3972,7 @@
             "h": 12,
             "w": 18,
             "x": 6,
-            "y": 101
+            "y": 117
           },
           "id": 8002,
           "options": {
@@ -4037,7 +4107,7 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 113
+            "y": 129
           },
           "id": 8003,
           "options": {
@@ -4073,6 +4143,76 @@
       ],
       "title": "Storage",
       "type": "row"
+    },
+    {
+      "type": "logs",
+      "title": "Recent errors (Loki)",
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "{namespace=\"external-secrets\"} |~ \"(?i)error|fail\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Recent errors (Loki)",
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 55
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "{namespace=\"kube-system\", app=\"cilium\"} |~ \"(?i)error|denied|drop|audit\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
     }
   ],
   "preload": false,
@@ -4159,6 +4299,23 @@
         "query": "Average : 1, Minimum : 2, Maximum : 3",
         "type": "custom",
         "valuesFormat": "csv"
+      },
+      {
+        "name": "loki_datasource",
+        "type": "datasource",
+        "query": "loki",
+        "label": "Loki",
+        "regex": "",
+        "current": {
+          "selected": false,
+          "text": "Loki",
+          "value": "loki"
+        },
+        "hide": 0,
+        "refresh": 1,
+        "skipUrlSync": false,
+        "multi": false,
+        "includeAll": false
       }
     ]
   },
