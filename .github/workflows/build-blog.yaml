@@ -2,32 +2,60 @@ name: Build and Deploy Blog
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - stage
+          - prod
+        default: stage
   push:
-    branches: ["main"]
+    branches:
+      - main # Pushing here updates STAGE only
     paths:
       - "blog/**"
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/blog
-  MANIFEST_PATH: k8s/talos/apps/blog/deployment.yaml
 
 jobs:
-  build-and-update:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required to commit the new tag
-      packages: write # Required to push the image
+      contents: write # Needed to update manifests
+      packages: write # Needed to push images
 
     steps:
       - uses: actions/checkout@v6
         with:
-          submodules: recursive # Critical for themes
+          submodules: recursive # Critical for the Hugo theme submodule
           fetch-depth: 0
 
-      - name: Generate Short SHA
-        id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Determine Environment
+        id: context
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "TAG=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+          # workflow_dispatch input takes precedence, otherwise default to stage
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENV="${{ inputs.environment }}"
+          else
+            ENV="stage"
+          fi
+
+          echo "ENV=${ENV}" >> $GITHUB_OUTPUT
+
+          if [[ "${ENV}" == "prod" ]]; then
+            echo "MANIFEST=k8s/talos/apps/blog/deployment.yaml" >> $GITHUB_OUTPUT
+          else
+            echo "MANIFEST=k8s/talos/apps/blog-stage/deployment.yaml" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Deploying to environment: ${ENV}"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
@@ -46,36 +74,42 @@ jobs:
         with:
           context: ./blog
           push: true
-          # Pushes both 'latest' and the specific SHA
+          # Immutable SHA tag + mutable env tag (stage / prod)
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.ENV }}
 
       - name: Logout from Docker Hub
         if: always()
         run: docker logout
 
-      - name: Update Deployment Manifest
+      - name: Update Kubernetes Manifest
         run: |
-          # Define new image tag
-          NEW_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}"
+          MANIFEST="${{ steps.context.outputs.MANIFEST }}"
+          TAG="${{ steps.context.outputs.TAG }}"
+          ENV="${{ steps.context.outputs.ENV }}"
+          NEW_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
 
-          # Use sed to replace ONLY the blog image line
-          # Preserves indentation, comments, and file structure
-          sed -i "s|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:.*|image: $NEW_IMAGE|g" ${{ env.MANIFEST_PATH }}
+          echo "Updating manifest: ${MANIFEST}"
+          echo "New image: ${NEW_IMAGE}"
 
-          # Verify change in logs
-          grep "image:" ${{ env.MANIFEST_PATH }}
+          if [[ ! -f "${MANIFEST}" ]]; then
+            echo "ERROR: Manifest file not found: ${MANIFEST}"
+            exit 1
+          fi
 
-          # Configure Git
+          sed -i "s|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:.*|image: ${NEW_IMAGE}|g" $MANIFEST
+
+          echo "Changes made:"
+          git diff $MANIFEST
+
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-          # Commit and Push if changes exist
           if [[ -n $(git status -s) ]]; then
-            git add ${{ env.MANIFEST_PATH }}
-            git commit -m "chore(blog): update image tag to ${{ steps.vars.outputs.sha_short }}"
-            git push
+            git add $MANIFEST
+            git commit -m "chore(blog): deploy ${TAG} to ${ENV}"
+            git push origin HEAD:main
           else
-            echo "No changes detected."
+            echo "Manifest already up to date."
           fi

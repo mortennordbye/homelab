@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: blog-stage
+  namespace: stage-blog
+spec:
+  selector:
+    app.kubernetes.io/name: blog-stage
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
