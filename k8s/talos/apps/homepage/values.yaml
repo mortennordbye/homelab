@@ -171,8 +171,12 @@ config:
               key: "{{HOMEPAGE_VAR_BAZARR_API_KEY}}"
         - Plex:
             icon: plex.png
-            href: https://plex.local.bigd.no
-            description: Media server
+            href: http://10.3.10.101:32400/web
+            description: Media server (via Traefik TCPRoute)
+        - Plex (Direct):
+            icon: plex.png
+            href: http://10.3.10.103:32400/web
+            description: Direct LB IP fallback (bypasses Traefik)
         - qBittorrent:
             icon: qbittorrent.png
             href: https://qbittorrent.local.bigd.no
