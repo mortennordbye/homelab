@@ -1,0 +1,40 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: metrics-server
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: metrics-server
+  ingress:
+    # Aggregated API server requests for metrics.
+    - fromEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "10250"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+  egress:
+    # DNS to CoreDNS.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    # Scrape kubelet on every node for resource metrics.
+    - toEntities:
+        - host
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "10250"
+              protocol: TCP
+    # Aggregated API server registration.
+    - toEntities:
+        - kube-apiserver

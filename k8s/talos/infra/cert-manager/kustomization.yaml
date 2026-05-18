@@ -13,6 +13,7 @@ resources:
   - certificates/logeverylift-com.yaml
   - issuers/letsencrypt-prod.yaml
   - reference-grant.yaml
+  - ciliumnetworkpolicy.yaml
 
 namespace: cert-manager
 helmCharts:

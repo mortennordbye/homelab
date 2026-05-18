@@ -1,0 +1,38 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: authentik
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: authentik
+  ingress:
+    # Web UI / OIDC endpoints fronted by Traefik.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+    # Internal: server <-> worker <-> postgres within the namespace.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": identity
+            "k8s:app.kubernetes.io/instance": authentik
+    - fromEntities:
+        - host
+        - health
+  egress:
+    # DNS to CoreDNS.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    # Internal: server -> postgres, worker -> postgres, server <-> worker.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": identity
+            "k8s:app.kubernetes.io/instance": authentik
+    # No external IdP configured yet. Audit mode will reveal SMTP / OIDC upstreams if any.

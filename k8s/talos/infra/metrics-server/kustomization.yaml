@@ -6,6 +6,9 @@ commonAnnotations:
 
 namespace: kube-system
 
+resources:
+  - ciliumnetworkpolicy.yaml
+
 helmCharts:
   - name: metrics-server
     repo: https://kubernetes-sigs.github.io/metrics-server/
