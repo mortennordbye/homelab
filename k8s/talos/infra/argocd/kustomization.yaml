@@ -8,6 +8,7 @@ resources:
   - apps.yaml
   - infra.yaml
   - httproute.yaml
+  - ciliumnetworkpolicy.yaml
 namespace: argocd
 
 helmCharts:

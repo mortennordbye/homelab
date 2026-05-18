@@ -1,0 +1,36 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: argocd-egress
+  namespace: argocd
+spec:
+  endpointSelector:
+    matchLabels:
+      "k8s:io.kubernetes.pod.namespace": argocd
+  egress:
+    # DNS to CoreDNS. Required for toFQDNs to resolve names.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    # GitHub for manifest fetches by argocd-repo-server.
+    # *.github.com covers api.github.com, codeload.github.com, etc.
+    # *.githubusercontent.com covers raw.githubusercontent.com.
+    - toFQDNs:
+        - matchPattern: "*.github.com"
+        - matchPattern: "*.githubusercontent.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    # Kubernetes API server for application-controller to reconcile resources.
+    - toEntities:
+        - kube-apiserver
+    # Internal traffic between argocd components (server, repo-server, redis, etc.).
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": argocd
