@@ -119,6 +119,18 @@ config:
             icon: mdi-web-clock
             href: https://portfolio-stage.local.bigd.no
             description: Staging environment
+        - Blog (Production):
+            icon: mdi-post-outline
+            href: https://blog.nordbye.it
+            description: Tech blog
+        - Blog (Staging):
+            icon: mdi-post-outline
+            href: https://blog-stage.local.bigd.no
+            description: Blog staging environment
+        - Workout (LogEveryLift):
+            icon: mdi-dumbbell
+            href: https://logeverylift.com
+            description: Workout logger
         - Headroom:
             icon: mdi-head-cog
             href: https://headroom.local.bigd.no
@@ -202,6 +214,14 @@ config:
             icon: home-assistant.png
             href: http://10.3.10.15:8123
             description: Direct IP fallback (k8s-independent)
+        - ArgoCD:
+            icon: argocd.png
+            href: https://argocd.local.bigd.no
+            description: GitOps controller (via Traefik)
+        - ArgoCD (Direct):
+            icon: argocd.png
+            href: https://10.3.10.100
+            description: Direct LB IP fallback (bypasses Traefik)
 
     - Torrent Sites:
         - IPTorrents:
@@ -224,7 +244,7 @@ config:
     - Monitoring:
         - Prometheus:
             icon: prometheus.png
-            href: http://prometheus.local.bigd.no
+            href: https://prometheus.local.bigd.no
             description: Metrics database
         - Grafana:
             icon: grafana.png
