@@ -1,0 +1,34 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: proxmox-csi-plugin
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: proxmox-csi-plugin
+  ingress:
+    - fromEntities:
+        - kube-apiserver
+    - fromEntities:
+        - host
+        - health
+  egress:
+    # DNS to CoreDNS.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    # Kubernetes API server for CSI registration and volume operations.
+    - toEntities:
+        - kube-apiserver
+    # Proxmox API on the LAN. Endpoint lives in a sealed secret; audit mode will reveal the actual IP set.
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "8006"
+              protocol: TCP

@@ -1,0 +1,44 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: cert-manager
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: cert-manager
+  ingress:
+    # Webhook + cainjector receive validating/mutating admission calls.
+    - fromEntities:
+        - kube-apiserver
+    - fromEntities:
+        - host
+        - health
+  egress:
+    # DNS to CoreDNS.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    # Let's Encrypt ACME + Cloudflare DNS-01 validation.
+    - toFQDNs:
+        - matchName: "acme-v02.api.letsencrypt.org"
+        - matchName: "api.cloudflare.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    # Recursive DNS for DNS-01 propagation checks (Cloudflare 1.1.1.1, Quad9 9.9.9.9).
+    - toCIDR:
+        - "1.1.1.1/32"
+        - "9.9.9.9/32"
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    # Kubernetes API server.
+    - toEntities:
+        - kube-apiserver

@@ -9,6 +9,7 @@ resources:
   - cluster_issuer.yaml
   - bitwarden-certificate.yaml
   - clustersecretstore-bitwarden.yaml
+  - ciliumnetworkpolicy.yaml
 
 helmCharts:
   - name: external-secrets

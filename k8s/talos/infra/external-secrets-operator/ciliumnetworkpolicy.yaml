@@ -1,0 +1,47 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: external-secrets-operator
+  namespace: external-secrets
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: external-secrets-operator
+  ingress:
+    # Webhook + cert-controller receive admission and metrics scrapes.
+    - fromEntities:
+        - kube-apiserver
+    - fromEntities:
+        - host
+        - health
+    # Internal traffic between ESO components (operator -> bitwarden-sdk-server).
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": external-secrets
+            "k8s:app.kubernetes.io/instance": external-secrets-operator
+  egress:
+    # DNS to CoreDNS.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    # Bitwarden Secrets Manager API + identity (called by the bitwarden-sdk-server pod).
+    - toFQDNs:
+        - matchName: "api.bitwarden.com"
+        - matchName: "identity.bitwarden.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    # Kubernetes API server.
+    - toEntities:
+        - kube-apiserver
+    # Internal: operator -> bitwarden-sdk-server, cert-controller -> webhook, etc.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": external-secrets
+            "k8s:app.kubernetes.io/instance": external-secrets-operator
