@@ -161,6 +161,7 @@ Homelab infrastructure for a 6-node Proxmox cluster running a Talos Kubernetes c
 - **Match the manifest style of the surrounding app.** App directories use kustomize or plain manifests inconsistently — copy the pattern of the directory you're editing rather than introducing a new one.
 - **Image tags are pinned.** Don't change a tag to `latest`; bump to a specific version. The CI pipelines rewrite tags for portfolio/blog only.
 - **Home Assistant is configured via the HA MCP server**, not via files in this repo. Only add HA-related Kubernetes manifests (the HA pod itself, networking) here — the automation/dashboard config lives in HA.
+- **Blog posts follow `blog/STYLE.md`.** Before drafting a new post under `blog/content/blog/**` or proposing voice/structure edits to an existing one, read `blog/STYLE.md` — it's the personality/rule book derived from posts already published.
 
 ### Code quality
 
