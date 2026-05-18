@@ -12,7 +12,7 @@ RUN apk add --no-cache \
     npm \
     libstdc++ \
     gcompat \
-    && wget -O hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v0.154.5/hugo_extended_0.154.5_linux-amd64.tar.gz \
+    && wget -O hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v0.161.1/hugo_extended_0.161.1_linux-amd64.tar.gz \
     && tar -xzf hugo.tar.gz \
     && mv hugo /usr/bin/hugo \
     && rm hugo.tar.gz LICENSE README.md \
