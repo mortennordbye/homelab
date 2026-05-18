@@ -10,6 +10,7 @@ resources:
   - alertmanager-discord-webhook-secret.yaml
   - homelab-alerts.yaml
   - dashboards
+  - ciliumnetworkpolicy.yaml
 
 helmCharts:
   - name: kube-prometheus-stack

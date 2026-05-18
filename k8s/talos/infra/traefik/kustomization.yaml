@@ -11,6 +11,7 @@ resources:
   - service-public.yaml
   - service-private.yaml
   - httproute-dashboard.yaml
+  - ciliumnetworkpolicy.yaml
 
 helmCharts:
   - name: traefik

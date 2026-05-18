@@ -3,6 +3,9 @@ kind: Kustomization
 
 namespace: monitoring
 
+resources:
+  - ciliumnetworkpolicy.yaml
+
 helmCharts:
 
   - name: loki

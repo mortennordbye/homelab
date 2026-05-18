@@ -9,3 +9,4 @@ resources:
   - service.yaml
   - gluetun.yaml
   - httproute.yaml
+  - ciliumnetworkpolicy.yaml
