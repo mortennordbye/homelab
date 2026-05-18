@@ -7,6 +7,24 @@ spec:
   endpointSelector:
     matchLabels:
       "k8s:io.kubernetes.pod.namespace": argocd
+  ingress:
+    # Traefik fronts the argocd-server UI.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+    # Prometheus scrapes argocd-server, repo-server, application-controller metrics.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": prometheus
+    # Internal: argocd components talk to each other (redis, server, repo-server, controller).
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": argocd
+    - fromEntities:
+        - host
+        - health
   egress:
     # DNS to CoreDNS. Required for toFQDNs to resolve names.
     - toEndpoints:
