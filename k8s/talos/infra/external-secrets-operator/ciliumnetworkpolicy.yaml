@@ -8,9 +8,14 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: external-secrets-operator
   ingress:
-    # Webhook + cert-controller receive admission and metrics scrapes.
+    # Webhook + cert-controller receive admission calls.
     - fromEntities:
         - kube-apiserver
+    # Prometheus scrapes the three metrics services (operator, cert-controller, webhook).
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": prometheus
     - fromEntities:
         - host
         - health

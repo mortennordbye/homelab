@@ -37,10 +37,8 @@ spec:
         - ports:
             - port: "53"
               protocol: ANY
-    # Backend pods live in every namespace that has an HTTPRoute targeting traefik.
-    # toEntities: cluster covers them all; audit mode reveals the actual set if a tighter rule is wanted later.
+    # Backends + Kubernetes API. cluster entity already covers all pods, host,
+    # remote-node, and kube-apiserver, so this single line is enough. Audit mode
+    # will reveal the actual destination set if a tighter rule is wanted later.
     - toEntities:
         - cluster
-    # Kubernetes API for Gateway/HTTPRoute discovery.
-    - toEntities:
-        - kube-apiserver

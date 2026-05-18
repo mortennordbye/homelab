@@ -32,13 +32,11 @@ spec:
     # Kubernetes API for service discovery.
     - toEntities:
         - kube-apiserver
-    # Scrape targets: every pod in the cluster (audit mode will narrow).
+    # Scrape targets: every pod, host, and remote node in the cluster (cluster entity
+    # already covers host + remote-node + kube-apiserver, so node-exporter on the host
+    # network is included). Audit mode will narrow this later.
     - toEntities:
         - cluster
-    # Scrape node-exporter (DaemonSet on host network) on every node.
-    - toEntities:
-        - host
-        - remote-node
 ---
 # Alertmanager: receives alert payloads from Prometheus, forwards to Discord.
 apiVersion: "cilium.io/v2"
@@ -127,6 +125,15 @@ spec:
   ingress:
     - fromEntities:
         - kube-apiserver
+    # Prometheus scrapes the operator's own metrics on the HTTPS admission port.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": prometheus
+      toPorts:
+        - ports:
+            - port: "10250"
+              protocol: TCP
     - fromEntities:
         - host
         - health
