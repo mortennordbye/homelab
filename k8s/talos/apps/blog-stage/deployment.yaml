@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog-stage
+  namespace: stage-blog
+  labels:
+    app.kubernetes.io/name: blog-stage
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: blog-stage
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: blog-stage
+    spec:
+      containers:
+        - name: blog
+          image: ghcr.io/mortennordbye/homelab/blog:efb2131
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
