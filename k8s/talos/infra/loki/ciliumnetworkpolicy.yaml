@@ -1,0 +1,86 @@
+# Loki: log ingest from Alloy, queries from Grafana.
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: loki
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: loki
+  ingress:
+    # Alloy pushes logs on the loki HTTP port.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": alloy
+      toPorts:
+        - ports: [{ port: "3100", protocol: TCP }]
+    # Grafana queries.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": grafana
+      toPorts:
+        - ports: [{ port: "3100", protocol: TCP }]
+    # Prometheus scrapes loki metrics.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": prometheus
+    # Memberlist gossip between loki replicas (single-binary today, but kept open).
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": loki
+    - fromEntities:
+        - host
+        - health
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports: [{ port: "53", protocol: ANY }]
+    # Self for memberlist gossip.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": loki
+    # Filesystem storage only; no S3/MinIO egress needed.
+---
+# Alloy: DaemonSet collecting logs/metrics from every node, pushes to Loki.
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: alloy
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: alloy
+  ingress:
+    # Prometheus scrapes alloy metrics.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": prometheus
+    - fromEntities:
+        - host
+        - health
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports: [{ port: "53", protocol: ANY }]
+    # Push logs to Loki.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": loki
+      toPorts:
+        - ports: [{ port: "3100", protocol: TCP }]
+    # Kubernetes API for pod discovery and log enrichment.
+    - toEntities:
+        - kube-apiserver

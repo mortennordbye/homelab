@@ -1,0 +1,46 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: traefik
+  namespace: traefik
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: traefik
+  ingress:
+    # Public ingress from anywhere on HTTP/HTTPS (LB-exposed).
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+            - port: "8443"
+              protocol: TCP
+            - port: "8444"
+              protocol: TCP
+    # Dashboard / metrics endpoint scraped by Prometheus.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": prometheus
+    - fromEntities:
+        - host
+        - health
+  egress:
+    # DNS to CoreDNS.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    # Backend pods live in every namespace that has an HTTPRoute targeting traefik.
+    # toEntities: cluster covers them all; audit mode reveals the actual set if a tighter rule is wanted later.
+    - toEntities:
+        - cluster
+    # Kubernetes API for Gateway/HTTPRoute discovery.
+    - toEntities:
+        - kube-apiserver

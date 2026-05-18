@@ -1,0 +1,57 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: gluetun-vpn
+  namespace: gluetun-vpn
+spec:
+  endpointSelector:
+    matchLabels:
+      app: gluetun
+  ingress:
+    # Traefik fronts qbittorrent (8080) and prowlarr (9696) UIs.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+            - port: "9696"
+              protocol: TCP
+    # arr-stack pods query prowlarr for indexers.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": arr-stack
+      toPorts:
+        - ports:
+            - port: "9696"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+  egress:
+    # DNS to CoreDNS for resolving PIA endpoints at startup.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    # VPN tunnel egress to PIA. OpenVPN on UDP 1194/1198; WireGuard on UDP 51820.
+    # All inner traffic (qbittorrent peers, torrent indexers, etc.) is encapsulated
+    # in this tunnel and not visible to Cilium as separate flows.
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "1194"
+              protocol: UDP
+            - port: "1198"
+              protocol: UDP
+            - port: "51820"
+              protocol: UDP
+            - port: "443"
+              protocol: TCP
