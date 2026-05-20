@@ -1,0 +1,19 @@
+# Persisted Chroma index — rebuilt locally, never committed.
+local_poc_db/
+
+# Sample documents — sensitive content stays on the laptop.
+# Exception: the generated contract fixtures under contracts/contract_<slug>.pdf
+# ship with the repo so anyone cloning can `make run` immediately. The
+# exception is scoped tightly so any other PDFs/DOCX (including user-dropped
+# files in contracts/) stay local.
+*.pdf
+*.docx
+!contracts/contract_*.pdf
+
+# Python local state
+.venv/
+__pycache__/
+*.pyc
+
+# Local env overrides
+.env

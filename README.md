@@ -181,10 +181,17 @@ graph TB
 │   ├── 📁 config/
 │   ├── 📁 content/
 │   └── 📁 themes/
-└── 📁 portfolio/                        # Portfolio site source
-    ├── Dockerfile
-    ├── 📁 nginx/
-    └── 📁 src/
+├── 📁 portfolio/                        # Portfolio site source
+│   ├── Dockerfile
+│   ├── 📁 nginx/
+│   └── 📁 src/
+└── 📁 ai/                               # AI agents, skills, projects, local LLM
+    ├── 📁 agents/
+    ├── 📁 skills/
+    ├── 📁 projects/
+    ├── 📁 local-llm/
+    ├── 📁 prompts/
+    └── 📁 notes/
 ```
 
 ---
