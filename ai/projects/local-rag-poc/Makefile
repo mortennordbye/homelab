@@ -5,8 +5,9 @@
 # host.docker.internal (Docker Desktop for Mac handles this automatically).
 
 IMAGE := local-rag-poc:dev
+WEB_PORT ?= 8000
 
-.PHONY: lm-setup lm-status lm-stop sample build run shell clean
+.PHONY: lm-setup lm-status lm-stop sample build run shell up web web-shell clean
 
 # Declaratively download + load the two required LM Studio models and start
 # the local server. Idempotent — safe to re-run. See setup-lmstudio.sh for
@@ -44,14 +45,18 @@ build:
 
 # `make run` rebuilds the image, mounts the project folder so the script sees
 # the user's PDFs/DOCX plus the persisted Chroma DB, and connects to LM Studio
-# on the host. By default drops into an interactive REPL — override with
-# QUESTION=… to run a single query and exit:
+# on the host. By default drops into an interactive REPL with the hybrid
+# retriever. Override with:
 #     QUESTION="What is the late-payment interest rate?" make run
+#     MODE=vector make run           # use the dense (Chroma) retriever only
+#     MODE=bm25    make run          # use the sparse (BM25) retriever only
+#     MODE=hybrid  make run          # default
 run: build
 	docker run --rm -it \
 		--add-host=host.docker.internal:host-gateway \
 		-e QUESTION \
 		-e DOC_DIR \
+		-e MODE \
 		-v "$(PWD)":/app \
 		$(IMAGE)
 
@@ -60,6 +65,41 @@ shell: build
 	docker run --rm -it \
 		--add-host=host.docker.internal:host-gateway \
 		-v "$(PWD)":/app \
+		--entrypoint /bin/bash \
+		$(IMAGE)
+
+# Launch the three-mode comparison web UI. Builds all three retrievers at
+# startup (slow cold-start: chunking + Chroma fingerprint check + BM25 index),
+# then serves on http://localhost:$(WEB_PORT). The same volume mount as `run`
+# means a fresh PDF added to ./contracts/ will be picked up on the next
+# `make web`.
+# One-shot bring-up: ensure LM Studio is serving the required models, then
+# build + run the web UI. `lm-setup` is idempotent — if the models are already
+# downloaded, loaded, and the server is up, it just verifies and exits.
+up:
+	@$(MAKE) --no-print-directory lm-setup
+	@$(MAKE) --no-print-directory web
+
+web: build
+	@echo ""
+	@echo "  ▸ local-rag-poc web UI →  http://localhost:$(WEB_PORT)"
+	@echo "    (cold start: chunking + index build — first request after 'ready' is fast)"
+	@echo ""
+	docker run --rm -it \
+		--add-host=host.docker.internal:host-gateway \
+		-e DOC_DIR \
+		-v "$(PWD)":/app \
+		-p $(WEB_PORT):8000 \
+		$(IMAGE) \
+		uvicorn web.app:app --host 0.0.0.0 --port 8000
+
+# Same image, but drop into bash — useful for inspecting installed packages
+# or running uvicorn with custom flags (--reload, --log-level, etc.).
+web-shell: build
+	docker run --rm -it \
+		--add-host=host.docker.internal:host-gateway \
+		-v "$(PWD)":/app \
+		-p $(WEB_PORT):8000 \
 		--entrypoint /bin/bash \
 		$(IMAGE)
 

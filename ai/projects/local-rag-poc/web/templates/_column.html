@@ -1,0 +1,39 @@
+{# One mode's result. Rendered into #col-{mode} as an htmx swap target. #}
+{% if error %}
+  <div class="error" role="alert">
+    <strong>Error</strong>
+    <pre>{{ error }}</pre>
+  </div>
+{% else %}
+  <section class="answer">
+    <h3>Answer</h3>
+    <p>{{ answer }}</p>
+  </section>
+
+  <details class="chunks" open>
+    <summary>Retrieved chunks &middot; {{ chunks|length }}</summary>
+    <ol>
+      {% for chunk in chunks %}
+      <li>
+        <div class="chunk-meta">
+          <span class="chip source" title="{{ chunk.source }}">{{ chunk.source }}</span>
+          {% if chunk.page is not none %}<span class="chip page">p. {{ chunk.page }}</span>{% endif %}
+        </div>
+        <pre class="chunk-text">{{ chunk.text }}</pre>
+      </li>
+      {% endfor %}
+    </ol>
+  </details>
+
+  <footer class="timings" aria-label="latency breakdown">
+    <span class="t-chip" title="Time spent in the retriever alone">
+      retrieval&nbsp;<strong>{{ retrieval_ms }}</strong>&nbsp;ms
+    </span>
+    <span class="t-chip" title="Time spent in the LLM call (also includes a second retrieval pass inside RetrievalQA)">
+      llm&nbsp;<strong>{{ llm_ms }}</strong>&nbsp;ms
+    </span>
+    <span class="t-chip" title="Total wall-clock">
+      total&nbsp;<strong>{{ total_ms }}</strong>&nbsp;ms
+    </span>
+  </footer>
+{% endif %}
