@@ -26,7 +26,9 @@ import hashlib
 import os
 import shutil
 import sys
+import time
 from pathlib import Path
+from typing import Any
 
 # --- LangChain stack imports --------------------------------------------------
 # The split-package layout (langchain, langchain-community, langchain-openai,
@@ -186,10 +188,19 @@ def _doc_fingerprint(doc_paths: list[Path]) -> str:
 
 
 # =============================================================================
-# Step 3 — Build the hybrid retriever (Chroma + BM25 → Ensemble)
+# Step 3 — Build the retrievers
 # =============================================================================
-def build_ensemble_retriever(chunks, doc_paths: list[Path]):
-    """Build (or reuse) the Chroma store and combine it 50/50 with BM25."""
+# The three modes the web UI compares (vector / bm25 / hybrid) and the CLI
+# `MODE=` flag exposes all share the same chunk set and same builders below.
+# Keep them as independent functions so the web layer can instantiate any
+# subset without dragging in the others (e.g. MODE=bm25 skips the slow
+# Chroma cold-start entirely).
+
+MODES = ("vector", "bm25", "hybrid")
+
+
+def build_vector_retriever(chunks, doc_paths: list[Path]):
+    """Build (or reuse) the Chroma store and return a dense retriever."""
 
     # Embeddings client points at LM Studio. `check_embedding_ctx_length=False`
     # disables the OpenAI-side context-length check that fails against
@@ -231,22 +242,37 @@ def build_ensemble_retriever(chunks, doc_paths: list[Path]):
         )
         fp_path.write_text(current_fp)
 
-    # Dense retriever — semantic similarity over the embedded chunks.
-    vector_retriever = vector_store.as_retriever(search_kwargs={"k": TOP_K})
+    return vector_store.as_retriever(search_kwargs={"k": TOP_K})
 
-    # Sparse retriever — classic BM25 over the same chunks. BM25 is rebuilt
-    # in-memory every cold start; there is no persisted index. For this POC
-    # that's fine.
+
+def build_bm25_retriever(chunks):
+    """Sparse retriever — classic BM25 rebuilt in-memory each cold start."""
     bm25_retriever = BM25Retriever.from_documents(chunks)
     bm25_retriever.k = TOP_K
+    return bm25_retriever
 
-    # 50/50 ensemble. Tuning these weights is the first thing worth doing
-    # once an eval harness exists.
-    ensemble = EnsembleRetriever(
+
+def build_hybrid_retriever(vector_retriever, bm25_retriever):
+    """50/50 ensemble of the two. Tuning weights is the first thing worth doing
+    once an eval harness exists."""
+    return EnsembleRetriever(
         retrievers=[vector_retriever, bm25_retriever],
         weights=[0.5, 0.5],
     )
-    return ensemble
+
+
+def build_retriever(mode: str, chunks, doc_paths: list[Path]):
+    """Dispatch on MODE. Only builds what's needed for that mode."""
+    if mode == "vector":
+        return build_vector_retriever(chunks, doc_paths)
+    if mode == "bm25":
+        return build_bm25_retriever(chunks)
+    if mode == "hybrid":
+        return build_hybrid_retriever(
+            build_vector_retriever(chunks, doc_paths),
+            build_bm25_retriever(chunks),
+        )
+    raise ValueError(f"unknown mode {mode!r}; choose one of {MODES}")
 
 
 # =============================================================================
@@ -362,6 +388,43 @@ def run_query(qa, query: str) -> None:
         print()
 
 
+# =============================================================================
+# Step 5b — Structured query for the web layer
+# =============================================================================
+# RetrievalQA hides retrieval timing and bundles the LLM call. The web UI
+# wants both numbers separately (so you can see at a glance whether vector
+# retrieval cost more than BM25, etc.) and also needs the raw retrieved chunks
+# regardless of what the LLM said. So we expose a thin structured runner that
+# the FastAPI endpoint calls — it does one retrieval, then invokes the chain
+# (which retrieves a second time internally but the result is identical and
+# both retrievers are fast relative to the LLM call). For a POC this is fine.
+def run_query_structured(retriever, qa, query: str) -> dict[str, Any]:
+    """Run a query and return a dict suitable for JSON / template rendering."""
+    t0 = time.perf_counter()
+    retrieved = retriever.invoke(query)
+    t1 = time.perf_counter()
+    result = qa.invoke({"query": query})
+    t2 = time.perf_counter()
+
+    chunks = []
+    for doc in retrieved:
+        chunks.append(
+            {
+                "source": doc.metadata.get("source", "<unknown>"),
+                "page": doc.metadata.get("page", None),
+                "text": doc.page_content,
+            }
+        )
+
+    return {
+        "answer": result["result"],
+        "chunks": chunks,
+        "retrieval_ms": int((t1 - t0) * 1000),
+        "llm_ms": int((t2 - t1) * 1000),
+        "total_ms": int((t2 - t0) * 1000),
+    }
+
+
 # Words that exit the REPL. `q` is included because it's the universal "I'm
 # done" shortcut from less / vim / psql.
 EXIT_WORDS = {"exit", "quit", "q", ":q", ":quit"}
@@ -401,9 +464,17 @@ def interactive_loop(qa) -> None:
 def main() -> None:
     print(BANNER)
 
+    # MODE=… picks which retriever the CLI uses. Default "hybrid" preserves
+    # the previous behaviour so existing scripts and the README workflow keep
+    # working unchanged. The web UI builds all three retrievers regardless.
+    mode = os.getenv("MODE", "hybrid").strip().lower()
+    if mode not in MODES:
+        sys.exit(f"ERROR: unknown MODE={mode!r}; choose one of {MODES}")
+
     doc_paths = find_documents()
     chunks = load_and_chunk(doc_paths)
-    retriever = build_ensemble_retriever(chunks, doc_paths)
+    retriever = build_retriever(mode, chunks, doc_paths)
+    print(f"Retrieval mode: {mode}")
     qa = build_qa_chain(retriever, doc_paths)
 
     # QUESTION=… lets you skip the REPL for scripting / CI — runs one query

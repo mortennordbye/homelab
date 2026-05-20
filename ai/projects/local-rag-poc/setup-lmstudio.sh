@@ -60,6 +60,14 @@ QUANT="Q4_K_M"
 # Server port the script (and main.py) expect.
 PORT="1234"
 
+# Context window to load the CHAT model with. Llama-3.1-8B-Instruct natively
+# supports 128k, but `lms load` defaults to ~2048 tokens unless told otherwise.
+# With TOP_K=6 chunks of ~200 tokens each plus the prompt template, document
+# inventory, and question, ~2048 is too small and LM Studio returns
+# `Context size has been exceeded`. 8192 leaves comfortable headroom; bump
+# higher if you raise TOP_K or CHUNK_SIZE in main.py.
+CHAT_CTX="8192"
+
 # Where LM Studio stores model files. Files dropped here are picked up by
 # `lms ls` and become loadable.
 LMSTUDIO_MODELS_DIR="${HOME}/.lmstudio/models"
@@ -178,28 +186,52 @@ ensure_loaded() {
   local repo="$2"
   local identifier="$3"
   local label="$4"
+  local ctx="${5:-}"   # optional: --context-length value
 
   if model_loaded "${identifier}"; then
     log "${label} already loaded as '${identifier}' — skipping."
     return 0
   fi
 
-  log "Loading ${label} as '${identifier}'…"
+  local ctx_args=()
+  if [[ -n "${ctx}" ]]; then
+    ctx_args=(--context-length "${ctx}")
+    log "Loading ${label} as '${identifier}' (context-length=${ctx})…"
+  else
+    log "Loading ${label} as '${identifier}'…"
+  fi
+
   # Try the full repo path first; fall back to the substring match in case
   # `lms load` wants the local key rather than the HF path.
-  if ! lms load "${repo}" --identifier "${identifier}" --yes 2>/dev/null; then
+  if ! lms load "${repo}" --identifier "${identifier}" "${ctx_args[@]}" --yes 2>/dev/null; then
     log "  retrying with local key '${match}'…"
-    lms load "${match}" --identifier "${identifier}" --yes
+    lms load "${match}" --identifier "${identifier}" "${ctx_args[@]}" --yes
   fi
 }
 
 ensure_server() {
-  if lms server status >/dev/null 2>&1; then
-    log "Local server already running on port ${PORT} — skipping."
-  else
-    log "Starting LM Studio local server on port ${PORT}…"
-    lms server start --port "${PORT}"
+  # `lms server status` can return success even when the HTTP server isn't
+  # bound to ${PORT} — probe the actual endpoint instead.
+  if curl -fsS "http://localhost:${PORT}/v1/models" >/dev/null 2>&1; then
+    log "Local server already serving on port ${PORT} — skipping."
+    return 0
   fi
+
+  log "Starting LM Studio local server on port ${PORT}…"
+  lms server start --port "${PORT}"
+
+  # `lms server start` returns once the daemon accepts the start command,
+  # not once the HTTP listener is bound. Poll the endpoint for a few seconds.
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    if curl -fsS "http://localhost:${PORT}/v1/models" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  err "Server start command returned, but /v1/models is still not reachable on :${PORT}."
+  err "Open LM Studio → Developer → Local Server and confirm it's listening on ${PORT}."
+  exit 1
 }
 
 verify() {
@@ -241,7 +273,7 @@ ensure_downloaded "${EMBED_MATCH}" "${EMBED_REPO}" "embedding model"
 ensure_downloaded "${CHAT_MATCH}"  "${CHAT_REPO}"  "chat model"
 
 ensure_loaded "${EMBED_MATCH}" "${EMBED_REPO}" "${EMBED_ID}" "embedding model"
-ensure_loaded "${CHAT_MATCH}"  "${CHAT_REPO}"  "${CHAT_ID}"  "chat model"
+ensure_loaded "${CHAT_MATCH}"  "${CHAT_REPO}"  "${CHAT_ID}"  "chat model" "${CHAT_CTX}"
 
 ensure_server
 verify

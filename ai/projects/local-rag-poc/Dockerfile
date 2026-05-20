@@ -26,9 +26,11 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY main.py .
+COPY web ./web
 
 # Defaults assume the container talks to LM Studio on the Docker Desktop host.
 ENV LM_STUDIO_BASE_URL=http://host.docker.internal:1234/v1 \
     LM_STUDIO_API_KEY=lm-studio
 
+# Default entrypoint is the CLI. `make web` overrides CMD to launch uvicorn.
 CMD ["python", "main.py"]

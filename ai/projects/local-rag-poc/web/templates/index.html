@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>local-rag-poc — three-mode comparison</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>
+      <span class="dot" aria-hidden="true" title="service running"></span>
+      <span class="repo-name">local-rag-poc</span>
+      <span class="sr-only">three-mode retrieval comparison</span>
+    </h1>
+    <p class="subtitle">
+      Same question, three retrieval strategies. Compare the answers and the chunks each strategy surfaced —
+      is the vector DB earning its keep over plain keyword search?
+    </p>
+  </header>
+
+  <section class="corpus">
+    <details>
+      <summary>Corpus &middot; {{ doc_paths|length }} document{{ '' if doc_paths|length == 1 else 's' }}</summary>
+      <ul>
+        {% for p in doc_paths %}
+        <li title="{{ p }}">{{ p }}</li>
+        {% endfor %}
+      </ul>
+    </details>
+  </section>
+
+  <form id="query-form" class="query-form" onsubmit="event.preventDefault(); fireAll();">
+    <label for="q" class="sr-only">Question</label>
+    <div class="input-shell">
+      <svg class="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        id="q"
+        name="q"
+        type="text"
+        autocomplete="off"
+        required
+        placeholder="Ask something — e.g. What is the late-payment interest rate?"
+        autofocus
+      >
+    </div>
+    <button type="submit" class="primary">
+      Ask all three
+      <kbd>⌘ ↵</kbd>
+    </button>
+  </form>
+
+  <main class="columns">
+    {% for mode in modes %}
+    <article class="column" data-mode="{{ mode }}" id="col-{{ mode }}-wrap">
+      <header class="col-header">
+        <h2>{{ mode }}</h2>
+        <p class="col-desc">
+          {% if mode == "vector" %}Dense retrieval (Chroma)
+          {% elif mode == "bm25" %}Sparse keyword retrieval (BM25)
+          {% elif mode == "hybrid" %}50/50 ensemble{% endif %}
+          + same LLM
+        </p>
+      </header>
+      <div class="col-body" id="col-{{ mode }}" aria-live="polite" aria-busy="false">
+        <p class="placeholder">Run a query to populate this column.</p>
+      </div>
+    </article>
+    {% endfor %}
+  </main>
+
+  <script>
+    // Plain fetch instead of htmx.ajax. We observed htmx silently dropping
+    // one of three rapid-fire parallel ajax calls when target elements differ
+    // only by id; the dropped request never reached the network. Three
+    // independent fetch() Promises behave deterministically.
+    async function fireAll() {
+      const q = document.getElementById('q').value.trim();
+      if (!q) return;
+      const modes = {{ modes|tojson }};
+      const skeleton = (mode) => `
+        <div class="skeleton" role="status" aria-label="querying ${mode}">
+          <span class="skeleton-label"><span class="pulse"></span>querying ${mode}…</span>
+          <div class="sk w-90"></div>
+          <div class="sk w-75"></div>
+          <div class="sk w-60"></div>
+          <div class="sk w-40"></div>
+        </div>`;
+
+      const fireOne = async (mode) => {
+        const el = document.getElementById('col-' + mode);
+        el.setAttribute('aria-busy', 'true');
+        el.innerHTML = skeleton(mode);
+        try {
+          const body = new FormData();
+          body.append('q', q);
+          body.append('mode', mode);
+          const resp = await fetch('/query', { method: 'POST', body });
+          const html = await resp.text();
+          el.innerHTML = html;
+        } catch (err) {
+          el.innerHTML = `<div class="error" role="alert">
+            <strong>Network error</strong>
+            <pre>${String(err)}</pre>
+          </div>`;
+        } finally {
+          el.setAttribute('aria-busy', 'false');
+        }
+      };
+
+      // Kick them all off in parallel — no awaiting between calls.
+      modes.map(fireOne);
+    }
+
+    // ⌘/Ctrl + Enter submits from anywhere
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('query-form').requestSubmit();
+      }
+    });
+  </script>
+</body>
+</html>
