@@ -79,3 +79,18 @@ blog/README.md
 # Kustomize helm chart cache — regenerated locally by `kustomize build --enable-helm`,
 # ArgoCD pulls the chart fresh on sync.
 k8s/**/charts/
+
+# AI — never commit local LLM weights or runtime caches
+ai/local-llm/**/*.gguf
+ai/local-llm/**/*.bin
+ai/local-llm/**/*.safetensors
+ai/local-llm/**/*.pt
+ai/local-llm/**/*.onnx
+ai/**/.venv/
+ai/**/__pycache__/
+
+# AI — Jarvis runtime artefacts (state DB, voice clone samples)
+ai/projects/jarvis
+ai/projects/jarvis/.state/
+ai/projects/jarvis/voices/*.wav
+ai/projects/jarvis/voices/*.wav.txt

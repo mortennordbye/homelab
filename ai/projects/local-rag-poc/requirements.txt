@@ -1,0 +1,25 @@
+# Local Hybrid-Retrieval RAG POC — pinned dependencies.
+#
+# Versions chosen as latest stable in each package's current major at the time
+# of writing. The split-package layout (langchain + langchain-community +
+# langchain-openai + langchain-chroma + langchain-text-splitters) is the
+# supported modern shape — older monolithic imports still work but emit
+# deprecation warnings.
+
+langchain==0.3.27
+langchain-community==0.3.27
+langchain-text-splitters==0.3.9
+langchain-openai==0.3.28
+langchain-chroma==0.2.4
+
+# Vector store + parsers.
+# chromadb is pulled in transitively by langchain-chroma; pinning it directly
+# led to a resolver conflict (langchain-chroma 0.2.4 needs chromadb>=1.0.9).
+pypdf==5.1.0
+docx2txt==0.8
+
+# Sparse retrieval
+rank_bm25==0.2.2
+
+# Tokenizer used by langchain-openai's embedding context checks
+tiktoken==0.8.0
