@@ -16,6 +16,7 @@ on:
       - main # Pushing here updates STAGE only
     paths:
       - "portfolio/**"
+      - ".github/workflows/build-portfolio.yaml"
 
 env:
   REGISTRY: ghcr.io
@@ -25,13 +26,13 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Needed to update manifests
-      packages: write # Needed to push images
+      contents: write
+      packages: write
 
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0 # We just need the history, no submodules
+          fetch-depth: 0
 
       - name: Determine Environment
         id: context
@@ -39,7 +40,6 @@ jobs:
           SHORT_SHA=$(git rev-parse --short HEAD)
           echo "TAG=${SHORT_SHA}" >> $GITHUB_OUTPUT
 
-          # Determine environment: workflow_dispatch input takes precedence, otherwise stage
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             ENV="${{ inputs.environment }}"
           else
@@ -55,7 +55,6 @@ jobs:
           fi
 
           echo "Deploying to environment: ${ENV}"
-          echo "Using manifest: ${MANIFEST}"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
@@ -74,7 +73,8 @@ jobs:
         with:
           context: ./portfolio
           push: true
-          # Tags: Unique SHA (immutable) + Branch Name (mutable)
+          build-args: |
+            BUILD_SHA=${{ steps.context.outputs.TAG }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.ENV }}
@@ -93,20 +93,18 @@ jobs:
           echo "Updating manifest: ${MANIFEST}"
           echo "New image: ${NEW_IMAGE}"
 
-          # Verify manifest exists
           if [[ ! -f "${MANIFEST}" ]]; then
             echo "ERROR: Manifest file not found: ${MANIFEST}"
             exit 1
           fi
 
-          # Update the manifest
-          sed -i "s|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:.*|image: ${NEW_IMAGE}|g" $MANIFEST
+          # Regex tolerates legacy portfolio-modern image tags left behind
+          # from the V1 → V2 cutover; first run after merge sweeps them out.
+          sed -i "s|image: ${{ env.REGISTRY }}/${{ github.repository }}/portfolio[a-z-]*:.*|image: ${NEW_IMAGE}|g" $MANIFEST
 
-          # Show the changes
           echo "Changes made:"
           git diff $MANIFEST
 
-          # Commit and Push
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
