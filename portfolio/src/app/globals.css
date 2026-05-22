@@ -149,6 +149,74 @@ a {
   mix-blend-mode: var(--grain-mix);
 }
 
+/* Oslo marker — HTML/CSS pulse rendered above the dimmed globe canvas so
+   it stays at full brightness. Position is set by JS each frame from the
+   3D scene's OsloProjector (transform: translate(...) translate(-50%,-50%)). */
+.oslo-marker {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--accent);
+  box-shadow:
+    0 0 6px var(--accent),
+    0 0 16px rgba(93, 183, 255, 0.7),
+    0 0 32px rgba(93, 183, 255, 0.4);
+}
+
+.oslo-marker-label {
+  position: absolute;
+  left: 50%;
+  /* Sits above the expanding pulse ring with a short stem. */
+  bottom: calc(100% + 60px);
+  transform: translateX(-50%);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-shadow:
+    0 0 8px rgba(93, 183, 255, 0.6),
+    0 0 14px rgba(93, 183, 255, 0.35);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.oslo-marker-label::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2px);
+  width: 1px;
+  height: 42px;
+  background: linear-gradient(to bottom, var(--accent), rgba(93, 183, 255, 0));
+  transform: translateX(-50%);
+}
+
+.oslo-marker::before,
+.oslo-marker::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  animation: oslo-pulse 2.6s ease-out infinite;
+}
+
+.oslo-marker::after {
+  animation-delay: 1.3s;
+}
+
+@keyframes oslo-pulse {
+  0%   { transform: scale(1);   opacity: 0.9; }
+  100% { transform: scale(4.5); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oslo-marker::before,
+  .oslo-marker::after { animation: none; opacity: 0; }
+}
+
 /* Marquee animation */
 @keyframes marquee {
   from { transform: translateX(0); }
