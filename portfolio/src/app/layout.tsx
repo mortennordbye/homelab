@@ -11,9 +11,13 @@ import { site } from "@/content/site";
 import { getAllWork } from "@/lib/work";
 import { services } from "@/content/services";
 
-// Inline before-paint script: read saved theme (or OS preference) and apply
-// the right class to <html> so we never flash the wrong palette.
-const themeBoot = `(function(){try{var s=localStorage.getItem('theme');var t=s||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');var c=document.documentElement.classList;c.remove('light','dark');c.add(t);document.documentElement.dataset.theme=t;}catch(e){document.documentElement.classList.add('dark');}})();`;
+// Inline before-paint script: apply the right palette class to <html> before
+// first paint so we never flash the wrong theme. Defaults to dark — the
+// design is dark-first, and matching the brand on first visit is more
+// important than honouring the OS preference. Users who toggle to light via
+// the header button have their choice persisted in localStorage and that
+// wins on subsequent visits.
+const themeBoot = `(function(){try{var s=localStorage.getItem('theme');var t=s||'dark';var c=document.documentElement.classList;c.remove('light','dark');c.add(t);document.documentElement.dataset.theme=t;}catch(e){document.documentElement.classList.add('dark');}})();`;
 
 const body = Inter({
   variable: "--font-body",
