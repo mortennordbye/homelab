@@ -53,9 +53,9 @@ type Bus = { elapsed: number; rotation: number };
 
 function Earth({ bus }: { bus: React.MutableRefObject<Bus> }) {
   const [day, normal, specular] = useTexture([
-    "/textures/earth-day.jpg",
-    "/textures/earth-normal.jpg",
-    "/textures/earth-specular.jpg",
+    "/textures/earth-day.webp",
+    "/textures/earth-normal.webp",
+    "/textures/earth-specular.webp",
   ]);
   const groupRef = useRef<THREE.Group>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);

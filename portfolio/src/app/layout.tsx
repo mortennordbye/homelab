@@ -160,6 +160,13 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
+        {/* Warm the HTTP cache for the WelcomeGlobe textures so the network
+            fetch starts in parallel with the three.js chunk download instead
+            of after it. Skipped on repeat visits by the browser cache + the
+            sessionStorage guard in WelcomeIntro. */}
+        <link rel="preload" as="image" type="image/webp" href="/textures/earth-day.webp" />
+        <link rel="preload" as="image" type="image/webp" href="/textures/earth-normal.webp" />
+        <link rel="preload" as="image" type="image/webp" href="/textures/earth-specular.webp" />
       </head>
       <body className="bg-bg text-fg min-h-screen flex flex-col">
         <Header />

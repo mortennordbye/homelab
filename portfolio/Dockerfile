@@ -59,6 +59,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 
+# Pre-compress static assets so nginx (gzip_static on) serves the .gz
+# straight from disk instead of compressing on every request.
+RUN find out -type f \
+      \( -name "*.js" -o -name "*.css" -o -name "*.html" \
+       -o -name "*.svg" -o -name "*.json" -o -name "*.txt" \
+       -o -name "*.xml" -o -name "*.webmanifest" \) \
+      -exec gzip -9 -k {} \;
+
 # ---- Stage cv-bundle: dev-server volume populator ----
 # Merges the host's static public/ assets with the freshly-built CV
 # artifacts into /staging. A one-shot service in compose.yaml runs
