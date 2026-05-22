@@ -160,12 +160,10 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
-        {/* Texture preloads were removed: WelcomeIntro now skips the globe on
-            mobile / save-data, but `<link rel="preload">` fires unconditionally
-            from the document head. Preloading 558 KB of textures on every
-            mobile visit defeated the mobile-skip optimization. WelcomeGlobe's
-            `useTexture` will fetch them lazily on desktop first visit, which
-            is fast enough. */}
+        {/* Next's <Image priority> on the Hero portrait already emits a
+            high-priority preload for /images/profile.webp — no explicit
+            <link> needed here. Texture preloads were removed because the
+            globe is mobile-gated + idle-deferred. */}
       </head>
       <body className="bg-bg text-fg min-h-screen flex flex-col">
         <Header />

@@ -47,7 +47,22 @@ export function WelcomeIntro() {
     }
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReduced(mq.matches);
-    setActive(true);
+    // Defer the globe to the first idle window so it doesn't compete with
+    // LCP and TBT on first paint. Without this, three.js compile lands in
+    // the critical path and pushes desktop TBT past 800ms even though the
+    // globe doesn't actually need to start until the user has seen the
+    // page. requestIdleCallback isn't supported in Safari — fall back to
+    // a short setTimeout so the timing intent still holds.
+    const ric =
+      (window as Window & {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      }).requestIdleCallback;
+    const start = () => setActive(true);
+    if (ric) {
+      ric(start, { timeout: 2000 });
+    } else {
+      window.setTimeout(start, 400);
+    }
   }, []);
 
   const dismiss = useCallback(() => {
