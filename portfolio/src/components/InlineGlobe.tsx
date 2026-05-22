@@ -27,6 +27,10 @@ export function InlineGlobe() {
   const [mode, setMode] = useState<Mode>("loading");
   const [inView, setInView] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  // The Oslo marker lives in this overlay — a sibling of the dimmed canvas
+  // wrapper, so the wrapper's opacity doesn't apply. The scene's
+  // OsloProjector mutates `transform` on this element each frame.
+  const osloOverlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const isNarrow = window.matchMedia("(max-width: 768px)").matches;
@@ -69,16 +73,31 @@ export function InlineGlobe() {
   }
 
   return (
-    <div
-      ref={ref}
-      aria-hidden
-      // Opacity tuned so the globe reads clearly without competing with the
-      // headline text or the portrait card. Adjust here if you want it bolder
-      // or quieter.
-      className="pointer-events-none absolute inset-0 -z-10 opacity-[0.45]"
-    >
-      {inView && <InlineGlobeScene />}
-    </div>
+    <>
+      <div
+        ref={ref}
+        aria-hidden
+        // Opacity tuned so the globe reads clearly without competing with the
+        // headline text or the portrait card. Adjust here if you want it
+        // bolder or quieter. The Oslo overlay below is outside this wrapper
+        // so the dimming doesn't apply to the pulse marker.
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.45]"
+      >
+        {inView && <InlineGlobeScene overlayRef={osloOverlayRef} />}
+      </div>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-[5] overflow-hidden"
+      >
+        <div
+          ref={osloOverlayRef}
+          className="oslo-marker absolute left-0 top-0"
+          style={{ opacity: 0, willChange: "transform" }}
+        >
+          <span className="oslo-marker-label">OSLO</span>
+        </div>
+      </div>
+    </>
   );
 }
 
