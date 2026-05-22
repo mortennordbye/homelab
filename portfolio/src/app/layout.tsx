@@ -6,18 +6,15 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { CommandPalette } from "@/components/CommandPalette";
-import { WelcomeIntro } from "@/components/WelcomeIntro";
 import { site } from "@/content/site";
 import { getAllWork } from "@/lib/work";
 import { services } from "@/content/services";
 
-// Inline before-paint script: apply the right palette class to <html> before
-// first paint so we never flash the wrong theme. Defaults to dark — the
-// design is dark-first, and matching the brand on first visit is more
-// important than honouring the OS preference. Users who toggle to light via
-// the header button have their choice persisted in localStorage and that
-// wins on subsequent visits.
-const themeBoot = `(function(){try{var s=localStorage.getItem('theme');var t=s||'dark';var c=document.documentElement.classList;c.remove('light','dark');c.add(t);document.documentElement.dataset.theme=t;}catch(e){document.documentElement.classList.add('dark');}})();`;
+// Inline before-paint script: force the dark palette class on <html> before
+// first paint. The site is dark-only; the legacy localStorage 'theme' key
+// (set by the now-removed toggle) is ignored — anyone with 'light' stored
+// from before still lands on dark.
+const themeBoot = `document.documentElement.classList.add('dark');document.documentElement.dataset.theme='dark';`;
 
 const body = Inter({
   variable: "--font-body",
@@ -175,7 +172,6 @@ export default function RootLayout({
         <Footer />
         <ScrollToTop />
         <CommandPalette work={workLite} services={servicesLite} />
-        <WelcomeIntro />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -1,7 +1,6 @@
 import { Dumbbell, Wifi } from "lucide-react";
 import { Reveal } from "@/components/primitives/Reveal";
 import { Section } from "@/components/primitives/Section";
-import { Stat } from "@/components/primitives/Stat";
 import { CareerPath } from "@/components/sections/CareerPath";
 import { skills } from "@/content/skills";
 import { interests, type Interest } from "@/content/interests";
@@ -24,33 +23,23 @@ export function AboutSection() {
     <Section
       id="about"
       heading="About me."
-      description="How I got here, what I work with, and what I build after hours."
       className="border-t border-line"
     >
-      <div className="grid grid-cols-12 gap-8 md:gap-12">
-        <div className="col-span-12 md:col-span-7">
-          <p className="text-fg-2 leading-relaxed">
-            Skilled ICT Service Operator by trade. Started on the front line in
-            an Operations Centre, monitoring alarms and running incidents across
-            customer environments, then moved into platform and cloud engineering
-            as the workloads followed. Scripting led to automation, automation
-            led to infrastructure as code, and the work shifted from reacting to
-            alerts to building the platforms that produce them.
-          </p>
-          <p className="mt-4 text-fg-2 leading-relaxed">
-            Today I work as a Cloud Engineer at Orange Business, on Azure
-            platforms for customers across a range of regulated sectors. On the
-            side I run a homelab cluster that doubles as my proving ground for
-            anything I want to try before it touches production.
-          </p>
-        </div>
-
-        <div className="col-span-12 md:col-span-5 grid grid-cols-2 gap-x-8 gap-y-6">
-          <Stat value="4+" label="Years in production cloud" accent />
-          <Stat value="5" label="Active certifications" caption="incl. CKA, AZ-305" />
-          <Stat value="33M+" label="Req / day peak" caption="Betting platform on AKS" />
-          <Stat value="6" label="Node Talos cluster" caption="Homelab, prod-grade" />
-        </div>
+      <div className="grid gap-8 md:grid-cols-2 md:gap-12">
+        <p className="text-fg-2 leading-relaxed">
+          Skilled ICT Service Operator by trade. Started on the front line in
+          an Operations Centre, monitoring alarms and running incidents across
+          customer environments, then moved into platform and cloud engineering
+          as the workloads followed. Scripting led to automation, automation
+          led to infrastructure as code, and the work shifted from reacting to
+          alerts to building the platforms that produce them.
+        </p>
+        <p className="text-fg-2 leading-relaxed">
+          Today I work as a Cloud Engineer at Orange Business, on Azure
+          platforms for customers across a range of regulated sectors. On the
+          side I run a homelab cluster that doubles as my proving ground for
+          anything I want to try before it touches production.
+        </p>
       </div>
 
       <div className="mt-20">

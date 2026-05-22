@@ -21,18 +21,6 @@ type Props = {
   services: ServiceItem[];
 };
 
-function setTheme(next: "dark" | "light") {
-  const root = document.documentElement;
-  root.classList.toggle("dark", next === "dark");
-  root.classList.toggle("light", next === "light");
-  root.dataset.theme = next;
-  try {
-    localStorage.setItem("theme", next);
-  } catch {
-    /* ignore */
-  }
-}
-
 export function CommandPalette({ work, services }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -126,18 +114,6 @@ export function CommandPalette({ work, services }: Props) {
         label: "cat about.md",
         hint: "short bio",
         run: () => print([site.description]),
-      },
-      {
-        id: "theme dark",
-        label: "theme dark",
-        hint: "switch to dark mode",
-        run: () => setTheme("dark"),
-      },
-      {
-        id: "theme light",
-        label: "theme light",
-        hint: "switch to light mode",
-        run: () => setTheme("light"),
       },
       {
         id: "htop",
@@ -352,7 +328,7 @@ export function CommandPalette({ work, services }: Props) {
                   aria-activedescendant={
                     filtered[selected] ? `palette-opt-${filtered[selected].id}` : undefined
                   }
-                  placeholder="try cd work, whoami, theme light…"
+                  placeholder="try cd work, whoami, htop…"
                   className="w-full caret-emerald-400 bg-transparent text-white placeholder:text-white/30 focus:outline-none"
                   autoComplete="off"
                   spellCheck={false}

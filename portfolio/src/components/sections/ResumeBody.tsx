@@ -4,8 +4,8 @@ import { certs, education, experience } from "@/content/resume";
 
 /**
  * The two-column resume body (Certifications + Education on the left,
- * Professional Experience on the right). Reused by both the standalone
- * /resume route and the resume section on the home page.
+ * Professional Experience on the right). Rendered inside ResumeSection
+ * on the home page.
  */
 export function ResumeBody() {
   return (
