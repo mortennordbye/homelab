@@ -98,9 +98,7 @@ jobs:
             exit 1
           fi
 
-          # Regex tolerates legacy portfolio-modern image tags left behind
-          # from the V1 → V2 cutover; first run after merge sweeps them out.
-          sed -i "s|image: ${{ env.REGISTRY }}/${{ github.repository }}/portfolio[a-z-]*:.*|image: ${NEW_IMAGE}|g" $MANIFEST
+          sed -i "s|image: ${{ env.REGISTRY }}/${{ github.repository }}/portfolio:.*|image: ${NEW_IMAGE}|g" $MANIFEST
 
           echo "Changes made:"
           git diff $MANIFEST

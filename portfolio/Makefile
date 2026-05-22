@@ -1,6 +1,6 @@
-IMAGE      ?= portfolio-modern:dev
+IMAGE      ?= portfolio:dev
 PROD_PORT  ?= 8080
-PROD_NAME  ?= portfolio-modern-prod
+PROD_NAME  ?= portfolio-prod
 DEV_PORT   ?= 3000
 SHA        := $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
 
@@ -41,9 +41,9 @@ run-prod: image  ## Build the prod image and run nginx on http://localhost:$(PRO
 clean: down  ## Stop dev stack and drop its volumes (cv-bundle + Turbopack cache + node_modules)
 	rm -rf out
 	docker volume rm \
-	  portfolio-modern_cv-bundle \
-	  portfolio-modern_next-cache \
-	  portfolio-modern_node_modules \
+	  portfolio_cv-bundle \
+	  portfolio_next-cache \
+	  portfolio_node_modules \
 	  2>/dev/null || true
 
 # CV / résumé generation has no standalone target and never touches
