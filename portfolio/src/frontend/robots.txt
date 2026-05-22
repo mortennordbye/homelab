@@ -1,5 +1,0 @@
-User-agent: *
-Disallow: /errors/
-Allow: /
-
-Sitemap: https://nordbye.it/sitemap.xml
