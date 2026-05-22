@@ -163,7 +163,7 @@ export default function RootLayout({
       </head>
       <body className="bg-bg text-fg min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1">{children}</main>
+        <main className="relative flex-1">{children}</main>
         <Footer />
         <ScrollToTop />
         <CommandPalette work={workLite} services={servicesLite} />

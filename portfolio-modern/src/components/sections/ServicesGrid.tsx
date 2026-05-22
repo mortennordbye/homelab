@@ -22,8 +22,7 @@ export function ServicesGrid() {
   return (
     <Section
       id="services"
-      eyebrow="services"
-      heading="Where I plug in."
+      heading="Services I provide."
       description="Three engagement shapes. Each one is grounded in something that has already shipped — case studies linked from each card."
       className="border-t border-line bg-bg-2/40"
     >

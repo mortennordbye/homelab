@@ -16,13 +16,12 @@ export function CtaContact() {
             Available · Oslo &amp; remote
           </p>
           <h2 className="mt-6 text-display-lg text-fg leading-[1]">
-            Let&apos;s build something solid.
+            Contact.
           </h2>
           <p className="mt-6 max-w-xl text-fg-2">
-            Open to senior cloud engineering and architecture work — public
-            sector, regulated industries, or platform builds where
-            production-grade matters more than the demo. I read everything that
-            lands in the inbox and reply within a couple of working days.
+            Reach out about cloud engineering, platform work or consulting
+            engagements. I read everything that lands in the inbox and reply
+            within a couple of working days.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button

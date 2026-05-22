@@ -10,9 +10,9 @@ export async function LatestWriting() {
 
   return (
     <Section
-      eyebrow="writing"
-      heading="From the blog."
-      description="Long-form notes from running cloud infrastructure — migrations, post-mortems, and the occasional hot take. Lives at blog.nordbye.it."
+      id="blog"
+      heading="Blog."
+      description="Long-form notes from running cloud infrastructure, including migrations, post-mortems and the occasional hot take. Lives at blog.nordbye.it."
       align="between"
       className="border-t border-line"
       cta={

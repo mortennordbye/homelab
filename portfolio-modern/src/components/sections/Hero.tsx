@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight, Download } from "lucide-react";
 import { site } from "@/content/site";
 import { HeroTopologyGraph } from "./HeroTopologyGraph";
@@ -55,7 +55,7 @@ export function Hero() {
             style={reduce ? undefined : { y: yWord, opacity }}
             className="mt-2 text-display-lg text-fg"
           >
-            Senior Cloud Engineer
+            I am a <Typewriter words={site.hero.rotating} reduce={!!reduce} />
             <span className="text-fg-3">.</span>
           </motion.h1>
 
@@ -169,5 +169,57 @@ function PortraitCard() {
         </span>
       </div>
     </figure>
+  );
+}
+
+function Typewriter({
+  words,
+  reduce,
+}: {
+  words: readonly string[];
+  reduce: boolean;
+}) {
+  const [idx, setIdx] = useState(0);
+  const [text, setText] = useState(words[0] ?? "");
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (reduce) return;
+    const word = words[idx] ?? "";
+    const done = text === word;
+    const empty = text === "";
+    const delay = deleting
+      ? empty
+        ? 220
+        : 45
+      : done
+        ? 1600
+        : 75;
+
+    const t = window.setTimeout(() => {
+      if (!deleting && done) {
+        setDeleting(true);
+      } else if (deleting && empty) {
+        setDeleting(false);
+        setIdx((i) => (i + 1) % words.length);
+      } else if (deleting) {
+        setText((s) => s.slice(0, -1));
+      } else {
+        setText(word.slice(0, text.length + 1));
+      }
+    }, delay);
+    return () => window.clearTimeout(t);
+  }, [text, deleting, idx, words, reduce]);
+
+  return (
+    <span className="text-accent">
+      {text}
+      <span
+        aria-hidden
+        className="ml-0.5 inline-block w-[0.55ch] -translate-y-[0.05em] animate-pulse text-accent"
+      >
+        |
+      </span>
+    </span>
   );
 }

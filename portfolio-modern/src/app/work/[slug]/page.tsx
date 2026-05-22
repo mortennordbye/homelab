@@ -2,10 +2,9 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { Section } from "@/components/primitives/Section";
-import { Tag } from "@/components/primitives/Tag";
-import { Callout } from "@/components/primitives/Callout";
 import { Button } from "@/components/primitives/Button";
-import { Gallery, CoverImage } from "@/components/work/Gallery";
+import { CoverImage } from "@/components/work/Gallery";
+import { StackTiles } from "@/components/work/StackTiles";
 import { ArchitectureSection } from "@/components/work/ArchitectureSection";
 import { mdxComponents } from "@/components/work/mdx-components";
 import { getAllWork, getWorkBySlug } from "@/lib/work";
@@ -39,14 +38,21 @@ export default async function WorkDetailPage({
   if (!w) notFound();
 
   return (
-    <main className="pt-32">
+    <main className="pt-28">
+      {/* 1. Header — wide, no top border (page top) */}
       <Section
         eyebrow={`${w.kind === "professional" ? "client" : "homelab"} · case study`}
         heading={w.title}
         description={w.summary}
+        width="wide"
       >
         <div className="mb-10">
-          <Button href="/#portfolio" variant="ghost" size="sm" iconLeft={<ArrowLeft size={14} aria-hidden />}>
+          <Button
+            href="/#portfolio"
+            variant="ghost"
+            size="sm"
+            iconLeft={<ArrowLeft size={14} aria-hidden />}
+          >
             All work
           </Button>
         </div>
@@ -57,36 +63,58 @@ export default async function WorkDetailPage({
           <Row label="Period">{w.period}</Row>
         </dl>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          {w.stack.map((s) => (
-            <Tag key={s}>{s}</Tag>
-          ))}
-        </div>
+        <StackTiles stack={w.stack} />
+      </Section>
 
-        {w.outcomes && w.outcomes.length > 0 && (
-          <Callout tone="result" title="Outcomes">
-            <ul className="space-y-2">
-              {w.outcomes.map((o, i) => (
-                <li key={i} className="flex gap-3">
-                  <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-copper" />
-                  <span>{o}</span>
-                </li>
-              ))}
-            </ul>
-          </Callout>
-        )}
+      {/* 2. Outcomes — numbered card grid */}
+      {w.outcomes && w.outcomes.length > 0 && (
+        <Section
+          width="wide"
+          eyebrow="results"
+          heading="What shipped."
+          className="border-t border-line bg-bg-2/40"
+        >
+          <ul className="grid gap-px overflow-hidden rounded-lg border border-line bg-line md:grid-cols-2">
+            {w.outcomes.map((o, i) => (
+              <li
+                key={i}
+                className="flex gap-5 bg-bg p-7 transition-colors hover:bg-surface/40"
+              >
+                <span className="shrink-0 font-mono text-xs text-accent">
+                  /{String(i + 1).padStart(2, "0")}
+                </span>
+                <p className="text-fg-2 leading-relaxed">{o}</p>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
 
-        {w.cover && <CoverImage src={w.cover} title={w.title} />}
+      {/* 3. Architecture — interactive diagram in its own section */}
+      {w.arch && (
+        <Section
+          width="wide"
+          eyebrow="architecture"
+          heading="How it fits together."
+          description="Hover a node to highlight its connections. Click one to read what it does and why it is there."
+          className="border-t border-line"
+        >
+          <ArchitectureSection arch={w.arch} />
+        </Section>
+      )}
 
-        {w.arch && <ArchitectureSection arch={w.arch} />}
+      {/* Static cover image fallback for case studies without arch data */}
+      {!w.arch && w.cover && (
+        <Section width="wide" className="border-t border-line">
+          <CoverImage src={w.cover} title={w.title} />
+        </Section>
+      )}
 
-        <article className="prose mt-12 max-w-[var(--container-prose)]">
+      {/* 4. Body — narrow prose column */}
+      <Section width="prose" className="border-t border-line">
+        <article className="prose">
           <MDXRemote source={w.body} components={mdxComponents} />
         </article>
-
-        {w.gallery && w.gallery.length > 0 && (
-          <Gallery images={w.gallery} title={w.title} />
-        )}
       </Section>
     </main>
   );

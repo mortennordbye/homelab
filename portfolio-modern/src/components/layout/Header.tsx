@@ -28,6 +28,19 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Smooth-scroll for in-page anchors when we're already on the home page.
+  const onAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (!href.startsWith("/#")) return;
+    if (pathname !== "/") return;
+    const id = href.slice(2);
+    const el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (history.replaceState) history.replaceState(null, "", `#${id}`);
+    if (open) setOpen(false);
+  };
+
   return (
     <header
       className={cn(
@@ -55,6 +68,7 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={(e) => onAnchorClick(e, item.href)}
                 className={cn(
                   "focus-ring text-sm transition-colors hover:text-fg",
                   active ? "text-fg" : "text-fg-2",
@@ -92,6 +106,7 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={(e) => onAnchorClick(e, item.href)}
                 className="focus-ring rounded-md px-3 py-3 text-base text-fg-2 hover:bg-surface hover:text-fg"
               >
                 {item.label}

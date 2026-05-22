@@ -1,10 +1,16 @@
-import { ArrowUpRight } from "lucide-react";
+import { Dumbbell, Wifi } from "lucide-react";
 import { Reveal } from "@/components/primitives/Reveal";
 import { Section } from "@/components/primitives/Section";
 import { Stat } from "@/components/primitives/Stat";
-import { Button } from "@/components/primitives/Button";
+import { CareerPath } from "@/components/sections/CareerPath";
 import { skills } from "@/content/skills";
+import { interests, type Interest } from "@/content/interests";
 import type { Skill } from "@/content/schemas";
+
+const interestIcon: Record<Interest["icon"], React.ReactNode> = {
+  fitness: <Dumbbell size={20} />,
+  homelab: <Wifi size={20} />,
+};
 
 const skillGroups: { id: Skill["group"]; label: string }[] = [
   { id: "platform", label: "Platform & infrastructure" },
@@ -17,16 +23,9 @@ export function AboutSection() {
   return (
     <Section
       id="about"
-      eyebrow="about"
-      heading="From the operations centre to platform engineering."
+      heading="About me."
       description="How I got here, what I work with, and what I build after hours."
       className="border-t border-line"
-      cta={
-        <Button href="/about" variant="ghost" size="sm" iconRight={<ArrowUpRight size={16} aria-hidden />}>
-          Full story
-        </Button>
-      }
-      align="between"
     >
       <div className="grid grid-cols-12 gap-8 md:gap-12">
         <div className="col-span-12 md:col-span-7">
@@ -79,6 +78,32 @@ export function AboutSection() {
               </Reveal>
             );
           })}
+        </div>
+      </div>
+
+      <div className="mt-24">
+        <p className="eyebrow">career</p>
+        <h3 className="mt-3 text-h2 text-fg">The route here.</h3>
+        <div className="mt-10">
+          <CareerPath />
+        </div>
+      </div>
+
+      <div className="mt-24">
+        <p className="eyebrow">off the clock</p>
+        <h3 className="mt-3 text-h2 text-fg">Outside work.</h3>
+        <div className="mt-10 grid gap-px overflow-hidden rounded-lg border border-line bg-line md:grid-cols-2">
+          {interests.map((it, i) => (
+            <Reveal key={it.title} delay={i * 0.08}>
+              <div className="flex h-full flex-col gap-4 bg-bg p-8">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line-2 bg-surface/40 text-accent">
+                  {interestIcon[it.icon]}
+                </span>
+                <h4 className="text-h3 text-fg">{it.title}</h4>
+                <p className="text-sm text-fg-2 leading-relaxed">{it.body}</p>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </div>
     </Section>

@@ -47,6 +47,8 @@ html {
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* motion/react useScroll inspects the offset parent of its target — give it one */
+  position: relative;
 }
 
 body {
@@ -55,6 +57,8 @@ body {
   color: var(--fg);
   /* Body prose at 17px — comfier reading; explicit text-sm/xs/lg utilities still override */
   font-size: 1.0625rem;
+  /* motion/react useScroll needs a positioned scroll container — silence the dev warning */
+  position: relative;
 }
 
 ::selection {

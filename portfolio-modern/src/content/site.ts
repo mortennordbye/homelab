@@ -44,10 +44,10 @@ export const site = {
     { label: "Blog", href: "https://blog.nordbye.it" },
   ],
   nav: [
+    { label: "About", href: "/#about" },
+    { label: "Resume", href: "/#resume" },
     { label: "Work", href: "/#portfolio" },
-    { label: "Writing", href: "https://blog.nordbye.it" },
-    { label: "Resume", href: "/resume" },
-    { label: "About", href: "/about" },
+    { label: "Blog", href: "/#blog" },
     { label: "Contact", href: "/#contact" },
   ] as readonly { href: string; label: string }[],
 } as const;

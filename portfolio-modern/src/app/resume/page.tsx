@@ -6,7 +6,7 @@ import { ResumePdfButtons } from "@/components/sections/ResumePdfButtons";
 export const metadata: Metadata = {
   title: "Resume — Morten Nordbye",
   description:
-    "Senior Cloud Engineer & Architect — Azure, Kubernetes, Terraform, GitOps, observability. Full résumé, certifications, education.",
+    "Cloud Engineer & Architect — Azure, Kubernetes, Terraform, GitOps, observability. Full résumé, certifications, education.",
 };
 
 export default function ResumePage() {
@@ -15,7 +15,7 @@ export default function ResumePage() {
       <Section
         eyebrow="resume"
         heading="Curriculum vitae."
-        description="The full record — current and past roles, certifications, education. Customise the printable PDF before you download."
+        description="The full record: current and past roles, certifications, education. Customise the printable PDF before you download."
       >
         <ResumePdfButtons />
         <div className="mt-16">
