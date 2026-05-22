@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { CommandPalette } from "@/components/CommandPalette";
+import { WelcomeIntro } from "@/components/WelcomeIntro";
 import { site } from "@/content/site";
 import { getAllWork } from "@/lib/work";
 import { services } from "@/content/services";
@@ -20,8 +21,8 @@ const body = Inter({
   display: "swap",
 });
 
-const display = JetBrains_Mono({
-  variable: "--font-display",
+const mono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500", "700"],
@@ -155,7 +156,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${body.variable} ${display.variable} antialiased`}
+      className={`${body.variable} ${mono.variable} antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
@@ -166,6 +167,7 @@ export default function RootLayout({
         <Footer />
         <ScrollToTop />
         <CommandPalette work={workLite} services={servicesLite} />
+        <WelcomeIntro />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

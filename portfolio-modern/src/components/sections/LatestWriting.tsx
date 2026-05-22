@@ -1,6 +1,7 @@
 import { ArrowUpRight, Rss } from "lucide-react";
-import { SectionHeading } from "@/components/primitives/SectionHeading";
+import { Section } from "@/components/primitives/Section";
 import { Reveal } from "@/components/primitives/Reveal";
+import { Button } from "@/components/primitives/Button";
 import { getLatestBlogPosts } from "@/lib/blog";
 
 export async function LatestWriting() {
@@ -8,76 +9,56 @@ export async function LatestWriting() {
   if (posts.length === 0) return null;
 
   return (
-    <section className="border-t border-line">
-      <div className="mx-auto max-w-7xl px-5 py-28 md:px-8 md:py-36">
-        <SectionHeading
-          eyebrow="writing"
-          title="From the blog."
-          description="Long-form notes from running cloud infrastructure, including migrations, post-mortems and the occasional hot take. Lives at blog.nordbye.it."
-          align="between"
-          cta={
+    <Section
+      eyebrow="writing"
+      heading="From the blog."
+      description="Long-form notes from running cloud infrastructure — migrations, post-mortems, and the occasional hot take. Lives at blog.nordbye.it."
+      align="between"
+      className="border-t border-line"
+      cta={
+        <Button href="https://blog.nordbye.it" variant="ghost" iconLeft={<Rss size={14} aria-hidden />} iconRight={<ArrowUpRight size={16} aria-hidden />}>
+          Read the blog
+        </Button>
+      }
+    >
+      <ul className="grid gap-6 md:grid-cols-3">
+        {posts.map((p, i) => (
+          <Reveal key={p.url} delay={i * 0.08} as="li">
             <a
-              href="https://blog.nordbye.it"
+              href={p.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 font-display text-sm text-fg-2 hover:text-fg"
+              className="focus-ring group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-bg transition-colors hover:border-accent/60"
             >
-              <Rss size={14} /> Read the blog
-              <ArrowUpRight
-                size={16}
-                className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-              />
-            </a>
-          }
-        />
-
-        <ul className="mt-16 grid gap-px overflow-hidden rounded-lg border border-line bg-line md:grid-cols-3">
-          {posts.map((p, i) => (
-            <Reveal key={p.url} delay={i * 0.08}>
-              <a
-                href={p.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative flex h-full flex-col overflow-hidden bg-bg transition-colors hover:bg-surface"
-              >
-                {p.cover && (
-                  <figure className="relative aspect-[16/9] w-full overflow-hidden border-b border-line bg-surface/40">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={p.cover}
-                      alt=""
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                    />
-                  </figure>
-                )}
-                <div className="flex flex-1 flex-col gap-5 p-8">
-                  <p className="font-display text-xs uppercase tracking-[0.18em] text-fg-3">
-                    {p.date}
-                  </p>
-                  <h3 className="text-h3 font-display text-fg leading-tight transition-colors group-hover:text-accent">
-                    {p.title}
-                  </h3>
-                  <p className="flex-1 text-sm text-fg-2 leading-relaxed">{p.excerpt}</p>
-                  <span className="inline-flex items-center gap-2 font-display text-sm text-fg-2 transition-colors group-hover:text-accent">
-                    Read post
-                    <ArrowUpRight
-                      size={14}
-                      className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                    />
-                  </span>
-                </div>
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute right-3 top-3 z-10 font-display text-fg-3/30 group-hover:text-accent/40 transition-colors"
-                >
-                  +
+              {p.cover && (
+                <figure className="relative aspect-[16/9] w-full overflow-hidden border-b border-line bg-surface/40">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.cover}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                  />
+                </figure>
+              )}
+              <div className="flex flex-1 flex-col gap-4 p-6">
+                <p className="eyebrow">{p.date}</p>
+                <h3 className="text-h3 text-fg leading-tight transition-colors group-hover:text-accent">
+                  {p.title}
+                </h3>
+                <p className="flex-1 text-sm text-fg-2 leading-relaxed">{p.excerpt}</p>
+                <span className="inline-flex items-center gap-2 text-sm text-fg-2 transition-colors group-hover:text-accent">
+                  Read post
+                  <ArrowUpRight
+                    size={14}
+                    className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  />
                 </span>
-              </a>
-            </Reveal>
-          ))}
-        </ul>
-      </div>
-    </section>
+              </div>
+            </a>
+          </Reveal>
+        ))}
+      </ul>
+    </Section>
   );
 }

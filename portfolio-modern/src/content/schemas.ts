@@ -14,6 +14,13 @@ export const serviceSchema = z.object({
   summary: z.string(),
   bullets: z.array(z.string()),
   cover: z.string(),
+  accent: z.enum(["arctic", "copper", "teal"]).default("arctic"),
+  proof: z
+    .object({
+      label: z.string(),
+      workSlug: z.string().optional(),
+    })
+    .optional(),
 });
 export type Service = z.infer<typeof serviceSchema>;
 

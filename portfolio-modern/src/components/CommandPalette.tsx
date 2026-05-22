@@ -210,8 +210,13 @@ export function CommandPalette({ work, services }: Props) {
         close();
       }
     };
+    const onOpenEvent = () => openPalette();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("palette:open", onOpenEvent as EventListener);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("palette:open", onOpenEvent as EventListener);
+    };
   }, [mounted, open]);
 
   // Reset selection when filter narrows past it.
@@ -235,17 +240,6 @@ export function CommandPalette({ work, services }: Props) {
 
   return (
     <>
-      {/* Floating hint button — also opens on click for touch users. */}
-      <button
-        type="button"
-        aria-label="Open command palette (⌘K)"
-        onClick={openPalette}
-        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full border border-line-2 bg-bg-2/80 px-3 py-2 font-display text-xs text-fg-2 backdrop-blur transition-colors hover:border-accent hover:text-accent md:bottom-6 md:right-6"
-      >
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)]" />
-        <span className="font-mono">⌘K</span>
-      </button>
-
       {open && (
         <div
           role="dialog"

@@ -23,12 +23,8 @@ export function SectionHeading({
       )}
     >
       <div className="max-w-2xl">
-        {eyebrow && (
-          <p className="font-display text-xs uppercase tracking-[0.2em] text-fg-3">
-            {eyebrow}
-          </p>
-        )}
-        <h2 className={cn("text-h1 font-display text-fg", eyebrow ? "mt-5" : "")}>{title}</h2>
+        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+        <h2 className={cn("text-h1 text-fg", eyebrow ? "mt-4" : "")}>{title}</h2>
         {description && (
           <p className="mt-4 max-w-xl text-fg-2">{description}</p>
         )}

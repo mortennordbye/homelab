@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
-import { useEffect, useRef, useState } from "react";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { useRef } from "react";
+import { ArrowRight, ArrowUpRight, Download } from "lucide-react";
 import { site } from "@/content/site";
 import { HeroTopologyGraph } from "./HeroTopologyGraph";
+import { Button } from "@/components/primitives/Button";
+import { Tag } from "@/components/primitives/Tag";
 
 export function Hero() {
   const reduce = useReducedMotion();
@@ -15,69 +16,19 @@ export function Hero() {
     target: ref,
     offset: ["start start", "end start"],
   });
-  const yWord = useTransform(scrollYProgress, [0, 1], ["0%", "-22%"]);
-  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.25]);
-
-  const roles = site.hero.rotating;
-  const [roleIndex, setRoleIndex] = useState(0);
-  const [text, setText] = useState<string>(roles[0]);
-  type Phase = "pausing-full" | "deleting" | "pausing-empty" | "typing";
-  const [phase, setPhase] = useState<Phase>("pausing-full");
-
-  useEffect(() => {
-    if (reduce) return;
-    const full = roles[roleIndex];
-    let delay: number;
-    let action: () => void;
-
-    switch (phase) {
-      case "pausing-full":
-        delay = 1600;
-        action = () => setPhase("deleting");
-        break;
-      case "deleting":
-        if (text.length === 0) {
-          delay = 280;
-          action = () => setPhase("pausing-empty");
-        } else {
-          delay = 45;
-          action = () => setText((t) => t.slice(0, -1));
-        }
-        break;
-      case "pausing-empty":
-        delay = 280;
-        action = () => {
-          setRoleIndex((i) => (i + 1) % roles.length);
-          setPhase("typing");
-        };
-        break;
-      case "typing":
-        if (text === full) {
-          delay = 0;
-          action = () => setPhase("pausing-full");
-        } else {
-          delay = 85;
-          action = () => setText(full.slice(0, text.length + 1));
-        }
-        break;
-    }
-
-    const id = setTimeout(action, delay);
-    return () => clearTimeout(id);
-  }, [text, phase, roleIndex, reduce, roles]);
+  const yWord = useTransform(scrollYProgress, [0, 1], ["0%", "-12%"]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.4]);
 
   return (
     <section
       ref={ref}
       className="relative isolate overflow-hidden pt-32 md:pt-40"
     >
-      {/* Atmospheric layers */}
       <div className="absolute inset-0 -z-10 bg-grain opacity-[0.18] mix-blend-overlay" />
       <div
         aria-hidden
         className="absolute -z-10 left-0 right-0 top-0 h-px aurora-line opacity-60"
       />
-      {/* Grid lines (subtle) */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 opacity-[0.08]"
@@ -87,87 +38,65 @@ export function Hero() {
           backgroundSize: "80px 80px",
         }}
       />
-      {/* Cluster topology intro animation */}
       <HeroTopologyGraph />
 
-      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-8 px-5 pb-20 md:px-8 md:pb-28">
+      <div className="mx-auto grid max-w-[var(--container-wide)] grid-cols-12 gap-8 px-6 pb-20 md:px-8 md:pb-28">
         <div className="col-span-12 md:col-span-8">
-          <p className="font-display text-xs uppercase tracking-[0.3em] text-fg-3">
-            <span className="text-accent">●</span>{" "}
-            available, Oslo &amp; remote · {site.role}
+          <p className="eyebrow flex items-center gap-2">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)]" />
+            Available · Oslo &amp; remote
+          </p>
+
+          <p className="mt-8 font-mono text-sm text-fg-3">
+            {site.firstName} {site.lastName}
           </p>
 
           <motion.h1
             style={reduce ? undefined : { y: yWord, opacity }}
-            className="mt-8 font-display text-display-xl text-fg leading-[0.92]"
+            className="mt-2 text-display-lg text-fg"
           >
-            <span className="block">Morten Victor</span>
-            <span className="block">Nordbye</span>
+            Senior Cloud Engineer
+            <span className="text-fg-3">.</span>
           </motion.h1>
 
-          <p
-            className="mt-8 font-display text-lg text-fg-2 md:text-xl"
-            aria-label={`I am a ${roles[roleIndex]}`}
-          >
-            I am a{" "}
-            <span className="gradient-text glow-accent" aria-hidden>
-              {text}
-            </span>
-            <motion.span
-              aria-hidden
-              animate={reduce ? undefined : { opacity: [1, 1, 0, 0] }}
-              transition={{
-                duration: 1,
-                repeat: Infinity,
-                ease: "linear",
-                times: [0, 0.5, 0.5, 1],
-              }}
-              className="ml-[0.15ch] inline-block w-[0.55ch] bg-accent"
-              style={{ height: "1em", verticalAlign: "-0.12em" }}
-            />
-          </p>
-
-          <p className="mt-10 max-w-2xl text-lg text-fg-2 md:text-xl">
+          <p className="mt-8 max-w-2xl text-lg text-fg-2 md:text-xl">
             {site.hero.sub}
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link
-              href="#portfolio"
-              className="group inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-display text-sm text-accent-ink transition-all hover:shadow-[0_0_44px_-8px_var(--accent)]"
-            >
-              See selected work
-              <ArrowRight
-                size={16}
-                className="transition-transform group-hover:translate-x-1"
-              />
-            </Link>
-            <a
-              href={`mailto:${site.email}`}
-              className="group inline-flex items-center gap-2 rounded-full border border-line-2 bg-surface/40 px-6 py-3 font-display text-sm text-fg transition-all hover:border-accent hover:text-accent"
-            >
-              Start a conversation
-              <ArrowUpRight
-                size={16}
-                className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-              />
-            </a>
+          <div className="mt-8 flex flex-wrap gap-2">
+            <Tag variant="accent">CKA</Tag>
+            <Tag variant="accent">AZ-305</Tag>
+            <Tag variant="muted">4+ yrs production cloud</Tag>
+            <Tag variant="muted">Public &amp; private · enterprise scale</Tag>
           </div>
 
-          <ul className="mt-12 flex flex-wrap gap-x-6 gap-y-3 font-display text-xs text-fg-3">
-            <li className="flex items-center gap-2">
-              <span className="h-1 w-1 rounded-full bg-accent" /> 4+ years in production cloud
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="h-1 w-1 rounded-full bg-accent" /> CKA · AZ-305
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="h-1 w-1 rounded-full bg-accent" /> Public &amp; private · small to enterprise
-            </li>
-          </ul>
+          <div className="mt-10 flex flex-wrap items-center gap-3">
+            <Button
+              href="/resume"
+              variant="primary"
+              iconRight={<Download size={16} aria-hidden />}
+            >
+              Open CV
+            </Button>
+            <Button
+              href="#portfolio"
+              variant="secondary"
+              iconRight={<ArrowRight size={16} aria-hidden />}
+            >
+              Selected work
+            </Button>
+            <Button
+              href={`mailto:${site.email}`}
+              variant="ghost"
+              iconRight={<ArrowUpRight size={16} aria-hidden />}
+            >
+              Start a conversation
+            </Button>
+          </div>
+
+          <TopologyLegend />
         </div>
 
-        {/* Portrait card */}
         <aside className="relative col-span-12 mt-12 md:col-span-4 md:mt-0">
           <div className="sticky top-32 flex flex-col gap-5">
             <PortraitCard />
@@ -175,6 +104,34 @@ export function Hero() {
         </aside>
       </div>
     </section>
+  );
+}
+
+function TopologyLegend() {
+  return (
+    <ul className="mt-14 flex flex-wrap gap-x-6 gap-y-2 font-mono text-[11px] tracking-wide text-fg-3">
+      <li className="flex items-center gap-2">
+        <svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden>
+          <circle r="5" fill="transparent" stroke="currentColor" strokeWidth="1.5" className="text-accent" />
+          <circle r="1.5" className="fill-accent" />
+        </svg>
+        control plane
+      </li>
+      <li className="flex items-center gap-2">
+        <svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden>
+          <circle r="4" fill="var(--bg)" stroke="currentColor" strokeWidth="1.25" />
+        </svg>
+        worker node
+      </li>
+      <li className="flex items-center gap-2">
+        <svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden>
+          <circle r="6" fill="transparent" stroke="currentColor" strokeWidth="1" className="text-accent opacity-40" />
+          <circle r="3.5" className="fill-accent" />
+        </svg>
+        gateway
+      </li>
+      <li className="text-fg-3/60">— a cluster I run in production at home</li>
+    </ul>
   );
 }
 
@@ -205,7 +162,7 @@ function PortraitCard() {
         />
         <span
           aria-hidden
-          className="absolute right-3 top-3 inline-flex items-center gap-2 rounded-full border border-line-2 bg-bg/70 px-3 py-1 font-display text-[11px] uppercase tracking-[0.2em] text-fg-2 backdrop-blur"
+          className="absolute right-3 top-3 inline-flex items-center gap-2 rounded-full border border-line-2 bg-bg/70 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-fg-2 backdrop-blur"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)]" />
           oslo · 59.9°N
@@ -214,4 +171,3 @@ function PortraitCard() {
     </figure>
   );
 }
-

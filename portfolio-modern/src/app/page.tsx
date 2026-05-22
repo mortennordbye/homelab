@@ -12,10 +12,10 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <AboutSection />
-      <ResumeSection />
       <FeaturedWork items={work} />
       <ServicesGrid />
+      <AboutSection />
+      <ResumeSection />
       <LatestWriting />
       <CtaContact />
     </>

@@ -43,7 +43,13 @@ export const site = {
     { label: "X", href: "https://x.com/mortennordbye" },
     { label: "Blog", href: "https://blog.nordbye.it" },
   ],
-  nav: [] as readonly { href: string; label: string }[],
+  nav: [
+    { label: "Work", href: "/#portfolio" },
+    { label: "Writing", href: "https://blog.nordbye.it" },
+    { label: "Resume", href: "/resume" },
+    { label: "About", href: "/about" },
+    { label: "Contact", href: "/#contact" },
+  ] as readonly { href: string; label: string }[],
 } as const;
 
 export type Site = typeof site;

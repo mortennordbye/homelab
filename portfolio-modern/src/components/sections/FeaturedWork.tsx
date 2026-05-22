@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { SectionHeading } from "@/components/primitives/SectionHeading";
+import { ArrowUpRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Section } from "@/components/primitives/Section";
 import { Reveal } from "@/components/primitives/Reveal";
 import { Tag } from "@/components/primitives/Tag";
+import { Button } from "@/components/primitives/Button";
 import { WorkCardCover } from "@/components/work/WorkCardCover";
 import { cn } from "@/lib/cn";
 import type { WorkMeta } from "@/lib/work";
@@ -18,6 +20,7 @@ const filters: { id: Filter; label: string }[] = [
 ];
 
 const INITIAL_LIMIT = 5;
+const TAG_LIMIT = 5;
 
 export function FeaturedWork({ items }: { items: WorkMeta[] }) {
   const [filter, setFilter] = useState<Filter>("professional");
@@ -41,70 +44,90 @@ export function FeaturedWork({ items }: { items: WorkMeta[] }) {
   };
 
   return (
-    <section id="portfolio" className="scroll-mt-24 mx-auto max-w-7xl px-5 py-28 md:px-8 md:py-36">
-      <SectionHeading
-        title="Portfolio."
-        description="Selected case studies from client engagements and the homelab. Each one carries the design rationale, the trade-offs, and what shipped. Filter by client or homelab to scope the list."
-      />
-
-      <div
-        role="tablist"
-        aria-label="Filter portfolio projects"
-        className="mt-10 inline-flex items-center gap-1 rounded-full border border-line bg-surface/40 p-1 font-display text-xs"
-      >
-        {filters.map((f) => {
-          const active = filter === f.id;
+    <Section
+      id="portfolio"
+      eyebrow="portfolio"
+      heading="Selected work."
+      description="Case studies from client engagements and the homelab. Each one carries the design rationale, the trade-offs, and what shipped."
+      align="between"
+      cta={
+        <div
+          role="tablist"
+          aria-label="Filter portfolio projects"
+          className="inline-flex items-center gap-1 rounded-md border border-line bg-surface/40 p-1 font-mono text-xs"
+        >
+          {filters.map((f) => {
+            const active = filter === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => onFilterChange(f.id)}
+                className={cn(
+                  "focus-ring rounded-sm px-3 py-1.5 uppercase tracking-[0.18em] transition-colors",
+                  active
+                    ? "bg-accent text-accent-ink"
+                    : "text-fg-3 hover:text-fg",
+                )}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+      }
+    >
+      <ul className="divide-y divide-line border-y border-line">
+        {displayed.map((w, i) => {
+          const overflow = w.stack.length - TAG_LIMIT;
           return (
-            <button
-              key={f.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => onFilterChange(f.id)}
-              className={cn(
-                "rounded-full px-4 py-1.5 uppercase tracking-[0.18em] transition-colors",
-                active
-                  ? "bg-accent text-accent-ink"
-                  : "text-fg-2 hover:text-fg",
-              )}
-            >
-              {f.label}
-            </button>
+            <Reveal key={w.slug} delay={i * 0.08} as="li">
+              <Link
+                href={`/work/${w.slug}`}
+                className="focus-ring group flex flex-col gap-5 py-8 md:flex-row md:items-center md:gap-8"
+              >
+                <span className="font-mono text-xs text-fg-3 md:w-8 md:shrink-0">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+
+                <figure className="relative aspect-[16/9] w-full shrink-0 overflow-hidden rounded-md border border-line bg-surface/40 md:aspect-[4/3] md:w-64">
+                  <WorkCardCover work={w} />
+                </figure>
+
+                <div className="flex-1">
+                  <h3 className="flex items-baseline gap-3 text-h2 text-fg transition-colors group-hover:text-accent">
+                    {w.title}
+                    <ArrowUpRight
+                      size={18}
+                      className="opacity-0 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
+                      aria-hidden
+                    />
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-fg-2">{w.summary}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {w.stack.slice(0, TAG_LIMIT).map((s) => (
+                      <Tag key={s}>{s}</Tag>
+                    ))}
+                    {overflow > 0 && (
+                      <Tag variant="muted" aria-label={`${overflow} more technologies`}>
+                        +{overflow}
+                      </Tag>
+                    )}
+                  </div>
+                </div>
+
+                <div className="hidden shrink-0 font-mono text-xs text-fg-3 md:block">
+                  <span>{w.period}</span>
+                </div>
+              </Link>
+            </Reveal>
           );
         })}
-      </div>
-
-      <ul className="mt-8 divide-y divide-line border-y border-line">
-        {displayed.map((w, i) => (
-          <Reveal key={w.slug} delay={i * 0.08} as="li">
-            <article className="flex flex-col gap-5 py-8 md:flex-row md:items-center md:gap-8">
-              <span className="font-display text-xs text-fg-3 md:w-8 md:shrink-0">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-
-              <figure className="relative aspect-[16/9] w-full shrink-0 overflow-hidden rounded-md border border-line bg-surface/40 md:aspect-[4/3] md:w-64">
-                <WorkCardCover work={w} />
-              </figure>
-
-              <div className="flex-1">
-                <h3 className="font-display text-h2 text-fg">{w.title}</h3>
-                <p className="mt-2 max-w-2xl text-fg-2">{w.summary}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {w.stack.slice(0, 5).map((s) => (
-                    <Tag key={s}>{s}</Tag>
-                  ))}
-                </div>
-              </div>
-
-              <div className="hidden shrink-0 font-display text-xs text-fg-3 md:block">
-                <span>{w.period}</span>
-              </div>
-            </article>
-          </Reveal>
-        ))}
 
         {visible.length === 0 && (
-          <li className="py-10 text-center font-display text-sm text-fg-3">
+          <li className="py-10 text-center font-mono text-sm text-fg-3">
             Nothing here yet. Try another filter.
           </li>
         )}
@@ -112,32 +135,18 @@ export function FeaturedWork({ items }: { items: WorkMeta[] }) {
 
       {hiddenCount > 0 && (
         <div className="mt-10 flex justify-center">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={() => setExpanded((e) => !e)}
             aria-expanded={expanded}
-            className="group inline-flex items-center gap-2 rounded-full border border-line-2 bg-surface/40 px-6 py-3 font-display text-sm text-fg-2 transition-all hover:border-accent hover:text-accent hover:shadow-[0_0_22px_-10px_var(--accent)]"
+            iconRight={
+              expanded ? <ChevronUp size={16} aria-hidden /> : <ChevronDown size={16} aria-hidden />
+            }
           >
-            {expanded ? (
-              <>
-                Show less
-                <ChevronUp
-                  size={16}
-                  className="transition-transform group-hover:-translate-y-0.5"
-                />
-              </>
-            ) : (
-              <>
-                Show {hiddenCount} more
-                <ChevronDown
-                  size={16}
-                  className="transition-transform group-hover:translate-y-0.5"
-                />
-              </>
-            )}
-          </button>
+            {expanded ? "Show less" : `Show ${hiddenCount} more`}
+          </Button>
         </div>
       )}
-    </section>
+    </Section>
   );
 }
