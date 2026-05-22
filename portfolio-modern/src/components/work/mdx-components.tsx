@@ -1,14 +1,15 @@
 import type { MDXComponents } from "mdx/types";
+import { Callout } from "@/components/primitives/Callout";
 
 export const mdxComponents: MDXComponents = {
   h1: ({ children }) => (
-    <h1 className="text-h1 font-display text-fg mt-10 mb-4 leading-tight">{children}</h1>
+    <h1 className="text-h1 text-fg mt-10 mb-4 leading-tight">{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-h2 font-display text-fg mt-12 mb-3 leading-tight">{children}</h2>
+    <h2 className="text-h2 text-fg mt-12 mb-3 leading-tight">{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-h3 font-display text-fg mt-8 mb-2">{children}</h3>
+    <h3 className="text-h3 text-fg mt-8 mb-2">{children}</h3>
   ),
   p: ({ children }) => (
     <p className="text-fg-2 leading-relaxed mb-5">{children}</p>
@@ -25,7 +26,7 @@ export const mdxComponents: MDXComponents = {
   a: ({ href, children }) => (
     <a
       href={href}
-      className="text-fg underline decoration-accent decoration-2 underline-offset-4 hover:text-accent"
+      className="focus-ring text-fg underline decoration-accent decoration-2 underline-offset-4 hover:text-accent"
       target={href?.startsWith("http") ? "_blank" : undefined}
       rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}
     >
@@ -48,4 +49,5 @@ export const mdxComponents: MDXComponents = {
       {children}
     </blockquote>
   ),
+  Callout,
 };

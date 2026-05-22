@@ -14,10 +14,17 @@
   --color-accent-2: var(--accent-2);
   --color-accent-3: var(--accent-3);
   --color-accent-ink: var(--accent-ink);
+  --color-copper: var(--copper);
   --color-warn: var(--warn);
+  --color-interactive: var(--interactive);
+  --color-interactive-hover: var(--interactive-hover);
+  --color-interactive-ink: var(--interactive-ink);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
 
   --font-sans: var(--font-body);
-  --font-display: var(--font-display);
+  --font-display: var(--font-body);
   --font-mono: var(--font-mono);
 
   --radius-sm: var(--radius-sm);
@@ -88,13 +95,31 @@ a {
 }
 
 /* Utilities */
-.text-display-xl { font-size: var(--text-display-xl); line-height: 0.9; letter-spacing: -0.04em; }
-.text-display-lg { font-size: var(--text-display-lg); line-height: 0.95; letter-spacing: -0.035em; }
-.text-h1 { font-size: var(--text-h1); line-height: 1.05; letter-spacing: -0.025em; }
-.text-h2 { font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em; }
-.text-h3 { font-size: var(--text-h3); line-height: 1.2; letter-spacing: -0.01em; }
+.text-display-xl { font-size: var(--text-display-xl); line-height: 0.92; letter-spacing: -0.035em; font-weight: var(--font-weight-semibold); }
+.text-display-lg { font-size: var(--text-display-lg); line-height: 0.95; letter-spacing: -0.03em; font-weight: var(--font-weight-semibold); }
+.text-h1 { font-size: var(--text-h1); line-height: 1.05; letter-spacing: -0.02em; font-weight: var(--font-weight-semibold); }
+.text-h2 { font-size: var(--text-h2); line-height: 1.12; letter-spacing: -0.015em; font-weight: var(--font-weight-semibold); }
+.text-h3 { font-size: var(--text-h3); line-height: 1.25; letter-spacing: -0.01em; font-weight: var(--font-weight-semibold); }
 
-.font-display { font-family: var(--font-display), ui-monospace, monospace; }
+.font-display { font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif; }
+.font-mono, .mono { font-family: var(--font-mono), ui-monospace, monospace; }
+
+/* Eyebrow — small caps mono label used above section headings */
+.eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Centralised focus affordance */
+.focus-ring:focus-visible {
+  outline: var(--ring-width) solid var(--ring);
+  outline-offset: var(--ring-offset);
+  border-radius: var(--radius-sm);
+}
 
 .hairline { border-color: var(--line); }
 .hairline-strong { border-color: var(--line-2); }

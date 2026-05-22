@@ -1,56 +1,79 @@
-import { ArrowRight, Mail, MapPin } from "lucide-react";
+import { ArrowRight, Clock, MapPin, ExternalLink } from "lucide-react";
+import { Button } from "@/components/primitives/Button";
 import { site } from "@/content/site";
 
 export function CtaContact() {
   return (
-    <section id="contact" className="scroll-mt-24 border-t border-line">
-      <div className="mx-auto grid max-w-7xl gap-12 px-5 py-28 md:grid-cols-12 md:gap-8 md:px-8 md:py-36">
+    <section
+      id="contact"
+      className="scroll-mt-24 border-t border-line"
+      style={{ paddingTop: "var(--space-section-y)", paddingBottom: "var(--space-section-y)" }}
+    >
+      <div className="mx-auto grid max-w-[var(--container-wide)] gap-12 px-6 md:grid-cols-12 md:gap-8 md:px-8">
         <div className="md:col-span-7">
-          <h2 className="text-display-lg font-display text-fg leading-[1]">
-            Contact.
+          <p className="eyebrow flex items-center gap-2">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)]" />
+            Available · Oslo &amp; remote
+          </p>
+          <h2 className="mt-6 text-display-lg text-fg leading-[1]">
+            Let&apos;s build something solid.
           </h2>
           <p className="mt-6 max-w-xl text-fg-2">
-            Reach out about cloud engineering, platform work or consulting engagements. I read everything that lands in the inbox and reply within a couple of working days.
+            Open to senior cloud engineering and architecture work — public
+            sector, regulated industries, or platform builds where
+            production-grade matters more than the demo. I read everything that
+            lands in the inbox and reply within a couple of working days.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <a
+            <Button
               href={`mailto:${site.email}`}
-              className="group inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-display text-sm text-accent-ink transition-all hover:shadow-[0_0_44px_-8px_var(--accent)]"
+              variant="primary"
+              size="lg"
+              iconRight={<ArrowRight size={16} aria-hidden />}
             >
               {site.email}
-              <ArrowRight
-                size={16}
-                className="transition-transform group-hover:translate-x-1"
-              />
-            </a>
+            </Button>
+            <Button
+              href={`https://www.linkedin.com/in/${site.linkedin}`}
+              variant="secondary"
+              size="lg"
+              iconLeft={<ExternalLink size={16} aria-hidden />}
+            >
+              Reach out on LinkedIn
+            </Button>
           </div>
         </div>
 
         <aside className="md:col-span-5">
-          <ul className="divide-y divide-line border-y border-line">
-            <li className="flex items-center gap-4 py-5">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line-2 text-accent">
-                <Mail size={16} />
-              </span>
-              <div>
-                <p className="font-display text-xs uppercase tracking-wider text-fg-3">email</p>
-                <a href={`mailto:${site.email}`} className="text-fg hover:text-accent">
-                  {site.email}
-                </a>
-              </div>
-            </li>
-            <li className="flex items-center gap-4 py-5">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line-2 text-accent">
-                <MapPin size={16} />
-              </span>
-              <div>
-                <p className="font-display text-xs uppercase tracking-wider text-fg-3">based in</p>
-                <p className="text-fg">{site.location}</p>
-              </div>
-            </li>
-          </ul>
+          <dl className="divide-y divide-line border-y border-line">
+            <Row icon={<MapPin size={14} aria-hidden />} label="Based in" value={`${site.location} · CET / CEST`} />
+            <Row icon={<Clock size={14} aria-hidden />} label="Response time" value="Within 2 working days" />
+            <Row icon={<ExternalLink size={14} aria-hidden />} label="Engagement" value="Available via Orange Business or directly" />
+          </dl>
         </aside>
       </div>
     </section>
+  );
+}
+
+function Row({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-start gap-4 py-5">
+      <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md border border-line-2 text-accent">
+        {icon}
+      </span>
+      <div>
+        <dt className="eyebrow">{label}</dt>
+        <dd className="mt-1 text-fg">{value}</dd>
+      </div>
+    </div>
   );
 }

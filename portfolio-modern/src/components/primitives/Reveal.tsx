@@ -1,4 +1,4 @@
-import type { ElementType, ReactNode, CSSProperties } from "react";
+import { createElement, type ElementType, type ReactNode, type CSSProperties } from "react";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -16,10 +16,10 @@ type Props = {
  */
 export function Reveal({ children, delay = 0, className, as }: Props) {
   const Tag = (as ?? "div") as ElementType;
-  const style = { "--d": `${delay}s` } as CSSProperties;
-  return (
-    <Tag className={cn("reveal", className)} style={style}>
-      {children}
-    </Tag>
+  const inlineStyle = { "--d": `${delay}s` } as CSSProperties;
+  return createElement(
+    Tag,
+    { className: cn("reveal", className), style: inlineStyle },
+    children,
   );
 }

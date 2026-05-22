@@ -76,6 +76,28 @@
   --grain-mix: multiply;
 }
 
+:root,
+:root.dark {
+  /* Semantic colours (dark) */
+  --interactive: var(--accent);
+  --interactive-hover: #7fc6ff;
+  --interactive-ink: var(--accent-ink);
+  --success: #6ad6a8;
+  --danger: #ef6f7a;
+  --info: var(--accent-3);
+  --ring: rgba(var(--accent-rgb), 0.55);
+}
+
+:root.light {
+  --interactive: var(--accent);
+  --interactive-hover: #1858b8;
+  --interactive-ink: var(--accent-ink);
+  --success: #1b8f5e;
+  --danger: #b03544;
+  --info: var(--accent-3);
+  --ring: rgba(var(--accent-rgb), 0.45);
+}
+
 :root {
   /* Static (theme-independent) */
   --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
@@ -86,6 +108,30 @@
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Motion durations */
+  --duration-hover: 180ms;
+  --duration-press: 80ms;
+  --duration-enter: 700ms;
+
+  /* Spacing — section rhythm and container widths */
+  --space-section-y: clamp(5rem, 9vw, 9rem);
+  --space-block: clamp(2rem, 4vw, 3.5rem);
+  --space-stack: 1rem;
+  --container-wide: 80rem;       /* 1280px */
+  --container-prose: 65ch;
+  --container-readable: 42rem;   /* 672px */
+
+  /* Type weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Focus ring */
+  --ring-width: 2px;
+  --ring-offset: 2px;
 }
 
 /* Honour OS preference for first visit when no saved choice (script overrides) */
