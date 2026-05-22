@@ -6,9 +6,7 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
-import { ThemeToggle } from "@/components/primitives/ThemeToggle";
 import { PaletteLauncher } from "@/components/PaletteLauncher";
-import { Button } from "@/components/primitives/Button";
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -79,15 +77,10 @@ export function Header() {
             );
           })}
           <PaletteLauncher className="ml-2" />
-          <ThemeToggle />
-          <Button href={`mailto:${site.email}`} variant="secondary" size="sm">
-            Get in touch
-          </Button>
         </nav>
 
         <div className="flex items-center gap-2 md:hidden">
           <PaletteLauncher compact />
-          <ThemeToggle />
           <button
             type="button"
             aria-label={open ? "Close menu" : "Open menu"}
@@ -112,9 +105,6 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <Button href={`mailto:${site.email}`} variant="secondary" className="mt-4 justify-between">
-              Get in touch <span aria-hidden>→</span>
-            </Button>
           </nav>
         </div>
       )}

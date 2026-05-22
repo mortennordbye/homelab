@@ -3,10 +3,8 @@
 import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, ArrowUpRight, Download } from "lucide-react";
 import { site } from "@/content/site";
-import { HeroTopologyGraph } from "./HeroTopologyGraph";
-import { Button } from "@/components/primitives/Button";
+import { InlineGlobe } from "@/components/InlineGlobe";
 import { Tag } from "@/components/primitives/Tag";
 
 export function Hero() {
@@ -38,7 +36,7 @@ export function Hero() {
           backgroundSize: "80px 80px",
         }}
       />
-      <HeroTopologyGraph />
+      <InlineGlobe />
 
       <div className="mx-auto grid max-w-[var(--container-wide)] grid-cols-12 gap-8 px-6 pb-20 md:px-8 md:pb-28">
         <div className="col-span-12 md:col-span-8">
@@ -56,7 +54,6 @@ export function Hero() {
             className="mt-2 text-display-lg text-fg"
           >
             I am a <Typewriter words={site.hero.rotating} reduce={!!reduce} />
-            <span className="text-fg-3">.</span>
           </motion.h1>
 
           <p className="mt-8 max-w-2xl text-lg text-fg-2 md:text-xl">
@@ -69,32 +66,6 @@ export function Hero() {
             <Tag variant="muted">4+ yrs production cloud</Tag>
             <Tag variant="muted">Public &amp; private · enterprise scale</Tag>
           </div>
-
-          <div className="mt-10 flex flex-wrap items-center gap-3">
-            <Button
-              href="/resume"
-              variant="primary"
-              iconRight={<Download size={16} aria-hidden />}
-            >
-              Open CV
-            </Button>
-            <Button
-              href="#portfolio"
-              variant="secondary"
-              iconRight={<ArrowRight size={16} aria-hidden />}
-            >
-              Selected work
-            </Button>
-            <Button
-              href={`mailto:${site.email}`}
-              variant="ghost"
-              iconRight={<ArrowUpRight size={16} aria-hidden />}
-            >
-              Start a conversation
-            </Button>
-          </div>
-
-          <TopologyLegend />
         </div>
 
         <aside className="relative col-span-12 mt-12 md:col-span-4 md:mt-0">
@@ -104,34 +75,6 @@ export function Hero() {
         </aside>
       </div>
     </section>
-  );
-}
-
-function TopologyLegend() {
-  return (
-    <ul className="mt-14 flex flex-wrap gap-x-6 gap-y-2 font-mono text-[11px] tracking-wide text-fg-3">
-      <li className="flex items-center gap-2">
-        <svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden>
-          <circle r="5" fill="transparent" stroke="currentColor" strokeWidth="1.5" className="text-accent" />
-          <circle r="1.5" className="fill-accent" />
-        </svg>
-        control plane
-      </li>
-      <li className="flex items-center gap-2">
-        <svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden>
-          <circle r="4" fill="var(--bg)" stroke="currentColor" strokeWidth="1.25" />
-        </svg>
-        worker node
-      </li>
-      <li className="flex items-center gap-2">
-        <svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden>
-          <circle r="6" fill="transparent" stroke="currentColor" strokeWidth="1" className="text-accent opacity-40" />
-          <circle r="3.5" className="fill-accent" />
-        </svg>
-        gateway
-      </li>
-      <li className="text-fg-3/60">— a cluster I run in production at home</li>
-    </ul>
   );
 }
 
