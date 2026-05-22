@@ -24,7 +24,7 @@ spec:
         runAsGroup: 101
       containers:
         - name: portfolio
-          image: ghcr.io/mortennordbye/homelab/portfolio-modern:ad82028
+          image: ghcr.io/mortennordbye/homelab/portfolio-modern:1b8c2ca
           imagePullPolicy: Always
           ports:
             - name: http
