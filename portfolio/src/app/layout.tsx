@@ -160,13 +160,12 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
-        {/* Warm the HTTP cache for the WelcomeGlobe textures so the network
-            fetch starts in parallel with the three.js chunk download instead
-            of after it. Skipped on repeat visits by the browser cache + the
-            sessionStorage guard in WelcomeIntro. */}
-        <link rel="preload" as="image" type="image/webp" href="/textures/earth-day.webp" />
-        <link rel="preload" as="image" type="image/webp" href="/textures/earth-normal.webp" />
-        <link rel="preload" as="image" type="image/webp" href="/textures/earth-specular.webp" />
+        {/* Texture preloads were removed: WelcomeIntro now skips the globe on
+            mobile / save-data, but `<link rel="preload">` fires unconditionally
+            from the document head. Preloading 558 KB of textures on every
+            mobile visit defeated the mobile-skip optimization. WelcomeGlobe's
+            `useTexture` will fetch them lazily on desktop first visit, which
+            is fast enough. */}
       </head>
       <body className="bg-bg text-fg min-h-screen flex flex-col">
         <Header />
