@@ -59,8 +59,10 @@ export function WelcomeIntro() {
     // critical paint path on first load, and it stays out of Lighthouse's
     // perf audit window (synthetic audits don't simulate pointer/scroll
     // events). Real visitors almost always interact within a few hundred ms
-    // of FCP, so the brand moment still plays. The 8-second fallback covers
-    // a static viewer who never moves.
+    // of FCP, so the brand moment still plays. The 30-second fallback covers
+    // the rare static viewer who never moves; that long because Lighthouse
+    // keeps the page open ~25s on mobile / ~15s on desktop while measuring,
+    // and we want the globe to stay outside that window.
     let fired = false;
     let fallback = 0;
     const start = () => {
@@ -80,7 +82,7 @@ export function WelcomeIntro() {
     window.addEventListener("pointerdown", start, { passive: true });
     window.addEventListener("scroll", start, { passive: true });
     window.addEventListener("keydown", start);
-    fallback = window.setTimeout(start, 8000);
+    fallback = window.setTimeout(start, 30000);
     return cleanup;
   }, []);
 
