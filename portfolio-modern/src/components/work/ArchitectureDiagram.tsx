@@ -11,6 +11,104 @@ import type {
 const NODE_HEIGHT = 56;
 const NODE_DEFAULT_WIDTH = 150;
 
+type EdgeRoute = {
+  d: string;
+  length: number;
+  labelX: number;
+  labelY: number;
+};
+
+/**
+ * Manhattan (right-angle) routing between two boxes.
+ *
+ * Picks a Z-shape with the bend running through the empty lane between
+ * the two boxes. Endpoints sit on the box border (top/bottom/left/right
+ * midpoint) so arrowheads land on the edge, never inside it. For axis-
+ * aligned pairs we collapse to a straight line.
+ */
+function orthogonalRoute(a: ArchNode, b: ArchNode): EdgeRoute {
+  const aw = a.width ?? NODE_DEFAULT_WIDTH;
+  const bw = b.width ?? NODE_DEFAULT_WIDTH;
+  const A = {
+    cx: a.x + aw / 2,
+    cy: a.y + NODE_HEIGHT / 2,
+    left: a.x,
+    right: a.x + aw,
+    top: a.y,
+    bottom: a.y + NODE_HEIGHT,
+  };
+  const B = {
+    cx: b.x + bw / 2,
+    cy: b.y + NODE_HEIGHT / 2,
+    left: b.x,
+    right: b.x + bw,
+    top: b.y,
+    bottom: b.y + NODE_HEIGHT,
+  };
+  const dx = B.cx - A.cx;
+  const dy = B.cy - A.cy;
+  const ax = Math.abs(dx);
+  const ay = Math.abs(dy);
+  const ALIGN = 16;
+
+  // Boxes overlap horizontally and are stacked vertically → straight line.
+  if (ay > ALIGN && ax < ALIGN) {
+    const sy = dy >= 0 ? A.bottom : A.top;
+    const ty = dy >= 0 ? B.top : B.bottom;
+    const x = (A.cx + B.cx) / 2;
+    const length = Math.abs(ty - sy);
+    return {
+      d: `M ${x} ${sy} L ${x} ${ty}`,
+      length,
+      labelX: x,
+      labelY: (sy + ty) / 2 - 6,
+    };
+  }
+  // Same-row pair → straight horizontal line.
+  if (ax > ALIGN && ay < ALIGN) {
+    const sx = dx >= 0 ? A.right : A.left;
+    const tx = dx >= 0 ? B.left : B.right;
+    const y = (A.cy + B.cy) / 2;
+    const length = Math.abs(tx - sx);
+    return {
+      d: `M ${sx} ${y} L ${tx} ${y}`,
+      length,
+      labelX: (sx + tx) / 2,
+      labelY: y - 6,
+    };
+  }
+
+  // Diagonal: pick a Z-shape with one orthogonal bend.
+  if (ay >= ax) {
+    // Vertical-dominant: exit top/bottom, jog horizontally at mid-Y, enter
+    // top/bottom of target. The jog sits in the empty gap between rows.
+    const sy = dy >= 0 ? A.bottom : A.top;
+    const ty = dy >= 0 ? B.top : B.bottom;
+    const midY = (sy + ty) / 2;
+    const length =
+      Math.abs(midY - sy) + Math.abs(B.cx - A.cx) + Math.abs(ty - midY);
+    return {
+      d: `M ${A.cx} ${sy} V ${midY} H ${B.cx} V ${ty}`,
+      length,
+      labelX: (A.cx + B.cx) / 2,
+      labelY: midY - 6,
+    };
+  } else {
+    // Horizontal-dominant: exit left/right, jog vertically at mid-X.
+    const sx = dx >= 0 ? A.right : A.left;
+    const tx = dx >= 0 ? B.left : B.right;
+    const midX = (sx + tx) / 2;
+    const length =
+      Math.abs(midX - sx) + Math.abs(B.cy - A.cy) + Math.abs(tx - midX);
+    return {
+      d: `M ${sx} ${A.cy} H ${midX} V ${B.cy} H ${tx}`,
+      length,
+      labelX: midX,
+      labelY: (A.cy + B.cy) / 2 - 6,
+    };
+  }
+}
+
 type Props = {
   arch: Architecture;
   selectedId: string | null;
@@ -142,13 +240,7 @@ export function ArchitectureDiagram({
           const a = nodeById.get(e.from);
           const b = nodeById.get(e.to);
           if (!a || !b) return null;
-          const aw = a.width ?? NODE_DEFAULT_WIDTH;
-          const bw = b.width ?? NODE_DEFAULT_WIDTH;
-          const cx1 = a.x + aw / 2;
-          const cy1 = a.y + NODE_HEIGHT / 2;
-          const cx2 = b.x + bw / 2;
-          const cy2 = b.y + NODE_HEIGHT / 2;
-          const len = Math.ceil(Math.hypot(cx2 - cx1, cy2 - cy1));
+          const route = orthogonalRoute(a, b);
           const style = e.style ?? "solid";
           const isMigration = style === "migration";
           const dasharray =
@@ -170,29 +262,28 @@ export function ArchitectureDiagram({
                   opacity: isEdgeDim(e) ? 0.18 : 1,
                   transition: "opacity 240ms ease-out",
                   "--edge-delay": `${i * 60}ms`,
-                  "--edge-len": String(len),
+                  "--edge-len": String(route.length),
                 } as React.CSSProperties
               }
             >
-              <line
+              <path
                 className="topo-edge"
-                x1={cx1}
-                y1={cy1}
-                x2={cx2}
-                y2={cy2}
+                d={route.d}
+                fill="none"
                 strokeLinecap="round"
+                strokeLinejoin="round"
                 strokeWidth={style === "telemetry" ? 1.2 : 1.4}
                 strokeDasharray={dasharray}
                 markerEnd={isMigration ? "url(#arch-arrow)" : undefined}
                 style={{
                   stroke,
-                  strokeDashoffset: hasPlayed ? 0 : len,
+                  strokeDashoffset: hasPlayed ? 0 : route.length,
                 }}
               />
               {e.label && (
                 <text
-                  x={(cx1 + cx2) / 2}
-                  y={(cy1 + cy2) / 2 - 6}
+                  x={route.labelX}
+                  y={route.labelY}
                   textAnchor="middle"
                   className="font-display"
                   style={{

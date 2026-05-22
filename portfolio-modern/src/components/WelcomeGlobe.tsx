@@ -5,15 +5,27 @@ import { Stars, useTexture } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
+// Silence the noisy "THREE.Clock has been deprecated" warning emitted from
+// inside @react-three/fiber / drei. The library still uses Clock internally;
+// the message floods the dev indicator until upstream migrates to Timer.
+if (typeof window !== "undefined") {
+  const origWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    const first = args[0];
+    if (typeof first === "string" && first.includes("THREE.Clock")) return;
+    origWarn(...args);
+  };
+}
+
 const OSLO = { lat: 59.91, lon: 10.75 };
 
 // Timeline (seconds)
-const T_EARTH_IN = 1.2;
-const T_ZOOM_START = 3.2;
-const T_ZOOM_END = 7.4;
-const T_PULSE = 7.0;
-const T_FLASH = 7.8;
-const T_COMPLETE = 8.3;
+const T_EARTH_IN = 0.25;
+const T_ZOOM_START = 0.5;
+const T_ZOOM_END = 1.7;
+const T_PULSE = 1.5;
+const T_FLASH = 1.8;
+const T_COMPLETE = 2.0;
 
 const RADIUS = 1.6;
 const EARTH_TILT_X = 0.32;
@@ -125,7 +137,7 @@ function OsloPulse({ bus, index }: { bus: React.MutableRefObject<Bus>; index: nu
     const up = new THREE.Vector3(0, 0, 1);
     return new THREE.Quaternion().setFromUnitVectors(up, n);
   }, [pos]);
-  const start = T_PULSE + index * 0.45;
+  const start = T_PULSE + index * 0.12;
 
   useFrame(() => {
     const elapsed = bus.current.elapsed;
@@ -134,12 +146,12 @@ function OsloPulse({ bus, index }: { bus: React.MutableRefObject<Bus>; index: nu
     }
     const t = elapsed - start;
     if (!ringRef.current) return;
-    if (t < 0 || t > 1.1) {
+    if (t < 0 || t > 0.4) {
       ringRef.current.visible = false;
       return;
     }
     ringRef.current.visible = true;
-    const progress = clamp01(t / 1.1);
+    const progress = clamp01(t / 0.4);
     // Keep the ring small so it doesn't dominate the close-up frame.
     const s = 0.01 + easeOut(progress) * 0.07;
     ringRef.current.scale.set(s, s, s);
@@ -226,7 +238,7 @@ function Clock({
     lastMsRef.current = now;
     bus.current.elapsed = t;
     const zoomT = clamp01((t - T_ZOOM_START) / (T_ZOOM_END - T_ZOOM_START));
-    const rotSpeed = 0.06 * (1 - zoomT * 0.9);
+    const rotSpeed = 0.22 * (1 - zoomT * 0.9);
     bus.current.rotation += rotSpeed * wallDelta;
 
     if (!flashedRef.current && t >= T_FLASH) {

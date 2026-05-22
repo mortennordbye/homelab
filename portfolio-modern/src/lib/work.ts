@@ -48,13 +48,3 @@ export function getAllWork(): WorkMeta[] {
 export function getWorkBySlug(slug: string): WorkMeta | undefined {
   return getAllWork().find((w) => w.slug === slug);
 }
-
-export function getFeaturedWork(limit = 3): WorkMeta[] {
-  return getAllWork()
-    .filter((w) => w.featured)
-    .slice(0, limit);
-}
-
-export function getWorkByKind(kind: WorkMeta["kind"]): WorkMeta[] {
-  return getAllWork().filter((w) => w.kind === kind);
-}

@@ -46,9 +46,8 @@ export function FeaturedWork({ items }: { items: WorkMeta[] }) {
   return (
     <Section
       id="portfolio"
-      eyebrow="portfolio"
-      heading="Selected work."
-      description="Case studies from client engagements and the homelab. Each one carries the design rationale, the trade-offs, and what shipped."
+      heading="Portfolio."
+      description="Selected case studies from client engagements and the homelab. Each one carries the design rationale, the trade-offs, and what shipped. Filter by client or homelab to scope the list."
       align="between"
       cta={
         <div

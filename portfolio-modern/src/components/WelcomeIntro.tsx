@@ -4,9 +4,9 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const SESSION_KEY = "portfolio:welcome-played";
-const FADE_MS = 600;
-const FLASH_FADE_MS = 600;
-const REDUCED_HOLD_MS = 900;
+const FADE_MS = 220;
+const FLASH_FADE_MS = 220;
+const REDUCED_HOLD_MS = 300;
 
 const WelcomeGlobe = dynamic(() => import("./WelcomeGlobe"), { ssr: false });
 

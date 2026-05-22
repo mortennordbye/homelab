@@ -27,18 +27,3 @@ export function Card({
   );
 }
 
-export function CardEyebrow({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn("eyebrow", className)}>{children}</p>;
-}
-
-export function CardTitle({ children, className }: { children: ReactNode; className?: string }) {
-  return <h3 className={cn("text-h3 text-fg mt-3", className)}>{children}</h3>;
-}
-
-export function CardBody({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("mt-3 text-fg-2", className)}>{children}</div>;
-}
-
-export function CardFooter({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("mt-6 flex items-center gap-3 text-sm", className)}>{children}</div>;
-}

@@ -20,7 +20,6 @@ const raw: Service[] = [
       "Wire up CI/CD and GitOps so deployments are repeatable and reversible.",
       "Audit clusters against CIS and Pod Security baselines and fix what comes up.",
     ],
-    cover: "/images/services/kubernetes-containerization.webp",
   },
   {
     slug: "gitops-and-ansible",
@@ -41,7 +40,6 @@ const raw: Service[] = [
       "Apply IaC practices for module structure, state handling and secrets.",
       "Add security and compliance checks into the pipeline so they happen automatically.",
     ],
-    cover: "/images/services/gitops-ansible.webp",
   },
   {
     slug: "technical-consulting",
@@ -62,9 +60,7 @@ const raw: Service[] = [
       "Lead infrastructure upgrades and cloud migrations, with rollback plans in place.",
       "Hand things over properly so the team owns the result after I leave.",
     ],
-    cover: "/images/services/technical-support-consulting.webp",
   },
 ];
 
 export const services: Service[] = raw.map((s) => serviceSchema.parse(s));
-export const getService = (slug: string) => services.find((s) => s.slug === slug);

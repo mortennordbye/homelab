@@ -13,7 +13,6 @@ export const serviceSchema = z.object({
   blurb: z.string(),
   summary: z.string(),
   bullets: z.array(z.string()),
-  cover: z.string(),
   accent: z.enum(["arctic", "copper", "teal"]).default("arctic"),
   proof: z
     .object({
