@@ -28,6 +28,23 @@ export function WelcomeIntro() {
       played = false;
     }
     if (played) return;
+    // Skip the globe on small viewports and save-data connections. three.js
+    // + drei + fiber is ~600 KB JS for a one-shot brand moment — on Slow 4G
+    // it pushed mobile LCP to 8s and the perf score to 23. Dynamic import
+    // means the chunk is never fetched when we don't mount it.
+    const isNarrow = window.matchMedia("(max-width: 768px)").matches;
+    const conn = (navigator as Navigator & {
+      connection?: { saveData?: boolean };
+    }).connection;
+    const saveData = conn?.saveData === true;
+    if (isNarrow || saveData) {
+      try {
+        sessionStorage.setItem(SESSION_KEY, "1");
+      } catch {
+        /* storage unavailable — ignore */
+      }
+      return;
+    }
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReduced(mq.matches);
     setActive(true);

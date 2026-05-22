@@ -211,14 +211,32 @@ function Typewriter({
     return () => window.clearTimeout(t);
   }, [text, deleting, idx, words, reduce]);
 
+  // Reserve space for the longest word so the h1 never reflows as letters
+  // type/delete — was a major CLS contributor (mobile CLS 0.30 → target <0.1).
+  // Inline-grid stacks the visible text on top of an invisible "ghost" sized
+  // by the browser to the widest entry; the line wraps consistently from the
+  // first paint instead of jumping each frame.
+  const longest = words.reduce(
+    (a, b) => (b.length > a.length ? b : a),
+    words[0] ?? "",
+  );
+
   return (
-    <span className="text-accent">
-      {text}
+    <span style={{ display: "inline-grid" }}>
       <span
         aria-hidden
-        className="ml-0.5 inline-block w-[0.55ch] -translate-y-[0.05em] animate-pulse text-accent"
+        style={{ gridArea: "1 / 1", visibility: "hidden", whiteSpace: "nowrap" }}
       >
-        |
+        {longest}
+      </span>
+      <span style={{ gridArea: "1 / 1" }} className="text-accent">
+        {text}
+        <span
+          aria-hidden
+          className="ml-0.5 inline-block w-[0.55ch] -translate-y-[0.05em] animate-pulse text-accent"
+        >
+          |
+        </span>
       </span>
     </span>
   );
