@@ -1,8 +1,44 @@
-# Ignore build artifacts
-node_modules/
-dist/
-.env
-*.log
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Ignore local Kubernetes configs
-.kube/
+# Dependencies & build outputs
+/node_modules
+/.next/
+/out/
+/coverage
+
+# Tooling caches & logs
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+.pnpm-debug.log*
+
+# Local-only files
+.DS_Store
+.env*
+*.pem
+
+# CV workspace — local-only drafts shared via the CV.md interview flow.
+CV-RAW.md
+CV-POLISHED.md
+CV.md
+GEMINI-VOICE-PROMPT.md
+
+# CV pipeline artifacts. All produced inside the multi-stage Dockerfile —
+# either baked into the production image (CI) or written to the cv-bundle
+# Docker volume (`make up`). If anything ever lands on the host (an IDE
+# integration running xelatex in-place, a stray docker run -v, etc.) keep
+# it out of git.
+latex/output/
+latex/*.aux
+latex/*.log
+latex/*.out
+latex/*.synctex.gz
+latex/*.fls
+latex/*.fdb_latexmk
+latex/*.pdf
+latex/*.tex
+latex/cv/
+latex/resume/
+public/resume.pdf
+public/cv-*.pdf
+public/cv-manifest.json
