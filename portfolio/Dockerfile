@@ -6,7 +6,8 @@ FROM node:20-alpine AS texgen
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --include=dev
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    npm ci --include=dev --prefer-offline --no-audit --no-fund
 
 COPY tsconfig.json ./
 COPY src/content ./src/content
@@ -37,7 +38,8 @@ WORKDIR /app
 
 # Install deps with cache-friendly two-step copy
 COPY package.json package-lock.json ./
-RUN npm ci --include=dev
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    npm ci --include=dev --prefer-offline --no-audit --no-fund
 
 # Build inputs
 COPY tsconfig.json next.config.ts postcss.config.mjs eslint.config.mjs ./
@@ -57,7 +59,8 @@ ARG BUILD_SHA=dev
 ENV NEXT_PUBLIC_BUILD_SHA=$BUILD_SHA
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
 # Pre-compress static assets so nginx (gzip_static on) serves the .gz
 # straight from disk instead of compressing on every request.
@@ -85,19 +88,28 @@ COPY --from=pdfbuild /work/latex/output/cv-*.pdf ./
 COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 
 # ---- Stage 4: serve via hardened nginx ----
-FROM nginx:alpine
-
-WORKDIR /usr/share/nginx/html
+# nginx-unprivileged ships writable /tmp + writable temp paths and listens
+# on 8080 as the nginx user out of the box, so we can drop the manual USER
+# directive and the -u root workaround the plain nginx:alpine image needed.
+# Brotli precompression was attempted here but apk's nginx-mod-http-brotli
+# is ABI-pinned to alpine's nginx build, which doesn't match nginxinc's
+# custom build — leaving as gzip-only until we either compile the module
+# from source or switch to a brotli-bundled image. Tracked in BACKLOG.
+FROM nginxinc/nginx-unprivileged:1.27-alpine
 
 COPY --from=build /app/out /usr/share/nginx/html/nordbye.it/
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# Hardening: directories 555, files 444 — locks down the document root
+# Hardening: directories 555, files 444 — locks down the document root.
+# Needs USER root temporarily because the unprivileged image defaults to
+# the nginx user.
+USER root
 RUN find /usr/share/nginx/html/nordbye.it -type d -exec chmod 555 {} \; \
  && find /usr/share/nginx/html/nordbye.it -type f -exec chmod 444 {} \;
+USER nginx
 
-USER nginx:nginx
+WORKDIR /usr/share/nginx/html
 
 EXPOSE 8080
 

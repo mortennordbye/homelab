@@ -12,6 +12,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Portfolio modern — items deferred during initial build
 
+### Brotli precompression for nginx static assets
+- **What:** Ship `.br` siblings alongside the existing `.gz` files and enable `brotli_static on;` in `nginx.conf`. Typical 15-25% smaller transfer than gzip on JS/CSS/HTML.
+- **Why deferred:** The `nginxinc/nginx-unprivileged:*-alpine` image ships a custom nginx build whose ABI doesn't match Alpine's apk `nginx-mod-http-brotli` package — the module loads but reports `not binary compatible` at startup. Switching back to plain `nginx:alpine` to apk-install a matching module would lose the unprivileged-runtime fix we just added.
+- **Unblock:** Either (a) compile the brotli module from source in a build stage matched to the nginxinc nginx version, or (b) switch to a maintained brotli-bundled image (e.g. `fholzer/nginx-brotli`) and re-verify unprivileged operation. The `brotli` CLI invocation in the build stage is one extra `find … -exec brotli -q 11 -k {} \;` next to the existing gzip line.
+- **Where:** `portfolio/Dockerfile` (final stage), `portfolio/nginx/nginx.conf` (`load_module`, `brotli_static on`).
+
 ### Docker build verification
 - **What:** Build and run `portfolio/Dockerfile` end-to-end (`docker build` then `docker run -p 8080:8080`) and confirm `/healthz`, security headers, and routing work as expected.
 - **Why deferred:** Local build was verified via `npm run build` + `npx serve out`; Docker layer not run during the rebuild session.
