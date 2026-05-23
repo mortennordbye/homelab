@@ -1,19 +1,12 @@
 "use client";
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Preload, Text, useTexture } from "@react-three/drei";
-import {
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 // Silence the noisy "THREE.Clock has been deprecated" warning emitted from
-// inside @react-three/fiber / drei. The library still uses Clock internally;
-// the message floods the dev indicator until upstream migrates to Timer.
+// inside @react-three/fiber. The library still uses Clock internally; the
+// message floods the dev indicator until upstream migrates to Timer.
 if (typeof window !== "undefined") {
   const origWarn = console.warn;
   console.warn = (...args: unknown[]) => {
@@ -26,10 +19,12 @@ if (typeof window !== "undefined") {
 const OSLO = { lat: 59.91, lon: 10.75 };
 const RADIUS = 1.6;
 const EARTH_TILT_X = 0.32;
-// Static rotation locked to face Europe / North Atlantic, so Oslo always
-// sits in the upper-mid area of the visible disk and never drifts behind
-// the limb.
-const STATIC_ROTATION = -1.95;
+// Rotation centered on Europe / North Atlantic. The globe sways back and
+// forth around this pose so Oslo stays in the visible hemisphere while the
+// earth still feels alive. The OsloProjector follows the live rotation.
+const INITIAL_ROTATION = -1.95;
+const SWAY_AMPLITUDE = 0.7; // radians — ~±40°, keeps Oslo on the visible face
+const SWAY_SPEED = 0.08; // radians per second of the sine argument — ~80s full cycle
 
 function latLonToVec3(lat: number, lon: number, radius = RADIUS) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -40,8 +35,12 @@ function latLonToVec3(lat: number, lon: number, radius = RADIUS) {
   return new THREE.Vector3(x, y, z);
 }
 
-function Earth() {
-  const [day, normal, specular] = useTexture([
+function Earth({
+  rotationRef,
+}: {
+  rotationRef: React.MutableRefObject<number>;
+}) {
+  const [day, normal, specular] = useLoader(THREE.TextureLoader, [
     "/textures/earth-day.webp",
     "/textures/earth-normal.webp",
     "/textures/earth-specular.webp",
@@ -52,14 +51,26 @@ function Earth() {
     normal.colorSpace = THREE.NoColorSpace;
     specular.colorSpace = THREE.NoColorSpace;
     [day, normal, specular].forEach((t) => {
-      t.anisotropy = 8;
+      t.anisotropy = 4;
     });
   }, [day, normal, specular]);
 
+  const groupRef = useRef<THREE.Group>(null);
+  const elapsed = useRef(0);
+
+  useFrame((_, dt) => {
+    elapsed.current += dt;
+    rotationRef.current =
+      INITIAL_ROTATION + SWAY_AMPLITUDE * Math.sin(elapsed.current * SWAY_SPEED);
+    if (groupRef.current) {
+      groupRef.current.rotation.y = rotationRef.current;
+    }
+  });
+
   return (
-    <group rotation={[EARTH_TILT_X, STATIC_ROTATION, 0]}>
+    <group ref={groupRef} rotation={[EARTH_TILT_X, INITIAL_ROTATION, 0]}>
       <mesh>
-        <sphereGeometry args={[RADIUS, 96, 64]} />
+        <sphereGeometry args={[RADIUS, 64, 48]} />
         <meshStandardMaterial
           map={day}
           normalMap={normal}
@@ -77,57 +88,68 @@ function Earth() {
 // the resulting screen pixel position to a ref'd DOM element. That element
 // lives OUTSIDE the dimmed canvas wrapper, so the visible marker is rendered
 // in HTML/CSS at full brightness — no longer affected by the wrapper's
-// opacity-[0.85] dimming that covers the rest of the sky.
+// opacity dimming that covers the rest of the sky.
 function OsloProjector({
   overlayRef,
   offsetX,
+  rotationRef,
 }: {
   overlayRef: React.RefObject<HTMLDivElement | null>;
   offsetX: number;
+  rotationRef: React.MutableRefObject<number>;
 }) {
   const { camera, size } = useThree();
   const localOslo = useMemo(
     () => latLonToVec3(OSLO.lat, OSLO.lon, RADIUS * 1.005),
     [],
   );
-  const matrix = useMemo(() => {
-    const m = new THREE.Matrix4();
-    m.compose(
-      new THREE.Vector3(offsetX, 0, 0),
-      new THREE.Quaternion().setFromEuler(
-        new THREE.Euler(EARTH_TILT_X, STATIC_ROTATION, 0),
-      ),
-      new THREE.Vector3(1, 1, 1),
-    );
-    return m;
-  }, [offsetX]);
-  const v = useRef(new THREE.Vector3());
+  const scratch = useMemo(
+    () => ({
+      v: new THREE.Vector3(),
+      world: new THREE.Vector3(),
+      center: new THREE.Vector3(),
+      toOslo: new THREE.Vector3(),
+      toCam: new THREE.Vector3(),
+      euler: new THREE.Euler(),
+      quat: new THREE.Quaternion(),
+      scale: new THREE.Vector3(1, 1, 1),
+      matrix: new THREE.Matrix4(),
+    }),
+    [],
+  );
 
   useFrame(() => {
     const el = overlayRef.current;
     if (!el) return;
-    v.current.copy(localOslo).applyMatrix4(matrix).project(camera);
-    // project() may put points outside [-1,1] if behind camera; clamp visibility
-    if (v.current.z > 1 || v.current.z < -1) {
+
+    scratch.center.set(offsetX, 0, 0);
+    scratch.euler.set(EARTH_TILT_X, rotationRef.current, 0);
+    scratch.quat.setFromEuler(scratch.euler);
+    scratch.matrix.compose(scratch.center, scratch.quat, scratch.scale);
+    scratch.world.copy(localOslo).applyMatrix4(scratch.matrix);
+
+    // Cull when Oslo rotates to the back hemisphere of the globe.
+    scratch.toOslo.copy(scratch.world).sub(scratch.center).normalize();
+    scratch.toCam.copy(camera.position).sub(scratch.center).normalize();
+    const facing = scratch.toOslo.dot(scratch.toCam);
+    if (facing <= 0.05) {
       el.style.opacity = "0";
       return;
     }
-    el.style.opacity = "1";
-    const x = ((v.current.x + 1) / 2) * size.width;
-    const y = ((-v.current.y + 1) / 2) * size.height;
+
+    scratch.v.copy(scratch.world).project(camera);
+    if (scratch.v.z > 1 || scratch.v.z < -1) {
+      el.style.opacity = "0";
+      return;
+    }
+    el.style.opacity = String(Math.min(1, (facing - 0.05) * 5));
+    const x = ((scratch.v.x + 1) / 2) * size.width;
+    const y = ((-scratch.v.y + 1) / 2) * size.height;
     el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
   });
 
   return null;
 }
-
-
-// ---------------------------------------------------------------------------
-// Sky: starfield + brand-logo "constellations" + monospace IT easter-egg
-// labels. All positioned in screen-NDC so they stay anchored to the same
-// percent positions regardless of viewport, never crashing into the headline,
-// body copy, badges, or photo card.
-// ---------------------------------------------------------------------------
 
 const STARS_VERT = /* glsl */ `
   attribute float aSize;
@@ -158,7 +180,7 @@ function Stars() {
   const groupRef = useRef<THREE.Group>(null);
 
   const { positions, sizes, phases } = useMemo(() => {
-    const count = 2200;
+    const count = 1200;
     const pos = new Float32Array(count * 3);
     const sz = new Float32Array(count);
     const ph = new Float32Array(count);
@@ -209,198 +231,6 @@ function Stars() {
   );
 }
 
-// Screen-NDC → world coords at depth z. ndcX in [-1,1] left→right, ndcY in
-// [-1,1] top→bottom (CSS convention). Re-evaluated whenever the viewport
-// changes so positions stay anchored on resize.
-function useWorldFromNdc(ndcX: number, ndcY: number, z: number) {
-  const { camera, size } = useThree();
-  return useMemo(() => {
-    const cam = camera as THREE.PerspectiveCamera;
-    const dist = cam.position.z - z;
-    const vh = 2 * dist * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
-    const vw = vh * (size.width / size.height);
-    return [ndcX * (vw / 2), -ndcY * (vh / 2), z] as [number, number, number];
-  }, [camera, size, ndcX, ndcY, z]);
-}
-
-type SpaceLabel = {
-  text: string;
-  ndc: [number, number];
-  z: number;
-  size: number;
-  color?: string;
-};
-
-// All in the safe strips: top/bottom rows + outer ~10% on each side.
-// Never overlap the headline, body copy, or badges.
-const SPACE_LABELS: SpaceLabel[] = [
-  // Top strip (below the fixed nav, above the headline)
-  { text: "200 OK", ndc: [-0.30, -0.78], z: -7, size: 0.26, color: "#7be58a" },
-  { text: "{ ok: true }", ndc: [0.30, -0.78], z: -7, size: 0.24 },
-  { text: "HTTP/2", ndc: [-0.75, -0.65], z: -8, size: 0.24, color: "#9ec9ff" },
-  { text: "etcd", ndc: [0.78, -0.65], z: -8, size: 0.26 },
-  // Bottom strip (below the badges)
-  { text: "404", ndc: [-0.55, 0.92], z: -8, size: 0.30, color: "#ff8a8a" },
-  { text: "git push --force", ndc: [-0.18, 0.95], z: -8, size: 0.24, color: "#ffb27a" },
-  { text: "kubectl get pods", ndc: [0.18, 0.88], z: -7, size: 0.26 },
-  { text: "TLS 1.3", ndc: [0.55, 0.92], z: -8, size: 0.24 },
-  // Far-side strips
-  { text: "rate-limited", ndc: [-0.92, -0.10], z: -10, size: 0.22, color: "#9ec9ff" },
-  { text: ":wq", ndc: [0.92, -0.30], z: -10, size: 0.24 },
-  { text: "sudo rm -rf /", ndc: [0.90, 0.42], z: -10, size: 0.24, color: "#ffb27a" },
-];
-
-function NdcLabel({ label }: { label: SpaceLabel }) {
-  const pos = useWorldFromNdc(label.ndc[0], label.ndc[1], label.z);
-  return (
-    <Billboard pos={pos}>
-      <Text
-        fontSize={label.size}
-        color={label.color ?? "#9ec9ff"}
-        anchorX="center"
-        anchorY="middle"
-        font="/fonts/JetBrainsMono-Regular.ttf"
-        outlineWidth={0.004}
-        outlineColor="#000000"
-        outlineOpacity={0.6}
-        material-transparent
-        material-opacity={0.85}
-      >
-        {label.text}
-      </Text>
-    </Billboard>
-  );
-}
-
-function SpaceLabels() {
-  return (
-    <group>
-      {SPACE_LABELS.map((l) => (
-        <NdcLabel key={l.text} label={l} />
-      ))}
-    </group>
-  );
-}
-
-function Billboard({
-  pos,
-  children,
-}: {
-  pos: [number, number, number];
-  children: React.ReactNode;
-}) {
-  const ref = useRef<THREE.Group>(null);
-  useFrame(({ camera }) => {
-    if (!ref.current) return;
-    ref.current.quaternion.copy(camera.quaternion);
-  });
-  return (
-    <group position={pos} ref={ref}>
-      {children}
-    </group>
-  );
-}
-
-type SpaceLogo = {
-  slug: string;
-  ndc: [number, number];
-  z: number;
-  scale: number;
-};
-
-const SPACE_LOGOS: SpaceLogo[] = [
-  // Top strip — below the nav, above the headline
-  { slug: "prometheus", ndc: [-0.62, -0.72], z: -8, scale: 0.50 },
-  { slug: "kubernetes", ndc: [-0.42, -0.66], z: -7, scale: 0.55 },
-  { slug: "docker", ndc: [-0.22, -0.70], z: -7, scale: 0.45 },
-  { slug: "github", ndc: [-0.04, -0.68], z: -7, scale: 0.40 },
-  { slug: "linux", ndc: [0.14, -0.68], z: -7, scale: 0.50 },
-  { slug: "helm", ndc: [0.40, -0.72], z: -8, scale: 0.45 },
-  { slug: "nodedotjs", ndc: [0.62, -0.72], z: -8, scale: 0.45 },
-  // Left strip
-  { slug: "argo", ndc: [-0.92, -0.55], z: -9, scale: 0.55 },
-  { slug: "go", ndc: [-0.94, 0.20], z: -9, scale: 0.55 },
-  { slug: "python", ndc: [-0.88, 0.55], z: -9, scale: 0.50 },
-  // Right strip
-  { slug: "elasticsearch", ndc: [0.92, -0.55], z: -9, scale: 0.55 },
-  { slug: "redis", ndc: [0.95, 0.10], z: -10, scale: 0.55 },
-  { slug: "rabbitmq", ndc: [0.90, 0.62], z: -9, scale: 0.50 },
-  // Bottom strip
-  { slug: "terraform", ndc: [-0.42, 0.86], z: -8, scale: 0.50 },
-  { slug: "nginx", ndc: [-0.05, 0.92], z: -9, scale: 0.45 },
-  { slug: "grafana", ndc: [0.30, 0.86], z: -8, scale: 0.50 },
-  { slug: "ansible", ndc: [0.55, 0.92], z: -9, scale: 0.45 },
-  { slug: "cilium", ndc: [0.74, 0.86], z: -8, scale: 0.50 },
-  { slug: "postgresql", ndc: [-0.68, 0.92], z: -9, scale: 0.50 },
-];
-
-async function svgToTexture(url: string, size = 192): Promise<THREE.Texture> {
-  const res = await fetch(url);
-  const text = await res.text();
-  const blob = new Blob([text], { type: "image/svg+xml" });
-  const objUrl = URL.createObjectURL(blob);
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = canvas.height = size;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        URL.revokeObjectURL(objUrl);
-        reject(new Error("no 2d context"));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, size, size);
-      URL.revokeObjectURL(objUrl);
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.anisotropy = 4;
-      resolve(tex);
-    };
-    img.onerror = (e) => {
-      URL.revokeObjectURL(objUrl);
-      reject(e);
-    };
-    img.src = objUrl;
-  });
-}
-
-function LogoSprite({ logo }: { logo: SpaceLogo }) {
-  const [texture, setTexture] = useState<THREE.Texture | null>(null);
-  const pos = useWorldFromNdc(logo.ndc[0], logo.ndc[1], logo.z);
-
-  useEffect(() => {
-    let cancelled = false;
-    svgToTexture(`/icons/${logo.slug}.svg`)
-      .then((t) => {
-        if (!cancelled) setTexture(t);
-      })
-      .catch(() => {
-        /* skip icon if it fails to load */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [logo.slug]);
-
-  if (!texture) return null;
-  return (
-    <sprite position={pos} scale={[logo.scale, logo.scale, 1]}>
-      <spriteMaterial map={texture} transparent opacity={0.9} />
-    </sprite>
-  );
-}
-
-function SpaceLogos() {
-  return (
-    <group>
-      {SPACE_LOGOS.map((l) => (
-        <LogoSprite key={l.slug} logo={l} />
-      ))}
-    </group>
-  );
-}
-
 function useResponsiveEarthOffset() {
   const { camera, size } = useThree();
   return useMemo(() => {
@@ -414,11 +244,15 @@ function useResponsiveEarthOffset() {
   }, [camera, size]);
 }
 
-function EarthAssembly() {
+function EarthAssembly({
+  rotationRef,
+}: {
+  rotationRef: React.MutableRefObject<number>;
+}) {
   const offsetX = useResponsiveEarthOffset();
   return (
     <group position={[offsetX, 0, 0]}>
-      <Earth />
+      <Earth rotationRef={rotationRef} />
     </group>
   );
 }
@@ -429,6 +263,7 @@ function Scene({
   overlayRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const offsetX = useResponsiveEarthOffset();
+  const rotationRef = useRef(INITIAL_ROTATION);
   return (
     <>
       <ambientLight intensity={0.7} />
@@ -436,11 +271,12 @@ function Scene({
       <directionalLight position={[-3, -1, -2]} intensity={0.35} color="#5db7ff" />
       <directionalLight position={[0, 4, 0]} intensity={0.4} color="#5db7ff" />
       <Stars />
-      <SpaceLogos />
-      <SpaceLabels />
-      <EarthAssembly />
-      <OsloProjector overlayRef={overlayRef} offsetX={offsetX} />
-      <Preload all />
+      <EarthAssembly rotationRef={rotationRef} />
+      <OsloProjector
+        overlayRef={overlayRef}
+        offsetX={offsetX}
+        rotationRef={rotationRef}
+      />
     </>
   );
 }
@@ -453,7 +289,7 @@ export default function InlineGlobeScene({
   return (
     <Canvas
       camera={{ position: [0, 0.3, 5.5], fov: 50 }}
-      dpr={[1, 2]}
+      dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       style={{ width: "100%", height: "100%" }}
     >
