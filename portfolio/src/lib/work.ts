@@ -12,6 +12,13 @@ import puppetArch from "@/content/work/puppet-to-ansible.arch";
 import k8sHomelabArch from "@/content/work/k8s-homelab.arch";
 import tickArch from "@/content/work/tick-grafana-monitoring.arch";
 import ansibleMgmtArch from "@/content/work/ansible-server-mgmt.arch";
+import workspaceAzureArch from "@/content/work/workspace-azure-platform.arch";
+import traefikGwArch from "@/content/work/traefik-gateway-api-pr.arch";
+import ocSecretArch from "@/content/work/oc-shared-secret-aws.arch";
+import postgresTlsArch from "@/content/work/postgres-tls-healthcare.arch";
+import nasPciArch from "@/content/work/nas-pci-rhel-upgrade.arch";
+import bettingArch from "@/content/work/betting-platform-cloud-migration.arch";
+import dotnetRcaArch from "@/content/work/dotnet-thread-pool-rca.arch";
 
 const WORK_DIR = path.join(process.cwd(), "src/content/work");
 
@@ -22,6 +29,13 @@ const archBySlug: Record<string, Architecture | undefined> = {
   "k8s-homelab": k8sHomelabArch,
   "tick-grafana-monitoring": tickArch,
   "ansible-server-mgmt": ansibleMgmtArch,
+  "workspace-azure-platform": workspaceAzureArch,
+  "traefik-gateway-api-pr": traefikGwArch,
+  "oc-shared-secret-aws": ocSecretArch,
+  "postgres-tls-healthcare": postgresTlsArch,
+  "nas-pci-rhel-upgrade": nasPciArch,
+  "betting-platform-cloud-migration": bettingArch,
+  "dotnet-thread-pool-rca": dotnetRcaArch,
 };
 
 export type WorkMeta = WorkFrontmatter & {
