@@ -26,10 +26,12 @@ if (typeof window !== "undefined") {
 const OSLO = { lat: 59.91, lon: 10.75 };
 const RADIUS = 1.6;
 const EARTH_TILT_X = 0.32;
-// Static rotation locked to face Europe / North Atlantic, so Oslo always
-// sits in the upper-mid area of the visible disk and never drifts behind
-// the limb.
-const STATIC_ROTATION = -1.95;
+// Rotation centered on Europe / North Atlantic. The globe sways back and
+// forth around this pose so Oslo stays in the visible hemisphere while the
+// earth still feels alive. The OsloProjector follows the live rotation.
+const INITIAL_ROTATION = -1.95;
+const SWAY_AMPLITUDE = 0.7; // radians — ~±40°, keeps Oslo on the visible face
+const SWAY_SPEED = 0.08; // radians per second of the sine argument — ~80s full cycle
 
 function latLonToVec3(lat: number, lon: number, radius = RADIUS) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -40,7 +42,11 @@ function latLonToVec3(lat: number, lon: number, radius = RADIUS) {
   return new THREE.Vector3(x, y, z);
 }
 
-function Earth() {
+function Earth({
+  rotationRef,
+}: {
+  rotationRef: React.MutableRefObject<number>;
+}) {
   const [day, normal, specular] = useTexture([
     "/textures/earth-day.webp",
     "/textures/earth-normal.webp",
@@ -56,8 +62,20 @@ function Earth() {
     });
   }, [day, normal, specular]);
 
+  const groupRef = useRef<THREE.Group>(null);
+  const elapsed = useRef(0);
+
+  useFrame((_, dt) => {
+    elapsed.current += dt;
+    rotationRef.current =
+      INITIAL_ROTATION + SWAY_AMPLITUDE * Math.sin(elapsed.current * SWAY_SPEED);
+    if (groupRef.current) {
+      groupRef.current.rotation.y = rotationRef.current;
+    }
+  });
+
   return (
-    <group rotation={[EARTH_TILT_X, STATIC_ROTATION, 0]}>
+    <group ref={groupRef} rotation={[EARTH_TILT_X, INITIAL_ROTATION, 0]}>
       <mesh>
         <sphereGeometry args={[RADIUS, 96, 64]} />
         <meshStandardMaterial
@@ -81,40 +99,60 @@ function Earth() {
 function OsloProjector({
   overlayRef,
   offsetX,
+  rotationRef,
 }: {
   overlayRef: React.RefObject<HTMLDivElement | null>;
   offsetX: number;
+  rotationRef: React.MutableRefObject<number>;
 }) {
   const { camera, size } = useThree();
   const localOslo = useMemo(
     () => latLonToVec3(OSLO.lat, OSLO.lon, RADIUS * 1.005),
     [],
   );
-  const matrix = useMemo(() => {
-    const m = new THREE.Matrix4();
-    m.compose(
-      new THREE.Vector3(offsetX, 0, 0),
-      new THREE.Quaternion().setFromEuler(
-        new THREE.Euler(EARTH_TILT_X, STATIC_ROTATION, 0),
-      ),
-      new THREE.Vector3(1, 1, 1),
-    );
-    return m;
-  }, [offsetX]);
-  const v = useRef(new THREE.Vector3());
+  const scratch = useMemo(
+    () => ({
+      v: new THREE.Vector3(),
+      world: new THREE.Vector3(),
+      center: new THREE.Vector3(),
+      toOslo: new THREE.Vector3(),
+      toCam: new THREE.Vector3(),
+      euler: new THREE.Euler(),
+      quat: new THREE.Quaternion(),
+      scale: new THREE.Vector3(1, 1, 1),
+      matrix: new THREE.Matrix4(),
+    }),
+    [],
+  );
 
   useFrame(() => {
     const el = overlayRef.current;
     if (!el) return;
-    v.current.copy(localOslo).applyMatrix4(matrix).project(camera);
-    // project() may put points outside [-1,1] if behind camera; clamp visibility
-    if (v.current.z > 1 || v.current.z < -1) {
+
+    scratch.center.set(offsetX, 0, 0);
+    scratch.euler.set(EARTH_TILT_X, rotationRef.current, 0);
+    scratch.quat.setFromEuler(scratch.euler);
+    scratch.matrix.compose(scratch.center, scratch.quat, scratch.scale);
+    scratch.world.copy(localOslo).applyMatrix4(scratch.matrix);
+
+    // Cull when Oslo rotates to the back hemisphere of the globe.
+    scratch.toOslo.copy(scratch.world).sub(scratch.center).normalize();
+    scratch.toCam.copy(camera.position).sub(scratch.center).normalize();
+    const facing = scratch.toOslo.dot(scratch.toCam);
+    if (facing <= 0.05) {
       el.style.opacity = "0";
       return;
     }
-    el.style.opacity = "1";
-    const x = ((v.current.x + 1) / 2) * size.width;
-    const y = ((-v.current.y + 1) / 2) * size.height;
+
+    scratch.v.copy(scratch.world).project(camera);
+    if (scratch.v.z > 1 || scratch.v.z < -1) {
+      el.style.opacity = "0";
+      return;
+    }
+    // Fade in/out near the limb so the marker doesn't pop on/off.
+    el.style.opacity = String(Math.min(1, (facing - 0.05) * 5));
+    const x = ((scratch.v.x + 1) / 2) * size.width;
+    const y = ((-scratch.v.y + 1) / 2) * size.height;
     el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
   });
 
@@ -231,23 +269,15 @@ type SpaceLabel = {
   color?: string;
 };
 
-// All in the safe strips: top/bottom rows + outer ~10% on each side.
-// Never overlap the headline, body copy, or badges.
+// Only the truly humorous easter eggs survive — straight status codes /
+// protocol names were noise. Positions chosen so the labels never share a
+// row with any SPACE_LOGOS entry: the funny labels sit at y≈0.78 (above the
+// bottom logo row at y≈0.86-0.92) or at y≈-0.20 (between the right-edge
+// logos at -0.55 and 0.10).
 const SPACE_LABELS: SpaceLabel[] = [
-  // Top strip (below the fixed nav, above the headline)
-  { text: "200 OK", ndc: [-0.30, -0.78], z: -7, size: 0.26, color: "#7be58a" },
-  { text: "{ ok: true }", ndc: [0.30, -0.78], z: -7, size: 0.24 },
-  { text: "HTTP/2", ndc: [-0.75, -0.65], z: -8, size: 0.24, color: "#9ec9ff" },
-  { text: "etcd", ndc: [0.78, -0.65], z: -8, size: 0.26 },
-  // Bottom strip (below the badges)
-  { text: "404", ndc: [-0.55, 0.92], z: -8, size: 0.30, color: "#ff8a8a" },
-  { text: "git push --force", ndc: [-0.18, 0.95], z: -8, size: 0.24, color: "#ffb27a" },
-  { text: "kubectl get pods", ndc: [0.18, 0.88], z: -7, size: 0.26 },
-  { text: "TLS 1.3", ndc: [0.55, 0.92], z: -8, size: 0.24 },
-  // Far-side strips
-  { text: "rate-limited", ndc: [-0.92, -0.10], z: -10, size: 0.22, color: "#9ec9ff" },
-  { text: ":wq", ndc: [0.92, -0.30], z: -10, size: 0.24 },
-  { text: "sudo rm -rf /", ndc: [0.90, 0.42], z: -10, size: 0.24, color: "#ffb27a" },
+  { text: "git push --force", ndc: [-0.25, 0.78], z: -8, size: 0.24, color: "#ffb27a" },
+  { text: "sudo rm -rf /", ndc: [0.42, 0.78], z: -9, size: 0.24, color: "#ffb27a" },
+  { text: ":wq", ndc: [0.92, -0.20], z: -10, size: 0.24 },
 ];
 
 function NdcLabel({ label }: { label: SpaceLabel }) {
@@ -414,11 +444,15 @@ function useResponsiveEarthOffset() {
   }, [camera, size]);
 }
 
-function EarthAssembly() {
+function EarthAssembly({
+  rotationRef,
+}: {
+  rotationRef: React.MutableRefObject<number>;
+}) {
   const offsetX = useResponsiveEarthOffset();
   return (
     <group position={[offsetX, 0, 0]}>
-      <Earth />
+      <Earth rotationRef={rotationRef} />
     </group>
   );
 }
@@ -429,6 +463,7 @@ function Scene({
   overlayRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const offsetX = useResponsiveEarthOffset();
+  const rotationRef = useRef(INITIAL_ROTATION);
   return (
     <>
       <ambientLight intensity={0.7} />
@@ -438,8 +473,12 @@ function Scene({
       <Stars />
       <SpaceLogos />
       <SpaceLabels />
-      <EarthAssembly />
-      <OsloProjector overlayRef={overlayRef} offsetX={offsetX} />
+      <EarthAssembly rotationRef={rotationRef} />
+      <OsloProjector
+        overlayRef={overlayRef}
+        offsetX={offsetX}
+        rotationRef={rotationRef}
+      />
       <Preload all />
     </>
   );
