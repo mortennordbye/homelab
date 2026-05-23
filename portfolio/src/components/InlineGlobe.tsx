@@ -13,6 +13,45 @@ const InlineGlobeScene = dynamic(() => import("./InlineGlobeScene"), {
   ssr: false,
 });
 
+// ---------------------------------------------------------------------------
+// Morse easter egg: the Oslo dot's halo keys out "MORTEN VICTOR NORDBYE" on a
+// slow continuous loop (~9 WPM Farnsworth). Standard ITU timing — dit = 1
+// unit, dah = 3, intra-character gap = 1, inter-character = 3, inter-word = 7
+// — with a long end-of-message gap so the loop breathes between repetitions.
+// ---------------------------------------------------------------------------
+const MORSE_UNIT_MS = 130;
+const MORSE_TEXT = "MORTEN VICTOR NORDBYE";
+const MORSE_TABLE: Record<string, string> = {
+  A: ".-", B: "-...", C: "-.-.", D: "-..", E: ".", F: "..-.",
+  G: "--.", H: "....", I: "..", J: ".---", K: "-.-", L: ".-..",
+  M: "--", N: "-.", O: "---", P: ".--.", Q: "--.-", R: ".-.",
+  S: "...", T: "-", U: "..-", V: "...-", W: ".--", X: "-..-",
+  Y: "-.--", Z: "--..",
+};
+
+type MorseEvent = { on: boolean; units: number };
+
+function buildMorseSchedule(text: string): MorseEvent[] {
+  const events: MorseEvent[] = [];
+  const words = text.toUpperCase().split(/\s+/).filter(Boolean);
+  words.forEach((word, wi) => {
+    [...word].forEach((ch, ci) => {
+      const code = MORSE_TABLE[ch];
+      if (!code) return;
+      [...code].forEach((sym, si) => {
+        events.push({ on: true, units: sym === "-" ? 3 : 1 });
+        if (si < code.length - 1) events.push({ on: false, units: 1 });
+      });
+      if (ci < word.length - 1) events.push({ on: false, units: 3 });
+    });
+    if (wi < words.length - 1) events.push({ on: false, units: 7 });
+  });
+  events.push({ on: false, units: 20 });
+  return events;
+}
+
+const MORSE_SCHEDULE = buildMorseSchedule(MORSE_TEXT);
+
 type Mode = "loading" | "skip" | "static" | "webgl";
 
 /**
@@ -70,6 +109,37 @@ export function InlineGlobe() {
       events.forEach((ev) => window.removeEventListener(ev, trigger));
     };
   }, [mode, activated]);
+
+  // Easter egg: once the WebGL marker is live, key its glow on a slow Morse
+  // loop spelling "MORTEN VICTOR NORDBYE". The OsloProjector still writes
+  // opacity/transform on the same element each frame — those control whether
+  // the marker is visible at all (back-of-globe cull). --oslo-key drives the
+  // box-shadow alpha so the keying rides on top of that.
+  useEffect(() => {
+    if (!activated) return;
+    const el = osloOverlayRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const schedule = MORSE_SCHEDULE; // precomputed module constant
+    let i = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = () => {
+      const event = schedule[i];
+      el.style.setProperty("--oslo-key", event.on ? "1" : "0.25");
+      timer = setTimeout(() => {
+        i = (i + 1) % schedule.length;
+        tick();
+      }, event.units * MORSE_UNIT_MS);
+    };
+    tick();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      el.style.removeProperty("--oslo-key");
+    };
+  }, [activated]);
 
   if (mode === "loading" || mode === "skip") return null;
 
