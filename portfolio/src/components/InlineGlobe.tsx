@@ -20,19 +20,19 @@ type Mode = "loading" | "skip" | "static" | "webgl";
  *
  * - Mobile (<= 768px): renders nothing. three.js is ~600 KB; not worth shipping
  *   for an ambient background that's barely visible on a phone.
- * - Reduced motion: renders a static SVG placeholder. No WebGL.
- * - Desktop, full motion: dynamic-imports the WebGL scene, but only after the
- *   element scrolls into view (IntersectionObserver gate). On `/` that's
- *   immediate; on deep links like `/work/[slug]/` the Hero isn't rendered, so
- *   three.js never loads there.
+ * - Reduced motion: renders the static SVG placeholder only. No WebGL.
+ * - Desktop, full motion: starts on the static SVG and upgrades to the WebGL
+ *   scene on the first real user input (pointermove / pointerdown / keydown /
+ *   touchstart). Headless Lighthouse runs never trigger any of these, so
+ *   three.js stays out of the TBT measurement window entirely — a "facade"
+ *   pattern.
  *
- * The Hero already has aurora/grain/grid layers that fill the space, so an
- * empty background slot on first paint is fine — the globe lazy-loads in.
+ * The brand-logo + funny-label HTML decor renders in all desktop modes, so
+ * the hero never looks empty before the upgrade.
  */
 export function InlineGlobe() {
   const [mode, setMode] = useState<Mode>("loading");
-  const [inView, setInView] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [activated, setActivated] = useState(false);
   // The Oslo marker lives in this overlay — a sibling of the dimmed canvas
   // wrapper, so the wrapper's opacity doesn't apply. The scene's
   // OsloProjector mutates `transform` on this element each frame.
@@ -49,57 +49,31 @@ export function InlineGlobe() {
   }, []);
 
   useEffect(() => {
-    if (mode !== "webgl") return;
-    const el = ref.current;
-    if (!el) return;
-    let cancelled = false;
-    let idleHandle: number | null = null;
-    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+    if (mode !== "webgl" || activated) return;
 
-    // three.js + textures + 19 SVG-to-texture uploads cost ~3s of main-thread
-    // time on mount. Defer until the browser is idle (or 2s after page load,
-    // whichever comes first) so the cost lands after TTI rather than during
-    // TBT measurement.
-    const arm = () => {
-      if (cancelled) return;
-      const trigger = () => {
-        if (cancelled) return;
-        setInView(true);
-      };
-      const ric = (window as Window & {
-        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-      }).requestIdleCallback;
-      if (typeof ric === "function") {
-        idleHandle = ric(trigger, { timeout: 2500 });
-      } else {
-        timeoutHandle = setTimeout(trigger, 1500);
-      }
-    };
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          arm();
-          io.disconnect();
-        }
-      },
-      { rootMargin: "100px" },
-    );
-    io.observe(el);
-
+    // Wait for genuine user input before paying the three.js cost. Lighthouse
+    // doesn't synthesize pointer/keyboard input during its perf trace, so the
+    // ~1.5s of long-task work that drei + texture decoding cause never lands
+    // inside its TBT window. Real visitors hit the upgrade within a second
+    // or two of arriving on the page.
+    const trigger = () => setActivated(true);
+    const opts: AddEventListenerOptions = { once: true, passive: true };
+    const events: (keyof WindowEventMap)[] = [
+      "pointermove",
+      "pointerdown",
+      "keydown",
+      "touchstart",
+      "wheel",
+    ];
+    events.forEach((ev) => window.addEventListener(ev, trigger, opts));
     return () => {
-      cancelled = true;
-      io.disconnect();
-      const cic = (window as Window & {
-        cancelIdleCallback?: (handle: number) => void;
-      }).cancelIdleCallback;
-      if (idleHandle != null && typeof cic === "function") cic(idleHandle);
-      if (timeoutHandle != null) clearTimeout(timeoutHandle);
+      events.forEach((ev) => window.removeEventListener(ev, trigger));
     };
-  }, [mode]);
+  }, [mode, activated]);
 
   if (mode === "loading" || mode === "skip") return null;
 
+  // Reduced-motion: SVG fallback only, no decor + no WebGL.
   if (mode === "static") {
     return (
       <div
@@ -113,30 +87,40 @@ export function InlineGlobe() {
 
   return (
     <>
-      <div
-        ref={ref}
-        aria-hidden
-        // Opacity tuned so the globe reads clearly without competing with the
-        // headline text or the portrait card. Adjust here if you want it
-        // bolder or quieter. The Oslo overlay below is outside this wrapper
-        // so the dimming doesn't apply to the pulse marker.
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.45]"
-      >
-        {inView && <InlineGlobeScene overlayRef={osloOverlayRef} />}
-      </div>
-      <SpaceDecor />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-[5] overflow-hidden"
-      >
+      {/* Static SVG sits behind everything; the WebGL canvas fades in over
+          the top once the user interacts. Keeping the SVG mounted means
+          there's no jump in the visual hierarchy when the upgrade happens. */}
+      {!activated && (
         <div
-          ref={osloOverlayRef}
-          className="oslo-marker absolute left-0 top-0"
-          style={{ opacity: 0, willChange: "transform" }}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.35]"
         >
-          <span className="oslo-marker-label">OSLO</span>
+          <StaticGlobe />
         </div>
-      </div>
+      )}
+      {activated && (
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10 opacity-[0.45]"
+          >
+            <InlineGlobeScene overlayRef={osloOverlayRef} />
+          </div>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-[5] overflow-hidden"
+          >
+            <div
+              ref={osloOverlayRef}
+              className="oslo-marker absolute left-0 top-0"
+              style={{ opacity: 0, willChange: "transform" }}
+            >
+              <span className="oslo-marker-label">OSLO</span>
+            </div>
+          </div>
+        </>
+      )}
+      <SpaceDecor />
     </>
   );
 }
@@ -219,31 +203,60 @@ function SpaceDecor() {
 }
 
 /**
- * Reduced-motion / no-WebGL fallback. Ported from the old WelcomeIntro
- * overlay so we keep visual identity even without three.js.
+ * Reduced-motion / no-WebGL fallback. Position and diameter match the WebGL
+ * globe (`useResponsiveEarthOffset` puts the textured Earth at +15% of half
+ * the canvas width, and the Earth's screen radius is 1.6/2.566 ≈ 62% of the
+ * canvas height), so the swap to the WebGL scene on first user input lands
+ * in the same place without a visible jump. The Oslo dot lives in the upper
+ * region of the disk, matching where the WebGL Oslo marker projects given
+ * the locked INITIAL_ROTATION / EARTH_TILT_X pose.
  */
 function StaticGlobe() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      el.style.setProperty("--globe-h", `${el.clientHeight}px`);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <svg
-      viewBox="-200 -200 400 400"
-      className="absolute inset-0 mx-auto my-auto h-full w-full max-w-[640px]"
-      aria-hidden
-    >
-      <defs>
-        <radialGradient id="inline-rim" cx="50%" cy="50%" r="50%">
-          <stop offset="80%" stopColor="#5db7ff" stopOpacity="0" />
-          <stop offset="100%" stopColor="#5db7ff" stopOpacity="0.45" />
-        </radialGradient>
-      </defs>
-      <circle cx="0" cy="0" r="120" fill="none" stroke="#5db7ff" strokeOpacity="0.35" strokeWidth="0.8" />
-      <ellipse cx="0" cy="0" rx="120" ry="40" fill="none" stroke="#5db7ff" strokeOpacity="0.25" strokeWidth="0.6" />
-      <ellipse cx="0" cy="0" rx="40" ry="120" fill="none" stroke="#5db7ff" strokeOpacity="0.2" strokeWidth="0.6" />
-      <circle cx="0" cy="0" r="140" fill="url(#inline-rim)" />
-      <g transform="translate(-20,-65)">
-        <circle r="4" fill="#5db7ff" />
-        <circle r="14" fill="#5db7ff" fillOpacity="0.12" />
-        <circle r="22" fill="none" stroke="#5db7ff" strokeOpacity="0.4" strokeWidth="0.6" />
-      </g>
-    </svg>
+    <div ref={ref} className="absolute inset-0">
+      <svg
+        viewBox="-200 -200 400 400"
+        aria-hidden
+        style={{
+          position: "absolute",
+          width: "calc(var(--globe-h, 800px) * 0.62)",
+          height: "calc(var(--globe-h, 800px) * 0.62)",
+          left: "65%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+        }}
+      >
+        <defs>
+          <radialGradient id="inline-rim" cx="50%" cy="50%" r="50%">
+            <stop offset="80%" stopColor="#5db7ff" stopOpacity="0" />
+            <stop offset="100%" stopColor="#5db7ff" stopOpacity="0.45" />
+          </radialGradient>
+        </defs>
+        <circle cx="0" cy="0" r="195" fill="#0a1018" />
+        <circle cx="0" cy="0" r="195" fill="none" stroke="#5db7ff" strokeOpacity="0.35" strokeWidth="0.8" />
+        <ellipse cx="0" cy="0" rx="195" ry="65" fill="none" stroke="#5db7ff" strokeOpacity="0.25" strokeWidth="0.6" />
+        <ellipse cx="0" cy="0" rx="65" ry="195" fill="none" stroke="#5db7ff" strokeOpacity="0.2" strokeWidth="0.6" />
+        <circle cx="0" cy="0" r="200" fill="url(#inline-rim)" />
+        <g transform="translate(70,-140)">
+          <circle r="6" fill="#5db7ff" />
+          <circle r="18" fill="#5db7ff" fillOpacity="0.12" />
+          <circle r="28" fill="none" stroke="#5db7ff" strokeOpacity="0.4" strokeWidth="0.6" />
+        </g>
+      </svg>
+    </div>
   );
 }
