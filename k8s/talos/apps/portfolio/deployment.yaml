@@ -22,6 +22,10 @@ spec:
         runAsNonRoot: true
         runAsUser: 101
         runAsGroup: 101
+        # fsGroup chowns the nginx-cache emptyDir to gid 101 so the
+        # unprivileged nginx user can write its pid + temp paths under
+        # /var/cache/nginx (the only writable path under readOnlyRootFilesystem).
+        fsGroup: 101
       containers:
         - name: portfolio
           image: ghcr.io/mortennordbye/homelab/portfolio:61ce3f2
