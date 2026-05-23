@@ -2,6 +2,12 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
+import {
+  SPACE_LABELS,
+  SPACE_LOGOS,
+  ndcToPercent,
+  viewportFraction,
+} from "./InlineGlobeDecor";
 
 const InlineGlobeScene = dynamic(() => import("./InlineGlobeScene"), {
   ssr: false,
@@ -46,17 +52,50 @@ export function InlineGlobe() {
     if (mode !== "webgl") return;
     const el = ref.current;
     if (!el) return;
+    let cancelled = false;
+    let idleHandle: number | null = null;
+    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+
+    // three.js + textures + 19 SVG-to-texture uploads cost ~3s of main-thread
+    // time on mount. Defer until the browser is idle (or 2s after page load,
+    // whichever comes first) so the cost lands after TTI rather than during
+    // TBT measurement.
+    const arm = () => {
+      if (cancelled) return;
+      const trigger = () => {
+        if (cancelled) return;
+        setInView(true);
+      };
+      const ric = (window as Window & {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      }).requestIdleCallback;
+      if (typeof ric === "function") {
+        idleHandle = ric(trigger, { timeout: 2500 });
+      } else {
+        timeoutHandle = setTimeout(trigger, 1500);
+      }
+    };
+
     const io = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          setInView(true);
+          arm();
           io.disconnect();
         }
       },
       { rootMargin: "100px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+
+    return () => {
+      cancelled = true;
+      io.disconnect();
+      const cic = (window as Window & {
+        cancelIdleCallback?: (handle: number) => void;
+      }).cancelIdleCallback;
+      if (idleHandle != null && typeof cic === "function") cic(idleHandle);
+      if (timeoutHandle != null) clearTimeout(timeoutHandle);
+    };
   }, [mode]);
 
   if (mode === "loading" || mode === "skip") return null;
@@ -85,6 +124,7 @@ export function InlineGlobe() {
       >
         {inView && <InlineGlobeScene overlayRef={osloOverlayRef} />}
       </div>
+      <SpaceDecor />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-[5] overflow-hidden"
@@ -98,6 +138,83 @@ export function InlineGlobe() {
         </div>
       </div>
     </>
+  );
+}
+
+// Logos + monospace easter-egg labels rendered as HTML rather than three.js
+// sprites/text meshes. This replaces 19 fetch+canvas+texture-upload trips
+// (each logo was an SVG → Image → Canvas → THREE.CanvasTexture pipeline) and
+// drops the troika-three-text dependency that drei's <Text> pulled in.
+// Sizes match the original 3D layout via viewportFraction(worldSize, z),
+// which mirrors three.js's perspective projection for the same fov/camera.
+function SpaceDecor() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      el.style.setProperty("--decor-h", `${el.clientHeight}px`);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute inset-0 -z-[6] overflow-hidden font-mono"
+    >
+      {SPACE_LOGOS.map((logo) => {
+        const pos = ndcToPercent(logo.ndc);
+        const factor = viewportFraction(logo.scale, logo.z);
+        return (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={logo.slug}
+            src={`/icons/${logo.slug}.svg`}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            style={{
+              position: "absolute",
+              left: pos.left,
+              top: pos.top,
+              height: `calc(var(--decor-h, 800px) * ${factor})`,
+              width: `calc(var(--decor-h, 800px) * ${factor})`,
+              transform: "translate(-50%, -50%)",
+              opacity: 0.9,
+            }}
+          />
+        );
+      })}
+      {SPACE_LABELS.map((label) => {
+        const pos = ndcToPercent(label.ndc);
+        const factor = viewportFraction(label.size, label.z);
+        return (
+          <span
+            key={label.text}
+            style={{
+              position: "absolute",
+              left: pos.left,
+              top: pos.top,
+              transform: "translate(-50%, -50%)",
+              fontSize: `calc(var(--decor-h, 800px) * ${factor})`,
+              color: label.color ?? "#9ec9ff",
+              opacity: 0.85,
+              textShadow: "0 0 4px rgba(0,0,0,0.7)",
+              whiteSpace: "nowrap",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {label.text}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 

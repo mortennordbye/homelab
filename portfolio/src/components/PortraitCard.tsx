@@ -25,13 +25,6 @@ export function PortraitCard() {
               "radial-gradient(120% 60% at 0% 100%, rgba(var(--accent-rgb), 0.20), transparent 60%)",
           }}
         />
-        <span
-          aria-hidden
-          className="absolute right-3 top-3 inline-flex items-center gap-2 rounded-full border border-line-2 bg-bg/70 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-fg-2 backdrop-blur"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)]" />
-          oslo · 59.9°N
-        </span>
       </div>
     </figure>
   );
