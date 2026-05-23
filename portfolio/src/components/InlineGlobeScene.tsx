@@ -1,19 +1,12 @@
 "use client";
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Preload, Text, useTexture } from "@react-three/drei";
-import {
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 // Silence the noisy "THREE.Clock has been deprecated" warning emitted from
-// inside @react-three/fiber / drei. The library still uses Clock internally;
-// the message floods the dev indicator until upstream migrates to Timer.
+// inside @react-three/fiber. The library still uses Clock internally; the
+// message floods the dev indicator until upstream migrates to Timer.
 if (typeof window !== "undefined") {
   const origWarn = console.warn;
   console.warn = (...args: unknown[]) => {
@@ -47,7 +40,7 @@ function Earth({
 }: {
   rotationRef: React.MutableRefObject<number>;
 }) {
-  const [day, normal, specular] = useTexture([
+  const [day, normal, specular] = useLoader(THREE.TextureLoader, [
     "/textures/earth-day.webp",
     "/textures/earth-normal.webp",
     "/textures/earth-specular.webp",
@@ -58,7 +51,7 @@ function Earth({
     normal.colorSpace = THREE.NoColorSpace;
     specular.colorSpace = THREE.NoColorSpace;
     [day, normal, specular].forEach((t) => {
-      t.anisotropy = 8;
+      t.anisotropy = 4;
     });
   }, [day, normal, specular]);
 
@@ -77,7 +70,7 @@ function Earth({
   return (
     <group ref={groupRef} rotation={[EARTH_TILT_X, INITIAL_ROTATION, 0]}>
       <mesh>
-        <sphereGeometry args={[RADIUS, 96, 64]} />
+        <sphereGeometry args={[RADIUS, 64, 48]} />
         <meshStandardMaterial
           map={day}
           normalMap={normal}
@@ -95,7 +88,7 @@ function Earth({
 // the resulting screen pixel position to a ref'd DOM element. That element
 // lives OUTSIDE the dimmed canvas wrapper, so the visible marker is rendered
 // in HTML/CSS at full brightness — no longer affected by the wrapper's
-// opacity-[0.85] dimming that covers the rest of the sky.
+// opacity dimming that covers the rest of the sky.
 function OsloProjector({
   overlayRef,
   offsetX,
@@ -149,7 +142,6 @@ function OsloProjector({
       el.style.opacity = "0";
       return;
     }
-    // Fade in/out near the limb so the marker doesn't pop on/off.
     el.style.opacity = String(Math.min(1, (facing - 0.05) * 5));
     const x = ((scratch.v.x + 1) / 2) * size.width;
     const y = ((-scratch.v.y + 1) / 2) * size.height;
@@ -158,14 +150,6 @@ function OsloProjector({
 
   return null;
 }
-
-
-// ---------------------------------------------------------------------------
-// Sky: starfield + brand-logo "constellations" + monospace IT easter-egg
-// labels. All positioned in screen-NDC so they stay anchored to the same
-// percent positions regardless of viewport, never crashing into the headline,
-// body copy, badges, or photo card.
-// ---------------------------------------------------------------------------
 
 const STARS_VERT = /* glsl */ `
   attribute float aSize;
@@ -196,7 +180,7 @@ function Stars() {
   const groupRef = useRef<THREE.Group>(null);
 
   const { positions, sizes, phases } = useMemo(() => {
-    const count = 2200;
+    const count = 1200;
     const pos = new Float32Array(count * 3);
     const sz = new Float32Array(count);
     const ph = new Float32Array(count);
@@ -247,190 +231,6 @@ function Stars() {
   );
 }
 
-// Screen-NDC → world coords at depth z. ndcX in [-1,1] left→right, ndcY in
-// [-1,1] top→bottom (CSS convention). Re-evaluated whenever the viewport
-// changes so positions stay anchored on resize.
-function useWorldFromNdc(ndcX: number, ndcY: number, z: number) {
-  const { camera, size } = useThree();
-  return useMemo(() => {
-    const cam = camera as THREE.PerspectiveCamera;
-    const dist = cam.position.z - z;
-    const vh = 2 * dist * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
-    const vw = vh * (size.width / size.height);
-    return [ndcX * (vw / 2), -ndcY * (vh / 2), z] as [number, number, number];
-  }, [camera, size, ndcX, ndcY, z]);
-}
-
-type SpaceLabel = {
-  text: string;
-  ndc: [number, number];
-  z: number;
-  size: number;
-  color?: string;
-};
-
-// Only the truly humorous easter eggs survive — straight status codes /
-// protocol names were noise. Positions chosen so the labels never share a
-// row with any SPACE_LOGOS entry: the funny labels sit at y≈0.78 (above the
-// bottom logo row at y≈0.86-0.92) or at y≈-0.20 (between the right-edge
-// logos at -0.55 and 0.10).
-const SPACE_LABELS: SpaceLabel[] = [
-  { text: "git push --force", ndc: [-0.25, 0.78], z: -8, size: 0.24, color: "#ffb27a" },
-  { text: "sudo rm -rf /", ndc: [0.42, 0.78], z: -9, size: 0.24, color: "#ffb27a" },
-  { text: ":wq", ndc: [0.92, -0.20], z: -10, size: 0.24 },
-];
-
-function NdcLabel({ label }: { label: SpaceLabel }) {
-  const pos = useWorldFromNdc(label.ndc[0], label.ndc[1], label.z);
-  return (
-    <Billboard pos={pos}>
-      <Text
-        fontSize={label.size}
-        color={label.color ?? "#9ec9ff"}
-        anchorX="center"
-        anchorY="middle"
-        font="/fonts/JetBrainsMono-Regular.ttf"
-        outlineWidth={0.004}
-        outlineColor="#000000"
-        outlineOpacity={0.6}
-        material-transparent
-        material-opacity={0.85}
-      >
-        {label.text}
-      </Text>
-    </Billboard>
-  );
-}
-
-function SpaceLabels() {
-  return (
-    <group>
-      {SPACE_LABELS.map((l) => (
-        <NdcLabel key={l.text} label={l} />
-      ))}
-    </group>
-  );
-}
-
-function Billboard({
-  pos,
-  children,
-}: {
-  pos: [number, number, number];
-  children: React.ReactNode;
-}) {
-  const ref = useRef<THREE.Group>(null);
-  useFrame(({ camera }) => {
-    if (!ref.current) return;
-    ref.current.quaternion.copy(camera.quaternion);
-  });
-  return (
-    <group position={pos} ref={ref}>
-      {children}
-    </group>
-  );
-}
-
-type SpaceLogo = {
-  slug: string;
-  ndc: [number, number];
-  z: number;
-  scale: number;
-};
-
-const SPACE_LOGOS: SpaceLogo[] = [
-  // Top strip — below the nav, above the headline
-  { slug: "prometheus", ndc: [-0.62, -0.72], z: -8, scale: 0.50 },
-  { slug: "kubernetes", ndc: [-0.42, -0.66], z: -7, scale: 0.55 },
-  { slug: "docker", ndc: [-0.22, -0.70], z: -7, scale: 0.45 },
-  { slug: "github", ndc: [-0.04, -0.68], z: -7, scale: 0.40 },
-  { slug: "linux", ndc: [0.14, -0.68], z: -7, scale: 0.50 },
-  { slug: "helm", ndc: [0.40, -0.72], z: -8, scale: 0.45 },
-  { slug: "nodedotjs", ndc: [0.62, -0.72], z: -8, scale: 0.45 },
-  // Left strip
-  { slug: "argo", ndc: [-0.92, -0.55], z: -9, scale: 0.55 },
-  { slug: "go", ndc: [-0.94, 0.20], z: -9, scale: 0.55 },
-  { slug: "python", ndc: [-0.88, 0.55], z: -9, scale: 0.50 },
-  // Right strip
-  { slug: "elasticsearch", ndc: [0.92, -0.55], z: -9, scale: 0.55 },
-  { slug: "redis", ndc: [0.95, 0.10], z: -10, scale: 0.55 },
-  { slug: "rabbitmq", ndc: [0.90, 0.62], z: -9, scale: 0.50 },
-  // Bottom strip
-  { slug: "terraform", ndc: [-0.42, 0.86], z: -8, scale: 0.50 },
-  { slug: "nginx", ndc: [-0.05, 0.92], z: -9, scale: 0.45 },
-  { slug: "grafana", ndc: [0.30, 0.86], z: -8, scale: 0.50 },
-  { slug: "ansible", ndc: [0.55, 0.92], z: -9, scale: 0.45 },
-  { slug: "cilium", ndc: [0.74, 0.86], z: -8, scale: 0.50 },
-  { slug: "postgresql", ndc: [-0.68, 0.92], z: -9, scale: 0.50 },
-];
-
-async function svgToTexture(url: string, size = 192): Promise<THREE.Texture> {
-  const res = await fetch(url);
-  const text = await res.text();
-  const blob = new Blob([text], { type: "image/svg+xml" });
-  const objUrl = URL.createObjectURL(blob);
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = canvas.height = size;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        URL.revokeObjectURL(objUrl);
-        reject(new Error("no 2d context"));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, size, size);
-      URL.revokeObjectURL(objUrl);
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.anisotropy = 4;
-      resolve(tex);
-    };
-    img.onerror = (e) => {
-      URL.revokeObjectURL(objUrl);
-      reject(e);
-    };
-    img.src = objUrl;
-  });
-}
-
-function LogoSprite({ logo }: { logo: SpaceLogo }) {
-  const [texture, setTexture] = useState<THREE.Texture | null>(null);
-  const pos = useWorldFromNdc(logo.ndc[0], logo.ndc[1], logo.z);
-
-  useEffect(() => {
-    let cancelled = false;
-    svgToTexture(`/icons/${logo.slug}.svg`)
-      .then((t) => {
-        if (!cancelled) setTexture(t);
-      })
-      .catch(() => {
-        /* skip icon if it fails to load */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [logo.slug]);
-
-  if (!texture) return null;
-  return (
-    <sprite position={pos} scale={[logo.scale, logo.scale, 1]}>
-      <spriteMaterial map={texture} transparent opacity={0.9} />
-    </sprite>
-  );
-}
-
-function SpaceLogos() {
-  return (
-    <group>
-      {SPACE_LOGOS.map((l) => (
-        <LogoSprite key={l.slug} logo={l} />
-      ))}
-    </group>
-  );
-}
-
 function useResponsiveEarthOffset() {
   const { camera, size } = useThree();
   return useMemo(() => {
@@ -471,15 +271,12 @@ function Scene({
       <directionalLight position={[-3, -1, -2]} intensity={0.35} color="#5db7ff" />
       <directionalLight position={[0, 4, 0]} intensity={0.4} color="#5db7ff" />
       <Stars />
-      <SpaceLogos />
-      <SpaceLabels />
       <EarthAssembly rotationRef={rotationRef} />
       <OsloProjector
         overlayRef={overlayRef}
         offsetX={offsetX}
         rotationRef={rotationRef}
       />
-      <Preload all />
     </>
   );
 }
@@ -492,7 +289,7 @@ export default function InlineGlobeScene({
   return (
     <Canvas
       camera={{ position: [0, 0.3, 5.5], fov: 50 }}
-      dpr={[1, 2]}
+      dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       style={{ width: "100%", height: "100%" }}
     >
