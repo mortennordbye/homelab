@@ -151,16 +151,21 @@ a {
 
 /* Oslo marker — HTML/CSS pulse rendered above the dimmed globe canvas so
    it stays at full brightness. Position is set by JS each frame from the
-   3D scene's OsloProjector (transform: translate(...) translate(-50%,-50%)). */
+   3D scene's OsloProjector (transform: translate(...) translate(-50%,-50%)).
+   The halo intensity is driven by --oslo-key (0.25 .. 1) — InlineGlobe.tsx
+   walks a Morse schedule for "MORTEN VICTOR NORDBYE" and keys the dot
+   on/off via this variable. Reduced-motion users get a steady 0.55 glow. */
 .oslo-marker {
+  --oslo-key: 0.4;
   width: 14px;
   height: 14px;
   border-radius: 9999px;
   background: var(--accent);
   box-shadow:
-    0 0 6px var(--accent),
-    0 0 16px rgba(93, 183, 255, 0.7),
-    0 0 32px rgba(93, 183, 255, 0.4);
+    0 0 calc(8px * var(--oslo-key))  rgba(93, 183, 255, calc(0.4 + 0.6 * var(--oslo-key))),
+    0 0 calc(20px * var(--oslo-key)) rgba(93, 183, 255, calc(0.25 + 0.5 * var(--oslo-key))),
+    0 0 calc(42px * var(--oslo-key)) rgba(93, 183, 255, calc(0.15 + 0.35 * var(--oslo-key)));
+  transition: box-shadow 70ms linear;
 }
 
 .oslo-marker-label {
@@ -213,6 +218,7 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .oslo-marker { --oslo-key: 0.55; }
   .oslo-marker::before,
   .oslo-marker::after { animation: none; opacity: 0; }
 }

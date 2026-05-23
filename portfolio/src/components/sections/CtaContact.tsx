@@ -1,4 +1,4 @@
-import { ArrowRight, Clock, MapPin, ExternalLink } from "lucide-react";
+import { ArrowRight, MapPin, ExternalLink } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { site } from "@/content/site";
 
@@ -46,7 +46,6 @@ export function CtaContact() {
         <aside className="md:col-span-5">
           <dl className="divide-y divide-line border-y border-line">
             <Row icon={<MapPin size={14} aria-hidden />} label="Based in" value={`${site.location} · CET / CEST`} />
-            <Row icon={<Clock size={14} aria-hidden />} label="Response time" value="Within 2 working days" />
             <Row icon={<ExternalLink size={14} aria-hidden />} label="Engagement" value="Available via Orange Business or directly" />
           </dl>
         </aside>
