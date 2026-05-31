@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: reloader
+
+resources:
+  - namespace.yaml
+  - ciliumnetworkpolicy.yaml
+
+helmCharts:
+  - name: reloader
+    repo: https://stakater.github.io/stakater-charts
+    version: 2.2.12
+    releaseName: reloader
+    namespace: reloader
+    valuesFile: values.yaml
