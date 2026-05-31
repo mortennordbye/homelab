@@ -10,6 +10,13 @@ spec:
     - fromEntities:
         - host
         - health
+    # Prometheus scrapes the metrics endpoint.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": prometheus
+      toPorts:
+        - ports: [{ port: "8765", protocol: TCP }]
   egress:
     - toEndpoints:
         - matchLabels:
