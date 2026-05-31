@@ -1,0 +1,28 @@
+tempo:
+  reportingEnabled: false
+  retention: 24h
+  # OTLP-only: Traefik pushes OTLP gRPC. Drop the jaeger/zipkin/opencensus receivers.
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+# Local block storage for traces (same class Loki uses); 24h retention.
+persistence:
+  enabled: true
+  storageClassName: proxmox-local
+  size: 10Gi
+
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    release: kube-prometheus-stack

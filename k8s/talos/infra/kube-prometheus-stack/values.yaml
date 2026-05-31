@@ -65,6 +65,11 @@ grafana:
       url: http://loki.monitoring:3100/
       jsonData:
         maxLines: 1000
+    - name: Tempo
+      type: tempo
+      uid: tempo
+      access: proxy
+      url: http://tempo.monitoring:3200/
 
 ## Alertmanager — routes Prometheus alerts to Discord
 alertmanager:
