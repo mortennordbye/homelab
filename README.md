@@ -108,57 +108,9 @@ graph TD
 
 ## Kubernetes Application Stack
 
-```mermaid
-graph TB
-    %% Monochrome Professional Styling
-    classDef default fill:#2c3e50,stroke:#34495e,stroke-width:2px,color:#fff;
+![Kubernetes Architecture](docs/diagrams/architecture.png)
 
-    %% GitOps Layer
-    REPO["📦 GitHub Repository"]
-    ARGO["🔄 ArgoCD"]
-
-    REPO --> ARGO
-
-    %% Infrastructure Layer
-    subgraph INFRA["🔧 Infrastructure"]
-        direction TB
-        ARGOCD["🔄 argocd"]
-        CILIUM["🕸️ cilium"]
-        TRAEFIK["🚪 traefik"]
-        CERT["🔒 cert-manager"]
-        AUTH["🔑 authentik"]
-        FALCO["🛡️ falco"]
-        PROM["📊 kube-prometheus-stack"]
-        LOKI["📜 loki"]
-        TEMPO["🔍 tempo"]
-        METRICS["📈 metrics-server"]
-        OTEL["📡 otel-collector"]
-        RELOADER["🔁 reloader"]
-        CSI["💾 proxmox-csi-plugin"]
-        NFS["📁 csi-driver-nfs"]
-        ESO["🔐 external-secrets-operator"]
-        CRDS["📦 crds"]
-    end
-
-    %% Application Layer
-    subgraph APPS["📱 Applications"]
-        direction TB
-        PLEX["🎬 plex-media-stack"]
-        ARR["📚 arr-stack"]
-        AUDIO["🎧 audiobookshelf"]
-        PORTFOLIO["💼 portfolio"]
-        PORTFOLIOS["💼 portfolio-stage"]
-        BLOG["📝 blog"]
-        WORKOUT["🏋️ workout"]
-        HOME["🏠 homepage"]
-        TOOLS["🔧 it-tools"]
-        OMNI["🔧 omni-tools"]
-        VPN["🔒 gluetun-vpn"]
-    end
-
-    ARGO --> INFRA
-    ARGO --> APPS
-```
+> Rendered declaratively from [`docs/diagrams/architecture.d2`](docs/diagrams/architecture.d2) with [D2](https://d2lang.com/) — icons are inlined at render time, so the image is self-contained. Regenerate with `make diagram`.
 
 ---
 

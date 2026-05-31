@@ -1,0 +1,125 @@
+# Homelab — Genesis Kubernetes Architecture (source of truth)
+# Render to SVG with the containerized d2 (no native tooling):
+#   make diagram
+# Icons are fetched and inlined as data URIs at render time, so the
+# committed SVG is self-contained and renders on GitHub.
+
+direction: down
+
+net: Internet {
+  shape: cloud
+}
+
+gh: GitHub {
+  shape: image
+  icon: https://cdn.simpleicons.org/github
+}
+
+argocd: ArgoCD\n(GitOps) {
+  shape: image
+  icon: https://cdn.simpleicons.org/argo
+}
+
+cluster: Genesis · Talos Kubernetes {
+  edge: Ingress & Edge {
+    traefik: Traefik {
+      shape: image
+      icon: https://cdn.simpleicons.org/traefikproxy
+    }
+    cert: cert-manager {
+      shape: image
+      icon: https://raw.githubusercontent.com/cncf/artwork/main/projects/cert-manager/icon/color/cert-manager-icon-color.svg
+    }
+  }
+
+  netf: Networking {
+    cilium: Cilium {
+      shape: image
+      icon: https://cdn.simpleicons.org/cilium
+    }
+  }
+
+  sec: Security {
+    falco: Falco {
+      shape: image
+      icon: https://cdn.simpleicons.org/falco
+    }
+    authentik: Authentik {
+      shape: image
+      icon: https://cdn.simpleicons.org/authentik
+    }
+    eso: External\nSecrets
+  }
+
+  obs: Observability {
+    prometheus: Prometheus {
+      shape: image
+      icon: https://cdn.simpleicons.org/prometheus
+    }
+    grafana: Grafana {
+      shape: image
+      icon: https://cdn.simpleicons.org/grafana
+    }
+    loki: Loki {
+      shape: image
+      icon: https://raw.githubusercontent.com/grafana/loki/main/docs/sources/logo.png
+    }
+    tempo: Tempo {
+      shape: image
+      icon: https://cdn.simpleicons.org/grafana
+    }
+  }
+
+  plat: Platform {
+    reloader: Reloader
+    metrics: metrics-server {
+      shape: image
+      icon: https://cdn.simpleicons.org/kubernetes
+    }
+  }
+
+  apps: Applications {
+    portfolio: Portfolio {
+      shape: image
+      icon: https://cdn.simpleicons.org/nginx
+    }
+    blog: Blog {
+      shape: image
+      icon: https://cdn.simpleicons.org/hugo
+    }
+    workout: Workout {
+      shape: image
+      icon: https://cdn.simpleicons.org/postgresql
+    }
+  }
+}
+
+store: Storage {
+  csi: Proxmox CSI {
+    shape: image
+    icon: https://cdn.simpleicons.org/proxmox
+  }
+  nfs: Synology NFS {
+    shape: image
+    icon: https://cdn.simpleicons.org/synology
+  }
+}
+
+base: Proxmox VE · Talos Linux {
+  proxmox: Proxmox VE {
+    shape: image
+    icon: https://cdn.simpleicons.org/proxmox
+  }
+  talos: Talos Linux {
+    shape: image
+    icon: https://cdn.simpleicons.org/talos
+  }
+}
+
+# Flow: entry point → all the way down to hardware
+net -> cluster.edge.traefik: HTTPS
+gh -> argocd: git push
+argocd -> cluster: reconciles
+cluster.edge.traefik -> cluster.apps: routes
+cluster -> store: persistent volumes
+cluster -> base: runs on
