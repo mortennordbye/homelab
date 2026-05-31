@@ -21,3 +21,14 @@ resources:
   limits:
     cpu: 500m
     memory: 512Mi
+
+# Suppress false positives from the Cilium CNI plugin exec'ing on every node.
+customRules:
+  tuning.yaml: |-
+    - macro: cilium_cni_exec
+      condition: (proc.name=cilium-cni and proc.exepath startswith /opt/cni/bin/)
+
+    - rule: Drop and execute new binary in container
+      condition: and not cilium_cni_exec
+      override:
+        condition: append
