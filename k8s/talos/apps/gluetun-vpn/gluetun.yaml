@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: gluetun
   namespace: gluetun-vpn
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: 1
   revisionHistoryLimit: 3

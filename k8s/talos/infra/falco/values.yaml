@@ -4,6 +4,11 @@ driver:
   modernEbpf:
     leastPrivileged: false
 
+# Reloader restarts the DaemonSet when the rules/config ConfigMap changes.
+controller:
+  annotations:
+    reloader.stakater.com/auto: "true"
+
 falcosidekick:
   enabled: true
   webui:
