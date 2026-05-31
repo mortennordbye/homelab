@@ -6,6 +6,7 @@ namespace: falco
 resources:
   - namespace.yaml
   - ciliumnetworkpolicy.yaml
+  - falcosidekick-discord-secret.yaml
 
 helmCharts:
   - name: falco

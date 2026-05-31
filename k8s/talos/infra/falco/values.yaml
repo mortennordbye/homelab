@@ -9,16 +9,27 @@ driver:
     # Flip to true later for a smaller privilege footprint (BPF/PERFMON caps only).
     leastPrivileged: false
 
-# First test: pin to a single worker so exactly one DaemonSet pod runs. Falco
-# only sees syscalls on the node it runs on; widen coverage later by removing
-# this selector (runs on every schedulable node) or selecting all workers.
-nodeSelector:
-  kubernetes.io/hostname: genesis-worker-01
+# Runs on every node. No nodeSelector, and the chart's default tolerations cover
+# the control-plane/master taints, so the DaemonSet lands on all 6 nodes (3
+# control-plane + 3 worker) for full cluster syscall coverage.
 
-# No external alert routing yet. Read detections straight from the pod log:
-#   kubectl logs -n falco -l app.kubernetes.io/name=falco -f
+# Route alerts to Discord via falcosidekick. The webhook comes from the
+# falco-falcosidekick-discord Secret (ESO-synced from Bitwarden, /slack stripped);
+# a non-empty DISCORD_WEBHOOKURL in that secret is what enables the Discord output.
+# Falco auto-forwards events to the falcosidekick service when enabled here.
 falcosidekick:
-  enabled: false
+  enabled: true
+  webui:
+    enabled: false        # keep it light — pod logs + Discord are enough
+  config:
+    # The webhook (DISCORD_WEBHOOKURL) is delivered through this secret, which
+    # ALSO enables the Discord output. Note: setting existingSecret makes the
+    # chart drop its own generated config secret, so non-secret output tuning
+    # (e.g. the priority filter) must come via extraEnv, not config.discord.*.
+    existingSecret: falco-falcosidekick-discord
+    extraEnv:
+      - name: DISCORD_MINIMUMPRIORITY
+        value: notice            # drop debug/info chatter from Discord
 
 # Trimmed from the chart defaults (limits 1000m/1Gi) to stay light on a homelab
 # node. Bump if Falco gets OOMKilled under load.
