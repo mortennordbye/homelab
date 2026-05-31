@@ -1,8 +1,11 @@
 # Homelab — Genesis Kubernetes Architecture (source of truth)
-# Render to SVG with the containerized d2 (no native tooling):
-#   make diagram
-# Icons are fetched and inlined as data URIs at render time, so the
-# committed SVG is self-contained and renders on GitHub.
+# Render to SVG/PNG with the containerized d2:  make diagram
+# Icons are pulled from public icon repos at render time and inlined as data
+# URIs, so the committed image is self-contained:
+#   - most services: homarr-labs/dashboard-icons (colored, raw.githubusercontent)
+#   - falco:         cncf/artwork
+# raw.githubusercontent.com is reachable from GitHub Actions runners (unlike
+# cdn.simpleicons.org, which 403s datacenter IPs).
 
 direction: down
 
@@ -12,41 +15,41 @@ net: Internet {
 
 gh: GitHub {
   shape: image
-  icon: https://cdn.simpleicons.org/github
+  icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/github.svg
 }
 
 argocd: ArgoCD\n(GitOps) {
   shape: image
-  icon: https://cdn.simpleicons.org/argo
+  icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/argo-cd.svg
 }
 
 cluster: Genesis · Talos Kubernetes {
   edge: Ingress & Edge {
     traefik: Traefik {
       shape: image
-      icon: https://cdn.simpleicons.org/traefikproxy
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/traefik.svg
     }
     cert: cert-manager {
       shape: image
-      icon: https://raw.githubusercontent.com/cncf/artwork/main/projects/cert-manager/icon/color/cert-manager-icon-color.svg
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/cert-manager.svg
     }
   }
 
   netf: Networking {
     cilium: Cilium {
       shape: image
-      icon: https://cdn.simpleicons.org/cilium
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/cilium.svg
     }
   }
 
   sec: Security {
     falco: Falco {
       shape: image
-      icon: https://cdn.simpleicons.org/falco
+      icon: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg
     }
     authentik: Authentik {
       shape: image
-      icon: https://cdn.simpleicons.org/authentik
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/authentik.svg
     }
     eso: External\nSecrets
   }
@@ -54,19 +57,19 @@ cluster: Genesis · Talos Kubernetes {
   obs: Observability {
     prometheus: Prometheus {
       shape: image
-      icon: https://cdn.simpleicons.org/prometheus
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/prometheus.svg
     }
     grafana: Grafana {
       shape: image
-      icon: https://cdn.simpleicons.org/grafana
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/grafana.svg
     }
     loki: Loki {
       shape: image
-      icon: https://raw.githubusercontent.com/grafana/loki/main/docs/sources/logo.png
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/loki.svg
     }
     tempo: Tempo {
       shape: image
-      icon: https://cdn.simpleicons.org/grafana
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/tempo.svg
     }
   }
 
@@ -74,22 +77,22 @@ cluster: Genesis · Talos Kubernetes {
     reloader: Reloader
     metrics: metrics-server {
       shape: image
-      icon: https://cdn.simpleicons.org/kubernetes
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/kubernetes.svg
     }
   }
 
   apps: Applications {
     portfolio: Portfolio {
       shape: image
-      icon: https://cdn.simpleicons.org/nginx
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/nginx.svg
     }
     blog: Blog {
       shape: image
-      icon: https://cdn.simpleicons.org/hugo
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/hugo.svg
     }
     workout: Workout {
       shape: image
-      icon: https://cdn.simpleicons.org/postgresql
+      icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/postgresql.svg
     }
   }
 }
@@ -97,22 +100,22 @@ cluster: Genesis · Talos Kubernetes {
 store: Storage {
   csi: Proxmox CSI {
     shape: image
-    icon: https://cdn.simpleicons.org/proxmox
+    icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/proxmox.svg
   }
   nfs: Synology NFS {
     shape: image
-    icon: https://cdn.simpleicons.org/synology
+    icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/synology.svg
   }
 }
 
 base: Proxmox VE · Talos Linux {
   proxmox: Proxmox VE {
     shape: image
-    icon: https://cdn.simpleicons.org/proxmox
+    icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/proxmox.svg
   }
   talos: Talos Linux {
     shape: image
-    icon: https://cdn.simpleicons.org/talos
+    icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/talos.svg
   }
 }
 
