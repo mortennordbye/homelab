@@ -1,0 +1,41 @@
+name: Render Architecture Diagram
+
+# Re-renders docs/diagrams/architecture.svg + .png from the declarative D2 source
+# whenever it changes, and commits the result back — so the committed image can
+# never drift from architecture.d2.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/diagrams/architecture.d2"
+      - ".github/workflows/render-diagram.yaml"
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to commit the re-rendered diagram
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Render D2 to SVG + PNG
+        run: |
+          docker run --rm -v "${PWD}/docs/diagrams:/work" \
+            terrastruct/d2:v0.7.1 --pad 30 /work/architecture.d2 /work/architecture.svg
+          docker run --rm -v "${PWD}/docs/diagrams:/work" \
+            terrastruct/d2:v0.7.1 --pad 30 /work/architecture.d2 /work/architecture.png
+          sudo chown "$(id -u):$(id -g)" docs/diagrams/architecture.svg docs/diagrams/architecture.png
+
+      - name: Commit re-rendered diagram if changed
+        run: |
+          if [ -n "$(git status --porcelain docs/diagrams/architecture.svg docs/diagrams/architecture.png)" ]; then
+            git config --global user.name "GitHub Actions"
+            git config --global user.email "actions@github.com"
+            git add docs/diagrams/architecture.svg docs/diagrams/architecture.png
+            git commit -m "chore(diagram): re-render architecture from d2"
+            git push origin HEAD:main
+          else
+            echo "Diagram already up to date — nothing to commit."
+          fi
