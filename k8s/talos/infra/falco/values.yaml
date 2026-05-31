@@ -22,7 +22,17 @@ resources:
     cpu: 500m
     memory: 512Mi
 
-# Suppress false positives from the Cilium CNI plugin exec'ing on every node.
+# Expose Falco's Prometheus metrics; kube-prometheus-stack scrapes the
+# ServiceMonitor (release label matches the operator's selector convention).
+metrics:
+  enabled: true
+  interval: 15m
+serviceMonitor:
+  create: true
+  labels:
+    release: kube-prometheus-stack
+
+# Tune out known-benign behaviour so the channel only shows actionable alerts.
 customRules:
   tuning.yaml: |-
     - macro: cilium_cni_exec
@@ -30,5 +40,13 @@ customRules:
 
     - rule: Drop and execute new binary in container
       condition: and not cilium_cni_exec
+      override:
+        condition: append
+
+    - macro: authentik_server
+      condition: (container.image.repository=ghcr.io/goauthentik/server and proc.name=authentik)
+
+    - rule: Redirect STDOUT/STDIN to Network Connection in Container
+      condition: and not authentik_server
       override:
         condition: append
