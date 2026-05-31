@@ -1,0 +1,246 @@
+# Homelab — network & service flow (who talks to whom)
+# Source of truth. Render:  make diagram   (layout: elk)
+# Icons pulled from public repos at render time and inlined (self-contained):
+#   ${di} homarr-labs/dashboard-icons   ${sh} selfhst/icons   plus cncf/artwork (falco)
+
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  sh: https://raw.githubusercontent.com/selfhst/icons/main/svg
+  falcoicon: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg
+}
+
+direction: down
+
+title: Homelab · Network & Service Flow {
+  shape: text
+  near: top-center
+  style: {font-size: 40; bold: true; font-color: "#0f172a"}
+}
+
+classes: {
+  layer: {style: {stroke-width: 2; border-radius: 16; shadow: true; font-size: 19; bold: true}}
+  ext: {style: {stroke-width: 2; border-radius: 10; font-size: 14; bold: true; fill: "#f8fafc"; stroke: "#94a3b8"; font-color: "#334155"}}
+}
+
+# ───────────── External ─────────────
+internet: Internet {shape: cloud; style: {fill: "#f1f5f9"; stroke: "#64748b"; bold: true}}
+github: GitHub {shape: image; icon: ${di}/github.svg}
+bitwarden: Bitwarden {shape: image; icon: ${di}/bitwarden.svg}
+cloudflare: Cloudflare DNS {shape: image; icon: ${di}/cloudflare.svg}
+letsencrypt: Let's Encrypt {shape: image; icon: ${di}/lets-encrypt.svg}
+discord: Discord {shape: image; icon: ${di}/discord.svg}
+pia: PIA VPN {shape: image; icon: ${di}/private-internet-access.svg}
+
+# ───────────── Network edge ─────────────
+edge: Network Edge {
+  class: layer
+  style: {fill: "#e0f2fe"; stroke: "#0284c7"; font-color: "#0c4a6e"}
+  modem: Telia Modem
+  gw: UniFi Gateway {shape: image; icon: ${di}/unifi.svg}
+  sw: UniFi Switch {shape: image; icon: ${di}/unifi.svg}
+  ap: UniFi U6+ AP {shape: image; icon: ${di}/unifi.svg}
+  adguard: AdGuard Home {shape: image; icon: ${di}/adguard-home.svg}
+}
+
+# ───────────── Ingress & cluster networking ─────────────
+net: Ingress & Cluster Networking {
+  class: layer
+  style: {fill: "#cffafe"; stroke: "#0891b2"; font-color: "#155e75"}
+  metallb: MetalLB {shape: image; icon: ${di}/metallb.svg}
+  traefik: Traefik {shape: image; icon: ${di}/traefik.svg}
+  cert: cert-manager {shape: image; icon: ${di}/cert-manager.svg}
+  coredns: CoreDNS {shape: image; icon: ${di}/coredns.svg}
+  cilium: Cilium {shape: image; icon: ${di}/cilium.svg}
+}
+
+# ───────────── GitOps & config ─────────────
+ops: GitOps & Config {
+  class: layer
+  style: {fill: "#eef2ff"; stroke: "#4f46e5"; font-color: "#312e81"}
+  argocd: ArgoCD {shape: image; icon: ${di}/argo-cd.svg}
+  eso: External Secrets
+  reloader: Reloader
+}
+
+# ───────────── Public sites ─────────────
+sites: Public Sites {
+  class: layer
+  style: {fill: "#f5f3ff"; stroke: "#7c3aed"; font-color: "#5b21b6"}
+  portfolio: Portfolio {shape: image; icon: ${di}/nginx.svg}
+  blog: Blog {shape: image; icon: ${di}/hugo.svg}
+  workout: Workout {shape: image; icon: ${di}/postgresql.svg}
+  postgres: PostgreSQL {shape: image; icon: ${di}/postgresql.svg}
+  homepage: Homepage {shape: image; icon: ${sh}/homepage.svg}
+  abs: Audiobookshelf {shape: image; icon: ${di}/audiobookshelf.svg}
+  ittools: IT-Tools {shape: image; icon: ${di}/it-tools.svg}
+  omnitools: Omni-Tools
+}
+
+# ───────────── Media stack ─────────────
+media: Media Stack {
+  class: layer
+  style: {fill: "#fdf2f8"; stroke: "#db2777"; font-color: "#9d174d"}
+  seerr: Seerr {shape: image; icon: ${di}/jellyseerr.svg}
+  plex: Plex {shape: image; icon: ${di}/plex.svg}
+  tautulli: Tautulli {shape: image; icon: ${di}/tautulli.svg}
+  prowlarr: Prowlarr {shape: image; icon: ${di}/prowlarr.svg}
+  sonarr: Sonarr {shape: image; icon: ${di}/sonarr.svg}
+  radarr: Radarr {shape: image; icon: ${di}/radarr.svg}
+  bazarr: Bazarr {shape: image; icon: ${di}/bazarr.svg}
+  flaresolverr: FlareSolverr {shape: image; icon: ${di}/flaresolverr.svg}
+  qbit: qBittorrent {shape: image; icon: ${di}/qbittorrent.svg}
+  gluetun: Gluetun VPN {shape: image; icon: ${di}/gluetun.svg}
+}
+
+# ───────────── Observability ─────────────
+obs: Observability {
+  class: layer
+  style: {fill: "#ccfbf1"; stroke: "#0d9488"; font-color: "#115e59"}
+  prometheus: Prometheus {shape: image; icon: ${di}/prometheus.svg}
+  alertmanager: Alertmanager {shape: image; icon: ${di}/alertmanager.svg}
+  loki: Loki {shape: image; icon: ${di}/loki.svg}
+  tempo: Tempo {shape: image; icon: ${di}/tempo.svg}
+  grafana: Grafana {shape: image; icon: ${di}/grafana.svg}
+  metrics: metrics-server {shape: image; icon: ${di}/kubernetes.svg}
+}
+
+# ───────────── Security ─────────────
+sec: Security {
+  class: layer
+  style: {fill: "#fee2e2"; stroke: "#dc2626"; font-color: "#7f1d1d"}
+  falco: Falco {shape: image; icon: ${falcoicon}}
+  sidekick: Falcosidekick
+  authentik: Authentik {shape: image; icon: ${di}/authentik.svg}
+}
+
+# ───────────── Home automation ─────────────
+home: Home Automation {
+  class: layer
+  style: {fill: "#dcfce7"; stroke: "#16a34a"; font-color: "#14532d"}
+  ha: Home Assistant {shape: image; icon: ${di}/home-assistant.svg}
+  headroom: Headroom
+}
+
+smart: Smart Home Devices {
+  class: layer
+  style: {fill: "#dcfce7"; stroke: "#16a34a"; font-color: "#14532d"}
+  hue: Hue Bridge {shape: image; icon: ${sh}/philips-hue.svg}
+  zigbee: Zigbee ZBT-2 {shape: image; icon: ${di}/zigbee2mqtt.svg}
+  ble: BLE Proxy
+  cam: UniFi Camera {shape: image; icon: ${di}/unifi.svg}
+}
+
+# ───────────── Storage ─────────────
+store: Storage {
+  class: layer
+  style: {fill: "#fef3c7"; stroke: "#d97706"; font-color: "#78350f"}
+  pcsi: Proxmox CSI {shape: image; icon: ${di}/proxmox.svg}
+  nfscsi: NFS CSI {shape: image; icon: ${di}/synology.svg}
+}
+
+# ───────────── Physical hosts ─────────────
+hw: Physical Hosts · Proxmox VE {
+  class: layer
+  style: {fill: "#f1f5f9"; stroke: "#475569"; font-color: "#1e293b"}
+  hyper1: Hyper1 · M920 {shape: image; icon: ${di}/proxmox.svg}
+  hyper2: Hyper2 · M920q {shape: image; icon: ${di}/proxmox.svg}
+  nas: Synology · 60TB {shape: image; icon: ${di}/synology.svg}
+  habox: HA Mini-PC {shape: image; icon: ${di}/home-assistant.svg}
+}
+
+# ═════════════ FLOWS ═════════════
+
+# ── Traffic / ingress (blue) ──
+internet -> edge.gw: HTTPS {style: {stroke: "#0284c7"; stroke-width: 3}}
+edge.gw -> edge.sw {style: {stroke: "#475569"; stroke-width: 2}}
+edge.sw -> hw.hyper1 {style: {stroke: "#475569"}}
+edge.sw -> hw.hyper2 {style: {stroke: "#475569"}}
+edge.sw -> hw.nas {style: {stroke: "#475569"}}
+edge.sw -> hw.habox {style: {stroke: "#475569"}}
+edge.sw -> edge.ap {style: {stroke: "#475569"}}
+edge.gw -> net.traefik: ingress {style: {stroke: "#0284c7"; stroke-width: 3}}
+net.metallb -> net.traefik: LB IP {style: {stroke: "#0891b2"; stroke-dash: 3}}
+net.traefik -> sites.portfolio {style: {stroke: "#0284c7"}}
+net.traefik -> sites.blog {style: {stroke: "#0284c7"}}
+net.traefik -> sites.workout {style: {stroke: "#0284c7"}}
+net.traefik -> sites.homepage {style: {stroke: "#0284c7"}}
+net.traefik -> sites.abs {style: {stroke: "#0284c7"}}
+net.traefik -> sites.ittools {style: {stroke: "#0284c7"}}
+net.traefik -> sites.omnitools {style: {stroke: "#0284c7"}}
+net.traefik -> media.seerr {style: {stroke: "#0284c7"}}
+net.traefik -> media.plex {style: {stroke: "#0284c7"}}
+net.traefik -> obs.grafana {style: {stroke: "#0284c7"}}
+
+# ── TLS / DNS (cyan dashed) ──
+net.cert -> net.traefik: certs {style: {stroke: "#0891b2"; stroke-dash: 4}}
+net.cert -> cloudflare: DNS-01 {style: {stroke: "#0891b2"; stroke-dash: 4}}
+cloudflare -> letsencrypt: ACME {style: {stroke: "#0891b2"; stroke-dash: 4}}
+
+# ── GitOps (indigo dashed) ──
+github -> ops.argocd: git push {style: {stroke: "#4f46e5"; stroke-width: 2; stroke-dash: 4}}
+ops.argocd -> sites: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
+ops.argocd -> media: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
+ops.argocd -> net: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
+ops.argocd -> obs: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
+
+# ── Secrets & reload (purple) ──
+bitwarden -> ops.eso: secrets {style: {stroke: "#7c3aed"; stroke-width: 2}}
+ops.eso -> sites.workout {style: {stroke: "#7c3aed"}}
+ops.eso -> media.gluetun {style: {stroke: "#7c3aed"}}
+ops.eso -> obs.grafana {style: {stroke: "#7c3aed"}}
+ops.eso -> obs.alertmanager {style: {stroke: "#7c3aed"}}
+ops.eso -> sec.authentik {style: {stroke: "#7c3aed"}}
+ops.eso -> sec.sidekick {style: {stroke: "#7c3aed"}}
+ops.eso -> net.cert {style: {stroke: "#7c3aed"}}
+ops.reloader -> sec.sidekick: reload {style: {stroke: "#9333ea"; stroke-dash: 4}}
+ops.reloader -> media.gluetun: reload {style: {stroke: "#9333ea"; stroke-dash: 4}}
+
+# ── Media interactions (pink) ──
+media.seerr -> media.plex: library {style: {stroke: "#db2777"}}
+media.seerr -> media.sonarr: requests {style: {stroke: "#db2777"}}
+media.seerr -> media.radarr: requests {style: {stroke: "#db2777"}}
+media.prowlarr -> media.sonarr: indexers {style: {stroke: "#db2777"}}
+media.prowlarr -> media.radarr: indexers {style: {stroke: "#db2777"}}
+media.prowlarr -> media.flaresolverr {style: {stroke: "#db2777"}}
+media.sonarr -> media.qbit: downloads {style: {stroke: "#db2777"}}
+media.radarr -> media.qbit: downloads {style: {stroke: "#db2777"}}
+media.bazarr -> media.sonarr: subtitles {style: {stroke: "#db2777"}}
+media.bazarr -> media.radarr: subtitles {style: {stroke: "#db2777"}}
+media.tautulli -> media.plex: stats {style: {stroke: "#db2777"}}
+media.qbit -> media.gluetun: routed via {style: {stroke: "#ea580c"; stroke-width: 2}}
+media.gluetun -> pia: VPN tunnel {style: {stroke: "#ea580c"; stroke-width: 2; stroke-dash: 4}}
+
+# ── Data (blue) ──
+sites.workout -> sites.postgres: SQL {style: {stroke: "#0369a1"; stroke-width: 2}}
+
+# ── Observability (teal) ──
+net.traefik -> obs.tempo: OTLP traces {style: {stroke: "#0d9488"}}
+obs.prometheus -> net.traefik: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
+obs.prometheus -> sec.falco: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
+obs.prometheus -> obs.loki: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
+obs.prometheus -> net.cilium: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
+obs.grafana -> obs.prometheus: query {style: {stroke: "#0d9488"}}
+obs.grafana -> obs.loki: query {style: {stroke: "#0d9488"}}
+obs.grafana -> obs.tempo: query {style: {stroke: "#0d9488"}}
+obs.prometheus -> obs.alertmanager: alerts {style: {stroke: "#0d9488"}}
+obs.alertmanager -> discord: notify {style: {stroke: "#dc2626"; stroke-dash: 4}}
+
+# ── Security (red dashed) ──
+sec.falco -> sec.sidekick: events {style: {stroke: "#dc2626"}}
+sec.sidekick -> discord: alerts {style: {stroke: "#dc2626"; stroke-dash: 4}}
+sec.falco -> hw: syscalls {style: {stroke: "#dc2626"; stroke-dash: 4}}
+sec.authentik -> net.traefik: forward-auth {style: {stroke: "#dc2626"; stroke-dash: 4}}
+
+# ── Storage (amber) ──
+media.plex -> store.nfscsi: media {style: {stroke: "#d97706"}}
+sites.abs -> store.nfscsi: audiobooks {style: {stroke: "#d97706"}}
+sites.postgres -> store.pcsi: block {style: {stroke: "#d97706"}}
+store.nfscsi -> hw.nas: NFS {style: {stroke: "#d97706"; stroke-width: 2}}
+store.pcsi -> hw.hyper1: block {style: {stroke: "#d97706"; stroke-width: 2}}
+
+# ── Home automation (green) ──
+edge.sw -> home.ha {style: {stroke: "#16a34a"}}
+home.ha -> smart.hue {style: {stroke: "#16a34a"}}
+home.ha -> smart.zigbee {style: {stroke: "#16a34a"}}
+home.ha -> smart.ble {style: {stroke: "#16a34a"}}
+home.ha -> smart.cam {style: {stroke: "#16a34a"}}
