@@ -60,7 +60,7 @@ edge: Network Edge {
   style.stroke: "#0284c7"
   style.font-color: "#0c4a6e"
   grid-columns: 5
-  modem: Telia Modem
+  modem: "Telia Modem\n(bridge · translation layer)"
   gw: UniFi Gateway {
     shape: image
     icon: ${di}/unifi.svg
@@ -72,10 +72,6 @@ edge: Network Edge {
   ap: UniFi U6+ AP {
     shape: image
     icon: ${di}/unifi.svg
-  }
-  adguard: AdGuard Home {
-    shape: image
-    icon: ${di}/adguard-home.svg
   }
 }
 
@@ -233,7 +229,11 @@ k8s: Genesis · Talos Kubernetes {
       shape: image
       icon: ${di}/home-assistant.svg
     }
-    headroom: Headroom
+    adguard: "AdGuard Home\n(via Home Assistant)" {
+      shape: image
+      icon: ${di}/adguard-home.svg
+    }
+    headroom: "Headroom\n(personal finance app)"
   }
 }
 

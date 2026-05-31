@@ -35,11 +35,10 @@ pia: PIA VPN {shape: image; icon: ${di}/private-internet-access.svg}
 edge: Network Edge {
   class: layer
   style: {fill: "#e0f2fe"; stroke: "#0284c7"; font-color: "#0c4a6e"}
-  modem: Telia Modem
+  modem: "Telia Modem\n(bridge · translation layer)"
   gw: UniFi Gateway {shape: image; icon: ${di}/unifi.svg}
   sw: UniFi Switch {shape: image; icon: ${di}/unifi.svg}
   ap: UniFi U6+ AP {shape: image; icon: ${di}/unifi.svg}
-  adguard: AdGuard Home {shape: image; icon: ${di}/adguard-home.svg}
 }
 
 # ───────────── Ingress & cluster networking ─────────────
@@ -118,7 +117,8 @@ home: Home Automation {
   class: layer
   style: {fill: "#dcfce7"; stroke: "#16a34a"; font-color: "#14532d"}
   ha: Home Assistant {shape: image; icon: ${di}/home-assistant.svg}
-  headroom: Headroom
+  adguard: AdGuard Home {shape: image; icon: ${di}/adguard-home.svg}
+  headroom: "Headroom\n(personal finance app)"
 }
 
 smart: Smart Home Devices {
@@ -151,7 +151,8 @@ hw: Physical Hosts · Proxmox VE {
 # ═════════════ FLOWS ═════════════
 
 # ── Traffic / ingress (blue) ──
-internet -> edge.gw: HTTPS {style: {stroke: "#0284c7"; stroke-width: 3}}
+internet -> edge.modem: WAN {style: {stroke: "#0284c7"; stroke-width: 3}}
+edge.modem -> edge.gw: translates WAN → LAN {style: {stroke: "#0284c7"; stroke-width: 3}}
 edge.gw -> edge.sw {style: {stroke: "#475569"; stroke-width: 2}}
 edge.sw -> hw.hyper1 {style: {stroke: "#475569"}}
 edge.sw -> hw.hyper2 {style: {stroke: "#475569"}}
@@ -240,6 +241,8 @@ store.pcsi -> hw.hyper1: block {style: {stroke: "#d97706"; stroke-width: 2}}
 
 # ── Home automation (green) ──
 edge.sw -> home.ha {style: {stroke: "#16a34a"}}
+home.ha -> home.adguard: DNS add-on {style: {stroke: "#16a34a"; stroke-dash: 4}}
+edge.gw -> home.adguard: DNS queries {style: {stroke: "#0891b2"; stroke-dash: 3}}
 home.ha -> smart.hue {style: {stroke: "#16a34a"}}
 home.ha -> smart.zigbee {style: {stroke: "#16a34a"}}
 home.ha -> smart.ble {style: {stroke: "#16a34a"}}
