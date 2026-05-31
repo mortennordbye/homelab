@@ -32,21 +32,19 @@ serviceMonitor:
   labels:
     release: kube-prometheus-stack
 
-# Tune out known-benign behaviour so the channel only shows actionable alerts.
+# Tune known-benign behaviour through the upstream rules' own template macros
+# (best practice: overriding these hooks is upgrade-safe; the rules consume them).
 customRules:
   tuning.yaml: |-
-    - macro: cilium_cni_exec
+    # Cilium CNI plugin execs from /opt/cni/bin on every node — not a workload.
+    - macro: known_drop_and_execute_activities
       condition: (proc.name=cilium-cni and proc.exepath startswith /opt/cni/bin/)
-
-    - rule: Drop and execute new binary in container
-      condition: and not cilium_cni_exec
       override:
-        condition: append
+        condition: replace
 
-    - macro: authentik_server
-      condition: (container.image.repository=ghcr.io/goauthentik/server and proc.name=authentik)
-
-    - rule: Redirect STDOUT/STDIN to Network Connection in Container
-      condition: and not authentik_server
+    # kubelet (exec/port-forward streams) and Authentik wire stdio to sockets
+    # legitimately; scoped to those binaries so a real shell still alerts.
+    - macro: user_known_stand_streams_redirect_activities
+      condition: (proc.name=kubelet) or (container.image.repository=ghcr.io/goauthentik/server and proc.name=authentik)
       override:
-        condition: append
+        condition: replace
