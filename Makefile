@@ -5,7 +5,7 @@ diagram: ## Render every D2 diagram in docs/diagrams (→ SVG + PNG)
 	@for f in docs/diagrams/*.d2; do \
 		name=$$(basename $$f .d2); \
 		echo ">> rendering $$name"; \
-		docker run --rm -v "$(CURDIR)/docs/diagrams:/work" terrastruct/d2:v0.7.1 --pad 40 /work/$$name.d2 /work/$$name.svg; \
+		docker run --rm -v "$(CURDIR)/docs/diagrams:/work" terrastruct/d2:v0.7.1 --elk-nodeNodeBetweenLayers=35 --elk-padding="[top=25,left=25,bottom=25,right=25]" --pad 40 /work/$$name.d2 /work/$$name.svg; \
 	done
 
 .PHONY: help

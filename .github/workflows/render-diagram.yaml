@@ -24,7 +24,10 @@ jobs:
           for f in docs/diagrams/*.d2; do
             name=$(basename "$f" .d2)
             docker run --rm -v "${PWD}/docs/diagrams:/work" \
-              terrastruct/d2:v0.7.1 --pad 40 "/work/$name.d2" "/work/$name.svg"
+              terrastruct/d2:v0.7.1 \
+              --elk-nodeNodeBetweenLayers=35 \
+              --elk-padding="[top=25,left=25,bottom=25,right=25]" \
+              --pad 40 "/work/$name.d2" "/work/$name.svg"
           done
           sudo chown -R "$(id -u):$(id -g)" docs/diagrams
 

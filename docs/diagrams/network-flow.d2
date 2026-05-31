@@ -67,6 +67,7 @@ ops: GitOps & Config {
 # ───────────── Public sites ─────────────
 sites: Public Sites {
   class: layer
+  grid-columns: 4
   style: {fill: "#f5f3ff"; stroke: "#7c3aed"; font-color: "#5b21b6"}
   portfolio: Portfolio {shape: image; icon: ${di}/nginx.svg}
   blog: Blog {shape: image; icon: ${di}/hugo.svg}
@@ -81,6 +82,7 @@ sites: Public Sites {
 # ───────────── Media stack ─────────────
 media: Media Stack {
   class: layer
+  grid-columns: 5
   style: {fill: "#fdf2f8"; stroke: "#db2777"; font-color: "#9d174d"}
   seerr: Seerr {shape: image; icon: ${di}/jellyseerr.svg}
   plex: Plex {shape: image; icon: ${di}/plex.svg}
@@ -97,6 +99,7 @@ media: Media Stack {
 # ───────────── Observability ─────────────
 obs: Observability {
   class: layer
+  grid-columns: 3
   style: {fill: "#ccfbf1"; stroke: "#0d9488"; font-color: "#115e59"}
   prometheus: Prometheus {shape: image; icon: ${di}/prometheus.svg}
   alertmanager: Alertmanager {shape: image; icon: ${di}/alertmanager.svg}
