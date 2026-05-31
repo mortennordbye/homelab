@@ -1,0 +1,22 @@
+reloader:
+  # Watch every namespace; restart workloads annotated with
+  # reloader.stakater.com/auto: "true" when their ConfigMap/Secret changes.
+  watchGlobally: true
+
+  # Prometheus uses podMonitorSelector: {} (discovers all), so no label needed.
+  podMonitor:
+    enabled: true
+
+  deployment:
+    # No CPU limit (avoids CFS throttling); memory limit only.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
