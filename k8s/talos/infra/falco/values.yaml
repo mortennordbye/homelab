@@ -1,38 +1,19 @@
-# Talos runs an immutable OS with no kernel headers or module toolchain, so the
-# modern eBPF (CO-RE) driver is the only sane choice: it's compiled into the
-# Falco binary, loads no kernel module, and runs no driver-build init container.
+# modern eBPF: the only driver that works on Talos (no kernel headers).
 driver:
   kind: modern_ebpf
   modernEbpf:
-    # false => container runs privileged. Talos enforces restricted Pod Security
-    # by default, which is why the falco namespace is labelled privileged.
-    # Flip to true later for a smaller privilege footprint (BPF/PERFMON caps only).
     leastPrivileged: false
 
-# Runs on every node. No nodeSelector, and the chart's default tolerations cover
-# the control-plane/master taints, so the DaemonSet lands on all 6 nodes (3
-# control-plane + 3 worker) for full cluster syscall coverage.
-
-# Route alerts to Discord via falcosidekick. The webhook comes from the
-# falco-falcosidekick-discord Secret (ESO-synced from Bitwarden, /slack stripped);
-# a non-empty DISCORD_WEBHOOKURL in that secret is what enables the Discord output.
-# Falco auto-forwards events to the falcosidekick service when enabled here.
 falcosidekick:
   enabled: true
   webui:
-    enabled: false        # keep it light — pod logs + Discord are enough
+    enabled: false
   config:
-    # The webhook (DISCORD_WEBHOOKURL) is delivered through this secret, which
-    # ALSO enables the Discord output. Note: setting existingSecret makes the
-    # chart drop its own generated config secret, so non-secret output tuning
-    # (e.g. the priority filter) must come via extraEnv, not config.discord.*.
     existingSecret: falco-falcosidekick-discord
     extraEnv:
       - name: DISCORD_MINIMUMPRIORITY
-        value: notice            # drop debug/info chatter from Discord
+        value: notice
 
-# Trimmed from the chart defaults (limits 1000m/1Gi) to stay light on a homelab
-# node. Bump if Falco gets OOMKilled under load.
 resources:
   requests:
     cpu: 100m

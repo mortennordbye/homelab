@@ -1,6 +1,3 @@
-# Falco: runtime syscall monitor (DaemonSet). No inbound traffic needed beyond
-# node-local health checks; egress to DNS and the API server for enriching alerts
-# with pod/container metadata, and to falcosidekick for alert forwarding.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
@@ -20,25 +17,20 @@ spec:
             "k8s:k8s-app": kube-dns
       toPorts:
         - ports: [{ port: "53", protocol: ANY }]
-    # Kubernetes API for pod/container metadata enrichment in alerts.
     - toEntities:
         - kube-apiserver
-    # Forward detections to falcosidekick (which fans out to Discord).
     - toEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": falco
             "k8s:app.kubernetes.io/name": falcosidekick
       toPorts:
         - ports: [{ port: "2801", protocol: TCP }]
-    # falcoctl pulls the Falco ruleset from an OCI registry (ghcr.io) at startup
-    # and follows updates. Without this the artifact-install init container hangs
-    # and Falco never starts. Scoped to HTTPS to the outside world.
+    # falcoctl pulls the ruleset from ghcr.io at startup; without it Falco won't start.
     - toEntities:
         - world
       toPorts:
         - ports: [{ port: "443", protocol: TCP }]
 ---
-# falcosidekick: receives events from Falco and forwards them to Discord.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
@@ -48,7 +40,6 @@ spec:
     matchLabels:
       app.kubernetes.io/name: falcosidekick
   ingress:
-    # Events pushed from the Falco DaemonSet.
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": falco
@@ -65,7 +56,6 @@ spec:
             "k8s:k8s-app": kube-dns
       toPorts:
         - ports: [{ port: "53", protocol: ANY }]
-    # Deliver alerts to the Discord webhook over HTTPS.
     - toEntities:
         - world
       toPorts:
