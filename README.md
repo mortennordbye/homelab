@@ -126,11 +126,16 @@ graph TB
         CILIUM["🕸️ cilium"]
         TRAEFIK["🚪 traefik"]
         CERT["🔒 cert-manager"]
+        AUTH["🔑 authentik"]
+        FALCO["🛡️ falco"]
         PROM["📊 kube-prometheus-stack"]
+        LOKI["📜 loki"]
+        TEMPO["🔍 tempo"]
         METRICS["📈 metrics-server"]
         OTEL["📡 otel-collector"]
+        RELOADER["🔁 reloader"]
         CSI["💾 proxmox-csi-plugin"]
-        NFS["📁 syno-nfs-prov"]
+        NFS["📁 csi-driver-nfs"]
         ESO["🔐 external-secrets-operator"]
         CRDS["📦 crds"]
     end
@@ -143,6 +148,8 @@ graph TB
         AUDIO["🎧 audiobookshelf"]
         PORTFOLIO["💼 portfolio"]
         PORTFOLIOS["💼 portfolio-stage"]
+        BLOG["📝 blog"]
+        WORKOUT["🏋️ workout"]
         HOME["🏠 homepage"]
         TOOLS["🔧 it-tools"]
         OMNI["🔧 omni-tools"]
@@ -202,8 +209,9 @@ graph TB
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | GitOps        | [ArgoCD](https://argoproj.github.io/cd/)                                                                                                                                               |
 | Networking    | [Cilium](https://cilium.io/) (CNI + eBPF), [Traefik](https://traefik.io/) ([Gateway API](https://gateway-api.sigs.k8s.io/))                                                            |
-| Security      | [Cert-manager](https://cert-manager.io/), [External Secrets Operator](https://external-secrets.io/)                                                                                    |
-| Observability | [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [OpenTelemetry](https://opentelemetry.io/), [Metrics-server](https://github.com/kubernetes-sigs/metrics-server) |
+| Security      | [Falco](https://falco.org/) (runtime security), [Authentik](https://goauthentik.io/) (SSO), [Cert-manager](https://cert-manager.io/), [External Secrets Operator](https://external-secrets.io/)                                                                                    |
+| Observability | [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [Loki](https://grafana.com/oss/loki/) (logs), [Tempo](https://grafana.com/oss/tempo/) (traces), [OpenTelemetry](https://opentelemetry.io/), [Metrics-server](https://github.com/kubernetes-sigs/metrics-server) |
+| Automation    | [Reloader](https://github.com/stakater/Reloader) (config/secret-triggered rollouts)                                                                                                   |
 | Storage       | [Proxmox CSI](https://github.com/sergelogvinov/proxmox-csi-plugin), [Synology](https://www.synology.com/) (NFS)                                                                        |
 | Platform      | [Proxmox VE](https://www.proxmox.com/) (6-node HA cluster), [Talos Linux](https://www.talos.dev/), [Terraform](https://www.terraform.io/)                                              |
 
@@ -214,6 +222,10 @@ graph TB
 ### Container Vulnerability Scanning
 
 Automated vulnerability scanning runs weekly and on every Dockerfile change using Trivy. Scans detect CRITICAL and HIGH severity vulnerabilities in both blog and portfolio containers, with results automatically uploaded to GitHub Security tab for tracking and remediation.
+
+### Runtime Security
+
+[Falco](https://falco.org/) runs as a DaemonSet on every node, detecting anomalous activity at the syscall level through a modern eBPF probe (the Talos-safe driver — no kernel module). Detections are routed to Discord via Falcosidekick, false positives are tuned out using the upstream rules' own template macros (keeping signal high), and Falco metrics feed a Grafana dashboard for at-a-glance security visibility.
 
 ---
 
