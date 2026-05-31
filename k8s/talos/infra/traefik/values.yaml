@@ -100,3 +100,14 @@ metrics:
 experimental:
   kubernetesGateway:
     enabled: true
+
+# Emit OTLP traces for every ingress request to Tempo (blog.nordbye.it included).
+tracing:
+  serviceName: traefik
+  sampleRate: 1.0
+  otlp:
+    enabled: true
+    grpc:
+      enabled: true
+      endpoint: tempo.monitoring:4317
+      insecure: true
