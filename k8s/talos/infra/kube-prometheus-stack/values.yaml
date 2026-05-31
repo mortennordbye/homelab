@@ -92,16 +92,16 @@ alertmanager:
         memory: 128Mi
   config:
     route:
-      receiver: discord
+      receiver: "null"
       group_by: ["alertname", "severity", "namespace"]
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 12h
       routes:
-        # Watchdog is a dead-man-switch alert that always fires; drop it.
+        # Only critical alerts reach Discord; everything else is dropped.
         - matchers:
-            - alertname = "Watchdog"
-          receiver: "null"
+            - severity = "critical"
+          receiver: discord
     receivers:
       - name: "null"
       - name: discord
@@ -118,13 +118,6 @@ alertmanager:
               *Description:* {{ .Annotations.description }}
               {{ if .Annotations.runbook_url }}*Runbook:* {{ .Annotations.runbook_url }}{{ end }}
               {{ end }}
-    inhibit_rules:
-      # If a critical fires for a target, suppress the warning for the same target.
-      - source_matchers:
-          - severity = "critical"
-        target_matchers:
-          - severity =~ "warning|info"
-        equal: ["alertname", "namespace"]
 
 ## Enable basic exporters
 nodeExporter:
