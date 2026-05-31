@@ -5275,6 +5275,256 @@
       ],
       "title": "Blog (blog.nordbye.it)",
       "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 160
+      },
+      "id": 8400,
+      "panels": [
+        {
+          "type": "piechart",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 161
+          },
+          "id": 8401,
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "pieType": "donut",
+            "displayLabels": [
+              "percent"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "right",
+              "values": [
+                "value"
+              ]
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(increase(traefik_router_requests_total{router=~\"httproute-portfolio-nordbye-.*public.*\"}[24h]))",
+              "refId": "A",
+              "legendFormat": "Portfolio",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(increase(traefik_router_requests_total{router=~\"httproute-workout-workout-.*public.*\"}[24h]))",
+              "refId": "B",
+              "legendFormat": "Workout",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(increase(traefik_router_requests_total{router=~\"httproute-blog-blog-.*public.*\"}[24h]))",
+              "refId": "C",
+              "legendFormat": "Blog",
+              "instant": true
+            }
+          ],
+          "title": "Traffic Share (last 24h)"
+        },
+        {
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 16,
+            "x": 8,
+            "y": 161
+          },
+          "id": 8402,
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "mean",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(rate(traefik_router_requests_total{router=~\"httproute-portfolio-nordbye-.*public.*\"}[5m]))",
+              "refId": "A",
+              "legendFormat": "Portfolio"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(rate(traefik_router_requests_total{router=~\"httproute-workout-workout-.*public.*\"}[5m]))",
+              "refId": "B",
+              "legendFormat": "Workout"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(rate(traefik_router_requests_total{router=~\"httproute-blog-blog-.*public.*\"}[5m]))",
+              "refId": "C",
+              "legendFormat": "Blog"
+            }
+          ],
+          "title": "Requests/sec by Site"
+        },
+        {
+          "type": "bargauge",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 24,
+            "x": 0,
+            "y": 169
+          },
+          "id": 8403,
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "color"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(increase(traefik_router_requests_total{router=~\"httproute-portfolio-nordbye-.*public.*\"}[24h]))",
+              "refId": "A",
+              "legendFormat": "Portfolio",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(increase(traefik_router_requests_total{router=~\"httproute-workout-workout-.*public.*\"}[24h]))",
+              "refId": "B",
+              "legendFormat": "Workout",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(increase(traefik_router_requests_total{router=~\"httproute-blog-blog-.*public.*\"}[24h]))",
+              "refId": "C",
+              "legendFormat": "Blog",
+              "instant": true
+            }
+          ],
+          "title": "Requests (last 24h)"
+        }
+      ],
+      "title": "Public Sites",
+      "type": "row"
     }
   ],
   "preload": false,
