@@ -1,9 +1,12 @@
 # Homelab make targets. Tooling is containerized — nothing installed on the host.
 
 .PHONY: diagram
-diagram: ## Render the architecture diagram from docs/diagrams/architecture.d2 (D2 → SVG + PNG)
-	docker run --rm -v "$(CURDIR)/docs/diagrams:/work" terrastruct/d2:v0.7.1 --pad 30 /work/architecture.d2 /work/architecture.svg
-	docker run --rm -v "$(CURDIR)/docs/diagrams:/work" terrastruct/d2:v0.7.1 --pad 30 /work/architecture.d2 /work/architecture.png
+diagram: ## Render every D2 diagram in docs/diagrams (→ SVG + PNG)
+	@for f in docs/diagrams/*.d2; do \
+		name=$$(basename $$f .d2); \
+		echo ">> rendering $$name"; \
+		docker run --rm -v "$(CURDIR)/docs/diagrams:/work" terrastruct/d2:v0.7.1 --pad 40 /work/$$name.d2 /work/$$name.svg; \
+	done
 
 .PHONY: help
 help: ## List available targets

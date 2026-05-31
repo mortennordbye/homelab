@@ -1,0 +1,306 @@
+# Homelab — full overview (network · hardware · Kubernetes · smart home)
+# Source of truth. Render:  make diagram   (layout: elk)
+# Icons pulled from public repos at render time and inlined (self-contained):
+#   ${di}  homarr-labs/dashboard-icons   ${sh} selfhst/icons   plus cncf/artwork (falco)
+
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  sh: https://raw.githubusercontent.com/selfhst/icons/main/svg
+  falcoicon: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg
+}
+
+direction: down
+
+title: Homelab · Genesis Kubernetes Cluster {
+  shape: text
+  near: top-center
+  style: {
+    font-size: 38
+    bold: true
+    font-color: "#0f172a"
+  }
+}
+
+classes: {
+  layer: {
+    style: {
+      stroke-width: 2
+      border-radius: 18
+      shadow: true
+      font-size: 22
+      bold: true
+    }
+  }
+  sub: {
+    style: {
+      stroke-width: 1
+      border-radius: 12
+      font-size: 18
+      bold: true
+      fill: "#ffffff"
+      stroke: "#cbd5e1"
+      font-color: "#334155"
+    }
+  }
+}
+
+internet: Internet {
+  shape: cloud
+  style: {
+    fill: "#f1f5f9"
+    stroke: "#64748b"
+    font-color: "#334155"
+    bold: true
+  }
+}
+
+edge: Network Edge {
+  class: layer
+  style.fill: "#e0f2fe"
+  style.stroke: "#0284c7"
+  style.font-color: "#0c4a6e"
+  grid-columns: 5
+  modem: Telia Modem
+  gw: UniFi Gateway {
+    shape: image
+    icon: ${di}/unifi.svg
+  }
+  sw: UniFi Switch {
+    shape: image
+    icon: ${di}/unifi.svg
+  }
+  ap: UniFi U6+ AP {
+    shape: image
+    icon: ${di}/unifi.svg
+  }
+  adguard: AdGuard Home {
+    shape: image
+    icon: ${di}/adguard-home.svg
+  }
+}
+
+hosts: Physical Hosts · Proxmox VE {
+  class: layer
+  style.fill: "#f1f5f9"
+  style.stroke: "#475569"
+  style.font-color: "#1e293b"
+  grid-columns: 4
+  hyper1: Hyper1 · M920 {
+    shape: image
+    icon: ${di}/proxmox.svg
+  }
+  hyper2: Hyper2 · M920q {
+    shape: image
+    icon: ${di}/proxmox.svg
+  }
+  nas: Synology DS1522+ · 60TB · PBS {
+    shape: image
+    icon: ${di}/synology.svg
+  }
+  habox: HA Mini-PC · N100 {
+    shape: image
+    icon: ${di}/home-assistant.svg
+  }
+}
+
+k8s: Genesis · Talos Kubernetes {
+  class: layer
+  style.fill: "#eef2ff"
+  style.stroke: "#4f46e5"
+  style.font-color: "#312e81"
+
+  nodes: Talos Nodes {
+    class: sub
+    grid-columns: 2
+    cp: Control Plane x3 {
+      shape: image
+      icon: ${di}/talos.svg
+    }
+    wk: Workers x3 {
+      shape: image
+      icon: ${di}/talos.svg
+    }
+  }
+
+  platform: Platform & Infrastructure {
+    class: sub
+    grid-columns: 5
+    argocd: ArgoCD {
+      shape: image
+      icon: ${di}/argo-cd.svg
+    }
+    traefik: Traefik {
+      shape: image
+      icon: ${di}/traefik.svg
+    }
+    cilium: Cilium {
+      shape: image
+      icon: ${di}/cilium.svg
+    }
+    cert: cert-manager {
+      shape: image
+      icon: ${di}/cert-manager.svg
+    }
+    eso: External Secrets
+    authentik: Authentik {
+      shape: image
+      icon: ${di}/authentik.svg
+    }
+    falco: Falco {
+      shape: image
+      icon: ${falcoicon}
+    }
+    reloader: Reloader
+    prometheus: Prometheus {
+      shape: image
+      icon: ${di}/prometheus.svg
+    }
+    grafana: Grafana {
+      shape: image
+      icon: ${di}/grafana.svg
+    }
+    loki: Loki {
+      shape: image
+      icon: ${di}/loki.svg
+    }
+    tempo: Tempo {
+      shape: image
+      icon: ${di}/tempo.svg
+    }
+    metrics: metrics-server {
+      shape: image
+      icon: ${di}/kubernetes.svg
+    }
+    pcsi: Proxmox CSI {
+      shape: image
+      icon: ${di}/proxmox.svg
+    }
+    nfscsi: NFS CSI {
+      shape: image
+      icon: ${di}/synology.svg
+    }
+  }
+
+  apps: Applications {
+    class: sub
+    grid-columns: 5
+    portfolio: Portfolio {
+      shape: image
+      icon: ${di}/nginx.svg
+    }
+    blog: Blog {
+      shape: image
+      icon: ${di}/hugo.svg
+    }
+    workout: Workout {
+      shape: image
+      icon: ${di}/postgresql.svg
+    }
+    plex: Plex Stack {
+      shape: image
+      icon: ${di}/plex.svg
+    }
+    arr: arr-stack {
+      shape: image
+      icon: ${di}/sonarr.svg
+    }
+    seerr: Seerr {
+      shape: image
+      icon: ${di}/jellyseerr.svg
+    }
+    abs: Audiobookshelf {
+      shape: image
+      icon: ${di}/audiobookshelf.svg
+    }
+    gluetun: Gluetun VPN {
+      shape: image
+      icon: ${di}/gluetun.svg
+    }
+    qbit: qBittorrent {
+      shape: image
+      icon: ${di}/qbittorrent.svg
+    }
+    homepage: Homepage {
+      shape: image
+      icon: ${sh}/homepage.svg
+    }
+    ittools: IT-Tools {
+      shape: image
+      icon: ${di}/it-tools.svg
+    }
+    omnitools: Omni-Tools
+    ha: Home Assistant {
+      shape: image
+      icon: ${di}/home-assistant.svg
+    }
+    headroom: Headroom
+  }
+}
+
+storage: Storage {
+  class: layer
+  style.fill: "#fef3c7"
+  style.stroke: "#d97706"
+  style.font-color: "#78350f"
+  grid-columns: 2
+  nfs: Synology NFS {
+    shape: image
+    icon: ${di}/synology.svg
+  }
+  csi: Proxmox CSI {
+    shape: image
+    icon: ${di}/proxmox.svg
+  }
+}
+
+smart: Smart Home {
+  class: layer
+  style.fill: "#dcfce7"
+  style.stroke: "#16a34a"
+  style.font-color: "#14532d"
+  grid-columns: 4
+  hue: Hue Bridge {
+    shape: image
+    icon: ${sh}/philips-hue.svg
+  }
+  zigbee: Zigbee ZBT-2 {
+    shape: image
+    icon: ${di}/zigbee2mqtt.svg
+  }
+  ble: BLE Proxy
+  cam: UniFi Camera {
+    shape: image
+    icon: ${di}/unifi.svg
+  }
+}
+
+github: GitHub {
+  shape: image
+  icon: ${di}/github.svg
+}
+
+# Flow: entry point → all the way down to hardware
+internet -> edge: HTTPS {
+  style.stroke: "#0284c7"
+  style.stroke-width: 2
+}
+edge -> hosts: LAN {
+  style.stroke-width: 2
+}
+hosts -> k8s: Talos VMs {
+  style.stroke: "#4f46e5"
+  style.stroke-width: 2
+}
+github -> k8s: GitOps {
+  style.stroke: "#4f46e5"
+  style.stroke-width: 2
+  style.stroke-dash: 4
+}
+k8s -> storage: volumes {
+  style.stroke: "#d97706"
+  style.stroke-width: 2
+}
+hosts -> smart: Home Assistant {
+  style.stroke: "#16a34a"
+  style.stroke-width: 2
+}
