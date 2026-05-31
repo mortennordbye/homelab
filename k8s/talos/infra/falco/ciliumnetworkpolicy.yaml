@@ -1,0 +1,32 @@
+# Falco: runtime syscall monitor (DaemonSet). No inbound traffic needed beyond
+# node-local health checks; egress only to DNS and the API server for enriching
+# alerts with pod/container metadata.
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: falco
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: falco
+  ingress:
+    - fromEntities:
+        - host
+        - health
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports: [{ port: "53", protocol: ANY }]
+    # Kubernetes API for pod/container metadata enrichment in alerts.
+    - toEntities:
+        - kube-apiserver
+    # falcoctl pulls the Falco ruleset from an OCI registry (ghcr.io) at startup
+    # and follows updates. Without this the artifact-install init container hangs
+    # and Falco never starts. Scoped to HTTPS to the outside world.
+    - toEntities:
+        - world
+      toPorts:
+        - ports: [{ port: "443", protocol: TCP }]

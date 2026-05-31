@@ -1,0 +1,31 @@
+# Talos runs an immutable OS with no kernel headers or module toolchain, so the
+# modern eBPF (CO-RE) driver is the only sane choice: it's compiled into the
+# Falco binary, loads no kernel module, and runs no driver-build init container.
+driver:
+  kind: modern_ebpf
+  modernEbpf:
+    # false => container runs privileged. Talos enforces restricted Pod Security
+    # by default, which is why the falco namespace is labelled privileged.
+    # Flip to true later for a smaller privilege footprint (BPF/PERFMON caps only).
+    leastPrivileged: false
+
+# First test: pin to a single worker so exactly one DaemonSet pod runs. Falco
+# only sees syscalls on the node it runs on; widen coverage later by removing
+# this selector (runs on every schedulable node) or selecting all workers.
+nodeSelector:
+  kubernetes.io/hostname: genesis-worker-01
+
+# No external alert routing yet. Read detections straight from the pod log:
+#   kubectl logs -n falco -l app.kubernetes.io/name=falco -f
+falcosidekick:
+  enabled: false
+
+# Trimmed from the chart defaults (limits 1000m/1Gi) to stay light on a homelab
+# node. Bump if Falco gets OOMKilled under load.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
