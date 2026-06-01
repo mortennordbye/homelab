@@ -4,20 +4,17 @@
 #   ${di} homarr-labs/dashboard-icons   ${sh} selfhst/icons   plus cncf/artwork (falco)
 
 vars: {
-  d2-config: {
-    layout-engine: elk
-  }
   di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
   sh: https://raw.githubusercontent.com/selfhst/icons/main/svg
   falcoicon: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg
 }
 
-direction: right
+direction: down
 
 title: Homelab · Network & Service Flow {
   shape: text
   near: top-center
-  style: {font-size: 40; bold: true; font-color: "#0f172a"}
+  style: {font-size: 60; bold: true; font-color: "#0f172a"}
 }
 
 classes: {
@@ -38,6 +35,7 @@ pia: PIA VPN {shape: image; icon: ${di}/private-internet-access.svg}
 # ───────────── Network edge ─────────────
 edge: Network Edge {
   class: layer
+  style.font-size: 34
   style: {fill: "#e0f2fe"; stroke: "#0284c7"; font-color: "#0c4a6e"}
   modem: "Telia Modem\n(bridge · translation layer)"
   gw: UniFi Gateway {shape: image; icon: ${di}/unifi.svg}
@@ -48,6 +46,7 @@ edge: Network Edge {
 # ───────────── Ingress & cluster networking ─────────────
 net: Ingress & Cluster Networking {
   class: layer
+  style.font-size: 34
   style: {fill: "#cffafe"; stroke: "#0891b2"; font-color: "#155e75"}
   metallb: MetalLB {shape: image; icon: ${di}/metallb.svg}
   traefik: Traefik {shape: image; icon: ${di}/traefik.svg}
@@ -59,6 +58,7 @@ net: Ingress & Cluster Networking {
 # ───────────── GitOps & config ─────────────
 ops: GitOps & Config {
   class: layer
+  style.font-size: 34
   style: {fill: "#eef2ff"; stroke: "#4f46e5"; font-color: "#312e81"}
   argocd: ArgoCD {shape: image; icon: ${di}/argo-cd.svg}
   eso: External Secrets
@@ -68,6 +68,7 @@ ops: GitOps & Config {
 # ───────────── Public sites ─────────────
 sites: Public Sites {
   class: layer
+  style.font-size: 34
   style: {fill: "#f5f3ff"; stroke: "#7c3aed"; font-color: "#5b21b6"}
   portfolio: Portfolio {shape: image; icon: ${di}/nginx.svg}
   portfolio_stage: "Portfolio (stage)" {shape: image; icon: ${di}/nginx.svg; style.opacity: 0.7}
@@ -85,6 +86,7 @@ sites: Public Sites {
 # ───────────── Media stack ─────────────
 media: Media Stack {
   class: layer
+  style.font-size: 34
   style: {fill: "#fdf2f8"; stroke: "#db2777"; font-color: "#9d174d"}
   seerr: Seerr {shape: image; icon: ${di}/jellyseerr.svg}
   plex: Plex {shape: image; icon: ${di}/plex.svg}
@@ -101,6 +103,7 @@ media: Media Stack {
 # ───────────── Observability ─────────────
 obs: Observability {
   class: layer
+  style.font-size: 34
   style: {fill: "#ccfbf1"; stroke: "#0d9488"; font-color: "#115e59"}
   prometheus: Prometheus {shape: image; icon: ${di}/prometheus.svg}
   alertmanager: Alertmanager {shape: image; icon: ${di}/alertmanager.svg}
@@ -113,6 +116,7 @@ obs: Observability {
 # ───────────── Security ─────────────
 sec: Security {
   class: layer
+  style.font-size: 34
   style: {fill: "#fee2e2"; stroke: "#dc2626"; font-color: "#7f1d1d"}
   falco: Falco {shape: image; icon: ${falcoicon}}
   sidekick: Falcosidekick
@@ -122,6 +126,7 @@ sec: Security {
 # ───────────── Home automation ─────────────
 home: Home Automation {
   class: layer
+  style.font-size: 34
   style: {fill: "#dcfce7"; stroke: "#16a34a"; font-color: "#14532d"}
   ha: Home Assistant {shape: image; icon: ${di}/home-assistant.svg}
   adguard: AdGuard Home {shape: image; icon: ${di}/adguard-home.svg}
@@ -129,6 +134,7 @@ home: Home Automation {
 
 smart: Smart Home Devices {
   class: layer
+  style.font-size: 34
   style: {fill: "#dcfce7"; stroke: "#16a34a"; font-color: "#14532d"}
   hue: Hue Bridge {shape: image; icon: ${sh}/philips-hue.svg}
   zigbee: Zigbee ZBT-2 {shape: image; icon: ${di}/zigbee2mqtt.svg}
@@ -139,6 +145,7 @@ smart: Smart Home Devices {
 # ───────────── Storage ─────────────
 store: Storage {
   class: layer
+  style.font-size: 34
   style: {fill: "#fef3c7"; stroke: "#d97706"; font-color: "#78350f"}
   pcsi: Proxmox CSI {shape: image; icon: ${di}/proxmox.svg}
   nfscsi: NFS CSI {shape: image; icon: ${di}/synology.svg}
@@ -147,6 +154,7 @@ store: Storage {
 # ───────────── Physical hosts ─────────────
 hw: Physical Hosts · Proxmox VE {
   class: layer
+  style.font-size: 34
   style: {fill: "#f1f5f9"; stroke: "#475569"; font-color: "#1e293b"}
   hyper1: Hyper1 · M920 {shape: image; icon: ${di}/proxmox.svg}
   hyper2: Hyper2 · M920q {shape: image; icon: ${di}/proxmox.svg}
@@ -243,3 +251,12 @@ edge.sw -> home.ha {style: {stroke: "#16a34a"}}
 home.ha -> home.adguard: DNS add-on {style: {stroke: "#16a34a"; stroke-dash: 4}}
 edge.gw -> home.adguard: DNS queries {style: {stroke: "#0891b2"; stroke-dash: 3}}
 home.ha -> smart: Zigbee · BLE · Wi-Fi {style: {stroke: "#16a34a"}}
+
+# Inline-legibility: `direction: down` keeps the graph narrow-and-tall so GitHub's
+# width-fit downscale leaves bigger labels; this glob bumps every leaf label, and
+# the explicit container/title sizes above override it (explicit > glob > class).
+# Layout engine is set via the render command's `--layout elk` flag, since a `**`
+# glob can't coexist with a `vars.d2-config` block.
+**: {
+  style.font-size: 26
+}

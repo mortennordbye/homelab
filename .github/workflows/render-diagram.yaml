@@ -25,6 +25,7 @@ jobs:
             name=$(basename "$f" .d2)
             docker run --rm -v "${PWD}/docs/diagrams:/work" \
               terrastruct/d2:v0.7.1 \
+              --layout elk \
               --elk-nodeNodeBetweenLayers=35 \
               --elk-padding="[top=25,left=25,bottom=25,right=25]" \
               --pad 40 "/work/$name.d2" "/work/$name.svg"
