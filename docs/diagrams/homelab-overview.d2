@@ -4,9 +4,6 @@
 #   ${di}  homarr-labs/dashboard-icons   ${sh} selfhst/icons   plus cncf/artwork (falco)
 
 vars: {
-  d2-config: {
-    layout-engine: elk
-  }
   di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
   sh: https://raw.githubusercontent.com/selfhst/icons/main/svg
   falcoicon: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg
@@ -18,7 +15,7 @@ title: Homelab · Genesis Kubernetes Cluster {
   shape: text
   near: top-center
   style: {
-    font-size: 38
+    font-size: 46
     bold: true
     font-color: "#0f172a"
   }
@@ -59,6 +56,7 @@ internet: Internet {
 
 edge: Network Edge {
   class: layer
+  style.font-size: 34
   style.fill: "#e0f2fe"
   style.stroke: "#0284c7"
   style.font-color: "#0c4a6e"
@@ -80,6 +78,7 @@ edge: Network Edge {
 
 hosts: Physical Hosts · Proxmox VE {
   class: layer
+  style.font-size: 34
   style.fill: "#f1f5f9"
   style.stroke: "#475569"
   style.font-color: "#1e293b"
@@ -104,12 +103,14 @@ hosts: Physical Hosts · Proxmox VE {
 
 k8s: Genesis · Talos Kubernetes {
   class: layer
+  style.font-size: 34
   style.fill: "#eef2ff"
   style.stroke: "#4f46e5"
   style.font-color: "#312e81"
 
   nodes: Talos Nodes {
     class: sub
+    style.font-size: 26
     grid-columns: 2
     cp: Control Plane x3 {
       shape: image
@@ -123,6 +124,7 @@ k8s: Genesis · Talos Kubernetes {
 
   platform: Platform & Infrastructure {
     class: sub
+    style.font-size: 26
     grid-columns: 5
     argocd: ArgoCD {
       shape: image
@@ -182,6 +184,7 @@ k8s: Genesis · Talos Kubernetes {
 
   apps: Applications {
     class: sub
+    style.font-size: 26
     grid-columns: 5
     portfolio: Portfolio {
       shape: image
@@ -242,6 +245,7 @@ k8s: Genesis · Talos Kubernetes {
 
 storage: Storage {
   class: layer
+  style.font-size: 34
   style.fill: "#fef3c7"
   style.stroke: "#d97706"
   style.font-color: "#78350f"
@@ -258,6 +262,7 @@ storage: Storage {
 
 smart: Smart Home {
   class: layer
+  style.font-size: 34
   style.fill: "#dcfce7"
   style.stroke: "#16a34a"
   style.font-color: "#14532d"
@@ -306,4 +311,13 @@ k8s -> storage: volumes {
 hosts -> smart: Home Assistant {
   style.stroke: "#16a34a"
   style.stroke-width: 2
+}
+
+# Inline-legibility: bump every leaf label so it survives the README's down-scale.
+# Container titles and the diagram title set explicit larger sizes above, which
+# override this glob (explicit > glob > class). Layout engine is set via the
+# render command's `--layout elk` flag, since a `**` glob can't coexist with a
+# `vars.d2-config` block.
+**: {
+  style.font-size: 24
 }
