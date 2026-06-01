@@ -160,22 +160,11 @@ hw: Physical Hosts · Proxmox VE {
 internet -> edge.modem: WAN {style: {stroke: "#0284c7"; stroke-width: 3}}
 edge.modem -> edge.gw: translates WAN → LAN {style: {stroke: "#0284c7"; stroke-width: 3}}
 edge.gw -> edge.sw {style: {stroke: "#475569"; stroke-width: 2}}
-edge.sw -> hw.hyper1 {style: {stroke: "#475569"}}
-edge.sw -> hw.hyper2 {style: {stroke: "#475569"}}
-edge.sw -> hw.nas {style: {stroke: "#475569"}}
-edge.sw -> hw.habox {style: {stroke: "#475569"}}
+edge.sw -> hw: LAN {style: {stroke: "#475569"; stroke-width: 2}}
 edge.sw -> edge.ap {style: {stroke: "#475569"}}
 edge.gw -> net.traefik: ingress {style: {stroke: "#0284c7"; stroke-width: 3}}
 net.metallb -> net.traefik: LB IP {style: {stroke: "#0891b2"; stroke-dash: 3}}
-net.traefik -> sites.portfolio {style: {stroke: "#0284c7"}}
-net.traefik -> sites.portfolio_stage {style: {stroke: "#0284c7"; stroke-dash: 3}}
-net.traefik -> sites.blog {style: {stroke: "#0284c7"}}
-net.traefik -> sites.blog_stage {style: {stroke: "#0284c7"; stroke-dash: 3}}
-net.traefik -> sites.workout {style: {stroke: "#0284c7"}}
-net.traefik -> sites.homepage {style: {stroke: "#0284c7"}}
-net.traefik -> sites.abs {style: {stroke: "#0284c7"}}
-net.traefik -> sites.ittools {style: {stroke: "#0284c7"}}
-net.traefik -> sites.omnitools {style: {stroke: "#0284c7"}}
+net.traefik -> sites: HTTP routes {style: {stroke: "#0284c7"; stroke-width: 2}}
 net.traefik -> media.seerr {style: {stroke: "#0284c7"}}
 net.traefik -> media.plex {style: {stroke: "#0284c7"}}
 net.traefik -> obs.grafana {style: {stroke: "#0284c7"}}
@@ -253,7 +242,4 @@ store.pcsi -> hw.hyper1: block {style: {stroke: "#d97706"; stroke-width: 2}}
 edge.sw -> home.ha {style: {stroke: "#16a34a"}}
 home.ha -> home.adguard: DNS add-on {style: {stroke: "#16a34a"; stroke-dash: 4}}
 edge.gw -> home.adguard: DNS queries {style: {stroke: "#0891b2"; stroke-dash: 3}}
-home.ha -> smart.hue {style: {stroke: "#16a34a"}}
-home.ha -> smart.zigbee {style: {stroke: "#16a34a"}}
-home.ha -> smart.ble {style: {stroke: "#16a34a"}}
-home.ha -> smart.cam {style: {stroke: "#16a34a"}}
+home.ha -> smart: Zigbee · BLE · Wi-Fi {style: {stroke: "#16a34a"}}
