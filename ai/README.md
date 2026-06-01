@@ -11,6 +11,7 @@ AI-related work that lives inside the Homelab repo: Claude Code primitives, self
 | `projects/`  | Self-contained AI experiments and apps (FastAPI services, RAG pipelines, bots…)    |
 | `local-llm/` | Ollama / vLLM / llama.cpp — Modelfiles, eval configs, runtime stacks               |
 | `prompts/`   | Reusable prompt library that spans projects                                        |
+| `blueprints/`| Copy-and-fill scaffolds for new projects (e.g. a starter `CLAUDE.md`)               |
 | `notes/`     | Research notes, benchmarks, decision records                                       |
 
 ## Conventions
