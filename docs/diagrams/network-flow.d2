@@ -12,7 +12,7 @@ vars: {
   falcoicon: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg
 }
 
-direction: down
+direction: right
 
 title: Homelab · Network & Service Flow {
   shape: text
@@ -28,6 +28,7 @@ classes: {
 # ───────────── External ─────────────
 internet: Internet {shape: cloud; style: {fill: "#f1f5f9"; stroke: "#64748b"; bold: true}}
 github: GitHub {shape: image; icon: ${di}/github.svg}
+ghcr: "GHCR\n(container registry)" {shape: image; icon: ${di}/github.svg}
 bitwarden: Bitwarden {shape: image; icon: ${di}/bitwarden.svg}
 cloudflare: Cloudflare DNS {shape: image; icon: ${di}/cloudflare.svg}
 letsencrypt: Let's Encrypt {shape: image; icon: ${di}/lets-encrypt.svg}
@@ -67,22 +68,23 @@ ops: GitOps & Config {
 # ───────────── Public sites ─────────────
 sites: Public Sites {
   class: layer
-  grid-columns: 4
   style: {fill: "#f5f3ff"; stroke: "#7c3aed"; font-color: "#5b21b6"}
   portfolio: Portfolio {shape: image; icon: ${di}/nginx.svg}
+  portfolio_stage: "Portfolio (stage)" {shape: image; icon: ${di}/nginx.svg; style.opacity: 0.7}
   blog: Blog {shape: image; icon: ${di}/hugo.svg}
-  workout: Workout {shape: image; icon: ${di}/postgresql.svg}
+  blog_stage: "Blog (stage)" {shape: image; icon: ${di}/hugo.svg; style.opacity: 0.7}
+  workout: Workout {shape: image; icon: ${di}/nextjs.svg}
   postgres: PostgreSQL {shape: image; icon: ${di}/postgresql.svg}
   homepage: Homepage {shape: image; icon: ${sh}/homepage.svg}
   abs: Audiobookshelf {shape: image; icon: ${di}/audiobookshelf.svg}
   ittools: IT-Tools {shape: image; icon: ${di}/it-tools.svg}
   omnitools: Omni-Tools
+  headroom: "Headroom\n(personal finance app)"
 }
 
 # ───────────── Media stack ─────────────
 media: Media Stack {
   class: layer
-  grid-columns: 5
   style: {fill: "#fdf2f8"; stroke: "#db2777"; font-color: "#9d174d"}
   seerr: Seerr {shape: image; icon: ${di}/jellyseerr.svg}
   plex: Plex {shape: image; icon: ${di}/plex.svg}
@@ -99,7 +101,6 @@ media: Media Stack {
 # ───────────── Observability ─────────────
 obs: Observability {
   class: layer
-  grid-columns: 3
   style: {fill: "#ccfbf1"; stroke: "#0d9488"; font-color: "#115e59"}
   prometheus: Prometheus {shape: image; icon: ${di}/prometheus.svg}
   alertmanager: Alertmanager {shape: image; icon: ${di}/alertmanager.svg}
@@ -124,7 +125,6 @@ home: Home Automation {
   style: {fill: "#dcfce7"; stroke: "#16a34a"; font-color: "#14532d"}
   ha: Home Assistant {shape: image; icon: ${di}/home-assistant.svg}
   adguard: AdGuard Home {shape: image; icon: ${di}/adguard-home.svg}
-  headroom: "Headroom\n(personal finance app)"
 }
 
 smart: Smart Home Devices {
@@ -168,7 +168,9 @@ edge.sw -> edge.ap {style: {stroke: "#475569"}}
 edge.gw -> net.traefik: ingress {style: {stroke: "#0284c7"; stroke-width: 3}}
 net.metallb -> net.traefik: LB IP {style: {stroke: "#0891b2"; stroke-dash: 3}}
 net.traefik -> sites.portfolio {style: {stroke: "#0284c7"}}
+net.traefik -> sites.portfolio_stage {style: {stroke: "#0284c7"; stroke-dash: 3}}
 net.traefik -> sites.blog {style: {stroke: "#0284c7"}}
+net.traefik -> sites.blog_stage {style: {stroke: "#0284c7"; stroke-dash: 3}}
 net.traefik -> sites.workout {style: {stroke: "#0284c7"}}
 net.traefik -> sites.homepage {style: {stroke: "#0284c7"}}
 net.traefik -> sites.abs {style: {stroke: "#0284c7"}}
@@ -185,6 +187,8 @@ cloudflare -> letsencrypt: ACME {style: {stroke: "#0891b2"; stroke-dash: 4}}
 
 # ── GitOps (indigo dashed) ──
 github -> ops.argocd: git push {style: {stroke: "#4f46e5"; stroke-width: 2; stroke-dash: 4}}
+github -> ghcr: build & push image {style: {stroke: "#4f46e5"; stroke-width: 2; stroke-dash: 4}}
+ghcr -> sites: image pull {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> sites: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> media: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> net: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
