@@ -17,7 +17,11 @@ spec:
     - matches:
         - headers:
             - name: x-canary
+              type: Exact
               value: "true"
+          path:
+            type: PathPrefix
+            value: /
       backendRefs:
         - group: ""
           kind: Service
