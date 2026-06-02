@@ -16,16 +16,17 @@ spec:
         - path:
             type: PathPrefix
             value: /
-      # Weighted canary. Committed stable state is 100/0 (all v1).
-      # demo.sh patches these weights live to show traffic shifting.
+      # Weighted canary — 90% v1, 10% v2. To shift the rollout, change these two
+      # numbers and push: ArgoCD applies it and selfHeal keeps it there. GitOps,
+      # not imperative kubectl patches.
       backendRefs:
         - group: ""
           kind: Service
           name: whoami-v1
           port: 8080
-          weight: 100
+          weight: 90
         - group: ""
           kind: Service
           name: whoami-v2
           port: 8080
-          weight: 0
+          weight: 10
