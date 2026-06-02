@@ -79,7 +79,10 @@ literally editing two numbers. (Spread tightens with more samples: ./demo.sh loo
     ;;
 
   weight)
-    v1="${2:?usage: weight <v1> <v2>}"; v2="${3:?usage: weight <v1> <v2>}"
+    if [[ -z "${2:-}" || -z "${3:-}" ]]; then
+      echo "usage: ./demo.sh weight <v1> <v2>   e.g. ./demo.sh weight 50 50"; exit 1
+    fi
+    v1="$2"; v2="$3"
     kubectl -n "$NS" patch httproute whoami-weighted --type=json -p="[
       {\"op\":\"replace\",\"path\":\"/spec/rules/0/backendRefs/0/weight\",\"value\":${v1}},
       {\"op\":\"replace\",\"path\":\"/spec/rules/0/backendRefs/1/weight\",\"value\":${v2}}]"
