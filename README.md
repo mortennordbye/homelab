@@ -26,17 +26,17 @@ Feel free to send me a DM, open a pull request, or steal code from here. The goa
 
 ## Homelab Overview
 
-[![Homelab Overview](docs/diagrams/homelab-overview.svg)](docs/diagrams/homelab-overview.svg?raw=1)
+[![Homelab Overview](docs/diagrams/homelab-overview.png)](docs/diagrams/homelab-overview.png?raw=1)
 
-> **Click to open the full-size, zoomable SVG.** A map of the whole homelab — how the hardware, cluster and services fit together. Auto-generated through the [pipeline](.github/workflows/render-diagram.yaml) from [this file](docs/diagrams/homelab-overview.d2).
+> **Click to open the full-size image.** A map of the whole homelab — how the hardware, cluster and services fit together. Auto-generated through the [pipeline](.github/workflows/render-diagram.yaml) from [this file](docs/diagrams/homelab-overview.d2).
 
 ---
 
 ## Network & Service Flow
 
-[![Network & Service Flow](docs/diagrams/network-flow.svg)](docs/diagrams/network-flow.svg?raw=1)
+[![Network & Service Flow](docs/diagrams/network-flow.png)](docs/diagrams/network-flow.png?raw=1)
 
-> **Click to open the full-size, zoomable SVG.** Shows which services talk to each other and how traffic flows through the cluster. Auto-generated through the [pipeline](.github/workflows/render-diagram.yaml) from [this file](docs/diagrams/network-flow.d2).
+> **Click to open the full-size image.** Shows which services talk to each other and how traffic flows through the cluster. Auto-generated through the [pipeline](.github/workflows/render-diagram.yaml) from [this file](docs/diagrams/network-flow.d2).
 
 ---
 
