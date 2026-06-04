@@ -16,12 +16,9 @@ The repository is public by design. Transparency keeps me honest about following
 
 </div>
 
-## 🔗 Quick Links
+## Quick Links
 
-- 🌐 **Portfolio:** [nordbye.it](https://nordbye.it)
-- 📝 **Blog:** [blog.nordbye.it](https://blog.nordbye.it)
-- 💼 **LinkedIn:** [morten-victor-nordbye](https://www.linkedin.com/in/morten-victor-nordbye/)
-- 🐙 **GitHub:** [@mortennordbye](https://github.com/mortennordbye)
+[![Portfolio](https://img.shields.io/badge/Portfolio-nordbye.it-844FBA?style=flat-square&logo=googlechrome&logoColor=white)](https://nordbye.it) [![Blog](https://img.shields.io/badge/Blog-blog.nordbye.it-FF4088?style=flat-square&logo=hugo&logoColor=white)](https://blog.nordbye.it) [![LinkedIn](https://img.shields.io/badge/LinkedIn-morten--victor--nordbye-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/morten-victor-nordbye/) [![GitHub](https://img.shields.io/badge/GitHub-mortennordbye-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/mortennordbye)
 
 Feel free to send me a DM, open a pull request, or steal code from here. The goal is to learn and make connections.
 
@@ -31,7 +28,7 @@ Feel free to send me a DM, open a pull request, or steal code from here. The goa
 
 [![Homelab Overview](docs/diagrams/homelab-overview.svg)](docs/diagrams/homelab-overview.svg?raw=1)
 
-> 🔍 **Click to open the full-size, zoomable SVG.** A map of the whole homelab — how the hardware, cluster and services fit together. Auto-generated through the [pipeline](.github/workflows/render-diagram.yaml) from [this file](docs/diagrams/homelab-overview.d2).
+> **Click to open the full-size, zoomable SVG.** A map of the whole homelab — how the hardware, cluster and services fit together. Auto-generated through the [pipeline](.github/workflows/render-diagram.yaml) from [this file](docs/diagrams/homelab-overview.d2).
 
 ---
 
@@ -39,52 +36,52 @@ Feel free to send me a DM, open a pull request, or steal code from here. The goa
 
 [![Network & Service Flow](docs/diagrams/network-flow.svg)](docs/diagrams/network-flow.svg?raw=1)
 
-> 🔍 **Click to open the full-size, zoomable SVG.** Shows which services talk to each other and how traffic flows through the cluster. Auto-generated through the [pipeline](.github/workflows/render-diagram.yaml) from [this file](docs/diagrams/network-flow.d2).
+> **Click to open the full-size, zoomable SVG.** Shows which services talk to each other and how traffic flows through the cluster. Auto-generated through the [pipeline](.github/workflows/render-diagram.yaml) from [this file](docs/diagrams/network-flow.d2).
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 > **Note:** This is a simplified view showing the main folders and key files. The actual repository contains additional directories and configurations.
 
 ```
-📦 homelab
-├── 📁 k8s/talos/
-│   ├── 📁 apps/                         # Application deployments
-│   │   ├── 📁 arr-stack/
-│   │   ├── 📁 blog/
-│   │   └── 📁 plex-media-stack/
-│   └── 📁 infra/                        # Infrastructure components
-│       ├── 📁 argocd/
-│       ├── 📁 cilium/
-│       └── 📁 traefik/
-├── 📁 terraform/
-│   ├── 📁 azure/
-│   │   └── 📁 state/                    # Remote state backend
-│   └── 📁 proxmox/                      # Proxmox cluster IaC
-│       └── 📁 hyper-cluster/
-│           └── 📁 k8s/
-├── 📁 blog/                             # Hugo blog source
+homelab
+├── k8s/talos/
+│   ├── apps/                            # Application deployments
+│   │   ├── arr-stack/
+│   │   ├── blog/
+│   │   └── plex-media-stack/
+│   └── infra/                           # Infrastructure components
+│       ├── argocd/
+│       ├── cilium/
+│       └── traefik/
+├── terraform/
+│   ├── azure/
+│   │   └── state/                       # Remote state backend
+│   └── proxmox/                         # Proxmox cluster IaC
+│       └── hyper-cluster/
+│           └── k8s/
+├── blog/                                # Hugo blog source
 │   ├── Dockerfile
-│   ├── 📁 config/
-│   ├── 📁 content/
-│   └── 📁 themes/
-├── 📁 portfolio/                        # Portfolio site source
+│   ├── config/
+│   ├── content/
+│   └── themes/
+├── portfolio/                           # Portfolio site source
 │   ├── Dockerfile
-│   ├── 📁 nginx/
-│   └── 📁 src/
-└── 📁 ai/                               # AI agents, skills, projects, local LLM
-    ├── 📁 agents/
-    ├── 📁 skills/
-    ├── 📁 projects/
-    ├── 📁 local-llm/
-    ├── 📁 prompts/
-    └── 📁 notes/
+│   ├── nginx/
+│   └── src/
+└── ai/                                  # AI agents, skills, projects, local LLM
+    ├── agents/
+    ├── skills/
+    ├── projects/
+    ├── local-llm/
+    ├── prompts/
+    └── notes/
 ```
 
 ---
 
-## ☸️ Kubernetes Tech Stack
+## Kubernetes Tech Stack
 
 | Category      | Components                                                                                                                                                                             |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -98,7 +95,7 @@ Feel free to send me a DM, open a pull request, or steal code from here. The goa
 
 ---
 
-## 🔒 Security
+## Security
 
 ### Container Vulnerability Scanning
 
@@ -110,7 +107,7 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 ---
 
-## 🔄 CI/CD Workflows
+## CI/CD Workflows
 
 | Workflow                                                                                | Trigger                                   | Purpose                                                |
 | --------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------ |
@@ -168,8 +165,8 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 <div align="center">
 
-### ⭐ Star this repo if you find it useful!
+### Star this repo if you find it useful
 
-Made with ☕ and ☸️ by [Morten Victor Nordbye](https://nordbye.it)
+Made by [Morten Victor Nordbye](https://nordbye.it)
 
 </div>
