@@ -111,12 +111,12 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 | Workflow                                                                                | Trigger                                   | Purpose                                                |
 | --------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------ |
-| [**Build and Deploy Blog**](.github/workflows/build-blog.yaml)                          | Push to `main` (blog changes)             | Builds Hugo blog, pushes to GHCR, updates k8s manifest |
-| [**Build and Deploy Portfolio**](.github/workflows/portfolio.yaml)                      | Push to `main`/`prod` (portfolio changes) | Multi-environment deployment (stage/prod) to k8s       |
-| [**Container Vulnerability Scan**](.github/workflows/container-vulnerability-scan.yaml) | Weekly, Dockerfile changes, manual        | Scans blog & portfolio containers with Trivy           |
-| [**K8s Update Reminder**](.github/workflows/30-days-k8s-update-reminder.yml)            | Monthly (1st)                             | Discord notification for Kubernetes maintenance        |
-| [**Server Update Reminder**](.github/workflows/30-days-server-update-reminder.yml)      | Monthly (15th)                            | Discord notification for server updates                |
-| [**Actions Runner Test**](.github/workflows/test-arc.yml)                               | Manual                                    | Tests self-hosted ARC runner functionality             |
+| [**Build and Deploy Blog**](.github/workflows/build-blog.yaml)                          | Push to `main` (blog changes)                  | Builds Hugo blog, pushes to GHCR, updates k8s manifest |
+| [**Build and Deploy Portfolio**](.github/workflows/build-portfolio.yaml)                | Push to `main` (stage); manual dispatch (prod) | Builds portfolio image, pushes to GHCR, deploys stage/prod |
+| [**Container Vulnerability Scan**](.github/workflows/container-vulnerability-scan.yaml) | Weekly, Dockerfile changes, manual             | Scans blog & portfolio containers with Trivy           |
+| [**Render Diagrams**](.github/workflows/render-diagram.yaml)                            | Push to `main` (`docs/diagrams/*.d2`), manual  | Renders D2 sources to SVG + PNG, commits the result    |
+| [**K8s Update Reminder**](.github/workflows/30-days-k8s-update-reminder.yml)            | Monthly (1st)                                  | Discord notification for Kubernetes maintenance        |
+| [**Server Update Reminder**](.github/workflows/30-days-server-update-reminder.yml)      | Monthly (15th)                                 | Discord notification for server updates                |
 
 ---
 
