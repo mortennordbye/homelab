@@ -160,7 +160,7 @@ kubeScheduler:
   enabled: false
 
 kubeProxy:
-  enabled: true
+  enabled: false # Cilium runs kubeProxyReplacement there is no kube-proxy to scrape
 
 ## Basic alerting rules
 defaultRules:
