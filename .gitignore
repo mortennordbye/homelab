@@ -1,30 +1,25 @@
-# Secrets & env files
+# ──────────────────────────────────────────────────────────────
+# Secrets & credentials
+# ──────────────────────────────────────────────────────────────
 .env
 **/*.env
 *.key
 *.pem
 
-# OS/editor files
-.DS_Store
-Thumbs.db
-.*.swp
-*~
-*.swo
-*.swnc
-.vscode/
-.idea/
+# Talos & Kubernetes credentials
+talosconfig
+kubeconfig
+machine-secrets.yaml
+controlplane.yaml
+worker.yaml
 
-# Claude Code per-machine settings (agent definitions under .claude/agents/ stay tracked)
-.claude/settings.local.json
+# Ansible vault
+vault_password.txt
+.ansible
 
-# Logs
-logs/
-*.log
-crash.log
-crash.*.log
-docker-compose.override.yml
-
+# ──────────────────────────────────────────────────────────────
 # Terraform
+# ──────────────────────────────────────────────────────────────
 *.tfstate
 *.tfstate.*
 *.tfvars
@@ -41,48 +36,25 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Ansible
-vault_passaword.txt
-.ansible
+# Kustomize helm chart cache — regenerated locally by `kustomize build --enable-helm`;
+# ArgoCD pulls the chart fresh on sync.
+k8s/**/charts/
 
-# Talos & Kubernetes (sensitive credentials)
-talosconfig
-kubeconfig
-machine-secrets.yaml
-controlplane.yaml
-worker.yaml
-
-# Backup & Temporary Files
-*.backup
-*.bak
-*.tmp
-tmp/
-
-# Archives
-*.zip
-*.tar.gz
-*.tgz
-
-# Application folders
-#arr-stack/
-qbittorrent-vpn/
-kubernetes/
-blog/README.md
-
-# Local dev / tooling artifacts (must never be committed at repo root)
-.screenshots/
-.playwright-mcp/
+# ──────────────────────────────────────────────────────────────
+# Build output
+# ──────────────────────────────────────────────────────────────
+# Hugo (blog) — rendered in CI, never committed
+blog/public/
+blog/resources/
+.hugo_build.lock
+# Root-level Node tooling must never be committed (apps keep their own node_modules)
 /node_modules/
 /package.json
 /package-lock.json
 
-# 
-blog/STYLE.md
-# Kustomize helm chart cache — regenerated locally by `kustomize build --enable-helm`,
-# ArgoCD pulls the chart fresh on sync.
-k8s/**/charts/
-
-# AI — never commit local LLM weights or runtime caches
+# ──────────────────────────────────────────────────────────────
+# AI — never commit local model weights or runtime caches
+# ──────────────────────────────────────────────────────────────
 ai/local-llm/**/*.gguf
 ai/local-llm/**/*.bin
 ai/local-llm/**/*.safetensors
@@ -90,10 +62,47 @@ ai/local-llm/**/*.pt
 ai/local-llm/**/*.onnx
 ai/**/.venv/
 ai/**/__pycache__/
-
-# AI — Jarvis runtime artefacts (state DB, voice clone samples)
+# Jarvis runtime artefacts (state DB, voice clone samples)
 ai/projects/jarvis
 ai/projects/jarvis/.state/
 ai/projects/jarvis/voices/*.wav
 ai/projects/jarvis/voices/*.wav.txt
 ai/prompts/erlendgpt
+
+# ──────────────────────────────────────────────────────────────
+# Local-only files (deliberately kept out of the public repo)
+# ──────────────────────────────────────────────────────────────
+blog/README.md
+blog/STYLE.md
+qbittorrent-vpn/
+.screenshots/
+.playwright-mcp/
+.claude/settings.local.json
+
+# ──────────────────────────────────────────────────────────────
+# Logs, temp files, archives
+# ──────────────────────────────────────────────────────────────
+logs/
+*.log
+crash.log
+crash.*.log
+docker-compose.override.yml
+*.backup
+*.bak
+*.tmp
+tmp/
+*.zip
+*.tar.gz
+*.tgz
+
+# ──────────────────────────────────────────────────────────────
+# OS & editor
+# ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.*.swp
+*.swo
+*.swnc
+*~
+.vscode/
+.idea/
