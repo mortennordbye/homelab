@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1014"/>
+      <stop offset="1" stop-color="#171c24"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7bd88f" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#7bd88f" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- faint dashboard grid -->
+  <g stroke="#ffffff" stroke-opacity="0.035" stroke-width="1">
+    <line x1="100" y1="0" x2="100" y2="630"/><line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="300" y1="0" x2="300" y2="630"/><line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="500" y1="0" x2="500" y2="630"/><line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="700" y1="0" x2="700" y2="630"/><line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/><line x1="1000" y1="0" x2="1000" y2="630"/>
+    <line x1="1100" y1="0" x2="1100" y2="630"/>
+    <line x1="0" y1="90" x2="1200" y2="90"/><line x1="0" y1="180" x2="1200" y2="180"/>
+    <line x1="0" y1="270" x2="1200" y2="270"/><line x1="0" y1="360" x2="1200" y2="360"/>
+    <line x1="0" y1="450" x2="1200" y2="450"/><line x1="0" y1="540" x2="1200" y2="540"/>
+  </g>
+
+  <!-- url, top right -->
+  <text x="1120" y="78" text-anchor="end" font-size="24" fill="#5b6675" letter-spacing="0.5">blog.nordbye.it</text>
+
+  <!-- left accent bar -->
+  <rect x="80" y="150" width="6" height="212" rx="3" fill="#f46800"/>
+
+  <!-- kicker -->
+  <text x="110" y="172" font-size="22" font-weight="700" fill="#f46800" letter-spacing="3.5">HOMELAB &#183; KUBERNETES &#183; OBSERVABILITY</text>
+
+  <!-- title -->
+  <text x="105" y="252" font-size="68" font-weight="700" fill="#ffffff">Seeing Into a</text>
+  <text x="105" y="326" font-size="68" font-weight="700" fill="#ffffff">Talos Cluster</text>
+
+  <!-- subtitle -->
+  <text x="110" y="372" font-size="30" fill="#9aa4b2">The observability stack I actually run</text>
+
+  <!-- pillars -->
+  <g font-size="26" font-weight="600" fill="#c7d0db">
+    <circle cx="117" cy="431" r="8" fill="#f46800"/><text x="134" y="440">Metrics</text>
+    <circle cx="272" cy="431" r="8" fill="#f5d76e"/><text x="289" y="440">Logs</text>
+    <circle cx="385" cy="431" r="8" fill="#6ab0f3"/><text x="402" y="440">Traces</text>
+    <circle cx="535" cy="431" r="8" fill="#e5534b"/><text x="552" y="440">Runtime security</text>
+  </g>
+
+  <!-- sparkline motif (latency panel) -->
+  <path fill="url(#spark)" stroke="none"
+    d="M0,560 L50,520 100,565 150,500 200,575 250,515 300,495 350,555 400,485 450,535 500,510 550,488 600,525 650,500 700,515 750,482 800,505 850,530 900,495 950,520 1000,498 1050,540 1100,505 1150,525 1200,510 L1200,630 L0,630 Z"/>
+  <path fill="none" stroke="#7bd88f" stroke-width="3" stroke-linejoin="round"
+    d="M0,560 50,520 100,565 150,500 200,575 250,515 300,495 350,555 400,485 450,535 500,510 550,488 600,525 650,500 700,515 750,482 800,505 850,530 900,495 950,520 1000,498 1050,540 1100,505 1150,525 1200,510"/>
+</svg>
