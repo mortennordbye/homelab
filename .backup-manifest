@@ -1,0 +1,21 @@
+# Files backed up by scripts/backup-secrets.sh — repo-relative paths, one per line.
+# These are git-ignored files holding secrets / unversioned work. Only the paths
+# live here (safe to commit); the file contents stay out of git.
+# Blank lines and lines starting with # are ignored. Globs are allowed.
+
+# CV drafts
+portfolio/CV-RAW.md
+portfolio/CV-POLISHED.md
+
+# Blog local-only docs
+blog/STYLE.md
+blog/README.md
+
+# Talos / Kubernetes credentials + machine config
+terraform/proxmox/hyper-cluster/k8s/talos/kubeconfig
+terraform/proxmox/hyper-cluster/k8s/talos/talosconfig
+terraform/proxmox/hyper-cluster/k8s/talos/controlplane.yaml
+
+# Terraform variables (contain credentials)
+terraform/proxmox/hyper-cluster/k8s/talos/terraform.tfvars
+terraform/azure/state/terraform.tfvars
