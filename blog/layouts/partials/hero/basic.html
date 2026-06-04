@@ -1,0 +1,72 @@
+{{/*
+  Local override of Blowfish's hero/basic.html.
+  Only change vs. theme: the wrapper no longer uses a fixed-height band
+  (h-36/h-56/h-72) with object-cover, which cropped the top+bottom of our
+  1200x630 post covers (see blog/IMAGE-STYLE.md). Instead the wrapper keeps the
+  cover's exact aspect-ratio, so object-cover fills it with zero crop and the
+  full art (motif included) is always visible, responsively.
+  All image-resolution logic below is copied verbatim from the theme.
+*/}}
+{{ $disableImageOptimization := site.Store.Get "disableImageOptimization" }}
+
+{{ $useDefault := false }}
+{{ $featured := "" }}
+{{ $featuredURL := "" }}
+{{ with .Params.featureimage }}
+  {{ if or (strings.HasPrefix . "http:") (strings.HasPrefix . "https:") }}
+    {{ if site.Params.hotlinkFeatureImage }}
+      {{ $featuredURL = . }}
+    {{ else }}
+      {{ $featured = resources.GetRemote . }}
+    {{ end }}
+  {{ else }}
+    {{ $featured = resources.Get . }}
+  {{ end }}
+{{ end }}
+
+{{ if not (or $featured $featuredURL) }}
+  {{ $images := .Resources.ByType "image" }}
+  {{ range slice "*background*" "*feature*" "*cover*" "*thumbnail*" }}
+    {{ if not $featured }}{{ $featured = $images.GetMatch . }}{{ end }}
+  {{ end }}
+{{ end }}
+
+{{ if not (or $featured $featuredURL) }}
+  {{ $default := site.Store.Get "defaultBackgroundImage" }}
+  {{ if $default.url }}
+    {{ $featuredURL = $default.url }}
+    {{ $useDefault = true }}
+  {{ else if $default.obj }}
+    {{ $featured = $default.obj }}
+    {{ $useDefault = true }}
+  {{ end }}
+{{ end }}
+
+{{/* generate image URL if not hotlink */}}
+{{ if not $featuredURL }}
+  {{ with $featured }}
+    {{ $featuredURL = .RelPermalink }}
+    {{ if not (or $disableImageOptimization (eq .MediaType.SubType "svg")) }}
+      {{ $size := site.Store.Get "backgroundImageWidth" }}
+      {{ $featuredURL = (.Resize $size).RelPermalink }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ with $featuredURL }}
+  {{ $style := "" }}
+  {{ $defaultPosition := cond $useDefault site.Params.imagePosition false }}
+  {{ with $.Params.imagePosition | default $defaultPosition }}
+    {{ $style = printf "object-position: %s;" . }}
+  {{ end }}
+  <div class="overflow-hidden" style="aspect-ratio: 1200 / 630;">
+    <img
+      src="{{ . }}"
+      role="presentation"
+      loading="eager"
+      decoding="async"
+      fetchpriority="high"
+      class="w-full h-full nozoom object-cover"
+      {{ if $style }}style="{{ $style | safeCSS }}"{{ end }}>
+  </div>
+{{ end }}
