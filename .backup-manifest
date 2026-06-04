@@ -8,7 +8,8 @@ portfolio/CV-RAW.md
 portfolio/CV-POLISHED.md
 
 # Blog local-only docs
-blog/STYLE.md
+blog/TEXT-STYLE.md
+blog/IMAGE-STYLE.md
 blog/README.md
 
 # Talos / Kubernetes credentials + machine config

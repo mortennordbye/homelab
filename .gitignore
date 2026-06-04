@@ -73,7 +73,8 @@ ai/prompts/erlendgpt
 # Local-only files (deliberately kept out of the public repo)
 # ──────────────────────────────────────────────────────────────
 blog/README.md
-blog/STYLE.md
+blog/TEXT-STYLE.md
+blog/IMAGE-STYLE.md
 qbittorrent-vpn/
 .screenshots/
 .playwright-mcp/

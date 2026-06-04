@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a1015"/>
+      <stop offset="1" stop-color="#050a0f"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5db7ff"/>
+      <stop offset="1" stop-color="#8b7dff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- faint grid -->
+  <g stroke="#ffffff" stroke-opacity="0.03" stroke-width="1">
+    <line x1="100" y1="0" x2="100" y2="630"/><line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="300" y1="0" x2="300" y2="630"/><line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="500" y1="0" x2="500" y2="630"/><line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="700" y1="0" x2="700" y2="630"/><line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/><line x1="1000" y1="0" x2="1000" y2="630"/>
+    <line x1="1100" y1="0" x2="1100" y2="630"/>
+    <line x1="0" y1="90" x2="1200" y2="90"/><line x1="0" y1="180" x2="1200" y2="180"/>
+    <line x1="0" y1="270" x2="1200" y2="270"/><line x1="0" y1="360" x2="1200" y2="360"/>
+    <line x1="0" y1="450" x2="1200" y2="450"/><line x1="0" y1="540" x2="1200" y2="540"/>
+  </g>
+
+  <!-- url, top right -->
+  <text x="1120" y="78" text-anchor="end" font-size="24" fill="#8898aa" letter-spacing="0.5">blog.nordbye.it</text>
+
+  <!-- left accent bar -->
+  <rect x="80" y="150" width="6" height="212" rx="3" fill="url(#bar)"/>
+
+  <!-- kicker -->
+  <text x="110" y="172" font-size="22" font-weight="700" fill="#5db7ff" letter-spacing="3.5">KUBERNETES &#183; CILIUM &#183; NETWORK POLICY</text>
+
+  <!-- title -->
+  <text x="105" y="252" font-size="68" font-weight="700" fill="#e8eef5">Locking Down</text>
+  <text x="105" y="326" font-size="68" font-weight="700" fill="#e8eef5">Your Cluster</text>
+
+  <!-- subtitle -->
+  <text x="110" y="372" font-size="30" fill="#b0bccb">Rolling out Cilium network policies safely</text>
+
+  <!-- motif: policy mesh, allowed (green) vs blocked (red) -->
+  <g transform="translate(150,428)">
+    <g fill="none" stroke-width="3" stroke-linecap="round">
+      <path d="M64,64 L300,30" stroke="#6ad6a8"/>
+      <path d="M300,30 L540,70" stroke="#6ad6a8"/>
+      <path d="M64,64 L320,140" stroke="#6ad6a8"/>
+      <path d="M540,70 L800,40" stroke="#ef6f7a" stroke-dasharray="4 12"/>
+      <path d="M320,140 L800,40" stroke="#ef6f7a" stroke-dasharray="4 12"/>
+    </g>
+
+    <!-- blocked marker -->
+    <g transform="translate(665,52)">
+      <circle r="14" fill="#1a1015" stroke="#ef6f7a" stroke-width="2.5"/>
+      <line x1="-6" y1="-6" x2="6" y2="6" stroke="#ef6f7a" stroke-width="2.5"/>
+      <line x1="-6" y1="6" x2="6" y2="-6" stroke="#ef6f7a" stroke-width="2.5"/>
+    </g>
+
+    <!-- source pod: cilium logo tile -->
+    <rect x="34" y="38" width="56" height="56" rx="12" fill="#eef2f7"/>
+    <image x="42" y="46" width="40" height="40" xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjEuNzcgLTAuMDIgNjUuNDYgNjkuMDQiPjxnIHN0cm9rZT0iIzE0MWExZiIgc3Ryb2tlLXdpZHRoPSIyLjc3MSI+PHBhdGggZmlsbD0iI2U4MzAzMCIgZD0ibTI5LjAyNSA0NC4xOS01LjUwNi05LjY5IDUuNTA2LTkuNjg5aDEwLjk3NGw1LjUwNiA5LjY5LTUuNTA2IDkuNjg5eiIvPjxwYXRoIGZpbGw9IiM2YjkxYzciIGQ9Im0yOS4wMjUgNjcuNjM0LTUuNTA2LTkuNjkgNS41MDYtOS42ODloMTAuOTc0bDUuNTA2IDkuNjktNS41MDYgOS42OXoiLz48cGF0aCBmaWxsPSIjZjljMzFmIiBkPSJtMjkuMDI1IDIwLjc0NS01LjUwNi05LjY5IDUuNTA2LTkuNjloMTAuOTc0bDUuNTA2IDkuNjktNS41MDYgOS42OXoiLz48cGF0aCBmaWxsPSIjNzk1YWE1IiBkPSJtNDkuMzY1IDU1LjkxMS01LjUwNi05LjY5IDUuNTA2LTkuNjg5aDEwLjk3M2w1LjUwNiA5LjY5LTUuNTA2IDkuNjl6Ii8+PHBhdGggZmlsbD0iI2YxNzQyMyIgZD0ibTQ5LjM2NSAzMi40NjYtNS41MDYtOS42OSA1LjUwNi05LjY4OWgxMC45NzNsNS41MDYgOS42OS01LjUwNiA5LjY5eiIvPjxwYXRoIGZpbGw9IiM5N2M2MzkiIGQ9Im04LjY2MiA1NS45MS01LjUwNi05LjY4OSA1LjUwNi05LjY5aDEwLjk3M2w1LjUwNiA5LjY5LTUuNTA2IDkuNjl6Ii8+PHBhdGggZmlsbD0iI2M5ZGI3MCIgZD0ibTguNjYyIDMyLjQ2Ni01LjUwNi05LjY5IDUuNTA2LTkuNjg5aDEwLjk3M2w1LjUwNiA5LjY5LTUuNTA2IDkuNjl6Ii8+PC9nPjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/>
+
+    <!-- peer pods -->
+    <circle cx="300" cy="30" r="22" fill="#111923" stroke="#58d2c9" stroke-width="3"/>
+    <circle cx="320" cy="140" r="22" fill="#111923" stroke="#58d2c9" stroke-width="3"/>
+    <circle cx="540" cy="70" r="22" fill="#111923" stroke="#58d2c9" stroke-width="3"/>
+    <circle cx="800" cy="40" r="24" fill="#1a1015" stroke="#ef6f7a" stroke-width="3"/>
+
+    <!-- legend -->
+    <g font-size="22" font-weight="600">
+      <line x1="880" y1="22" x2="916" y2="22" stroke="#6ad6a8" stroke-width="3"/>
+      <text x="926" y="29" fill="#b0bccb">allowed</text>
+      <line x1="880" y1="62" x2="916" y2="62" stroke="#ef6f7a" stroke-width="3" stroke-dasharray="4 8"/>
+      <text x="926" y="69" fill="#b0bccb">denied</text>
+    </g>
+  </g>
+</svg>

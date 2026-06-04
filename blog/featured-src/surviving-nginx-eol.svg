@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a1015"/>
+      <stop offset="1" stop-color="#050a0f"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5db7ff"/>
+      <stop offset="1" stop-color="#8b7dff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- faint grid -->
+  <g stroke="#ffffff" stroke-opacity="0.03" stroke-width="1">
+    <line x1="100" y1="0" x2="100" y2="630"/><line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="300" y1="0" x2="300" y2="630"/><line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="500" y1="0" x2="500" y2="630"/><line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="700" y1="0" x2="700" y2="630"/><line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/><line x1="1000" y1="0" x2="1000" y2="630"/>
+    <line x1="1100" y1="0" x2="1100" y2="630"/>
+    <line x1="0" y1="90" x2="1200" y2="90"/><line x1="0" y1="180" x2="1200" y2="180"/>
+    <line x1="0" y1="270" x2="1200" y2="270"/><line x1="0" y1="360" x2="1200" y2="360"/>
+    <line x1="0" y1="450" x2="1200" y2="450"/><line x1="0" y1="540" x2="1200" y2="540"/>
+  </g>
+
+  <!-- url, top right -->
+  <text x="1120" y="78" text-anchor="end" font-size="24" fill="#8898aa" letter-spacing="0.5">blog.nordbye.it</text>
+
+  <!-- left accent bar -->
+  <rect x="80" y="150" width="6" height="212" rx="3" fill="url(#bar)"/>
+
+  <!-- kicker -->
+  <text x="110" y="172" font-size="22" font-weight="700" fill="#5db7ff" letter-spacing="3.5">KUBERNETES &#183; INGRESS &#183; MIGRATION</text>
+
+  <!-- title -->
+  <text x="105" y="252" font-size="68" font-weight="700" fill="#e8eef5">Surviving the</text>
+  <text x="105" y="326" font-size="68" font-weight="700" fill="#e8eef5">NGINX Ingress EOL</text>
+
+  <!-- subtitle -->
+  <text x="110" y="372" font-size="30" fill="#b0bccb">A zero downtime migration to Traefik</text>
+
+  <!-- motif: traffic cutover from nginx (drained) to traefik (live) -->
+  <g transform="translate(150,452)">
+    <text x="0" y="70" font-size="22" font-weight="600" fill="#8898aa">traffic</text>
+    <g stroke="#3a4a5e" stroke-width="2" fill="none">
+      <path d="M120,62 L210,42"/><path d="M120,62 L210,62"/><path d="M120,62 L210,82"/>
+    </g>
+
+    <circle cx="210" cy="62" r="9" fill="#111923" stroke="#b0bccb" stroke-width="2.5"/>
+
+    <!-- 0% path to nginx (drained) -->
+    <path d="M219,55 C320,30 380,20 470,20" stroke="#ef6f7a" stroke-width="2.5" fill="none" stroke-dasharray="6 8" stroke-opacity="0.7"/>
+    <g opacity="0.6">
+      <rect x="470" y="-6" width="262" height="56" rx="10" fill="#111923" stroke="#ef6f7a" stroke-width="2"/>
+      <rect x="482" y="6" width="40" height="40" rx="8" fill="#eef2f7"/>
+      <image x="487" y="11" width="30" height="30" xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiIHZpZXdCb3g9IjMxLjc2IDAgNDQ4LjUxIDUxMiI+PHBhdGggZD0iTTI1NSAwaDEuMmM2LjEgMi45IDEyIDYuMSAxNy44IDkuNyA2Ni4yIDM4LjEgMTMyLjQgNzYuMSAxOTguNiAxMTQuMiA1LjIgMi44IDguMiA4LjUgNy42IDE0LjQtLjEgODAuMyAwIDE2MC41LS4xIDI0MC43LS45IDMuOC0zLjIgNy4yLTYuNSA5LjNMMjYyLjQgNTA5LjhjLTMuNSAyLjctOC4yIDIuOS0xMiAuNy03MC41LTQwLjQtMTQwLjktODAuOS0yMTEuMy0xMjEuNS00LjctMi4yLTcuNi03LTcuMy0xMi4yVjEzNi4xYy0uNC01LjEgMi40LTEwIDcuMS0xMi4zIDY2LjEtMzcuOSAxMzIuMi03NiAxOTguMy0xMTQgNS45LTMuNCAxMS43LTYuOSAxNy44LTkuOCIgc3R5bGU9ImZpbGw6IzAxOTYzOSIvPjxwYXRoIGQ9Ik0xMjMuNyAxNTYuMXYxOTguNmMtLjIgNy40IDIuNiAxNC42IDcuOCAxOS45IDEwLjEgMTAgMjUuOCAxMS41IDM3LjcgMy44IDcuOC01LjMgMTIuNS0xNC4yIDEyLjUtMjMuNiAwLTQ3LjktLjEtOTUuOCAwLTE0My43IDQzLjcgNTIuMyA4Ny41IDEwNC41IDEzMS4zIDE1Ni43IDEyLjQgMTIuNSAzMC4zIDE3LjkgNDcuNSAxNC4zIDEyLjMtMi40IDIxLjYtMTIuNiAyMi45LTI1LjEuMS02Ny42LjEtMTM1LjEgMC0yMDIuNi0xLjQtMTUuOS0xNS40LTI3LjctMzEuMy0yNi4zLTE0IDEuMi0yNS4xIDEyLjMtMjYuMyAyNi4zIDAgNDguNy0uMyA5Ny4zIDAgMTQ2LTQyLjktNTAuNi04NS4zLTEwMS42LTEyOC0xNTIuNC0xMS41LTE0LjctMzAtMjIuMS00OC40LTE5LjItMTQuMiAxLjQtMjUuMSAxMy4xLTI1LjcgMjcuMyIgc3R5bGU9ImZpbGw6I2ZmZiIvPjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/>
+      <text x="536" y="33" font-size="24" font-weight="600" fill="#8898aa">nginx</text>
+      <text x="714" y="33" text-anchor="end" font-size="22" font-weight="700" fill="#ef6f7a">0%</text>
+    </g>
+
+    <!-- 100% path to traefik (live) -->
+    <path d="M219,70 C320,96 380,108 470,108" stroke="#5db7ff" stroke-width="3.5" fill="none"/>
+    <rect x="470" y="80" width="262" height="56" rx="10" fill="#111923" stroke="#5db7ff" stroke-width="2.5"/>
+    <rect x="482" y="92" width="40" height="40" rx="8" fill="#eef2f7"/>
+    <image x="486" y="99" width="32" height="26" xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiIHZpZXdCb3g9Ii0wLjA2IDgzLjQgNTEyLjE2IDM0NS4yNiI+PHBhdGggZD0iTTExNi44IDQyOC41Yy0zOC4zLTMuMy02Ny41LTE0LjktODguOC0zNS4yLTIxLjYtMjAuNi0zMC45LTQ3LjUtMjcuMy03OSA0LjItMzYuMiAyMS4zLTYxLjcgNTEuNC03Ni42IDIzLjEtMTEuNSA0Ni4yLTE1LjkgODMuOC0xNS45IDI2LjcgMCA0OS4xIDIuMiA4My4yIDguMSA4LjQgMS41IDE1LjggMi43IDE2LjIgMi43LjcgMCAxLjMtMi43IDIuOC0xMy41IDIuOC0xOS41IDMuMy0yNi4yIDIuNS0zNC4xLS45LTkuMS0yLTEzLjQtNS41LTIwLjUtOC45LTE4LjItMjkuOS0yOS4zLTYzLjctMzMuNy05LjctMS4yLTMxLjktMS40LTQxLjYtLjMtMTYuMiAxLjgtMjUuMyA0LjItNDUuNCAxMS44LTExLjggNC40LTExLjkgNC41LTE2LjYgNC4yLTguMS0uNS0xMy42LTQuMi0xNy4yLTExLjQtMS41LTMtMS43LTQuMi0xLjctOC4zIDAtNi4xIDEuNi05LjMgNy0xNC40QzY4LjUgMTAxIDg5LjIgOTEuMiAxMTAgODdjMTMuMy0yLjcgMTkuOS0zLjMgMzcuNS0zLjIgMTguMiAwIDI5LjggMS4xIDQ2IDQuMSAyNi45IDUgNDcuMyAxMy45IDYyLjcgMjcuMiA0LjYgMy45IDExLjUgMTEuNyAxNC40IDE2LjIuOSAxLjQgMS44IDIuNSAyLjEgMi41LjIgMCAxLjctMS43IDMuMy0zLjcgMjMuMy0yOS44IDYyLjYtNDYuNyAxMDguNi00Ni43IDMyLjUgMCA2Mi44IDguMyA4NS4zIDIzLjMgMTcuOSAxMS45IDMyLjQgMzAuMyAzOC4zIDQ4LjQgMy40IDEwLjQgMy45IDE0LjIgMy45IDI5LjMgMCA5LjQtLjIgMTUuNy0uOCAxOC43LTUuMyAyOS43LTE3LjggNTAuMi0zOS42IDY0LjktMTcuNSAxMS44LTM5LjYgMTguNy02OC40IDIxLjQtMTQuNSAxLjQtNDEgMS4yLTU4LjItLjMtMTQuNi0xLjMtMzIuNS0zLjYtNDAuMS01LjEtNi40LTEuMy0yOC4zLTUtMjguNS00LjgtLjEuMS0xLjEgNi43LTIuMyAxNC42LTEuOSAxMi43LTIuMiAxNS45LTIuMiAyNiAwIDEwLjMuMSAxMi4xIDEuMyAxNi45IDQgMTUuMyAxMi44IDI1LjYgMjguNyAzMy41IDE1LjcgNy44IDMyLjEgMTEuMiA1NyAxMS43IDExIC4yIDE2LjYuMSAyMy41LS43IDE2LjctMS44IDI0LjMtMy43IDQ2LjQtMTEuOSA1LjUtMiAxMS4yLTMuOSAxMi41LTQuMSAyLjktLjUgOC40LjUgMTEuNiAyLjEgNS43IDIuOSAxMC42IDEwLjcgMTAuNSAxNyAwIDcuNC0yLjUgMTEuOC05LjggMTcuNy0xNy40IDEzLjktMzkuNiAyMi40LTY2LjEgMjUuNC05LjUgMS4xLTMxIDEuMi00MS41LjMtMjkuNC0yLjYtNDkuNy03LjYtNjguNC0xNi45LTE0LjUtNy4zLTI1LjYtMTYuMy0zMy45LTI3LjUtMi0yLjgtMy44LTUuMS0zLjgtNS4yLS4xLS4xLTEuNCAxLjUtMyAzLjYtNyA5LTE3LjYgMTguNy0yOCAyNS41LTE1IDkuOC0zNi42IDE3LjMtNTguNCAyMC4zLTYuNy43LTI4LjMgMS41LTMzLjggMW0zNy41LTQyLjJjMTcuOC00IDMzLjctMTIuOSA0NS4yLTI1LjUgMTAuNS0xMS40IDE5LjEtMjguNiAyMy45LTQ3LjUgMi43LTEwLjcgNy4xLTQwLjMgNi4xLTQwLjktLjQtLjItMi43LS42LTUuMi0uOHMtOS42LTEuMS0xNS43LTEuOWMtMzYuNi00LjgtNTkuMS02LjYtNzEuNy01LjktMjQgMS4zLTMzLjcgMy40LTQ4LjEgMTAuMy03LjQgMy41LTEyLjUgNy40LTE2LjUgMTIuNC01LjggNy4zLTkuMyAxNC41LTExLjcgMjQuMi0xLjggNy4xLTEuOSAyNS42LS4zIDMxLjUgMi44IDEwIDYgMTUuNyAxMy40IDIzLjMgMTAuMSAxMC4zIDIzLjQgMTcuMiAzOS45IDIwLjYgOC40IDEuOCA4LjIgMS43IDIyLjMgMS41IDEwLjMtLjEgMTQuMi0uNCAxOC40LTEuM20yMzMuNS0xMzkuMWMxNC45LTEuMyAyNC4xLTMuNiAzNS4zLTkgOS40LTQuNCAxNC44LTguOSAyMC0xNi42IDcuNi0xMS4yIDEwLjUtMjEuOCAxMC41LTM3LjYtLjEtMTEuMi0xLTE1LjktNC45LTI0LTguNi0xOC0yOC45LTMxLTU1LjYtMzUuNC02LjYtMS4xLTI0LjUtLjktMzEuMy4zLTEzLjEgMi40LTI0LjIgNi44LTMzLjkgMTMuNC0xOCAxMi4zLTMwLjUgMzAuNy0zNy40IDU1LjUtMi43IDkuNy0zLjUgMTMuNS01LjkgMzAuM2wtMi4yIDE1LjUgMyAuM2M5LjEgMSAyOS41IDMuNSA0MS40IDUgNy41IDEgMTYuNiAyIDIwLjQgMi4zIDEwLjYgMSAzMCAxIDQwLjYgMCIgc3R5bGU9ImZpbGw6IzI0YTFjMSIvPjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/>
+    <text x="536" y="119" font-size="24" font-weight="600" fill="#e8eef5">traefik</text>
+    <text x="714" y="119" text-anchor="end" font-size="22" font-weight="700" fill="#5db7ff">100%</text>
+
+    <!-- live cluster -->
+    <path d="M732,108 L772,108" stroke="#5db7ff" stroke-width="3.5" fill="none"/>
+    <circle cx="790" cy="108" r="13" fill="#5db7ff"/>
+    <text x="816" y="116" font-size="22" font-weight="600" fill="#b0bccb">Gateway API</text>
+  </g>
+</svg>
