@@ -1,0 +1,47 @@
+name: "Backup Reminder (≈30 days)"
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 16:00 UTC on the 8th = 18:00 Europe/Oslo in summer
+    - cron: "0 16 8 * *"
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Discord Webhook URL from Bitwarden
+        id: bw-fetch
+        uses: bitwarden/sm-action@v2
+        with:
+          access_token: ${{ secrets.BW_ACCESS_TOKEN }}
+          secrets: |
+            ab7c03b3-dc21-4174-babf-b2cf00f9ae40 > HOMELAB_REMINDERS_WEBHOOK_URL
+
+      - name: Send Discord reminder
+        run: |
+          now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          curl -sSL -H "Content-Type: application/json" -X POST \
+               -d '{
+                 "username": "homelab-Reminders",
+                 "embeds":[
+                   {
+                     "title":"🔔 Backup Reminder",
+                     "description":"An alert to back up local-only repo files has been triggered.",
+                     "color":3066993,
+                     "fields":[
+                       {
+                         "name":"📌 @everyone",
+                         "value":"• 💾 Run scripts/backup-secrets.sh (snapshots git-ignored secrets to the NAS)\n• ✅ Confirm the latest .zip landed in Repo-Hidden-Files-Backups"
+                       },
+                       {
+                         "name":"⏳ Next run",
+                         "value":"Every 8th of the month at 18:00 Oslo time"
+                       }
+                     ],
+                     "footer":{"text":"Automated Reminder • homelab"},
+                     "timestamp":"'"$now"'"
+                   }
+                 ]
+               }' \
+               "$HOMELAB_REMINDERS_WEBHOOK_URL"
