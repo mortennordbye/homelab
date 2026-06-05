@@ -107,7 +107,7 @@ limits_config:
   reject_old_samples_max_age: 24h
 persistence:
   size: 20Gi
-  storageClass: "proxmox-local"  # local disk, not NFS: logs are high-write, low-value-after-a-day
+  storageClass: "proxmox-local"  # Proxmox CSI on the host's local SSD, not NFS: logs are high-write, low-value-after-a-day
 ```
 
 Logs are written constantly and rarely read after a day. Local disk gives the write throughput, and if the disk dies I lose a day of logs I almost certainly was never going to open. That is an acceptable loss. Metrics get NFS, logs get local. The storage class encodes what I am willing to lose.
@@ -148,7 +148,7 @@ tracing:
       insecure: true
 ```
 
-`sampleRate: 1.0` means every single request through the ingress gets a trace. Reload this post and your request shows up in Tempo. In production you would never do this. At a few requests per second the cost is nothing, and full sampling means when something is slow I have the trace, not a 1-in-1000 chance of having kept it. Where this breaks is traffic. Push real volume through 100% sampling and you drown Tempo in spans and pay for storage you will never query. Full sampling is a homelab luxury. Name the request rate where you would turn it down, and turn it down before you hit it.
+`sampleRate: 1.0` means every single request through the ingress gets a trace. Reload this post and your request shows up in Tempo. In production you would never do this. At a few requests per second the cost is nothing, and full sampling means when something is slow I have the trace, not a 1-in-1000 chance of having kept it. Where this breaks is traffic. Push real volume through 100% sampling and you drown Tempo in spans and pay for storage you will never query. Full sampling is a homelab luxury. Name the request rate where you would turn it down, and turn it down before you hit it. The production answer is tail-based sampling, which keeps the slow and errored traces and throws the boring ones away.
 
 ## Runtime Security: Who Is Doing Something They Should Not?
 
@@ -235,6 +235,7 @@ The rules behind those messages take more thought than the routing does. Two exa
 # Catches early flapping before CrashLoopBackOff. The upstream KubePodCrashLooping
 # only fires after 15 min sustained; this catches the restart storm earlier.
 - alert: ContainerRestartingFrequently
+  # increase() is the raw restart count over the window; rate() would give per-second and bury the storm.
   expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
   for: 2m
 
@@ -269,6 +270,8 @@ Three "No data" panels sitting next to a working one. The fix is not to delete t
 **Alerting on everything.** The instinct is to alert on every rule the internet hands you. Resist it. An alert channel you have learned to ignore is worse than no channel, because it gives you the feeling of coverage without the substance.
 
 ## The Whole Thing Is in Git
+
+You have now seen a dozen snippets from as many files. What makes them a system rather than a pile is that they share one source of truth.
 
 The dashboard up top is not clicked together in the Grafana UI where it would vanish with the pod. It is a `ConfigMap`, [`homelab-spog.json`](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json), that the Grafana sidecar discovers and loads. Same for every Helm value, every alert rule, every Falco exception in this post. ArgoCD reconciles all of it from `main`. If I delete the Grafana pod, the dashboard comes back exactly as it was.
 
