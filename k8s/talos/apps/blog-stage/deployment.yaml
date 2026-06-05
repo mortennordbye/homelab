@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: blog
-          image: ghcr.io/mortennordbye/homelab/blog:6cfc304
+          image: ghcr.io/mortennordbye/homelab/blog:6d6ef81
           imagePullPolicy: Always
           ports:
             - name: http
