@@ -21,13 +21,13 @@ This is the screen I check first when something feels off. One dashboard, every 
 
 <img src="/images/homelab-spog-dashboard.webp" alt="Homelab single pane of glass dashboard in Grafana, showing Traefik request rate, latency, 5xx rate and recent Loki errors" title="Homelab-SPOG dashboard" style="width:100%;" />
 
-It is called Homelab-SPOG, for single pane of glass. The rest of this post is what sits behind each panel, and the one decision that mattered for each piece. Whether your cluster runs four pods or four hundred, the questions are the same. Only the blast radius changes.
+It is my own Homelab-SPOG, for single pane of glass. No screenshot fits everything it holds, but it has what I want at a glance: request rate, latency, 5xx errors, per-node health, recent log errors. [The JSON is in the repo](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json) if you want to copy what you like. The rest of this post is what sits behind each panel, and the one decision that mattered for each piece. Whether your cluster runs four pods or four hundred, the questions are the same. Only the blast radius changes.
 
 ## Metrics: What Is the Cluster Doing?
 
 This is the foundation. [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) gives you Prometheus, Grafana, Alertmanager, node-exporter and kube-state-metrics in one Helm release that wires itself together.
 
-The interesting part is not what I turned on. It is what I turned off.
+The defaults scrape the whole managed control plane. Most of those targets I switch off.
 
 **Full file:** [`kube-prometheus-stack/values.yaml`](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/values.yaml)
 
@@ -50,17 +50,17 @@ kubeProxy:
   enabled: false                 # Cilium replaced kube-proxy; there is nothing to scrape
 ```
 
-On Talos the control plane sits behind locked-down endpoints, and reaching etcd or the scheduler for scraping means extra wiring. At this scale their metrics tell me almost nothing I would act on. So I monitor what breaks workloads, not the managed control plane.
+On Talos the control plane sits behind locked-down endpoints, and scraping etcd or the scheduler means extra wiring for metrics I would almost never act on. So I monitor what breaks workloads, not the managed control plane.
 
-The kube-proxy line is the one worth pausing on. I run Cilium in kube-proxy replacement mode, and Talos starts no kube-proxy at all. So a `kubeProxy` scrape target is pointed at a process that does not exist. It is not a quiet target, it is a permanently failing one. I had it enabled for a while before I noticed, which is the small embarrassment that taught me to read my own scrape config against what is actually running. Network-drop visibility does not come from kube-proxy here anyway. It comes from Cilium, in the Cilium section of the same dashboard.
+The kube-proxy line is the one worth pausing on. I run Cilium in kube-proxy replacement mode and Talos starts no kube-proxy at all, so that scrape target points at a process that does not exist. Leave it enabled and it is not a quiet target, it is a permanently failing one. Worth checking your own scrape config against what is actually running. Network-drop visibility comes from Cilium anyway, in the Cilium section of the same dashboard.
 
-node-exporter and kube-state-metrics carry the weight. Here is what that buys you, the Node section of the same dashboard.
+node-exporter and kube-state-metrics carry the weight. The Node section of the same dashboard is what that buys you.
 
 <img src="/images/homelab-spog-node.webp" alt="Per-node CPU, memory, disk and network panels across six Talos nodes, with one control-plane node memory gauge in the red at 90 percent" title="Per-node metrics from node-exporter" style="width:100%;" />
 
-That genesis-ctrl-02 gauge reading 90.1% in the red is real, not a staged screenshot. Control-plane nodes run hot, and that gauge on the front page is exactly why I know to watch that one before it starts evicting pods. An honest dashboard shows you the thing you would rather not see.
+This is the section I actually look at. One glance and I know which node is under pressure and which has headroom. And when a control-plane node sits this hot, it is the closest I get to a real reason for more hardware. For once another Proxmox node is fixing a problem, not feeding the hobby.
 
-One trade-off to copy with your eyes open. Retention is 7 days, on Synology NFS. NFS for the stateful control-plane components is a deliberate durability choice. It survives a node reboot, and metrics queries are infrequent enough that the network round-trip does not hurt.
+One trade-off to copy with your eyes open. Retention is 7 days on Synology NFS, a deliberate durability choice. It survives a node reboot, and metrics queries are infrequent enough that the network round-trip does not hurt.
 
 ## Logs: What Did It Say Before It Died?
 
