@@ -124,10 +124,20 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 ### Compute Nodes
 
-| Node   | Model                        | CPU                                     | RAM   | Storage |
-| ------ | ---------------------------- | --------------------------------------- | ----- | ------- |
-| Hyper1 | Lenovo ThinkCentre M920 Tiny | Intel Core i7-8700T (6C/12T @ 2.40 GHz) | 32 GB | 1 TB    |
-| Hyper2 | Lenovo ThinkCentre M920q     | Intel Core i5-8500T (6C/6T @ 2.10 GHz)  | 32 GB | 1 TB    |
+| Node   | Model                         | CPU                                      | RAM   | Storage |
+| ------ | ----------------------------- | ---------------------------------------- | ----- | ------- |
+| Hyper1 | Lenovo ThinkCentre M70q Gen 2 | Intel Core i5-11400T (6C/12T @ 1.30 GHz) | 32 GB | 1 TB    |
+| Hyper2 | Lenovo ThinkCentre M920q      | Intel Core i5-8500T (6C/6T @ 2.10 GHz)   | 16 GB | 1 TB    |
+| Hyper3 | Lenovo ThinkCentre M920 Tiny  | Intel Core i7-8700T (6C/12T @ 2.40 GHz)  | 32 GB | 1 TB    |
+
+#### Proxmox Setup Scripts
+
+[Community Proxmox VE Helper-Scripts](https://community-scripts.github.io/ProxmoxVE/) run on each node after install:
+
+| Script                                                                                                                     | Purpose                                                                  |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [Post PVE Install](https://community-scripts.github.io/ProxmoxVE/scripts?id=post-pve-install)                              | Post-install tuning — repo sources, subscription nag, updates            |
+| [NIC Offloading Fix](https://community-scripts.github.io/ProxmoxVE/scripts?id=nic-offloading-fix&category=Proxmox+%26+Virtualization) | Disables NIC hardware offloading to fix interface connectivity issues |
 
 ### Storage
 
