@@ -127,7 +127,7 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 | Node   | Model                         | CPU                                      | RAM   | Storage |
 | ------ | ----------------------------- | ---------------------------------------- | ----- | ------- |
 | Hyper1 | Lenovo ThinkCentre M70q Gen 2 | Intel Core i5-11400T (6C/12T @ 1.30 GHz) | 32 GB | 1 TB    |
-| Hyper2 | Lenovo ThinkCentre M920q      | Intel Core i5-8500T (6C/6T @ 2.10 GHz)   | 16 GB | 1 TB    |
+| Hyper2 | Lenovo ThinkCentre M920q      | Intel Core i5-8500T (6C/6T @ 2.10 GHz)   | 32 GB | 1 TB    |
 | Hyper3 | Lenovo ThinkCentre M920 Tiny  | Intel Core i7-8700T (6C/12T @ 2.40 GHz)  | 32 GB | 1 TB    |
 
 #### Proxmox Setup Scripts
