@@ -1,26 +1,26 @@
 # ai/blueprints/
 
-Reusable scaffolds for bootstrapping AI-tooling config in a new project — copy one out, fill in the placeholders, done.
+Reusable scaffolds for bootstrapping AI tooling in a new project — copy one out, fill in the placeholders, done.
 
 ## Layout
 
 ```
 blueprints/
-└── <name>.blueprint.md
+└── <name>/                  # one subfolder per blueprint, each with its own README
+    └── ...
 ```
 
 ## Contents
 
-| File                   | Purpose                                                                                  |
-| ---------------------- | ---------------------------------------------------------------------------------------- |
-| `generic.blueprint.md` | Principles only — the 5 working principles (Think / Simplicity / Surgical / Goal-driven / BACKLOG). Drop into any `CLAUDE.md`, agent prompt, or project instructions and merge. |
-| `coding.blueprint.md`  | Full `CLAUDE.md` for a new code repo — the generic principles + a built-in security baseline + `<!-- TODO -->` placeholders for Development, Architecture, project-specific safety rules, and the rest. |
+| Blueprint | Purpose |
+| --------- | ------- |
+| `claude-md/`   | `CLAUDE.md` scaffolds for a new project — a principles-only `generic` variant and a full-repo `coding` variant. |
+| `cv-workflow/` | Multi-file scaffold for an AI-assisted CV rebuild — a raw-notes layer (native language, witness-statement) plus a polished English output layer. |
 
-**Which one?** Reach for `coding.blueprint.md` when starting a repo from scratch — it's the complete file. Reach for `generic.blueprint.md` when you only want the behavioral principles to layer onto something that already exists (or a non-repo context).
+Open each subfolder's `README.md` for what it is and how to use it.
 
 ## Conventions
 
-- One blueprint per file. Filename = `<name>.blueprint.md`.
-- A blueprint is a *template to copy*, not live config — it stays generic. The project-agnostic sections ship as-is; everything else is a `<!-- TODO -->` placeholder.
-- To use one: copy it into the target repo under its real name (e.g. `coding.blueprint.md` → `CLAUDE.md`), fill the placeholders, delete the blueprint note at the top.
-- The principles in `generic.blueprint.md` are mirrored inside `coding.blueprint.md` so each file stays self-contained — edit both if you change the wording.
+- One blueprint per subfolder. Each subfolder carries its own `README.md`.
+- A blueprint is a *template to copy*, not live config — it stays generic. Project-agnostic sections ship as-is; everything else is a placeholder.
+- To use one: copy the file(s) into the target context under their real names, fill the placeholders, and delete the blueprint note at the top.
