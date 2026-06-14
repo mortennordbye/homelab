@@ -53,3 +53,10 @@ customRules:
       condition: (proc.name=kubelet) or (container.image.repository=ghcr.io/goauthentik/server and proc.name=authentik)
       override:
         condition: replace
+
+    # cilium-agent opens AF_PACKET sockets as part of normal datapath setup;
+    # scoped to the cilium image so any other container still alerts.
+    - macro: user_known_packet_socket_binaries
+      condition: (proc.name=cilium-agent and container.image.repository=quay.io/cilium/cilium)
+      override:
+        condition: replace
