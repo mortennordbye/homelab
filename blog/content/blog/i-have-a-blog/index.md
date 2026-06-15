@@ -1,5 +1,6 @@
 ---
 title: "Yet Another Tech Blog (I'm Sorry)"
+description: "Why I built yet another tech blog, and how it ships: a Hugo site containerised and deployed to Kubernetes through GitOps with GitHub Actions and ArgoCD."
 date: 2026-01-13
 draft: false
 tags: ["kubernetes", "gitops", "argocd", "intermediate", "homelab"]

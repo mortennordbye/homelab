@@ -1,5 +1,6 @@
 ---
 title: "Locking Down Your Cluster: Rolling Out Cilium Network Policies Without Breaking Everything"
+description: "Rolling out CiliumNetworkPolicies on Kubernetes without breaking traffic. Start in audit mode with Hubble, move to default-deny, and dodge the gotchas."
 date: 2026-05-16
 draft: false
 tags: ["kubernetes", "cilium", "network-policy", "ebpf", "hubble", "platform-engineering", "intermediate"]

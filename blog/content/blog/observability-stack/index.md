@@ -1,5 +1,6 @@
 ---
 title: "Seeing Into a Talos Cluster: The Observability Stack I Actually Run"
+description: "Metrics, logs, traces and runtime security on a Talos Kubernetes cluster: Prometheus, Loki, Tempo, Grafana and Falco, wired into one dashboard."
 date: 2026-06-15
 draft: false
 tags: ["kubernetes", "observability", "prometheus", "grafana", "loki", "tempo", "falco", "intermediate"]

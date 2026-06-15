@@ -1,3 +1,6 @@
+description = "Kubernetes, cloud infrastructure and homelab engineering from a Talos cluster I actually run. Practical guides on observability, networking and GitOps."
+env = "production"
+
 colorScheme = "github"
 defaultAppearance = "dark"
 autoSwitchAppearance = true

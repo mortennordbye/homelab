@@ -1,5 +1,6 @@
 ---
 title: "Surviving the NGINX Ingress EOL: A Zero-Downtime Migration to Traefik"
+description: "ingress-nginx is reaching end of life. A zero-downtime migration to Traefik and the Gateway API on Kubernetes, with the cutover plan and pitfalls to avoid."
 date: 2026-02-17
 draft: false
 tags: ["kubernetes", "traefik", "nginx", "ingress", "gateway-api", "intermediate"]

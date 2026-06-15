@@ -1,5 +1,6 @@
 ---
 title: "Getting Started with Kubernetes: A Quick Start Guide"
+description: "A beginner quick start for Kubernetes: the core objects, how pods, deployments and services fit together, and the first commands to run a workload."
 date: 2026-01-21
 draft: false
 tags: ["kubernetes", "tutorial", "beginner", "homelab"]
