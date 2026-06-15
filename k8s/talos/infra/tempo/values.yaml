@@ -12,9 +12,11 @@ tempo:
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
-    limits:
       memory: 512Mi
+    limits:
+      # 512Mi OOM-killed tempo on startup during WAL replay + local block reload,
+      # crash-looping before readiness. 1Gi clears the replay spike.
+      memory: 1Gi
 
 # Local block storage for traces (same class Loki uses); 24h retention.
 persistence:
