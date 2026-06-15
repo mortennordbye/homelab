@@ -77,6 +77,22 @@ spec:
               ArgoCD application `{{ $labels.name }}` (project `{{ $labels.project }}`, dest `{{ $labels.dest_namespace }}`) has been in health_status `{{ $labels.health_status }}` / sync_status `{{ $labels.sync_status }}` for over 15 minutes.
               Check: kubectl -n argocd describe application {{ $labels.name }}
 
+        # ArgoCD app stuck out-of-sync / unable to render manifests for >20 min.
+        # Complements ArgoCDAppDegraded, which is health-based and misses this:
+        # a ComparisonError (bad manifest/values) shows as sync_status "Unknown"
+        # while health stays "Healthy" — exactly the kube-prometheus-stack case.
+        # 20m avoids firing on normal in-progress syncs.
+        - alert: ArgoCDAppSyncStuck
+          expr: argocd_app_info{sync_status=~"OutOfSync|Unknown"} == 1
+          for: 20m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'ArgoCD app {{ $labels.name }} stuck sync={{ $labels.sync_status }} for >20m'
+            description: |
+              ArgoCD application `{{ $labels.name }}` (project `{{ $labels.project }}`, dest `{{ $labels.dest_namespace }}`) has been sync_status `{{ $labels.sync_status }}` for over 20 minutes — sustained drift or a manifest-generation failure (ComparisonError) that auto-sync cannot resolve.
+              Check: kubectl -n argocd get application {{ $labels.name }} -o jsonpath='{range .status.conditions[*]}{.type}: {.message}{"\n"}{end}'
+
         # ExternalSecret has been NotReady for 30 min.
         # Typical causes: Bitwarden API breakage, expired token, missing/renamed secret in the store, wrong remoteRef UUID.
         - alert: ExternalSecretNotReady

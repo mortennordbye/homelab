@@ -19,7 +19,12 @@ configs:
           - "*"
 
 server:
-  replicas: 1
+  replicas: 2
+  # Chart applies soft pod anti-affinity by default (global.affinity), so the
+  # replicas spread across nodes on their own.
+  pdb:
+    enabled: true
+    maxUnavailable: 1
   service:
     type: LoadBalancer
     annotations:
@@ -41,6 +46,10 @@ notifications:
 
 applicationSet:
   enabled: true
+  replicas: 2
+  pdb:
+    enabled: true
+    maxUnavailable: 1
 
 redis-ha:
   enabled: false
@@ -55,7 +64,10 @@ controller:
         release: kube-prometheus-stack
 
 repoServer:
-  replicas: 1
+  replicas: 2
+  pdb:
+    enabled: true
+    maxUnavailable: 1
   metrics:
     enabled: true
     serviceMonitor:

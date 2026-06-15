@@ -25,7 +25,22 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
-          resources: {}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            tcpSocket:
+              port: 3001
+            periodSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: 3001
+            periodSeconds: 20
+            failureThreshold: 3
       volumes:
         - name: data
           persistentVolumeClaim:

@@ -44,7 +44,22 @@ spec:
               mountPath: /config
             - name: metadata
               mountPath: /metadata
-          resources: {}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 768Mi
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            periodSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            periodSeconds: 20
+            failureThreshold: 3
       volumes:
         - name: share
           nfs:
