@@ -19,11 +19,11 @@ _If you find this useful or just appreciate the over-engineering, drop a ⭐ on 
 
 ## One Screen First
 
-This is the screen I check first when something feels off. One dashboard, every pillar, no clicking around.
+This is the screen I check first when something feels off. One dashboard, the global summary pinned at the top, and every domain in the cluster a row below it that I expand when I need to drill in.
 
-<img src="/images/homelab-spog-full.webp" alt="Homelab single pane of glass dashboard in Grafana, showing Traefik request rate, latency and 5xx rate, per-node CPU/memory/disk, recent Loki errors and Falco notices" title="Homelab-SPOG dashboard" style="width:100%;" />
+<img src="/images/homelab-spog-dashboard.webp" alt="Top of the Homelab-SPOG dashboard in Grafana: global request rate by status code, 5xx error rate, P95 and P99 routing latency, top services by traffic, and a recent errors panel from Loki" title="Homelab-SPOG dashboard" style="width:100%;" />
 
-It is my own Homelab-SPOG, for single pane of glass. Request rate, latency, 5xx errors, per-node health, recent log errors, runtime-security notices, all on one page. [The JSON is in the repo](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json) if you want to copy what you like.
+It is my own Homelab-SPOG, for single pane of glass. The summary row up top carries request rate, latency and the 5xx rate. Below it sit collapsible sections for each part of the cluster: Traefik, cert-manager, Cilium, CoreDNS, the public sites, ArgoCD, Falco, per-node health and storage. [The JSON is in the repo](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json) if you want to copy what you like.
 
 Every panel on that screen is the visible end of a decision I had to make and would have to defend in a design review. What store, what retention, what to scrape and what to ignore, what to alert on and what to leave on the dashboard. The rest of this post walks back from the panels to those decisions, one pillar at a time. Whether your cluster runs four pods or four hundred, the questions are the same. Only the blast radius changes.
 
@@ -31,7 +31,7 @@ Here is how the data reaches that screen.
 
 <img src="/images/observability-architecture.svg" alt="Data-flow diagram: workloads, nodes, Traefik and the kernel feed Alloy, node-exporter, OTLP and Falco, which write to Loki, Prometheus, Tempo and Falcosidekick; Prometheus, Loki and Tempo converge on Grafana, while Prometheus alerts and Falco notices branch out to Discord" title="How the four pillars funnel into one dashboard" style="width:70%;" />
 
-Four sources on the left, four stores in the middle, one Grafana on the right, and the single path that does not stop at a dashboard: alerts, which go to Discord. Nothing in the cluster is special-cased. Every workload is scraped, tailed and watched the same way.
+Four sources on the left, four stores in the middle, one Grafana on the right, and one path that does not stop at a dashboard. Alerts go to Discord. Nothing in the cluster is special-cased. Every workload is scraped, tailed and watched the same way.
 
 ## Metrics: What Is the Cluster Doing?
 
@@ -62,7 +62,7 @@ kubeProxy:
 
 On Talos the control plane sits behind locked-down endpoints, and scraping etcd or the scheduler means extra wiring for metrics I would almost never act on. So I monitor what breaks workloads, not the managed control plane. In a regulated production cluster you would scrape the control plane for capacity planning and audit trails. Here the cost outweighs the payoff, and that is a trade-off worth making on purpose rather than by inheriting a chart default.
 
-The kube-proxy line is the one worth pausing on. I run Cilium in kube-proxy replacement mode and Talos starts no kube-proxy at all, so that scrape target points at a process that does not exist. Leave it enabled and it is not a quiet target, it is a permanently failing one. Worth checking your own scrape config against what is actually running. Network-drop visibility comes from Cilium anyway, in the Cilium section of the same dashboard.
+The kube-proxy line is the one worth pausing on. I run Cilium in kube-proxy replacement mode and Talos starts no kube-proxy at all, so that scrape target points at a process that does not exist. Leave it enabled and that target fails on every scrape and never recovers. Worth checking your own scrape config against what is actually running. Network-drop visibility comes from Cilium anyway, in the Cilium section of the same dashboard.
 
 node-exporter and kube-state-metrics carry the weight. The per-node section of the dashboard is what that buys you.
 
@@ -110,7 +110,7 @@ mounts:
 
 That `dockercontainers: true` line is the Talos gotcha. The name is a historical artifact. Talos runs containerd, not Docker, but the container log files still live behind the path that mount exposes. Leave it off and Alloy comes up healthy, discovers every pod, and ships nothing. No error, just an empty Loki. If your Loki is empty while Alloy looks healthy, this mount is the first thing to check.
 
-The payoff is the "Recent errors (Loki)" panel up top. Those `GET /log/error.log` and `/errors/50x.html` lines returning 404 are not my apps misbehaving. They are bots probing the public ingress for files that do not exist. Metrics would have shown you a small bump in the 404 rate. The logs show you who, from where, looking for what. That is the difference between the two pillars, sitting in one panel.
+The payoff is the "Recent errors (Loki)" panel up top. Those `GET /log/error.log` and `/errors/50x.html` lines returning 404 are bots probing the public ingress for files that do not exist, not my apps misbehaving. Metrics would have shown you a small bump in the 404 rate. The logs show you who, from where, looking for what. That is the difference between the two pillars, sitting in one panel.
 
 Pod logs keep 24 hours, on local block storage rather than NFS. Kubernetes events get their own stream and live 7 days, because they are the breadcrumbs you want when reconstructing what happened days after it happened.
 
@@ -150,7 +150,7 @@ tempo:
         http:
 ```
 
-Dropping the legacy receivers is not just tidiness. Every receiver you enable is a listening port and a parser you do not use. It is the same instinct as the disabled control-plane scrapes. Fewer listening ports and fewer parsers mean less to reason about when something misbehaves.
+Dropping the legacy receivers buys more than tidiness. Every receiver you enable is a listening port and a parser you do not use. It is the same instinct as the disabled control-plane scrapes. Fewer listening ports and fewer parsers mean less to reason about when something misbehaves.
 
 The Traefik side is one block, and the number in it is the opinionated bit.
 
@@ -206,7 +206,7 @@ customRules:
         condition: replace
 ```
 
-The `override: condition: replace` is the part worth stealing. I am not disabling a rule and I am not raising a threshold. I am extending the macro the rule already consults for behaviour that is known and fine. When the upstream chart ships new rules, my exceptions still apply, because they hang off the macro, not off a specific rule I forked. That is the difference between tuning that survives the next chart bump and tuning you re-litigate every time.
+The `override: condition: replace` is the part worth stealing. It extends the macro the rule already consults for behaviour that is known and fine, instead of disabling the rule or raising a threshold. When the upstream chart ships new rules, my exceptions still apply, because they hang off the macro, not off a specific rule I forked. That is the difference between tuning that survives the next chart bump and tuning you re-litigate every time.
 
 Note the scope. The kubelet exception names the kubelet binary. A random shell redirecting its streams to a socket still trips the alert, because it is not kubelet. You are carving out the known-good case narrowly, not waving everything else through.
 
@@ -237,7 +237,7 @@ It was not always this quiet. Here is Discord on 23 May, when the route still se
 
 <img src="/images/alertmanager-discord-alert.webp" alt="Alertmanager Discord message: FIRING:2 ContainerRestartingFrequently, severity warning, two stage-portfolio pods restarting, each with a kubectl check command" title="A warning pinging Discord, before the critical-only routing" style="width:100%;" />
 
-Two stage-portfolio pods restarting more than three times in fifteen minutes. Severity warning. Useful the first time I saw it, noise by the tenth. On 31 May I flipped the default receiver to null and left only critical wired to Discord. Warnings live on the dashboard now, where I look when I want them, not in a channel that buzzes at people. One thing to keep from that message though. The description carries the exact `kubectl` command to run next, so the alert is not just a notification, it is the first step of the fix.
+Two stage-portfolio pods restarting more than three times in fifteen minutes. Severity warning. Useful the first time I saw it, noise by the tenth. On 31 May I flipped the default receiver to null and left only critical wired to Discord. Warnings live on the dashboard now, where I look when I want them, not in a channel that buzzes at people. One thing to keep from that message though. The description carries the exact `kubectl` command to run next, so the message hands you the first step of the fix.
 
 There is a Discord gotcha here that cost me a confused half hour. Alertmanager has no native Discord receiver. The trick is to point a `slack_config` at Discord's Slack-compatibility endpoint, and the webhook URL has to end in `/slack` or Discord rejects the Slack-shaped payload with an HTTP 400. The URL itself lives in Bitwarden and is mounted as a file, never committed.
 
@@ -286,7 +286,7 @@ I have made every one of these.
 
 <img src="/images/homelab-spog-cilium.webp" alt="Cilium dashboard section with three panels reading No data next to a working network drops graph" title="Panels committed before their metrics were wired up" style="width:100%;" />
 
-Three "No data" panels sitting next to a working one. The fix is not to delete them. It is to wire up the Hubble metrics they expect. The panel is a to-do list I checked into git, and I would rather see the gap than pretend it is not there.
+Three "No data" panels sitting next to a working one. The fix is to wire up the Hubble metrics those panels expect. The panel is a to-do list I checked into git, and I would rather see the gap than pretend it is not there.
 
 **Alerting on everything.** The instinct is to alert on every rule the internet hands you. Resist it. An alert channel you have learned to ignore is worse than no channel, because it gives you the feeling of coverage without the substance.
 
@@ -294,7 +294,7 @@ Three "No data" panels sitting next to a working one. The fix is not to delete t
 
 You have now seen a dozen snippets from as many files. What makes them a system rather than a pile is that they share one source of truth.
 
-The dashboard up top is not clicked together in the Grafana UI where it would vanish with the pod. It is a `ConfigMap`, [`homelab-spog.json`](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json), that the Grafana sidecar discovers and loads. Same for every Helm value, every alert rule, every Falco exception in this post. ArgoCD reconciles all of it from `main`. If I delete the Grafana pod, the dashboard comes back exactly as it was.
+The dashboard up top is a `ConfigMap`, [`homelab-spog.json`](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json), that the Grafana sidecar discovers and loads. Nobody clicked it together in the Grafana UI, where it would vanish the moment the pod restarts. Same for every Helm value, every alert rule, every Falco exception in this post. ArgoCD reconciles all of it from `main`. If I delete the Grafana pod, the dashboard comes back exactly as it was.
 
 That is the part that makes this maintainable rather than a pet. The cluster is blind by default. What you have read is the wiring that gives it sight, and all of it is text in a repo you can read.
 
