@@ -5,6 +5,16 @@ global:
 deployment:
   replicas: 3
 
+# Required zone anti-affinity below pins one replica per hypervisor (replicas ==
+# zones). The default surging rollout (maxSurge:1) then deadlocks — a 4th pod has
+# no free zone and stays Pending. Terminate-then-recreate frees a zone first, so
+# rollouts run at 2/3 briefly instead of getting stuck.
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 1
+
 # Spread the replicas one-per-hypervisor so losing a physical host (or a VIP
 # L2-announce re-election) can't take the edge proxy down. topology.kubernetes.io/zone
 # maps to the hypervisor (hyper1/2/3), matching how the apps express failure domains.
