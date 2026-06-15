@@ -50,6 +50,24 @@ alloy:
         forward_to = [loki.write.local.receiver]
       }
 
+      // 4b. Watch Kubernetes events cluster-wide for troubleshooting.
+      //     Emits labels: namespace, job ("kubernetes-events"), instance.
+      loki.source.kubernetes_events "k8s_events" {
+        job_name   = "kubernetes-events"
+        log_format = "logfmt"
+        forward_to = [loki.process.events.receiver]
+      }
+
+      // 4c. Tag events with the cluster label, then ship through the same writer.
+      loki.process "events" {
+        stage.static_labels {
+          values = {
+            cluster = "genesis",
+          }
+        }
+        forward_to = [loki.write.local.receiver]
+      }
+
       // 5. Send to Loki
       loki.write "local" {
         endpoint {
