@@ -99,7 +99,12 @@ hubble:
 
 # Operator
 operator:
-  replicas: 1
+  # HA: 2 replicas (active + standby via leader election) with a PDB so a node
+  # drain can't take the only operator down.
+  replicas: 2
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
   rollOutPods: true
   # CRITICAL: Allow operator to schedule during initial cluster bootstrap
   # Without these tolerations, operator won't schedule until nodes are Ready

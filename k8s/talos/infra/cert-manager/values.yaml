@@ -2,7 +2,22 @@ global:
   leaderElection:
     namespace: cert-manager
 installCRDs: true
-replicaCount: 1
+# HA: 2 replicas (active + standby via leader election) with a PDB so node
+# drains keep at least one controller, webhook, and cainjector available.
+replicaCount: 2
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+webhook:
+  replicaCount: 2
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
+cainjector:
+  replicaCount: 2
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
 extraArgs:
   - --dns01-recursive-nameservers=1.1.1.1:53,9.9.9.9:53
   - --dns01-recursive-nameservers-only

@@ -5,6 +5,14 @@ installCRDs: true
 
 replicaCount: 1
 
+# HA for the admission webhook: API calls to ExternalSecret/SecretStore block on
+# it, so keep 2 replicas with a PDB across node drains.
+webhook:
+  replicaCount: 2
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
+
 serviceMonitor:
   enabled: true
   interval: 30s

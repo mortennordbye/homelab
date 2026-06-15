@@ -18,6 +18,11 @@ affinity:
             app.kubernetes.io/instance: traefik-traefik
         topologyKey: topology.kubernetes.io/zone
 
+# Keep at least 2 of the 3 replicas up through node drains / voluntary disruptions.
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
 api:
   dashboard: true
 
