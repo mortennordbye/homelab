@@ -29,7 +29,7 @@ Every panel on that screen is the visible end of a decision I had to make and wo
 
 Here is how the data reaches that screen.
 
-<img src="/images/observability-architecture.svg" alt="Data-flow diagram: workloads, nodes, Traefik and the kernel feed Alloy, node-exporter, OTLP and Falco, which write to Loki, Prometheus, Tempo and Falcosidekick; Prometheus, Loki and Tempo converge on Grafana, while Prometheus alerts and Falco notices branch out to Discord" title="How the four pillars funnel into one dashboard" style="width:70%;" />
+<img src="/images/observability-architecture.svg" alt="Data-flow diagram: workloads, nodes, Traefik and the kernel feed Alloy, node-exporter, OTLP and Falco, which write to Loki, Prometheus, Tempo and Falcosidekick; Prometheus, Loki and Tempo converge on Grafana, while Prometheus alerts and Falco notices branch out to Discord" title="How the four pillars funnel into one dashboard" style="width:90%;" />
 
 Four sources on the left, four stores in the middle, one Grafana on the right, and one path that does not stop at a dashboard. Alerts go to Discord. Nothing in the cluster is special-cased. Every workload is scraped, tailed and watched the same way.
 
