@@ -278,17 +278,17 @@ The OOM one is the kind of thing you only learn by getting it wrong. The metric 
 
 I have made every one of these.
 
-**Copying my retention numbers without thinking.** 24 hours of logs and traces is fine for me because I debug in near-real-time and nothing here is under audit. If you have a compliance requirement or you investigate incidents days later, 24h is too short, and the line you go looking for will already be gone.
+**Copying my retention numbers without thinking.** 24h of logs and traces suits me because I debug in near-real-time and nothing here is under audit. Under a compliance requirement, or chasing an incident days later, 24h is too short and the line you need is already gone.
 
-**Putting high-write data on network storage.** Logs and traces are written constantly. Point them at NFS and you will feel it. Local block storage for the high-write pillars, durable network storage for the metrics you want to keep.
+**Putting high-write data on network storage.** Logs and traces are written constantly, so point them at NFS and you will feel it. High-write pillars on local block storage, the metrics you want to keep on durable network storage.
 
-**Committing a panel before the metric exists.** Dashboards-as-code is the right pattern, but it lets you add a panel for a metric that is not being scraped yet. The result is honest and a little embarrassing.
+**Committing a panel before the metric exists.** Dashboards-as-code lets you add a panel for a metric you are not scraping yet. Honest, and a little embarrassing.
 
 <img src="/images/homelab-spog-cilium.webp" alt="Cilium dashboard section with three panels reading No data next to a working network drops graph" title="Panels committed before their metrics were wired up" style="width:100%;" />
 
-Three "No data" panels sitting next to a working one. The fix is to wire up the Hubble metrics those panels expect. The panel is a to-do list I checked into git, and I would rather see the gap than pretend it is not there.
+Three "No data" panels next to a working one. The fix is to wire up the Hubble metrics they expect. The panel is a to-do list in git, and I would rather see the gap than pretend it is not there.
 
-**Alerting on everything.** The instinct is to alert on every rule the internet hands you. Resist it. An alert channel you have learned to ignore is worse than no channel, because it gives you the feeling of coverage without the substance.
+**Alerting on everything.** The instinct is to alert on every rule the internet hands you. Resist it. A channel you have learned to ignore is worse than none, because it feels like coverage while giving you nothing.
 
 ## The Whole Thing Is in Git
 
