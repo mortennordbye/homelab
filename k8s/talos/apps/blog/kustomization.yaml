@@ -6,6 +6,7 @@ commonAnnotations:
 
 resources:
   - deployment.yaml
+  - poddisruptionbudget.yaml
   - service.yaml
   - httproute.yaml
   - namespace.yaml

@@ -8,16 +8,45 @@ replicaCount: 2
 podDisruptionBudget:
   enabled: true
   maxUnavailable: 1
+# Soft spread the 2 replicas across hypervisors (zones); preferred so it never
+# blocks scheduling or rollouts.
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: cert-manager
+          topologyKey: topology.kubernetes.io/zone
 webhook:
   replicaCount: 2
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: webhook
+            topologyKey: topology.kubernetes.io/zone
 cainjector:
   replicaCount: 2
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: cainjector
+            topologyKey: topology.kubernetes.io/zone
 extraArgs:
   - --dns01-recursive-nameservers=1.1.1.1:53,9.9.9.9:53
   - --dns01-recursive-nameservers-only

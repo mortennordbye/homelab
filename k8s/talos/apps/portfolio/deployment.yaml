@@ -14,6 +14,18 @@ spec:
       labels:
         app: portfolio
     spec:
+      # Best-effort spread across hypervisors (zones) so a single host loss
+      # can't take a disproportionate share of replicas. Soft, so rollouts and
+      # constrained scheduling never block.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: portfolio
+                topologyKey: topology.kubernetes.io/zone
       terminationGracePeriodSeconds: 15
       automountServiceAccountToken: false
       enableServiceLinks: false

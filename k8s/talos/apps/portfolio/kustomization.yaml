@@ -7,6 +7,7 @@ commonAnnotations:
 resources:
   - namespace.yaml
   - deployment.yaml
+  - poddisruptionbudget.yaml
   - httproute.yaml
   - service.yaml
   - ciliumnetworkpolicy.yaml

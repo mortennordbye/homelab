@@ -75,7 +75,20 @@ grafana:
 alertmanager:
   enabled: true
   alertmanagerSpec:
-    replicas: 1
+    # HA: 2 replicas form a gossip cluster (the operator wires --cluster.peer
+    # automatically) so alerting survives a pod/node loss. Each replica gets its
+    # own NFS PVC via the volumeClaimTemplate below.
+    replicas: 2
+    # Soft spread the replicas across hypervisors (zones).
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: alertmanager
+              topologyKey: topology.kubernetes.io/zone
     retention: 120h
     # Mount the ExternalSecret with the Discord webhook so the URL is not in git.
     # The secret key 'url' is then read via api_url_file (see alertmanager.config below).

@@ -16,6 +16,18 @@ spec:
       labels:
         app.kubernetes.io/name: blog
     spec:
+      # Best-effort spread across hypervisors (zones) so a single host loss
+      # can't take a disproportionate share of replicas. Soft, so rollouts and
+      # constrained scheduling never block.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: blog
+                topologyKey: topology.kubernetes.io/zone
       containers:
         - name: blog
           image: ghcr.io/mortennordbye/homelab/blog:9c687f6

@@ -12,6 +12,16 @@ webhook:
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
+  # Soft spread the 2 webhook replicas across hypervisors (zones).
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: external-secrets-webhook
+            topologyKey: topology.kubernetes.io/zone
 
 serviceMonitor:
   enabled: true

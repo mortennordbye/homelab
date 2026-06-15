@@ -1,0 +1,12 @@
+# The prometheus-operator manages the Alertmanager StatefulSet but does not
+# create a PDB. With 2 replicas, keep at least one available through node drains.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alertmanager
