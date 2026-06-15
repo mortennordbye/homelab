@@ -1,6 +1,6 @@
 ---
 title: "Seeing Into a Talos Cluster: The Observability Stack I Actually Run"
-date: 2026-06-04
+date: 2026-06-15
 draft: false
 tags: ["kubernetes", "observability", "prometheus", "grafana", "loki", "tempo", "falco", "intermediate"]
 authors:
@@ -17,15 +17,25 @@ The two ways people get this wrong are running nothing, or bolting on the full e
 
 _If you find this useful or just appreciate the over-engineering, drop a ⭐ on the [Homelab repo](https://github.com/mortennordbye/Homelab)._
 
+## One Screen First
+
 This is the screen I check first when something feels off. One dashboard, every pillar, no clicking around.
 
-<img src="/images/homelab-spog-dashboard.webp" alt="Homelab single pane of glass dashboard in Grafana, showing Traefik request rate, latency, 5xx rate and recent Loki errors" title="Homelab-SPOG dashboard" style="width:100%;" />
+<img src="/images/homelab-spog-full.webp" alt="Homelab single pane of glass dashboard in Grafana, showing Traefik request rate, latency and 5xx rate, per-node CPU/memory/disk, recent Loki errors and Falco notices" title="Homelab-SPOG dashboard" style="width:100%;" />
 
-It is my own Homelab-SPOG, for single pane of glass. No screenshot fits everything it holds, but it has what I want at a glance: request rate, latency, 5xx errors, per-node health, recent log errors. [The JSON is in the repo](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json) if you want to copy what you like. The rest of this post is what sits behind each panel, and the one decision that mattered for each piece. Whether your cluster runs four pods or four hundred, the questions are the same. Only the blast radius changes.
+It is my own Homelab-SPOG, for single pane of glass. Request rate, latency, 5xx errors, per-node health, recent log errors, runtime-security notices, all on one page. [The JSON is in the repo](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json) if you want to copy what you like.
+
+Every panel on that screen is the visible end of a decision I had to make and would have to defend in a design review. What store, what retention, what to scrape and what to ignore, what to alert on and what to leave on the dashboard. The rest of this post walks back from the panels to those decisions, one pillar at a time. Whether your cluster runs four pods or four hundred, the questions are the same. Only the blast radius changes.
+
+Here is how the data reaches that screen.
+
+<img src="/images/observability-architecture.svg" alt="Data-flow diagram: workloads, nodes, Traefik and the kernel feed Alloy, node-exporter, OTLP and Falco, which write to Loki, Prometheus, Tempo and Falcosidekick; Prometheus, Loki and Tempo converge on Grafana, while Prometheus alerts and Falco notices branch out to Discord" title="How the four pillars funnel into one dashboard" style="width:70%;" />
+
+Four sources on the left, four stores in the middle, one Grafana on the right, and the single path that does not stop at a dashboard: alerts, which go to Discord. Nothing in the cluster is special-cased. Every workload is scraped, tailed and watched the same way.
 
 ## Metrics: What Is the Cluster Doing?
 
-This is the foundation. [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) gives you Prometheus, Grafana, Alertmanager, node-exporter and kube-state-metrics in one Helm release that wires itself together.
+The request rate, latency and 5xx panels across the top of the dashboard all come from here. This is the foundation. [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) gives you Prometheus, Grafana, Alertmanager, node-exporter and kube-state-metrics in one Helm release that wires itself together.
 
 The defaults scrape the whole managed control plane. Most of those targets I switch off.
 
@@ -35,7 +45,7 @@ The defaults scrape the whole managed control plane. Most of those targets I swi
 prometheus:
   prometheusSpec:
     retention: 7d
-    scrapeInterval: 30s          # 15s is the chart default; 30s halves the write load
+    scrapeInterval: 30s          # not chasing sub-minute resolution on a homelab
 
 ## Minimal monitoring of k8s components
 kubeApiServer:
@@ -50,21 +60,21 @@ kubeProxy:
   enabled: false                 # Cilium replaced kube-proxy; there is nothing to scrape
 ```
 
-On Talos the control plane sits behind locked-down endpoints, and scraping etcd or the scheduler means extra wiring for metrics I would almost never act on. So I monitor what breaks workloads, not the managed control plane.
+On Talos the control plane sits behind locked-down endpoints, and scraping etcd or the scheduler means extra wiring for metrics I would almost never act on. So I monitor what breaks workloads, not the managed control plane. In a regulated production cluster you would scrape the control plane for capacity planning and audit trails. Here the cost outweighs the payoff, and that is a trade-off worth making on purpose rather than by inheriting a chart default.
 
 The kube-proxy line is the one worth pausing on. I run Cilium in kube-proxy replacement mode and Talos starts no kube-proxy at all, so that scrape target points at a process that does not exist. Leave it enabled and it is not a quiet target, it is a permanently failing one. Worth checking your own scrape config against what is actually running. Network-drop visibility comes from Cilium anyway, in the Cilium section of the same dashboard.
 
-node-exporter and kube-state-metrics carry the weight. The Node section of the same dashboard is what that buys you.
+node-exporter and kube-state-metrics carry the weight. The per-node section of the dashboard is what that buys you.
 
 <img src="/images/homelab-spog-node.webp" alt="Per-node CPU, memory, disk and network panels across six Talos nodes, with one control-plane node memory gauge in the red at 90 percent" title="Per-node metrics from node-exporter" style="width:100%;" />
 
-This is the section I actually look at. One glance and I know which node is under pressure and which has headroom. And when a control-plane node sits this hot, it is the closest I get to a real reason for more hardware. For once another Proxmox node is fixing a problem, not feeding the hobby.
+This is the section I actually look at. One glance and I know which node is under pressure and which has headroom. When a control-plane node sits this hot, it is the closest I get to a defensible reason for more hardware. For once another Proxmox node is fixing a problem, not feeding the hobby.
 
-One trade-off to copy with your eyes open. Retention is 7 days on Synology NFS, a deliberate durability choice. It survives a node reboot, and metrics queries are infrequent enough that the network round-trip does not hurt.
+One trade-off to copy with your eyes open. Retention is 7 days, and Prometheus writes to Synology NFS rather than local disk. That is a durability choice. The data survives a node reboot, and metrics queries are infrequent enough that the network round trip does not hurt.
 
 ## Logs: What Did It Say Before It Died?
 
-Metrics tell you a pod restarted. They do not tell you why. For that you need the lines it printed on the way down.
+Metrics tell you a pod restarted. They do not tell you why. For that you need the lines it printed on the way down, and that is the "Recent errors" panel on the dashboard.
 
 [Loki](https://grafana.com/docs/loki/latest/) stores the logs. [Alloy](https://grafana.com/docs/alloy/latest/) collects them, a DaemonSet on every node that discovers pods through the Kubernetes API and ships their logs to Loki. If you remember Promtail, Alloy is its supported successor. Promtail reached end of life, so new clusters should start on Alloy.
 
@@ -86,44 +96,53 @@ discovery.relabel "pod_logs" {
   }
   // ...container, app, k8s_app
 }
+```
 
+Five labels, no more. namespace, pod, container, app, k8s_app. Everything else stays out of the index and lives in the log line itself, where a full-text search can still reach it without inflating what Loki has to keep in memory.
+
+Two Helm mounts in the same file decide whether any of this works.
+
+```yaml
 mounts:
   varlog: true            # /var/log
   dockercontainers: true  # Talos uses containerd; reaches the symlinked log files
 ```
 
-That `dockercontainers: true` line is the Talos gotcha. The name is a historical artifact. Talos runs containerd, not Docker, but the container log files still live behind the path that mount exposes. Leave it off and Alloy comes up healthy, discovers every pod, and ships nothing. No error, just an empty Loki. I lost an evening to that one.
+That `dockercontainers: true` line is the Talos gotcha. The name is a historical artifact. Talos runs containerd, not Docker, but the container log files still live behind the path that mount exposes. Leave it off and Alloy comes up healthy, discovers every pod, and ships nothing. No error, just an empty Loki. If your Loki is empty while Alloy looks healthy, this mount is the first thing to check.
 
-The payoff is the "Recent errors (Loki)" panel on the dashboard up top. Those `GET /log/error.log` and `/errors/50x.html` lines returning 404 are not my apps misbehaving. They are bots probing the public ingress for files that do not exist. Metrics would have shown you a small bump in the 404 rate. The logs show you who, from where, looking for what. That is the difference between the two pillars in one panel.
+The payoff is the "Recent errors (Loki)" panel up top. Those `GET /log/error.log` and `/errors/50x.html` lines returning 404 are not my apps misbehaving. They are bots probing the public ingress for files that do not exist. Metrics would have shown you a small bump in the 404 rate. The logs show you who, from where, looking for what. That is the difference between the two pillars, sitting in one panel.
 
-Loki keeps 24 hours, on local block storage rather than NFS.
+Pod logs keep 24 hours, on local block storage rather than NFS. Kubernetes events get their own stream and live 7 days, because they are the breadcrumbs you want when reconstructing what happened days after it happened.
 
 **Full file:** [`loki/values.yaml`](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/loki/values.yaml)
 
 ```yaml
 deploymentMode: SingleBinary   # one process; no microservices sprawl for a homelab
 limits_config:
-  retention_period: 24h
+  retention_period: 24h        # pod logs: a day is plenty
   reject_old_samples_max_age: 24h
+  retention_stream:
+    - selector: '{job="kubernetes-events"}'   # events outlive the logs: 7 days
+      period: 168h
 persistence:
   size: 20Gi
-  storageClass: "proxmox-local"  # Proxmox CSI on the host's local SSD, not NFS: logs are high-write, low-value-after-a-day
+  storageClass: "proxmox-local"  # Proxmox CSI on the host's local SSD, not NFS
 ```
 
-Logs are written constantly and rarely read after a day. Local disk gives the write throughput, and if the disk dies I lose a day of logs I almost certainly was never going to open. That is an acceptable loss. Metrics get NFS, logs get local. The storage class encodes what I am willing to lose.
+Logs are written constantly and rarely read after a day. Local disk gives the write throughput, and if the disk dies I lose a day of logs I almost certainly was never going to open. That is an acceptable loss. Metrics get NFS for durability, logs get local for throughput.
 
 ## Traces: Where Did the Request Actually Go?
 
 A request comes in through Traefik, hits a service, which calls another service, which queries something. When it is slow, which hop ate the time? Metrics give you an aggregate. A trace gives you the single request, hop by hop.
 
-[Tempo](https://grafana.com/docs/tempo/latest/) stores traces. Traefik emits them. Because Traefik already speaks OTLP (the OpenTelemetry wire protocol), Tempo only needs to listen for one protocol.
+[Tempo](https://grafana.com/docs/tempo/latest/) stores traces. Traefik emits them. Because Traefik already speaks OTLP (the OpenTelemetry wire protocol), Tempo only needs the OTLP receiver and none of the legacy ones.
 
 **Full file:** [`tempo/values.yaml`](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/tempo/values.yaml)
 
 ```yaml
 tempo:
   retention: 24h
-  # OTLP-only: Traefik pushes OTLP gRPC. Drop the jaeger/zipkin/opencensus receivers.
+  # OTLP-only: Traefik pushes OTLP. Drop the jaeger/zipkin/opencensus receivers.
   receivers:
     otlp:
       protocols:
@@ -131,7 +150,7 @@ tempo:
         http:
 ```
 
-Dropping the legacy receivers is not just tidiness. Every receiver you enable is a listening port and a parser you do not use. Turn off what nothing speaks to.
+Dropping the legacy receivers is not just tidiness. Every receiver you enable is a listening port and a parser you do not use. It is the same instinct as the disabled control-plane scrapes. Fewer listening ports and fewer parsers mean less to reason about when something misbehaves.
 
 The Traefik side is one block, and the number in it is the opinionated bit.
 
@@ -143,16 +162,18 @@ tracing:
   serviceName: traefik
   sampleRate: 1.0                # 100%. Every request gets a trace.
   otlp:
+    enabled: true
     grpc:
+      enabled: true
       endpoint: tempo.monitoring:4317
       insecure: true
 ```
 
-`sampleRate: 1.0` means every single request through the ingress gets a trace. Reload this post and your request shows up in Tempo. In production you would never do this. At a few requests per second the cost is nothing, and full sampling means when something is slow I have the trace, not a 1-in-1000 chance of having kept it. Where this breaks is traffic. Push real volume through 100% sampling and you drown Tempo in spans and pay for storage you will never query. Full sampling is a homelab luxury. Name the request rate where you would turn it down, and turn it down before you hit it. The production answer is tail-based sampling, which keeps the slow and errored traces and throws the boring ones away.
+`sampleRate: 1.0` means every single request through the ingress gets a trace. Reload this post and your request shows up in Tempo. In production you would never do this. At a few requests per second the cost is nothing, and full sampling means when something is slow I have the trace, not a one-in-a-thousand chance of having kept it. Where this breaks is traffic. Push real volume through 100% sampling and you drown Tempo in spans and pay for storage you will never query. Name the request rate where you would turn it down, and turn it down before you hit it. The production answer is tail-based sampling, which keeps the slow and errored traces and throws the boring ones away.
 
 ## Runtime Security: Who Is Doing Something They Should Not?
 
-The first three pillars tell you what your applications did. [Falco](https://falco.org/) tells you what they did that they were never supposed to. It watches syscalls and flags the suspicious ones. A shell spawned inside a container, a process reading `/etc/shadow`, an outbound connection from a pod that has no business making one.
+The first three pillars tell you what your applications did. [Falco](https://falco.org/) tells you what they did that they were never supposed to, and feeds the runtime-security panel on the dashboard. It watches syscalls and flags the suspicious ones. A shell spawned inside a container, a process reading `/etc/shadow`, an outbound connection from a pod that has no business making one.
 
 On Talos there is exactly one way to run it.
 
@@ -185,19 +206,19 @@ customRules:
         condition: replace
 ```
 
-The `override: condition: replace` is the part worth stealing. I am not disabling a rule and I am not raising a threshold. I am extending the macro the rule already consults for "things that are known and fine." When the upstream chart ships new rules, my exceptions still apply, because they hang off the macro, not off a specific rule I forked. Tuning that survives the next upgrade.
+The `override: condition: replace` is the part worth stealing. I am not disabling a rule and I am not raising a threshold. I am extending the macro the rule already consults for behaviour that is known and fine. When the upstream chart ships new rules, my exceptions still apply, because they hang off the macro, not off a specific rule I forked. That is the difference between tuning that survives the next chart bump and tuning you re-litigate every time.
 
 Note the scope. The kubelet exception names the kubelet binary. A random shell redirecting its streams to a socket still trips the alert, because it is not kubelet. You are carving out the known-good case narrowly, not waving everything else through.
 
-This is what one looks like when it reaches Discord, and it doubles as a confession.
+This is what one looks like when it reaches Discord, and it doubles as the next item on the list.
 
 <img src="/images/falco-discord-alert.webp" alt="Falco Discord alert: Redirect STDOUT/STDIN to Network Connection in Container, Notice priority, argocd-repo-server on genesis-worker-01 connecting to a udp port 53 socket" title="A Falco notice that is the next tuning candidate" style="width:100%;" />
 
-That is `argocd-repo-server` wiring stdout to a `udp` port 53 socket, which is the repo server resolving DNS. Benign, and the same stdio-to-socket shape as the kubelet and Authentik cases above. It still fires because I have not added it to the macro yet. It is the next line in that tuning block, scoped to the `argocd-repo-ser` process so a real shell in that pod still trips. Tuning is never finished. It is a list you work down as the cluster tells you what normal looks like.
+That is `argocd-repo-server` wiring stdout to a `udp` port 53 socket, which is the repo server resolving DNS. Benign, and the same stdio-to-socket shape as the kubelet and Authentik cases above. It still fires because I have not added it to the macro yet. It is the next line in that tuning block, scoped to the `argocd-repo-ser` process (Linux truncates the process name at fifteen characters) so a real shell in that pod still trips. Tuning is never finished. It is a list you work down as the cluster tells you what normal looks like.
 
 ## Alerting That Earns Its Keep
 
-A dashboard is something you look at. An alert is something that looks for you. The failure mode is alerting on everything, which trains you to ignore the channel. So almost nothing pages me.
+A dashboard waits for you to open it. An alert interrupts you whether you are looking or not. The failure mode is alerting on everything, which trains you to ignore the channel. So almost nothing reaches me.
 
 **Full file:** [`kube-prometheus-stack/values.yaml`](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/values.yaml)
 
@@ -212,11 +233,11 @@ route:
 
 Everything that is not critical goes to a null receiver and disappears. Only critical reaches me. If an alert is not worth a Discord ping, it is not worth firing, and if it fires too often it gets demoted or fixed.
 
-It was not always this quiet. Here is Discord on 23 May, two weeks earlier, when the route still sent everything to the channel.
+It was not always this quiet. Here is Discord on 23 May, when the route still sent everything to the channel.
 
 <img src="/images/alertmanager-discord-alert.webp" alt="Alertmanager Discord message: FIRING:2 ContainerRestartingFrequently, severity warning, two stage-portfolio pods restarting, each with a kubectl check command" title="A warning pinging Discord, before the critical-only routing" style="width:100%;" />
 
-Two stage-portfolio pods restarting more than three times in fifteen minutes. Severity warning. Useful the first time I saw it, noise by the tenth. On 31 May I flipped the default receiver to null and left only critical wired to Discord. Warnings live on the dashboard now, where I look when I want them, not in a channel that buzzes at people. One thing to keep from that message though. The description carries the exact `kubectl` command to run next. An alert that does not tell you what to do is half an alert.
+Two stage-portfolio pods restarting more than three times in fifteen minutes. Severity warning. Useful the first time I saw it, noise by the tenth. On 31 May I flipped the default receiver to null and left only critical wired to Discord. Warnings live on the dashboard now, where I look when I want them, not in a channel that buzzes at people. One thing to keep from that message though. The description carries the exact `kubectl` command to run next, so the alert is not just a notification, it is the first step of the fix.
 
 There is a Discord gotcha here that cost me a confused half hour. Alertmanager has no native Discord receiver. The trick is to point a `slack_config` at Discord's Slack-compatibility endpoint, and the webhook URL has to end in `/slack` or Discord rejects the Slack-shaped payload with an HTTP 400. The URL itself lives in Bitwarden and is mounted as a file, never committed.
 
@@ -257,9 +278,9 @@ The OOM one is the kind of thing you only learn by getting it wrong. The metric 
 
 I have made every one of these.
 
-**Copying my retention numbers without thinking.** 24 hours of logs and traces is fine for me because I debug in near-real-time and nothing here is under audit. If you have a compliance requirement or you investigate incidents days later, 24h will betray you. Retention is a policy decision dressed up as a config value.
+**Copying my retention numbers without thinking.** 24 hours of logs and traces is fine for me because I debug in near-real-time and nothing here is under audit. If you have a compliance requirement or you investigate incidents days later, 24h is too short, and the line you go looking for will already be gone.
 
-**Putting high-write data on network storage.** Logs and traces are written constantly. Point them at NFS and you will feel it. Local block storage for the firehose pillars, durable network storage for the metrics you want to keep. Let the storage class say what you are willing to lose.
+**Putting high-write data on network storage.** Logs and traces are written constantly. Point them at NFS and you will feel it. Local block storage for the high-write pillars, durable network storage for the metrics you want to keep.
 
 **Committing a panel before the metric exists.** Dashboards-as-code is the right pattern, but it lets you add a panel for a metric that is not being scraped yet. The result is honest and a little embarrassing.
 

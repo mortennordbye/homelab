@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1140 476" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a1015"/>
+      <stop offset="1" stop-color="#050a0f"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.03"/>
+    </pattern>
+    <marker id="ar-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#5db7ff"/>
+    </marker>
+    <marker id="ar-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#58d2c9"/>
+    </marker>
+    <marker id="ar-violet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#8b7dff"/>
+    </marker>
+    <marker id="ar-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#ef6f7a"/>
+    </marker>
+  </defs>
+
+  <rect x="2" y="2" width="1136" height="472" rx="16" fill="url(#bg)" stroke="#2a3849" stroke-width="1.5"/>
+  <rect x="2" y="2" width="1136" height="472" rx="16" fill="url(#grid)"/>
+
+  <!-- URL mark -->
+  <text x="1100" y="40" text-anchor="end" fill="#8898aa" font-size="20">blog.nordbye.it</text>
+
+  <!-- column headers -->
+  <g fill="#8898aa" font-size="15" font-weight="700" letter-spacing="2" text-anchor="middle">
+    <text x="114" y="78">SOURCE</text>
+    <text x="374" y="78">AGENT</text>
+    <text x="634" y="78">STORE</text>
+    <text x="960" y="78">VIEW &amp; ALERT</text>
+  </g>
+
+  <!-- ============ connectors (drawn first, sit under the nodes) ============ -->
+  <!-- metrics (blue) -->
+  <g fill="none" stroke="#5db7ff" stroke-width="2.5">
+    <line x1="198" y1="121" x2="288" y2="121" marker-end="url(#ar-blue)"/>
+    <line x1="458" y1="121" x2="548" y2="121" marker-end="url(#ar-blue)"/>
+    <line x1="718" y1="121" x2="818" y2="121" marker-end="url(#ar-blue)"/>
+  </g>
+  <!-- logs (teal) -->
+  <g fill="none" stroke="#58d2c9" stroke-width="2.5">
+    <line x1="198" y1="215" x2="288" y2="215" marker-end="url(#ar-teal)"/>
+    <line x1="458" y1="215" x2="548" y2="215" marker-end="url(#ar-teal)"/>
+    <line x1="718" y1="215" x2="818" y2="215" marker-end="url(#ar-teal)"/>
+  </g>
+  <!-- traces (violet): Traefik pushes OTLP straight to Tempo, no agent -->
+  <g fill="none" stroke="#8b7dff" stroke-width="2.5">
+    <line x1="198" y1="309" x2="548" y2="309" marker-end="url(#ar-violet)"/>
+    <line x1="718" y1="309" x2="818" y2="309" marker-end="url(#ar-violet)"/>
+  </g>
+  <text x="373" y="300" text-anchor="middle" fill="#b0bccb" font-size="14">OTLP gRPC</text>
+  <!-- security (fog -> danger to Discord) -->
+  <g fill="none" stroke="#b0bccb" stroke-width="2.5">
+    <line x1="198" y1="403" x2="288" y2="403" marker-end="url(#ar-danger)"/>
+    <line x1="458" y1="403" x2="548" y2="403" marker-end="url(#ar-danger)"/>
+  </g>
+  <line x1="718" y1="403" x2="818" y2="403" fill="none" stroke="#ef6f7a" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#ar-danger)"/>
+
+  <!-- alert egress: Prometheus -> Discord (dashed danger) -->
+  <path d="M718 132 H768 V360 H938 V372" fill="none" stroke="#ef6f7a" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#ar-danger)"/>
+  <text x="853" y="352" text-anchor="middle" fill="#ef6f7a" font-size="13">Alertmanager &#183; critical only</text>
+  <text x="769" y="396" text-anchor="middle" fill="#ef6f7a" font-size="12">min notice</text>
+
+  <!-- ============ nodes ============ -->
+  <!-- SOURCE column -->
+  <g text-anchor="middle">
+    <rect x="30" y="92" width="168" height="58" rx="10" fill="#111923" stroke="#5db7ff" stroke-width="2"/>
+    <text x="114" y="126" fill="#e8eef5" font-size="15" font-weight="600">Workloads &amp; nodes</text>
+
+    <rect x="30" y="186" width="168" height="58" rx="10" fill="#111923" stroke="#58d2c9" stroke-width="2"/>
+    <text x="114" y="220" fill="#e8eef5" font-size="16" font-weight="600">Pods</text>
+
+    <rect x="30" y="280" width="168" height="58" rx="10" fill="#111923" stroke="#8b7dff" stroke-width="2"/>
+    <text x="114" y="314" fill="#e8eef5" font-size="16" font-weight="600">Traefik</text>
+
+    <rect x="30" y="374" width="168" height="58" rx="10" fill="#111923" stroke="#b0bccb" stroke-width="2"/>
+    <text x="114" y="408" fill="#e8eef5" font-size="16" font-weight="600">Kernel syscalls</text>
+  </g>
+
+  <!-- AGENT column -->
+  <g text-anchor="middle">
+    <rect x="290" y="92" width="168" height="58" rx="10" fill="#111923" stroke="#5db7ff" stroke-width="2"/>
+    <text x="374" y="116" fill="#e8eef5" font-size="13.5" font-weight="600">node-exporter</text>
+    <text x="374" y="134" fill="#b0bccb" font-size="12.5">kube-state-metrics</text>
+
+    <rect x="290" y="186" width="168" height="58" rx="10" fill="#111923" stroke="#58d2c9" stroke-width="2"/>
+    <text x="374" y="210" fill="#e8eef5" font-size="16" font-weight="600">Alloy</text>
+    <text x="374" y="228" fill="#b0bccb" font-size="12.5">DaemonSet</text>
+
+    <rect x="290" y="374" width="168" height="58" rx="10" fill="#111923" stroke="#b0bccb" stroke-width="2"/>
+    <text x="374" y="408" fill="#e8eef5" font-size="16" font-weight="600">Falco</text>
+  </g>
+
+  <!-- STORE column -->
+  <g text-anchor="middle">
+    <rect x="550" y="92" width="168" height="58" rx="10" fill="#111923" stroke="#5db7ff" stroke-width="2"/>
+    <text x="634" y="126" fill="#e8eef5" font-size="16" font-weight="600">Prometheus</text>
+
+    <rect x="550" y="186" width="168" height="58" rx="10" fill="#111923" stroke="#58d2c9" stroke-width="2"/>
+    <text x="634" y="220" fill="#e8eef5" font-size="16" font-weight="600">Loki</text>
+
+    <rect x="550" y="280" width="168" height="58" rx="10" fill="#111923" stroke="#8b7dff" stroke-width="2"/>
+    <text x="634" y="314" fill="#e8eef5" font-size="16" font-weight="600">Tempo</text>
+
+    <rect x="550" y="374" width="168" height="58" rx="10" fill="#111923" stroke="#ef6f7a" stroke-width="2"/>
+    <text x="634" y="408" fill="#e8eef5" font-size="15" font-weight="600">Falcosidekick</text>
+  </g>
+
+  <!-- SINKS -->
+  <rect x="820" y="92" width="288" height="246" rx="12" fill="#111923" stroke="#5db7ff" stroke-width="2.5"/>
+  <rect x="838" y="110" width="6" height="210" rx="3" fill="#5db7ff"/>
+  <text x="976" y="208" text-anchor="middle" fill="#e8eef5" font-size="24" font-weight="700">Grafana</text>
+  <text x="976" y="236" text-anchor="middle" fill="#b0bccb" font-size="14">single pane of glass</text>
+
+  <rect x="820" y="374" width="240" height="58" rx="12" fill="#111923" stroke="#ef6f7a" stroke-width="2.5"/>
+  <text x="940" y="399" text-anchor="middle" fill="#e8eef5" font-size="18" font-weight="700">Discord</text>
+  <text x="940" y="418" text-anchor="middle" fill="#b0bccb" font-size="12.5">alerts only</text>
+</svg>
