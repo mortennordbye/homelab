@@ -138,6 +138,7 @@ cleanup() {
 trap cleanup EXIT
 
 log "Bundling ${#present[@]} files → $ARCHIVE"
+for f in "${present[@]}"; do printf '  \033[0;32m•\033[0m %s\n' "$f"; done
 # Paths are repo-relative (we cd'd to the repo root), so the zip restores into
 # the same tree on extract.
 zip -q "$TMP/$ARCHIVE" "${present[@]}"
