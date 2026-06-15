@@ -3,7 +3,20 @@ global:
   sendAnonymousUsage: false
 
 deployment:
-  replicas: 1
+  replicas: 3
+
+# Spread the replicas one-per-hypervisor so losing a physical host (or a VIP
+# L2-announce re-election) can't take the edge proxy down. topology.kubernetes.io/zone
+# maps to the hypervisor (hyper1/2/3), matching how the apps express failure domains.
+# 3 replicas / 3 zones => exactly one replica per hypervisor.
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: traefik
+            app.kubernetes.io/instance: traefik-traefik
+        topologyKey: topology.kubernetes.io/zone
 
 api:
   dashboard: true

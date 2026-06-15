@@ -14,3 +14,6 @@ configMapGenerator:
   - name: dashboard-homelab-spog
     files:
       - homelab-spog.json
+  - name: dashboard-homelab-log-spog
+    files:
+      - homelab-log-spog.json
