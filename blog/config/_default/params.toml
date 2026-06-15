@@ -60,6 +60,8 @@ showTaxonomies = true
 showAuthorsBadges = false
 showWordCount = true
 showComments = true
+showRelatedContent = true
+relatedContentLimit = 3
 sharingLinks = ["linkedin", "reddit"]
 
 [list]
