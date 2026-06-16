@@ -60,6 +60,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Add a `scripts/optimize-images.ts` step that runs `sharp` over `public/images/`.
 - **Where:** `portfolio/public/images/`.
 
+### ESLint 9 → 10 and TypeScript 5 → 6 bump
+- **What:** Bump `eslint` to `^10` and `typescript` to `^6` in `portfolio/package.json`. Held back during the 2026-06-16 dependency-upgrade pass (which shipped Node 22, Next 16.2.9, React 19.2.7, and the patch/minor batch).
+- **Why deferred:** `eslint-config-next@16.2.9` transitively bundles `typescript-eslint@8`, whose ESLint peer range tops out at 9 and which warns on TS 6.x. Forcing either major now risks a peer/plugin mismatch with zero runtime benefit (lint + typecheck only). The two unblock together.
+- **Unblock:** Wait for an `eslint-config-next` release built on `typescript-eslint@9` (supports ESLint 10 + TS 6). Then bump both, run a containerised `tsc --noEmit` and `next build`, and clear any new `strict`-mode diagnostics TS 6 surfaces.
+- **Where:** `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
+
 ## Cluster / infra
 
 ### Extend Loki PVC after kube-events validated
