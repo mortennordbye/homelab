@@ -96,6 +96,10 @@ vars (point to `.env.example`) and how to run a single test by name. -->
 # watch:  <watch mode, if any>
 ```
 
+**Build with containers in mind.** Develop, test, and ship inside containers so the app runs the same on a laptop, in CI, and in production — no "works on my machine" drift. Provide a `Dockerfile` (and a `compose` file when the app needs a database or other services), and keep the toolchain out of the host where practical.
+
+**Make the dev process easy.** Wrap the common workflows — setup, run, test, lint, build — behind short scripts or `make` targets so a newcomer (or an AI) runs one obvious command instead of memorizing flags. A documented one-liner beats a paragraph of setup steps.
+
 ## Before reporting a task complete
 
 <!-- TODO: The one command (or short list) that must pass before a task is "done" —
@@ -192,5 +196,7 @@ any UI rules (touch-target size, primary-action placement) that apply. -->
 ### Code quality
 
 - **Reuse before adding** — check shared utilities and components before writing new ones.
+- **Prefer established frameworks over reinventing** — reach for a well-maintained, widely-used library or framework before hand-rolling auth, routing, state, validation, dates, HTTP, and the like. The same goes for the UI: build on a proven component library or design system (e.g. shadcn/ui, Radix, MUI, Chakra) instead of hand-rolling buttons, modals, dropdowns, and form controls — you get accessibility, keyboard handling, and a consistent look for free. Mature libraries are battle-tested and keep the app feeling consistent; bespoke versions drift and rot. Only build your own when no good option fits, and say why.
+- **Use current, supported versions** — pick libraries that are actively maintained and pull a recent, supported release. Avoid end-of-life or abandoned dependencies; an unmaintained library is a security and upgrade liability.
 - **No dead code** — if a button has no handler, implement or remove it.
 - **No premature abstractions** — only extract a helper when it's used in 2+ places.
