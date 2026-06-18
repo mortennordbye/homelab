@@ -174,6 +174,8 @@ encrypted at rest. -->
 
 ### Environment variables
 
+**Use `.env` files for configuration and secrets.** Read config from the environment, loaded from a local `.env` file that is **gitignored and never committed**. Commit a `.env.example` listing every variable with safe placeholder values so a newcomer knows what to set. Validate the required vars at startup (a central validated module) and fail fast with a clear message when one is missing.
+
 <!-- TODO: How env vars are read and validated — a central validated module vs raw
 access — and how to add a new one (extend the schema + `.env.example`). -->
 
