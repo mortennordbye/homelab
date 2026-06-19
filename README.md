@@ -177,6 +177,14 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 ### Star this repo if you find it useful
 
+<a href="https://www.star-history.com/#mortennordbye/homelab&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=mortennordbye/homelab&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=mortennordbye/homelab&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=mortennordbye/homelab&type=Date" width="600" />
+  </picture>
+</a>
+
 Made by [Morten Victor Nordbye](https://nordbye.it)
 
 </div>
