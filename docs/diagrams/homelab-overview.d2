@@ -82,12 +82,16 @@ hosts: Physical Hosts · Proxmox VE {
   style.fill: "#f1f5f9"
   style.stroke: "#475569"
   style.font-color: "#1e293b"
-  grid-columns: 4
-  hyper1: Hyper1 · M920 {
+  grid-columns: 5
+  hyper1: "Hyper1 · M70q Gen 2\nctrl-01 + worker-01" {
     shape: image
     icon: ${di}/proxmox.svg
   }
-  hyper2: Hyper2 · M920q {
+  hyper2: "Hyper2 · M920q\nctrl-02 + worker-02" {
+    shape: image
+    icon: ${di}/proxmox.svg
+  }
+  hyper3: "Hyper3 · M920 Tiny\nctrl-03 + worker-03" {
     shape: image
     icon: ${di}/proxmox.svg
   }
@@ -108,15 +112,31 @@ k8s: Genesis · Talos Kubernetes {
   style.stroke: "#4f46e5"
   style.font-color: "#312e81"
 
-  nodes: Talos Nodes {
+  nodes: "Talos Nodes · one CP + one worker per host" {
     class: sub
     style.font-size: 26
-    grid-columns: 2
-    cp: Control Plane x3 {
+    grid-columns: 3
+    cp1: "ctrl-01 · hyper1" {
       shape: image
       icon: ${di}/talos.svg
     }
-    wk: Workers x3 {
+    cp2: "ctrl-02 · hyper2" {
+      shape: image
+      icon: ${di}/talos.svg
+    }
+    cp3: "ctrl-03 · hyper3" {
+      shape: image
+      icon: ${di}/talos.svg
+    }
+    wk1: "worker-01 · hyper1" {
+      shape: image
+      icon: ${di}/talos.svg
+    }
+    wk2: "worker-02 · hyper2" {
+      shape: image
+      icon: ${di}/talos.svg
+    }
+    wk3: "worker-03 · hyper3" {
       shape: image
       icon: ${di}/talos.svg
     }
