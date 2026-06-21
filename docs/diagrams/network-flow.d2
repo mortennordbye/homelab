@@ -51,6 +51,7 @@ net: Ingress & Cluster Networking {
   metallb: MetalLB {shape: image; icon: ${di}/metallb.svg}
   traefik: Traefik {shape: image; icon: ${di}/traefik.svg}
   cert: cert-manager {shape: image; icon: ${di}/cert-manager.svg}
+  externaldns: external-dns {shape: image; icon: ${di}/cloudflare.svg}
   coredns: CoreDNS {shape: image; icon: ${di}/coredns.svg}
   cilium: Cilium {shape: image; icon: ${di}/cilium.svg}
 }
@@ -181,6 +182,7 @@ net.traefik -> obs.grafana {style: {stroke: "#0284c7"}}
 # ── TLS / DNS (cyan dashed) ──
 net.cert -> net.traefik: certs {style: {stroke: "#0891b2"; stroke-dash: 4}}
 net.cert -> cloudflare: DNS-01 {style: {stroke: "#0891b2"; stroke-dash: 4}}
+net.externaldns -> cloudflare: CNAME records {style: {stroke: "#0891b2"; stroke-dash: 4}}
 cloudflare -> letsencrypt: ACME {style: {stroke: "#0891b2"; stroke-dash: 4}}
 
 # ── GitOps (indigo dashed) ──
@@ -201,6 +203,7 @@ ops.eso -> obs.alertmanager {style: {stroke: "#7c3aed"}}
 ops.eso -> sec.authentik {style: {stroke: "#7c3aed"}}
 ops.eso -> sec.sidekick {style: {stroke: "#7c3aed"}}
 ops.eso -> net.cert {style: {stroke: "#7c3aed"}}
+ops.eso -> net.externaldns {style: {stroke: "#7c3aed"}}
 ops.reloader -> sec.sidekick: reload {style: {stroke: "#9333ea"; stroke-dash: 4}}
 ops.reloader -> media.gluetun: reload {style: {stroke: "#9333ea"; stroke-dash: 4}}
 
