@@ -1,0 +1,44 @@
+provider:
+  name: cloudflare
+
+# Cloudflare API token (Zone:Read + DNS:Edit on the managed zones).
+env:
+  - name: CF_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-token-secret
+        key: cloudflare-token
+
+# Derive desired records from Gateway API HTTPRoutes.
+sources:
+  - gateway-httproute
+
+# Manage only the public zone; nordbye.it / logeverylift.com records stay hand-maintained.
+domainFilters:
+  - bigd.no
+
+# Never publish internal split-horizon hostnames, even if a route slips the gateway filter.
+excludeDomains:
+  - local.bigd.no
+
+# Start conservative: create/update records, never delete. Switch to "sync" once trusted.
+policy: upsert-only
+
+# Ownership tracking. txtPrefix templates the record type so the TXT never collides with a CNAME.
+registry: txt
+txtOwnerId: genesis
+txtPrefix: "%{record_type}-"
+
+# v0.21 default is external-dns.kubernetes.io/; pinned so the gateway target annotation always matches.
+annotationPrefix: external-dns.kubernetes.io/
+
+extraArgs:
+  # Only manage routes attached to the public Traefik gateway (label set in traefik/gateway-public.yaml).
+  - --gateway-label-filter=external-dns=public
+
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    release: kube-prometheus-stack
+
+logLevel: info

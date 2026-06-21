@@ -3,8 +3,13 @@ kind: Gateway
 metadata:
   name: traefik-gateway-public
   namespace: traefik
+  labels:
+    # Selected by external-dns --gateway-label-filter so only public routes get DNS records.
+    external-dns: public
   annotations:
     traefik.io/service.serversscheme: h2c
+    # external-dns publishes every public route on this gateway as a CNAME to this DDNS A record.
+    external-dns.kubernetes.io/target: ddns.bigd.no
 spec:
   gatewayClassName: traefik
   listeners:

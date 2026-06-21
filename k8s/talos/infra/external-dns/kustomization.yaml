@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - externalsecret.yaml
+  - ciliumnetworkpolicy.yaml
+
+namespace: external-dns
+helmCharts:
+  - name: external-dns
+    repo: https://kubernetes-sigs.github.io/external-dns/
+    namespace: external-dns
+    version: 1.21.1
+    releaseName: external-dns
+    valuesFile: ./values.yaml
