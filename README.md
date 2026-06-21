@@ -86,7 +86,7 @@ homelab
 | Category      | Components                                                                                                                                                                             |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | GitOps        | [ArgoCD](https://argoproj.github.io/cd/)                                                                                                                                               |
-| Networking    | [Cilium](https://cilium.io/) (CNI + eBPF), [Traefik](https://traefik.io/) ([Gateway API](https://gateway-api.sigs.k8s.io/))                                                            |
+| Networking    | [Cilium](https://cilium.io/) (CNI + eBPF), [Traefik](https://traefik.io/) ([Gateway API](https://gateway-api.sigs.k8s.io/)), [external-dns](https://github.com/kubernetes-sigs/external-dns) (Cloudflare DNS automation)                                                            |
 | Security      | [Falco](https://falco.org/) (runtime security), [Authentik](https://goauthentik.io/) (SSO), [Cert-manager](https://cert-manager.io/), [External Secrets Operator](https://external-secrets.io/)                                                                                    |
 | Observability | [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [Loki](https://grafana.com/oss/loki/) (logs), [Tempo](https://grafana.com/oss/tempo/) (traces), [OpenTelemetry](https://opentelemetry.io/), [Metrics-server](https://github.com/kubernetes-sigs/metrics-server) |
 | Automation    | [Reloader](https://github.com/stakater/Reloader) (config/secret-triggered rollouts)                                                                                                   |
@@ -175,7 +175,7 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 <div align="center">
 
-### Star this repo if you find it useful
+### ⭐ Star this repo if you find it useful ⭐
 
 <a href="https://www.star-history.com/#mortennordbye/homelab&Date">
   <picture>
