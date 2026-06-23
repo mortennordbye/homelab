@@ -6,7 +6,6 @@ metadata:
   labels:
     app: omni-tools
 spec:
-  replicas: 1
   revisionHistoryLimit: 3
   selector:
     matchLabels:

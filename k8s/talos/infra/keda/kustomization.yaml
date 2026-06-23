@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+
+namespace: keda
+helmCharts:
+  - name: keda
+    repo: https://kedacore.github.io/charts
+    includeCRDs: true
+    namespace: keda
+    version: 2.20.1
+    releaseName: keda
+    valuesFile: ./values.yaml
