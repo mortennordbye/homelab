@@ -101,6 +101,15 @@ media: Media Stack {
   gluetun: Gluetun VPN {shape: image; icon: ${di}/gluetun.svg}
 }
 
+# ───────────── AI / LLM ─────────────
+ai: AI / LLM {
+  class: layer
+  style.font-size: 34
+  style: {fill: "#fae8ff"; stroke: "#c026d3"; font-color: "#86198f"}
+  ollama: Ollama {shape: image; icon: ${di}/ollama.svg}
+  openwebui: Open WebUI {shape: image; icon: ${di}/open-webui.svg}
+}
+
 # ───────────── Observability ─────────────
 obs: Observability {
   class: layer
@@ -224,6 +233,12 @@ media.gluetun -> pia: VPN tunnel {style: {stroke: "#ea580c"; stroke-width: 2; st
 
 # ── Data (blue) ──
 sites.workout -> sites.postgres: SQL {style: {stroke: "#0369a1"; stroke-width: 2}}
+
+# ── AI / LLM (fuchsia) ──
+net.traefik -> ai.openwebui: HTTP route {style: {stroke: "#0284c7"}}
+ai.openwebui -> ai.ollama: LLM API {style: {stroke: "#c026d3"; stroke-width: 2}}
+ops.argocd -> ai: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
+ai -> store.nfscsi: models + data {style: {stroke: "#d97706"}}
 
 # ── Observability (teal) ──
 net.traefik -> obs.tempo: OTLP traces {style: {stroke: "#0d9488"}}
