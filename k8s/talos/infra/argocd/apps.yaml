@@ -26,6 +26,11 @@ spec:
       destination:
         name: in-cluster
         namespace: "{{ path.basename }}"
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas
       syncPolicy:
         automated:
           prune: true

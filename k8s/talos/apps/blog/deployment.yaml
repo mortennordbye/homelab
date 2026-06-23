@@ -6,7 +6,6 @@ metadata:
   labels:
     app.kubernetes.io/name: blog
 spec:
-  replicas: 3
   revisionHistoryLimit: 3
   selector:
     matchLabels:

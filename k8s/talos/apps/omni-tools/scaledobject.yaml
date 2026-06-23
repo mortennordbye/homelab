@@ -1,0 +1,18 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: omni-tools
+  namespace: omni-tools
+spec:
+  scaleTargetRef:
+    name: omni-tools
+  minReplicaCount: 0
+  maxReplicaCount: 1
+  cooldownPeriod: 300
+  triggers:
+    - type: cron
+      metadata:
+        timezone: Europe/Oslo
+        start: "0 7 * * *"
+        end: "0 23 * * *"
+        desiredReplicas: "1"
