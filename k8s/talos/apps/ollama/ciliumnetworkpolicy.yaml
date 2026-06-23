@@ -1,0 +1,18 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: ollama-policy
+  namespace: ollama
+spec:
+  endpointSelector:
+    matchLabels:
+      app: ollama
+  ingress:
+    - fromEntities:
+        - cluster
+        - host
+        - health
+      toPorts:
+        - ports:
+            - port: "11434"
+              protocol: TCP
