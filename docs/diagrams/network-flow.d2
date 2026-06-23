@@ -64,6 +64,7 @@ ops: GitOps & Config {
   argocd: ArgoCD {shape: image; icon: ${di}/argo-cd.svg}
   eso: External Secrets
   reloader: Reloader
+  keda: KEDA {shape: image; icon: ${di}/keda.svg}
 }
 
 # ───────────── Public sites ─────────────
@@ -202,6 +203,9 @@ ops.argocd -> sites: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> media: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> net: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> obs: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
+
+# ── Autoscaling (indigo) ──
+ops.keda -> sites: scale 0↔N · cron {style: {stroke: "#4f46e5"; stroke-width: 2}}
 
 # ── Secrets & reload (purple) ──
 bitwarden -> ops.eso: secrets {style: {stroke: "#7c3aed"; stroke-width: 2}}
