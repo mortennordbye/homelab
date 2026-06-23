@@ -5,6 +5,18 @@ resources:
   - namespace.yaml
 
 namespace: keda
+
+# kustomize's namespace transformer doesn't recognise the ServiceMonitor CRD
+# as namespaced, so stamp it explicitly — the infra Application has no default
+# destination namespace to fall back on.
+patches:
+  - target:
+      kind: ServiceMonitor
+    patch: |
+      - op: add
+        path: /metadata/namespace
+        value: keda
+
 helmCharts:
   - name: keda
     repo: https://kedacore.github.io/charts
