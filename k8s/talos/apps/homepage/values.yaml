@@ -107,6 +107,10 @@ config:
             icon: mdi-tools
             href: https://omni-tools.bigd.no
             description: Utility tools
+        - Open WebUI:
+            icon: open-webui.png
+            href: https://open-webui.local.bigd.no
+            description: Local LLM chat (Ollama)
         - Portfolio (Production):
             icon: mdi-web
             href: https://nordbye.it
