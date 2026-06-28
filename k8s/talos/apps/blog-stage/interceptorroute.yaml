@@ -1,0 +1,15 @@
+apiVersion: http.keda.sh/v1beta1
+kind: InterceptorRoute
+metadata:
+  name: blog-stage
+  namespace: stage-blog
+spec:
+  target:
+    service: blog-stage
+    port: 80
+  rules:
+    - hosts:
+        - blog-stage.local.bigd.no
+  scalingMetric:
+    concurrency:
+      targetValue: 100

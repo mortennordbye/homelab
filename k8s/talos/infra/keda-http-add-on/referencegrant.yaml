@@ -8,6 +8,9 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: stage-portfolio
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: stage-blog
   to:
     - group: ""
       kind: Service
