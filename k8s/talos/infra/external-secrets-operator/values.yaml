@@ -1,5 +1,11 @@
 bitwarden-sdk-server:
   enabled: true
+  # The server reads its TLS cert into memory at startup and never reloads it, so
+  # a cert-manager renewal of bitwarden-tls-certs leaves the pod serving the old
+  # cert while ESO trusts the new CA -> cluster-wide ExternalSecret x509 failures.
+  # Stakater Reloader restarts the Deployment when the cert secret changes.
+  deploymentAnnotations:
+    secret.reloader.stakater.com/reload: bitwarden-tls-certs
 
 installCRDs: true
 
