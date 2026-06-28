@@ -68,13 +68,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Cluster / infra
 
-### KEDA phase 2 — convert `headroom` to HTTP wake-from-zero
-- **What:** Phase 2 (the KEDA **HTTP add-on**, `keda-add-ons-http`, for daytime wake-from-zero) is **live on `portfolio-stage`, `blog-stage`, `it-tools`, `omni-tools`** (all four now on `external-push` ScaledObjects + InterceptorRoutes; add-on infra in `k8s/talos/infra/keda-http-add-on/`, chart 0.15.0). The one greenlit app **not yet converted is `headroom`** — still on a cron `ScaledObject`.
-- **Why deferred:** Not selected in the last rollout pass; no blocker, just wasn't done. It has a single RWO PVC at `/data` (remounts cleanly on a 0↔1 single replica), so it's a clean fit.
-- **Unblock:** Same four edits as the others, per the handover's per-app table — **`.notes/PHASE2-HTTP-ADDON-HANDOVER.md`**: repoint `httproute.yaml` backendRef → `keda-add-ons-http-interceptor-proxy:8080` (keda ns); add the interceptor `fromEndpoints` rule to its CNP on pod targetPort **3001**; add an `InterceptorRoute` (`headroom-service:8080`, host `headroom.local.bigd.no`); overwrite the cron `scaledobject.yaml` with `external-push`; and add a `from: { namespace: headroom }` entry to the add-on ReferenceGrant. `it-tools` is the worked reference.
-- **Where:** `k8s/talos/apps/headroom/{httproute.yaml,ciliumnetworkpolicy.yaml,scaledobject.yaml,kustomization.yaml}` + new `interceptorroute.yaml`; `k8s/talos/infra/keda-http-add-on/referencegrant.yaml`.
-- **Decided against (do not re-explore):** **ollama + open-webui** stay off the HTTP add-on — the interceptor 403s websocket `Upgrade` (kedacore/http-add-on#654) and open-webui needs websockets for chat streaming; ollama also has no HTTPRoute and modest savings (`OLLAMA_KEEP_ALIVE: 5m` already unloads the model). If their idle footprint is ever worth reclaiming, use a plain overnight **cron** ScaledObject, not the interceptor. **workout** also skipped (bundled Postgres stays up 24/7, so wake-from-zero only sleeps the frontend). **Prod portfolio/blog** stay on cron (cold-start latency for real visitors).
-
 ### Extend Loki PVC after kube-events validated
 - **What:** Bump the Loki single-binary PVC from 20Gi (`singleBinary.persistence.size`). Deferred until the new Kubernetes-events ingestion (Alloy `loki.source.kubernetes_events`, 7d per-stream retention) is confirmed working and we can measure real storage growth.
 - **Why deferred:** Events are low-volume, so 20Gi is expected to suffice; sizing should be driven by observed usage, not guessed. Also, the PVC is a StatefulSet `volumeClaimTemplate` — immutable after creation — so a resize is non-trivial.
