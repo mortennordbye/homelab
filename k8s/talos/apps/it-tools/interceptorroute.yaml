@@ -1,0 +1,15 @@
+apiVersion: http.keda.sh/v1beta1
+kind: InterceptorRoute
+metadata:
+  name: it-tools
+  namespace: it-tools
+spec:
+  target:
+    service: it-tools-service
+    port: 80
+  rules:
+    - hosts:
+        - it-tools.bigd.no
+  scalingMetric:
+    concurrency:
+      targetValue: 100

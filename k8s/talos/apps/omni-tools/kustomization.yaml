@@ -10,4 +10,5 @@ resources:
   - httproute.yaml
   - namespace.yaml
   - ciliumnetworkpolicy.yaml
+  - interceptorroute.yaml
   - scaledobject.yaml

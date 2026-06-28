@@ -16,6 +16,15 @@ spec:
         - ports:
             - port: "80"
               protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": keda
+            "k8s:app.kubernetes.io/component": interceptor
+            "k8s:app.kubernetes.io/part-of": keda-add-ons-http
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
     - fromEntities:
         - host
         - health

@@ -11,6 +11,12 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: stage-blog
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: it-tools
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: omni-tools
   to:
     - group: ""
       kind: Service
