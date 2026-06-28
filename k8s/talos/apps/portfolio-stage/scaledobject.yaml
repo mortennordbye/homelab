@@ -10,9 +10,7 @@ spec:
   maxReplicaCount: 1
   cooldownPeriod: 300
   triggers:
-    - type: cron
+    - type: external-push
       metadata:
-        timezone: Europe/Oslo
-        start: "0 7 * * *"
-        end: "0 23 * * *"
-        desiredReplicas: "1"
+        scalerAddress: keda-add-ons-http-external-scaler.keda:9090
+        interceptorRoute: portfolio-stage

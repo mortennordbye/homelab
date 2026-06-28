@@ -1,0 +1,15 @@
+apiVersion: http.keda.sh/v1beta1
+kind: InterceptorRoute
+metadata:
+  name: portfolio-stage
+  namespace: stage-portfolio
+spec:
+  target:
+    service: nordbye-service-stage
+    port: 8080
+  rules:
+    - hosts:
+        - portfolio-stage.local.bigd.no
+  scalingMetric:
+    concurrency:
+      targetValue: 100

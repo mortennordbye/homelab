@@ -1,0 +1,13 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: app-httproutes-to-interceptor
+  namespace: keda
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: stage-portfolio
+  to:
+    - group: ""
+      kind: Service

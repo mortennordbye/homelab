@@ -1,0 +1,4 @@
+interceptor:
+  replicas:
+    min: 2
+    max: 5
