@@ -77,6 +77,8 @@ blog/TEXT-STYLE.md
 blog/IMAGE-STYLE.md
 blog/LINKEDIN-STYLE.md
 qbittorrent-vpn/
+# Local working notes — handovers, diagnoses, plans (kept out of the public repo)
+/.notes/
 .screenshots/
 .playwright-mcp/
 .claude/settings.local.json
