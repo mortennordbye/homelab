@@ -6099,6 +6099,1438 @@
           "id": 8603
         }
       ]
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 74
+      },
+      "id": 9000,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Current / min / max replicas per KEDA ScaledObject (from the HPA KEDA manages). 0 = scaled to zero.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": false,
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 75
+          },
+          "id": 9001,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true,
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducers": [],
+              "show": false
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "label_replace(kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\")",
+              "legendFormat": "",
+              "refId": "A",
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "label_replace(kube_horizontalpodautoscaler_spec_min_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\")",
+              "legendFormat": "",
+              "refId": "B",
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "label_replace(kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\")",
+              "legendFormat": "",
+              "refId": "C",
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "title": "KEDA replica state",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "container": true,
+                  "endpoint": true,
+                  "instance": true,
+                  "job": true,
+                  "namespace": true,
+                  "pod": true,
+                  "service": true,
+                  "horizontalpodautoscaler": true,
+                  "prometheus": true,
+                  "receive": true
+                },
+                "includeByName": {},
+                "indexByName": {},
+                "renameByName": {
+                  "app": "ScaledObject",
+                  "Value #A": "Current",
+                  "Value #B": "Min",
+                  "Value #C": "Max"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Per-trigger active state reported by the KEDA operator. cronScaler = time-based; externalPushScaler = HTTP wake-from-zero.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": false,
+                "inspect": false
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "Idle",
+                      "index": 0
+                    },
+                    "1": {
+                      "text": "Active",
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Active"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "text",
+                          "value": 0
+                        },
+                        {
+                          "color": "green",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 75
+          },
+          "id": 9002,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true,
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducers": [],
+              "show": false
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "keda_scaler_active{scaledObject=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "title": "KEDA scaler status",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "container": true,
+                  "endpoint": true,
+                  "instance": true,
+                  "job": true,
+                  "namespace": true,
+                  "pod": true,
+                  "service": true,
+                  "horizontalpodautoscaler": true,
+                  "prometheus": true,
+                  "receive": true
+                },
+                "includeByName": {},
+                "indexByName": {},
+                "renameByName": {
+                  "scaledObject": "ScaledObject",
+                  "type": "Trigger",
+                  "scaler": "Scaler",
+                  "Value": "Active"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Running replicas per KEDA-scaled app. Watch the nightly headroom dip (cron 23:00\u219207:00), prod 3\u21921 off-hours, and HTTP wake spikes on the stage/tools apps.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none",
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 83
+          },
+          "id": 9003,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "kube_deployment_status_replicas{deployment=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools\"}",
+              "legendFormat": "{{namespace}}/{{deployment}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Replicas over time",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Pending-request metric the keda-http-add-on scaler reports to KEDA per host. >0 drives wake-from-zero for portfolio-stage / blog-stage / it-tools / omni-tools.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none",
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 91
+          },
+          "id": 9004,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "keda_scaler_metrics_value{scaledObject=~\"portfolio-stage|blog-stage|it-tools|omni-tools\"}",
+              "legendFormat": "{{scaledObject}}",
+              "refId": "A"
+            }
+          ],
+          "title": "HTTP wake-from-zero \u2014 pending requests",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Health of the HTTP add-on scaler\u2019s queue pinger. Non-zero = wake-from-zero routing may be degraded. Requires the scaler ServiceMonitor added in this change; populates once scraped.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none",
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 91
+          },
+          "id": 9005,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "scaler_pinger_unreachable_pods",
+              "legendFormat": "unreachable interceptor pods",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(scaler_pinger_fetch_errors_total[5m]))",
+              "legendFormat": "fetch errors/s",
+              "refId": "B"
+            }
+          ],
+          "title": "HTTP add-on scaler health",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Total replicas currently running across all KEDA-scaled apps.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 0,
+            "y": 98
+          },
+          "id": 9006,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(kube_deployment_status_replicas{deployment=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools\"})",
+              "legendFormat": "A",
+              "refId": "A"
+            }
+          ],
+          "title": "Pods running (KEDA apps)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "How many KEDA apps are currently at zero replicas.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 8,
+            "y": 98
+          },
+          "id": 9007,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum((kube_deployment_status_replicas{deployment=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools\"}) == bool 0)",
+              "legendFormat": "A",
+              "refId": "A"
+            }
+          ],
+          "title": "Apps scaled to zero",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "KEDA ScaledObject reconcile errors over the selected range. Should be 0.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 98
+          },
+          "id": 9008,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(keda_scaled_object_errors_total[$__range])) or vector(0)",
+              "legendFormat": "A",
+              "refId": "A"
+            }
+          ],
+          "title": "ScaledObject errors (range)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "CPU-core requests freed right now vs running every app at its max replicas 24/7.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none",
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 102
+          },
+          "id": 9009,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01",
+              "legendFormat": "cores freed vs max",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU cores reclaimed",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Memory requests freed right now vs running every app at its max replicas 24/7.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "bytes",
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 102
+          },
+          "id": 9010,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*134217728 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*67108864 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*67108864 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*33554432",
+              "legendFormat": "memory freed vs max",
+              "refId": "A"
+            }
+          ],
+          "title": "Memory reclaimed",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Core-hours of CPU request avoided over the selected range vs max-24/7 baseline.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 0,
+            "y": 109
+          },
+          "id": 9011,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01)[$__range:5m]) * $__range_s / 3600",
+              "legendFormat": "A",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU core-hours saved (range)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "GiB-hours of memory request avoided over the selected range.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none",
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 8,
+            "y": 109
+          },
+          "id": 9012,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.125 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.0625 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.0625 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.03125)[$__range:5m]) * $__range_s / 3600",
+              "legendFormat": "A",
+              "refId": "A"
+            }
+          ],
+          "title": "Memory GiB-hours saved (range)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Replica-hours not run over the selected range vs max-24/7 baseline.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none",
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 109
+          },
+          "id": 9013,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0)) + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0)) + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0)))[$__range:5m]) * $__range_s / 3600",
+              "legendFormat": "A",
+              "refId": "A"
+            }
+          ],
+          "title": "Pod-hours saved (range)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Notional electricity cost avoided by downscaling, on owned bare metal: freed CPU cores \u00d7 ${watts_per_core} W/core \u00d7 hours \u00d7 ${cost_per_kwh} per kWh. It is a request-based estimate (not measured draw); the figure is in whatever currency cost_per_kwh is set in.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 113
+          },
+          "id": 9014,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "legendFormat": "A",
+              "refId": "A"
+            }
+          ],
+          "title": "Electricity cost avoided (range)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Range-average power profile projected to a 730-hour month. Same assumptions as the range figure.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 113
+          },
+          "id": 9015,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * 730 * ${cost_per_kwh}",
+              "legendFormat": "A",
+              "refId": "A"
+            }
+          ],
+          "title": "Projected monthly electricity saved",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Electricity cost avoided per app over the selected range (same assumptions as the range stat).",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "none",
+              "decimals": 3
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 119
+          },
+          "id": 9016,
+          "options": {
+            "displayMode": "gradient",
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "maxVizHeight": 300,
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "legendFormat": "headroom",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "legendFormat": "portfolio",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "legendFormat": "blog",
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "legendFormat": "portfolio-stage",
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "legendFormat": "blog-stage",
+              "refId": "E"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "legendFormat": "it-tools",
+              "refId": "F"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "legendFormat": "omni-tools",
+              "refId": "G"
+            }
+          ],
+          "title": "Electricity cost avoided per app (range)",
+          "type": "bargauge"
+        }
+      ],
+      "title": "KEDA Autoscaling",
+      "type": "row"
     }
   ],
   "preload": false,
@@ -6202,6 +7634,44 @@
         "skipUrlSync": false,
         "multi": false,
         "includeAll": false
+      },
+      {
+        "current": {
+          "text": "1.5",
+          "value": "1.5"
+        },
+        "description": "Electricity price per kWh (in your local currency) used for the cost-avoided panels.",
+        "label": "El. price /kWh",
+        "name": "cost_per_kwh",
+        "options": [
+          {
+            "selected": true,
+            "text": "1.5",
+            "value": "1.5"
+          }
+        ],
+        "query": "1.5",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "10",
+          "value": "10"
+        },
+        "description": "Assumed power draw per freed CPU core (watts) used for the cost-avoided panels.",
+        "label": "Watts per CPU core",
+        "name": "watts_per_core",
+        "options": [
+          {
+            "selected": true,
+            "text": "10",
+            "value": "10"
+          }
+        ],
+        "query": "10",
+        "skipUrlSync": false,
+        "type": "textbox"
       }
     ]
   },
@@ -6213,6 +7683,6 @@
   "timezone": "browser",
   "title": "Homelab-SPOG",
   "uid": "mns9wmn",
-  "version": 25,
+  "version": 26,
   "weekStart": ""
 }

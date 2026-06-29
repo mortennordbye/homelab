@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: keda-add-ons-http-scaler
+  namespace: keda
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - keda
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: scaler
+      app.kubernetes.io/name: http-add-on
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

@@ -7,6 +7,7 @@ namespace: keda
 # it here (same pattern as loki/tempo into `monitoring`).
 resources:
   - referencegrant.yaml
+  - servicemonitor.yaml
 
 helmCharts:
   - name: keda-add-ons-http
