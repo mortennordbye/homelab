@@ -6168,7 +6168,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "label_replace(kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\")",
+              "expr": "max by (app) (label_replace(kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\"))",
               "legendFormat": "",
               "refId": "A",
               "instant": true,
@@ -6180,7 +6180,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "label_replace(kube_horizontalpodautoscaler_spec_min_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\")",
+              "expr": "max by (app) (label_replace(kube_horizontalpodautoscaler_spec_min_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\"))",
               "legendFormat": "",
               "refId": "B",
               "instant": true,
@@ -6192,7 +6192,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "label_replace(kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\")",
+              "expr": "max by (app) (label_replace(kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\"))",
               "legendFormat": "",
               "refId": "C",
               "instant": true,
@@ -6240,7 +6240,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Per-trigger active state reported by the KEDA operator. cronScaler = time-based; externalPushScaler = HTTP wake-from-zero.",
+          "description": "Active state per ScaledObject reported by the KEDA operator. cronScaler = time-based; externalPushScaler = HTTP wake-from-zero.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -6338,7 +6338,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "keda_scaler_active{scaledObject=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools\"}",
+              "expr": "max by (scaledObject, scaler) (keda_scaler_active{scaledObject=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools\"})",
               "legendFormat": "",
               "refId": "A",
               "instant": true,
@@ -6372,8 +6372,7 @@
                 "indexByName": {},
                 "renameByName": {
                   "scaledObject": "ScaledObject",
-                  "type": "Trigger",
-                  "scaler": "Scaler",
+                  "scaler": "Trigger",
                   "Value": "Active"
                 }
               }
@@ -7683,6 +7682,6 @@
   "timezone": "browser",
   "title": "Homelab-SPOG",
   "uid": "mns9wmn",
-  "version": 26,
+  "version": 27,
   "weekStart": ""
 }
