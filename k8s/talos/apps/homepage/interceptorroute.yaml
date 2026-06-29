@@ -1,0 +1,15 @@
+apiVersion: http.keda.sh/v1beta1
+kind: InterceptorRoute
+metadata:
+  name: homepage
+  namespace: homepage
+spec:
+  target:
+    service: homepage
+    port: 3000
+  rules:
+    - hosts:
+        - hub.bigd.no
+  scalingMetric:
+    concurrency:
+      targetValue: 100

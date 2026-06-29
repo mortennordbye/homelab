@@ -23,6 +23,9 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: audiobookshelf
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: homepage
   to:
     - group: ""
       kind: Service

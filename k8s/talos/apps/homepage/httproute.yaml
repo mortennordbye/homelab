@@ -25,8 +25,12 @@ spec:
             kind: Middleware
             name: homepage-basicauth
       backendRefs:
+        # Route through the KEDA HTTP interceptor so homepage wakes from zero.
+        # basicauth (above) runs at Traefik first, so only authenticated
+        # requests reach the interceptor and wake the pod.
         - group: ""
           kind: Service
-          name: homepage
-          port: 3000
+          name: keda-add-ons-http-interceptor-proxy
+          namespace: keda
+          port: 8080
           weight: 1

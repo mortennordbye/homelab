@@ -6168,7 +6168,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "max by (app) (label_replace(kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools|keda-hpa-ollama|keda-hpa-open-webui|keda-hpa-audiobookshelf\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\"))",
+              "expr": "max by (app) (label_replace(kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools|keda-hpa-ollama|keda-hpa-open-webui|keda-hpa-audiobookshelf|keda-hpa-homepage\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\"))",
               "legendFormat": "",
               "refId": "A",
               "instant": true,
@@ -6180,7 +6180,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "max by (app) (label_replace(kube_horizontalpodautoscaler_spec_min_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools|keda-hpa-ollama|keda-hpa-open-webui|keda-hpa-audiobookshelf\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\"))",
+              "expr": "max by (app) (label_replace(kube_horizontalpodautoscaler_spec_min_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools|keda-hpa-ollama|keda-hpa-open-webui|keda-hpa-audiobookshelf|keda-hpa-homepage\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\"))",
               "legendFormat": "",
               "refId": "B",
               "instant": true,
@@ -6192,7 +6192,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "max by (app) (label_replace(kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools|keda-hpa-ollama|keda-hpa-open-webui|keda-hpa-audiobookshelf\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\"))",
+              "expr": "max by (app) (label_replace(kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler=~\"keda-hpa-headroom|keda-hpa-portfolio|keda-hpa-blog|keda-hpa-portfolio-stage|keda-hpa-blog-stage|keda-hpa-it-tools|keda-hpa-omni-tools|keda-hpa-ollama|keda-hpa-open-webui|keda-hpa-audiobookshelf|keda-hpa-homepage\"}, \"app\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-(.*)\"))",
               "legendFormat": "",
               "refId": "C",
               "instant": true,
@@ -6338,7 +6338,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "max by (scaledObject, scaler) (keda_scaler_active{scaledObject=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools|ollama|open-webui|audiobookshelf\"})",
+              "expr": "max by (scaledObject, scaler) (keda_scaler_active{scaledObject=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools|ollama|open-webui|audiobookshelf|homepage\"})",
               "legendFormat": "",
               "refId": "A",
               "instant": true,
@@ -6467,7 +6467,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "kube_deployment_status_replicas{deployment=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools|ollama|open-webui|audiobookshelf\"}",
+              "expr": "kube_deployment_status_replicas{deployment=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools|ollama|open-webui|audiobookshelf|homepage\"}",
               "legendFormat": "{{namespace}}/{{deployment}}",
               "refId": "A"
             }
@@ -6562,7 +6562,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "keda_scaler_metrics_value{scaledObject=~\"portfolio-stage|blog-stage|it-tools|omni-tools|ollama|open-webui|audiobookshelf\"}",
+              "expr": "keda_scaler_metrics_value{scaledObject=~\"portfolio-stage|blog-stage|it-tools|omni-tools|ollama|open-webui|audiobookshelf|homepage\"}",
               "legendFormat": "{{scaledObject}}",
               "refId": "A"
             }
@@ -6732,7 +6732,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(kube_deployment_status_replicas{deployment=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools|ollama|open-webui|audiobookshelf\"})",
+              "expr": "sum(kube_deployment_status_replicas{deployment=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools|ollama|open-webui|audiobookshelf|homepage\"})",
               "legendFormat": "A",
               "refId": "A"
             }
@@ -6797,7 +6797,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum((kube_deployment_status_replicas{deployment=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools|ollama|open-webui|audiobookshelf\"}) == bool 0)",
+              "expr": "sum((kube_deployment_status_replicas{deployment=~\"headroom|portfolio|blog|portfolio-stage|blog-stage|it-tools|omni-tools|ollama|open-webui|audiobookshelf|homepage\"}) == bool 0)",
               "legendFormat": "A",
               "refId": "A"
             }
@@ -6961,7 +6961,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05",
+              "expr": "sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0",
               "legendFormat": "cores freed vs max",
               "refId": "A"
             }
@@ -7056,7 +7056,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*134217728 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*67108864 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*67108864 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*1073741824 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*268435456 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*268435456",
+              "expr": "sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*134217728 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*67108864 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*67108864 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*33554432 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*1073741824 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*268435456 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*268435456 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0",
               "legendFormat": "memory freed vs max",
               "refId": "A"
             }
@@ -7122,7 +7122,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05)[$__range:5m]) * $__range_s / 3600",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * $__range_s / 3600",
               "legendFormat": "A",
               "refId": "A"
             }
@@ -7188,7 +7188,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.125 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.0625 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.0625 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*1.0 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.25 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.25)[$__range:5m]) * $__range_s / 3600",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.125 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.0625 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.0625 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.03125 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*1.0 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.25 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.25 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * $__range_s / 3600",
               "legendFormat": "A",
               "refId": "A"
             }
@@ -7254,7 +7254,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0)) + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0)) + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0)))[$__range:5m]) * $__range_s / 3600",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0)) + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0)) + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0)) + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0)))[$__range:5m]) * $__range_s / 3600",
               "legendFormat": "A",
               "refId": "A"
             }
@@ -7320,7 +7320,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
               "legendFormat": "A",
               "refId": "A"
             }
@@ -7386,7 +7386,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * 730 * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * ${watts_per_core}/1000 * 730 * ${cost_per_kwh}",
               "legendFormat": "A",
               "refId": "A"
             }
@@ -7552,6 +7552,16 @@
               "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
               "legendFormat": "audiobookshelf",
               "refId": "J"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "legendFormat": "homepage",
+              "refId": "K"
             }
           ],
           "title": "Electricity cost avoided per app (range)",
@@ -7712,6 +7722,6 @@
   "timezone": "browser",
   "title": "Homelab-SPOG",
   "uid": "mns9wmn",
-  "version": 29,
+  "version": 30,
   "weekStart": ""
 }
