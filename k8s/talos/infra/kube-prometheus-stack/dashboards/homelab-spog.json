@@ -7267,7 +7267,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Notional electricity cost avoided by downscaling, on owned bare metal: freed CPU cores \u00d7 ${watts_per_core} W/core \u00d7 hours \u00d7 ${cost_per_kwh} per kWh. It is a request-based estimate (not measured draw); the figure is in whatever currency cost_per_kwh is set in.",
+          "description": "Notional electricity cost avoided by downscaling, on owned bare metal: freed CPU cores \u00d7 ${watts_per_core} W/core \u00d7 hours \u00d7 ${cost_per_kwh} per kWh. It is a request-based estimate (not measured draw), shown in kr.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -7283,7 +7283,7 @@
                   }
                 ]
               },
-              "unit": "none",
+              "unit": "currency:kr",
               "decimals": 2
             },
             "overrides": []
@@ -7349,7 +7349,7 @@
                   }
                 ]
               },
-              "unit": "none",
+              "unit": "currency:kr",
               "decimals": 2
             },
             "overrides": []
@@ -7415,7 +7415,7 @@
                   }
                 ]
               },
-              "unit": "none",
+              "unit": "currency:kr",
               "decimals": 3
             },
             "overrides": []
@@ -7639,8 +7639,8 @@
           "text": "1.5",
           "value": "1.5"
         },
-        "description": "Electricity price per kWh (in your local currency) used for the cost-avoided panels.",
-        "label": "El. price /kWh",
+        "description": "Electricity price in kr per kWh used for the cost-avoided panels.",
+        "label": "El. price (kr/kWh)",
         "name": "cost_per_kwh",
         "options": [
           {
@@ -7682,6 +7682,6 @@
   "timezone": "browser",
   "title": "Homelab-SPOG",
   "uid": "mns9wmn",
-  "version": 27,
+  "version": 28,
   "weekStart": ""
 }
