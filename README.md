@@ -141,9 +141,9 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 ### Storage
 
-| Device | Model            | Capacity        | Details                        |
-| ------ | ---------------- | --------------- | ------------------------------ |
-| NAS    | Synology DS1522+ | 3 × 20TB (60TB) | SHR, Btrfs, 2 × 1TB NVMe cache |
+| Device | Model            | CPU                            | RAM  | Capacity         | Details                                                                              |
+| ------ | ---------------- | ------------------------------ | ---- | ---------------- | ------------------------------------------------------------------------------------ |
+| NAS    | Synology DS1522+ | AMD Ryzen R1600 (2C @ 2.6 GHz) | 8 GB | 3 × 20TB (60TB)  | SHR, Btrfs, 2 × 1TB NVMe cache · DSM 7.3.2 · hosts a Proxmox Backup Server (PBS) VM   |
 
 ### Network Equipment
 
@@ -158,9 +158,9 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 #### Home Assistant Server
 
-| Component | Model                       | CPU        | RAM | Network         |
-| --------- | --------------------------- | ---------- | --- | --------------- |
-| Hardware  | Topton N100 Fanless Mini PC | Intel N100 | TBD | 4 × 2.5G i226-V |
+| Component | Model                       | CPU        | RAM | Storage    | OS                 | Network         |
+| --------- | --------------------------- | ---------- | --- | ---------- | ------------------ | --------------- |
+| Hardware  | Topton N100 Fanless Mini PC | Intel N100 | TBD | 512 GB SSD | Home Assistant OS  | 4 × 2.5G i226-V |
 
 #### Devices
 
