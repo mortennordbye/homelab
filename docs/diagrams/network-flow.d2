@@ -48,12 +48,12 @@ net: Ingress & Cluster Networking {
   class: layer
   style.font-size: 34
   style: {fill: "#cffafe"; stroke: "#0891b2"; font-color: "#155e75"}
-  metallb: MetalLB {shape: image; icon: ${di}/metallb.svg}
   traefik: Traefik {shape: image; icon: ${di}/traefik.svg}
   cert: cert-manager {shape: image; icon: ${di}/cert-manager.svg}
   externaldns: external-dns {shape: image; icon: ${di}/cloudflare.svg}
   coredns: CoreDNS {shape: image; icon: ${di}/coredns.svg}
   cilium: Cilium {shape: image; icon: ${di}/cilium.svg}
+  interceptor: "KEDA HTTP Interceptor\n(wake-from-zero)" {shape: image; icon: ${di}/keda.svg}
 }
 
 # ───────────── GitOps & config ─────────────
@@ -183,7 +183,7 @@ edge.gw -> edge.sw {style: {stroke: "#475569"; stroke-width: 2}}
 edge.sw -> hw: LAN {style: {stroke: "#475569"; stroke-width: 2}}
 edge.sw -> edge.ap {style: {stroke: "#475569"}}
 edge.gw -> net.traefik: ingress {style: {stroke: "#0284c7"; stroke-width: 3}}
-net.metallb -> net.traefik: LB IP {style: {stroke: "#0891b2"; stroke-dash: 3}}
+net.cilium -> net.traefik: LB IP · L2 + LBIPAM {style: {stroke: "#0891b2"; stroke-dash: 3}}
 net.traefik -> sites: HTTP routes {style: {stroke: "#0284c7"; stroke-width: 2}}
 net.traefik -> media.seerr {style: {stroke: "#0284c7"}}
 net.traefik -> media.plex {style: {stroke: "#0284c7"}}
@@ -205,7 +205,13 @@ ops.argocd -> net: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> obs: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 
 # ── Autoscaling (indigo) ──
-ops.keda -> sites: scale 0↔N · cron {style: {stroke: "#4f46e5"; stroke-width: 2}}
+# Cron scaling: portfolio & blog 1↔3 off-hours, headroom 0↔1 overnight.
+ops.keda -> sites: cron scale 0↔N {style: {stroke: "#4f46e5"; stroke-width: 2}}
+# HTTP wake-from-zero: KEDA's external scaler reads pending requests from the
+# interceptor; traffic to idle apps routes through it and wakes them 0→1.
+ops.keda -> net.interceptor: HTTP scaler {style: {stroke: "#4f46e5"; stroke-width: 2; stroke-dash: 4}}
+net.traefik -> net.interceptor: wake-from-zero routes {style: {stroke: "#0284c7"; stroke-width: 2}}
+net.interceptor -> sites: wake 0↔1 {style: {stroke: "#4f46e5"; stroke-width: 2}}
 
 # ── Secrets & reload (purple) ──
 bitwarden -> ops.eso: secrets {style: {stroke: "#7c3aed"; stroke-width: 2}}
@@ -238,9 +244,12 @@ media.gluetun -> pia: VPN tunnel {style: {stroke: "#ea580c"; stroke-width: 2; st
 # ── Data (blue) ──
 sites.workout -> sites.postgres: SQL {style: {stroke: "#0369a1"; stroke-width: 2}}
 
-# ── AI / LLM (fuchsia) ──
-net.traefik -> ai.openwebui: HTTP route {style: {stroke: "#0284c7"}}
-ai.openwebui -> ai.ollama: LLM API {style: {stroke: "#c026d3"; stroke-width: 2}}
+# ── AI / LLM (fuchsia) — both wake from zero via the interceptor ──
+# open-webui wakes on inbound traffic; it then calls ollama through the same
+# interceptor (OLLAMA_BASE_URL → ollama-wake) so ollama wakes only when used.
+net.interceptor -> ai.openwebui: wake 0↔1 {style: {stroke: "#4f46e5"; stroke-width: 2}}
+ai.openwebui -> net.interceptor: ollama API {style: {stroke: "#c026d3"; stroke-width: 2}}
+net.interceptor -> ai.ollama: wake 0↔1 {style: {stroke: "#4f46e5"; stroke-width: 2}}
 ops.argocd -> ai: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ai -> store.nfscsi: models + data {style: {stroke: "#d97706"}}
 

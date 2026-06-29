@@ -123,7 +123,7 @@ Doc-only edits (`README.md`, `BACKLOG.md`, this file) skip the above.
 Homelab infrastructure for a 6-node Proxmox cluster running a Talos Kubernetes cluster ("Genesis"), provisioned by Terraform and reconciled by ArgoCD.
 
 - **Compute:** Proxmox VE on two Lenovo ThinkCentre nodes; Talos Linux VMs form the K8s cluster.
-- **Networking:** Cilium (CNI), Traefik via Gateway API, MetalLB for L2.
+- **Networking:** Cilium (CNI + L2 announcements / LB IPAM for LoadBalancer VIPs), Traefik via Gateway API.
 - **Security:** cert-manager, External Secrets Operator, Falco, Authentik.
 - **Observability:** kube-prometheus-stack, Grafana, Loki, OpenTelemetry collector.
 - **Storage:** Proxmox CSI for block, Synology NFS for shared volumes.
