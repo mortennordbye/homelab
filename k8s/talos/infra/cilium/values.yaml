@@ -75,6 +75,10 @@ hubble:
       - flow
       - icmp
       - httpV2
+      # Policy verdicts (incl. AUDIT) to Prometheus, so would-be-denied traffic
+      # is recorded over the 7d retention rather than only the short Hubble ring
+      # buffer — needed to safely move off policyAuditMode into enforcement.
+      - policy:sourceContext=workload-name|reserved-identity;destinationContext=workload-name|reserved-identity;labelsContext=source_namespace,destination_namespace
     enableOpenMetrics: true
     port: 9965
     serviceMonitor:
