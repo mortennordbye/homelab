@@ -13,10 +13,12 @@ spec:
     - audiobookshelf.bigd.no
   rules:
     - backendRefs:
+        # Route through the KEDA HTTP interceptor so audiobookshelf wakes from zero.
         - group: ""
           kind: Service
-          name: audiobookshelf-service
-          port: 80
+          name: keda-add-ons-http-interceptor-proxy
+          namespace: keda
+          port: 8080
           weight: 1
       matches:
         - path:

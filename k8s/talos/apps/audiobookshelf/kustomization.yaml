@@ -12,3 +12,5 @@ resources:
   - namespace.yaml
   - service.yaml
   - ciliumnetworkpolicy.yaml
+  - interceptorroute.yaml
+  - scaledobject.yaml

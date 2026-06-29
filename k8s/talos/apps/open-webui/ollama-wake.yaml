@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama-wake
+  namespace: open-webui
+spec:
+  # ExternalName alias to the KEDA HTTP interceptor proxy. open-webui points
+  # OLLAMA_BASE_URL at http://ollama-wake:8080 so its ollama traffic flows
+  # through the interceptor, which wakes ollama from zero on demand.
+  type: ExternalName
+  externalName: keda-add-ons-http-interceptor-proxy.keda.svc.cluster.local

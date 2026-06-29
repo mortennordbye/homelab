@@ -17,6 +17,12 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: omni-tools
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: open-webui
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: audiobookshelf
   to:
     - group: ""
       kind: Service

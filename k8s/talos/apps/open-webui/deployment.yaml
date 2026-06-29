@@ -24,7 +24,9 @@ spec:
             - containerPort: 8080
           env:
             - name: OLLAMA_BASE_URL
-              value: "http://ollama-service.ollama:11434"
+              # Routed through the KEDA HTTP interceptor (via the ollama-wake
+              # ExternalName) so ollama wakes from zero on demand.
+              value: "http://ollama-wake:8080"
             - name: WEBUI_AUTH
               value: "true"
           volumeMounts:

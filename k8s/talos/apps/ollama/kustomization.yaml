@@ -10,3 +10,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - ciliumnetworkpolicy.yaml
+  - interceptorroute.yaml
+  - scaledobject.yaml

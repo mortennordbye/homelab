@@ -1,0 +1,15 @@
+apiVersion: http.keda.sh/v1beta1
+kind: InterceptorRoute
+metadata:
+  name: audiobookshelf
+  namespace: audiobookshelf
+spec:
+  target:
+    service: audiobookshelf-service
+    port: 80
+  rules:
+    - hosts:
+        - audiobookshelf.bigd.no
+  scalingMetric:
+    concurrency:
+      targetValue: 100

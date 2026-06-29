@@ -1,0 +1,18 @@
+apiVersion: http.keda.sh/v1beta1
+kind: InterceptorRoute
+metadata:
+  name: ollama
+  namespace: ollama
+spec:
+  target:
+    service: ollama-service
+    port: 11434
+  rules:
+    - hosts:
+        # Internal-only wake host. open-webui resolves the `ollama-wake`
+        # ExternalName (in its namespace) to the interceptor proxy and sends
+        # this as the Host header; the interceptor matches it and wakes ollama.
+        - ollama-wake
+  scalingMetric:
+    concurrency:
+      targetValue: 100
