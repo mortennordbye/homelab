@@ -120,3 +120,30 @@ spec:
               Certificate `{{ $labels.namespace }}/{{ $labels.name }}` expires in {{ $value | humanizeDuration }}.
               cert-manager should be auto-renewing — if this fires, the renewal pipeline is broken.
               Check: kubectl -n {{ $labels.namespace }} describe certificate {{ $labels.name }}
+
+        # KEDA-aware replacement for the upstream KubeHpaMaxedOut (disabled in
+        # values.yaml defaultRules). KEDA repurposes the HPA and drives it from
+        # external triggers (cron / HTTP concurrency), so "at max" is by design —
+        # the cron prod apps sit at 3 all day, wake-from-zero apps cap at 1 — and
+        # is not the under-provisioning signal this alert was built for. We exclude
+        # keda-hpa-* and keep full coverage for genuine CPU/memory HPAs. Expr
+        # mirrors the upstream rule (current == max, and max != min) verbatim.
+        - alert: KubeHpaMaxedOut
+          expr: |
+            (
+              kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", horizontalpodautoscaler!~"keda-hpa-.*"}
+                == kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics", horizontalpodautoscaler!~"keda-hpa-.*"}
+            )
+            and on (namespace, horizontalpodautoscaler)
+            (
+              kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics", horizontalpodautoscaler!~"keda-hpa-.*"}
+                != kube_horizontalpodautoscaler_spec_min_replicas{job="kube-state-metrics", horizontalpodautoscaler!~"keda-hpa-.*"}
+            )
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} running at max replicas'
+            description: |
+              HPA `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` has been at max replicas for over 15 minutes and cannot scale higher to meet demand. (KEDA-driven HPAs are excluded — their max is set by schedule/trigger, not load.)
+              Check: kubectl -n {{ $labels.namespace }} describe hpa {{ $labels.horizontalpodautoscaler }}

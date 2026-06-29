@@ -168,6 +168,12 @@ kubeProxy:
 ## Basic alerting rules
 defaultRules:
   create: true
+  # Replaced by a KEDA-aware version in homelab-alerts.yaml. KEDA drives HPAs by
+  # external triggers (cron / HTTP concurrency), so "running at max" is by design
+  # for every cron/wake app (e.g. portfolio & blog pinned at 3 during the day) and
+  # is not the under-provisioning signal this upstream alert was built for.
+  disabled:
+    KubeHpaMaxedOut: true
   rules:
     alertmanager: false
     etcd: false
