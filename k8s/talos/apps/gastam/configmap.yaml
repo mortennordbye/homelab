@@ -1,0 +1,423 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gastam-site
+  namespace: gastam
+data:
+  index.html: |
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="no" lang="no">
+    <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Gastam.no &raquo; Velkommen!</title>
+    <meta name="description" content="Gastam.no - din nye favorittside paa nettet. Web 2.0!" />
+    <meta name="keywords" content="gastam, web 2.0, blogg, community, norge" />
+    <style type="text/css">
+    /* ----------  2008 Web 2.0 stylesheet  ---------- */
+    * { margin:0; padding:0; }
+    body {
+      font-family: "Lucida Grande", "Trebuchet MS", Verdana, Arial, sans-serif;
+      font-size: 13px;
+      color: #333333;
+      background: #5b8fb0 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='4' height='4'><rect width='4' height='4' fill='%235b8fb0'/><rect width='2' height='2' fill='%2354869f'/></svg>") repeat;
+      background-image: -webkit-gradient(linear, left top, left bottom, from(#7fb6d6), to(#42718e));
+      background-attachment: fixed;
+      text-align: center;
+    }
+    a { color:#1a6fb5; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    
+    #wrapper {
+      width: 880px;
+      margin: 0 auto;
+      text-align: left;
+      background: #ffffff;
+      border: 1px solid #2c4a5e;
+      -moz-border-radius: 10px;
+      -webkit-border-radius: 10px;
+      border-radius: 10px;
+      margin-top: 18px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+      -moz-box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+      overflow: hidden;
+    }
+    
+    /* ----------  Header  ---------- */
+    #header {
+      position: relative;
+      height: 96px;
+      background: #2b6ca3;
+      background-image: -webkit-gradient(linear, left top, left bottom,
+         from(#5fa8dd), color-stop(0.5,#2b78b5), color-stop(0.5,#1f5e95), to(#16486f));
+      background-image: -moz-linear-gradient(top,#5fa8dd 0%,#2b78b5 50%,#1f5e95 50%,#16486f 100%);
+      background-image: linear-gradient(to bottom,#5fa8dd 0%,#2b78b5 50%,#1f5e95 50%,#16486f 100%);
+      border-bottom: 3px solid #ffcc00;
+      padding: 18px 24px 0 24px;
+    }
+    #logo {
+      font-family: "Trebuchet MS", Helvetica, Arial, sans-serif;
+      font-size: 44px;
+      font-weight: bold;
+      letter-spacing: -2px;
+      color: #ffffff;
+      text-shadow: 0 2px 3px rgba(0,0,0,0.45);
+      text-decoration: none;
+    }
+    #logo span.dot { color:#ffcc00; }
+    #logo small {
+      font-size: 12px;
+      font-weight: normal;
+      letter-spacing: 0;
+      display:block;
+      color:#cde6f7;
+      text-shadow:none;
+      margin-top: 2px;
+    }
+    #beta {
+      position:absolute;
+      top: 10px;
+      right: -34px;
+      width: 130px;
+      text-align:center;
+      background: #e23b2e;
+      background-image: -webkit-gradient(linear,left top,left bottom,from(#ff6a5e),to(#c41d12));
+      color:#fff;
+      font-size:11px;
+      font-weight:bold;
+      letter-spacing:2px;
+      padding: 4px 0;
+      -webkit-transform: rotate(45deg);
+      -moz-transform: rotate(45deg);
+      transform: rotate(45deg);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+    }
+    
+    /* ----------  Navigation tabs  ---------- */
+    #nav {
+      background: #16486f;
+      background-image: -webkit-gradient(linear,left top,left bottom,from(#23597f),to(#103a5b));
+      height: 34px;
+      padding-left: 14px;
+      border-top: 1px solid #6fb0d8;
+    }
+    #nav ul { list-style:none; }
+    #nav li { float:left; }
+    #nav a {
+      display:block;
+      float:left;
+      color:#dceaf5;
+      font-weight:bold;
+      font-size:12px;
+      padding: 9px 18px;
+      margin-top: 4px;
+      margin-right: 3px;
+      -moz-border-radius: 6px 6px 0 0;
+      -webkit-border-top-left-radius:6px;
+      -webkit-border-top-right-radius:6px;
+      border-radius: 6px 6px 0 0;
+    }
+    #nav a:hover { background:#2e6e9c; text-decoration:none; color:#fff; }
+    #nav a.active {
+      background:#ffffff;
+      color:#16486f;
+      background-image:-webkit-gradient(linear,left top,left bottom,from(#ffffff),to(#e7f1f8));
+    }
+    
+    /* ----------  Layout  ---------- */
+    #main { padding: 16px; overflow:hidden; }
+    #content { float:left; width: 560px; }
+    #sidebar { float:right; width: 270px; }
+    
+    /* glossy panels */
+    .box {
+      border:1px solid #b8cfdd;
+      -moz-border-radius:8px; -webkit-border-radius:8px; border-radius:8px;
+      margin-bottom:16px;
+      background:#fff;
+      overflow:hidden;
+    }
+    .box h2 {
+      font-size:14px;
+      color:#fff;
+      padding:7px 12px;
+      background:#4a90c4;
+      background-image:-webkit-gradient(linear,left top,left bottom,from(#6cb0de),to(#3877a8));
+      background-image: linear-gradient(to bottom,#6cb0de,#3877a8);
+      text-shadow:0 1px 1px rgba(0,0,0,0.3);
+    }
+    .box .inner { padding:12px; }
+    
+    /* big web2.0 callout */
+    #hero {
+      text-align:center;
+      background:#eef7fc;
+      border:1px solid #b8cfdd;
+      -moz-border-radius:8px;-webkit-border-radius:8px;border-radius:8px;
+      padding:22px;
+      margin-bottom:16px;
+      background-image:-webkit-gradient(linear,left top,left bottom,from(#ffffff),to(#dcecf6));
+      background-image: linear-gradient(to bottom,#ffffff,#dcecf6);
+    }
+    #hero h1 {
+      font-family:"Trebuchet MS",Helvetica,sans-serif;
+      font-size:30px;
+      color:#2b6ca3;
+      letter-spacing:-1px;
+      text-shadow:0 1px 0 #fff;
+      margin-bottom:8px;
+    }
+    #hero p { color:#555; font-size:14px; margin-bottom:14px; }
+    
+    /* shiny button */
+    .btn {
+      display:inline-block;
+      font-weight:bold;
+      font-size:14px;
+      color:#ffffff !important;
+      padding:9px 22px;
+      border:1px solid #2c7a2c;
+      -moz-border-radius:7px;-webkit-border-radius:7px;border-radius:7px;
+      background:#4caf3f;
+      background-image:-webkit-gradient(linear,left top,left bottom,from(#7ed46f),color-stop(0.5,#52b23f),color-stop(0.5,#3d9a2f),to(#2f7d24));
+      background-image: linear-gradient(to bottom,#7ed46f 0%,#52b23f 50%,#3d9a2f 50%,#2f7d24 100%);
+      text-shadow:0 -1px 1px rgba(0,0,0,0.35);
+      box-shadow:0 1px 2px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+    .btn:hover { text-decoration:none !important; }
+    .btn.blue {
+      border-color:#1a5b8c;
+      background:#3a8fcf;
+      background-image:-webkit-gradient(linear,left top,left bottom,from(#79bde8),color-stop(0.5,#3a8fcf),color-stop(0.5,#2c79b3),to(#1f5e90));
+      background-image: linear-gradient(to bottom,#79bde8 0%,#3a8fcf 50%,#2c79b3 50%,#1f5e90 100%);
+    }
+    
+    /* news list */
+    .news { margin-bottom:14px; }
+    .news h3 { font-size:14px; color:#2b6ca3; margin-bottom:2px; }
+    .news .meta { font-size:11px; color:#999; margin-bottom:4px; }
+    .news p { font-size:12px; color:#444; line-height:1.5; }
+    .news hr { border:0; border-top:1px dashed #cddde8; margin:10px 0; }
+    
+    /* sidebar bits */
+    .sidebar-list { list-style:none; }
+    .sidebar-list li { padding:5px 0; border-bottom:1px dotted #cddde8; font-size:12px; }
+    .sidebar-list li a { font-weight:bold; }
+    
+    /* login box */
+    .login label { display:block; font-size:11px; font-weight:bold; color:#555; margin-bottom:2px; }
+    .login input.txt {
+      width:96%; padding:4px; border:1px solid #aac3d4; margin-bottom:8px;
+      -moz-border-radius:3px;border-radius:3px; font-size:12px;
+    }
+    
+    /* counter */
+    #counter {
+      font-family:"Courier New",monospace;
+      background:#111; color:#33ff33;
+      display:inline-block; padding:3px 8px; letter-spacing:3px;
+      border:1px solid #000; font-size:15px; font-weight:bold;
+    }
+    
+    /* tags */
+    .cloud a { display:inline-block; margin:2px 4px; color:#2b6ca3; }
+    .cloud a.s1{font-size:11px;} .cloud a.s2{font-size:13px;} .cloud a.s3{font-size:16px;} .cloud a.s4{font-size:20px;}
+    
+    /* ----------  Footer  ---------- */
+    #footer {
+      clear:both;
+      background:#eef4f8;
+      border-top:1px solid #cddde8;
+      padding:12px 16px;
+      font-size:11px;
+      color:#778;
+      overflow:hidden;
+    }
+    #footer .left { float:left; }
+    #footer .right { float:right; }
+    .badge {
+      display:inline-block; padding:2px 6px; font-size:10px; font-weight:bold;
+      border:1px solid #99b; -moz-border-radius:3px;border-radius:3px;
+      background:#fff; color:#447; margin-left:4px;
+    }
+    marquee { color:#16486f; font-size:12px; padding:6px 0; }
+    </style>
+    </head>
+    
+    <body>
+    <div id="wrapper">
+    
+      <!-- Header -->
+      <div id="header">
+        <a href="#" id="logo">gastam<span class="dot">.no</span>
+          <small>&laquo; din plass paa nettet &raquo;</small>
+        </a>
+        <div id="beta">BETA</div>
+      </div>
+    
+      <!-- Nav -->
+      <div id="nav">
+        <ul>
+          <li><a href="#" class="active">Hjem</a></li>
+          <li><a href="#">Om oss</a></li>
+          <li><a href="#">Blogg</a></li>
+          <li><a href="#">Forum</a></li>
+          <li><a href="#">Galleri</a></li>
+          <li><a href="#">Gjestebok</a></li>
+          <li><a href="#">Kontakt</a></li>
+        </ul>
+      </div>
+    
+      <marquee scrollamount="4">&#9733; Velkommen til nye gastam.no! &nbsp; Vi er naa paa Web 2.0! &nbsp; Registrer deg gratis i dag og bli med i fellesskapet! &nbsp; &#9733;</marquee>
+    
+      <!-- Main -->
+      <div id="main">
+    
+        <!-- Content -->
+        <div id="content">
+    
+          <div id="hero">
+            <h1>Velkommen til Gastam.no!</h1>
+            <p>Norges koseligste lille hjoerne av internett.<br />
+               Bli med i dag &ndash; det er 100% gratis!</p>
+            <a href="#" class="btn">Registrer deg na!</a>
+            &nbsp;
+            <a href="#" class="btn blue">Les mer</a>
+          </div>
+    
+          <div class="box">
+            <h2>Siste nytt</h2>
+            <div class="inner">
+    
+              <div class="news">
+                <h3><a href="#">Ny versjon av siden er lansert!</a></h3>
+                <div class="meta">Postet av admin &bull; 30. juni 2008 &bull; 12 kommentarer</div>
+                <p>Vi har endelig oppgradert til den nye Web 2.0-designen med
+                   avrundede hjoerner, fine farger og glansede knapper. Hva synes
+                   du? Skriv gjerne i gjesteboka!</p>
+              </div>
+              <hr />
+              <div class="news">
+                <h3><a href="#">Forumet er aapent igjen</a></h3>
+                <div class="meta">Postet av admin &bull; 22. juni 2008 &bull; 5 kommentarer</div>
+                <p>Etter litt teknisk trobbel er forumet endelig oppe og gaar igjen.
+                   Kom innom og si hei til de andre medlemmene!</p>
+              </div>
+              <hr />
+              <div class="news">
+                <h3><a href="#">Sommerkonkurranse: vinn en iPod!</a></h3>
+                <div class="meta">Postet av admin &bull; 14. juni 2008 &bull; 27 kommentarer</div>
+                <p>Last opp ditt beste sommerbilde i galleriet, saa er du med i
+                   trekningen av en splitter ny iPod Nano. Lykke til!</p>
+              </div>
+    
+            </div>
+          </div>
+    
+          <div class="box">
+            <h2>Om Gastam.no</h2>
+            <div class="inner">
+              <p style="font-size:12px;line-height:1.6;color:#444;">
+                Gastam.no startet som en liten hobbyside i 2003 og har siden vokst
+                til et hyggelig lite fellesskap. Her finner du blogg, forum, galleri
+                og en alltid like aktiv gjestebok. Vaar misjon er enkel: en koselig
+                plass der alle kan henge ut. Lag deg en bruker, sett opp en profil
+                og bli med paa moroa!
+              </p>
+            </div>
+          </div>
+    
+        </div><!-- /content -->
+    
+        <!-- Sidebar -->
+        <div id="sidebar">
+    
+          <div class="box login">
+            <h2>Logg inn</h2>
+            <div class="inner">
+              <label for="u">Brukernavn</label>
+              <input type="text" id="u" class="txt" />
+              <label for="p">Passord</label>
+              <input type="password" id="p" class="txt" />
+              <a href="#" class="btn blue" style="font-size:12px;padding:6px 16px;">Logg inn</a>
+              <p style="margin-top:8px;font-size:11px;">
+                <a href="#">Glemt passord?</a> &bull; <a href="#">Registrer</a>
+              </p>
+            </div>
+          </div>
+    
+          <div class="box">
+            <h2>Besoekende</h2>
+            <div class="inner" style="text-align:center;">
+              <div id="counter">0008154</div>
+              <p style="font-size:11px;color:#999;margin-top:6px;">
+                Du er besoekende nr. 8154<br />Online naa: <b>13</b>
+              </p>
+            </div>
+          </div>
+    
+          <div class="box">
+            <h2>Meny</h2>
+            <div class="inner">
+              <ul class="sidebar-list">
+                <li>&raquo; <a href="#">Min profil</a></li>
+                <li>&raquo; <a href="#">Siste innlegg</a></li>
+                <li>&raquo; <a href="#">Mest leste</a></li>
+                <li>&raquo; <a href="#">Medlemsliste</a></li>
+                <li>&raquo; <a href="#">RSS-feed</a></li>
+              </ul>
+            </div>
+          </div>
+    
+          <div class="box">
+            <h2>Stikkord (tags)</h2>
+            <div class="inner cloud">
+              <a href="#" class="s2">norge</a>
+              <a href="#" class="s4">blogg</a>
+              <a href="#" class="s1">musikk</a>
+              <a href="#" class="s3">foto</a>
+              <a href="#" class="s2">venner</a>
+              <a href="#" class="s1">spill</a>
+              <a href="#" class="s3">web2.0</a>
+              <a href="#" class="s2">sommer</a>
+              <a href="#" class="s1">koding</a>
+              <a href="#" class="s4">community</a>
+            </div>
+          </div>
+    
+          <div class="box">
+            <h2>Faa med deg dette</h2>
+            <div class="inner" style="text-align:center;">
+              <p style="font-size:11px;color:#777;margin-bottom:8px;">Abonner paa oss:</p>
+              <span class="badge" style="background:#f60;color:#fff;border-color:#c50;">RSS</span>
+              <span class="badge" style="background:#3b5998;color:#fff;border-color:#2d4373;">f</span>
+              <span class="badge" style="background:#00aced;color:#fff;border-color:#0089bd;">tweet</span>
+            </div>
+          </div>
+    
+        </div><!-- /sidebar -->
+    
+      </div><!-- /main -->
+    
+      <!-- Footer -->
+      <div id="footer">
+        <div class="left">
+          &copy; 2003&ndash;2008 Gastam.no &bull; Laget med <span style="color:#e23;">&hearts;</span> i Norge
+        </div>
+        <div class="right">
+          <span class="badge">Valid XHTML 1.0</span>
+          <span class="badge">Valid CSS</span>
+          <span class="badge" style="background:#ffcc00;color:#553;border-color:#cc9900;">Best i 1024x768</span>
+        </div>
+      </div>
+    
+    </div><!-- /wrapper -->
+    
+    <div style="color:#cde6f7;font-size:11px;padding-bottom:24px;">
+      Denne siden er optimalisert for Internet Explorer 7 og Firefox 2.
+    </div>
+    
+    </body>
+    </html>
