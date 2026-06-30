@@ -4,9 +4,17 @@ kind: Kustomization
 commonAnnotations:
   argocd.argoproj.io/sync-wave: "0"
 
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: gastam-site
+    namespace: gastam
+    files:
+      - index.html
+
 resources:
   - namespace.yaml
-  - configmap.yaml
   - deployment.yaml
   - service.yaml
   - httproute.yaml
