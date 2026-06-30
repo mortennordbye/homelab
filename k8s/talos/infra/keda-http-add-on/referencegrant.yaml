@@ -26,6 +26,9 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: homepage
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: gastam
   to:
     - group: ""
       kind: Service
