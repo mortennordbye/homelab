@@ -95,7 +95,11 @@ COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 # is ABI-pinned to alpine's nginx build, which doesn't match nginxinc's
 # custom build — leaving as gzip-only until we either compile the module
 # from source or switch to a brotli-bundled image. Tracked in BACKLOG.
-FROM nginxinc/nginx-unprivileged:1.27-alpine
+# -slim drops the xslt/image-filter/geoip/perl/njs modules this static site
+# never loads, which removes their lib deps (libxml2, libxslt, libpng, libgd)
+# and the OS-package CVEs that come with them. gzip_static is a core module and
+# survives slim. 1.29 is the current stable line — fresher openssl/expat.
+FROM nginxinc/nginx-unprivileged:1.29-alpine-slim
 
 COPY --from=build /app/out /usr/share/nginx/html/nordbye.it/
 COPY nginx/nginx.conf /etc/nginx/nginx.conf

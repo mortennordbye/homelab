@@ -1,0 +1,65 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "timezone": "Europe/Oslo",
+  "schedule": [
+    "before 9am on monday"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "packageRules": [
+    {
+      "description": "Auto-merge low-risk GitHub Actions bumps, grouped into one PR",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "groupName": "github-actions",
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "description": "Auto-merge low-risk Docker base image bumps, grouped into one PR",
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "groupName": "docker base images",
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "description": "Major bumps always open a PR for manual review",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "npm and Terraform: open PRs, never auto-merge",
+      "matchManagers": [
+        "npm",
+        "terraform"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "texlive base is intentionally pinned to :latest and layer-cached in CI",
+      "matchDepNames": [
+        "texlive/texlive"
+      ],
+      "enabled": false
+    }
+  ]
+}
