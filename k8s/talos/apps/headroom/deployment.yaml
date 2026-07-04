@@ -31,6 +31,13 @@ spec:
         - name: headroom
           image: ghcr.io/mortennordbye/headroom:latest
           imagePullPolicy: Always
+          env:
+            # The app enforces a Host-header allowlist (DNS-rebinding guard) that
+            # defaults to loopback only, so it 403s ("host not allowed") behind
+            # the gateway. List the external hostname(s) it's served on. Loopback
+            # is kept for any in-cluster/localhost checks.
+            - name: ALLOWED_HOSTS
+              value: "headroom.local.bigd.no,localhost,127.0.0.1"
           ports:
             - containerPort: 3001
           volumeMounts:
