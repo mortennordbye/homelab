@@ -15,6 +15,18 @@ spec:
       labels:
         app: headroom
     spec:
+      # The headroom image starts as root, fixes /data ownership, then drops to
+      # uid 1000 (node) — but only when that uid can actually write the volume.
+      # On this Synology NFS PVC the in-container chown doesn't stick, so it
+      # falls back to running as root (which the export permits). fsGroup asks
+      # the CSI to make the volume group-writable by gid 1000 so it can run
+      # non-root where the driver supports it; NFS drivers that ignore fsGroup
+      # simply use the root fallback. Do NOT add runAsUser here — starting the
+      # pod non-root removes the entrypoint's ability to escalate for the
+      # fallback and reintroduces the SQLITE_CANTOPEN startup crash.
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: headroom
           image: ghcr.io/mortennordbye/headroom:latest
