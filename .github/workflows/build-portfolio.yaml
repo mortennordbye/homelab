@@ -150,6 +150,11 @@ jobs:
           if [[ -n $(git status -s) ]]; then
             git add $MANIFEST
             git commit -m "chore(portfolio): deploy ${TAG} to ${ENV}"
+            # main may have advanced while the image built (e.g. the blog
+            # deploy pushing its manifest commit); rebase so the push is
+            # fast-forward instead of getting rejected.
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           else
             echo "Manifest already up to date."
