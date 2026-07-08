@@ -5,9 +5,6 @@ metadata:
   namespace: audiobookshelf
   labels:
     app: audiobookshelf
-  annotations:
-    # temporary: replace once to clear the stale rollingUpdate block, then remove
-    argocd.argoproj.io/sync-options: Replace=true
 spec:
   replicas: 1
   strategy:

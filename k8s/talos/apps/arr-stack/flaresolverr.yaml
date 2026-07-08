@@ -29,9 +29,6 @@ kind: Deployment
 metadata:
   name: flaresolverr
   namespace: arr-stack
-  annotations:
-    # temporary: replace once to clear the stale rollingUpdate block, then remove
-    argocd.argoproj.io/sync-options: Replace=true
 spec:
   replicas: 1
   strategy:
