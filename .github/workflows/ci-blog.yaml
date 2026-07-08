@@ -1,0 +1,46 @@
+name: CI Blog
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "blog/**"
+      - ".github/workflows/ci-blog.yaml"
+  push:
+    branches:
+      - main
+    paths:
+      - "blog/**"
+      - ".github/workflows/ci-blog.yaml"
+
+jobs:
+  lint-markdown:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Rule config lives in blog/.markdownlint.yaml
+      - name: Lint markdown content
+        uses: DavidAnson/markdownlint-cli2-action@v24
+        with:
+          globs: "blog/content/**/*.md"
+
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive # Required for Hugo theme
+
+      # Hugo renders inside the image build; this validates templates,
+      # front matter and content before merge. Build only, no push —
+      # build-blog.yaml owns publishing.
+      - name: Build blog image (render check)
+        run: docker build -t blog:ci ./blog

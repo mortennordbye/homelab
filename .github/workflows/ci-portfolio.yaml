@@ -1,0 +1,49 @@
+name: CI Portfolio
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "portfolio/**"
+      - ".github/workflows/ci-portfolio.yaml"
+  push:
+    branches:
+      - main
+    paths:
+      - "portfolio/**"
+      - ".github/workflows/ci-portfolio.yaml"
+
+jobs:
+  lint-typecheck-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: portfolio/.nvmrc
+          cache: npm
+          cache-dependency-path: portfolio/package-lock.json
+
+      - name: Install dependencies
+        working-directory: portfolio
+        run: npm ci
+
+      - name: Lint
+        working-directory: portfolio
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: portfolio
+        run: npm run typecheck
+
+      # Static export catches broken MDX content, bad imports and route
+      # errors that lint/typecheck miss. The deploy workflow rebuilds inside
+      # Docker; this run is the pre-merge gate.
+      - name: Build (static export)
+        working-directory: portfolio
+        run: npm run build
