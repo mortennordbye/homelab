@@ -6,11 +6,11 @@
 # supported modern shape — older monolithic imports still work but emit
 # deprecation warnings.
 
-langchain==0.3.27
+langchain==0.3.30
 langchain-community==0.3.27
-langchain-text-splitters==0.3.9
-langchain-openai==0.3.28
-langchain-chroma==0.2.4
+langchain-text-splitters==0.3.11
+langchain-openai==0.3.35
+langchain-chroma==0.2.6
 
 # Vector store + parsers.
 # chromadb is pulled in transitively by langchain-chroma; pinning it directly
@@ -28,5 +28,5 @@ tiktoken==0.8.0
 # not pulled in by the CLI path. python-multipart is required for form posts.
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
-jinja2==3.1.5
-python-multipart==0.0.20
+jinja2==3.1.6
+python-multipart==0.0.32
