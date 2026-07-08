@@ -50,7 +50,7 @@ spec:
                       - hyper1
       containers:
         - name: flaresolverr
-          image: ghcr.io/flaresolverr/flaresolverr:v3.4.6
+          image: ghcr.io/flaresolverr/flaresolverr:v3.5.0
           ports:
             - containerPort: 8191
               name: http

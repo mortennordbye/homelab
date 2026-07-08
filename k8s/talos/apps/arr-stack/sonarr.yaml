@@ -50,7 +50,7 @@ spec:
                       - hyper1
       containers:
         - name: sonarr
-          image: ghcr.io/linuxserver/sonarr:4.0.16
+          image: ghcr.io/linuxserver/sonarr:4.0.19
           ports:
             - containerPort: 8989
               name: http
