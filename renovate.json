@@ -1,64 +1,212 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    ":rebaseStalePrs",
+    ":semanticCommits"
   ],
   "timezone": "Europe/Oslo",
   "schedule": [
-    "before 9am on monday"
+    "after 10pm every weekday",
+    "before 5am every weekday",
+    "every weekend"
   ],
-  "labels": [
-    "dependencies"
+  "labels": ["dependencies"],
+  "kubernetes": {
+    "managerFilePatterns": ["/k8s/.*\\.ya?ml$/"]
+  },
+  "helm-values": {
+    "managerFilePatterns": ["/k8s/.*/values\\.ya?ml$/"]
+  },
+  "kustomize": {
+    "managerFilePatterns": ["/k8s/.*/kustomization\\.ya?ml$/"]
+  },
+  "terraform": {
+    "managerFilePatterns": ["/terraform/.*\\.tf$/"]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/\\.ya?ml$/"],
+      "matchStrings": [
+        "(?<currentValue>[\\w+\\.\\-]*)['\",;]*\\s*#\\s?renovate: (?<datasource>\\S+)=(?<depName>\\S+)\\s?(registry=(?<registryUrl>\\S+))?\\s?(versioning=(?<versioning>\\S+))?"
+      ]
+    }
   ],
   "packageRules": [
     {
-      "description": "Auto-merge low-risk GitHub Actions bumps, grouped into one PR",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "digest"
-      ],
-      "groupName": "github-actions",
+      "description": "GitHub Actions: group all minor/patch/digest, automerge",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "GitHub Actions",
+      "groupSlug": "github-actions",
       "automerge": true,
-      "platformAutomerge": true
+      "platformAutomerge": true,
+      "addLabels": ["github-actions"]
     },
     {
-      "description": "Auto-merge low-risk Docker base image bumps, grouped into one PR",
-      "matchManagers": [
-        "dockerfile"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "digest"
-      ],
-      "groupName": "docker base images",
+      "description": "Helm Networking: traefik, cilium, cert-manager, external-dns, traefik-crds",
+      "matchManagers": ["kustomize"],
+      "matchPackageNames": ["traefik", "traefik-crds", "cilium", "cert-manager", "external-dns"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Helm Networking",
+      "groupSlug": "helm-networking",
       "automerge": true,
-      "platformAutomerge": true
+      "minimumReleaseAge": "7 days",
+      "addLabels": ["helm", "networking"]
     },
     {
-      "description": "Major bumps always open a PR for manual review",
-      "matchUpdateTypes": [
-        "major"
+      "description": "Helm Platform: argo-cd, reloader, keda, metrics-server, external-secrets, csi drivers",
+      "matchManagers": ["kustomize"],
+      "matchPackageNames": [
+        "argo-cd",
+        "reloader",
+        "keda",
+        "keda-add-ons-http",
+        "metrics-server",
+        "external-secrets",
+        "proxmox-csi-plugin",
+        "csi-driver-nfs"
       ],
-      "automerge": false
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Helm Platform",
+      "groupSlug": "helm-platform",
+      "automerge": true,
+      "minimumReleaseAge": "7 days",
+      "addLabels": ["helm", "platform"]
     },
     {
-      "description": "npm and Terraform: open PRs, never auto-merge",
-      "matchManagers": [
-        "npm",
-        "terraform"
-      ],
-      "automerge": false
+      "description": "Helm Monitoring: kube-prometheus-stack, loki, tempo, alloy",
+      "matchManagers": ["kustomize"],
+      "matchPackageNames": ["kube-prometheus-stack", "loki", "tempo", "alloy"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Helm Monitoring",
+      "groupSlug": "helm-monitoring",
+      "automerge": true,
+      "minimumReleaseAge": "7 days",
+      "addLabels": ["helm", "monitoring"]
     },
     {
-      "description": "texlive base is intentionally pinned to :latest and layer-cached in CI",
-      "matchDepNames": [
-        "texlive/texlive"
-      ],
+      "description": "Helm Security: authentik, falco — manual review",
+      "matchManagers": ["kustomize"],
+      "matchPackageNames": ["authentik", "falco", "falco-falcosidekick"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Helm Security",
+      "groupSlug": "helm-security",
+      "automerge": false,
+      "addLabels": ["helm", "security"]
+    },
+    {
+      "description": "Dockerfile base images: group and automerge minor/patch",
+      "matchManagers": ["dockerfile"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "Dockerfile Base Images",
+      "groupSlug": "docker-base-images",
+      "automerge": true,
+      "platformAutomerge": true,
+      "addLabels": ["docker"]
+    },
+    {
+      "description": "K8s Docker - arr-stack segment",
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["k8s/talos/apps/arr-stack/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Arr Stack",
+      "groupSlug": "arr-stack",
+      "automerge": true,
+      "minimumReleaseAge": "14 days",
+      "addLabels": ["arr-stack"]
+    },
+    {
+      "description": "K8s Docker - plex-media-stack segment",
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["k8s/talos/apps/plex-media-stack/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Plex Media Stack",
+      "groupSlug": "plex-stack",
+      "automerge": true,
+      "minimumReleaseAge": "14 days",
+      "addLabels": ["plex"]
+    },
+    {
+      "description": "K8s Docker - all other apps, grouped",
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["k8s/talos/apps/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "K8s Apps",
+      "groupSlug": "k8s-apps",
+      "automerge": true,
+      "minimumReleaseAge": "14 days",
+      "addLabels": ["k8s-apps"]
+    },
+    {
+      "description": "K8s Docker - infra images",
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["k8s/talos/infra/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "K8s Infra Images",
+      "groupSlug": "k8s-infra",
+      "automerge": true,
+      "minimumReleaseAge": "7 days",
+      "addLabels": ["k8s-infra"]
+    },
+    {
+      "description": "npm - portfolio project",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["portfolio/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm Portfolio",
+      "groupSlug": "npm-portfolio",
+      "automerge": false,
+      "addLabels": ["npm", "portfolio"]
+    },
+    {
+      "description": "npm - blog theme",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["blog/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm Blog",
+      "groupSlug": "npm-blog",
+      "automerge": false,
+      "addLabels": ["npm", "blog"]
+    },
+    {
+      "description": "Terraform: group all, manual review",
+      "matchManagers": ["terraform"],
+      "groupName": "Terraform",
+      "groupSlug": "terraform",
+      "automerge": false,
+      "addLabels": ["terraform"]
+    },
+    {
+      "description": "Security vulnerabilities: fast-track automerge",
+      "matchDepTypes": ["vulnerabilities"],
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "3 days",
+      "addLabels": ["security", "automerge"]
+    },
+    {
+      "description": "Major updates always require manual review",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "addLabels": ["major-update"]
+    },
+    {
+      "description": "Disable: portfolio image is managed by CI",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/mortennordbye/portfolio"],
+      "enabled": false
+    },
+    {
+      "description": "Disable: qbittorrent managed separately",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/linuxserver/qbittorrent"],
+      "enabled": false
+    },
+    {
+      "description": "Disable: texlive pinned intentionally",
+      "matchDepNames": ["texlive/texlive"],
       "enabled": false
     }
   ]
