@@ -191,7 +191,7 @@ its health score staying below 100 is by design.
     (`img.shields.io/badge/...` with logos, 3–5 core technologies), workflow status
     badges (only workflows that exist), repo-meta badges (License, Last Commit, Stars).
 
-```markdown
+~~~markdown
 <div align="center">
 
 # [one emoji] [Project Name]
@@ -228,6 +228,33 @@ Explain the core architecture or main features. If they enumerate, use a table:
 
 ---
 
+## Repository structure
+
+Simplified tree, one line per entry, ignored/generated dirs omitted:
+
+```text
+<repo>/
+├── src/            # ...
+├── .github/
+│   └── workflows/  # CI and security pipelines
+└── ...
+```
+
+---
+
+## Workflows
+
+One row per workflow this repo actually has:
+
+| Workflow | Trigger | Purpose |
+| -------- | ------- | ------- |
+| CI | push, PR | lint, test[, build image] |
+| Dependency Review | PR | block known-vulnerable dependency changes |
+| Scorecard | push, weekly | OpenSSF supply-chain grade |
+| Container Scan | push, weekly | Trivy image scan → Security tab |
+
+---
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -249,10 +276,31 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 Made by [<name>](<homepage or github profile>)
 
 </div>
-```
+~~~
 
   (Omit the Contributing section in the light profile — CONTRIBUTING.md doesn't exist
-  there. Keep the star footer in both profiles.)
+  there. Keep the star footer in both profiles. List only workflows that exist in the
+  Workflows table, and only badges for workflows that were actually created.)
+
+  **Brownfield README (file already exists — skip-list hit).** "Never overwrite" protects
+  the author's prose; it does not mean *contribute nothing*. When README.md already exists,
+  audit it read-only against the template above and report each gap as a finding in the
+  Phase 7 summary, then offer to apply the missing pieces **additively** — insert the
+  blocks, never rewrite existing prose. The checklist:
+
+  1. **Badge block** — the three rows (workflow status incl. Scorecard, tech stack, repo-meta
+     license/last-commit/issues/stars). Add any row that's missing.
+  2. **Centered header** — title, tagline, badges, intro, and any hero images wrapped in one
+     `<div align="center">` block.
+  3. **Star-history footer** — the `⭐ Star this repo` block plus the "Made by" credit.
+  4. **Workflows table** — a `Workflow | Trigger | Purpose` table covering every pipeline
+     the skill just added; without it the user can't see what now runs.
+  5. **Repository structure** — the simplified tree with one-line comments.
+
+  Items 1–3 are already in the greenfield template; the only reason a brownfield README
+  lacks them is that the skip protected the file. Items 4–5 are worth adding to both. Same
+  additive-only rule applies to other existing core files (LICENSE, SECURITY.md): report
+  deviations, never silently rewrite.
 
 - **`CONTRIBUTING.md`** — standard fork → branch → PR flow, plus the *real* detected
   commands for running tests and lint locally. Wrong commands are worse than none.
@@ -681,7 +729,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build image
         run: docker build -t local-scan-image .
-      - uses: aquasecurity/trivy-action@0.28.0
+      - uses: aquasecurity/trivy-action@v0.36.0   # tag is v-prefixed; verify it resolves (see below)
         with:
           image-ref: local-scan-image
           format: sarif
@@ -760,7 +808,22 @@ jobs:
           exempt-pr-labels: 'never-stale'
 ```
 
-Before committing, validate the generated workflows with `actionlint` if available.
+Before committing, validate the generated workflows:
+
+- **`actionlint`** if available — but note it validates *syntax*, not whether a pinned tag
+  exists. It will pass a workflow that references a non-existent action version.
+- **Confirm every pinned third-party action tag actually resolves**, because hard-coded
+  versions in this skill go stale (the Trivy pin above is a known offender — its tags are
+  `v`-prefixed and move often). For each non-`actions/*` pin, check the ref and bump to the
+  latest release if it 404s:
+
+  ```bash
+  gh api /repos/aquasecurity/trivy-action/git/ref/tags/v0.36.0 >/dev/null 2>&1 \
+    || gh api /repos/aquasecurity/trivy-action/releases/latest -q .tag_name   # use this instead
+  ```
+
+  A workflow pinned to a missing tag fails at action resolution on its first run, before
+  doing any work — Phase 7 catches it only if it checks that workflow's run (it does).
 
 ## Phase 4 — Commit
 
@@ -944,8 +1007,18 @@ exists, update it by ID rather than creating a duplicate.
 - `gh api /repos/{owner}/{repo}/rulesets` shows exactly one `protect-default-branch` ruleset.
 - `gh api /repos/{owner}/{repo}/actions/permissions/workflow` shows
   `default_workflow_permissions: read`.
-- `gh workflow list` shows the expected workflows and the latest CI run is green on real
-  commands.
+- `gh workflow list` shows the expected workflows, and **every workflow the skill just
+  added has a green first run — not only CI.** A green CI run says nothing about the
+  security workflows (dependency-review, scorecard, container-scan); a broken third-party
+  action pin (issue this check exists to catch) fails Container Scan on push while CI stays
+  green. Check each generated workflow's latest conclusion and treat any failure as a
+  finding to fix or report, not a pass:
+
+  ```bash
+  for wf in ci.yml dependency-review.yml scorecard.yml container-scan.yml; do
+    echo "$wf: $(gh run list --workflow="$wf" -L1 --json conclusion -q '.[0].conclusion // "no run yet"')"
+  done
+  ```
 - Strict profile: `gh api /repos/{owner}/{repo}/codeowners/errors` returns no errors — a
   broken CODEOWNERS file fails silently otherwise.
 - Strict profile: open a one-line smoke-test PR (e.g. a docs touch) to prove the
