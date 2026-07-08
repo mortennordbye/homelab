@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.25
 #
 # Local Hybrid-Retrieval RAG POC — container image.
 #
@@ -7,7 +7,7 @@
 # container reaches LM Studio at host.docker.internal:1234 (provided by
 # Docker Desktop for Mac automatically).
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.25
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
 # Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
@@ -99,7 +99,7 @@ COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 # never loads, which removes their lib deps (libxml2, libxslt, libpng, libgd)
 # and the OS-package CVEs that come with them. gzip_static is a core module and
 # survives slim. 1.29 is the current stable line — fresher openssl/expat.
-FROM nginxinc/nginx-unprivileged:1.29-alpine-slim
+FROM nginxinc/nginx-unprivileged:1.31-alpine-slim
 
 COPY --from=build /app/out /usr/share/nginx/html/nordbye.it/
 COPY nginx/nginx.conf /etc/nginx/nginx.conf

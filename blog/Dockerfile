@@ -1,6 +1,6 @@
 # --- Stage 1: Build the Site ---
 # Using alpine and installing Hugo extended from GitHub releases
-FROM alpine:3.23 AS builder
+FROM alpine:3.24 AS builder
 
 WORKDIR /src
 
