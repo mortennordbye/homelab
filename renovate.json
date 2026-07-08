@@ -171,6 +171,53 @@
       "addLabels": ["npm", "blog"]
     },
     {
+      "description": "Python - Jarvis AI project",
+      "matchManagers": ["pip_requirements"],
+      "matchFileNames": ["ai/**"],
+      "groupName": "Jarvis AI",
+      "groupSlug": "jarvis-ai",
+      "automerge": false,
+      "addLabels": ["python", "ai"]
+    },
+    {
+      "description": "GitHub Actions major: group all major bumps for manual review",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "GitHub Actions (major)",
+      "groupSlug": "github-actions-major",
+      "automerge": false,
+      "addLabels": ["github-actions", "major-update"]
+    },
+    {
+      "description": "Helm major: group all major chart bumps for manual review",
+      "matchManagers": ["kustomize"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Helm Major Updates",
+      "groupSlug": "helm-major",
+      "automerge": false,
+      "addLabels": ["helm", "major-update"]
+    },
+    {
+      "description": "npm Portfolio major updates",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["portfolio/**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "npm Portfolio (major)",
+      "groupSlug": "npm-portfolio-major",
+      "automerge": false,
+      "addLabels": ["npm", "portfolio", "major-update"]
+    },
+    {
+      "description": "npm Blog major updates",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["blog/**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "npm Blog (major)",
+      "groupSlug": "npm-blog-major",
+      "automerge": false,
+      "addLabels": ["npm", "blog", "major-update"]
+    },
+    {
       "description": "Terraform: group all, manual review",
       "matchManagers": ["terraform"],
       "groupName": "Terraform",
