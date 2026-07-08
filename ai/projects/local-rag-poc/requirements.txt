@@ -6,7 +6,7 @@
 # supported modern shape — older monolithic imports still work but emit
 # deprecation warnings.
 
-langchain==0.3.27
+langchain==0.3.30
 langchain-community==0.3.27
 langchain-text-splitters==0.3.9
 langchain-openai==0.3.28
