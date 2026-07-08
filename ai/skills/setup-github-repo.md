@@ -1,6 +1,6 @@
 ---
 name: setup-github-repo
-description: Sets up a public GitHub repository with best-practice metadata, community health files, security hardening, branch rulesets, CI/CD, and dependency automation. Works on empty or existing repos, offers a light profile (personal projects) and a strict profile (team-grade guardrails), plus an audit-only dry-run mode.
+description: Sets up a public GitHub repository with best-practice metadata, community health files, security hardening, branch rulesets, CI/CD, and dependency automation. Works on empty or existing repos, offers a light profile (personal projects) and a strict profile (team-grade guardrails), plus an audit-only dry-run mode. Writes a plan file the user must approve before any file or API change happens.
 ---
 
 # Setup GitHub Repo
@@ -13,24 +13,25 @@ the GitHub CLI (`gh`), and automated commits.
 Two switches, both resolved before anything runs.
 
 **Run mode — setup (default) or audit.** When invoked with "audit" or "dry-run", execute
-Phase 0 plus every read-only check from Phases 4–6 and print the compliance table
+Phase 0 plus every read-only check from Phases 5–7 and print the compliance table
 (compliant / missing / would-change) without writing anything. Use it before a first run,
 and re-run it later to detect drift on repos that were set up earlier.
 
 **Profile — light (default) or strict.** Security that runs invisibly is always on;
 what the profile controls is friction. A hobby project should not feel like filing a
-change request to push to main.
+change request to push to its default branch.
 
 | | light (personal / hobby) | strict (team / corporate) |
 |---|---|---|
 | Invisible security: Dependabot alerts + security updates, secret scanning, private vulnerability reporting, CodeQL, dependency review, Trivy, OpenSSF Scorecard, read-only Actions token | yes | yes |
 | Core files: README, LICENSE, SECURITY.md, .gitignore, .gitattributes, .editorconfig, dependabot.yml | yes | yes |
 | CI workflow | yes, informational | yes, required check |
-| Default-branch ruleset | block deletion + force-push only; direct pushes to main keep working | PRs required, review count from team size, required status checks |
+| Default-branch ruleset | block deletion + force-push only; direct pushes to the default branch keep working | PRs required, review count from team size, required status checks |
 | Community files: CONTRIBUTING, CODE_OF_CONDUCT, SUPPORT, issue forms, PR template, CODEOWNERS | no | yes |
 | Conventional-Commits PR title check | no | yes |
 | Dependabot auto-merge | no (no required checks to gate it) | opt-in |
 | Release automation + tag protection | ask | ask |
+| AGENTS.md agent guide | ask | ask |
 
 ## Principles
 
@@ -48,7 +49,33 @@ change request to push to main.
    actions pinned to a version tag (never `@master`/`@main`), an explicit least-privilege
    `permissions:` block, a `concurrency` group on CI, and never `pull_request_target`
    combined with a checkout of PR head code.
-5. **Commit surgically.** Stage generated files by explicit path. Never `git add .`.
+5. **Commit surgically.** Stage generated files by explicit path. Never `git add .`. For
+   every commit use the same three steps: `git status --porcelain` (confirm only intended
+   files changed) → `git add <exact/path> ...` → `git commit -m "type(scope): summary"`.
+6. **No heredocs for API bodies.** Some agent harnesses corrupt shell heredocs
+   (`<<'EOF'`) through quote or newline handling. For any `gh api` call that takes a JSON
+   body, write the payload to a temp file *outside the working tree* (so it can't be
+   staged or trip the clean-tree check — use your file-writing tool or `printf`, not a
+   heredoc), apply it with `gh api ... --input "$f"`, and delete it after. The JSON blocks
+   below are payloads to write, not commands to paste into a shell.
+
+## Error handling
+
+Phase 0 gates the hard blockers — auth, admin rights, archived, fork, dirty tree — and
+those abort the run. Once past Phase 0, a single failed settings call must never halt the
+run or pause to ask: log it, add it to the manual-steps summary, and continue. Specific
+cases:
+
+| Failure | Action |
+|---|---|
+| CodeQL default-setup 409 (language unsupported, or already configured) | log "Skipped: CodeQL not available for this language", continue |
+| Ruleset 403 (org restrictions / insufficient rights) | log it, add "apply branch ruleset manually" to the summary, continue |
+| Auto-merge 422 (org policy blocks auto-merge) | skip the repo auto-merge enable, drop `dependabot-automerge.yml`, note the block in the summary, continue |
+| private-vulnerability-reporting / secret-scanning 403 (no Advanced Security, e.g. a private repo) | expected when Phase 0 flagged a non-public repo; skip and note, continue |
+
+Anything not listed: if it is a settings call, treat it like the rows above (log,
+summarize, continue); if it is a blocker that makes later phases meaningless — the
+scaffold failed to push, say — stop and report.
 
 ## Phase 0 — Preflight
 
@@ -56,11 +83,12 @@ Run these checks; abort with a clear message if any fail:
 
 | Check | How |
 |---|---|
-| Authenticated, correct account | `gh auth status` |
+| Authenticated, correct account | `gh auth status`. If not signed in, stop: the user must run `gh auth login` themselves (it is interactive), then preflight resumes. The signed-in account is echoed in the Phase 2 plan |
 | Token can push workflow files | only relevant when the remote uses HTTPS (`git remote get-url origin`): then the token needs the `workflow` scope, fix with `gh auth refresh -s workflow`. SSH remotes are unaffected; do not block on this check for SSH |
 | Repo identity + state | `gh repo view --json nameWithOwner,defaultBranchRef,visibility,isFork,isArchived,description,homepageUrl` |
 | Not archived | `isArchived` must be false; every write fails on an archived repo |
 | Not a fork | if `isFork` is true, stop and confirm: health files belong upstream, and settings changes on forks are usually unwanted |
+| Public repo | this skill targets public repos. If `visibility != "public"`, warn: Scorecard and dependency review are public-only, and private vulnerability reporting / secret scanning depend on GitHub Advanced Security — those steps will be skipped or 403 on a private repo. Confirm before continuing, and drop the affected workflows/settings from the plan |
 | No classic branch protection | `gh api /repos/{owner}/{repo}/branches/<default>/protection` should 404. Existing classic rules stack with the new ruleset and the most restrictive combination wins (an old "1 required review" rule re-creates the solo lockout); offer to migrate and delete them first |
 | Empty vs populated | `git rev-parse HEAD` exit code; `defaultBranchRef == null` means empty |
 | Clean working tree | `git status --porcelain` must be empty |
@@ -69,7 +97,7 @@ Run these checks; abort with a clear message if any fail:
 | Existing health files | list README, LICENSE, CONTRIBUTING, etc. to build the skip-list |
 | Baseline health score | `gh api /repos/{owner}/{repo}/community/profile -q .health_percentage` (compare again at the end) |
 
-## Phase 1 — Ask the user (one batched round, then run unattended)
+## Phase 1 — Ask the user (one batched round)
 
 Ask only what cannot be decided automatically:
 
@@ -88,14 +116,53 @@ Ask only what cannot be decided automatically:
 5. **Stale bot?** (strict only) — opt-in even then; auto-closing issues is hostile as a
    default.
 6. **Auto-merge Dependabot patch/minor updates?** (strict only) — safe only because the
-   strict ruleset gates merges on required status checks; see the workflow in Phase 2.
+   strict ruleset gates merges on required status checks; see the workflow in Phase 3.
+   `--auto` only completes once *all* required approvals are in, so it merges hands-free
+   only when the review count is 0 (solo). On a team repo (1+ reviews) the PR still parks
+   waiting for a human approval — flag this so auto-merge isn't mistaken for zero-touch.
 7. **Does this project cut versioned releases?** — only generate release-please (and the
-   tag-protection ruleset, Phase 5) if yes. Continuously deployed apps (GitOps,
+   tag-protection ruleset, Phase 6) if yes. Continuously deployed apps (GitOps,
    sha-tagged images, `"private": true` packages) get perpetual meaningless version-bump
    PRs from release automation; skip it for those.
 8. **Description / homepage / topics** — propose inferred values, confirm.
+9. **Add an `AGENTS.md` agent guide?** (both profiles) — a short root file that hands
+   coding agents (Claude Code and others) the repo's real build/test/lint commands,
+   layout, and guardrails, so they don't have to re-derive them. Suggest yes: it reuses
+   the commands already detected for CONTRIBUTING/CI and is skipped if the repo already
+   has an `AGENTS.md`. This is the only "AI blueprint" the skill seeds — always ask, never
+   assume it, and don't scaffold empty `ai/`, `skills/`, or `docs/` folders (a generic run
+   can't know what belongs in them; `AGENTS.md` gives an agent enough to create the right
+   ones later).
 
-## Phase 2 — Generate files (honor the skip-list)
+## Phase 2 — Plan file and approval (before anything is written)
+
+Nothing mutates — no file, no commit, no settings API call — until the user has approved
+a written plan. (Audit mode skips this phase: it is read-only by definition.)
+
+Write `SETUP-PLAN.md` in the repo root. Never stage or commit it, and delete it at the
+end of the run. Keep it to one screen, tables where they fit:
+
+- **Access** — the `gh` account the run will act as (from Phase 0) and that admin rights
+  were confirmed, so the user knows whose credentials do the writing. If preflight found
+  an auth gap, it goes here as a blocking prerequisite: not signed in → the user must run
+  `gh auth login` themselves (it is interactive); HTTPS remote without the `workflow`
+  scope → `gh auth refresh -s workflow`.
+- **Answers** — profile and the Phase 1 answers being acted on.
+- **Files** — what will be created, and the skip-list of existing files left untouched.
+- **Commits** — how changes land (direct push to the default branch in light, PR in strict).
+- **Settings calls** — every API write in plain words: "enable secret scanning push
+  protection", "set Actions token read-only", "create default-branch ruleset blocking
+  deletion + force-push", ...
+- **Manual steps** expected to remain after the run.
+
+Then stop and ask for approval. Only after an explicit yes, run Phases 3–7 unattended.
+If the user edits the plan file instead of replying, re-read it and honor the edits.
+
+For the rest of the run, `SETUP-PLAN.md` is the authoritative record of the profile and
+Phase 1 answers — consult it when branching in Phases 3–7 rather than relying on memory,
+and keep it on disk until Phase 7 deletes it.
+
+## Phase 3 — Generate files (honor the skip-list)
 
 ### Documentation and community health
 
@@ -193,7 +260,7 @@ Made by [<name>](<homepage or github profile>)
   example messages — the PR title check and release-please both depend on contributors
   knowing it, and a check that fails with no documented rule just reads as hostile.
 - **`SECURITY.md`** — this file points contributors at the "Report a vulnerability"
-  button, so the feature must exist before the file lands. Pull that single Phase 4
+  button, so the feature must exist before the file lands. Pull that single Phase 5
   call forward and run it before committing:
   `gh api -X PUT /repos/{owner}/{repo}/private-vulnerability-reporting`
 
@@ -325,13 +392,52 @@ trim_trailing_whitespace = false
 
 - **`Makefile`** — only if the repo has no task runner yet, and only with real detected
   commands wired into `test` / `lint` targets. Skip for an empty repo.
+- **`AGENTS.md`** — both profiles, only if the user opted in (Phase 1 Q9) and the repo has
+  none. The agent-facing counterpart to CONTRIBUTING: the same detected commands, aimed at
+  a coding agent. Include only commands that were actually detected — omit a line rather
+  than guess (a wrong command sends an agent down the wrong path, same rule as CI). The
+  "open a PR, don't push to the default branch" line is strict-profile only; drop it in
+  light, where direct pushes are the intended workflow. Substitute the real default branch
+  (Phase 0) for `<default-branch>`.
+
+```markdown
+# AGENTS.md
+
+Guidance for coding agents (Claude Code and others) working in this repository.
+
+## Commands
+
+| Task | Command |
+| ---- | ------- |
+| Install | <detected, or omit row> |
+| Build | <detected, or omit row> |
+| Test | <detected> |
+| Lint | <detected> |
+
+## Layout
+
+One line per meaningful top-level directory (from Phase 0 detection):
+
+- `<dir>/` — <what lives here>
+
+## Conventions
+
+- Commits follow Conventional Commits (see CONTRIBUTING.md).
+- Never commit secrets or credentials.
+- Open a pull request; don't push directly to `<default-branch>`.  <!-- strict only -->
+```
 
 ### Automation and CI/CD
+
+The workflow templates below write `branches: [main]` for readability. `main` is the
+common case, but substitute the actual default branch from Phase 0 (`defaultBranchRef`)
+wherever these templates say `main` — a repo on `master`/`trunk` would otherwise never
+trigger CI on push, which also breaks the Phase 6 check-run discovery.
 
 - **`.github/workflows/ci.yml`** — language-detected. Skeleton (fill in real setup and
   commands; if the stack is unknown, skip this file and report it). Give the job a
   human-readable `name:` — that display name is the check-run context the ruleset
-  references in Phase 5. When a `Dockerfile` exists, the image build goes into this
+  references in Phase 6. When a `Dockerfile` exists, the image build goes into this
   same workflow as a second job gated with `needs:` (next bullet), not into a separate
   workflow file:
 
@@ -474,7 +580,7 @@ jobs:
 
 - **`.github/workflows/dependabot-automerge.yml`** (strict profile, opt-in from Phase 1)
   — auto-merges Dependabot patch/minor PRs once required checks pass. Safe ONLY when the
-  ruleset requires status checks and repo auto-merge is enabled (Phase 4); with no
+  ruleset requires status checks and repo auto-merge is enabled (Phase 5); with no
   required checks, `--auto` merges immediately and unverified — never generate this in
   the light profile:
 
@@ -505,7 +611,7 @@ jobs:
 
 - **Docker build & publish job** — only if a `Dockerfile` exists. Not a separate
   workflow: append this job to ci.yml with `needs: verify`, so lint and test run before
-  every image build — on direct pushes to main just as on PRs. The branch ruleset only
+  every image build — on direct pushes to the default branch just as on PRs. The branch ruleset only
   guards PR merges (and the light profile allows direct pushes at all times), so this
   `needs:` gate is the only thing stopping a broken push from shipping an image to the
   registry; that friction is deliberate. On PRs the image is built as a smoke test but
@@ -656,7 +762,7 @@ jobs:
 
 Before committing, validate the generated workflows with `actionlint` if available.
 
-## Phase 3 — Commit
+## Phase 4 — Commit
 
 ### Commit message style
 
@@ -682,17 +788,18 @@ reviewable sequence:
 ### Landing the commits
 
 - **Empty repo** (no commits): commit the scaffold directly to the default branch and
-  `git push -u origin main`. There is no history to protect and no base branch for a PR.
+  `git push -u origin <default-branch>` (usually `main`). There is no history to protect
+  and no base branch for a PR.
 - **Existing code, light profile**: commit directly to the default branch and push.
-  Direct pushes to main are the workflow this profile is built around; the setup itself
-  is no exception. CI runs on the push, which also produces the check-run names Phase 5
+  Direct pushes to the default branch are the workflow this profile is built around; the setup itself
+  is no exception. CI runs on the push, which also produces the check-run names Phase 6
   needs to discover.
 - **Existing code, strict profile**: create branch `chore/setup-github-repo`, stage the
   generated files by explicit path, commit, `gh pr create`, wait for CI, and merge.
   Settings and rulesets come after the merge. Write the PR body in the Why / What /
   Verification shape the generated PR template uses — no boilerplate beyond that.
 
-## Phase 4 — Repository settings (after merge)
+## Phase 5 — Repository settings (after the scaffold has landed on the default branch)
 
 Metadata and features:
 
@@ -735,9 +842,10 @@ gh api -X PUT /repos/{owner}/{repo}/automated-security-fixes
 gh api -X PUT /repos/{owner}/{repo}/private-vulnerability-reporting
 
 # Secret scanning push protection (default-on for public repos since 2024; verify anyway)
-gh api -X PATCH /repos/{owner}/{repo} --input - <<'EOF'
-{ "security_and_analysis": { "secret_scanning_push_protection": { "status": "enabled" } } }
-EOF
+# no heredoc: write the body to a temp file, apply, remove
+body=$(mktemp)
+printf '%s' '{ "security_and_analysis": { "secret_scanning_push_protection": { "status": "enabled" } } }' > "$body"
+gh api -X PATCH /repos/{owner}/{repo} --input "$body" && rm -f "$body"
 
 # CodeQL default setup — only for CodeQL-supported languages; handle a 409 gracefully
 gh api -X PATCH /repos/{owner}/{repo}/code-scanning/default-setup -f state=configured
@@ -747,7 +855,7 @@ gh api -X PUT /repos/{owner}/{repo}/actions/permissions/workflow \
   -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false
 ```
 
-## Phase 5 — Branch ruleset (last, after CI has reported at least once)
+## Phase 6 — Branch ruleset (last, after CI has reported at least once)
 
 Use rulesets, not classic branch protection (classic is legacy, and `gh api -f` cannot
 express its required JSON types). Rules:
@@ -770,8 +878,11 @@ express its required JSON types). Rules:
   exists, update it by ID (`PUT /repos/{owner}/{repo}/rulesets/{id}`) instead of creating
   a duplicate.
 
-```bash
-gh api -X POST /repos/{owner}/{repo}/rulesets --input - <<'EOF'
+Write this payload to a temp file outside the repo and apply it with
+`gh api -X POST /repos/{owner}/{repo}/rulesets --input "$f"` (per the no-heredoc rule),
+then delete the file:
+
+```json
 {
   "name": "protect-default-branch",
   "target": "branch",
@@ -798,7 +909,6 @@ gh api -X POST /repos/{owner}/{repo}/rulesets --input - <<'EOF'
     { "actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always" }
   ]
 }
-EOF
 ```
 
 If no CI workflow was generated (unknown stack), omit the `required_status_checks` rule.
@@ -807,8 +917,10 @@ If the user opted into versioned releases (Phase 1), add a second ruleset protec
 release tags from deletion or moving — released tags being immutable is a real
 supply-chain property, and release-please can still create new tags freely:
 
-```bash
-gh api -X POST /repos/{owner}/{repo}/rulesets --input - <<'EOF'
+Same handling — write to a temp file, then
+`gh api -X POST /repos/{owner}/{repo}/rulesets --input "$f"`:
+
+```json
 {
   "name": "protect-release-tags",
   "target": "tag",
@@ -816,10 +928,13 @@ gh api -X POST /repos/{owner}/{repo}/rulesets --input - <<'EOF'
   "conditions": { "ref_name": { "include": ["refs/tags/v*"], "exclude": [] } },
   "rules": [ { "type": "deletion" }, { "type": "update" } ]
 }
-EOF
 ```
 
-## Phase 6 — Verify and report
+Apply the same idempotency check here as for the default-branch ruleset: list
+`gh api /repos/{owner}/{repo}/rulesets` first, and if `protect-release-tags` already
+exists, update it by ID rather than creating a duplicate.
+
+## Phase 7 — Verify and report
 
 - `gh api /repos/{owner}/{repo}/community/profile -q .health_percentage` improved
   (target 100 in strict; light intentionally skips the community files, so just confirm
@@ -840,4 +955,5 @@ EOF
 
 Finish with a summary table: **applied** / **skipped (already present)** / **manual steps
 remaining** (social preview image, Renovate app install if chosen, enforcement contact in
-CODE_OF_CONDUCT.md if the user's email was not confirmed).
+CODE_OF_CONDUCT.md if the user's email was not confirmed). Delete `SETUP-PLAN.md` — the
+summary supersedes it, and it must never end up committed.
