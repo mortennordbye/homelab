@@ -9,6 +9,8 @@ spec:
   replicas: 1
   strategy:
     type: Recreate
+    # explicit null clears the leftover rollingUpdate block on the live object
+    rollingUpdate: null
   revisionHistoryLimit: 3
   selector:
     matchLabels:
