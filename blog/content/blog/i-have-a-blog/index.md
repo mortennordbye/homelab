@@ -4,8 +4,6 @@ description: "Why I built yet another tech blog, and how it ships: a Hugo site c
 date: 2026-01-13
 draft: false
 tags: ["kubernetes", "gitops", "argocd", "intermediate", "homelab"]
-authors:
-  - name: Morten Victor Nordbye
 ---
 
 # Yet Another Tech Blog (I'm Sorry)

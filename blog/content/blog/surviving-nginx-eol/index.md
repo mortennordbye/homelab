@@ -4,8 +4,6 @@ description: "ingress-nginx is reaching end of life. A zero-downtime migration t
 date: 2026-02-17
 draft: false
 tags: ["kubernetes", "traefik", "nginx", "ingress", "gateway-api", "intermediate"]
-authors:
-  - name: Morten Victor Nordbye
 ---
 
 Are you a Platform Engineer, an Architect, or a CTO who is currently losing sleep over how to handle the migration away from the good, reliable workhorse that is [`ingress-nginx`](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/)?

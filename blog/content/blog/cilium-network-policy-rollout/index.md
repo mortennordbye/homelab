@@ -4,8 +4,6 @@ description: "Rolling out CiliumNetworkPolicies on Kubernetes without breaking t
 date: 2026-05-16
 draft: false
 tags: ["kubernetes", "cilium", "network-policy", "ebpf", "hubble", "platform-engineering", "intermediate"]
-authors:
-  - name: Morten Victor Nordbye
 ---
 
 # Locking Down Your Cluster: Rolling Out Cilium Network Policies Without Breaking Everything

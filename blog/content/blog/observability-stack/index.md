@@ -4,8 +4,6 @@ description: "Metrics, logs, traces and runtime security on a Talos Kubernetes c
 date: 2026-06-15
 draft: false
 tags: ["kubernetes", "observability", "prometheus", "grafana", "loki", "tempo", "falco", "intermediate"]
-authors:
-  - name: Morten Victor Nordbye
 ---
 
 # Seeing Into a Talos Cluster: The Observability Stack I Actually Run

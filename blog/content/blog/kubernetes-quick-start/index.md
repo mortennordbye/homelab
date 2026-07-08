@@ -4,8 +4,6 @@ description: "A beginner quick start for Kubernetes: the core objects, how pods,
 date: 2026-01-21
 draft: false
 tags: ["kubernetes", "tutorial", "beginner", "homelab"]
-authors:
-  - name: Morten Victor Nordbye
 ---
 
 # Getting Started with Kubernetes: A Quick Start Guide
