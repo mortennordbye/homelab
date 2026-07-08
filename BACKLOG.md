@@ -60,6 +60,18 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Add a `scripts/optimize-images.ts` step that runs `sharp` over `public/images/`.
 - **Where:** `portfolio/public/images/`.
 
+### Fix react-hooks v6 lint findings (currently downgraded to warnings)
+- **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI.
+- **Why deferred:** Fixing them means refactoring 5 working components (effect restructuring, moving three.js texture setup into the loader callback) with visual/behavioral risk that needs browser re-verification — out of scope for the CI-wiring change that surfaced them. The R3F texture mutations may be acceptable as-is (idiomatic three.js); decide per-case rather than blanket-refactor.
+- **Unblock:** Refactor each component (or add per-line disables where the pattern is intentional), verify in the browser via `make up`, then remove the two `warn` overrides from `eslint.config.mjs`.
+- **Where:** `portfolio/eslint.config.mjs`, `portfolio/src/components/{CommandPalette,FooterStamp,InlineGlobe,InlineGlobeScene}.tsx`, `portfolio/src/components/work/ArchitectureDiagram.tsx`.
+
+### Playwright smoke test suite for portfolio
+- **What:** A small containerized Playwright suite that builds the prod image, runs the container, and asserts key routes return 200 with expected content plus `/healthz`. Wire into `.github/workflows/ci-portfolio.yaml` as a job after lint/typecheck/build.
+- **Why deferred:** Tier 2 of the linting/testing rollout (2026-07-08); user approved shipping lint + typecheck + build gates first. Adds ~2–3 min to CI and needs a committed Playwright config decision (image, route list).
+- **Unblock:** Decide the route/assertion list, add `portfolio/tests/` with a Playwright config running via `mcr.microsoft.com/playwright` Docker image, add the CI job.
+- **Where:** `.github/workflows/ci-portfolio.yaml`, new `portfolio/tests/`.
+
 ### ESLint 9 → 10 and TypeScript 5 → 6 bump
 - **What:** Bump `eslint` to `^10` and `typescript` to `^6` in `portfolio/package.json`. Held back during the 2026-06-16 dependency-upgrade pass (which shipped Node 22, Next 16.2.9, React 19.2.7, and the patch/minor batch).
 - **Why deferred:** `eslint-config-next@16.2.9` transitively bundles `typescript-eslint@8`, whose ESLint peer range tops out at 9 and which warns on TS 6.x. Forcing either major now risks a peer/plugin mismatch with zero runtime benefit (lint + typecheck only). The two unblock together.

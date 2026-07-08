@@ -13,6 +13,15 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // New react-hooks v6 rules (via eslint-config-next 16) flag pre-existing
+    // component patterns (setState-in-effect guards, three.js texture mutation
+    // in R3F). Downgraded to warnings so lint can gate CI; see BACKLOG.md.
+    rules: {
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/immutability": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

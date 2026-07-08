@@ -1,0 +1,18 @@
+# markdownlint rules for blog content (enforced by ci-blog.yaml via markdownlint-cli2).
+# Tuned for Hugo posts: front matter carries the title and inline HTML (<img>) is idiomatic.
+
+# Long prose lines are fine; posts are not wrapped
+MD013: false
+
+# Inline HTML is used for sized images
+MD033: false
+
+# Posts start with front matter + intro/image, not an H1 (title comes from front matter)
+MD041: false
+
+# Posts repeat the title as a body H1; don't count the front matter title as one
+MD025:
+  front_matter_title: ""
+
+# Bold pseudo-headings (e.g. "Step 1: ...") are an established pattern in the posts
+MD036: false

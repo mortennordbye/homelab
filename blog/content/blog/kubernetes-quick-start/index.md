@@ -234,7 +234,7 @@ kubectl port-forward service/whoami-service 8080:80
 
 Keep that terminal running and open your browser to `http://localhost:8080`. You should see output like this:
 
-```
+```text
 Hostname: whoami-deployment-7d8f9c5b4-x9k2l
 IP: 127.0.0.1
 IP: ::1
