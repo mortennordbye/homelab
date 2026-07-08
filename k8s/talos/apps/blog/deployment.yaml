@@ -29,7 +29,7 @@ spec:
                 topologyKey: topology.kubernetes.io/zone
       containers:
         - name: blog
-          image: ghcr.io/mortennordbye/homelab/blog:ad63436
+          image: ghcr.io/mortennordbye/homelab/blog:65fcdd7
           imagePullPolicy: Always
           ports:
             - name: http
