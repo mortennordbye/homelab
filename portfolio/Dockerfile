@@ -2,7 +2,7 @@
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
 # Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
-FROM node:22-alpine AS texgen
+FROM node:24-alpine AS texgen
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -33,7 +33,7 @@ RUN mkdir -p output && \
     done
 
 # ---- Stage 3: build the Next.js static export ----
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 
 # Install deps with cache-friendly two-step copy

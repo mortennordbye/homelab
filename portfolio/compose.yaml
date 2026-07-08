@@ -18,7 +18,7 @@ services:
       app: portfolio
 
   dev:
-    image: node:20-alpine
+    image: node:24-alpine
     container_name: portfolio-dev
     working_dir: /app
     command: sh -c "npm install --no-audit --no-fund && npm run dev -- --hostname 0.0.0.0"
