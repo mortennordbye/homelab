@@ -9,7 +9,7 @@
 langchain==0.3.30
 langchain-community==0.3.27
 langchain-text-splitters==0.3.11
-langchain-openai==0.3.28
+langchain-openai==0.3.35
 langchain-chroma==0.2.6
 
 # Vector store + parsers.
