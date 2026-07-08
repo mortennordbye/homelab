@@ -10,7 +10,7 @@ langchain==0.3.27
 langchain-community==0.3.27
 langchain-text-splitters==0.3.9
 langchain-openai==0.3.28
-langchain-chroma==0.2.4
+langchain-chroma==0.2.6
 
 # Vector store + parsers.
 # chromadb is pulled in transitively by langchain-chroma; pinning it directly
