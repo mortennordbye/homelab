@@ -1,13 +1,9 @@
 name: CI Portfolio
 
+# PR gate only. Pushes to main are gated by the ci job in
+# build-portfolio.yaml before the stage image is built.
 on:
   pull_request:
-    branches:
-      - main
-    paths:
-      - "portfolio/**"
-      - ".github/workflows/ci-portfolio.yaml"
-  push:
     branches:
       - main
     paths:

@@ -23,7 +23,40 @@ env:
   IMAGE_NAME: ${{ github.repository }}/portfolio
 
 jobs:
+  ci:
+    # Gates stage deploys on push to main. Manual prod dispatch skips this.
+    # next build is not repeated here: it runs inside the Docker build, and
+    # the image is only pushed if that succeeds.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: portfolio/.nvmrc
+          cache: npm
+          cache-dependency-path: portfolio/package-lock.json
+
+      - name: Install dependencies
+        working-directory: portfolio
+        run: npm ci
+
+      - name: Lint
+        working-directory: portfolio
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: portfolio
+        run: npm run typecheck
+
   build-and-deploy:
+    needs: ci
+    # success = push with green ci; skipped = manual prod dispatch
+    if: ${{ !cancelled() && (needs.ci.result == 'success' || needs.ci.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

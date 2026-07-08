@@ -22,7 +22,28 @@ env:
   IMAGE_NAME: ${{ github.repository }}/blog
 
 jobs:
+  ci:
+    # Gates stage deploys on push to main. Manual prod dispatch skips this.
+    # The Hugo render itself is validated by the Docker build below, and
+    # the image is only pushed if that succeeds.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Rule config lives in blog/.markdownlint.yaml
+      - name: Lint markdown content
+        uses: DavidAnson/markdownlint-cli2-action@v24
+        with:
+          globs: "blog/content/**/*.md"
+
   build-and-deploy:
+    needs: ci
+    # success = push with green ci; skipped = manual prod dispatch
+    if: ${{ !cancelled() && (needs.ci.result == 'success' || needs.ci.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write # Needed to update manifests

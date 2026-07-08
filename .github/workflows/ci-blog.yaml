@@ -1,13 +1,9 @@
 name: CI Blog
 
+# PR gate only. Pushes to main are gated by the ci job in
+# build-blog.yaml before the stage image is built.
 on:
   pull_request:
-    branches:
-      - main
-    paths:
-      - "blog/**"
-      - ".github/workflows/ci-blog.yaml"
-  push:
     branches:
       - main
     paths:
