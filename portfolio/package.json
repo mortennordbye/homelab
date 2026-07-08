@@ -17,11 +17,11 @@
     "gray-matter": "^4.0.3",
     "lucide-react": "^1.18.0",
     "motion": "^12.40.0",
-    "next": "16.2.9",
+    "next": "16.2.10",
     "next-mdx-remote": "^6.0.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "three": "^0.184.0",
+    "three": "^0.185.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -29,9 +29,9 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/three": "^0.184.1",
+    "@types/three": "^0.185.0",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.2.10",
     "sharp": "^0.35.1",
     "tailwindcss": "^4.3.1",
     "typescript": "^5"
