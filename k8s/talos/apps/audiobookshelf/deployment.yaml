@@ -5,12 +5,13 @@ metadata:
   namespace: audiobookshelf
   labels:
     app: audiobookshelf
+  annotations:
+    # temporary: replace once to clear the stale rollingUpdate block, then remove
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   replicas: 1
   strategy:
     type: Recreate
-    # explicit null clears the leftover rollingUpdate block on the live object
-    rollingUpdate: null
   revisionHistoryLimit: 3
   selector:
     matchLabels:
