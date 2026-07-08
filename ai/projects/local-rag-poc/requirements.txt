@@ -7,7 +7,7 @@
 # deprecation warnings.
 
 langchain==0.3.30
-langchain-community==0.3.27
+langchain-community==0.4.2
 langchain-text-splitters==0.3.11
 langchain-openai==0.3.35
 langchain-chroma==0.2.6
@@ -15,18 +15,18 @@ langchain-chroma==0.2.6
 # Vector store + parsers.
 # chromadb is pulled in transitively by langchain-chroma; pinning it directly
 # led to a resolver conflict (langchain-chroma 0.2.4 needs chromadb>=1.0.9).
-pypdf==5.1.0
-docx2txt==0.8
+pypdf==5.9.0
+docx2txt==0.9
 
 # Sparse retrieval
 rank_bm25==0.2.2
 
 # Tokenizer used by langchain-openai's embedding context checks
-tiktoken==0.8.0
+tiktoken==0.13.0
 
 # Web UI — FastAPI + Jinja templates served by uvicorn. Started by `make web`,
 # not pulled in by the CLI path. python-multipart is required for form posts.
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
+fastapi==0.139.0
+uvicorn[standard]==0.50.2
 jinja2==3.1.6
 python-multipart==0.0.32
