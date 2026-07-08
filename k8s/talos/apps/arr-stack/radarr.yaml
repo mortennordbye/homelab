@@ -50,7 +50,7 @@ spec:
                       - hyper1
       containers:
         - name: radarr
-          image: ghcr.io/linuxserver/radarr:6.0.4
+          image: ghcr.io/linuxserver/radarr:6.2.1
           ports:
             - containerPort: 7878
               name: http
