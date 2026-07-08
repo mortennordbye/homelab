@@ -29,7 +29,7 @@ jobs:
       packages: write # Needed to push images
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive # Critical for the Hugo theme submodule
           fetch-depth: 0
