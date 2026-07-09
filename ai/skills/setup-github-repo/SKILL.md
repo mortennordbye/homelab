@@ -1,12 +1,41 @@
 ---
 name: setup-github-repo
-description: Sets up a public GitHub repository with best-practice metadata, community health files, security hardening, branch rulesets, CI/CD, and dependency automation. Works on empty or existing repos, offers a light profile (personal projects) and a strict profile (team-grade guardrails), plus an audit-only dry-run mode. Writes a plan file the user must approve before any file or API change happens.
+description: Sets up a public GitHub repository with best-practice metadata, community health files, security hardening, branch rulesets, CI/CD, and dependency automation. Works on empty or existing repos, offers a light profile (personal projects) and a strict profile (team-grade guardrails), plus an audit-only dry-run mode. Never overwrites existing files — audits them for gaps and offers additive improvements instead. Writes a plan file the user must approve before any file or API change happens.
 ---
 
 # Setup GitHub Repo
 
 When invoked, configure the current repository to the standard below using `git`,
 the GitHub CLI (`gh`), and automated commits.
+
+## What this skill does not do
+
+State the boundaries up front so nothing lands by surprise. This skill:
+
+- **Never overwrites your content unasked.** Existing non-empty files are audited
+  read-only and improvements are offered *additively* (Principle 7). `.gitignore` and
+  `.gitattributes` only ever gain missing lines. The one path that reorganizes existing
+  prose — restructuring a badly-organized README — happens only after you approve it
+  explicitly, and even then it reflows your content without rewording it (Phase 3).
+- **Never treats "already present" as "done."** Every skipped file is still audited for
+  gaps against the standard below, in setup mode as well as audit mode (Principle 7).
+- **Never picks a license.** Legal decision — asked in Phase 1, never auto-selected.
+- **Never invents CI commands.** If the stack can't be detected, CI is skipped and
+  reported; a green check that tests nothing is worse than none (Principle 3).
+- **Never installs GitHub Apps.** Renovate needs the Mend app installed by hand — the
+  skill commits the config and prints the install URL as a manual step.
+- **Never does what has no API.** Social preview image, and anything else GitHub exposes
+  only in the UI, land in the manual-steps summary rather than being attempted.
+- **Never runs interactive auth.** `gh auth login` / `gh auth refresh` are yours to run;
+  the skill detects the gap and stops (Phase 0).
+- **Never force-pushes, deletes branches, or rewrites history** — the ruleset it installs
+  forbids exactly that.
+- **Never commits secrets, and never `git add .`** — files are staged by explicit path
+  (Principle 5).
+- **Never applies protection that can lock you out.** Solo repos never require
+  self-approval; light-profile direct pushes stay open.
+- **Never touches a repo it shouldn't.** Archived, fork, or non-admin aborts in Phase 0;
+  a private repo drops the public-only features instead of erroring through them.
 
 ## Modes
 
@@ -15,7 +44,9 @@ Two switches, both resolved before anything runs.
 **Run mode — setup (default) or audit.** When invoked with "audit" or "dry-run", execute
 Phase 0 plus every read-only check from Phases 5–7 and print the compliance table
 (compliant / missing / would-change) without writing anything. Use it before a first run,
-and re-run it later to detect drift on repos that were set up earlier.
+and re-run it later to detect drift on repos that were set up earlier. Setup mode audits
+too: it never overwrites an existing file, but it still reads each one against the standard
+and reports the gaps (Principle 7) — audit-only mode just stops before the writing.
 
 **Profile — light (default) or strict.** Security that runs invisibly is always on;
 what the profile controls is friction. A hobby project should not feel like filing a
@@ -35,9 +66,10 @@ change request to push to its default branch.
 
 ## Principles
 
-1. **Idempotent.** Safe to re-run. Never overwrite a non-empty existing file; skip it and
-   note it. Settings calls (`gh repo edit`, `gh api PUT/PATCH`) are naturally idempotent.
-   End every run with a summary table: applied / skipped (already present) / manual steps.
+1. **Idempotent.** Safe to re-run. Never overwrite a non-empty existing file; skip it,
+   note it, and audit it (Principle 7). Settings calls (`gh repo edit`, `gh api
+   PUT/PATCH`) are naturally idempotent. End every run with a summary table: applied /
+   skipped (already present, with any audit gaps) / manual steps.
 2. **Ordering matters.** Files first, merge them, *then* rulesets and required checks.
    Applying protection that requires reviews or status checks before those exist locks
    the maintainer out of their own repo.
@@ -58,6 +90,17 @@ change request to push to its default branch.
    staged or trip the clean-tree check — use your file-writing tool or `printf`, not a
    heredoc), apply it with `gh api ... --input "$f"`, and delete it after. The JSON blocks
    below are payloads to write, not commands to paste into a shell.
+7. **Audit, don't just skip.** A skipped file is not a finished file. For every existing
+   file on the skip-list — README, LICENSE, SECURITY.md, dependabot.yml, existing
+   workflows, dotfiles — audit it read-only against this skill's standard and record every
+   gap as a finding in the Phase 7 summary, then offer to apply the missing pieces
+   *additively* (insert blocks, keep the author's content). This runs in setup mode, not
+   only the dedicated audit mode: an "already present" line in the summary must always be
+   paired with what, if anything, that file still lacks — never a bare skip. The README
+   brownfield checklist in Phase 3 is the worked example; hold every other skipped file to
+   the same read-and-report discipline. Existing workflows in particular: check they carry
+   a least-privilege `permissions:` block, version-pinned actions that still resolve, and a
+   `concurrency` group (Principle 4) — report deviations, don't rewrite silently.
 
 ## Error handling
 
@@ -301,6 +344,28 @@ Made by [<name>](<homepage or github profile>)
   lacks them is that the skip protected the file. Items 4–5 are worth adding to both. Same
   additive-only rule applies to other existing core files (LICENSE, SECURITY.md): report
   deviations, never silently rewrite.
+
+  **When the structure itself is the problem — ask, then restructure.** Additive insertion
+  fixes a README that's *missing* pieces; it can't fix one that's badly *organized* — a
+  wall of prose with no headings, the install steps buried under trivia, no Overview or
+  Getting Started, sections in a random order, the same thing explained twice. Detecting
+  that is part of the audit (Principle 7). When you find it, don't force it into the
+  additive mold and don't rewrite it unasked — flag the specific structural problems and
+  ask the user one question: keep it additive-only (default), or reorganize the README into
+  the template's shape? Offer this only when there's a real structural issue; a
+  well-ordered README that's merely missing a badge row needs no such prompt.
+
+  If the user says yes to a restructure, it is a reflow, not a rewrite:
+
+  - **Preserve every fact.** Reorder and re-section the author's existing content into the
+    template's shape (header → Overview → Getting Started → structure → Workflows → footer);
+    never drop information and never invent a claim the old README didn't make. If something
+    doesn't fit a template section, keep it under its own heading rather than deleting it.
+  - **Keep the author's voice.** Reheading, resequencing, and merging duplicated passages is
+    in scope; rewording their prose into your own style is not — the AI-tell ban still holds.
+  - **Show before applying.** Present the proposed section outline (or a diff) for approval
+    before writing, since this is the one case where the skill touches existing prose. Record
+    it as its own line in the Phase 7 summary, distinct from the additive insertions.
 
 - **`CONTRIBUTING.md`** — standard fork → branch → PR flow, plus the *real* detected
   commands for running tests and lint locally. Wrong commands are worse than none.
@@ -1028,5 +1093,7 @@ exists, update it by ID rather than creating a duplicate.
 
 Finish with a summary table: **applied** / **skipped (already present)** / **manual steps
 remaining** (social preview image, Renovate app install if chosen, enforcement contact in
-CODE_OF_CONDUCT.md if the user's email was not confirmed). Delete `SETUP-PLAN.md` — the
-summary supersedes it, and it must never end up committed.
+CODE_OF_CONDUCT.md if the user's email was not confirmed). Every skipped file carries its
+audit result (Principle 7): either "compliant" or the specific gaps found, each with an
+offer to apply them additively — a bare skip with no audit line is incomplete. Delete
+`SETUP-PLAN.md` — the summary supersedes it, and it must never end up committed.
