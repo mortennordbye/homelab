@@ -24,6 +24,18 @@ Feel free to send me a DM, open a pull request, or steal code from here. The goa
 
 ---
 
+## Other Projects
+
+A few other things I build and self-host outside this repo:
+
+| Project | Description | Stack |
+| ------- | ----------- | ----- |
+| [**logeverylift**](https://github.com/mortennordbye/logeverylift) | Mobile-first workout tracking PWA | Next.js 16, PostgreSQL, Drizzle |
+| [**lawless-waf**](https://github.com/mortennordbye/lawless-waf) | Tune Azure WAF false positives without paying Log Analytics prices | Python, React, Terraform |
+| [**headroom**](https://github.com/mortennordbye/headroom) | Self-hosted personal finance tracker for budgets, assets, investments, and loan modeling | TypeScript, SQLite, Docker |
+
+---
+
 ## Homelab Overview
 
 [![Homelab Overview](docs/diagrams/homelab-overview.png)](docs/diagrams/homelab-overview.png?raw=1)
