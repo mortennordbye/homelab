@@ -12,9 +12,3 @@ resources:
   - service.yaml
   - ciliumnetworkpolicy.yaml
   - scaledobject.yaml
-
-# CI (headroom build.yml -> .github/workflows/bump-image.yml) rewrites newTag
-# to the freshly-built commit SHA via `kustomize edit set image` and opens a PR.
-images:
-  - name: ghcr.io/mortennordbye/headroom
-    newTag: sha-2629ed3

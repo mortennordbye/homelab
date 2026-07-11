@@ -17,8 +17,8 @@ rather than the in-repo commit flow used by `blog` / `portfolio`:
 
 1. Push to `main` in the headroom repo builds and pushes `ghcr.io/mortennordbye/headroom:sha-<short>`.
 2. Its CI calls this repo's reusable [`bump-image.yml`](../../../../.github/workflows/bump-image.yml),
-   which runs `kustomize edit set image …:sha-<short>` and **opens a PR** here.
-3. Merging the PR updates `newTag` in [`kustomization.yaml`](kustomization.yaml); ArgoCD syncs it.
+   which rewrites the `image:` line in [`deployment.yaml`](deployment.yaml) and **opens a PR** here.
+3. Merging the PR updates the pinned tag; ArgoCD syncs it.
 
 The tag is never `:latest` — the running revision is always an immutable commit
 SHA visible in Git. Verify what's live at runtime via `GET /api/version` (the
@@ -35,7 +35,7 @@ image bakes `BUILD_SHA`), which should match the deployed `sha-<short>`.
 | [`httproute.yaml`](httproute.yaml) | HTTPRoute | Binds `headroom.local.bigd.no` to `traefik-gateway-private` |
 | [`ciliumnetworkpolicy.yaml`](ciliumnetworkpolicy.yaml) | CiliumNetworkPolicy | Ingress only from Traefik + host/health probes |
 | [`scaledobject.yaml`](scaledobject.yaml) | KEDA ScaledObject | Scale-to-zero outside 07:00–23:00 Europe/Oslo |
-| [`kustomization.yaml`](kustomization.yaml) | Kustomization | `images:` newTag override (CI bumps this) |
+| [`kustomization.yaml`](kustomization.yaml) | Kustomization | Bundles the resources above |
 
 ## Operational notes
 

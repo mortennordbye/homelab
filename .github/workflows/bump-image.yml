@@ -1,14 +1,15 @@
 # Reusable image-tag bump: an app repo's CI calls this after pushing a new
-# image, and it opens a PR here bumping that app's Kustomize newTag. Merging
-# the PR is what deploys (ArgoCD syncs from Git). Reused across app repos
-# (headroom, logeverylift, ...) by passing app_dir/image/new_tag.
+# image, and it rewrites the image tag in that app's deployment manifest, then
+# opens a PR here. Merging the PR is what deploys (ArgoCD syncs from Git).
+# Reused across app repos (headroom, logeverylift, ...) by passing
+# app_dir/image/new_tag (and manifest, when it isn't deployment.yaml).
 name: Bump image tag
 
 on:
   workflow_call:
     inputs:
       app_dir:
-        description: Path to the app's kustomize dir, e.g. k8s/talos/apps/headroom
+        description: Path to the app's dir, e.g. k8s/talos/apps/headroom
         required: true
         type: string
       image:
@@ -18,6 +19,11 @@ on:
       new_tag:
         description: New immutable tag, e.g. sha-abc1234
         required: true
+        type: string
+      manifest:
+        description: Manifest file within app_dir holding the image line
+        required: false
+        default: deployment.yaml
         type: string
     secrets:
       app-id:
@@ -43,12 +49,21 @@ jobs:
         with:
           token: ${{ steps.token.outputs.token }}
 
-      - name: Set up kustomize
-        uses: imranismail/setup-kustomize@v2
-
-      - name: Bump image tag
-        working-directory: ${{ inputs.app_dir }}
-        run: kustomize edit set image ${{ inputs.image }}=${{ inputs.image }}:${{ inputs.new_tag }}
+      - name: Bump image tag in manifest
+        run: |
+          MANIFEST="${{ inputs.app_dir }}/${{ inputs.manifest }}"
+          if [ ! -f "$MANIFEST" ]; then
+            echo "::error::manifest not found: $MANIFEST"
+            exit 1
+          fi
+          # '|' delimiter so the slashes in the image name don't need escaping.
+          sed -i "s|image: ${{ inputs.image }}:.*|image: ${{ inputs.image }}:${{ inputs.new_tag }}|g" "$MANIFEST"
+          echo "Diff:"
+          git diff -- "$MANIFEST"
+          if git diff --quiet -- "$MANIFEST"; then
+            echo "::error::no image line matched '${{ inputs.image }}:' in $MANIFEST"
+            exit 1
+          fi
 
       - name: Open PR
         uses: peter-evans/create-pull-request@v6
@@ -61,6 +76,7 @@ jobs:
             Automated image bump from CI.
 
             - App: `${{ inputs.app_dir }}`
+            - Manifest: `${{ inputs.manifest }}`
             - Image: `${{ inputs.image }}:${{ inputs.new_tag }}`
 
             Merging deploys via ArgoCD.

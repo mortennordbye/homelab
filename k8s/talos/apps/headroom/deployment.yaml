@@ -29,8 +29,8 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: headroom
-          # Tag is pinned to an immutable commit SHA and overridden by the
-          # kustomization images: entry, which CI bumps via PR. Never :latest.
+          # Pinned to an immutable commit SHA. CI (bump-image.yml) rewrites this
+          # line to the freshly-built SHA and opens a PR. Never :latest.
           image: ghcr.io/mortennordbye/headroom:sha-2629ed3
           imagePullPolicy: IfNotPresent
           env:
