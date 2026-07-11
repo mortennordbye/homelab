@@ -20,7 +20,7 @@ spec:
         - name: logeverylift-app
           # Pinned to an immutable commit SHA. CI (bump-image.yml) rewrites this
           # line to the freshly-built SHA and opens a PR. Never :latest.
-          image: ghcr.io/mortennordbye/logeverylift:sha-2042b0a
+          image: ghcr.io/mortennordbye/logeverylift:sha-f76cc90
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
