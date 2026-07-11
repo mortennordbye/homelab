@@ -1,8 +1,5 @@
-# Reusable image-tag bump: an app repo's CI calls this after pushing a new
-# image, and it rewrites the image tag in that app's deployment manifest, then
-# opens a PR here. Merging the PR is what deploys (ArgoCD syncs from Git).
-# Reused across app repos (headroom, logeverylift, ...) by passing
-# app_dir/image/new_tag (and manifest, when it isn't deployment.yaml).
+# Reusable: an app repo's CI calls this to rewrite its image tag in a manifest
+# here and open a PR. Merging deploys (ArgoCD). See docs/gitops-external-app-deploys.md.
 name: Bump image tag
 
 on:
@@ -47,9 +44,7 @@ jobs:
       - name: Checkout homelab
         uses: actions/checkout@v4
         with:
-          # In a reusable (workflow_call) run, github.repository is the CALLER
-          # (the app repo), so checkout would grab that without this. Pin to
-          # homelab, which is where the manifests live.
+          # Required: in a workflow_call run github.repository is the caller repo.
           repository: ${{ github.repository_owner }}/homelab
           token: ${{ steps.token.outputs.token }}
 
@@ -60,7 +55,6 @@ jobs:
             echo "::error::manifest not found: $MANIFEST"
             exit 1
           fi
-          # '|' delimiter so the slashes in the image name don't need escaping.
           sed -i "s|image: ${{ inputs.image }}:.*|image: ${{ inputs.image }}:${{ inputs.new_tag }}|g" "$MANIFEST"
           echo "Diff:"
           git diff -- "$MANIFEST"
