@@ -1,0 +1,43 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: logeverylift-app-policy
+  namespace: logeverylift
+spec:
+  endpointSelector:
+    matchLabels:
+      app: logeverylift-app
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: logeverylift-postgres-policy
+  namespace: logeverylift
+spec:
+  endpointSelector:
+    matchLabels:
+      app: postgres
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": logeverylift
+            app: logeverylift-app
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health

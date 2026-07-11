@@ -1,0 +1,112 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logeverylift-app
+  namespace: logeverylift
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logeverylift-app
+  template:
+    metadata:
+      labels:
+        app: logeverylift-app
+    spec:
+      containers:
+        - name: logeverylift-app
+          # Pinned to an immutable commit SHA. CI (bump-image.yml) rewrites this
+          # line to the freshly-built SHA and opens a PR. Never :latest.
+          image: ghcr.io/mortennordbye/logeverylift:sha-2042b0a
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: NEXT_TELEMETRY_DISABLED
+              value: "1"
+            - name: BETTER_AUTH_URL
+              value: "https://logeverylift.local.bigd.no"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: logeverylift-secret
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: "postgresql://postgres:$(POSTGRES_PASSWORD)@postgres.logeverylift.svc.cluster.local:5432/logeverylift_db"
+            - name: BETTER_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: logeverylift-secret
+                  key: BETTER_AUTH_SECRET
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: logeverylift-secret
+                  key: ADMIN_EMAIL
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: logeverylift-secret
+                  key: ADMIN_PASSWORD
+            - name: ADMIN_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: logeverylift-secret
+                  key: ADMIN_NAME
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: logeverylift-secret
+                  key: OPENROUTER_API_KEY
+            - name: GOOGLE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: logeverylift-secret
+                  key: GOOGLE_API_KEY
+            - name: NEXT_PRIVATE_SERVER_ACTIONS_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: logeverylift-secret
+                  key: NEXT_PRIVATE_SERVER_ACTIONS_ENCRYPTION_KEY
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logeverylift-app
+  namespace: logeverylift
+spec:
+  selector:
+    app: logeverylift-app
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
