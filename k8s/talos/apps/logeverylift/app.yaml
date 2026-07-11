@@ -19,7 +19,7 @@ spec:
       containers:
         - name: logeverylift-app
           # Pinned SHA, rewritten by CI (bump-image.yml). Never :latest.
-          image: ghcr.io/mortennordbye/logeverylift:sha-f76cc90
+          image: ghcr.io/mortennordbye/logeverylift:sha-43378df
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
