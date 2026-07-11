@@ -47,6 +47,10 @@ jobs:
       - name: Checkout homelab
         uses: actions/checkout@v4
         with:
+          # In a reusable (workflow_call) run, github.repository is the CALLER
+          # (the app repo), so checkout would grab that without this. Pin to
+          # homelab, which is where the manifests live.
+          repository: ${{ github.repository_owner }}/homelab
           token: ${{ steps.token.outputs.token }}
 
       - name: Bump image tag in manifest
