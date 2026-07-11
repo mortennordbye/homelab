@@ -113,17 +113,32 @@ The `build` job exposes the exact short SHA it pushed:
 The 7-char short SHA matches `docker/metadata-action`'s
 `type=sha,prefix=sha-,format=short`, so the pushed tag and the bumped tag agree.
 
-## Onboarding a new app
+## Onboarding a new app repo
 
-1. Add the app's manifests under `k8s/talos/apps/<app>/` (the ArgoCD
-   ApplicationSet auto-registers any `apps/*` dir as an Application). Pin the
-   deployment manifest's `image:` to a currently-published `sha-<short>`.
-2. Ensure the app's build workflow publishes a `sha-<short>` tag
-   (`type=sha,prefix=sha-,format=short`) and exposes a `short_sha` output.
-3. Add the `deploy` job above, changing `app_dir` / `image` / `new_tag` (and
-   `manifest` if the image line isn't in `deployment.yaml`).
-4. Set the `HOMELAB_DEPLOYER_*` secrets on the app repo. (This is a personal
-   account, so there are no org-level secrets — set them per repo.)
+The `homelab-deployer` GitHub App (section 2) is a one-time, shared prerequisite
+— it already exists. Per new app repo:
+
+1. **Manifests here.** Add `k8s/talos/apps/<app>/` (the ArgoCD ApplicationSet
+   auto-registers any `apps/*` dir as an Application in a namespace named after
+   the dir — no `Application` manifest needed). Pin the deployment manifest's
+   `image:` to a currently-published `sha-<short>` so it runs before the first
+   bump. Do **not** add a kustomize `images:` override — it would win over the
+   line CI edits.
+2. **Build workflow (app repo).** Publish a `sha-<short>` tag
+   (`docker/metadata-action` → `type=sha,prefix=sha-,format=short`) and expose a
+   `short_sha` output on the `build` job (see the snippet in part 4 above).
+3. **Deploy job (app repo).** Add the `deploy` job above, changing `app_dir` /
+   `image` / `new_tag`, plus `manifest` if the image line isn't in
+   `deployment.yaml` (e.g. `manifest: app.yaml`).
+4. **Secrets (app repo).** Set the App credentials — personal account, so no
+   org-level secrets; set them per repo:
+
+   ```bash
+   gh secret set HOMELAB_DEPLOYER_APP_ID      --repo mortennordbye/<app> --body "<app-id>"
+   gh secret set HOMELAB_DEPLOYER_PRIVATE_KEY --repo mortennordbye/<app> < homelab-deployer.private-key.pem
+   ```
+
+That's it — the next push to the app repo's `main` opens a bump PR here.
 
 ## In-repo vs external at a glance
 
