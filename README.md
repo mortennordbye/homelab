@@ -125,6 +125,7 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 | --------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------ |
 | [**Build and Deploy Blog**](.github/workflows/build-blog.yaml)                          | Push to `main` (blog changes)                  | Builds Hugo blog, pushes to GHCR, updates k8s manifest |
 | [**Build and Deploy Portfolio**](.github/workflows/build-portfolio.yaml)                | Push to `main` (stage); manual dispatch (prod) | Builds portfolio image, pushes to GHCR, deploys stage/prod |
+| [**Bump Image Tag**](.github/workflows/bump-image.yml)                                  | Called by external app repos (`workflow_call`) | Opens a PR pinning an app to a new immutable `sha-` image tag ([pattern](docs/gitops-external-app-deploys.md)) |
 | [**Container Vulnerability Scan**](.github/workflows/container-vulnerability-scan.yaml) | Weekly, Dockerfile changes, manual             | Scans blog & portfolio containers with Trivy           |
 | [**Render Diagrams**](.github/workflows/render-diagram.yaml)                            | Push to `main` (`docs/diagrams/*.d2`), manual  | Renders D2 sources to SVG + PNG, commits the result    |
 | [**K8s Update Reminder**](.github/workflows/30-days-k8s-update-reminder.yml)            | Monthly (1st)                                  | Discord notification for Kubernetes maintenance        |

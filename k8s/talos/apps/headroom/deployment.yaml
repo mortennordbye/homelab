@@ -29,8 +29,10 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: headroom
-          image: ghcr.io/mortennordbye/headroom:latest
-          imagePullPolicy: Always
+          # Pinned to an immutable commit SHA. CI (bump-image.yml) rewrites this
+          # line to the freshly-built SHA and opens a PR. Never :latest.
+          image: ghcr.io/mortennordbye/headroom:sha-2629ed3
+          imagePullPolicy: IfNotPresent
           env:
             # The app enforces a Host-header allowlist (DNS-rebinding guard) that
             # defaults to loopback only, so it 403s ("host not allowed") behind
