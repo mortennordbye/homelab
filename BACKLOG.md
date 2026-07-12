@@ -111,12 +111,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Media stack observability (arr-stack)
 
-### qBittorrent exporter
-- **What:** Add a qBittorrent exporter for download-client throughput/stall metrics and fold a row into the SPOG dashboard. Sonarr, Radarr, Bazarr, and Prowlarr are now covered by Exportarr (all deployed in `arr-stack`; Prowlarr scrapes `prowlarr.gluetun-vpn:9696`, which the existing gluetun CNP already permits from `arr-stack`).
-- **Why deferred:** qBittorrent has no API key — its exporter (`ghcr.io/esanchezm/prometheus-qbittorrent-exporter`) authenticates with the WebUI username/password (already in Bitwarden as `HOMEPAGE_VAR_QBITTORRENT_*`), so it needs its own ExternalSecret and a slightly different config. qBittorrent lives in `gluetun-vpn` behind the VPN pod.
-- **Unblock:** Decide placement (exporter in `gluetun-vpn` next to qBittorrent, or in `arr-stack` reaching `qbittorrent.gluetun-vpn:8080` — the gluetun CNP would need an ingress allow on 8080 from `arr-stack`, currently only 9696 is open). Add an ExternalSecret pulling the qBittorrent user/pass, the exporter Deployment/Service/ServiceMonitor, and a "Media — qBittorrent" row in `homelab-spog.json`.
-- **Where:** `k8s/talos/apps/gluetun-vpn/` or `k8s/talos/apps/arr-stack/exportarr.yaml`, `k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json`.
-
 ### Discord alert rules for the media stack
 - **What:** PrometheusRules that page Discord on actionable media-stack conditions — e.g. an *arr queue item stuck (no progress) for >2h, a root folder under a free-space threshold, or an exporter/target down.
 - **Why deferred:** Scope of this change was graphs, not alerting. The metrics now exist, so the rules are a clean follow-up; thresholds want a little live baseline first.

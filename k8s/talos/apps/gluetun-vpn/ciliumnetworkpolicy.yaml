@@ -19,13 +19,16 @@ spec:
               protocol: TCP
             - port: "9696"
               protocol: TCP
-    # arr-stack pods query prowlarr for indexers.
+    # arr-stack pods query prowlarr for indexers (9696) and the qbittorrent
+    # WebUI (8080) — the *arr download client and the qbittorrent exporter.
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": arr-stack
       toPorts:
         - ports:
             - port: "9696"
+              protocol: TCP
+            - port: "8080"
               protocol: TCP
     - fromEntities:
         - host

@@ -10,6 +10,7 @@ resources:
   - flaresolverr.yaml
   - unpackerr.yaml
   - exportarr.yaml
+  - qbittorrent-exporter.yaml
  # - tdarr.yaml
  # - huntarr.yaml
  # - cleanuparr.yaml
