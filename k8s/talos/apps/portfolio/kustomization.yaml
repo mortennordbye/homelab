@@ -12,3 +12,4 @@ resources:
   - service.yaml
   - ciliumnetworkpolicy.yaml
   - scaledobject.yaml
+  - status-publisher.yaml

@@ -56,6 +56,11 @@ spec:
           volumeMounts:
             - name: nginx-cache
               mountPath: /var/cache/nginx
+            # Live cluster status written by the status-publisher CronJob.
+            # Served at /status.json; optional so pods start without it.
+            - name: status
+              mountPath: /usr/share/nginx/html/status
+              readOnly: true
           resources:
             requests: { cpu: 50m, memory: 64Mi }
             limits: { cpu: 200m, memory: 256Mi }
@@ -79,3 +84,7 @@ spec:
         - name: nginx-cache
           emptyDir:
             medium: Memory
+        - name: status
+          configMap:
+            name: portfolio-status
+            optional: true
