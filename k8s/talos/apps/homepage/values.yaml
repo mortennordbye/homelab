@@ -173,10 +173,6 @@ config:
               type: bazarr
               url: https://bazarr.local.bigd.no
               key: "{{HOMEPAGE_VAR_BAZARR_API_KEY}}"
-        - LazyLibrarian:
-            icon: lazylibrarian.png
-            href: https://lazylibrarian.local.bigd.no
-            description: Audiobook automation
         - Plex:
             icon: plex.png
             href: http://10.3.10.101:32400/web
