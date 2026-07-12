@@ -1,0 +1,212 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: exportarr-api-keys
+  namespace: arr-stack
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: bitwarden-secretsmanager
+  target:
+    name: exportarr-api-keys
+    creationPolicy: Owner
+  data:
+    - secretKey: SONARR_APIKEY
+      remoteRef:
+        key: 0350d8a3-05eb-4201-859a-b3c200a15fc4
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+    - secretKey: RADARR_APIKEY
+      remoteRef:
+        key: 453e06b8-66bc-4d5b-94ac-b3c200a12c85
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: exportarr-sonarr
+  namespace: arr-stack
+  labels:
+    app: exportarr-sonarr
+spec:
+  selector:
+    app: exportarr-sonarr
+  ports:
+    - name: metrics
+      port: 9707
+      targetPort: 9707
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exportarr-sonarr
+  namespace: arr-stack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exportarr-sonarr
+  template:
+    metadata:
+      labels:
+        app: exportarr-sonarr
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - hyper1
+      containers:
+        - name: exportarr
+          image: ghcr.io/onedr0p/exportarr:v2.3.0
+          args:
+            - sonarr
+          env:
+            - name: PORT
+              value: "9707"
+            - name: URL
+              value: "http://sonarr:8989"
+            - name: APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: exportarr-api-keys
+                  key: SONARR_APIKEY
+          ports:
+            - containerPort: 9707
+              name: metrics
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9707
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9707
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: exportarr-sonarr
+  namespace: arr-stack
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: exportarr-sonarr
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: exportarr-radarr
+  namespace: arr-stack
+  labels:
+    app: exportarr-radarr
+spec:
+  selector:
+    app: exportarr-radarr
+  ports:
+    - name: metrics
+      port: 9707
+      targetPort: 9707
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exportarr-radarr
+  namespace: arr-stack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exportarr-radarr
+  template:
+    metadata:
+      labels:
+        app: exportarr-radarr
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - hyper1
+      containers:
+        - name: exportarr
+          image: ghcr.io/onedr0p/exportarr:v2.3.0
+          args:
+            - radarr
+          env:
+            - name: PORT
+              value: "9707"
+            - name: URL
+              value: "http://radarr:7878"
+            - name: APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: exportarr-api-keys
+                  key: RADARR_APIKEY
+          ports:
+            - containerPort: 9707
+              name: metrics
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9707
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9707
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: exportarr-radarr
+  namespace: arr-stack
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: exportarr-radarr
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

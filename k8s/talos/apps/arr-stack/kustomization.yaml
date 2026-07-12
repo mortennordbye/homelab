@@ -9,6 +9,7 @@ resources:
   - bazarr.yaml
   - flaresolverr.yaml
   - unpackerr.yaml
+  - exportarr.yaml
  # - tdarr.yaml
  # - huntarr.yaml
  # - cleanuparr.yaml
