@@ -8,6 +8,7 @@ resources:
   - radarr.yaml
   - bazarr.yaml
   - flaresolverr.yaml
+  - unpackerr.yaml
  # - tdarr.yaml
  # - huntarr.yaml
  # - cleanuparr.yaml
