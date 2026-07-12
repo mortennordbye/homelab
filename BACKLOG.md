@@ -10,6 +10,14 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Author 15–25 QA pairs against the four fixtures (single-doc + cross-doc questions, plus a handful of out-of-corpus refusals), pick the metric, wire `make eval` to the existing chain.
 - **Where:** `ai/projects/local-rag-poc/main.py`, `ai/projects/local-rag-poc/Makefile`, plus a new `ai/projects/local-rag-poc/evals/` directory.
 
+## Infrastructure page
+
+### 30-day availability strip
+- **What:** The `/infrastructure` page design mockup included a 30-day availability tick strip with an uptime percentage. Dropped from the implemented page because nothing external probes the site today, and self-reported uptime from inside the cluster proves nothing when the cluster is what fails.
+- **Why deferred:** Needs an external prober (Uptime Kuma on another host, healthchecks.io, or a GitHub Actions schedule hitting the site) publishing daily results somewhere the static page can fetch.
+- **Unblock:** Pick the prober, publish daily results as JSON (could ride along in `status.json` or a second file), add the strip section back to `portfolio/src/app/infrastructure/page.tsx`.
+- **Where:** `portfolio/src/app/infrastructure/page.tsx`, `k8s/talos/apps/portfolio/status-publisher.yaml`.
+
 ## Portfolio modern — items deferred during initial build
 
 ### Brotli precompression for nginx static assets

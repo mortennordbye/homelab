@@ -1,0 +1,180 @@
+# Publishes live cluster facts to the portfolio-status ConfigMap every five
+# minutes. The portfolio deployment mounts that ConfigMap and nginx serves it
+# as /status.json, which the /infrastructure page fetches client-side.
+#
+# The ConfigMap itself is created by the CronJob, not by Git — ArgoCD ignores
+# it because it carries no tracking label, so automated prune never touches it.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: status-publisher
+  namespace: portfolio
+---
+# Cluster-scoped reads: nodes for readiness + versions, plus single named
+# objects (the ArgoCD Application and the site certificate) in other
+# namespaces. resourceNames limits get to exactly those objects.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: portfolio-status-publisher
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["argoproj.io"]
+    resources: ["applications"]
+    resourceNames: ["portfolio"]
+    verbs: ["get"]
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificates"]
+    resourceNames: ["nordbye-it"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: portfolio-status-publisher
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: portfolio-status-publisher
+subjects:
+  - kind: ServiceAccount
+    name: status-publisher
+    namespace: portfolio
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: status-publisher
+  namespace: portfolio
+rules:
+  # create cannot be restricted by resourceName (the name doesn't exist yet);
+  # the rest is pinned to the one ConfigMap this job owns.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["portfolio-status"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["portfolio"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: status-publisher
+  namespace: portfolio
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: status-publisher
+subjects:
+  - kind: ServiceAccount
+    name: status-publisher
+    namespace: portfolio
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: status-publisher
+  namespace: portfolio
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 120
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 120
+      template:
+        metadata:
+          labels:
+            app: status-publisher
+        spec:
+          serviceAccountName: status-publisher
+          restartPolicy: Never
+          enableServiceLinks: false
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+          containers:
+            - name: publish
+              # kubectl + jq in one small image; tag tracks the cluster minor.
+              image: docker.io/alpine/k8s:1.34.1
+              env:
+                # kubectl writes discovery cache under $HOME
+                - name: HOME
+                  value: /tmp
+              command: ["/bin/sh", "-ec"]
+              args:
+                - |
+                  kubectl get nodes -o json > /tmp/nodes.json
+                  READY=$(jq '[.items[] | select(any(.status.conditions[]; .type=="Ready" and .status=="True"))] | length' /tmp/nodes.json)
+                  TOTAL=$(jq '.items | length' /tmp/nodes.json)
+                  K8S=$(jq -r '.items[0].status.nodeInfo.kubeletVersion' /tmp/nodes.json)
+                  TALOS=$(jq -r '.items[0].status.nodeInfo.osImage | capture("\\((?<v>v[0-9][0-9.]*)\\)").v // empty' /tmp/nodes.json)
+
+                  kubectl get application portfolio -n argocd -o json > /tmp/app.json
+                  SYNC=$(jq -r '.status.sync.status // "Unknown"' /tmp/app.json)
+                  HEALTH=$(jq -r '.status.health.status // "Unknown"' /tmp/app.json)
+                  SYNCED_AT=$(jq -r '.status.operationState.finishedAt // empty' /tmp/app.json)
+
+                  kubectl get deployment portfolio -n portfolio -o json > /tmp/deploy.json
+                  BUILD=$(jq -r '.spec.template.spec.containers[0].image | split(":") | last' /tmp/deploy.json)
+                  DEPLOYED_AT=$(jq -r '[.status.conditions[] | select(.type=="Progressing")][0].lastUpdateTime // empty' /tmp/deploy.json)
+
+                  NOT_AFTER=$(kubectl get certificate nordbye-it -n cert-manager -o jsonpath='{.status.notAfter}')
+
+                  jq -n \
+                    --arg generatedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+                    --arg build "$BUILD" \
+                    --arg deployedAt "$DEPLOYED_AT" \
+                    --arg sync "$SYNC" \
+                    --arg health "$HEALTH" \
+                    --arg syncedAt "$SYNCED_AT" \
+                    --argjson ready "$READY" \
+                    --argjson total "$TOTAL" \
+                    --arg k8s "$K8S" \
+                    --arg talos "$TALOS" \
+                    --arg notAfter "$NOT_AFTER" \
+                    '{
+                      generatedAt: $generatedAt,
+                      build: $build,
+                      deployedAt: $deployedAt,
+                      argocd: {sync: $sync, health: $health, syncedAt: $syncedAt},
+                      nodes: {ready: $ready, total: $total},
+                      versions: {kubernetes: $k8s, talos: $talos},
+                      cert: {notAfter: $notAfter}
+                    }' > /tmp/status.json
+
+                  kubectl create configmap portfolio-status -n portfolio \
+                    --from-file=status.json=/tmp/status.json \
+                    --dry-run=client -o yaml | kubectl apply -f -
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                privileged: false
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+          volumes:
+            - name: tmp
+              emptyDir: {}

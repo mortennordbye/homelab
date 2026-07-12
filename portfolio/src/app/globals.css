@@ -223,6 +223,18 @@ a {
   .oslo-marker::after { animation: none; opacity: 0; }
 }
 
+/* Infrastructure page — packet dot travelling along a pipeline connector */
+@keyframes packet-flow {
+  0%   { left: 4px; opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { left: calc(100% - 10px); opacity: 0; }
+}
+.packet {
+  animation: packet-flow 2.8s linear infinite;
+  animation-delay: var(--packet-delay, 0s);
+}
+
 /* Marquee animation */
 @keyframes marquee {
   from { transform: translateX(0); }
