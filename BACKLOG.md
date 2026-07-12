@@ -111,11 +111,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Media stack observability (arr-stack)
 
-### Exportarr coverage for Prowlarr, Bazarr, qBittorrent
-- **What:** Extend the media-stack metrics/dashboard beyond Sonarr + Radarr. Add Exportarr instances for Prowlarr (indexer grab/fail rates — directly relevant to spotting bad/fake releases) and Bazarr, plus a qBittorrent exporter for download-client throughput/stall metrics.
-- **Why deferred:** Sonarr + Radarr shipped first because both live in `arr-stack`, their API keys are already in Bitwarden, and same-namespace scraping is trivial. Prowlarr and Bazarr run in the `gluetun-vpn` namespace behind the VPN pod, so scraping them cross-namespace needs a CiliumNetworkPolicy allowing ingress from `arr-stack` (or the exporters deployed into `gluetun-vpn`). qBittorrent has no API key — its exporter (`ghcr.io/esanchezm/prometheus-qbittorrent-exporter`) authenticates with the WebUI username/password (already in Bitwarden as `HOMEPAGE_VAR_QBITTORRENT_*`).
-- **Unblock:** Decide placement (exporters in `gluetun-vpn` next to the targets vs. in `arr-stack` with a cross-namespace allow rule). Prowlarr/Bazarr API keys already exist in Bitwarden (see `k8s/talos/apps/homepage/secrets.yaml`: Prowlarr `72898bab-…`, Bazarr `384c2a48-…`). Add exporter Deployments/Services/ServiceMonitors and extend `arr-stack.json` with Prowlarr/Bazarr/qBittorrent rows.
-- **Where:** `k8s/talos/apps/arr-stack/exportarr.yaml` (or a new manifest under `k8s/talos/apps/gluetun-vpn/`), `k8s/talos/infra/kube-prometheus-stack/dashboards/arr-stack.json`.
+### qBittorrent exporter
+- **What:** Add a qBittorrent exporter for download-client throughput/stall metrics and fold a row into the SPOG dashboard. Sonarr, Radarr, Bazarr, and Prowlarr are now covered by Exportarr (all deployed in `arr-stack`; Prowlarr scrapes `prowlarr.gluetun-vpn:9696`, which the existing gluetun CNP already permits from `arr-stack`).
+- **Why deferred:** qBittorrent has no API key — its exporter (`ghcr.io/esanchezm/prometheus-qbittorrent-exporter`) authenticates with the WebUI username/password (already in Bitwarden as `HOMEPAGE_VAR_QBITTORRENT_*`), so it needs its own ExternalSecret and a slightly different config. qBittorrent lives in `gluetun-vpn` behind the VPN pod.
+- **Unblock:** Decide placement (exporter in `gluetun-vpn` next to qBittorrent, or in `arr-stack` reaching `qbittorrent.gluetun-vpn:8080` — the gluetun CNP would need an ingress allow on 8080 from `arr-stack`, currently only 9696 is open). Add an ExternalSecret pulling the qBittorrent user/pass, the exporter Deployment/Service/ServiceMonitor, and a "Media — qBittorrent" row in `homelab-spog.json`.
+- **Where:** `k8s/talos/apps/gluetun-vpn/` or `k8s/talos/apps/arr-stack/exportarr.yaml`, `k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json`.
 
 ### Discord alert rules for the media stack
 - **What:** PrometheusRules that page Discord on actionable media-stack conditions — e.g. an *arr queue item stuck (no progress) for >2h, a root folder under a free-space threshold, or an exporter/target down.
