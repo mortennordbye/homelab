@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lazylibrarian-config
+  namespace: arr-stack
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: proxmox-local
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lazylibrarian
+  namespace: arr-stack
+spec:
+  selector:
+    app: lazylibrarian
+  ports:
+    - name: http
+      port: 5299
+      targetPort: 5299
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lazylibrarian
+  namespace: arr-stack
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: lazylibrarian
+  template:
+    metadata:
+      labels:
+        app: lazylibrarian
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - hyper1
+      containers:
+        - name: lazylibrarian
+          image: ghcr.io/linuxserver/lazylibrarian:version-40a389ea
+          ports:
+            - containerPort: 5299
+              name: http
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "Europe/Oslo"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: audiobooks
+              mountPath: /audiobooks
+            - name: torrents
+              mountPath: /torrents
+              readOnly: true
+            - name: torrents-download
+              mountPath: /torrents/download
+            - name: downloads
+              mountPath: /downloads
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          startupProbe:
+            tcpSocket:
+              port: 5299
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            failureThreshold: 40
+          livenessProbe:
+            tcpSocket:
+              port: 5299
+            periodSeconds: 60
+            failureThreshold: 5
+          readinessProbe:
+            tcpSocket:
+              port: 5299
+            periodSeconds: 20
+            failureThreshold: 5
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: lazylibrarian-config
+        - name: audiobooks
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/shared-data/media/audiobooks
+        - name: torrents
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/shared-data/media/torrents
+        - name: torrents-download
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/shared-data/media/torrents/download
+        - name: downloads
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/shared-data/media/torrents/completed
