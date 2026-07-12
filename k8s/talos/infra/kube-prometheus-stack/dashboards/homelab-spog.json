@@ -7947,7 +7947,7 @@
     {
       "id": 9200,
       "type": "row",
-      "title": "Media \u2014 Sonarr",
+      "title": "Media Stack",
       "collapsed": true,
       "gridPos": {
         "h": 1,
@@ -7959,7 +7959,7 @@
         {
           "id": 9201,
           "type": "stat",
-          "title": "Status",
+          "title": "Sonarr \u00b7 Status",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8034,7 +8034,7 @@
         {
           "id": 9202,
           "type": "stat",
-          "title": "Queue",
+          "title": "Sonarr \u00b7 Queue",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8090,7 +8090,7 @@
         {
           "id": 9203,
           "type": "stat",
-          "title": "Missing episodes",
+          "title": "Sonarr \u00b7 Missing eps",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8146,7 +8146,7 @@
         {
           "id": 9204,
           "type": "stat",
-          "title": "Health issues",
+          "title": "Sonarr \u00b7 Health",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8206,7 +8206,7 @@
         {
           "id": 9205,
           "type": "stat",
-          "title": "Series",
+          "title": "Sonarr \u00b7 Series",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8262,7 +8262,7 @@
         {
           "id": 9206,
           "type": "stat",
-          "title": "Min free space",
+          "title": "Sonarr \u00b7 Free space",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8326,7 +8326,7 @@
         {
           "id": 9207,
           "type": "timeseries",
-          "title": "Queue size",
+          "title": "Sonarr \u00b7 Queue size",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8387,7 +8387,7 @@
         {
           "id": 9208,
           "type": "timeseries",
-          "title": "Root folder free space",
+          "title": "Sonarr \u00b7 Free space",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8444,25 +8444,11 @@
               "refId": "A"
             }
           ]
-        }
-      ]
-    },
-    {
-      "id": 9210,
-      "type": "row",
-      "title": "Media \u2014 Radarr",
-      "collapsed": true,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 19
-      },
-      "panels": [
+        },
         {
-          "id": 9211,
+          "id": 9209,
           "type": "stat",
-          "title": "Status",
+          "title": "Radarr \u00b7 Status",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8535,9 +8521,9 @@
           ]
         },
         {
-          "id": 9212,
+          "id": 9210,
           "type": "stat",
-          "title": "Queue",
+          "title": "Radarr \u00b7 Queue",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8591,9 +8577,9 @@
           ]
         },
         {
-          "id": 9213,
+          "id": 9211,
           "type": "stat",
-          "title": "Missing movies",
+          "title": "Radarr \u00b7 Missing movies",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8647,9 +8633,9 @@
           ]
         },
         {
-          "id": 9214,
+          "id": 9212,
           "type": "stat",
-          "title": "Health issues",
+          "title": "Radarr \u00b7 Health",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8707,9 +8693,9 @@
           ]
         },
         {
-          "id": 9215,
+          "id": 9213,
           "type": "stat",
-          "title": "Movies",
+          "title": "Radarr \u00b7 Movies",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8763,9 +8749,9 @@
           ]
         },
         {
-          "id": 9216,
+          "id": 9214,
           "type": "stat",
-          "title": "Min free space",
+          "title": "Radarr \u00b7 Free space",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8827,9 +8813,9 @@
           ]
         },
         {
-          "id": 9217,
+          "id": 9215,
           "type": "timeseries",
-          "title": "Queue size",
+          "title": "Radarr \u00b7 Queue size",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8888,9 +8874,9 @@
           ]
         },
         {
-          "id": 9218,
+          "id": 9216,
           "type": "timeseries",
-          "title": "Root folder free space",
+          "title": "Radarr \u00b7 Free space",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8947,25 +8933,11 @@
               "refId": "A"
             }
           ]
-        }
-      ]
-    },
-    {
-      "id": 9220,
-      "type": "row",
-      "title": "Media \u2014 Bazarr",
-      "collapsed": true,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 20
-      },
-      "panels": [
+        },
         {
-          "id": 9221,
+          "id": 9217,
           "type": "stat",
-          "title": "Status",
+          "title": "Bazarr \u00b7 Status",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9038,9 +9010,9 @@
           ]
         },
         {
-          "id": 9222,
+          "id": 9218,
           "type": "stat",
-          "title": "Health issues",
+          "title": "Bazarr \u00b7 Health",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9098,9 +9070,9 @@
           ]
         },
         {
-          "id": 9223,
+          "id": 9219,
           "type": "stat",
-          "title": "Missing subs",
+          "title": "Bazarr \u00b7 Missing subs",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9154,9 +9126,9 @@
           ]
         },
         {
-          "id": 9224,
+          "id": 9220,
           "type": "stat",
-          "title": "Downloaded subs",
+          "title": "Bazarr \u00b7 Downloaded subs",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9210,9 +9182,9 @@
           ]
         },
         {
-          "id": 9225,
+          "id": 9221,
           "type": "stat",
-          "title": "Wanted subs",
+          "title": "Bazarr \u00b7 Wanted subs",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9266,9 +9238,9 @@
           ]
         },
         {
-          "id": 9226,
+          "id": 9222,
           "type": "stat",
-          "title": "Throttled providers",
+          "title": "Bazarr \u00b7 Throttled",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9326,9 +9298,9 @@
           ]
         },
         {
-          "id": 9227,
+          "id": 9223,
           "type": "timeseries",
-          "title": "Subtitles missing",
+          "title": "Bazarr \u00b7 Subtitles missing",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9387,9 +9359,9 @@
           ]
         },
         {
-          "id": 9228,
+          "id": 9224,
           "type": "timeseries",
-          "title": "Subtitles downloaded",
+          "title": "Bazarr \u00b7 Subtitles downloaded",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9446,25 +9418,11 @@
               "refId": "A"
             }
           ]
-        }
-      ]
-    },
-    {
-      "id": 9230,
-      "type": "row",
-      "title": "Media \u2014 Prowlarr",
-      "collapsed": true,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 21
-      },
-      "panels": [
+        },
         {
-          "id": 9231,
+          "id": 9225,
           "type": "stat",
-          "title": "Exporter up",
+          "title": "Prowlarr \u00b7 Up",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9537,9 +9495,9 @@
           ]
         },
         {
-          "id": 9232,
+          "id": 9226,
           "type": "stat",
-          "title": "Indexers",
+          "title": "Prowlarr \u00b7 Indexers",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9593,9 +9551,9 @@
           ]
         },
         {
-          "id": 9233,
+          "id": 9227,
           "type": "stat",
-          "title": "Enabled",
+          "title": "Prowlarr \u00b7 Enabled",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9649,9 +9607,9 @@
           ]
         },
         {
-          "id": 9234,
+          "id": 9228,
           "type": "stat",
-          "title": "Queries",
+          "title": "Prowlarr \u00b7 Queries",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9705,9 +9663,9 @@
           ]
         },
         {
-          "id": 9235,
+          "id": 9229,
           "type": "stat",
-          "title": "Failed queries",
+          "title": "Prowlarr \u00b7 Failed queries",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9765,9 +9723,9 @@
           ]
         },
         {
-          "id": 9236,
+          "id": 9230,
           "type": "stat",
-          "title": "Failed grabs",
+          "title": "Prowlarr \u00b7 Failed grabs",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9825,9 +9783,9 @@
           ]
         },
         {
-          "id": 9237,
+          "id": 9231,
           "type": "timeseries",
-          "title": "Queries by indexer",
+          "title": "Prowlarr \u00b7 Queries by indexer",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9886,9 +9844,9 @@
           ]
         },
         {
-          "id": 9238,
+          "id": 9232,
           "type": "timeseries",
-          "title": "Grabs by indexer",
+          "title": "Prowlarr \u00b7 Grabs by indexer",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9945,25 +9903,11 @@
               "refId": "A"
             }
           ]
-        }
-      ]
-    },
-    {
-      "id": 9240,
-      "type": "row",
-      "title": "Media \u2014 qBittorrent",
-      "collapsed": true,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 22
-      },
-      "panels": [
+        },
         {
-          "id": 9241,
+          "id": 9233,
           "type": "stat",
-          "title": "Status",
+          "title": "qBittorrent \u00b7 Status",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -10036,9 +9980,9 @@
           ]
         },
         {
-          "id": 9242,
+          "id": 9234,
           "type": "stat",
-          "title": "Torrents",
+          "title": "qBittorrent \u00b7 Torrents",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -10092,9 +10036,9 @@
           ]
         },
         {
-          "id": 9243,
+          "id": 9235,
           "type": "stat",
-          "title": "Downloading",
+          "title": "qBittorrent \u00b7 Downloading",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -10148,9 +10092,9 @@
           ]
         },
         {
-          "id": 9244,
+          "id": 9236,
           "type": "stat",
-          "title": "Stalled",
+          "title": "qBittorrent \u00b7 Stalled",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -10208,9 +10152,9 @@
           ]
         },
         {
-          "id": 9245,
+          "id": 9237,
           "type": "stat",
-          "title": "DHT nodes",
+          "title": "qBittorrent \u00b7 DHT nodes",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -10264,9 +10208,9 @@
           ]
         },
         {
-          "id": 9246,
+          "id": 9238,
           "type": "stat",
-          "title": "Firewalled",
+          "title": "qBittorrent \u00b7 Firewalled",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -10339,9 +10283,9 @@
           ]
         },
         {
-          "id": 9247,
+          "id": 9239,
           "type": "timeseries",
-          "title": "Throughput",
+          "title": "qBittorrent \u00b7 Throughput",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -10409,9 +10353,9 @@
           ]
         },
         {
-          "id": 9248,
+          "id": 9240,
           "type": "timeseries",
-          "title": "Torrents by status",
+          "title": "qBittorrent \u00b7 Torrents by status",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
