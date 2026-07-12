@@ -108,3 +108,17 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** Out of scope for the BPF fix above; needs a policy design decision.
 - **Unblock:** Split into two separate `CiliumL2AnnouncementPolicy` resources with disjoint `nodeSelector`s (e.g. private → ctrl-only, public → worker-only) so an election blip never blackholes both. Validate that L2 lease params (`leaseDuration` / `leaseRenewDeadline` / `leaseRetryPeriod`) are set conservatively — defaults can re-elect aggressively under control-plane load.
 - **Where:** `k8s/talos/infra/cilium/l2-announcement-policy.yaml`.
+
+## Media stack observability (arr-stack)
+
+### Exportarr coverage for Prowlarr, Bazarr, qBittorrent
+- **What:** Extend the media-stack metrics/dashboard beyond Sonarr + Radarr. Add Exportarr instances for Prowlarr (indexer grab/fail rates — directly relevant to spotting bad/fake releases) and Bazarr, plus a qBittorrent exporter for download-client throughput/stall metrics.
+- **Why deferred:** Sonarr + Radarr shipped first because both live in `arr-stack`, their API keys are already in Bitwarden, and same-namespace scraping is trivial. Prowlarr and Bazarr run in the `gluetun-vpn` namespace behind the VPN pod, so scraping them cross-namespace needs a CiliumNetworkPolicy allowing ingress from `arr-stack` (or the exporters deployed into `gluetun-vpn`). qBittorrent has no API key — its exporter (`ghcr.io/esanchezm/prometheus-qbittorrent-exporter`) authenticates with the WebUI username/password (already in Bitwarden as `HOMEPAGE_VAR_QBITTORRENT_*`).
+- **Unblock:** Decide placement (exporters in `gluetun-vpn` next to the targets vs. in `arr-stack` with a cross-namespace allow rule). Prowlarr/Bazarr API keys already exist in Bitwarden (see `k8s/talos/apps/homepage/secrets.yaml`: Prowlarr `72898bab-…`, Bazarr `384c2a48-…`). Add exporter Deployments/Services/ServiceMonitors and extend `arr-stack.json` with Prowlarr/Bazarr/qBittorrent rows.
+- **Where:** `k8s/talos/apps/arr-stack/exportarr.yaml` (or a new manifest under `k8s/talos/apps/gluetun-vpn/`), `k8s/talos/infra/kube-prometheus-stack/dashboards/arr-stack.json`.
+
+### Discord alert rules for the media stack
+- **What:** PrometheusRules that page Discord on actionable media-stack conditions — e.g. an *arr queue item stuck (no progress) for >2h, a root folder under a free-space threshold, or an exporter/target down.
+- **Why deferred:** Scope of this change was graphs, not alerting. The metrics now exist, so the rules are a clean follow-up; thresholds want a little live baseline first.
+- **Unblock:** Add a rule group to `homelab-alerts.yaml` (label `release: kube-prometheus-stack`, `severity: critical` routes to Discord per the existing Alertmanager config). Base the stuck-queue expr on `sonarr_queue_total` / `radarr_queue_total` once a normal range is observed.
+- **Where:** `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`.
