@@ -27,7 +27,7 @@ spec:
         fsGroup: 101
       containers:
         - name: portfolio
-          image: ghcr.io/mortennordbye/homelab/portfolio:dbe6889
+          image: ghcr.io/mortennordbye/homelab/portfolio:4395d88
           imagePullPolicy: Always
           ports:
             - name: http
