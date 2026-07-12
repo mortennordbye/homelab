@@ -9,6 +9,9 @@ generatorOptions:
     grafana_dashboard: "1"
   annotations:
     k8s-sidecar-target-directory: Homelab
+    # SPOG dashboard JSON exceeds the 256 KiB last-applied-configuration
+    # annotation limit, so ArgoCD must use server-side apply for these.
+    argocd.argoproj.io/sync-options: ServerSideApply=true
 
 configMapGenerator:
   - name: dashboard-homelab-spog
@@ -17,6 +20,3 @@ configMapGenerator:
   - name: dashboard-homelab-log-spog
     files:
       - homelab-log-spog.json
-  - name: dashboard-arr-stack
-    files:
-      - arr-stack.json
