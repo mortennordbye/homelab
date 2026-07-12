@@ -312,9 +312,13 @@ spec:
     matchLabels:
       app: exportarr-bazarr
   endpoints:
+    # Bazarr's collector crawls the whole library each scrape (slow on large
+    # libraries), so give it a long interval and matching scrape timeout to
+    # avoid the scrape timing out and marking the target down.
     - port: metrics
       path: /metrics
-      interval: 30s
+      interval: 2m
+      scrapeTimeout: 110s
 ---
 apiVersion: v1
 kind: Service
@@ -360,6 +364,9 @@ spec:
           image: ghcr.io/onedr0p/exportarr:v2.3.0
           args:
             - prowlarr
+            # Pull historical indexer stats so query/grab metrics populate
+            # immediately instead of only counting activity after startup.
+            - --backfill
           env:
             - name: PORT
               value: "9707"
