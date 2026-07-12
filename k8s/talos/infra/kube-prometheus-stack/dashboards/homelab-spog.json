@@ -8204,9 +8204,9 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum(qbittorrent_torrents_count{status=~\"stalledDL|stalledUP\"})",
+              "expr": "sum(qbittorrent_torrents_count{status=\"stalledDL\"})",
               "instant": true,
-              "legendFormat": "Stalled torrents",
+              "legendFormat": "Stalled DL",
               "refId": "A"
             },
             {
@@ -8860,7 +8860,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "rate(qbittorrent_dl_info_data[5m])",
+              "expr": "rate(qbittorrent_dl_info_data_total[5m])",
               "legendFormat": "download",
               "refId": "A"
             },
@@ -8869,7 +8869,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "rate(qbittorrent_up_info_data[5m])",
+              "expr": "rate(qbittorrent_up_info_data_total[5m])",
               "legendFormat": "upload",
               "refId": "B"
             }
