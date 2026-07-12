@@ -7959,14 +7959,14 @@
         {
           "id": 9201,
           "type": "stat",
-          "title": "Sonarr \u00b7 Status",
+          "title": "Service status",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
           "gridPos": {
             "h": 4,
-            "w": 4,
+            "w": 24,
             "x": 0,
             "y": 340
           },
@@ -8006,9 +8006,9 @@
           },
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
-            "orientation": "auto",
+            "orientation": "horizontal",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -8016,7 +8016,7 @@
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "textMode": "value_and_name"
           },
           "targets": [
             {
@@ -8026,136 +8026,64 @@
               },
               "expr": "sonarr_system_status",
               "instant": true,
-              "legendFormat": "",
+              "legendFormat": "Sonarr",
               "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "radarr_system_status",
+              "instant": true,
+              "legendFormat": "Radarr",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "bazarr_system_status",
+              "instant": true,
+              "legendFormat": "Bazarr",
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "up{job=\"exportarr-prowlarr\"}",
+              "instant": true,
+              "legendFormat": "Prowlarr",
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "qbittorrent_up",
+              "instant": true,
+              "legendFormat": "qBittorrent",
+              "refId": "E"
             }
           ]
         },
         {
           "id": 9202,
           "type": "stat",
-          "title": "Sonarr \u00b7 Queue",
+          "title": "Health issues",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
           "gridPos": {
             "h": 4,
-            "w": 4,
-            "x": 4,
-            "y": 340
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(sonarr_queue_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9203,
-          "type": "stat",
-          "title": "Sonarr \u00b7 Missing eps",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 8,
-            "y": 340
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(sonarr_episode_missing_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9204,
-          "type": "stat",
-          "title": "Sonarr \u00b7 Health",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 12,
-            "y": 340
+            "w": 6,
+            "x": 0,
+            "y": 344
           },
           "fieldConfig": {
             "defaults": {
@@ -8178,9 +8106,9 @@
           },
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
-            "orientation": "auto",
+            "orientation": "horizontal",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -8188,7 +8116,7 @@
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "textMode": "value_and_name"
           },
           "targets": [
             {
@@ -8198,24 +8126,124 @@
               },
               "expr": "sum(sonarr_system_health_issues)",
               "instant": true,
-              "legendFormat": "",
+              "legendFormat": "Sonarr",
               "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(radarr_system_health_issues)",
+              "instant": true,
+              "legendFormat": "Radarr",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(bazarr_system_health_issues)",
+              "instant": true,
+              "legendFormat": "Bazarr",
+              "refId": "C"
             }
           ]
         },
         {
-          "id": 9205,
+          "id": 9203,
           "type": "stat",
-          "title": "Sonarr \u00b7 Series",
+          "title": "Problems",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
           "gridPos": {
             "h": 4,
-            "w": 4,
-            "x": 16,
-            "y": 340
+            "w": 6,
+            "x": 6,
+            "y": 344
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(qbittorrent_torrents_count{status=~\"stalledDL|stalledUP\"})",
+              "instant": true,
+              "legendFormat": "Stalled torrents",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(prowlarr_indexer_failed_queries_total)",
+              "instant": true,
+              "legendFormat": "Failed queries",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(prowlarr_indexer_failed_grabs_total)",
+              "instant": true,
+              "legendFormat": "Failed grabs",
+              "refId": "C"
+            }
+          ]
+        },
+        {
+          "id": 9204,
+          "type": "stat",
+          "title": "Queues",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 344
           },
           "fieldConfig": {
             "defaults": {
@@ -8234,9 +8262,9 @@
           },
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
-            "orientation": "auto",
+            "orientation": "horizontal",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -8244,7 +8272,7 @@
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "textMode": "value_and_name"
           },
           "targets": [
             {
@@ -8252,26 +8280,36 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum(sonarr_series_total)",
+              "expr": "sum(sonarr_queue_total)",
               "instant": true,
-              "legendFormat": "",
+              "legendFormat": "Sonarr",
               "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(radarr_queue_total)",
+              "instant": true,
+              "legendFormat": "Radarr",
+              "refId": "B"
             }
           ]
         },
         {
-          "id": 9206,
+          "id": 9205,
           "type": "stat",
-          "title": "Sonarr \u00b7 Free space",
+          "title": "Free space (min)",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
           "gridPos": {
             "h": 4,
-            "w": 4,
-            "x": 20,
-            "y": 340
+            "w": 6,
+            "x": 18,
+            "y": 344
           },
           "fieldConfig": {
             "defaults": {
@@ -8298,9 +8336,9 @@
           },
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
-            "orientation": "auto",
+            "orientation": "horizontal",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -8308,7 +8346,7 @@
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "textMode": "value_and_name"
           },
           "targets": [
             {
@@ -8318,15 +8356,319 @@
               },
               "expr": "min(sonarr_rootfolder_freespace_bytes)",
               "instant": true,
-              "legendFormat": "",
+              "legendFormat": "Sonarr",
               "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "min(radarr_rootfolder_freespace_bytes)",
+              "instant": true,
+              "legendFormat": "Radarr",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 9206,
+          "type": "stat",
+          "title": "Missing",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 348
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(sonarr_episode_missing_total)",
+              "instant": true,
+              "legendFormat": "Episodes",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(radarr_movie_missing_total)",
+              "instant": true,
+              "legendFormat": "Movies",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(bazarr_subtitles_missing_total)",
+              "instant": true,
+              "legendFormat": "Subtitles",
+              "refId": "C"
             }
           ]
         },
         {
           "id": 9207,
+          "type": "stat",
+          "title": "Library",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 348
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(sonarr_series_total)",
+              "instant": true,
+              "legendFormat": "Series",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(radarr_movie_total)",
+              "instant": true,
+              "legendFormat": "Movies",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 9208,
+          "type": "stat",
+          "title": "qBittorrent",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 348
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(qbittorrent_torrents_count)",
+              "instant": true,
+              "legendFormat": "Torrents",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(qbittorrent_torrents_count{status=\"downloading\"})",
+              "instant": true,
+              "legendFormat": "Downloading",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "qbittorrent_dht_nodes",
+              "instant": true,
+              "legendFormat": "DHT nodes",
+              "refId": "C"
+            }
+          ]
+        },
+        {
+          "id": 9209,
+          "type": "stat",
+          "title": "Prowlarr indexers",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 348
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(prowlarr_indexer_total)",
+              "instant": true,
+              "legendFormat": "Total",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(prowlarr_indexer_enabled_total)",
+              "instant": true,
+              "legendFormat": "Enabled",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(prowlarr_indexer_queries_total)",
+              "instant": true,
+              "legendFormat": "Queries",
+              "refId": "C"
+            }
+          ]
+        },
+        {
+          "id": 9210,
           "type": "timeseries",
-          "title": "Sonarr \u00b7 Queue size",
+          "title": "Queue size",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8335,7 +8677,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 344
+            "y": 352
           },
           "fieldConfig": {
             "defaults": {
@@ -8379,15 +8721,24 @@
                 "uid": "${datasource}"
               },
               "expr": "sum(sonarr_queue_total)",
-              "legendFormat": "queue",
+              "legendFormat": "Sonarr",
               "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(radarr_queue_total)",
+              "legendFormat": "Radarr",
+              "refId": "B"
             }
           ]
         },
         {
-          "id": 9208,
+          "id": 9211,
           "type": "timeseries",
-          "title": "Sonarr \u00b7 Free space",
+          "title": "Root folder free space",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -8396,7 +8747,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 344
+            "y": 352
           },
           "fieldConfig": {
             "defaults": {
@@ -8440,867 +8791,24 @@
                 "uid": "${datasource}"
               },
               "expr": "sonarr_rootfolder_freespace_bytes",
-              "legendFormat": "{{path}}",
+              "legendFormat": "Sonarr {{path}}",
               "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9209,
-          "type": "stat",
-          "title": "Radarr \u00b7 Status",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 0,
-            "y": 352
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "mappings": [
-                {
-                  "type": "value",
-                  "options": {
-                    "0": {
-                      "text": "DOWN",
-                      "color": "red"
-                    },
-                    "1": {
-                      "text": "UP",
-                      "color": "green"
-                    }
-                  }
-                }
-              ],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "green",
-                    "value": 1
-                  }
-                ]
-              }
             },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "radarr_system_status",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9210,
-          "type": "stat",
-          "title": "Radarr \u00b7 Queue",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 4,
-            "y": 352
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(radarr_queue_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9211,
-          "type": "stat",
-          "title": "Radarr \u00b7 Missing movies",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 8,
-            "y": 352
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(radarr_movie_missing_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9212,
-          "type": "stat",
-          "title": "Radarr \u00b7 Health",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 12,
-            "y": 352
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(radarr_system_health_issues)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9213,
-          "type": "stat",
-          "title": "Radarr \u00b7 Movies",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 16,
-            "y": 352
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(radarr_movie_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9214,
-          "type": "stat",
-          "title": "Radarr \u00b7 Free space",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 20,
-            "y": 352
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "bytes",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 53687091200
-                  },
-                  {
-                    "color": "green",
-                    "value": 214748364800
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "min(radarr_rootfolder_freespace_bytes)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9215,
-          "type": "timeseries",
-          "title": "Radarr \u00b7 Queue size",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 356
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "smooth",
-                "fillOpacity": 12,
-                "showPoints": "never",
-                "lineWidth": 2,
-                "axisPlacement": "auto",
-                "spanNulls": true
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "calcs": []
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(radarr_queue_total)",
-              "legendFormat": "queue",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9216,
-          "type": "timeseries",
-          "title": "Radarr \u00b7 Free space",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 356
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "bytes",
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "smooth",
-                "fillOpacity": 12,
-                "showPoints": "never",
-                "lineWidth": 2,
-                "axisPlacement": "auto",
-                "spanNulls": true
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "calcs": []
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
             {
               "datasource": {
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
               "expr": "radarr_rootfolder_freespace_bytes",
-              "legendFormat": "{{path}}",
-              "refId": "A"
+              "legendFormat": "Radarr {{path}}",
+              "refId": "B"
             }
           ]
         },
         {
-          "id": 9217,
-          "type": "stat",
-          "title": "Bazarr \u00b7 Status",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 0,
-            "y": 364
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "mappings": [
-                {
-                  "type": "value",
-                  "options": {
-                    "0": {
-                      "text": "DOWN",
-                      "color": "red"
-                    },
-                    "1": {
-                      "text": "UP",
-                      "color": "green"
-                    }
-                  }
-                }
-              ],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "green",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "bazarr_system_status",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9218,
-          "type": "stat",
-          "title": "Bazarr \u00b7 Health",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 4,
-            "y": 364
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(bazarr_system_health_issues)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9219,
-          "type": "stat",
-          "title": "Bazarr \u00b7 Missing subs",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 8,
-            "y": 364
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(bazarr_subtitles_missing_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9220,
-          "type": "stat",
-          "title": "Bazarr \u00b7 Downloaded subs",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 12,
-            "y": 364
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(bazarr_subtitles_downloaded_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9221,
-          "type": "stat",
-          "title": "Bazarr \u00b7 Wanted subs",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 16,
-            "y": 364
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(bazarr_subtitles_wanted_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9222,
-          "type": "stat",
-          "title": "Bazarr \u00b7 Throttled",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 20,
-            "y": 364
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(bazarr_throttled_providers)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9223,
+          "id": 9212,
           "type": "timeseries",
-          "title": "Bazarr \u00b7 Subtitles missing",
+          "title": "qBittorrent throughput",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -9309,992 +8817,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 368
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "smooth",
-                "fillOpacity": 12,
-                "showPoints": "never",
-                "lineWidth": 2,
-                "axisPlacement": "auto",
-                "spanNulls": true
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "calcs": []
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(bazarr_subtitles_missing_total)",
-              "legendFormat": "missing",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9224,
-          "type": "timeseries",
-          "title": "Bazarr \u00b7 Subtitles downloaded",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 368
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "smooth",
-                "fillOpacity": 12,
-                "showPoints": "never",
-                "lineWidth": 2,
-                "axisPlacement": "auto",
-                "spanNulls": true
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "calcs": []
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(bazarr_subtitles_downloaded_total)",
-              "legendFormat": "downloaded",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9225,
-          "type": "stat",
-          "title": "Prowlarr \u00b7 Up",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 0,
-            "y": 376
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "mappings": [
-                {
-                  "type": "value",
-                  "options": {
-                    "0": {
-                      "text": "DOWN",
-                      "color": "red"
-                    },
-                    "1": {
-                      "text": "UP",
-                      "color": "green"
-                    }
-                  }
-                }
-              ],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "green",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "up{job=\"exportarr-prowlarr\"}",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9226,
-          "type": "stat",
-          "title": "Prowlarr \u00b7 Indexers",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 4,
-            "y": 376
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(prowlarr_indexer_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9227,
-          "type": "stat",
-          "title": "Prowlarr \u00b7 Enabled",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 8,
-            "y": 376
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(prowlarr_indexer_enabled_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9228,
-          "type": "stat",
-          "title": "Prowlarr \u00b7 Queries",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 12,
-            "y": 376
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(prowlarr_indexer_queries_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9229,
-          "type": "stat",
-          "title": "Prowlarr \u00b7 Failed queries",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 16,
-            "y": 376
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(prowlarr_indexer_failed_queries_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9230,
-          "type": "stat",
-          "title": "Prowlarr \u00b7 Failed grabs",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 20,
-            "y": 376
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(prowlarr_indexer_failed_grabs_total)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9231,
-          "type": "timeseries",
-          "title": "Prowlarr \u00b7 Queries by indexer",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 380
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "smooth",
-                "fillOpacity": 12,
-                "showPoints": "never",
-                "lineWidth": 2,
-                "axisPlacement": "auto",
-                "spanNulls": true
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "calcs": []
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum by (indexer) (prowlarr_indexer_queries_total)",
-              "legendFormat": "{{indexer}}",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9232,
-          "type": "timeseries",
-          "title": "Prowlarr \u00b7 Grabs by indexer",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 380
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "smooth",
-                "fillOpacity": 12,
-                "showPoints": "never",
-                "lineWidth": 2,
-                "axisPlacement": "auto",
-                "spanNulls": true
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "calcs": []
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum by (indexer) (prowlarr_indexer_grabs_total)",
-              "legendFormat": "{{indexer}}",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9233,
-          "type": "stat",
-          "title": "qBittorrent \u00b7 Status",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 0,
-            "y": 388
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "mappings": [
-                {
-                  "type": "value",
-                  "options": {
-                    "0": {
-                      "text": "DOWN",
-                      "color": "red"
-                    },
-                    "1": {
-                      "text": "UP",
-                      "color": "green"
-                    }
-                  }
-                }
-              ],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "green",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "qbittorrent_up",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9234,
-          "type": "stat",
-          "title": "qBittorrent \u00b7 Torrents",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 4,
-            "y": 388
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(qbittorrent_torrents_count)",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9235,
-          "type": "stat",
-          "title": "qBittorrent \u00b7 Downloading",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 8,
-            "y": 388
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(qbittorrent_torrents_count{status=\"downloading\"})",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9236,
-          "type": "stat",
-          "title": "qBittorrent \u00b7 Stalled",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 12,
-            "y": 388
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "sum(qbittorrent_torrents_count{status=~\"stalledDL|stalledUP\"})",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9237,
-          "type": "stat",
-          "title": "qBittorrent \u00b7 DHT nodes",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 16,
-            "y": 388
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "text",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "qbittorrent_dht_nodes",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9238,
-          "type": "stat",
-          "title": "qBittorrent \u00b7 Firewalled",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 4,
-            "x": 20,
-            "y": 388
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "mappings": [
-                {
-                  "type": "value",
-                  "options": {
-                    "0": {
-                      "text": "OK",
-                      "color": "green"
-                    },
-                    "1": {
-                      "text": "FIREWALLED",
-                      "color": "orange"
-                    }
-                  }
-                }
-              ],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "qbittorrent_firewalled",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9239,
-          "type": "timeseries",
-          "title": "qBittorrent \u00b7 Throughput",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 392
+            "y": 360
           },
           "fieldConfig": {
             "defaults": {
@@ -10348,14 +8871,14 @@
               },
               "expr": "rate(qbittorrent_up_info_data[5m])",
               "legendFormat": "upload",
-              "refId": "A"
+              "refId": "B"
             }
           ]
         },
         {
-          "id": 9240,
+          "id": 9213,
           "type": "timeseries",
-          "title": "qBittorrent \u00b7 Torrents by status",
+          "title": "Torrents by status",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -10364,7 +8887,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 392
+            "y": 360
           },
           "fieldConfig": {
             "defaults": {
@@ -10410,6 +8933,137 @@
               "expr": "sum by (status) (qbittorrent_torrents_count)",
               "legendFormat": "{{status}}",
               "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 9214,
+          "type": "timeseries",
+          "title": "Prowlarr queries by indexer",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 368
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 12,
+                "showPoints": "never",
+                "lineWidth": 2,
+                "axisPlacement": "auto",
+                "spanNulls": true
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (indexer) (prowlarr_indexer_queries_total)",
+              "legendFormat": "{{indexer}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 9215,
+          "type": "timeseries",
+          "title": "Bazarr subtitles",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 368
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 12,
+                "showPoints": "never",
+                "lineWidth": 2,
+                "axisPlacement": "auto",
+                "spanNulls": true
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(bazarr_subtitles_missing_total)",
+              "legendFormat": "missing",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(bazarr_subtitles_downloaded_total)",
+              "legendFormat": "downloaded",
+              "refId": "B"
             }
           ]
         }
