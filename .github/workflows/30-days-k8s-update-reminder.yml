@@ -8,6 +8,7 @@ on:
 
 jobs:
   notify:
+    if: github.repository_owner == 'mortennordbye'
     runs-on: ubuntu-latest
     steps:
       - name: Get Discord Webhook URL from Bitwarden

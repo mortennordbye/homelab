@@ -27,7 +27,7 @@ jobs:
     # Gates stage deploys on push to main. Manual prod dispatch skips this.
     # next build is not repeated here: it runs inside the Docker build, and
     # the image is only pushed if that succeeds.
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.repository_owner == 'mortennordbye'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -56,7 +56,7 @@ jobs:
   build-and-deploy:
     needs: ci
     # success = push with green ci; skipped = manual prod dispatch
-    if: ${{ !cancelled() && (needs.ci.result == 'success' || needs.ci.result == 'skipped') }}
+    if: ${{ !cancelled() && (needs.ci.result == 'success' || needs.ci.result == 'skipped') && github.repository_owner == 'mortennordbye' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

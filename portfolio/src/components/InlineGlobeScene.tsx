@@ -239,8 +239,12 @@ function useResponsiveEarthOffset() {
     const vw = vh * (size.width / size.height);
     const halfW = vw / 2;
     const desired = halfW * 0.30;
+    // Perspective anamorphosis: a sphere far off the camera axis projects as
+    // an ellipse, which ultrawide viewports otherwise hit hard. Keep the
+    // earth within ~20 degrees off-axis, where the stretch stays invisible.
+    const maxOffAxis = cam.position.z * Math.tan(THREE.MathUtils.degToRad(20));
     const cap = halfW - RADIUS - 0.25;
-    return Math.max(0, Math.min(desired, cap));
+    return Math.max(0, Math.min(desired, maxOffAxis, cap));
   }, [camera, size]);
 }
 

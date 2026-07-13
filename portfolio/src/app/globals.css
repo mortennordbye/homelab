@@ -66,9 +66,12 @@ body {
   color: var(--selection-fg);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+/* In @layer base so color/decoration utilities on links win the cascade */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -231,7 +234,7 @@ a {
   100% { left: calc(100% - 10px); opacity: 0; }
 }
 .packet {
-  animation: packet-flow 2.8s linear infinite;
+  animation: packet-flow var(--packet-duration, 2.8s) linear infinite;
   animation-delay: var(--packet-delay, 0s);
 }
 

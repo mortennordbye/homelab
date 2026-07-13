@@ -14,13 +14,50 @@ export const metadata: Metadata = {
 const dotTints = ["bg-accent", "bg-accent-3", "bg-accent-2", "bg-copper"];
 
 const statusJsonExample = `{
-  "generatedAt": "2026-07-12T09:14:02Z",
-  "build":      "286dd6c",
-  "argocd":     { "sync": "Synced", "health": "Healthy" },
-  "nodes":      { "ready": 6, "total": 6 },
-  "versions":   { "talos": "v1.11.6", "kubernetes": "v1.34.0" },
-  "cert":       { "notAfter": "2026-09-04T08:11:39Z" }
+  "generatedAt": "2026-07-13T05:55:03Z",
+  "build": "72088b9",
+  "deployedAt": "2026-07-12T19:33:47Z",
+  "argocd": {
+    "sync": "Synced",
+    "health": "Healthy",
+    "syncedAt": "2026-07-12T19:32:48Z"
+  },
+  "nodes": { "ready": 6, "total": 6 },
+  "versions": { "talos": "v1.11.6", "kubernetes": "v1.34.0" },
+  "cert": { "notAfter": "2026-09-25T11:41:28Z" },
+  "history": [{ "d": "2026-07-13", "ok": 71, "total": 71 }, ...]
 }`;
+
+function JsonCode({ code }: { code: string }) {
+  return (
+    <>
+      {code.split(/("[^"]*":|"[^"]*"|\d+)/g).map((part, i) => {
+        if (part.endsWith('":')) {
+          return (
+            <span key={i}>
+              <span className="text-accent">{part.slice(0, -1)}</span>:
+            </span>
+          );
+        }
+        if (part.startsWith('"')) {
+          return (
+            <span key={i} className="text-accent-3">
+              {part}
+            </span>
+          );
+        }
+        if (/^\d+$/.test(part)) {
+          return (
+            <span key={i} className="text-copper">
+              {part}
+            </span>
+          );
+        }
+        return part;
+      })}
+    </>
+  );
+}
 
 export default function InfrastructurePage() {
   return (
@@ -61,7 +98,7 @@ export default function InfrastructurePage() {
         }
         className="border-t border-line"
       >
-        <Pipeline hops={deployPath} />
+        <Pipeline hops={deployPath} variant="steps" />
       </Section>
 
       <Section
@@ -86,14 +123,29 @@ export default function InfrastructurePage() {
               fall back to a build-time snapshot and say so. The page never
               breaks because the homelab is having a bad day.
             </p>
+            <div className="space-y-4 border-t border-line pt-5 text-sm">
+              <p className="eyebrow text-[0.65rem]">design decisions</p>
+              <p>
+                The pod serving this page has no Kubernetes API access. A
+                status API would be fresher, but it would put cluster
+                credentials behind a public endpoint for data that changes
+                every few minutes at most. The publisher&apos;s RBAC reads the
+                objects it reports on, pinned to resource names where the API
+                allows it, and writes one ConfigMap.
+              </p>
+              <p>
+                The pill checks the timestamp too. Data older than 15 minutes
+                is reported as stale rather than shown as operational.
+              </p>
+            </div>
           </div>
           <Reveal className="overflow-hidden rounded-lg border border-line bg-bg-2">
             <div className="flex items-center justify-between border-b border-line px-4 py-2.5 font-mono text-xs">
               <span className="text-fg-2">GET /status.json</span>
               <span className="text-fg-3">refreshed every 5 min</span>
             </div>
-            <pre className="overflow-x-auto p-4 font-mono text-[0.78rem] leading-relaxed text-fg-2">
-              {statusJsonExample}
+            <pre className="overflow-x-auto p-4 font-mono text-[0.78rem] leading-relaxed text-fg-3">
+              <JsonCode code={statusJsonExample} />
             </pre>
           </Reveal>
         </div>
@@ -116,10 +168,10 @@ export default function InfrastructurePage() {
         }
         className="border-t border-line"
       >
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
           {platform.map((p, i) => (
             <Reveal key={p.name} delay={i * 0.05}>
-              <div className="h-full rounded-md border border-line bg-surface p-4 transition-colors hover:border-line-2">
+              <div className="border-t border-line pt-4">
                 <p className="flex items-center gap-2 font-mono text-sm font-semibold text-fg">
                   <span
                     aria-hidden
