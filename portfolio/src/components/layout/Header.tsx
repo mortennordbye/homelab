@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
@@ -48,38 +48,39 @@ export function Header() {
           : "border-b border-transparent",
       )}
     >
-      <div className="mx-auto flex max-w-[var(--container-wide)] items-center justify-between px-5 py-4 md:px-8">
-        <Link
-          href="/"
-          className="focus-ring flex items-center gap-2 text-sm tracking-wide"
-        >
-          <span className="inline-block h-2 w-2 rounded-full bg-accent shadow-[0_0_18px_var(--accent)]" />
-          <span className="text-fg font-medium">morten</span>
-          <span className="text-fg-3">/</span>
-          <span className="text-fg-2">nordbye.it</span>
-        </Link>
-
-        <nav className="hidden items-center gap-7 md:flex">
+      <div className="mx-auto flex max-w-[var(--container-wide)] items-center px-5 py-4 md:px-8">
+        <nav className="hidden flex-1 items-baseline gap-2.5 font-mono text-[13px] md:flex">
+          <Link
+            href="/"
+            aria-label="Home"
+            className="focus-ring text-fg-3 transition-colors hover:text-fg"
+          >
+            ~
+          </Link>
           {site.nav.map((item) => {
             const active = pathname === item.href || pathname?.startsWith(item.href + "/");
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={(e) => onAnchorClick(e, item.href)}
-                className={cn(
-                  "focus-ring text-sm transition-colors hover:text-fg",
-                  active ? "text-fg" : "text-fg-2",
-                )}
-              >
-                {item.label}
-              </Link>
+              <Fragment key={item.href}>
+                <span aria-hidden className="text-line-2">
+                  /
+                </span>
+                <Link
+                  href={item.href}
+                  onClick={(e) => onAnchorClick(e, item.href)}
+                  className={cn(
+                    "focus-ring lowercase transition-colors hover:text-fg",
+                    active ? "text-accent" : "text-fg-2",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              </Fragment>
             );
           })}
-          <PaletteLauncher className="ml-2" />
+          <PaletteLauncher className="ml-auto" />
         </nav>
 
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="ml-auto flex items-center gap-2 md:hidden">
           <PaletteLauncher compact />
           <button
             type="button"

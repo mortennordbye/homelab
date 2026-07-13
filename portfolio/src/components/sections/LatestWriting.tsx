@@ -14,7 +14,7 @@ export async function LatestWriting() {
       heading="Blog."
       description="Long-form notes from running cloud infrastructure, including migrations, post-mortems and the occasional hot take. Lives at blog.nordbye.it."
       align="between"
-      className="border-t border-line"
+      className="section-rule"
       cta={
         <Button href="https://blog.nordbye.it" variant="ghost" iconLeft={<Rss size={14} aria-hidden />} iconRight={<ArrowUpRight size={16} aria-hidden />}>
           Read the blog

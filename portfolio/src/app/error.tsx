@@ -15,7 +15,7 @@ export default function Error({
       <p className="font-display text-xs uppercase tracking-[0.3em] text-accent">
         500 — something broke
       </p>
-      <h1 className="mt-6 text-display-lg font-display text-fg leading-[1]">
+      <h1 className="mt-6 text-display-lg text-fg leading-[1]">
         That didn&apos;t go{" "}
         <span className="gradient-text">according to plan.</span>
       </h1>

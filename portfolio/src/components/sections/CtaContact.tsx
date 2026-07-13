@@ -6,7 +6,7 @@ export function CtaContact() {
   return (
     <section
       id="contact"
-      className="scroll-mt-24 border-t border-line"
+      className="scroll-mt-24 section-rule"
       style={{ paddingTop: "var(--space-section-y)", paddingBottom: "var(--space-section-y)" }}
     >
       <div className="mx-auto grid max-w-[var(--container-wide)] gap-12 px-6 md:grid-cols-12 md:gap-8 md:px-8">

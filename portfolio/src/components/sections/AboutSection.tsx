@@ -24,7 +24,7 @@ export function AboutSection() {
     <Section
       id="about"
       heading="About me."
-      className="border-t border-line"
+      className="section-rule"
     >
       <div className="grid gap-8 md:grid-cols-[300px_1fr] md:items-start md:gap-12">
         <PortraitCard />
