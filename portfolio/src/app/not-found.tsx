@@ -7,7 +7,7 @@ export default function NotFound() {
       <p className="font-display text-xs uppercase tracking-[0.3em] text-accent">
         404 — page not found
       </p>
-      <h1 className="mt-6 text-display-lg font-display text-fg leading-[1]">
+      <h1 className="mt-6 text-display-lg text-fg leading-[1]">
         Took a wrong{" "}
         <span className="gradient-text">turn somewhere.</span>
       </h1>

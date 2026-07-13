@@ -102,14 +102,33 @@ body {
 }
 
 /* Utilities */
-.text-display-xl { font-size: var(--text-display-xl); line-height: 0.92; letter-spacing: -0.035em; font-weight: var(--font-weight-semibold); }
-.text-display-lg { font-size: var(--text-display-lg); line-height: 0.95; letter-spacing: -0.03em; font-weight: var(--font-weight-semibold); }
-.text-h1 { font-size: var(--text-h1); line-height: 1.05; letter-spacing: -0.02em; font-weight: var(--font-weight-semibold); }
-.text-h2 { font-size: var(--text-h2); line-height: 1.12; letter-spacing: -0.015em; font-weight: var(--font-weight-semibold); }
-.text-h3 { font-size: var(--text-h3); line-height: 1.25; letter-spacing: -0.01em; font-weight: var(--font-weight-semibold); }
+/* Headings render in the Fraunces display face; body/UI text stays on Inter.
+   Tracking is looser than the old Inter values — negative tracking that tight
+   cramps a serif — and the large display sizes drop to 500 so Fraunces doesn't
+   read heavy. */
+.text-display-xl { font-family: var(--font-display-face), ui-serif, Georgia, serif; font-size: var(--text-display-xl); line-height: 0.95; letter-spacing: -0.015em; font-weight: 500; }
+.text-display-lg { font-family: var(--font-display-face), ui-serif, Georgia, serif; font-size: var(--text-display-lg); line-height: 0.98; letter-spacing: -0.012em; font-weight: 500; }
+.text-h1 { font-family: var(--font-display-face), ui-serif, Georgia, serif; font-size: var(--text-h1); line-height: 1.08; letter-spacing: -0.01em; font-weight: 500; }
+.text-h2 { font-family: var(--font-display-face), ui-serif, Georgia, serif; font-size: var(--text-h2); line-height: 1.15; letter-spacing: -0.005em; font-weight: var(--font-weight-semibold); }
+.text-h3 { font-family: var(--font-display-face), ui-serif, Georgia, serif; font-size: var(--text-h3); line-height: 1.25; letter-spacing: 0; font-weight: var(--font-weight-semibold); }
 
 .font-display { font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif; }
 .font-mono, .mono { font-family: var(--font-mono), ui-monospace, monospace; }
+
+/* Section separator — replaces the full-bleed border-t. A hairline capped at
+   content width, fading out at both ends so it never touches the viewport
+   edges. */
+.section-rule { position: relative; }
+.section-rule::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100% - 2.5rem, calc(var(--container-wide) - 4rem));
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-2) 14%, var(--line-2) 86%, transparent);
+}
 
 /* Eyebrow — small caps mono label used above section headings */
 .eyebrow {

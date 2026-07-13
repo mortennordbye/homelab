@@ -7,7 +7,7 @@ const buildYear = new Date().getFullYear();
 
 export function Footer() {
   return (
-    <footer className="mt-32 border-t border-line bg-bg-2">
+    <footer className="mt-32 section-rule bg-bg-2">
       <div className="mx-auto grid max-w-[var(--container-wide)] gap-12 px-6 py-16 md:grid-cols-12 md:gap-8 md:px-8">
         <div className="md:col-span-7">
           <p className="eyebrow">colophon</p>
@@ -54,7 +54,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-line">
+      <div className="section-rule">
         <div className="mx-auto flex max-w-[var(--container-wide)] flex-col gap-2 px-6 py-6 font-mono text-xs text-fg-3 md:flex-row md:items-center md:justify-between md:px-8">
           <p>
             © {buildYear} {site.name}. {site.location}.

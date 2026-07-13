@@ -33,16 +33,12 @@ export function PaletteLauncher({ className, compact = false }: { className?: st
       aria-label="Open command palette (⌘K)"
       onClick={onClick}
       className={cn(
-        "focus-ring inline-flex items-center gap-2 rounded-md border border-line-2 bg-surface/50 px-3 py-1.5 text-sm text-fg-3 transition-colors hover:border-accent/60 hover:text-fg",
+        "focus-ring inline-flex items-center gap-1 text-fg-3 transition-colors hover:text-fg",
         className,
       )}
     >
-      <Search size={14} aria-hidden />
-      <span>Search</span>
-      <span className="ml-3 inline-flex items-center gap-1">
-        <Kbd>⌘</Kbd>
-        <Kbd>K</Kbd>
-      </span>
+      <Kbd>⌘</Kbd>
+      <Kbd>K</Kbd>
     </button>
   );
 }

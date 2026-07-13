@@ -7,7 +7,7 @@ export function ResumeSection() {
     <Section
       id="resume"
       heading="Resume."
-      className="border-t border-line bg-bg-2/40"
+      className="section-rule bg-bg-2/40"
     >
       <ResumePdfButtons />
       <div className="mt-16">

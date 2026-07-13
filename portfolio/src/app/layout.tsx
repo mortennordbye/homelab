@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
@@ -27,6 +27,15 @@ const mono = JetBrains_Mono({
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500", "700"],
+});
+
+// Serif display face for headings only (text-display-* / text-h*); body and
+// UI labels stay on Inter. opsz keeps optical sizing across heading sizes.
+const displayFace = Fraunces({
+  variable: "--font-display-face",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -157,7 +166,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${body.variable} ${mono.variable} antialiased`}
+      className={`${body.variable} ${mono.variable} ${displayFace.variable} antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />

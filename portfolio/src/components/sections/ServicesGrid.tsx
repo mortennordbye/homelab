@@ -24,7 +24,7 @@ export function ServicesGrid() {
       id="services"
       heading="Services I provide."
       description="Three engagement shapes. Each one is grounded in something that has already shipped — case studies linked from each card."
-      className="border-t border-line bg-bg-2/40"
+      className="section-rule bg-bg-2/40"
     >
       <div className="grid gap-6 md:grid-cols-3">
         {services.map((s, i) => {
