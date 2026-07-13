@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bigd-service
+  namespace: bigd
+spec:
+  selector:
+    app: bigd
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

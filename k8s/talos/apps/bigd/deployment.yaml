@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bigd
+  namespace: bigd
+  labels:
+    app: bigd
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: bigd
+  template:
+    metadata:
+      labels:
+        app: bigd
+    spec:
+      containers:
+        - name: bigd
+          image: nginxinc/nginx-unprivileged:1.27-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            periodSeconds: 20
+            failureThreshold: 3
+      volumes:
+        - name: html
+          configMap:
+            name: bigd-html

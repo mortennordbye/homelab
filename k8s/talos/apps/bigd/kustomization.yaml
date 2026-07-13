@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "0"
+
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - httproute.yaml
+  - ciliumnetworkpolicy.yaml
+
+configMapGenerator:
+  - name: bigd-html
+    namespace: bigd
+    files:
+      - index.html
