@@ -134,6 +134,17 @@ spec:
 
                   NOT_AFTER=$(kubectl get certificate nordbye-it -n cert-manager -o jsonpath='{.status.notAfter}')
 
+                  # Previous payload carries the per-day uptime history; keep it.
+                  kubectl get configmap portfolio-status -n portfolio \
+                    -o jsonpath='{.data.status\.json}' > /tmp/prev.json 2>/dev/null || true
+                  jq -e . /tmp/prev.json > /dev/null 2>&1 || echo '{}' > /tmp/prev.json
+
+                  if [ "$READY" = "$TOTAL" ] && [ "$SYNC" = "Synced" ] && [ "$HEALTH" = "Healthy" ]; then
+                    OK=1
+                  else
+                    OK=0
+                  fi
+
                   jq -n \
                     --arg generatedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
                     --arg build "$BUILD" \
@@ -154,7 +165,20 @@ spec:
                       nodes: {ready: $ready, total: $total},
                       versions: {kubernetes: $k8s, talos: $talos},
                       cert: {notAfter: $notAfter}
-                    }' > /tmp/status.json
+                    }' > /tmp/new.json
+
+                  # Fold this run into today's uptime bucket, keep 30 days.
+                  jq -s \
+                    --arg today "$(date -u +%Y-%m-%d)" \
+                    --argjson ok "$OK" \
+                    '
+                    (.[0].history // []) as $h
+                    | (if ($h | length) > 0 and $h[-1].d == $today
+                       then $h[:-1] + [{d: $today, ok: ($h[-1].ok + $ok), total: ($h[-1].total + 1)}]
+                       else $h + [{d: $today, ok: $ok, total: 1}]
+                       end) as $merged
+                    | .[1] + {history: ($merged | sort_by(.d) | .[-30:])}
+                    ' /tmp/prev.json /tmp/new.json > /tmp/status.json
 
                   kubectl create configmap portfolio-status -n portfolio \
                     --from-file=status.json=/tmp/status.json \

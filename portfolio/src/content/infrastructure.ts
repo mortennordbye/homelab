@@ -35,9 +35,9 @@ export const requestPath: readonly PipelineHop[] = [
   },
   {
     icon: "globe",
-    name: "DNS + edge",
-    desc: "Resolves to the cluster's public entry point",
-    meta: "proxied",
+    name: "DNS",
+    desc: "Cloudflare DNS points straight at the cluster's public IP",
+    meta: "no CDN in front",
   },
   {
     icon: "network",
@@ -68,7 +68,7 @@ export const deployPath: readonly PipelineHop[] = [
   {
     icon: "cog",
     name: "GitHub Actions",
-    desc: "Builds the image, scans it, updates the manifest tag in the same run",
+    desc: "Builds the image and updates the manifest tag in the same run",
   },
   {
     icon: "registry",

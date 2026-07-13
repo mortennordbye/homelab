@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { site } from "@/content/site";
 import { FooterStamp } from "@/components/FooterStamp";
 
@@ -15,13 +16,13 @@ export function Footer() {
           </h2>
           <p className="mt-4 max-w-md text-fg-2">
             Next.js, Tailwind, served by hardened nginx in Kubernetes.
-            Reconciled by ArgoCD from{" "}
-            <a
-              href="https://github.com/mortennordbye/Homelab"
+            Reconciled by ArgoCD.{" "}
+            <Link
+              href="/infrastructure"
               className="focus-ring text-fg underline decoration-accent decoration-2 underline-offset-4 hover:text-accent"
             >
-              this repo
-            </a>
+              See how this page reaches you
+            </Link>
             .
           </p>
         </div>

@@ -12,11 +12,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Infrastructure page
 
-### 30-day availability strip
-- **What:** The `/infrastructure` page design mockup included a 30-day availability tick strip with an uptime percentage. Dropped from the implemented page because nothing external probes the site today, and self-reported uptime from inside the cluster proves nothing when the cluster is what fails.
-- **Why deferred:** Needs an external prober (Uptime Kuma on another host, healthchecks.io, or a GitHub Actions schedule hitting the site) publishing daily results somewhere the static page can fetch.
-- **Unblock:** Pick the prober, publish daily results as JSON (could ride along in `status.json` or a second file), add the strip section back to `portfolio/src/app/infrastructure/page.tsx`.
-- **Where:** `portfolio/src/app/infrastructure/page.tsx`, `k8s/talos/apps/portfolio/status-publisher.yaml`.
+### Outside-in probing for the 30-day health strip
+- **What:** The `/infrastructure` page now renders a 30-day health strip from per-day sample counts the status publisher accumulates in `status.json` (`history` array). It is labelled "observed in-cluster" because that is all it is: days where the publisher never ran show as gaps, but the strip cannot see the site being unreachable from the internet while the cluster is fine, and self-reported health proves less than an external probe.
+- **Why deferred:** True availability needs an external prober (Uptime Kuma on another host, healthchecks.io, or a GitHub Actions schedule hitting the site) publishing daily results somewhere the static page can fetch.
+- **Unblock:** Pick the prober, publish daily results as JSON the page can fetch (second file next to `status.json`, or merged into it), then swap the strip's data source and drop the "observed in-cluster" qualifier.
+- **Where:** `portfolio/src/components/infrastructure/LiveStatus.tsx` (`buildUptime`), `k8s/talos/apps/portfolio/status-publisher.yaml` (history merge step).
 
 ## Portfolio modern — items deferred during initial build
 
