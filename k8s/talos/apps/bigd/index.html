@@ -60,6 +60,23 @@
     .stat span { color: var(--muted); font-size: .95rem; }
     blockquote { border-left: 4px solid var(--blue); padding-left: 24px; font-size: 1.3rem; color: var(--navy); max-width: 700px; margin-top: 40px; }
     blockquote footer { margin-top: 16px; font-size: .95rem; color: var(--muted); border: 0; background: none; }
+    .faq details { border: 1px solid var(--line); border-radius: 10px; padding: 18px 24px; margin-top: 16px; }
+    .faq summary { cursor: pointer; font-weight: 600; color: var(--navy); }
+    .faq details p { color: var(--muted); margin-top: 10px; font-size: .95rem; }
+    .exec { display: flex; gap: 40px; align-items: center; margin-top: 48px; flex-wrap: wrap; }
+    .exec img { width: 280px; max-width: 100%; border-radius: 12px; border: 1px solid var(--line); flex-shrink: 0; }
+    .exec > div { flex: 1; min-width: 280px; }
+    .exec h3 { color: var(--navy); font-size: 1.3rem; }
+    .exec-title { color: var(--blue); font-weight: 600; font-size: .9rem; margin: 6px 0 14px; }
+    .exec p { color: var(--muted); }
+    .countdown { background: var(--navy); color: #fff; text-align: center; }
+    .countdown h2 { color: #fff; }
+    .countdown .lede { color: #c7d4ec; margin-left: auto; margin-right: auto; }
+    .timer { display: flex; justify-content: center; gap: 20px; margin-top: 40px; flex-wrap: wrap; }
+    .timer div { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 10px; padding: 20px 26px; min-width: 110px; }
+    .timer b { display: block; font-size: 2.4rem; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+    .timer span { font-size: .8rem; color: #c7d4ec; text-transform: uppercase; letter-spacing: 1.5px; }
+    .timer-note { margin-top: 24px; font-size: .85rem; color: #8fa3c4; }
     .cta-band { background: var(--navy); color: #fff; text-align: center; }
     .cta-band h2 { color: #fff; }
     .cta-band p { color: #c7d4ec; margin: 12px auto 32px; max-width: 560px; }
@@ -77,6 +94,7 @@
     <ul>
       <li><a href="#solutions">Solutions</a></li>
       <li><a href="#numbers">Impact</a></li>
+      <li><a href="#faq">FAQ</a></li>
       <li><a href="#careers">Careers</a></li>
     </ul>
     <a class="btn" href="#contact">Talk to Sales</a>
@@ -149,6 +167,65 @@
   </div>
 </section>
 
+<section class="faq" id="faq">
+  <div class="wrap">
+    <p class="kicker">Frequently asked questions</p>
+    <h2>About the name. Yes, we know.</h2>
+    <p class="lede">Our brand team anticipated your questions. Legal reviewed the answers. This is what survived.</p>
+    <details>
+      <summary>What does the D in BigD stand for?</summary>
+      <p>Data. It stands for Data. It has always stood for Data. Please stop smirking, this is a professional website.</p>
+    </details>
+    <details>
+      <summary>Is the D really that big?</summary>
+      <p>Our D is enterprise-scale, highly available, and horizontally scalable. HR has asked us to stop putting this slide in the all-hands deck.</p>
+    </details>
+    <details>
+      <summary>Why not just register bigdata.no?</summary>
+      <p>It was taken. Also, the shorter form tested better with our focus group (n=1, it was the founder, he laughed for ten minutes).</p>
+    </details>
+    <details>
+      <summary>Do people giggle when you hand out business cards?</summary>
+      <p>We don't have business cards. We have a domain and a dream, and frankly the dream is also just the domain.</p>
+    </details>
+    <details>
+      <summary>Have you considered rebranding?</summary>
+      <p>Every single day. But the TLS certificate is already issued, and in this economy a wildcard cert is a wildcard cert.</p>
+    </details>
+  </div>
+</section>
+
+<section id="leadership">
+  <div class="wrap">
+    <p class="kicker">Leadership</p>
+    <h2>Meet the executive team.</h2>
+    <p class="lede">All of them. This is the entire org chart, as rendered by the founder's own AI budget.</p>
+    <div class="exec">
+      <img src="https://i.imgur.com/DdFZF5mh.jpg" alt="The founder, reimagined as a superhero, mustache included" loading="lazy">
+      <div>
+        <h3>The Founder</h3>
+        <p class="exec-title">Chief Executive, Technology, Financial, Wonder &amp; Closet Officer</p>
+        <p>He asked the AI for "a professional executive headshot conveying strength and vision." This is what came back, and frankly, the board (him) voted unanimously (once) to keep it. The mustache is real. The armor is aspirational. The lasso of truth is used exclusively in retrospectives.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="countdown" id="countdown">
+  <div class="wrap">
+    <p class="kicker" style="color:#8fb0f4">Something BIG is coming</p>
+    <h2>Countdown to our first customer.</h2>
+    <p class="lede">Projections by our finance department (same guy). Confidence level: unwavering.</p>
+    <div class="timer">
+      <div><b id="cd-days">–</b><span>Days</span></div>
+      <div><b id="cd-hours">–</b><span>Hours</span></div>
+      <div><b id="cd-mins">–</b><span>Minutes</span></div>
+      <div><b id="cd-secs">–</b><span>Seconds</span></div>
+    </div>
+    <p class="timer-note">If the counter reaches zero, the deadline will be moved. That is the BigD promise.</p>
+  </div>
+</section>
+
 <section id="careers">
   <div class="wrap">
     <p class="kicker">Careers</p>
@@ -179,6 +256,27 @@
     </p>
   </div>
 </footer>
+
+<script>
+  // Counts down to the projected first customer. When it hits zero, the
+  // deadline slips a quarter, exactly like a real enterprise roadmap.
+  var target = new Date("2030-01-01T09:00:00");
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function tick() {
+    var ms = target - new Date();
+    if (ms <= 0) {
+      target = new Date(target.getTime() + 90 * 24 * 3600 * 1000);
+      ms = target - new Date();
+    }
+    var s = Math.floor(ms / 1000);
+    document.getElementById("cd-days").textContent = Math.floor(s / 86400);
+    document.getElementById("cd-hours").textContent = pad(Math.floor(s % 86400 / 3600));
+    document.getElementById("cd-mins").textContent = pad(Math.floor(s % 3600 / 60));
+    document.getElementById("cd-secs").textContent = pad(s % 60);
+  }
+  tick();
+  setInterval(tick, 1000);
+</script>
 
 </body>
 </html>
