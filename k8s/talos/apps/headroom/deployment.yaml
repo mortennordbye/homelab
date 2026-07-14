@@ -30,7 +30,7 @@ spec:
       containers:
         - name: headroom
           # Pinned SHA, rewritten by CI (bump-image.yml). Never :latest.
-          image: ghcr.io/mortennordbye/headroom:sha-fc90bf4
+          image: ghcr.io/mortennordbye/headroom:sha-32a1389
           imagePullPolicy: IfNotPresent
           env:
             # The app enforces a Host-header allowlist (DNS-rebinding guard) that
