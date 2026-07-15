@@ -2,12 +2,12 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please follow these steps:
+Please do not report security vulnerabilities through public GitHub issues.
 
-1. **Open a GitHub Issue**: Report the vulnerability by creating an issue in the repository.
-2. **Provide Details**: Include a clear description, steps to reproduce, and any potential impact.
-3. **Responsible Disclosure**: Do not publicly disclose the issue until I have had a chance to investigate and release a fix.
-4. **Response Time**: I aim to acknowledge receipt of reports within 48 hours and will provide updates during the investigation.
-5. **Fix Timeline**: If the vulnerability is confirmed, I will work on a fix and coordinate a disclosure timeline with you.
+Use the "Report a vulnerability" button under this repository's [Security tab](https://github.com/mortennordbye/homelab/security/advisories/new). Private vulnerability reporting is enabled, so the report stays between us until a fix is ready.
 
-Thank you for helping keep this project secure!
+Include a clear description, steps to reproduce, and any potential impact.
+
+I aim to acknowledge a report within 48 hours and will provide updates while I investigate. If the vulnerability is confirmed, I will work on a fix and coordinate a disclosure timeline with you.
+
+Thank you for helping keep this project secure.
