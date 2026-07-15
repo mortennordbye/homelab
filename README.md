@@ -128,8 +128,9 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 | [**Bump Image Tag**](.github/workflows/bump-image.yml)                                  | Called by external app repos (`workflow_call`) | Opens a PR pinning an app to a new immutable `sha-` image tag ([pattern](docs/gitops-external-app-deploys.md)) |
 | [**Container Vulnerability Scan**](.github/workflows/container-vulnerability-scan.yaml) | Weekly, Dockerfile changes, manual             | Scans blog & portfolio containers with Trivy           |
 | [**Render Diagrams**](.github/workflows/render-diagram.yaml)                            | Push to `main` (`docs/diagrams/*.d2`), manual  | Renders D2 sources to SVG + PNG, commits the result    |
-| [**K8s Update Reminder**](.github/workflows/30-days-k8s-update-reminder.yml)            | Monthly (1st)                                  | Discord notification for Kubernetes maintenance        |
-| [**Server Update Reminder**](.github/workflows/30-days-server-update-reminder.yml)      | Monthly (15th)                                 | Discord notification for server updates                |
+| [**Reminders**](.github/workflows/reminders.yml)                                        | Monthly (1st, 8th, 15th)                       | Discord reminders for Kubernetes upkeep, backups, and server updates |
+| [**Dependency Review**](.github/workflows/dependency-review.yml)                        | PR                                             | Blocks pull requests that add known-vulnerable dependencies |
+| [**Scorecard**](.github/workflows/scorecard.yml)                                        | Push to `main`, weekly                         | OpenSSF supply chain score, published to the Security tab |
 
 ---
 
