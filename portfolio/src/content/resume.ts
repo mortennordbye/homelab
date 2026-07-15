@@ -9,6 +9,12 @@ import {
 
 const certsRaw: Cert[] = [
   {
+    title: "GitHub Actions Certification",
+    issuer: "GitHub (Microsoft)",
+    date: "Jul 2026",
+    credentialId: "90FCBE7771D404BA",
+  },
+  {
     title: "Microsoft Certified: Azure Solutions Architect Expert",
     issuer: "Microsoft",
     date: "Feb 2026",
