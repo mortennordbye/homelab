@@ -58,7 +58,8 @@ change request to push to its default branch.
 | Core files: README, LICENSE, SECURITY.md, .gitignore, .gitattributes, .editorconfig, dependabot.yml | yes | yes |
 | CI workflow | yes, informational | yes, required check |
 | Default-branch ruleset | block deletion + force-push only; direct pushes to the default branch keep working | PRs required, review count from team size, required status checks |
-| Community files: CONTRIBUTING, CODE_OF_CONDUCT, SUPPORT, issue forms, PR template, CODEOWNERS | no | yes |
+| PR template | yes | yes |
+| Community files: CONTRIBUTING, CODE_OF_CONDUCT, SUPPORT, issue forms, CODEOWNERS | no | yes |
 | Conventional-Commits PR title check | no | yes |
 | Dependabot auto-merge | no (no required checks to gate it) | opt-in |
 | Release automation + tag protection | ask | ask |
@@ -212,10 +213,12 @@ and keep it on disk until Phase 7 deletes it.
 GitHub scores these via `gh api /repos/{owner}/{repo}/community/profile` — that endpoint
 is the built-in verification for this section.
 
-**Light profile:** generate only LICENSE, README.md, and SECURITY.md from this section.
-The rest (CONTRIBUTING, CODE_OF_CONDUCT, SUPPORT, issue forms, PR template, CODEOWNERS)
-is strict-profile; a personal project doesn't need contribution process scaffolding, and
-its health score staying below 100 is by design.
+**Light profile:** generate only LICENSE, README.md, SECURITY.md, and the PR template from
+this section. The rest (CONTRIBUTING, CODE_OF_CONDUCT, SUPPORT, issue forms, CODEOWNERS) is
+strict-profile; a personal project doesn't need contribution process scaffolding, and its
+health score staying below 100 is by design. The PR template is the exception because it is
+not contribution scaffolding — it is a self-review checklist the solo maintainer fills in
+for their own changes, and it costs one file with no process attached.
 
 - **`LICENSE`** — fetch the chosen license: `gh api /licenses/mit -q .body`, substitute
   year and full name.
@@ -450,17 +453,30 @@ body:
 blank_issues_enabled: false
 ```
 
-- **`.github/PULL_REQUEST_TEMPLATE.md`**:
+- **`.github/PULL_REQUEST_TEMPLATE.md`** — both profiles. Fill the Verification list with the
+  *real* detected checks, one row per gate a contributor can actually run; the same rule as
+  CONTRIBUTING and CI applies, so a repo with no test suite gets its actual validation
+  commands (`terraform plan`, `kubectl diff`, an image build) rather than a "tests pass"
+  box that nothing backs. Drop the CONTRIBUTING.md row in the light profile, where that
+  file doesn't exist.
 
 ```markdown
 ## Why
 
+<!-- The problem this solves. Link any related issue. -->
+
 ## What
+
+<!-- What changed. -->
 
 ## Verification
 
-- [ ] Tests pass locally
-- [ ] I have read CONTRIBUTING.md
+<!-- Delete the rows that don't apply. -->
+
+- [ ] <real detected test command> passes locally
+- [ ] <real detected lint command> is clean
+- [ ] Docs only, no verification needed
+- [ ] I have read CONTRIBUTING.md   <!-- strict only -->
 ```
 
 - **`.github/CODEOWNERS`**:
