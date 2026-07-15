@@ -1,0 +1,117 @@
+name: "Reminders (≈30 days)"
+
+# One workflow for all three monthly Discord reminders. They were three near
+# identical files; only the day, the wording, and the colour ever differed.
+# The schedule that fired is matched back to a reminder via github.event.schedule,
+# so the cron strings below must stay distinct and must match the case block.
+
+on:
+  workflow_dispatch:
+    inputs:
+      reminder:
+        description: "Which reminder to send"
+        required: true
+        type: choice
+        options:
+          - kubernetes
+          - backup
+          - server
+        default: kubernetes
+  schedule:
+    # 16:00 UTC = 18:00 Europe/Oslo in summer
+    - cron: "0 16 1 * *" # kubernetes
+    - cron: "0 16 8 * *" # backup
+    - cron: "0 16 15 * *" # server
+
+# Fetches a webhook from Bitwarden and posts to Discord; never calls the GitHub API.
+permissions: {}
+
+jobs:
+  notify:
+    if: github.repository_owner == 'mortennordbye'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Work out which reminder this run is
+        id: pick
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          DISPATCH: ${{ inputs.reminder }}
+        run: |
+          # A dispatch names the reminder outright; a scheduled run is identified
+          # by the cron that fired.
+          case "${DISPATCH:-$SCHEDULE}" in
+            kubernetes | "0 16 1 * *") key=kubernetes ;;
+            backup | "0 16 8 * *") key=backup ;;
+            server | "0 16 15 * *") key=server ;;
+            *)
+              echo "::error::no reminder matches trigger '${DISPATCH:-$SCHEDULE}'"
+              exit 1
+              ;;
+          esac
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+          echo "Sending the $key reminder."
+
+      - name: Get Discord webhook URL from Bitwarden
+        uses: bitwarden/sm-action@v3.0.1
+        with:
+          access_token: ${{ secrets.BW_ACCESS_TOKEN }}
+          secrets: |
+            ab7c03b3-dc21-4174-babf-b2cf00f9ae40 > HOMELAB_REMINDERS_WEBHOOK_URL
+
+      - name: Send Discord reminder
+        env:
+          KEY: ${{ steps.pick.outputs.key }}
+        run: |
+          case "$KEY" in
+            kubernetes)
+              title="🔔 Kubernetes Update Reminder"
+              description="An alert for Kubernetes upkeep has been triggered."
+              color=15548997
+              tasks=$'• 🔄 CRDs: check & apply updates\n• 🤖 Renovate: review & merge PRs'
+              next="Every 1st of the month at 18:00 Oslo time"
+              ;;
+            backup)
+              title="🔔 Backup Reminder"
+              description="An alert to back up local-only repo files has been triggered."
+              color=3066993
+              tasks=$'• 💾 Run scripts/backup-secrets.sh (snapshots git-ignored secrets to the NAS)\n• ✅ Confirm the latest .zip landed in Repo-Hidden-Files-Backups'
+              next="Every 8th of the month at 18:00 Oslo time"
+              ;;
+            server)
+              title="🔔 Server Update Reminder"
+              description="An alert for Server Updates has been triggered."
+              color=16711680
+              tasks="• 🔄 Update servers"
+              next="Every 15th of the month at 18:00 Oslo time"
+              ;;
+          esac
+
+          # jq builds the body so the emoji, newlines, and parentheses in the task
+          # lists are escaped properly rather than hand quoted into JSON.
+          payload=$(jq -n \
+            --arg title "$title" \
+            --arg description "$description" \
+            --argjson color "$color" \
+            --arg tasks "$tasks" \
+            --arg next "$next" \
+            --arg now "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+            '{
+              username: "homelab-Reminders",
+              embeds: [{
+                title: $title,
+                description: $description,
+                color: $color,
+                fields: [
+                  { name: "📌 @everyone", value: $tasks },
+                  { name: "⏳ Next run", value: $next }
+                ],
+                footer: { text: "Automated Reminder • homelab" },
+                timestamp: $now
+              }]
+            }')
+
+          curl -sSL --fail-with-body -X POST \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$HOMELAB_REMINDERS_WEBHOOK_URL"
