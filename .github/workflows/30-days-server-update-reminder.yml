@@ -5,6 +5,9 @@ on:
     # 16:00 UTC on the 15th of each month ≃ 18:00 Europe/Oslo
     - cron: "0 16 15 * *"
 
+# Fetches a webhook from Bitwarden and posts to Discord; never calls the GitHub API.
+permissions: {}
+
 jobs:
   notify:
     if: github.repository_owner == 'mortennordbye'

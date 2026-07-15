@@ -17,6 +17,14 @@ on:
     paths:
       - "blog/**"
 
+# Serialise deploys to the same environment: the manifest commit is rebased onto
+# main and pushed, so two runs racing would fight over the same branch. Never
+# cancel in progress, which could tear a half-finished deploy. Scoped per
+# environment so a stage push can't cancel a queued prod dispatch.
+concurrency:
+  group: build-blog-${{ inputs.environment || 'stage' }}
+  cancel-in-progress: false
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/blog

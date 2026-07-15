@@ -6,6 +6,9 @@ on:
     # 16:00 UTC on the 8th = 18:00 Europe/Oslo in summer
     - cron: "0 16 8 * *"
 
+# Fetches a webhook from Bitwarden and posts to Discord; never calls the GitHub API.
+permissions: {}
+
 jobs:
   notify:
     if: github.repository_owner == 'mortennordbye'

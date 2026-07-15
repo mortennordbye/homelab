@@ -11,6 +11,12 @@ on:
       - ".github/workflows/render-diagram.yaml"
   workflow_dispatch:
 
+# Commits rendered diagrams back to main; queue rather than cancel so a run is
+# never killed between rendering and pushing.
+concurrency:
+  group: render-diagram
+  cancel-in-progress: false
+
 jobs:
   render:
     if: github.repository_owner == 'mortennordbye'

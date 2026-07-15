@@ -28,6 +28,15 @@ on:
       app-private-key:
         required: true
 
+# Every git operation here uses the minted app token, not GITHUB_TOKEN.
+permissions: {}
+
+# Scoped per app so two different apps still bump in parallel; two bumps of the
+# same app serialise instead of racing on the same deploy branch.
+concurrency:
+  group: bump-image-${{ inputs.app_dir }}
+  cancel-in-progress: false
+
 jobs:
   bump:
     runs-on: ubuntu-latest

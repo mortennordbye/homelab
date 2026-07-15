@@ -10,6 +10,11 @@ on:
       - "blog/**"
       - ".github/workflows/ci-blog.yaml"
 
+# PR gate: a new push supersedes the old run, so cancelling is free.
+concurrency:
+  group: ci-blog-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-markdown:
     runs-on: ubuntu-latest
