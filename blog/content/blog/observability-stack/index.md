@@ -285,7 +285,7 @@ I have made every one of these.
 
 <img src="/images/homelab-spog-cilium.webp" alt="Cilium dashboard section with three panels reading No data next to a working network drops graph" title="Panels committed before their metrics were wired up" style="width:100%;" />
 
-Three "No data" panels next to a working one. The fix is to wire up the Hubble metrics they expect. The panel is a to-do list in git, and I would rather see the gap than pretend it is not there.
+Three "No data" panels next to a working one. The fix is to wire up the Hubble metrics they expect, the same ones I turn on in the [Cilium network policy rollout](/blog/cilium-network-policy-rollout/). The panel is a to-do list in git, and I would rather see the gap than pretend it is not there.
 
 **Alerting on everything.** The instinct is to alert on every rule the internet hands you. Resist it. A channel you have learned to ignore is worse than none, because it feels like coverage while giving you nothing.
 

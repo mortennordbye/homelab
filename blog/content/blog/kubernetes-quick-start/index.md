@@ -605,7 +605,7 @@ Full config in my [Cilium setup](https://github.com/mortennordbye/Homelab/tree/m
 
 - Better performance (eBPF vs iptables)
 - Native Gateway API support
-- Built-in network policies
+- Built-in [network policies](/blog/cilium-network-policy-rollout/)
 - Hubble observability
 
 **Downside:** More complex to set up and troubleshoot.
@@ -614,7 +614,7 @@ Full config in my [Cilium setup](https://github.com/mortennordbye/Homelab/tree/m
 
 Creating a LoadBalancer service for every app is wasteful (cloud costs) or uses up IPs (bare metal). Use an Ingress controller instead.
 
-**Note:** Kubernetes is moving away from traditional Ingress to [Gateway API](https://gateway-api.sigs.k8s.io/), which offers more flexibility and better role-oriented design. Gateway API is the future, but that's a topic for another blog post. For now, traditional Ingress is still widely used and perfectly fine for learning.
+**Note:** Kubernetes is moving away from traditional Ingress to [Gateway API](https://gateway-api.sigs.k8s.io/), which offers more flexibility and better role-oriented design. Gateway API is the future, and I wrote up [a zero-downtime migration to Traefik and Gateway API](/blog/surviving-nginx-eol/) if you want the real-world version. For now, traditional Ingress is still widely used and perfectly fine for learning.
 
 **How it works:**
 

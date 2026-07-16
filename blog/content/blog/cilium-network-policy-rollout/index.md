@@ -73,7 +73,7 @@ This gives you three things:
 
 1. **Hubble Relay**. A gRPC service that aggregates per-node flow data into a cluster-wide view.
 2. **Hubble UI**. A web app that draws a live service map, with red lines for drops and green for allowed flows.
-3. **Hubble metrics**. Prometheus-scrapeable flow counts, broken down by protocol, verdict, identity. The accompanying Grafana dashboards are worth installing.
+3. **Hubble metrics**. Prometheus-scrapeable flow counts, broken down by protocol, verdict, identity. The accompanying Grafana dashboards are worth installing, and they land in the [single dashboard I check first](/blog/observability-stack/).
 
 If you also use Gateway API or Traefik like I do, expose Hubble UI through an HTTPRoute behind whatever dashboard URL you use.
 

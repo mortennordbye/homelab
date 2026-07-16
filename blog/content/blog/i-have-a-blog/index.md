@@ -205,7 +205,7 @@ spec:
 
 The image tag (`2694c9b` in this example) is the short SHA of the commit. Every time I push to the blog, GitHub Actions updates this line. That's the entire trick.
 
-You'll also need a Service to expose the deployment and an HTTPRoute for ingress (I use Traefik with Gateway API, but that's a topic for another post).
+You'll also need a Service to expose the deployment and an HTTPRoute for ingress (I use Traefik with Gateway API, which is [a topic for another post](/blog/surviving-nginx-eol/)).
 
 ## ArgoCD: The Closer
 

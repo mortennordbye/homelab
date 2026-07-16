@@ -185,6 +185,6 @@ While this workaround works, it is verbose. I didn't want to leave it at that, s
 
 ## Summary
 
-The end of `ingress-nginx` isn't a disaster. It's an opportunity to modernize. By moving to Traefik, we got a more capable proxy and a bridge to the Gateway API future without breaking our production environment.
+The end of `ingress-nginx` isn't a disaster. It's an opportunity to modernize. By moving to Traefik, we got a more capable proxy and a bridge to the Gateway API future without breaking our production environment. With the front door swapped, the next job is locking down what can reach what behind it, which is where [Cilium network policies](/blog/cilium-network-policy-rollout/) come in.
 
 Start with a parallel migration, stick to standard Ingress for speed, and adopt Gateway API when you are ready. Just watch out for those sticky sessions!
