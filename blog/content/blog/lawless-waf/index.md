@@ -3,7 +3,7 @@ title: "Tuning Azure WAF Without Paying Log Analytics Prices"
 description: "Azure WAF false positives are painful to tune and expensive to analyse in Log Analytics. lawless-waf queries the archived logs on your laptop with DuckDB and hands you the Terraform exclusion."
 date: 2026-07-16
 draft: false
-tags: ["azure", "waf", "front-door", "terraform", "duckdb", "cost-optimization", "intermediate"]
+tags: ["azure", "waf", "application-gateway", "terraform", "duckdb", "mcp", "cost-optimization", "intermediate"]
 ---
 
 # Tuning Azure WAF Without Paying Log Analytics Prices
@@ -20,13 +20,13 @@ Azure WAF logs are noisy and high volume. Every blocked request, every anomaly s
 
 That works, and it bills you per gigabyte ingested. On one Azure environment I worked on, keeping the WAF logs queryable in Log Analytics ran about 3,000 NOK a day, roughly $270, or somewhere north of $8,000 a month. It kept billing whether or not anyone was tuning anything that week. You cannot ingest only the interesting rows for less either. You pay for the volume that lands.
 
-That same environment already archived the logs to a storage account, and the archive, with a long retention window, cost under 1,000 NOK a month. The data you need to tune the WAF is sitting in Blob Storage for less than one day of the ingestion bill. You are paying premium ingestion prices to read a copy of something you already keep.
+There is another destination for those same logs. A diagnostic setting can write WAF logs to a storage account instead of, or alongside, Log Analytics, and that archive is cheap. On the same environment, a storage account holding the logs with a long retention window came in under 1,000 NOK a month. If you are not sending diagnostics to a storage account yet, it is one setting to add. Once the logs land there, you have a copy you can query for a fraction of a single day of the ingestion bill.
 
-So I stopped ingesting to read it, and started querying the archive directly.
+So I stopped ingesting to read them, and started querying that storage account directly.
 
 ## What lawless-waf Does
 
-[lawless-waf](https://github.com/mortennordbye/lawless-waf) is a small web app and local API that reads your archived Front Door WAF logs straight out of Blob Storage and runs the analysis with [DuckDB](https://duckdb.org/) on your own machine. No ingestion, no Sentinel workspace, no per-query cost. The logs are already there. It just points a fast analytical query engine at them.
+[lawless-waf](https://github.com/mortennordbye/lawless-waf) is a small web app and local API that reads your archived Azure WAF logs, whether they come from Front Door or Application Gateway, straight out of the storage account and runs the analysis with [DuckDB](https://duckdb.org/) on your own machine. No ingestion, no Sentinel workspace, no per-query cost. The logs are already there. It just points a fast analytical query engine at them.
 
 Whether you run one WAF policy or forty, the workflow is the same. Download a window of logs, look at what got blocked, decide what is a real attack and what is a false positive, and get the exclusion you need to fix it.
 
@@ -76,7 +76,9 @@ exclusion {
 }
 ```
 
-Because it knows what your policy already excludes, it can also check a request against your existing `waf-exclusions.tf` and tell you the rule is already covered, so you stop writing duplicate exclusions for something a colleague fixed last sprint.
+It also checks a request against the exclusions you already have. You point it at the file that holds them, usually a `waf-exclusions.tf` in your infrastructure repository, and it tells you whether the rule is already covered, so you stop writing duplicate exclusions for something a colleague fixed last sprint.
+
+Pointing it at a file in a Git repository buys you one more thing. It reads the repository, checks the branch, and confirms your exclusions file is in sync with the remote before it reasons about coverage. A stale local checkout is the classic way to decide a rule is missing when it actually shipped last week, or that a request is covered when someone only added the exclusion on a branch that never merged. The sync check keeps the coverage answer tied to the exclusions that are actually deployed, so you know you are working against the right infrastructure repository and not a copy that drifted.
 
 ## Real Attacks Look Like False Positives Until You Split Them
 
@@ -90,18 +92,20 @@ Once you have shipped an exclusion, you can prove it worked. The before-and-afte
 
 That verification step is the difference between "I think I fixed it" and "the blocks dropped to zero and nothing new leaked."
 
-## What It Does Not Do Yet
+## Let an Agent Do the Tuning
 
-It reads Azure Front Door WAF logs. Application Gateway WAF logs have a different schema and are on the list, but not done, so if your WAF sits in front of an App Gateway this is not your tool today.
+Everything the UI does is also exposed over MCP, so an agent like [Claude Code](https://www.anthropic.com/claude-code) can drive the whole loop. `make mcp` wires it up.
 
-It also has no application-level login. Access control leans entirely on your Azure credentials and the fact that it binds to localhost. That is a deliberate choice for a tool you run on your own laptop against your own archive. Do not put it on a shared host and expose the port.
+WAF tuning is exactly the kind of tedious, well-defined job an agent is good at. You point Claude Code at a policy and ask why a request is blocked. It pulls the exclusion context, splits the scanner noise from the real false positives, checks your Terraform exclusions for coverage, and proposes the `match_variable` and `selector` you need, then reads the before-and-after diff to confirm the change once you ship it. The API, the UI and the MCP server share the same core logic, so the agent works from the same analysis you would.
 
-If you want to wire the analysis into an agent, it also ships an MCP server, so a tool like Claude Code can run the same tuning queries. `make mcp` sets that up. The core logic is shared between the API and the MCP server, so the agent sees exactly what the UI does.
+## There Is No Login
+
+lawless-waf has no application-level login. Access control leans entirely on your Azure credentials and the fact that it binds to localhost. That is deliberate for a tool you run on your own laptop against your own archive. Do not put it on a shared host and expose the port.
 
 ## Final Thoughts
 
-Tuning a WAF is one of those jobs that is easy to postpone because the feedback loop is slow and the logs are expensive to poke at. Move the analysis onto the archive you already keep, and the cost of looking drops to zero. You look more often, you tune sooner, and the customer who got blocked this morning is unblocked before lunch.
+Tuning a WAF is one of those jobs that is easy to postpone because the feedback loop is slow and the logs are expensive to poke at. Point a diagnostic setting at a storage account, move the analysis there, and the cost of looking drops to zero. You look more often, you tune sooner, and the customer who got blocked this morning is unblocked before lunch.
 
 The whole thing is Apache-2.0 and [on GitHub](https://github.com/mortennordbye/lawless-waf). Clone it, run the demo, and point it at your own logs.
 
-Go read your WAF logs. You are already paying to store them.
+Go read your WAF logs. The cheap copy is one diagnostic setting away.
