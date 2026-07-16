@@ -1,0 +1,53 @@
+# stage: receives new Freight directly from the Warehouse (auto-promoted per
+# ProjectConfig), rewrites the image tag in the portfolio-stage kustomization,
+# pushes to main, then verifies with an HTTP smoke test. Only Freight that
+# passes verification here becomes available to prod.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: stage
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: portfolio
+      sources:
+        direct: true
+  verification:
+    analysisTemplates:
+      - name: portfolio-smoke
+  promotionTemplate:
+    spec:
+      vars:
+        - name: gitopsRepo
+          value: https://github.com/mortennordbye/homelab.git
+        - name: appPath
+          value: k8s/talos/apps/portfolio-stage
+        - name: imageRepo
+          value: ghcr.io/mortennordbye/homelab/portfolio
+      steps:
+        - uses: git-clone
+          config:
+            repoURL: ${{ vars.gitopsRepo }}
+            checkout:
+              - branch: main
+                path: ./repo
+        - uses: kustomize-set-image
+          config:
+            path: ./repo/${{ vars.appPath }}
+            images:
+              # Confirm the imageFrom(...).Tag expression against the promotion
+              # steps expression reference for the pinned Kargo version.
+              - image: ${{ vars.imageRepo }}
+                tag: ${{ imageFrom(vars.imageRepo).Tag }}
+        - uses: git-commit
+          as: commit
+          config:
+            path: ./repo
+            message: "chore(portfolio): promote ${{ imageFrom(vars.imageRepo).Tag }} to stage"
+        - uses: git-push
+          config:
+            path: ./repo

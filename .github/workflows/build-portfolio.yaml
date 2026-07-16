@@ -67,7 +67,7 @@ jobs:
     if: ${{ !cancelled() && (needs.ci.result == 'success' || needs.ci.result == 'skipped') && github.repository_owner == 'mortennordbye' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       packages: write
 
     steps:
@@ -88,12 +88,6 @@ jobs:
           fi
 
           echo "ENV=${ENV}" >> $GITHUB_OUTPUT
-
-          if [[ "${ENV}" == "prod" ]]; then
-            echo "MANIFEST=k8s/talos/apps/portfolio/deployment.yaml" >> $GITHUB_OUTPUT
-          else
-            echo "MANIFEST=k8s/talos/apps/portfolio-stage/deployment.yaml" >> $GITHUB_OUTPUT
-          fi
 
           echo "Deploying to environment: ${ENV}"
 
@@ -131,39 +125,3 @@ jobs:
       - name: Logout from Docker Hub
         if: always()
         run: docker logout
-
-      - name: Update Kubernetes Manifest
-        run: |
-          MANIFEST="${{ steps.context.outputs.MANIFEST }}"
-          TAG="${{ steps.context.outputs.TAG }}"
-          ENV="${{ steps.context.outputs.ENV }}"
-          NEW_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
-
-          echo "Updating manifest: ${MANIFEST}"
-          echo "New image: ${NEW_IMAGE}"
-
-          if [[ ! -f "${MANIFEST}" ]]; then
-            echo "ERROR: Manifest file not found: ${MANIFEST}"
-            exit 1
-          fi
-
-          sed -i "s|image: ${{ env.REGISTRY }}/${{ github.repository }}/portfolio:.*|image: ${NEW_IMAGE}|g" $MANIFEST
-
-          echo "Changes made:"
-          git diff $MANIFEST
-
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-
-          if [[ -n $(git status -s) ]]; then
-            git add $MANIFEST
-            git commit -m "chore(portfolio): deploy ${TAG} to ${ENV}"
-            # main may have advanced while the image built (e.g. the blog
-            # deploy pushing its manifest commit); rebase so the push is
-            # fast-forward instead of getting rejected.
-            git fetch origin main
-            git rebase origin/main
-            git push origin HEAD:main
-          else
-            echo "Manifest already up to date."
-          fi
