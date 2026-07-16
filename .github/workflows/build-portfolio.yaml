@@ -118,8 +118,14 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_SHA=${{ steps.context.outputs.TAG }}
+          # 0.0.<run_number> is a strict-semver build counter GitHub increments
+          # on its own: monotonic, so the Kargo Warehouse (SemVer strategy) always
+          # selects the newest build without any manual tagging. The git-SHA tag
+          # stays for human traceability; strictSemvers makes the Warehouse ignore
+          # it and the moving env tag automatically.
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:0.0.${{ github.run_number }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.ENV }}
 
       - name: Logout from Docker Hub
