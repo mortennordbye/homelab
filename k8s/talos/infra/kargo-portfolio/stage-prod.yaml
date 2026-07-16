@@ -37,6 +37,7 @@ spec:
           config:
             path: ./repo/${{ vars.appPath }}
             images:
+              # Freight tag is the 0.0.<run_number> semver the Warehouse selected.
               - image: ${{ vars.imageRepo }}
                 tag: ${{ imageFrom(vars.imageRepo).Tag }}
         - uses: git-commit
@@ -48,9 +49,14 @@ spec:
           config:
             path: ./repo
         # Trigger the Argo CD sync and block until portfolio (prod) is Synced +
-        # Healthy before the promotion reports success. desiredRevision is
-        # intentionally not pinned (app tracks main HEAD; see stage-stage.yaml).
+        # Healthy before the promotion reports success. Pin the app to this
+        # promotion's commit so Kargo's argocd-update health check stays green as
+        # main advances (see the longer note in stage-stage.yaml).
         - uses: argocd-update
           config:
             apps:
               - name: portfolio
+                sources:
+                  - repoURL: ${{ vars.gitopsRepo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
+                    updateTargetRevision: true

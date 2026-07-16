@@ -39,8 +39,7 @@ spec:
           config:
             path: ./repo/${{ vars.appPath }}
             images:
-              # Confirm the imageFrom(...).Tag expression against the promotion
-              # steps expression reference for the pinned Kargo version.
+              # Freight tag is the 0.0.<run_number> semver the Warehouse selected.
               - image: ${{ vars.imageRepo }}
                 tag: ${{ imageFrom(vars.imageRepo).Tag }}
         - uses: git-commit
@@ -53,11 +52,19 @@ spec:
             path: ./repo
         # Trigger the Argo CD sync and block until portfolio-stage is Synced +
         # Healthy, so the promotion (and its verification) only succeed once the
-        # deploy has converged. We do NOT pin desiredRevision: the app tracks
-        # main HEAD, and any later commit from another app's promotion would then
-        # make Kargo report this stage perpetually unhealthy on a revision
-        # mismatch even though Argo CD itself is healthy.
+        # deploy has converged. Pin the app to the commit this promotion just
+        # pushed: argocd-update registers a lasting health check against
+        # desiredRevision, so the app must track a revision Kargo controls.
+        # updateTargetRevision rewrites the Application's targetRevision to that
+        # commit; without it the app tracks the shared main HEAD, which every
+        # later commit advances past, leaving this Stage perpetually Unhealthy.
+        # The apps ApplicationSet ignores /spec/source/targetRevision for
+        # portfolio* so it does not revert this pin (k8s/talos/infra/argocd/apps.yaml).
         - uses: argocd-update
           config:
             apps:
               - name: portfolio-stage
+                sources:
+                  - repoURL: ${{ vars.gitopsRepo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
+                    updateTargetRevision: true
