@@ -97,7 +97,7 @@ homelab
 
 | Category      | Components                                                                                                                                                                             |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GitOps        | [ArgoCD](https://argoproj.github.io/cd/)                                                                                                                                               |
+| GitOps        | [ArgoCD](https://argoproj.github.io/cd/), [Kargo](https://kargo.io/) (stage → prod promotion, portfolio pilot)                                                                          |
 | Networking    | [Cilium](https://cilium.io/) (CNI + eBPF), [Traefik](https://traefik.io/) ([Gateway API](https://gateway-api.sigs.k8s.io/)), [external-dns](https://github.com/kubernetes-sigs/external-dns) (Cloudflare DNS automation)                                                            |
 | Security      | [Falco](https://falco.org/) (runtime security), [Authentik](https://goauthentik.io/) (SSO), [Cert-manager](https://cert-manager.io/), [External Secrets Operator](https://external-secrets.io/)                                                                                    |
 | Observability | [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [Loki](https://grafana.com/oss/loki/) (logs), [Tempo](https://grafana.com/oss/tempo/) (traces), [OpenTelemetry](https://opentelemetry.io/), [Metrics-server](https://github.com/kubernetes-sigs/metrics-server) |
@@ -124,7 +124,7 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 | Workflow                                                                                | Trigger                                   | Purpose                                                |
 | --------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------ |
 | [**Build and Deploy Blog**](.github/workflows/build-blog.yaml)                          | Push to `main` (blog changes)                  | Builds Hugo blog, pushes to GHCR, updates k8s manifest |
-| [**Build and Deploy Portfolio**](.github/workflows/build-portfolio.yaml)                | Push to `main` (stage); manual dispatch (prod) | Builds portfolio image, pushes to GHCR, deploys stage/prod |
+| [**Build and Deploy Portfolio**](.github/workflows/build-portfolio.yaml)                | Push to `main`                                 | Builds portfolio image and pushes to GHCR ([Kargo](https://kargo.io/) promotes stage → prod) |
 | [**Bump Image Tag**](.github/workflows/bump-image.yml)                                  | Called by external app repos (`workflow_call`) | Opens a PR pinning an app to a new immutable `sha-` image tag ([pattern](docs/gitops-external-app-deploys.md)) |
 | [**Container Vulnerability Scan**](.github/workflows/container-vulnerability-scan.yaml) | Weekly, Dockerfile changes, manual             | Scans blog & portfolio containers with Trivy           |
 | [**Render Diagrams**](.github/workflows/render-diagram.yaml)                            | Push to `main` (`docs/diagrams/*.d2`), manual  | Renders D2 sources to SVG + PNG, commits the result    |

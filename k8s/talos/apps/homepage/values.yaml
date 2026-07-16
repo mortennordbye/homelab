@@ -230,6 +230,10 @@ config:
             icon: argocd.png
             href: https://10.3.10.100
             description: Direct LB IP fallback (bypasses Traefik)
+        - Kargo:
+            icon: https://raw.githubusercontent.com/akuity/kargo/main/ui/public/kargo-logo.png
+            href: https://kargo.local.bigd.no
+            description: GitOps promotion (portfolio stage to prod)
 
     - Torrent Sites:
         - IPTorrents:
