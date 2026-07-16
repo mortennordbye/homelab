@@ -24,7 +24,7 @@ spec:
                 restartPolicy: Never
                 containers:
                   - name: smoke
-                    image: curlimages/curl:8.11.0
+                    image: curlimages/curl:8.21.0
                     command:
                       - /bin/sh
                       - -c
