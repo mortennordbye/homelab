@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - kargo-api-secret.yaml
+
+helmCharts:
+  - name: kargo
+    # OCI chart. If `kustomize build --enable-helm` cannot pull from the OCI
+    # registry, fall back to a child Argo CD Application with a Helm source.
+    repo: oci://ghcr.io/akuity/kargo-charts
+    version: 1.10.9
+    releaseName: kargo
+    namespace: kargo
+    includeCRDs: true
+    valuesFile: values.yaml

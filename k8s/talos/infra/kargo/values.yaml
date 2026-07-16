@@ -1,0 +1,19 @@
+# Kargo chart values. Admin credentials are NOT inlined here; the chart reads
+# them from the pre-existing Secret named below (synced by ESO in
+# kargo-api-secret.yaml), which must hold ADMIN_ACCOUNT_PASSWORD_HASH and
+# ADMIN_ACCOUNT_TOKEN_SIGNING_KEY.
+api:
+  secret:
+    name: kargo-api
+  # Homelab: admin-account login only for now, bundled Dex OIDC disabled.
+  oidc:
+    dex:
+      enabled: false
+
+controller:
+  argocd:
+    # We reconcile via Argo CD selfHeal (no argocd-update step in the pilot),
+    # but leaving the integration on lets Kargo surface Argo app health/sync
+    # in its UI and keeps the door open for argocd-update later.
+    integrationEnabled: true
+    namespace: argocd

@@ -1,0 +1,5 @@
+# Argo Rollouts is installed only for its AnalysisTemplate / AnalysisRun CRDs
+# and controller, which Kargo reuses for Stage verification. We do not use the
+# Rollout workload type itself, so the dashboard is left off.
+dashboard:
+  enabled: false
