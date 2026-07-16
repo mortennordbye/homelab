@@ -62,6 +62,7 @@ ops: GitOps & Config {
   style.font-size: 34
   style: {fill: "#eef2ff"; stroke: "#4f46e5"; font-color: "#312e81"}
   argocd: ArgoCD {shape: image; icon: ${di}/argo-cd.svg}
+  kargo: "Kargo\n(promotion)"
   eso: External Secrets
   reloader: Reloader
   keda: KEDA {shape: image; icon: ${di}/keda.svg}
@@ -198,6 +199,8 @@ cloudflare -> letsencrypt: ACME {style: {stroke: "#0891b2"; stroke-dash: 4}}
 # ── GitOps (indigo dashed) ──
 github -> ops.argocd: git push {style: {stroke: "#4f46e5"; stroke-width: 2; stroke-dash: 4}}
 github -> ghcr: build & push image {style: {stroke: "#4f46e5"; stroke-width: 2; stroke-dash: 4}}
+ghcr -> ops.kargo: watch images {style: {stroke: "#4f46e5"; stroke-dash: 4}}
+ops.kargo -> github: promote (git push) {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ghcr -> sites: image pull {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> sites: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> media: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
