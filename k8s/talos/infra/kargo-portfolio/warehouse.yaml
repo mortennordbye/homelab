@@ -6,7 +6,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  interval: 5m
+  # interval as Kargo normalizes it (5m -> 5m0s), to avoid ArgoCD drift.
+  interval: 5m0s
   freightCreationPolicy: Automatic
   subscriptions:
     - image:
@@ -17,3 +18,5 @@ spec:
         imageSelectionStrategy: NewestBuild
         allowTags: ^[0-9a-f]{7,40}$
         discoveryLimit: 20
+        # Kargo defaults this to true; spell it out so ArgoCD sees no drift.
+        strictSemvers: true
