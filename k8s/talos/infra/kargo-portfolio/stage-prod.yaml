@@ -47,3 +47,12 @@ spec:
         - uses: git-push
           config:
             path: ./repo
+        # Trigger the Argo CD sync and block until portfolio (prod) is Synced +
+        # Healthy at the promoted commit before the promotion reports success.
+        - uses: argocd-update
+          config:
+            apps:
+              - name: portfolio
+                sources:
+                  - repoURL: ${{ vars.gitopsRepo }}
+                    desiredRevision: ${{ outputs.commit.commit }}

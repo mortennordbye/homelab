@@ -4,6 +4,10 @@ metadata:
   name: apps
   namespace: argocd
 spec:
+  # goTemplate is required for templatePatch below. String fields switch to the
+  # {{.path.*}} syntax; every generated Application renders exactly as before.
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
         repoURL: https://github.com/mortennordbye/homelab.git
@@ -12,7 +16,7 @@ spec:
           - path: k8s/talos/apps/*
   template:
     metadata:
-      name: "{{ path.basename }}"
+      name: '{{.path.basename}}'
       annotations:
         argocd.argoproj.io/sync-wave: "10"
       finalizers:
@@ -22,10 +26,10 @@ spec:
       source:
         repoURL: https://github.com/mortennordbye/homelab.git
         targetRevision: HEAD
-        path: "{{ path }}"
+        path: '{{.path.path}}'
       destination:
         name: in-cluster
-        namespace: "{{ path.basename }}"
+        namespace: '{{.path.basename}}'
       ignoreDifferences:
         - group: apps
           kind: Deployment
@@ -46,3 +50,18 @@ spec:
           - PruneLast=true
           - ServerSideApply=true
           - RespectIgnoreDifferences=true
+  # Authorize Kargo to sync only the portfolio apps. templatePatch is a
+  # Go-templated merge patch (a string), so structural if/end conditionals are
+  # valid here in a way they are not inside the parsed `template` above. For
+  # every other app this renders empty (no patch).
+  templatePatch: |
+    {{- if eq .path.basename "portfolio-stage" }}
+    metadata:
+      annotations:
+        kargo.akuity.io/authorized-stage: portfolio-cd:stage
+    {{- end }}
+    {{- if eq .path.basename "portfolio" }}
+    metadata:
+      annotations:
+        kargo.akuity.io/authorized-stage: portfolio-cd:prod
+    {{- end }}
