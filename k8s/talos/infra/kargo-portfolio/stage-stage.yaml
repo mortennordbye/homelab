@@ -52,12 +52,12 @@ spec:
           config:
             path: ./repo
         # Trigger the Argo CD sync and block until portfolio-stage is Synced +
-        # Healthy at the promoted commit, so the promotion (and its verification)
-        # only succeed once the deploy has actually converged.
+        # Healthy, so the promotion (and its verification) only succeed once the
+        # deploy has converged. We do NOT pin desiredRevision: the app tracks
+        # main HEAD, and any later commit from another app's promotion would then
+        # make Kargo report this stage perpetually unhealthy on a revision
+        # mismatch even though Argo CD itself is healthy.
         - uses: argocd-update
           config:
             apps:
               - name: portfolio-stage
-                sources:
-                  - repoURL: ${{ vars.gitopsRepo }}
-                    desiredRevision: ${{ outputs.commit.commit }}
