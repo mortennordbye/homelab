@@ -8,6 +8,14 @@ spec:
   # {{.path.*}} syntax; every generated Application renders exactly as before.
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
+  # Kargo pins portfolio and portfolio-stage to a specific commit on promotion
+  # (argocd-update updateTargetRevision, see k8s/talos/infra/kargo-portfolio/).
+  # Without this the ApplicationSet controller would revert targetRevision back
+  # to HEAD and fight Kargo. Scoped to portfolio*; every other app keeps HEAD.
+  ignoreApplicationDifferences:
+    - name: 'portfolio*'
+      jsonPointers:
+        - /spec/source/targetRevision
   generators:
     - git:
         repoURL: https://github.com/mortennordbye/homelab.git
