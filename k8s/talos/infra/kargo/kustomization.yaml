@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - kargo-api-secret.yaml
+  - httproute.yaml
 
 helmCharts:
   - name: kargo
