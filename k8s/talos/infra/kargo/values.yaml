@@ -5,6 +5,11 @@
 api:
   secret:
     name: kargo-api
+  # The API is fronted by the Traefik private gateway, which terminates TLS for
+  # *.local.bigd.no. Serve plain HTTP in-pod so the gateway can route to it
+  # (kargo-api Service becomes port 80 instead of 443).
+  tls:
+    enabled: false
   # Homelab: admin-account login only for now, bundled Dex OIDC disabled.
   oidc:
     dex:
