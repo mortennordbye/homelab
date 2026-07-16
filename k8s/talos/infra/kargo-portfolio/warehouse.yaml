@@ -1,0 +1,19 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: portfolio
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  interval: 5m
+  freightCreationPolicy: Automatic
+  subscriptions:
+    - image:
+        repoURL: ghcr.io/mortennordbye/homelab/portfolio
+        # Tags are immutable git short-SHAs, so neither SemVer nor Lexical
+        # ordering applies. NewestBuild orders by image build time. allowTags
+        # keeps the moving `stage`/`prod` tags out of Freight selection.
+        imageSelectionStrategy: NewestBuild
+        allowTags: ^[0-9a-f]{7,40}$
+        discoveryLimit: 20

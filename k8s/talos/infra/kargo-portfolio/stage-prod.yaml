@@ -1,0 +1,49 @@
+# prod: receives only Freight already verified in `stage` (sources.stages).
+# No autoPromotionEnabled entry in ProjectConfig, so promotion here is a
+# deliberate manual action. This is the structural replacement for today's
+# manual `environment: prod` workflow dispatch that skipped the CI gate.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: portfolio
+      sources:
+        stages:
+          - stage
+  promotionTemplate:
+    spec:
+      vars:
+        - name: gitopsRepo
+          value: https://github.com/mortennordbye/homelab.git
+        - name: appPath
+          value: k8s/talos/apps/portfolio
+        - name: imageRepo
+          value: ghcr.io/mortennordbye/homelab/portfolio
+      steps:
+        - uses: git-clone
+          config:
+            repoURL: ${{ vars.gitopsRepo }}
+            checkout:
+              - branch: main
+                path: ./repo
+        - uses: kustomize-set-image
+          config:
+            path: ./repo/${{ vars.appPath }}
+            images:
+              - image: ${{ vars.imageRepo }}
+                tag: ${{ imageFrom(vars.imageRepo).Tag }}
+        - uses: git-commit
+          as: commit
+          config:
+            path: ./repo
+            message: "chore(portfolio): promote ${{ imageFrom(vars.imageRepo).Tag }} to prod"
+        - uses: git-push
+          config:
+            path: ./repo
