@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: verksted-app
+  namespace: verksted
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  # Single stateful pod on a ReadWriteOnce PVC: never run two at once (the second
+  # could not mount /data), so replace rather than roll.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: verksted-app
+  template:
+    metadata:
+      labels:
+        app: verksted-app
+    spec:
+      containers:
+        - name: verksted
+          image: ghcr.io/mortennordbye/verksted:0.0.7
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            # Agent sessions run docker against the dind sidecar over the shared
+            # pod network (plain tcp, no TLS — pod-local only).
+            - name: DOCKER_HOST
+              value: tcp://localhost:2375
+            # Deep-link base for ntfy pushes back into a waiting session.
+            - name: PUBLIC_URL
+              value: https://verksted.local.bigd.no
+            # Persist settings on the PVC (agent env vars set via the UI).
+            - name: SETTINGS_FILE
+              value: /data/settings.json
+          # The backend serves the built SPA at / — a plain 200 once it is up.
+          # Agent auth (claude/codex/agy tokens) is configured interactively in
+          # the pod terminal afterwards and persists under HOME=/data/home.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+        # Docker daemon for the agent sessions. Privileged is inherent to dind;
+        # shares the pod netns so the app reaches it at localhost:2375.
+        - name: dind
+          image: docker:28-dind
+          args:
+            - --host=tcp://127.0.0.1:2375
+          env:
+            # Plain tcp on 2375, pod-local only — no TLS cert dance.
+            - name: DOCKER_TLS_CERTDIR
+              value: ""
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          volumeMounts:
+            # Ephemeral image/layer store; rebuilt after a restart. maintenance.ts
+            # prunes it daily. Kept off the NFS PVC (overlayfs needs local disk).
+            - name: dind-storage
+              mountPath: /var/lib/docker
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: verksted-data
+        - name: dind-storage
+          emptyDir: {}

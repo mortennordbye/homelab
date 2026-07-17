@@ -1,0 +1,178 @@
+# Kargo project for the verksted app. Single-environment (no stage overlay), so
+# the whole pipeline is one auto-promotion: the verksted CI pushes a new image ->
+# Warehouse creates Freight -> Kargo auto-opens a homelab PR -> merging it deploys
+# prod -> the smoke test verifies. Mirrors logeverylift.yaml/headroom.yaml. The
+# image source and CI live in the separate mortennordbye/verksted repo.
+
+# --- Project namespace ------------------------------------------------------
+# Named `verksted-cd` (not `verksted`) to avoid colliding with the app namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: verksted-cd
+  labels:
+    kargo.akuity.io/project: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  name: verksted-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# Single Stage: a new Freight is auto-promoted to `prod` via promote-via-pr, which
+# opens a homelab PR and blocks on the merge. Merging the PR is the only gate.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ProjectConfig
+metadata:
+  name: verksted-cd
+  namespace: verksted-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  promotionPolicies:
+    - stage: prod
+      autoPromotionEnabled: true
+---
+# Git write credential for Kargo's git-push/PR, using the existing GitHub App
+# `mortennordbye-homelab-deployer`. Same App and Bitwarden keys as the other
+# projects; only the namespace differs (Kargo cred lookup is per-Project).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: kargo-git-homelab
+  namespace: verksted-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: kargo-git-homelab
+    creationPolicy: Owner
+    template:
+      metadata:
+        labels:
+          kargo.akuity.io/cred-type: git
+      data:
+        repoURL: https://github.com/mortennordbye/homelab.git
+        githubAppClientID: "{{ .githubAppClientID }}"
+        githubAppInstallationID: "{{ .githubAppInstallationID }}"
+        githubAppPrivateKey: "{{ .githubAppPrivateKey }}"
+  data:
+    - secretKey: githubAppClientID
+      remoteRef:
+        key: "a6b2b4ea-fa97-4d5c-bd74-b489010c5fab"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+    - secretKey: githubAppInstallationID
+      remoteRef:
+        key: "aabab894-a09a-415c-ba17-b489010c8df5"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+    - secretKey: githubAppPrivateKey
+      remoteRef:
+        key: "fc775dd0-1b67-4dfa-b2e9-b489010d0359"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: verksted
+  namespace: verksted-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  # interval as Kargo normalizes it (5m -> 5m0s), to avoid ArgoCD drift.
+  interval: 5m0s
+  freightCreationPolicy: Automatic
+  subscriptions:
+    - image:
+        repoURL: ghcr.io/mortennordbye/verksted
+        # verksted CI tags every build 0.0.<run_number>; SemVer picks the
+        # greatest. strictSemvers keeps the git-SHA/latest tags out of selection.
+        imageSelectionStrategy: SemVer
+        strictSemvers: true
+        discoveryLimit: 20
+---
+# prod verification: a one-shot Job that curls the app URL and fails on any
+# non-2xx. verksted is on the private gateway with an internal cert, so use the
+# internal hostname and -k. argocd-wait has already confirmed the pod Healthy
+# (readiness probe on /), so the retries just cover the brief window after roll.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: verksted-prod-smoke
+  namespace: verksted-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  metrics:
+    - name: verksted-prod-http-200
+      count: 1
+      provider:
+        job:
+          spec:
+            backoffLimit: 2
+            activeDeadlineSeconds: 180
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: smoke
+                    image: curlimages/curl:8.21.0
+                    command:
+                      - /bin/sh
+                      - -c
+                      - >
+                        curl -fsSk --retry 10 --retry-delay 6 --retry-all-errors
+                        -o /dev/null -w '%{http_code}\n'
+                        https://verksted.local.bigd.no/
+---
+# prod: the only Stage. Receives Freight straight from the Warehouse
+# (sources.direct), auto-promoted per ProjectConfig through promote-via-pr, then
+# verified by the smoke test. promote-via-pr opens a homelab PR and waits for the
+# merge, so the PR review is the deploy gate.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: verksted-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    # Cosmetic UI colour, kept identical across apps: prod = red.
+    kargo.akuity.io/color: "#e11d48"
+    kargo.akuity.io/description: "Auto-promoted from the Warehouse via a homelab PR; smoke-tested on verksted.local.bigd.no after merge."
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: verksted
+      sources:
+        direct: true
+  verification:
+    analysisTemplates:
+      - name: verksted-prod-smoke
+  promotionTemplate:
+    spec:
+      vars:
+        - name: appName
+          value: verksted
+        - name: appPath
+          value: k8s/talos/apps/verksted
+        - name: imageRepo
+          value: ghcr.io/mortennordbye/verksted
+        - name: argocdApp
+          value: verksted
+      steps:
+        - task:
+            name: promote-via-pr
+            kind: ClusterPromotionTask
