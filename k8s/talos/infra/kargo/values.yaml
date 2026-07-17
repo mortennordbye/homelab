@@ -5,11 +5,19 @@
 api:
   secret:
     name: kargo-api
+  # Where the UI/API is actually reached. Kargo builds the "View in Kargo UI"
+  # link in every promotion PR body from this host; unset it defaults to
+  # `localhost` and the PR links point nowhere.
+  host: kargo.local.bigd.no
   # The API is fronted by the Traefik private gateway, which terminates TLS for
   # *.local.bigd.no. Serve plain HTTP in-pod so the gateway can route to it
-  # (kargo-api Service becomes port 80 instead of 443).
+  # (kargo-api Service becomes port 80 instead of 443). terminatedUpstream forces
+  # the generated URLs to https (the gateway serves https) even though the pod
+  # itself listens on plain HTTP — it is the one tls.* field honoured when
+  # enabled is false.
   tls:
     enabled: false
+    terminatedUpstream: true
   # Homelab: admin-account login only for now, bundled Dex OIDC disabled.
   oidc:
     dex:
