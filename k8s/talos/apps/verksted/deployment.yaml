@@ -66,8 +66,11 @@ spec:
         # shares the pod netns so the app reaches it at localhost:2375.
         - name: dind
           image: docker:28-dind
-          args:
-            - --host=tcp://127.0.0.1:2375
+          # No explicit --host: with TLS off the dind entrypoint already binds a
+          # single tcp://0.0.0.0:2375 listener. Adding our own -H on 2375 made two
+          # listeners on the same port and dind crash-looped ("port is already
+          # allocated"). 0.0.0.0 is safe here — the CiliumNetworkPolicy blocks
+          # 2375 from other pods, and the app reaches it over loopback.
           env:
             # Plain tcp on 2375, pod-local only — no TLS cert dance.
             - name: DOCKER_TLS_CERTDIR
