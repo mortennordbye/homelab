@@ -139,6 +139,38 @@ spec:
                         -o /dev/null -w '%{http_code}\n'
                         https://blog-stage.local.bigd.no/
 ---
+# prod verification: same one-shot HTTP check against the live public domain.
+# Confirmed the cluster can reach blog.nordbye.it (no NAT-hairpin issue).
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: blog-prod-smoke
+  namespace: blog-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  metrics:
+    - name: blog-prod-http-200
+      count: 1
+      provider:
+        job:
+          spec:
+            backoffLimit: 2
+            activeDeadlineSeconds: 180
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: smoke
+                    image: curlimages/curl:8.21.0
+                    command:
+                      - /bin/sh
+                      - -c
+                      - >
+                        curl -fsSk --retry 5 --retry-delay 6 --retry-all-errors
+                        -o /dev/null -w '%{http_code}\n'
+                        https://blog.nordbye.it/
+---
 # stage: receives new Freight directly from the Warehouse (auto-promoted per
 # ProjectConfig), then verifies with the HTTP smoke test. Only Freight that
 # passes verification here becomes available to prod.
@@ -149,6 +181,9 @@ metadata:
   namespace: blog-cd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    # Cosmetic UI colour, kept identical across apps: stage = blue, prod = red.
+    kargo.akuity.io/color: "#0284c7"
+    kargo.akuity.io/description: "Auto-promoted from the Warehouse, then smoke-tested on blog-stage.local.bigd.no."
 spec:
   requestedFreight:
     - origin:
@@ -185,6 +220,8 @@ metadata:
   namespace: blog-cd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    kargo.akuity.io/color: "#e11d48"
+    kargo.akuity.io/description: "Manual promotion of stage-verified Freight. Live at blog.nordbye.it; smoke-tested after deploy."
 spec:
   requestedFreight:
     - origin:
@@ -193,6 +230,9 @@ spec:
       sources:
         stages:
           - stage
+  verification:
+    analysisTemplates:
+      - name: blog-prod-smoke
   promotionTemplate:
     spec:
       vars:

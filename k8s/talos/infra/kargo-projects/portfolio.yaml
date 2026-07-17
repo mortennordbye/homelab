@@ -144,6 +144,40 @@ spec:
                         -o /dev/null -w '%{http_code}\n'
                         https://portfolio-stage.local.bigd.no/
 ---
+# prod verification: same one-shot HTTP check against the live public domain
+# (through the public gateway + TLS), so a bad prod promotion is flagged instead
+# of showing green. Confirmed the cluster can reach nordbye.it (no NAT-hairpin
+# issue). Fewer cold-start retries needed than stage since prod stays warm.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: portfolio-prod-smoke
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  metrics:
+    - name: portfolio-prod-http-200
+      count: 1
+      provider:
+        job:
+          spec:
+            backoffLimit: 2
+            activeDeadlineSeconds: 180
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: smoke
+                    image: curlimages/curl:8.21.0
+                    command:
+                      - /bin/sh
+                      - -c
+                      - >
+                        curl -fsSk --retry 5 --retry-delay 6 --retry-all-errors
+                        -o /dev/null -w '%{http_code}\n'
+                        https://nordbye.it/
+---
 # stage: receives new Freight directly from the Warehouse (auto-promoted per
 # ProjectConfig), then verifies with the HTTP smoke test. Only Freight that
 # passes verification here becomes available to prod. The promotion steps live
@@ -156,6 +190,11 @@ metadata:
   namespace: portfolio-cd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    # Cosmetic UI colour (Kargo pipeline view). Set per role and kept identical
+    # across every app: stage = blue, prod = red, so the pipeline reads the same
+    # everywhere instead of Kargo picking a random colour per Stage.
+    kargo.akuity.io/color: "#0284c7"
+    kargo.akuity.io/description: "Auto-promoted from the Warehouse, then smoke-tested on portfolio-stage.local.bigd.no."
 spec:
   requestedFreight:
     - origin:
@@ -192,6 +231,8 @@ metadata:
   namespace: portfolio-cd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    kargo.akuity.io/color: "#e11d48"
+    kargo.akuity.io/description: "Manual promotion of stage-verified Freight. Live at nordbye.it; smoke-tested after deploy."
 spec:
   requestedFreight:
     - origin:
@@ -200,6 +241,9 @@ spec:
       sources:
         stages:
           - stage
+  verification:
+    analysisTemplates:
+      - name: portfolio-prod-smoke
   promotionTemplate:
     spec:
       vars:
