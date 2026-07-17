@@ -11,3 +11,9 @@ resources:
   - app.yaml
   - httproute.yaml
   - ciliumnetworkpolicy.yaml
+
+# newTag via the kustomize-set-image promotion step (Kargo). Overrides the inline
+# tag in app.yaml; the logeverylift-cd Warehouse/promotion rewrites it to 0.0.N.
+images:
+  - name: ghcr.io/mortennordbye/logeverylift
+    newTag: sha-43378df
