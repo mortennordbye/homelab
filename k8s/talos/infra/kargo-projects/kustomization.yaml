@@ -8,3 +8,4 @@ kind: Kustomization
 resources:
   - clusterpromotiontask.yaml
   - portfolio.yaml
+  - blog.yaml
