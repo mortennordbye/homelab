@@ -1,4 +1,4 @@
-name: Build and Deploy Portfolio
+name: Build Portfolio image
 
 on:
   workflow_dispatch:
