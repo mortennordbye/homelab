@@ -51,20 +51,17 @@ spec:
           config:
             path: ./repo
         # Trigger the Argo CD sync and block until portfolio-stage is Synced +
-        # Healthy, so the promotion (and its verification) only succeed once the
-        # deploy has converged. Pin the app to the commit this promotion just
-        # pushed: argocd-update registers a lasting health check against
-        # desiredRevision, so the app must track a revision Kargo controls.
-        # updateTargetRevision rewrites the Application's targetRevision to that
-        # commit; without it the app tracks the shared main HEAD, which every
-        # later commit advances past, leaving this Stage perpetually Unhealthy.
-        # The apps ApplicationSet ignores /spec/source/targetRevision for
-        # portfolio* so it does not revert this pin (k8s/talos/infra/argocd/apps.yaml).
+        # Healthy. Do NOT pin desiredRevision: both portfolio apps track the
+        # shared main HEAD, so a fixed revision falls behind on the next commit
+        # (another stage's promotion) and reports this Stage perpetually
+        # Unhealthy even though Argo CD is healthy. Kargo v1.1.0+ requires an
+        # explicit desiredRevision precisely so shared-branch setups can omit it.
+        # Real verification comes from the portfolio-smoke test below.
         - uses: argocd-update
           config:
             apps:
               - name: portfolio-stage
-                sources:
-                  - repoURL: ${{ vars.gitopsRepo }}
-                    desiredRevision: ${{ outputs.commit.commit }}
-                    updateTargetRevision: true
+        - uses: argocd-wait
+          config:
+            apps:
+              - name: portfolio-stage

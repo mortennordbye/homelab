@@ -49,14 +49,14 @@ spec:
           config:
             path: ./repo
         # Trigger the Argo CD sync and block until portfolio (prod) is Synced +
-        # Healthy before the promotion reports success. Pin the app to this
-        # promotion's commit so Kargo's argocd-update health check stays green as
-        # main advances (see the longer note in stage-stage.yaml).
+        # Healthy before the promotion reports success. Do NOT pin
+        # desiredRevision: the app tracks the shared main HEAD (see the longer
+        # note in stage-stage.yaml).
         - uses: argocd-update
           config:
             apps:
               - name: portfolio
-                sources:
-                  - repoURL: ${{ vars.gitopsRepo }}
-                    desiredRevision: ${{ outputs.commit.commit }}
-                    updateTargetRevision: true
+        - uses: argocd-wait
+          config:
+            apps:
+              - name: portfolio
