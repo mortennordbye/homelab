@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.25
 
-# Kargo PR-promotion pilot: trigger a build to exercise the stage -> prod PR flow.
+# Kargo PR-promotion pilot: verifying the stage -> prod PR flow end to end.
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
 # Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
