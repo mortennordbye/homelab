@@ -223,7 +223,10 @@ spec:
 ---
 # prod: receives only Freight already verified in `stage` (sources.stages). No
 # autoPromotionEnabled entry in ProjectConfig, so promotion here is a deliberate
-# manual action.
+# manual action. Pilot: prod promotion goes through promote-via-pr (opens a
+# homelab PR and waits for the merge) instead of the direct-push
+# promote-to-argocd, so the manual prod gate is a GitHub PR review. stage still
+# uses promote-to-argocd above.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
@@ -257,5 +260,5 @@ spec:
           value: portfolio
       steps:
         - task:
-            name: promote-to-argocd
+            name: promote-via-pr
             kind: ClusterPromotionTask

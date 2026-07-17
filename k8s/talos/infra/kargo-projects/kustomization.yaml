@@ -7,5 +7,6 @@ kind: Kustomization
 # ../argocd/apps.yaml.
 resources:
   - clusterpromotiontask.yaml
+  - clusterpromotiontask-pr.yaml
   - portfolio.yaml
   - blog.yaml

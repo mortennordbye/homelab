@@ -1,0 +1,72 @@
+# PR-based variant of promote-to-argocd. Same image-bump logic, but instead of
+# pushing the commit straight to main it pushes to a generated branch, opens a
+# homelab PR, and blocks until that PR is merged in GitHub before syncing Argo
+# CD. This keeps promotion "review-and-merge in GitHub" while Kargo still drives
+# image discovery, the pipeline view, and post-deploy verification.
+#
+# Currently used only by portfolio's prod Stage as a pilot. The direct-push
+# promote-to-argocd task (clusterpromotiontask.yaml) is unchanged and still used
+# by every stage Stage and by blog.
+#
+# PREREQUISITE: the git credential's GitHub App (mortennordbye-homelab-deployer)
+# needs Pull requests: read/write in addition to Contents: read/write. git-open-pr
+# fails without it. desiredRevision is deliberately NOT pinned on argocd-update
+# for the same reason as promote-to-argocd: prod tracks shared main HEAD, so a
+# fixed revision would report the Stage perpetually Unhealthy on the next commit.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ClusterPromotionTask
+metadata:
+  name: promote-via-pr
+spec:
+  vars:
+    - name: appName      # commit-message scope, e.g. portfolio
+    - name: appPath      # kustomization dir, e.g. k8s/talos/apps/portfolio
+    - name: imageRepo    # GHCR repo the Warehouse subscribes to
+    - name: argocdApp    # Argo CD Application to sync, e.g. portfolio
+  steps:
+    - uses: git-clone
+      config:
+        repoURL: https://github.com/mortennordbye/homelab.git
+        checkout:
+          - branch: main
+            path: ./repo
+    - uses: kustomize-set-image
+      config:
+        path: ./repo/${{ vars.appPath }}
+        images:
+          - image: ${{ vars.imageRepo }}
+            tag: ${{ imageFrom(vars.imageRepo).Tag }}
+    - uses: git-commit
+      config:
+        path: ./repo
+        message: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
+    # generateTargetBranch pushes to kargo/promotion/<promotionName> instead of
+    # main; its `branch` output feeds git-open-pr's sourceBranch.
+    - uses: git-push
+      as: push
+      config:
+        path: ./repo
+        generateTargetBranch: true
+    - uses: git-open-pr
+      as: open-pr
+      config:
+        repoURL: https://github.com/mortennordbye/homelab.git
+        provider: github
+        sourceBranch: ${{ outputs.push.branch }}
+        targetBranch: main
+        title: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
+    # Blocks the promotion until the PR is merged in GitHub.
+    - uses: git-wait-for-pr
+      as: wait-pr
+      config:
+        repoURL: https://github.com/mortennordbye/homelab.git
+        provider: github
+        prNumber: ${{ outputs['open-pr'].pr.id }}
+    - uses: argocd-update
+      config:
+        apps:
+          - name: ${{ vars.argocdApp }}
+    - uses: argocd-wait
+      config:
+        apps:
+          - name: ${{ vars.argocdApp }}
