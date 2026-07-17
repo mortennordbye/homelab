@@ -1,0 +1,50 @@
+# Reusable promotion pipeline shared by every Kargo app in this monorepo.
+# Each app's Stages reference this task instead of inlining the six steps, so
+# onboarding a new app (blog, ...) is a handful of vars rather than ~25 lines of
+# duplicated promotion logic per Stage. Cluster-scoped so it is defined once and
+# referenced from every <app>-cd Project.
+#
+# Behaviour matches the portfolio pipeline: rewrite the image tag in the app's
+# kustomization, commit + push to main, trigger the Argo CD sync, then block
+# until the app is Synced + Healthy. desiredRevision is deliberately NOT pinned
+# (both stage and prod apps track shared main HEAD; a fixed revision falls behind
+# on the next commit and reports the Stage perpetually Unhealthy). Real
+# verification is each Stage's own AnalysisTemplate smoke test.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ClusterPromotionTask
+metadata:
+  name: promote-to-argocd
+spec:
+  vars:
+    - name: appName      # commit-message scope, e.g. portfolio
+    - name: appPath      # kustomization dir, e.g. k8s/talos/apps/portfolio-stage
+    - name: imageRepo    # GHCR repo the Warehouse subscribes to
+    - name: argocdApp    # Argo CD Application to sync, e.g. portfolio-stage
+  steps:
+    - uses: git-clone
+      config:
+        repoURL: https://github.com/mortennordbye/homelab.git
+        checkout:
+          - branch: main
+            path: ./repo
+    - uses: kustomize-set-image
+      config:
+        path: ./repo/${{ vars.appPath }}
+        images:
+          - image: ${{ vars.imageRepo }}
+            tag: ${{ imageFrom(vars.imageRepo).Tag }}
+    - uses: git-commit
+      config:
+        path: ./repo
+        message: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
+    - uses: git-push
+      config:
+        path: ./repo
+    - uses: argocd-update
+      config:
+        apps:
+          - name: ${{ vars.argocdApp }}
+    - uses: argocd-wait
+      config:
+        apps:
+          - name: ${{ vars.argocdApp }}

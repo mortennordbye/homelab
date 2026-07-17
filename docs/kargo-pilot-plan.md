@@ -1,5 +1,14 @@
 # Kargo promotion pilot — plan
 
+> **Historical planning record.** The pilot shipped; some decisions here were
+> superseded in implementation. Notably: image selection is **SemVer** on
+> `0.0.<run_number>` tags (not `NewestBuild`/SHA `allowTags`); sync uses
+> **`argocd-update` + `argocd-wait`** (not selfHeal-only), with `desiredRevision`
+> intentionally **unpinned**; and the pipelines live in a single
+> `k8s/talos/infra/kargo-projects/` dir (shared ClusterPromotionTask + one file
+> per app), not `kargo-portfolio/`. For the current state, see
+> [`docs/kargo.md`](kargo.md); this file is kept for the decision journey.
+
 Evaluate and pilot [Kargo](https://kargo.io/) (Akuity's GitOps promotion engine) on top of
 the existing Argo CD setup, replacing the hand-rolled "CI rewrites the image tag and commits"
 promotion flow with a real Warehouse → Freight → Stage → Promotion pipeline.

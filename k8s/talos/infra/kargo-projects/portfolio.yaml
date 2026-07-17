@@ -1,0 +1,217 @@
+# Kargo project for the portfolio app: stage -> prod promotion driven by the
+# portfolio Warehouse. All portfolio-cd resources live in this one file; the
+# reusable promotion steps live in clusterpromotiontask.yaml (shared with every
+# other app's project). Onboarding another app = a sibling <app>.yaml here.
+
+# --- Project namespace ------------------------------------------------------
+# Named `portfolio-cd` (not `portfolio`) to avoid colliding with the portfolio
+# app namespace. The label lets the Project below adopt this pre-created
+# namespace instead of racing to create it, keeping Argo CD sync ordering clean.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: portfolio-cd
+  labels:
+    kargo.akuity.io/project: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  name: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# Auto-promotion is a Project-level policy in Kargo (never on a Stage). Here we
+# auto-promote the `stage` Stage and leave `prod` as a deliberate manual step.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ProjectConfig
+metadata:
+  name: portfolio-cd
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  promotionPolicies:
+    - stage: stage
+      autoPromotionEnabled: true
+---
+# Git write credential for Kargo's git-push, using the existing GitHub App
+# `mortennordbye-homelab-deployer` (scoped to mortennordbye/homelab, Contents
+# read/write). ESO pulls the three App values from Bitwarden and templates them
+# plus the static repoURL and the required cred-type label into the Secret.
+# The Secret must live in this Project namespace (Kargo cred lookup is per-Project).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: kargo-git-homelab
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: kargo-git-homelab
+    creationPolicy: Owner
+    template:
+      metadata:
+        labels:
+          kargo.akuity.io/cred-type: git
+      data:
+        repoURL: https://github.com/mortennordbye/homelab.git
+        githubAppClientID: "{{ .githubAppClientID }}"
+        githubAppInstallationID: "{{ .githubAppInstallationID }}"
+        githubAppPrivateKey: "{{ .githubAppPrivateKey }}"
+  data:
+    - secretKey: githubAppClientID
+      remoteRef:
+        key: "a6b2b4ea-fa97-4d5c-bd74-b489010c5fab"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+    - secretKey: githubAppInstallationID
+      remoteRef:
+        key: "aabab894-a09a-415c-ba17-b489010c8df5"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+    - secretKey: githubAppPrivateKey
+      remoteRef:
+        key: "fc775dd0-1b67-4dfa-b2e9-b489010d0359"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: portfolio
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  # interval as Kargo normalizes it (5m -> 5m0s), to avoid ArgoCD drift.
+  interval: 5m0s
+  freightCreationPolicy: Automatic
+  subscriptions:
+    - image:
+        repoURL: ghcr.io/mortennordbye/homelab/portfolio
+        # CI tags every build 0.0.<run_number> (GitHub's monotonic run counter).
+        # SemVer picks the greatest such tag, so new builds are always selected
+        # with no manual tagging and no dependence on image timestamps (the
+        # reason NewestBuild stalled: all builds share the base layer's `created`).
+        # strictSemvers (default true) makes the git-SHA and env tags non-eligible.
+        # discoveryLimit + strictSemvers spelled out to match Kargo's defaults and
+        # avoid ArgoCD drift.
+        imageSelectionStrategy: SemVer
+        strictSemvers: true
+        discoveryLimit: 20
+---
+# Stage verification: a one-shot Job that curls the stage URL and fails on any
+# non-2xx. Retries cover the KEDA scale-from-zero cold start (the request also
+# wakes the stage deployment). -k skips TLS verify for the internal local cert.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: portfolio-smoke
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  metrics:
+    - name: portfolio-stage-http-200
+      count: 1
+      provider:
+        job:
+          spec:
+            backoffLimit: 2
+            activeDeadlineSeconds: 180
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: smoke
+                    image: curlimages/curl:8.21.0
+                    command:
+                      - /bin/sh
+                      - -c
+                      - >
+                        curl -fsSk --retry 10 --retry-delay 6 --retry-all-errors
+                        -o /dev/null -w '%{http_code}\n'
+                        https://portfolio-stage.local.bigd.no/
+---
+# stage: receives new Freight directly from the Warehouse (auto-promoted per
+# ProjectConfig), then verifies with the HTTP smoke test. Only Freight that
+# passes verification here becomes available to prod. The promotion steps live
+# in the shared promote-to-argocd ClusterPromotionTask; this Stage supplies the
+# per-app vars.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: stage
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: portfolio
+      sources:
+        direct: true
+  verification:
+    analysisTemplates:
+      - name: portfolio-smoke
+  promotionTemplate:
+    spec:
+      vars:
+        - name: appName
+          value: portfolio
+        - name: appPath
+          value: k8s/talos/apps/portfolio-stage
+        - name: imageRepo
+          value: ghcr.io/mortennordbye/homelab/portfolio
+        - name: argocdApp
+          value: portfolio-stage
+      steps:
+        - task:
+            name: promote-to-argocd
+            kind: ClusterPromotionTask
+---
+# prod: receives only Freight already verified in `stage` (sources.stages). No
+# autoPromotionEnabled entry in ProjectConfig, so promotion here is a deliberate
+# manual action.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: portfolio
+      sources:
+        stages:
+          - stage
+  promotionTemplate:
+    spec:
+      vars:
+        - name: appName
+          value: portfolio
+        - name: appPath
+          value: k8s/talos/apps/portfolio
+        - name: imageRepo
+          value: ghcr.io/mortennordbye/homelab/portfolio
+        - name: argocdApp
+          value: portfolio
+      steps:
+        - task:
+            name: promote-to-argocd
+            kind: ClusterPromotionTask
