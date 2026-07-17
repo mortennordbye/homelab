@@ -149,6 +149,8 @@ metadata:
   namespace: blog-cd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    # Cosmetic UI colour, kept identical across apps: stage = blue, prod = red.
+    kargo.akuity.io/color: "#0284c7"
 spec:
   requestedFreight:
     - origin:
@@ -185,6 +187,7 @@ metadata:
   namespace: blog-cd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    kargo.akuity.io/color: "#e11d48"
 spec:
   requestedFreight:
     - origin:

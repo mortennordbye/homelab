@@ -156,6 +156,10 @@ metadata:
   namespace: portfolio-cd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    # Cosmetic UI colour (Kargo pipeline view). Set per role and kept identical
+    # across every app: stage = blue, prod = red, so the pipeline reads the same
+    # everywhere instead of Kargo picking a random colour per Stage.
+    kargo.akuity.io/color: "#0284c7"
 spec:
   requestedFreight:
     - origin:
@@ -192,6 +196,7 @@ metadata:
   namespace: portfolio-cd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    kargo.akuity.io/color: "#e11d48"
 spec:
   requestedFreight:
     - origin:
