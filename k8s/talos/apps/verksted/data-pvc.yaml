@@ -1,0 +1,18 @@
+# Persistent /data: agent repos, session state, per-agent HOME (logins/configs),
+# and settings.json. On Synology NFS so it survives node moves and is easy to
+# back up / inspect. ReadWriteOnce is fine — a single verksted pod owns it (the
+# Deployment uses Recreate, so no two pods contend for the mount).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: verksted-data
+  namespace: verksted
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: syno-nfs-csi
+  resources:
+    requests:
+      storage: 20Gi

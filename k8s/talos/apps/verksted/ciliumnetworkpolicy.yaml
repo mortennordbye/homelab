@@ -1,0 +1,26 @@
+# Ingress-only policy: lock inbound to the private gateway, leave egress open.
+# verksted legitimately needs broad egress — agent sessions clone repos, hit
+# package registries and LLM APIs, and the dind sidecar pulls images. Cilium only
+# default-denies a direction once a rule for that direction exists, so declaring
+# no egress rule keeps egress unrestricted (matches the other apps here).
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: verksted-app-policy
+  namespace: verksted
+spec:
+  endpointSelector:
+    matchLabels:
+      app: verksted-app
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
