@@ -1,0 +1,210 @@
+# Kargo project for the blog app: stage -> prod promotion driven by the blog
+# Warehouse. Mirrors portfolio.yaml; the promotion steps live in the shared
+# promote-to-argocd ClusterPromotionTask.
+
+# --- Project namespace ------------------------------------------------------
+# Named `blog-cd` (not `blog`) to avoid colliding with the blog app namespace.
+# The label lets the Project below adopt this pre-created namespace instead of
+# racing to create it, keeping Argo CD sync ordering clean.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blog-cd
+  labels:
+    kargo.akuity.io/project: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  name: blog-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# Auto-promotion is a Project-level policy in Kargo (never on a Stage). Here we
+# auto-promote the `stage` Stage and leave `prod` as a deliberate manual step.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ProjectConfig
+metadata:
+  name: blog-cd
+  namespace: blog-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  promotionPolicies:
+    - stage: stage
+      autoPromotionEnabled: true
+---
+# Git write credential for Kargo's git-push, using the existing GitHub App
+# `mortennordbye-homelab-deployer` (scoped to mortennordbye/homelab, Contents
+# read/write). Same App as portfolio-cd; only the namespace differs. The Secret
+# must live in this Project namespace (Kargo cred lookup is per-Project).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: kargo-git-homelab
+  namespace: blog-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: kargo-git-homelab
+    creationPolicy: Owner
+    template:
+      metadata:
+        labels:
+          kargo.akuity.io/cred-type: git
+      data:
+        repoURL: https://github.com/mortennordbye/homelab.git
+        githubAppClientID: "{{ .githubAppClientID }}"
+        githubAppInstallationID: "{{ .githubAppInstallationID }}"
+        githubAppPrivateKey: "{{ .githubAppPrivateKey }}"
+  data:
+    - secretKey: githubAppClientID
+      remoteRef:
+        key: "a6b2b4ea-fa97-4d5c-bd74-b489010c5fab"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+    - secretKey: githubAppInstallationID
+      remoteRef:
+        key: "aabab894-a09a-415c-ba17-b489010c8df5"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+    - secretKey: githubAppPrivateKey
+      remoteRef:
+        key: "fc775dd0-1b67-4dfa-b2e9-b489010d0359"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: blog
+  namespace: blog-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  # interval as Kargo normalizes it (5m -> 5m0s), to avoid ArgoCD drift.
+  interval: 5m0s
+  freightCreationPolicy: Automatic
+  subscriptions:
+    - image:
+        repoURL: ghcr.io/mortennordbye/homelab/blog
+        # CI tags every build 0.0.<run_number>; SemVer picks the greatest.
+        # strictSemvers keeps the git-SHA and moving env tags out of selection.
+        # No eligible Freight exists until the first build after the CI change
+        # lands a 0.0.<run> tag (the current blog images are git-SHA tagged).
+        imageSelectionStrategy: SemVer
+        strictSemvers: true
+        discoveryLimit: 20
+---
+# Stage verification: a one-shot Job that curls the stage URL and fails on any
+# non-2xx. Retries cover the KEDA scale-from-zero cold start (the request also
+# wakes the stage deployment). -k skips TLS verify for the internal local cert.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: blog-smoke
+  namespace: blog-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  metrics:
+    - name: blog-stage-http-200
+      count: 1
+      provider:
+        job:
+          spec:
+            backoffLimit: 2
+            activeDeadlineSeconds: 180
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: smoke
+                    image: curlimages/curl:8.21.0
+                    command:
+                      - /bin/sh
+                      - -c
+                      - >
+                        curl -fsSk --retry 10 --retry-delay 6 --retry-all-errors
+                        -o /dev/null -w '%{http_code}\n'
+                        https://blog-stage.local.bigd.no/
+---
+# stage: receives new Freight directly from the Warehouse (auto-promoted per
+# ProjectConfig), then verifies with the HTTP smoke test. Only Freight that
+# passes verification here becomes available to prod.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: stage
+  namespace: blog-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: blog
+      sources:
+        direct: true
+  verification:
+    analysisTemplates:
+      - name: blog-smoke
+  promotionTemplate:
+    spec:
+      vars:
+        - name: appName
+          value: blog
+        - name: appPath
+          value: k8s/talos/apps/blog-stage
+        - name: imageRepo
+          value: ghcr.io/mortennordbye/homelab/blog
+        - name: argocdApp
+          value: blog-stage
+      steps:
+        - task:
+            name: promote-to-argocd
+            kind: ClusterPromotionTask
+---
+# prod: receives only Freight already verified in `stage` (sources.stages). No
+# autoPromotionEnabled entry in ProjectConfig, so promotion here is a deliberate
+# manual action.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: blog-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: blog
+      sources:
+        stages:
+          - stage
+  promotionTemplate:
+    spec:
+      vars:
+        - name: appName
+          value: blog
+        - name: appPath
+          value: k8s/talos/apps/blog
+        - name: imageRepo
+          value: ghcr.io/mortennordbye/homelab/blog
+        - name: argocdApp
+          value: blog
+      steps:
+        - task:
+            name: promote-to-argocd
+            kind: ClusterPromotionTask

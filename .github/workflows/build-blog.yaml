@@ -17,10 +17,9 @@ on:
     paths:
       - "blog/**"
 
-# Serialise deploys to the same environment: the manifest commit is rebased onto
-# main and pushed, so two runs racing would fight over the same branch. Never
-# cancel in progress, which could tear a half-finished deploy. Scoped per
-# environment so a stage push can't cancel a queued prod dispatch.
+# Serialise image builds per environment. Never cancel in progress, which could
+# tear a half-finished build. Kargo (not this workflow) owns the manifest write
+# and promotion now; CI only builds and pushes the image.
 concurrency:
   group: build-blog-${{ inputs.environment || 'stage' }}
   cancel-in-progress: false
@@ -54,7 +53,7 @@ jobs:
     if: ${{ !cancelled() && (needs.ci.result == 'success' || needs.ci.result == 'skipped') && github.repository_owner == 'mortennordbye' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Needed to update manifests
+      contents: read
       packages: write # Needed to push images
 
     steps:
@@ -78,13 +77,7 @@ jobs:
 
           echo "ENV=${ENV}" >> $GITHUB_OUTPUT
 
-          if [[ "${ENV}" == "prod" ]]; then
-            echo "MANIFEST=k8s/talos/apps/blog/deployment.yaml" >> $GITHUB_OUTPUT
-          else
-            echo "MANIFEST=k8s/talos/apps/blog-stage/deployment.yaml" >> $GITHUB_OUTPUT
-          fi
-
-          echo "Deploying to environment: ${ENV}"
+          echo "Building for environment: ${ENV}"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
@@ -103,47 +96,16 @@ jobs:
         with:
           context: ./blog
           push: true
-          # Immutable SHA tag + mutable env tag (stage / prod)
+          # 0.0.<run_number> is a strict-semver build counter GitHub increments
+          # on its own: monotonic, so the Kargo Warehouse (SemVer strategy) always
+          # selects the newest build without any manual tagging. The git-SHA tag
+          # stays for human traceability; strictSemvers makes the Warehouse ignore
+          # it and the moving env tag automatically.
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:0.0.${{ github.run_number }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.ENV }}
 
       - name: Logout from Docker Hub
         if: always()
         run: docker logout
-
-      - name: Update Kubernetes Manifest
-        run: |
-          MANIFEST="${{ steps.context.outputs.MANIFEST }}"
-          TAG="${{ steps.context.outputs.TAG }}"
-          ENV="${{ steps.context.outputs.ENV }}"
-          NEW_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
-
-          echo "Updating manifest: ${MANIFEST}"
-          echo "New image: ${NEW_IMAGE}"
-
-          if [[ ! -f "${MANIFEST}" ]]; then
-            echo "ERROR: Manifest file not found: ${MANIFEST}"
-            exit 1
-          fi
-
-          sed -i "s|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:.*|image: ${NEW_IMAGE}|g" $MANIFEST
-
-          echo "Changes made:"
-          git diff $MANIFEST
-
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-
-          if [[ -n $(git status -s) ]]; then
-            git add $MANIFEST
-            git commit -m "chore(blog): deploy ${TAG} to ${ENV}"
-            # main may have advanced while the image built (e.g. the portfolio
-            # deploy pushing its manifest commit); rebase so the push is
-            # fast-forward instead of getting rejected.
-            git fetch origin main
-            git rebase origin/main
-            git push origin HEAD:main
-          else
-            echo "Manifest already up to date."
-          fi
