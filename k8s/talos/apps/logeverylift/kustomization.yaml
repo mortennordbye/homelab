@@ -1,19 +1,16 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 commonAnnotations:
   argocd.argoproj.io/sync-wave: "0"
-
 resources:
-  - namespace.yaml
-  - externalsecret.yaml
-  - postgres.yaml
-  - app.yaml
-  - httproute.yaml
-  - ciliumnetworkpolicy.yaml
-
+- namespace.yaml
+- externalsecret.yaml
+- postgres.yaml
+- app.yaml
+- httproute.yaml
+- ciliumnetworkpolicy.yaml
 # newTag via the kustomize-set-image promotion step (Kargo). Overrides the inline
 # tag in app.yaml; the logeverylift-cd Warehouse/promotion rewrites it to 0.0.N.
 images:
-  - name: ghcr.io/mortennordbye/logeverylift
-    newTag: sha-43378df
+- name: ghcr.io/mortennordbye/logeverylift
+  newTag: 0.0.28
