@@ -10,3 +10,4 @@ resources:
   - clusterpromotiontask-pr.yaml
   - portfolio.yaml
   - blog.yaml
+  - logeverylift.yaml
