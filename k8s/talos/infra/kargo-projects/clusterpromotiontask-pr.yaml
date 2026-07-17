@@ -37,39 +37,44 @@ spec:
           - image: ${{ vars.imageRepo }}
             tag: ${{ imageFrom(vars.imageRepo).Tag }}
     - uses: git-commit
+      as: commit
       config:
         path: ./repo
         message: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
-    # generateTargetBranch pushes to kargo/promotion/<promotionName> instead of
-    # main; its `branch` output feeds git-open-pr's sourceBranch.
+    # Steps inside a task reference each other via task.outputs['<alias>'] (plain
+    # outputs.* does not resolve; the task's runtime step alias is not known at
+    # definition time).
+    #
+    # The `if` guards handle a no-op promotion (image tag unchanged, e.g. Kargo
+    # re-promoting a fresh Freight for the already-live version). git-push creates
+    # a branch even with nothing new to push, so branch-presence is not a reliable
+    # signal; git-commit is skipped when there is nothing to commit and emits no
+    # `commit` output, so that is the no-op signal. On a no-op these three git
+    # steps all skip (no orphan branch, no empty PR) and argocd-update/wait below
+    # stay unguarded so the promotion still ends green by confirming prod Healthy.
     - uses: git-push
       as: push
+      if: ${{ (task.outputs?.['commit']?.commit ?? '') != '' }}
       config:
         path: ./repo
         generateTargetBranch: true
-    # The `if` guards make a no-op promotion (image tag unchanged, e.g. Kargo
-    # re-promoting a fresh Freight for the already-live version) skip cleanly
-    # instead of erroring: git-commit is skipped when there is nothing to commit,
-    # so git-push produces no branch, so there is nothing to open a PR for. On a
-    # real bump push.branch is set and both steps run. argocd-update/wait below
-    # stay unguarded so a no-op still ends green by confirming prod is Healthy.
     - uses: git-open-pr
       as: open-pr
-      if: ${{ (outputs?.push?.branch ?? '') != '' }}
+      if: ${{ (task.outputs?.['commit']?.commit ?? '') != '' }}
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         provider: github
-        sourceBranch: ${{ outputs.push.branch }}
+        sourceBranch: ${{ task.outputs['push'].branch }}
         targetBranch: main
         title: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
     # Blocks the promotion until the PR is merged in GitHub.
     - uses: git-wait-for-pr
       as: wait-pr
-      if: ${{ (outputs?.push?.branch ?? '') != '' }}
+      if: ${{ (task.outputs?.['commit']?.commit ?? '') != '' }}
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         provider: github
-        prNumber: ${{ outputs['open-pr'].pr.id }}
+        prNumber: ${{ task.outputs['open-pr'].pr.id }}
     - uses: argocd-update
       config:
         apps:
