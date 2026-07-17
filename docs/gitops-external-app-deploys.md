@@ -1,5 +1,12 @@
 # GitOps deploys for external app repos
 
+> **Superseded (2026-07) for Kargo-managed apps.** `headroom` and `logeverylift`
+> now promote through Kargo, which opens the homelab PR itself — see
+> [`kargo.md`](kargo.md) → "Onboard another app → B. External-repo, single-env".
+> The `bump-image.yml` write-back below remains only for any external app not yet
+> onboarded to Kargo.
+
+
 How apps whose **source lives in a separate repo** (e.g.
 [`headroom`](https://github.com/mortennordbye/headroom),
 [`logeverylift`](https://github.com/mortennordbye/logeverylift)) get deployed

@@ -1,45 +1,70 @@
 # Kargo — app promotion
 
-Kargo promotes apps through `stage` then `prod` on top of Argo CD. CI only builds
-and pushes the image; Kargo owns the git write and the promotion. Portfolio is
-live; the pipeline is built to scale to more apps (blog next).
+Kargo promotes container images into the cluster on top of Argo CD. CI only
+builds and pushes the image; Kargo owns the git write and the promotion. Live for
+**portfolio, blog, logeverylift, and headroom**.
 Design/rollout history (superseded where it disagrees with this file):
 [`docs/kargo-pilot-plan.md`](kargo-pilot-plan.md).
 
-## Flow
+## Two app shapes
+
+- **Two-stage** (`portfolio`, `blog`) — `stage` → `prod`. `stage` auto-promotes and
+  is smoke-tested; only stage-verified Freight reaches `prod`. Source + CI live in
+  this monorepo.
+- **Single-env** (`logeverylift`, `headroom`) — one `prod` Stage fed directly by
+  the Warehouse and auto-promoted. Source + CI live in the app's own repo; only the
+  deploy manifests live here.
+
+## Two promotion styles
+
+Every Stage runs a shared cluster-scoped ClusterPromotionTask and only supplies
+per-app vars (`appName`, `appPath`, `imageRepo`, `argocdApp`).
+
+- **Direct push — `promote-to-argocd`** ([`clusterpromotiontask.yaml`](../k8s/talos/infra/kargo-projects/clusterpromotiontask.yaml)):
+  `git-clone → kustomize-set-image → git-commit → git-push (main) → argocd-update → argocd-wait`.
+  Used by every `stage` Stage and by `blog` prod.
+- **PR-gated — `promote-via-pr`** ([`clusterpromotiontask-pr.yaml`](../k8s/talos/infra/kargo-projects/clusterpromotiontask-pr.yaml)):
+  pushes the bump to a generated branch, opens a homelab PR, and **blocks on the
+  merge** before syncing:
+  `… git-commit → git-push (generateTargetBranch) → git-open-pr → git-wait-for-pr → argocd-update → argocd-wait`.
+  Used by `portfolio`, `logeverylift`, and `headroom` prod. Merging the PR in
+  GitHub is the deploy gate — there is no Kargo UI click.
+
+Both end with `argocd-update` + `argocd-wait` (blocks until the Argo CD app is
+Synced + Healthy). `desiredRevision` is deliberately **not** pinned: apps track
+shared `main` HEAD, so pinning the health check to one commit makes the Stage go
+perpetually Unhealthy on the next commit. Real verification is each Stage's own
+AnalysisTemplate smoke test.
+
+## Flow (single-env, PR-gated — logeverylift/headroom)
 
 ```
-CI build --> GHCR image --> Warehouse --> Freight
-                                            |
-                              auto + verify v
-                                          stage  --(manual)-->  prod
-                                            |                     |
-                               argocd-update+wait      argocd-update+wait
-                                            |                     |
-                                       Argo CD sync          Argo CD sync
+app-repo push → CI builds+pushes GHCR image :0.0.<run> → Warehouse → Freight
+                                                                        │
+                                                          auto-promote  ▼
+                                                                      prod (promote-via-pr)
+                                                                        │
+                                            git-push branch → git-open-pr → homelab PR
+                                                                        │  (you merge)
+                                                        git-wait-for-pr → argocd-update + wait
+                                                                        │
+                                                                   smoke test
 ```
 
-Each Stage runs the shared `promote-to-argocd` ClusterPromotionTask:
-`git-clone -> kustomize-set-image -> git-commit -> git-push -> argocd-update -> argocd-wait`.
-`argocd-wait` blocks until the Argo CD app is Synced + Healthy.
-
-`desiredRevision` is deliberately **not** pinned. Both stage and prod apps track
-shared `main` HEAD, so pinning the health check to one commit makes it fall behind
-on the next commit and report the Stage perpetually Unhealthy. Real verification
-is the Stage's own AnalysisTemplate smoke test. (See the pilot plan for the full
-post-mortem of the pinning attempts.)
+Two-stage apps are the same with a `stage` Stage (direct-push, auto-promoted,
+smoke-tested) in front, gating what Freight `prod` can receive.
 
 ## Critical facts
 
 | Item | Value |
 | --- | --- |
-| Project / namespace | `<app>-cd` (portfolio: `portfolio-cd`) |
-| Watched image | `ghcr.io/mortennordbye/homelab/<app>` (`SemVer`, `strictSemvers`) |
+| Project / namespace | `<app>-cd` (e.g. `logeverylift-cd`) — distinct from the app namespace |
+| Watched image | portfolio/blog: `ghcr.io/mortennordbye/homelab/<app>`; logeverylift/headroom: `ghcr.io/mortennordbye/<app>` (`SemVer`, `strictSemvers`) |
 | Image tags | CI tags every build `0.0.<run_number>`; SemVer selects the greatest |
-| `stage` | auto-promote; verified by HTTP smoke test on `<app>-stage.local.bigd.no` |
-| `prod` | manual; only accepts Freight verified in `stage` |
-| Git write | GitHub App `mortennordbye-homelab-deployer` (cred via ESO, per-Project) |
-| Sync trigger | `argocd-update` + `argocd-wait` (needs `kargo.akuity.io/authorized-stage` on the app) |
+| prod promotion | `promote-via-pr` (portfolio, logeverylift, headroom) opens a homelab PR; `blog` prod is direct push |
+| Git write | GitHub App `mortennordbye-homelab-deployer` — needs **Contents AND Pull requests** read/write (PR flow); cred via ESO, per-Project |
+| Sync trigger | `argocd-update` + `argocd-wait` (needs `kargo.akuity.io/authorized-stage` on the Argo app) |
+| Smoke test | two-stage: `<app>-stage.local.bigd.no`; single-env: the app's URL (private gateway → `-k`) |
 | UI | `https://kargo.local.bigd.no` (admin account) |
 | Version | Kargo `1.10.9`, Argo Rollouts `2.41.0` (verification CRDs) |
 
@@ -49,57 +74,93 @@ post-mortem of the pinning attempts.)
 | --- | --- |
 | `k8s/talos/infra/kargo/` | Kargo install (Helm OCI) + UI route |
 | `k8s/talos/infra/argo-rollouts/` | AnalysisTemplate/AnalysisRun CRDs for verification |
-| `k8s/talos/infra/kargo-projects/` | All promotion pipelines: shared `clusterpromotiontask.yaml` + one `<app>.yaml` per app |
+| `k8s/talos/infra/kargo-projects/clusterpromotiontask.yaml` | Shared direct-push task `promote-to-argocd` |
+| `k8s/talos/infra/kargo-projects/clusterpromotiontask-pr.yaml` | Shared PR-gated task `promote-via-pr` |
+| `k8s/talos/infra/kargo-projects/<app>.yaml` | One multi-doc file per app (Namespace, Project, ProjectConfig, ESO git cred, Warehouse, AnalysisTemplate, Stage(s)) |
 | `k8s/talos/infra/argocd/apps.yaml` | `authorized-stage` annotation via `goTemplate` + `templatePatch` (list-driven) |
-
-`kargo-projects/` is one Argo CD Application (auto-discovered by the infra
-ApplicationSet). Each `<app>.yaml` is a single multi-document file holding that
-app's Namespace, Project, ProjectConfig, ExternalSecret (git cred), Warehouse,
-AnalysisTemplate, and the `stage`/`prod` Stages. The Stages only carry per-app
-vars; the six promotion steps live once in the ClusterPromotionTask.
 
 ## Operate
 
-- **Promote to prod:** Kargo UI -> `prod` stage -> *Promote from upstream*.
-- **Trigger a build:** push under `portfolio/**`, or `gh workflow run build-portfolio.yaml --ref main -f environment=stage`.
+- **Deploy to prod:** fully automatic up to the gate — merge the PR Kargo opens
+  (`chore(<app>): promote 0.0.N to prod`). Nothing reaches prod without that merge.
+- **Trigger a build:** push under the app's path (monorepo) or to the app repo's
+  `main` (external).
 - **Inspect:** `kubectl -n <app>-cd get warehouse,stage,freight,promotion`.
 
 ## Onboard another app
 
-For an app `<app>` with `<app>` (prod) and `<app>-stage` overlays:
+### A. In-repo, two-stage (like portfolio/blog)
 
-1. **Kustomizations** — add an `images:` block to the app's prod and stage
-   kustomizations (`name: ghcr.io/mortennordbye/homelab/<app>`, `newTag` = the
-   currently deployed tag, so rendering is unchanged).
-2. **CI** — drop the manifest-write step from the app's build workflow, set the
-   job to `contents: read`, and add a `0.0.${{ github.run_number }}` tag to the
-   `tags:` list so the SemVer Warehouse can select builds. CI now only builds and
-   pushes.
-3. **Pipeline** — add `k8s/talos/infra/kargo-projects/<app>.yaml` (copy
-   `portfolio.yaml`): Namespace `<app>-cd` (labelled `kargo.akuity.io/project:
-   "true"`, distinct from the app namespace), Project, ProjectConfig (auto-promote
-   the stage Stage), ExternalSecret (git cred), Warehouse (the app's GHCR image,
-   `SemVer` + `strictSemvers` + `interval: 5m0s`), AnalysisTemplate smoke test on
-   the stage URL, and `stage`/`prod` Stages whose only step is the shared
-   `promote-to-argocd` task. Then add `<app>.yaml` to `kargo-projects/kustomization.yaml`.
-4. **Git credential** — the ExternalSecret reuses the same GitHub App: keep the
-   three Bitwarden UUIDs and the `conversionStrategy`/`decodingStrategy`/`metadataPolicy`
-   fields; only its `namespace` changes to `<app>-cd`.
-5. **Authorize sync** — in `k8s/talos/infra/argocd/apps.yaml`, add `<app>` to the
-   `templatePatch` list (`range $app := list "portfolio" "<app>"`). That stamps
-   `<app>-cd:prod` on `<app>` and `<app>-cd:stage` on `<app>-stage`.
+1. **Kustomizations** — add an `images:` block to the prod and stage kustomizations
+   (`name: ghcr.io/mortennordbye/homelab/<app>`, `newTag` = the currently deployed
+   tag, so rendering is unchanged).
+2. **CI** — drop the manifest-write step, set the job to `contents: read`, and add a
+   `0.0.${{ github.run_number }}` tag so the SemVer Warehouse can select builds.
+3. **Pipeline** — add `kargo-projects/<app>.yaml` (copy `portfolio.yaml`): stage
+   uses `promote-to-argocd`, prod uses `promote-via-pr`; register it in
+   `kargo-projects/kustomization.yaml`.
+4. **Authorize** — add `<app>` to the `apps.yaml` `templatePatch` list.
 
-Ship the pipeline once the `images:` block + CI change land. First sync
-auto-promotes the newest build to stage and verifies; prod stays manual.
+### B. External-repo, single-env (like logeverylift/headroom)
+
+The app's source + CI live in its own repo (`mortennordbye/<app>`). "Both sides":
+
+1. **App manifests** — the deploy manifests must exist under `k8s/talos/apps/<app>/`
+   (create them if new). Add an `images:` block to that kustomization
+   (`name: ghcr.io/mortennordbye/<app>`, `newTag` = current tag).
+2. **Pipeline** — add `kargo-projects/<app>.yaml` (copy `logeverylift.yaml`): one
+   Warehouse + one auto-promoted `prod` Stage using `promote-via-pr` + one smoke
+   AnalysisTemplate on the app's URL. Register it in `kargo-projects/kustomization.yaml`;
+   add `<app>` to the `apps.yaml` list (stamps `<app>-cd:prod`; the `-stage` arm
+   renders nothing with no such app dir).
+3. **App repo CI** — in the app's build workflow: add
+   `type=raw,value=0.0.${{ github.run_number }},enable={{is_default_branch}}`, and
+   **delete the `deploy:` job** that called `homelab/.github/workflows/bump-image.yml`
+   (Kargo replaces the self-opened PR) plus the now-orphaned short-SHA step/output.
+
+Merge order is safe either way: the Warehouse has no Freight until the first
+`0.0.<run>` build, and the deploy job is removed in the same CI PR, so there is no
+double-write. Merging the CI PR is itself a push that triggers the first build.
+
+> This supersedes `bump-image.yml` / [`gitops-external-app-deploys.md`](gitops-external-app-deploys.md)
+> for Kargo-managed external apps. `bump-image.yml` stays only for any external app
+> not yet on Kargo.
+
+### Git credential (both variants)
+
+The ExternalSecret reuses the same GitHub App: keep the three Bitwarden UUIDs and
+the `conversionStrategy`/`decodingStrategy`/`metadataPolicy` fields; only its
+`namespace` changes to `<app>-cd`.
 
 ## Conventions & gotchas
 
+- **PR flow needs `task.outputs`.** Inside a (Cluster)PromotionTask, one step
+  references another's output as `task.outputs['<alias>']`, **not** `outputs.<alias>`
+  (task steps are inflated as `task-1::<alias>` at Promotion time). Plain `outputs.*`
+  resolves to nil — `git-open-pr` then gets an empty branch and the bump strands on
+  an orphan `kargo/promotion/…` branch while the promotion reports Succeeded.
+- **No-op guard keys on the git-commit output, not the branch.** `git-push` with
+  `generateTargetBranch` creates a branch even when nothing changed, so branch
+  presence is not a no-op signal. `git-commit` is skipped with no `commit` output
+  when there is nothing to commit — guard the push/open-pr/wait-pr steps with
+  `if: ${{ (task.outputs?.['commit']?.commit ?? '') != '' }}` so a no-op re-promote
+  (Warehouse re-creating Freight for the already-live tag) skips cleanly and still
+  ends green via `argocd-wait`.
+- **GitHub App scope:** the PR flow needs **Pull requests: read/write** in addition
+  to Contents. Without it, `git-open-pr` fails.
 - **Stage namespace flips word order:** the `<app>-stage` overlay dir maps to
-  namespace `stage-<app>` (e.g. `portfolio-stage` -> `stage-portfolio`). The
-  ApplicationSet's `destination.namespace` is the dir basename, but every stage
-  manifest declares `namespace: stage-<app>` explicitly, and that explicit value
-  wins. Keep the `<app>` / `stage-<app>` pair consistent per app.
-- GitHub App cred needs the **Installation ID** (not the App ID). Wrong value = git-push fails with GitHub `404` on the installation-access-token call.
-- ESO remoteRefs and the Warehouse must spell out defaulted fields (`conversionStrategy`/`decodingStrategy`/`metadataPolicy`; `strictSemvers`, `interval: 5m0s`) or Argo CD reports perpetual `OutOfSync`.
-- Per-app annotations in the `apps` ApplicationSet must use `templatePatch`; inline `{{if}}` in the parsed `template` is invalid YAML.
-- Verify ApplicationSet changes: `argocd appset generate --core -n argocd <file>` (swap the git generator for a `list` generator to render offline).
+  namespace `stage-<app>`; every stage manifest declares it explicitly and that wins.
+- GitHub App cred needs the **Installation ID** (not the App ID). Wrong value =
+  git-push fails with GitHub `404` on the installation-access-token call.
+- ESO remoteRefs and the Warehouse must spell out defaulted fields
+  (`conversionStrategy`/`decodingStrategy`/`metadataPolicy`; `strictSemvers`,
+  `interval: 5m0s`) or Argo CD reports perpetual `OutOfSync`.
+- Per-app annotations in the `apps` ApplicationSet must use `templatePatch`; inline
+  `{{if}}` in the parsed `template` is invalid YAML. Verify offline with
+  `argocd appset generate --core -n argocd <file>` (swap the git generator for a
+  `list` generator).
+- **Private-gateway smoke DNS (temporary, 2026-07):** `*.local.bigd.no` for
+  logeverylift/headroom does not yet resolve from in-cluster pods, so their prod
+  smoke AnalysisRuns go red even though the deploy + promotion Succeeded. The smoke
+  config is correct and passes once DNS is fixed. portfolio prod smoke curls the
+  public `nordbye.it`, so it is unaffected.
