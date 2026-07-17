@@ -43,6 +43,25 @@ spec:
               Deployment `{{ $labels.namespace }}/{{ $labels.deployment }}` wants >0 replicas but has 0 available for over 5 minutes.
               Check: kubectl -n {{ $labels.namespace }} describe deploy {{ $labels.deployment }}
 
+        # A container stuck in CrashLoopBackOff for 10 min. Unlike DeploymentUnavailable
+        # (which needs 0 available replicas), this fires even when a rolling update
+        # keeps the old pod serving while the NEW revision crash-loops — e.g. a bad
+        # image promoted to prod (the Kargo case: the app looks "up" but main is
+        # pinned to a broken tag). Critical so it routes to Discord. max_over_time
+        # smooths the brief gaps while the kubelet is mid-restart-attempt (the
+        # waiting reason clears during the run); a single crash that recovers keeps
+        # the expr true for only ~5 min and never reaches `for: 10m`, so no false page.
+        - alert: PodCrashLooping
+          expr: max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"}[5m]) == 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} crash-looping'
+            description: |
+              Container `{{ $labels.container }}` in pod `{{ $labels.namespace }}/{{ $labels.pod }}` has been in CrashLoopBackOff for over 10 minutes. A rolling update may be masking this (an old pod still serving) — the new revision is broken.
+              Check: kubectl -n {{ $labels.namespace }} logs {{ $labels.pod }} -c {{ $labels.container }} --previous
+
         # Any container whose last termination was OOMKilled within the last 10 min.
         # last_terminated_reason is a persistent gauge (stays 1 forever after an OOM),
         # so we AND it with a recency check on last_terminated_timestamp to ensure the
