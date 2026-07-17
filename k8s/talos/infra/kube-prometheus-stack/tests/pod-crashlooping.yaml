@@ -1,0 +1,38 @@
+# Triggers: PodCrashLooping
+#
+# Container exits immediately on start, so the kubelet backs off and the pod
+# enters CrashLoopBackOff within a minute. The alert requires the CrashLoopBackOff
+# waiting reason to persist for `for: 10m` (max_over_time[5m] smooths the restart
+# attempts), so a single transient crash would NOT fire — only a stuck one.
+#
+# Expected timeline:
+#   t≈0       pod starts, container exits 1
+#   t≈1min    repeated fast failures → CrashLoopBackOff
+#   t≈10min   `for: 10m` elapsed → firing → Discord (critical route, group_wait: 30s)
+#
+# Note: this crashes outright (no old ReplicaSet), so DeploymentUnavailable also
+# fires. The point of PodCrashLooping is the case where a rolling update keeps an
+# old pod serving — which DeploymentUnavailable misses — so verify this one on its
+# own by watching the alert in Alertmanager, not just that Discord pinged.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-test-crashloop
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: homelab-alert-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alert-test-crashloop
+  template:
+    metadata:
+      labels:
+        app: alert-test-crashloop
+        app.kubernetes.io/managed-by: homelab-alert-test
+    spec:
+      containers:
+        - name: crash
+          image: busybox:1.37.0
+          command: ["sh", "-c", "echo starting; exit 1"]
