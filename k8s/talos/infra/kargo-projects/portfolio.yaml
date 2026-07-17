@@ -23,8 +23,12 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 ---
-# Auto-promotion is a Project-level policy in Kargo (never on a Stage). Here we
-# auto-promote the `stage` Stage and leave `prod` as a deliberate manual step.
+# Auto-promotion is a Project-level policy in Kargo (never on a Stage). Both
+# Stages auto-promote: `stage` pushes the bump straight to main, and `prod` runs
+# promote-via-pr, which auto-opens a homelab PR and then blocks on the merge. So
+# the only human gate in the whole pipeline is approving that prod PR in GitHub;
+# there is no manual "promote" click in the Kargo UI. prod still only receives
+# Freight that passed the stage smoke test (see the Stage's sources.stages).
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ProjectConfig
 metadata:
@@ -35,6 +39,8 @@ metadata:
 spec:
   promotionPolicies:
     - stage: stage
+      autoPromotionEnabled: true
+    - stage: prod
       autoPromotionEnabled: true
 ---
 # Git write credential for Kargo's git-push, using the existing GitHub App
@@ -221,9 +227,11 @@ spec:
             name: promote-to-argocd
             kind: ClusterPromotionTask
 ---
-# prod: receives only Freight already verified in `stage` (sources.stages). No
-# autoPromotionEnabled entry in ProjectConfig, so promotion here is a deliberate
-# manual action.
+# prod: receives only Freight already verified in `stage` (sources.stages).
+# Auto-promoted (see ProjectConfig), but through promote-via-pr: as soon as a
+# Freight passes the stage smoke test, Kargo auto-opens a homelab PR and waits.
+# The prod deploy happens when that PR is approved and merged in GitHub, so the
+# PR review is the prod gate. stage still uses the direct-push promote-to-argocd.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
@@ -257,5 +265,5 @@ spec:
           value: portfolio
       steps:
         - task:
-            name: promote-to-argocd
+            name: promote-via-pr
             kind: ClusterPromotionTask
