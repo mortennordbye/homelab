@@ -47,8 +47,15 @@ spec:
       config:
         path: ./repo
         generateTargetBranch: true
+    # The `if` guards make a no-op promotion (image tag unchanged, e.g. Kargo
+    # re-promoting a fresh Freight for the already-live version) skip cleanly
+    # instead of erroring: git-commit is skipped when there is nothing to commit,
+    # so git-push produces no branch, so there is nothing to open a PR for. On a
+    # real bump push.branch is set and both steps run. argocd-update/wait below
+    # stay unguarded so a no-op still ends green by confirming prod is Healthy.
     - uses: git-open-pr
       as: open-pr
+      if: ${{ (outputs?.push?.branch ?? '') != '' }}
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         provider: github
@@ -58,6 +65,7 @@ spec:
     # Blocks the promotion until the PR is merged in GitHub.
     - uses: git-wait-for-pr
       as: wait-pr
+      if: ${{ (outputs?.push?.branch ?? '') != '' }}
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         provider: github
