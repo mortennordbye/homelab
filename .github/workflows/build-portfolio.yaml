@@ -2,28 +2,19 @@ name: Build and Deploy Portfolio
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "Target environment"
-        required: true
-        type: choice
-        options:
-          - stage
-          - prod
-        default: stage
   push:
     branches:
-      - main # Pushing here updates STAGE only
+      - main
     paths:
       - "portfolio/**"
       - ".github/workflows/build-portfolio.yaml"
 
-# Serialise deploys to the same environment: the manifest commit is rebased onto
-# main and pushed, so two runs racing would fight over the same branch. Never
-# cancel in progress, which could tear a half-finished deploy. Scoped per
-# environment so a stage push can't cancel a queued prod dispatch.
+# Serialise image builds. Never cancel in progress, which could tear a
+# half-finished build. Kargo (not this workflow) owns the manifest write and
+# promotion; the same image is promoted stage -> prod, so there is no
+# per-environment build.
 concurrency:
-  group: build-portfolio-${{ inputs.environment || 'stage' }}
+  group: build-portfolio
   cancel-in-progress: false
 
 env:
@@ -32,9 +23,9 @@ env:
 
 jobs:
   ci:
-    # Gates stage deploys on push to main. Manual prod dispatch skips this.
-    # next build is not repeated here: it runs inside the Docker build, and
-    # the image is only pushed if that succeeds.
+    # Gates builds on push to main. Manual dispatch skips this. The next build
+    # is not repeated here: it runs inside the Docker build, and the image is
+    # only pushed if that succeeds.
     if: github.event_name == 'push' && github.repository_owner == 'mortennordbye'
     runs-on: ubuntu-latest
     permissions:
@@ -63,7 +54,7 @@ jobs:
 
   build-and-deploy:
     needs: ci
-    # success = push with green ci; skipped = manual prod dispatch
+    # success = push with green ci; skipped = manual dispatch
     if: ${{ !cancelled() && (needs.ci.result == 'success' || needs.ci.result == 'skipped') && github.repository_owner == 'mortennordbye' }}
     runs-on: ubuntu-latest
     permissions:
@@ -75,21 +66,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Determine Environment
+      - name: Determine tag
         id: context
         run: |
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "TAG=${SHORT_SHA}" >> $GITHUB_OUTPUT
-
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            ENV="${{ inputs.environment }}"
-          else
-            ENV="stage"
-          fi
-
-          echo "ENV=${ENV}" >> $GITHUB_OUTPUT
-
-          echo "Deploying to environment: ${ENV}"
+          echo "TAG=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
@@ -118,15 +98,14 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_SHA=${{ steps.context.outputs.TAG }}
-          # 0.0.<run_number> is a strict-semver build counter GitHub increments
-          # on its own: monotonic, so the Kargo Warehouse (SemVer strategy) always
-          # selects the newest build without any manual tagging. The git-SHA tag
-          # stays for human traceability; strictSemvers makes the Warehouse ignore
-          # it and the moving env tag automatically.
+          # Two tags: the git short-SHA for human traceability, and a
+          # 0.0.<run_number> strict-semver build counter that the Kargo Warehouse
+          # (SemVer strategy) selects. No moving stage/prod tag -- the same image
+          # is promoted across environments by Kargo, so an env tag would be
+          # redundant (stage) or misleading (prod is promoted in git, not tagged).
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:0.0.${{ github.run_number }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.ENV }}
 
       - name: Logout from Docker Hub
         if: always()
