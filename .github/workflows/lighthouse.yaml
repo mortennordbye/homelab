@@ -14,7 +14,9 @@ on:
     - cron: "0 6 * * 1"
 
 permissions:
-  contents: read
+  # write so the nordbye.it job can push its scores to the lighthouse-data
+  # branch (read from there by the profile README's card generator).
+  contents: write
 
 concurrency:
   group: lighthouse
@@ -49,35 +51,96 @@ jobs:
           LINKS: ${{ steps.lighthouse.outputs.links }}
         run: |
           python3 - <<'PY'
-          import json, os
+          import json, os, glob, statistics
+          from collections import defaultdict
 
-          path = os.path.join(os.environ.get("RESULTS_PATH", ""), "manifest.json")
-          try:
-              manifest = json.load(open(path))
-          except (OSError, ValueError):
-              manifest = []
+          results = os.environ.get("RESULTS_PATH", "")
           links = json.loads(os.environ.get("LINKS") or "{}")
-          runs = [m for m in manifest if m.get("isRepresentativeRun")] or manifest
 
-          def pct(x):
-              return str(round(x * 100)) if isinstance(x, (int, float)) else "-"
+          # LHCI writes one lhr-*.json per run (numberOfRuns); there is no
+          # manifest.json in the results dir. Group runs by URL and take the
+          # median of each category.
+          scores = defaultdict(lambda: defaultdict(list))
+          for f in glob.glob(os.path.join(results, "lhr-*.json")):
+              try:
+                  d = json.load(open(f))
+              except (OSError, ValueError):
+                  continue
+              url = d.get("finalDisplayedUrl") or d.get("finalUrl") or d.get("requestedUrl")
+              for k, cat in d.get("categories", {}).items():
+                  if isinstance(cat.get("score"), (int, float)):
+                      scores[url][k].append(cat["score"])
+
+          def med(url, k):
+              vals = scores[url].get(k)
+              return str(round(statistics.median(vals) * 100)) if vals else "-"
 
           out = ["## Lighthouse",
                  "",
                  "| URL | Perf | A11y | Best-Practices | SEO | Report |",
                  "|---|---|---|---|---|---|"]
-          for m in runs:
-              s = m.get("summary", {})
-              url = m.get("url", "")
-              report = links.get(url, "")
+          for url in scores:
+              report = links.get(url) or ""
               rep = f"[open]({report})" if report else "-"
               out.append(
-                  f"| {url} | {pct(s.get('performance'))} | {pct(s.get('accessibility'))} "
-                  f"| {pct(s.get('best-practices'))} | {pct(s.get('seo'))} | {rep} |"
+                  f"| {url} | {med(url, 'performance')} | {med(url, 'accessibility')} "
+                  f"| {med(url, 'best-practices')} | {med(url, 'seo')} | {rep} |"
               )
-          if not runs:
+          if not scores:
               out.append("_No Lighthouse results were produced._")
 
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
               f.write("\n".join(out) + "\n")
           PY
+
+      # Publish nordbye.it's scores as JSON for the profile README's Lighthouse
+      # card. Only the nordbye.it matrix job publishes, so there is a single
+      # writer to the data branch (no push race).
+      - name: Build scores JSON
+        if: ${{ always() && matrix.url == 'https://nordbye.it/' }}
+        env:
+          RESULTS_PATH: ${{ steps.lighthouse.outputs.resultsPath }}
+        run: |
+          python3 - <<'PY'
+          import json, os, glob, statistics, datetime
+          from collections import defaultdict
+
+          results = os.environ.get("RESULTS_PATH", "")
+          cat = defaultdict(list)
+          for f in glob.glob(os.path.join(results, "lhr-*.json")):
+              try:
+                  d = json.load(open(f))
+              except (OSError, ValueError):
+                  continue
+              for k, c in d.get("categories", {}).items():
+                  if isinstance(c.get("score"), (int, float)):
+                      cat[k].append(c["score"])
+
+          def med(k):
+              v = cat.get(k)
+              return round(statistics.median(v) * 100) if v else None
+
+          out = {
+              "url": "https://nordbye.it/",
+              "performance": med("performance"),
+              "accessibility": med("accessibility"),
+              "bestPractices": med("best-practices"),
+              "seo": med("seo"),
+              "generatedAt": datetime.datetime.now(datetime.timezone.utc)
+                  .replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+          }
+          os.makedirs("dist", exist_ok=True)
+          with open("dist/lighthouse.json", "w") as f:
+              json.dump(out, f, indent=2)
+          print(json.dumps(out))
+          PY
+
+      - name: Publish to lighthouse-data branch
+        if: ${{ always() && matrix.url == 'https://nordbye.it/' && hashFiles('dist/lighthouse.json') != '' }}
+        uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: lighthouse-data
+          build_dir: dist
+          keep_history: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
