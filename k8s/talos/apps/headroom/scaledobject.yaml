@@ -9,6 +9,11 @@ spec:
   minReplicaCount: 0
   maxReplicaCount: 1
   cooldownPeriod: 300
+  # KEDA scales to the max of the triggers. The cron pins 1 replica through the
+  # day (07:00-23:00 Oslo) so headroom stays warm and never cold-starts while in
+  # use. Outside that window the cron is inactive, so scaling falls to the HTTP
+  # trigger: 0 with no traffic (scales down at night) but a request through the
+  # KEDA interceptor wakes it from zero.
   triggers:
     - type: cron
       metadata:
@@ -16,3 +21,7 @@ spec:
         start: "0 7 * * *"
         end: "0 23 * * *"
         desiredReplicas: "1"
+    - type: external-push
+      metadata:
+        scalerAddress: keda-add-ons-http-external-scaler.keda:9090
+        interceptorRoute: headroom

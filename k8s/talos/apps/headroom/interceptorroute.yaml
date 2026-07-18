@@ -1,0 +1,15 @@
+apiVersion: http.keda.sh/v1beta1
+kind: InterceptorRoute
+metadata:
+  name: headroom
+  namespace: headroom
+spec:
+  target:
+    service: headroom-service
+    port: 8080
+  rules:
+    - hosts:
+        - headroom.local.bigd.no
+  scalingMetric:
+    concurrency:
+      targetValue: 100
