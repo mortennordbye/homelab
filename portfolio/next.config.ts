@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   // /api/v1 alongside the site, which a static export cannot do. Emits a
   // self-contained .next/standalone bundle for the Node runtime image.
   output: "standalone",
+  // Compression is handled at the Traefik edge (compress Middleware, br/zstd/
+  // gzip by preference). Next's built-in gzip runs first at the origin and,
+  // because a proxy won't re-encode an already-compressed response, would pin
+  // every client that accepts gzip to gzip and starve brotli. Off here so the
+  // edge picks the smallest encoding.
+  compress: false,
   // Pages keep trailing slashes for stable canonical URLs; the redirect is
   // skipped so API clients hitting /api/v1/profile aren't 308'd to a slash.
   trailingSlash: true,
