@@ -49,33 +49,42 @@ jobs:
           LINKS: ${{ steps.lighthouse.outputs.links }}
         run: |
           python3 - <<'PY'
-          import json, os
+          import json, os, glob, statistics
+          from collections import defaultdict
 
-          path = os.path.join(os.environ.get("RESULTS_PATH", ""), "manifest.json")
-          try:
-              manifest = json.load(open(path))
-          except (OSError, ValueError):
-              manifest = []
+          results = os.environ.get("RESULTS_PATH", "")
           links = json.loads(os.environ.get("LINKS") or "{}")
-          runs = [m for m in manifest if m.get("isRepresentativeRun")] or manifest
 
-          def pct(x):
-              return str(round(x * 100)) if isinstance(x, (int, float)) else "-"
+          # LHCI writes one lhr-*.json per run (numberOfRuns); there is no
+          # manifest.json in the results dir. Group runs by URL and take the
+          # median of each category.
+          scores = defaultdict(lambda: defaultdict(list))
+          for f in glob.glob(os.path.join(results, "lhr-*.json")):
+              try:
+                  d = json.load(open(f))
+              except (OSError, ValueError):
+                  continue
+              url = d.get("finalDisplayedUrl") or d.get("finalUrl") or d.get("requestedUrl")
+              for k, cat in d.get("categories", {}).items():
+                  if isinstance(cat.get("score"), (int, float)):
+                      scores[url][k].append(cat["score"])
+
+          def med(url, k):
+              vals = scores[url].get(k)
+              return str(round(statistics.median(vals) * 100)) if vals else "-"
 
           out = ["## Lighthouse",
                  "",
                  "| URL | Perf | A11y | Best-Practices | SEO | Report |",
                  "|---|---|---|---|---|---|"]
-          for m in runs:
-              s = m.get("summary", {})
-              url = m.get("url", "")
-              report = links.get(url, "")
+          for url in scores:
+              report = links.get(url) or ""
               rep = f"[open]({report})" if report else "-"
               out.append(
-                  f"| {url} | {pct(s.get('performance'))} | {pct(s.get('accessibility'))} "
-                  f"| {pct(s.get('best-practices'))} | {pct(s.get('seo'))} | {rep} |"
+                  f"| {url} | {med(url, 'performance')} | {med(url, 'accessibility')} "
+                  f"| {med(url, 'best-practices')} | {med(url, 'seo')} | {rep} |"
               )
-          if not runs:
+          if not scores:
               out.append("_No Lighthouse results were produced._")
 
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
