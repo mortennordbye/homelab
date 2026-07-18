@@ -32,6 +32,9 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: mealie
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: headroom
   to:
     - group: ""
       kind: Service
