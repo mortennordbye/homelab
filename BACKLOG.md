@@ -96,11 +96,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Portfolio API
 
-### Create the Bitwarden item for PORTFOLIO_API_KEY
-- **What:** The `portfolio-api` ExternalSecret references a Bitwarden Secrets Manager item by a placeholder UUID. Until a real item exists and the UUID is filled in, `PORTFOLIO_API_KEY` never syncs, so every write endpoint returns 401 (reads are unaffected).
-- **Why deferred:** The secret value/item is owned by the operator, not committed. The Deployment's `secretKeyRef` is `optional: true` so pods run and reads serve regardless.
-- **Unblock:** Generate a key (`openssl rand -base64 48`), store it as a Bitwarden Secrets Manager item, and replace `REPLACE-WITH-BITWARDEN-ITEM-UUID` with the item UUID. Confirm ESO creates the `portfolio-api` secret and a `POST /api/v1/echo` with the Bearer key returns 200.
-- **Where:** `k8s/talos/apps/portfolio/externalsecret.yaml`.
+### Prod cutover of the Next.js server + API
+- **What:** The stage app runs the new Next.js server + `/api/v1` (validated on `portfolio-stage`). Prod (`nordbye.it`) still runs the old nginx/static image. Prod's structural manifests (containerPort 3000, `/api/health` probes, `.next/cache` + `/tmp` volumes, status ConfigMap at `/config`, `PORTFOLIO_API_KEY` env, distroless uid 65532) plus `externalsecret.yaml` (Bitwarden UUID `575eaaa2-…f98f` already set) are held on branch `portfolio-api-prod-cutover`.
+- **Why deferred:** Prod is warm; ArgoCD applies manifest changes on merge, so a structural change landing while prod still runs the old image = immediate outage (the manifest and image must flip together). Stage-first per [[feedback_stage_before_prod]].
+- **Unblock:** After stage is confirmed healthy, cut prod over so the manifest change and the new image tag deploy in one ArgoCD sync. Kargo prod uses `promote-via-pr`, so the clean path is to add the `portfolio-api-prod-cutover` structural changes onto Kargo's auto-opened prod promotion PR (which bumps the image tag), then merge that single PR. Verify `nordbye.it/api/v1/*` and `POST /api/v1/echo` (401 without key, 200 with the Bearer key).
+- **Where:** branch `portfolio-api-prod-cutover` → `k8s/talos/apps/portfolio/{deployment,service,ciliumnetworkpolicy,kustomization,externalsecret}.yaml`; Kargo project `k8s/talos/infra/kargo-projects/portfolio.yaml`.
 
 ### Real stateful write endpoints
 - **What:** The write framework ships only a stateless example (`POST /api/v1/echo`). A useful write (e.g. a guestbook, or a "notify me" capture) needs a datastore.

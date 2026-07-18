@@ -6,7 +6,7 @@
 #    kubectl get svc -n stage-portfolio nordbye-service-stage
 #
 # 3. Attempt to connect from the test pod (this should time out):
-#    kubectl exec -it -n default net-test -- curl -m 5 http://<CLUSTER_IP>:8080/api/health
+#    kubectl exec -it -n default net-test -- curl -m 5 http://<CLUSTER_IP>:8080/healthz
 #
 # 4. Clean up the test pod:
 #    kubectl delete pod net-test -n default
@@ -26,7 +26,7 @@ spec:
             "k8s:app.kubernetes.io/instance": traefik-traefik
       toPorts:
         - ports:
-            - port: "3000"
+            - port: "8080"
               protocol: TCP
     - fromEntities:
         - host
