@@ -19,37 +19,40 @@ spec:
       securityContext:
         seccompProfile: { type: RuntimeDefault }
         runAsNonRoot: true
-        runAsUser: 101
-        runAsGroup: 101
-        # fsGroup chowns the nginx-cache emptyDir to gid 101 so the
-        # unprivileged nginx user can write its pid + temp paths under
-        # /var/cache/nginx (the only writable path under readOnlyRootFilesystem).
-        fsGroup: 101
+        # Distroless nodejs runs as the built-in `nonroot` user (uid 65532).
+        runAsUser: 65532
+        runAsGroup: 65532
+        # fsGroup chowns the writable emptyDirs to gid 65532 so the Node
+        # process can write the .next cache and /tmp under readOnlyRootFilesystem.
+        fsGroup: 65532
       containers:
         - name: portfolio
           image: ghcr.io/mortennordbye/homelab/portfolio:def4da2
           imagePullPolicy: Always
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 3000
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             privileged: false
             runAsNonRoot: true
-            runAsUser: 101
-            runAsGroup: 101
+            runAsUser: 65532
+            runAsGroup: 65532
             capabilities: { drop: ["ALL"] }
             seccompProfile: { type: RuntimeDefault }
           volumeMounts:
-            - name: nginx-cache
-              mountPath: /var/cache/nginx
+            # Next's ISR/fetch cache — the only path the server writes at runtime.
+            - name: next-cache
+              mountPath: /app/.next/cache
+            - name: tmp
+              mountPath: /tmp
           resources:
-            requests: { cpu: 50m, memory: 64Mi }
-            limits: { cpu: 200m, memory: 256Mi }
+            requests: { cpu: 100m, memory: 192Mi }
+            limits: { cpu: 500m, memory: 512Mi }
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: /api/health
               port: http
               httpHeaders:
                 [{ name: Host, value: portfolio-stage.local.bigd.no }]
@@ -58,7 +61,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: /api/health
               port: http
               httpHeaders:
                 [{ name: Host, value: portfolio-stage.local.bigd.no }]
@@ -66,6 +69,10 @@ spec:
             periodSeconds: 15
             failureThreshold: 3
       volumes:
-        - name: nginx-cache
+        - name: next-cache
+          emptyDir:
+            sizeLimit: 256Mi
+        - name: tmp
           emptyDir:
             medium: Memory
+            sizeLimit: 32Mi

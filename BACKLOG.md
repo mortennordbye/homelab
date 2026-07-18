@@ -94,6 +94,38 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Wait for an `eslint-config-next` release built on `typescript-eslint@9` (supports ESLint 10 + TS 6). Then bump both, run a containerised `tsc --noEmit` and `next build`, and clear any new `strict`-mode diagnostics TS 6 surfaces.
 - **Where:** `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
 
+## Portfolio API
+
+### Prod cutover of the Next.js server + API
+- **What:** The stage app runs the new Next.js server + `/api/v1` (validated on `portfolio-stage`). Prod (`nordbye.it`) still runs the old nginx/static image. Prod's structural manifests (containerPort 3000, `/api/health` probes, `.next/cache` + `/tmp` volumes, status ConfigMap at `/config`, `PORTFOLIO_API_KEY` env, distroless uid 65532) plus `externalsecret.yaml` (Bitwarden UUID `575eaaa2-…f98f` already set) are held on branch `portfolio-api-prod-cutover`.
+- **Why deferred:** Prod is warm; ArgoCD applies manifest changes on merge, so a structural change landing while prod still runs the old image = immediate outage (the manifest and image must flip together). Stage-first per [[feedback_stage_before_prod]].
+- **Unblock:** After stage is confirmed healthy, cut prod over so the manifest change and the new image tag deploy in one ArgoCD sync. Kargo prod uses `promote-via-pr`, so the clean path is to add the `portfolio-api-prod-cutover` structural changes onto Kargo's auto-opened prod promotion PR (which bumps the image tag), then merge that single PR. Verify `nordbye.it/api/v1/*` and `POST /api/v1/echo` (401 without key, 200 with the Bearer key).
+- **Where:** branch `portfolio-api-prod-cutover` → `k8s/talos/apps/portfolio/{deployment,service,ciliumnetworkpolicy,kustomization,externalsecret}.yaml`; Kargo project `k8s/talos/infra/kargo-projects/portfolio.yaml`.
+
+### Real stateful write endpoints
+- **What:** The write framework ships only a stateless example (`POST /api/v1/echo`). A useful write (e.g. a guestbook, or a "notify me" capture) needs a datastore.
+- **Why deferred:** Scope was the read API + a proven auth seam. Persistence is a separate design (schema, storage, retention, abuse handling).
+- **Unblock:** Pick a store (SQLite on a PVC for a single-writer app, or the existing CNPG Postgres), add a route under `src/app/api/v1/` guarded by `requireApiKey`, and wire storage + any needed CiliumNetworkPolicy egress.
+- **Where:** `portfolio/src/app/api/v1/`, `portfolio/src/lib/api.ts`.
+
+### Authentik forward-auth option for writes
+- **What:** Writes currently authenticate with a static API key. For SSO-consistent, per-user writes, route the write paths through Authentik (Traefik forward-auth / OIDC) instead.
+- **Why deferred:** The static key is simpler and sufficient to ship the framework; Authentik wiring only pays off once a real user-facing write exists.
+- **Unblock:** Add an Authentik provider + Traefik forward-auth middleware on the `/api/v1` POST paths, and relax `requireApiKey` to accept the forwarded identity.
+- **Where:** `portfolio/src/lib/api.ts`, `k8s/talos/apps/portfolio/httproute.yaml`, Authentik config.
+
+### Response compression on the Node runtime
+- **What:** The old nginx stage did `gzip_static`/`gzip`. The distroless Node server serves uncompressed; text assets are larger over the wire.
+- **Why deferred:** Correctness-neutral; the site works, just heavier. Compression belongs at the edge, not baked into the app.
+- **Unblock:** Add a Traefik `compress` middleware on the portfolio HTTPRoute (or a gateway-wide default). Measure before/after on the largest JS/CSS.
+- **Where:** `k8s/talos/apps/portfolio/httproute.yaml` (Traefik middleware), `k8s/talos/infra/traefik/`.
+
+### Silence the Turbopack NFT over-trace on /api/v1/infra
+- **What:** `next build` warns that the `fs.readFile` in the infra route causes Node File Tracing to sweep the whole project into `.next/standalone` (locally this pulled in `latex/`, `out/`, CV markdown). The shipped Docker image is unaffected because the build stage only `COPY`s `src`/`public`/config, but the warning is noise and the local standalone is bloated.
+- **Why deferred:** Cosmetic; build is green and the runtime image is lean.
+- **Unblock:** Scope the read (constant path, or `outputFileTracingRoot`/`outputFileTracingExcludes` in `next.config.ts`) until the warning clears without pulling in extra files.
+- **Where:** `portfolio/src/app/api/v1/infra/route.ts`, `portfolio/next.config.ts`.
+
 ## Cluster / infra
 
 ### Extend Loki PVC after kube-events validated

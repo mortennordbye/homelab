@@ -32,7 +32,7 @@ RUN mkdir -p output && \
       xelatex -interaction=nonstopmode -output-directory=output "$f" >/dev/null; \
     done
 
-# ---- Stage 3: build the Next.js static export ----
+# ---- Stage 3: build the Next.js server bundle ----
 FROM node:24-alpine AS build
 WORKDIR /app
 
@@ -62,14 +62,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN --mount=type=cache,target=/app/.next/cache \
     npm run build
 
-# Pre-compress static assets so nginx (gzip_static on) serves the .gz
-# straight from disk instead of compressing on every request.
-RUN find out -type f \
-      \( -name "*.js" -o -name "*.css" -o -name "*.html" \
-       -o -name "*.svg" -o -name "*.json" -o -name "*.txt" \
-       -o -name "*.xml" -o -name "*.webmanifest" \) \
-      -exec gzip -9 -k {} \;
-
 # ---- Stage cv-bundle: dev-server volume populator ----
 # Merges the host's static public/ assets with the freshly-built CV
 # artifacts into /staging. A one-shot service in compose.yaml runs
@@ -78,7 +70,7 @@ RUN find out -type f \
 # dev server serves the real CV without writing anything to the
 # host filesystem.
 #
-# Never built when targeting the production nginx image — CI's
+# Never built when targeting the production runtime image — CI's
 # `docker build .` skips this stage automatically.
 FROM alpine AS cv-bundle
 WORKDIR /staging
@@ -87,37 +79,30 @@ COPY --from=pdfbuild /work/latex/output/resume.pdf ./resume.pdf
 COPY --from=pdfbuild /work/latex/output/cv-*.pdf ./
 COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 
-# ---- Stage 4: serve via hardened nginx ----
-# nginx-unprivileged ships writable /tmp + writable temp paths and listens
-# on 8080 as the nginx user out of the box, so we can drop the manual USER
-# directive and the -u root workaround the plain nginx:alpine image needed.
-# Brotli precompression was attempted here but apk's nginx-mod-http-brotli
-# is ABI-pinned to alpine's nginx build, which doesn't match nginxinc's
-# custom build — leaving as gzip-only until we either compile the module
-# from source or switch to a brotli-bundled image. Tracked in BACKLOG.
-# -slim drops the xslt/image-filter/geoip/perl/njs modules this static site
-# never loads, which removes their lib deps (libxml2, libxslt, libpng, libgd)
-# and the OS-package CVEs that come with them. gzip_static is a core module and
-# survives slim. 1.29 is the current stable line — fresher openssl/expat.
-FROM nginxinc/nginx-unprivileged:1.31-alpine-slim
+# ---- Stage 4: serve the Next.js server on distroless Node ----
+# Distroless nodejs has no shell/package manager — minimal attack surface and
+# runs as the built-in `nonroot` user (uid 65532). The standalone output ships
+# a trimmed node_modules and a self-contained server.js; only `.next/static`
+# and `public` are copied alongside it. At runtime the only writable path the
+# server needs is `.next/cache` (ISR/fetch cache), mounted as an emptyDir in
+# the Deployment so readOnlyRootFilesystem still holds.
+FROM gcr.io/distroless/nodejs24-debian12 AS runtime
+WORKDIR /app
 
-COPY --from=build /app/out /usr/share/nginx/html/nordbye.it/
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
-COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0 \
+    NEXT_TELEMETRY_DISABLED=1
 
-# Hardening: directories 555, files 444 — locks down the document root.
-# Needs USER root temporarily because the unprivileged image defaults to
-# the nginx user.
-USER root
-RUN find /usr/share/nginx/html/nordbye.it -type d -exec chmod 555 {} \; \
- && find /usr/share/nginx/html/nordbye.it -type f -exec chmod 444 {} \;
-USER nginx
+COPY --from=build --chown=nonroot:nonroot /app/.next/standalone ./
+COPY --from=build --chown=nonroot:nonroot /app/.next/static ./.next/static
+COPY --from=build --chown=nonroot:nonroot /app/public ./public
 
-WORKDIR /usr/share/nginx/html
+USER nonroot
 
-EXPOSE 8080
-
-HEALTHCHECK CMD wget -qO- http://127.0.0.1:8080/healthz || exit 1
+EXPOSE 3000
 
 STOPSIGNAL SIGTERM
-CMD ["nginx", "-g", "daemon off;"]
+
+# Distroless nodejs sets `node` as the entrypoint, so CMD is just the script.
+CMD ["server.js"]

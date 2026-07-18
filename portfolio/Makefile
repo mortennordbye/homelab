@@ -36,12 +36,12 @@ lint:  ## Run ESLint in Docker (same check as CI)
 typecheck:  ## Run tsc --noEmit in Docker (same check as CI)
 	docker run --rm -v $(PWD):/app -w /app node:24-alpine sh -c "npm ci --no-audit --no-fund && npm run typecheck"
 
-image:  ## Build the production Docker image (multi-stage node→nginx; same path as CI)
+image:  ## Build the production Docker image (multi-stage node build → distroless Node runtime; same path as CI)
 	docker build --build-arg BUILD_SHA=$(SHA) -t $(IMAGE) .
 
-run-prod: image  ## Build the prod image and run nginx on http://localhost:$(PROD_PORT)
+run-prod: image  ## Build the prod image and run the server on http://localhost:$(PROD_PORT)
 	docker rm -f $(PROD_NAME) 2>/dev/null || true
-	docker run -d --name $(PROD_NAME) -p $(PROD_PORT):8080 $(IMAGE)
+	docker run -d --name $(PROD_NAME) -p $(PROD_PORT):3000 $(IMAGE)
 	@echo "→ http://localhost:$(PROD_PORT)"
 
 clean: down  ## Stop dev stack and drop its volumes (cv-bundle + Turbopack cache + node_modules)
@@ -54,7 +54,7 @@ clean: down  ## Stop dev stack and drop its volumes (cv-bundle + Turbopack cache
 
 # CV / résumé generation has no standalone target and never touches
 # the host filesystem. The 17 PDFs and the customizer manifest are
-# produced inside Docker only: CI bakes them into the production nginx
+# produced inside Docker only: CI bakes them into the production runtime
 # image; `make up` populates a Docker volume via the cv-bundle service
 # in compose.yaml, which the dev container mounts read-only at
 # /app/public. To preview the production image locally, run
