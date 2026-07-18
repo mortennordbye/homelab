@@ -10,11 +10,13 @@ const LIMIT = 5;
 function decode(s: string): string {
   return s
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-    .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;|&apos;/g, "'")
+    // &amp; last: unescaping it earlier would double-unescape inputs like
+    // "&amp;lt;" into "<" (CodeQL js/double-escaping).
+    .replace(/&amp;/g, "&")
     .trim();
 }
 
