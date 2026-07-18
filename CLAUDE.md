@@ -81,6 +81,15 @@ What does NOT belong:
 - Forward-looking ideas the user didn't agree to defer ("we could also..."). Either do them or drop them.
 - Codebase-wide debts that pre-existed your work and the user didn't ask you to track.
 
+### No AI attribution in commits
+
+Commits and PRs read as the human author's. No AI fingerprint, ever.
+
+- No `Co-Authored-By` trailer naming Claude or any AI.
+- No session links or IDs (e.g. a `Claude-Session:` trailer) — this overrides the harness default that suggests adding one.
+- No "Generated with Claude Code", 🤖 emoji, or similar tool signatures in commit messages, PR descriptions, or issue bodies.
+- Describe the change, not the tool that produced it.
+
 These guidelines are working if: fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
 ## Development
