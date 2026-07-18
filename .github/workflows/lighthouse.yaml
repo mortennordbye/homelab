@@ -34,9 +34,50 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Lighthouse CI
+        id: lighthouse
         uses: treosh/lighthouse-ci-action@v12
         with:
           urls: ${{ matrix.url }}
           configPath: ./.github/lighthouse/lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
+
+      - name: Write scores to job summary
+        if: always()
+        env:
+          RESULTS_PATH: ${{ steps.lighthouse.outputs.resultsPath }}
+          LINKS: ${{ steps.lighthouse.outputs.links }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+
+          path = os.path.join(os.environ.get("RESULTS_PATH", ""), "manifest.json")
+          try:
+              manifest = json.load(open(path))
+          except (OSError, ValueError):
+              manifest = []
+          links = json.loads(os.environ.get("LINKS") or "{}")
+          runs = [m for m in manifest if m.get("isRepresentativeRun")] or manifest
+
+          def pct(x):
+              return str(round(x * 100)) if isinstance(x, (int, float)) else "-"
+
+          out = ["## Lighthouse",
+                 "",
+                 "| URL | Perf | A11y | Best-Practices | SEO | Report |",
+                 "|---|---|---|---|---|---|"]
+          for m in runs:
+              s = m.get("summary", {})
+              url = m.get("url", "")
+              report = links.get(url, "")
+              rep = f"[open]({report})" if report else "-"
+              out.append(
+                  f"| {url} | {pct(s.get('performance'))} | {pct(s.get('accessibility'))} "
+                  f"| {pct(s.get('best-practices'))} | {pct(s.get('seo'))} | {rep} |"
+              )
+          if not runs:
+              out.append("_No Lighthouse results were produced._")
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write("\n".join(out) + "\n")
+          PY
