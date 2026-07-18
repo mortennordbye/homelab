@@ -17,6 +17,9 @@ spec:
               protocol: TCP
             - port: "8443"
               protocol: TCP
+            # HTTP/3 (QUIC) on the public websecure entrypoint.
+            - port: "8443"
+              protocol: UDP
             - port: "8444"
               protocol: TCP
     # Dashboard / metrics endpoint scraped by Prometheus.
