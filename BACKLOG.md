@@ -28,29 +28,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Portfolio modern — items deferred during initial build
 
-### Docker build verification
-- **What:** Build and run `portfolio/Dockerfile` end-to-end (`docker build` then `docker run -p 8080:8080`) and confirm `/healthz`, security headers, and routing work as expected.
-- **Why deferred:** Local build was verified via `npm run build` + `npx serve out`; Docker layer not run during the rebuild session.
-- **Unblock:** `cd portfolio && docker build -t portfolio:dev .` then exercise the routes.
-- **Where:** `portfolio/Dockerfile`, `portfolio/nginx/`.
-
-### OG / social-card images
-- **What:** Add `app/opengraph-image.tsx` (root) and `app/work/[slug]/opengraph-image.tsx` so links to the site render rich previews.
-- **Why deferred:** Out of scope for the initial cut — site is functional without it; first-time deploys pull a default OG.
-- **Unblock:** Decide whether to use Next's `ImageResponse` (works under static export) or a build-time script with `@vercel/og`.
-- **Where:** `portfolio/src/app/`.
-
 ### Lighthouse / axe verification on the live stage URL
 - **What:** Run Lighthouse mobile + `@axe-core/cli` against the deployed `portfolio-stage` URL and act on findings (target ≥95 perf / 100 a11y / 100 SEO).
 - **Why deferred:** Site has not yet been deployed to stage — first push to `portfolio/**` will trigger CI and deploy.
 - **Unblock:** Push the branch, wait for ArgoCD sync, run Lighthouse against `portfolio-stage.local.bigd.no`.
 - **Where:** Run from `portfolio/` after deploy.
-
-### Cutover from old portfolio to new
-- **What:** Once the new site is approved on stage, promote it to prod (`workflow_dispatch` → `environment: prod`) and remove the old `portfolio/` tree + `.github/workflows/build-portfolio.yaml`.
-- **Why deferred:** User chose stage-first cutover. Old portfolio stays in the repo until promotion is approved.
-- **Unblock:** User reviews stage, then triggers the prod workflow_dispatch, then opens a cleanup PR.
-- **Where:** `portfolio/`, `.github/workflows/build-portfolio.yaml`, `k8s/talos/apps/portfolio*/deployment.yaml`.
 
 ### CI auto-rebuild of CV/résumé PDFs on content change
 - **What:** GitHub Action that runs `cd portfolio && make cv` (with TeX Live in CI) when `src/content/{site,resume,skills}.ts` changes, then commits the refreshed `public/{resume,cv}.pdf` back to the branch.
@@ -89,12 +71,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
 
 ## Portfolio API
-
-### Prod cutover of the Next.js server + API
-- **What:** The stage app runs the new Next.js server + `/api/v1` (validated on `portfolio-stage`). Prod (`nordbye.it`) still runs the old nginx/static image. Prod's structural manifests (containerPort 3000, `/api/health` probes, `.next/cache` + `/tmp` volumes, status ConfigMap at `/config`, `PORTFOLIO_API_KEY` env, distroless uid 65532) plus `externalsecret.yaml` (Bitwarden UUID `575eaaa2-…f98f` already set) are held on branch `portfolio-api-prod-cutover`.
-- **Why deferred:** Prod is warm; ArgoCD applies manifest changes on merge, so a structural change landing while prod still runs the old image = immediate outage (the manifest and image must flip together). Stage-first per [[feedback_stage_before_prod]].
-- **Unblock:** After stage is confirmed healthy, cut prod over so the manifest change and the new image tag deploy in one ArgoCD sync. Kargo prod uses `promote-via-pr`, so the clean path is to add the `portfolio-api-prod-cutover` structural changes onto Kargo's auto-opened prod promotion PR (which bumps the image tag), then merge that single PR. Verify `nordbye.it/api/v1/*` and `POST /api/v1/echo` (401 without key, 200 with the Bearer key).
-- **Where:** branch `portfolio-api-prod-cutover` → `k8s/talos/apps/portfolio/{deployment,service,ciliumnetworkpolicy,kustomization,externalsecret}.yaml`; Kargo project `k8s/talos/infra/kargo-projects/portfolio.yaml`.
 
 ### Real stateful write endpoints
 - **What:** The write framework ships only a stateless example (`POST /api/v1/echo`). A useful write (e.g. a guestbook, or a "notify me" capture) needs a datastore.
