@@ -28,11 +28,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Portfolio modern — items deferred during initial build
 
-### Brotli precompression for nginx static assets — SUPERSEDED
-- **What:** Was: ship `.br` siblings and enable `brotli_static on;` in `nginx.conf`. The portfolio no longer uses nginx — it runs the distroless Node runtime, and compression is now handled at the Traefik edge (see "Response compression on the Node runtime — prod cutover"). Traefik negotiates brotli from `Accept-Encoding` at request time, so precompressed `.br` siblings are unnecessary.
-- **Action:** Delete this entry once the edge-compression prod cutover lands.
-- **Where:** obsolete — retired `portfolio/nginx/`.
-
 ### Docker build verification
 - **What:** Build and run `portfolio/Dockerfile` end-to-end (`docker build` then `docker run -p 8080:8080`) and confirm `/healthz`, security headers, and routing work as expected.
 - **Why deferred:** Local build was verified via `npm run build` + `npx serve out`; Docker layer not run during the rebuild session.
@@ -112,12 +107,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** The static key is simpler and sufficient to ship the framework; Authentik wiring only pays off once a real user-facing write exists.
 - **Unblock:** Add an Authentik provider + Traefik forward-auth middleware on the `/api/v1` POST paths, and relax `requireApiKey` to accept the forwarded identity.
 - **Where:** `portfolio/src/lib/api.ts`, `k8s/talos/apps/portfolio/httproute.yaml`, Authentik config.
-
-### Response compression on the Node runtime — prod cutover
-- **What:** Stage now compresses at the Traefik edge: a `compress` Middleware (`portfolio-stage-compress`) attached to the stage HTTPRoute via an `ExtensionRef` filter (PR #380). Prod (`nordbye.it`) still serves text assets uncompressed from the distroless Node runtime.
-- **Why deferred:** Stage-first per [[feedback_stage_before_prod]] — validate the encoding/size win on stage before touching warm prod.
-- **Unblock:** After confirming stage returns `content-encoding: br`/`gzip` and a real size drop on the largest JS bundle, mirror the change into the prod app: add an equivalent `compress` Middleware in the `portfolio` namespace and the `ExtensionRef` filter on the prod HTTPRoute.
-- **Where:** stage (done) `k8s/talos/apps/portfolio-stage/{compress-middleware,httproute}.yaml`; prod (pending) `k8s/talos/apps/portfolio/httproute.yaml`.
 
 ### Silence the Turbopack NFT over-trace on /api/v1/infra
 - **What:** `next build` warns that the `fs.readFile` in the infra route causes Node File Tracing to sweep the whole project into `.next/standalone` (locally this pulled in `latex/`, `out/`, CV markdown). The shipped Docker image is unaffected because the build stage only `COPY`s `src`/`public`/config, but the warning is noise and the local standalone is bloated.
