@@ -46,12 +46,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Push the branch, wait for ArgoCD sync, run Lighthouse against `portfolio-stage.local.bigd.no`.
 - **Where:** Run from `portfolio/` after deploy.
 
-### Cutover from old portfolio to new
-- **What:** Once the new site is approved on stage, promote it to prod (`workflow_dispatch` → `environment: prod`) and remove the old `portfolio/` tree + `.github/workflows/build-portfolio.yaml`.
-- **Why deferred:** User chose stage-first cutover. Old portfolio stays in the repo until promotion is approved.
-- **Unblock:** User reviews stage, then triggers the prod workflow_dispatch, then opens a cleanup PR.
-- **Where:** `portfolio/`, `.github/workflows/build-portfolio.yaml`, `k8s/talos/apps/portfolio*/deployment.yaml`.
-
 ### CI auto-rebuild of CV/résumé PDFs on content change
 - **What:** GitHub Action that runs `cd portfolio && make cv` (with TeX Live in CI) when `src/content/{site,resume,skills}.ts` changes, then commits the refreshed `public/{resume,cv}.pdf` back to the branch.
 - **Why deferred:** Manual `make cv` works fine for now; user can re-run locally and commit the PDFs. Adding CI = an extra ~3 GB Docker layer or a `xu-cheng/latex-action` step in the workflow.
@@ -89,12 +83,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
 
 ## Portfolio API
-
-### Prod cutover of the Next.js server + API
-- **What:** The stage app runs the new Next.js server + `/api/v1` (validated on `portfolio-stage`). Prod (`nordbye.it`) still runs the old nginx/static image. Prod's structural manifests (containerPort 3000, `/api/health` probes, `.next/cache` + `/tmp` volumes, status ConfigMap at `/config`, `PORTFOLIO_API_KEY` env, distroless uid 65532) plus `externalsecret.yaml` (Bitwarden UUID `575eaaa2-…f98f` already set) are held on branch `portfolio-api-prod-cutover`.
-- **Why deferred:** Prod is warm; ArgoCD applies manifest changes on merge, so a structural change landing while prod still runs the old image = immediate outage (the manifest and image must flip together). Stage-first per [[feedback_stage_before_prod]].
-- **Unblock:** After stage is confirmed healthy, cut prod over so the manifest change and the new image tag deploy in one ArgoCD sync. Kargo prod uses `promote-via-pr`, so the clean path is to add the `portfolio-api-prod-cutover` structural changes onto Kargo's auto-opened prod promotion PR (which bumps the image tag), then merge that single PR. Verify `nordbye.it/api/v1/*` and `POST /api/v1/echo` (401 without key, 200 with the Bearer key).
-- **Where:** branch `portfolio-api-prod-cutover` → `k8s/talos/apps/portfolio/{deployment,service,ciliumnetworkpolicy,kustomization,externalsecret}.yaml`; Kargo project `k8s/talos/infra/kargo-projects/portfolio.yaml`.
 
 ### Real stateful write endpoints
 - **What:** The write framework ships only a stateless example (`POST /api/v1/echo`). A useful write (e.g. a guestbook, or a "notify me" capture) needs a datastore.
