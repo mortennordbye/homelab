@@ -68,13 +68,18 @@ spec:
         targetBranch: main
         title: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
     # Blocks the promotion until the PR is merged in GitHub.
+    # prNumber must be null-safe: Kargo builds a step's config before evaluating
+    # its `if`, so on a no-op (open-pr skipped, no output) a bare
+    # task.outputs['open-pr'].pr.id throws "cannot fetch id from <nil>" and the
+    # guard never gets to skip the step. The `?? 0` fallback is never used at
+    # runtime because the `if` skips the step whenever open-pr was skipped.
     - uses: git-wait-for-pr
       as: wait-pr
       if: ${{ (task.outputs?.['commit']?.commit ?? '') != '' }}
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         provider: github
-        prNumber: ${{ task.outputs['open-pr'].pr.id }}
+        prNumber: ${{ task.outputs?.['open-pr']?.pr?.id ?? 0 }}
     - uses: argocd-update
       config:
         apps:
