@@ -12,14 +12,20 @@ spec:
   hostnames:
     - blog-stage.local.bigd.no
   rules:
-    - backendRefs:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: blog-stage-compress
+      backendRefs:
         - group: ""
           kind: Service
           name: keda-add-ons-http-interceptor-proxy
           namespace: keda
           port: 8080
           weight: 1
-      matches:
-        - path:
-            type: PathPrefix
-            value: /

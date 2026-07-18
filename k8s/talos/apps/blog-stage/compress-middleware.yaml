@@ -1,0 +1,30 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: blog-stage-compress
+  namespace: stage-blog
+spec:
+  # Edge compression for the Hugo/nginx blog. Traefik negotiates br/zstd/gzip
+  # from Accept-Encoding; encodings order wins over the client's q-values so
+  # brotli leads. includedContentTypes limits work to compressible text.
+  # NOTE: nginx.conf still has `gzip on;`, which compresses at the origin and
+  # would pin clients to gzip (Traefik won't re-encode). Brotli only takes over
+  # once nginx gzip is disabled in a follow-up image build.
+  compress:
+    encodings:
+      - br
+      - zstd
+      - gzip
+    minResponseBodyBytes: 1024
+    includedContentTypes:
+      - text/html
+      - text/css
+      - text/plain
+      - text/xml
+      - text/javascript
+      - application/javascript
+      - application/json
+      - application/xml
+      - application/rss+xml
+      - application/manifest+json
+      - image/svg+xml
