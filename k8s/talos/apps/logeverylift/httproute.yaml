@@ -9,10 +9,10 @@ spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: traefik-gateway-private
+      name: traefik-gateway-public
       namespace: traefik
   hostnames:
-    - "logeverylift.local.bigd.no"
+    - "logeverylift.com"
   rules:
     - matches:
         - path:
