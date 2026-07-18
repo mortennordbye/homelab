@@ -28,11 +28,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Portfolio modern — items deferred during initial build
 
-### Brotli precompression for nginx static assets
-- **What:** Ship `.br` siblings alongside the existing `.gz` files and enable `brotli_static on;` in `nginx.conf`. Typical 15-25% smaller transfer than gzip on JS/CSS/HTML.
-- **Why deferred:** The `nginxinc/nginx-unprivileged:*-alpine` image ships a custom nginx build whose ABI doesn't match Alpine's apk `nginx-mod-http-brotli` package — the module loads but reports `not binary compatible` at startup. Switching back to plain `nginx:alpine` to apk-install a matching module would lose the unprivileged-runtime fix we just added.
-- **Unblock:** Either (a) compile the brotli module from source in a build stage matched to the nginxinc nginx version, or (b) switch to a maintained brotli-bundled image (e.g. `fholzer/nginx-brotli`) and re-verify unprivileged operation. The `brotli` CLI invocation in the build stage is one extra `find … -exec brotli -q 11 -k {} \;` next to the existing gzip line.
-- **Where:** `portfolio/Dockerfile` (final stage), `portfolio/nginx/nginx.conf` (`load_module`, `brotli_static on`).
+### Brotli precompression for nginx static assets — SUPERSEDED
+- **What:** Was: ship `.br` siblings and enable `brotli_static on;` in `nginx.conf`. The portfolio no longer uses nginx — it runs the distroless Node runtime, and compression is now handled at the Traefik edge (see "Response compression on the Node runtime — prod cutover"). Traefik negotiates brotli from `Accept-Encoding` at request time, so precompressed `.br` siblings are unnecessary.
+- **Action:** Delete this entry once the edge-compression prod cutover lands.
+- **Where:** obsolete — retired `portfolio/nginx/`.
 
 ### Docker build verification
 - **What:** Build and run `portfolio/Dockerfile` end-to-end (`docker build` then `docker run -p 8080:8080`) and confirm `/healthz`, security headers, and routing work as expected.
@@ -114,11 +113,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Add an Authentik provider + Traefik forward-auth middleware on the `/api/v1` POST paths, and relax `requireApiKey` to accept the forwarded identity.
 - **Where:** `portfolio/src/lib/api.ts`, `k8s/talos/apps/portfolio/httproute.yaml`, Authentik config.
 
-### Response compression on the Node runtime
-- **What:** The old nginx stage did `gzip_static`/`gzip`. The distroless Node server serves uncompressed; text assets are larger over the wire.
-- **Why deferred:** Correctness-neutral; the site works, just heavier. Compression belongs at the edge, not baked into the app.
-- **Unblock:** Add a Traefik `compress` middleware on the portfolio HTTPRoute (or a gateway-wide default). Measure before/after on the largest JS/CSS.
-- **Where:** `k8s/talos/apps/portfolio/httproute.yaml` (Traefik middleware), `k8s/talos/infra/traefik/`.
+### Response compression on the Node runtime — prod cutover
+- **What:** Stage now compresses at the Traefik edge: a `compress` Middleware (`portfolio-stage-compress`) attached to the stage HTTPRoute via an `ExtensionRef` filter (PR #380). Prod (`nordbye.it`) still serves text assets uncompressed from the distroless Node runtime.
+- **Why deferred:** Stage-first per [[feedback_stage_before_prod]] — validate the encoding/size win on stage before touching warm prod.
+- **Unblock:** After confirming stage returns `content-encoding: br`/`gzip` and a real size drop on the largest JS bundle, mirror the change into the prod app: add an equivalent `compress` Middleware in the `portfolio` namespace and the `ExtensionRef` filter on the prod HTTPRoute.
+- **Where:** stage (done) `k8s/talos/apps/portfolio-stage/{compress-middleware,httproute}.yaml`; prod (pending) `k8s/talos/apps/portfolio/httproute.yaml`.
 
 ### Silence the Turbopack NFT over-trace on /api/v1/infra
 - **What:** `next build` warns that the `fs.readFile` in the infra route causes Node File Tracing to sweep the whole project into `.next/standalone` (locally this pulled in `latex/`, `out/`, CV markdown). The shipped Docker image is unaffected because the build stage only `COPY`s `src`/`public`/config, but the warning is noise and the local standalone is bloated.
