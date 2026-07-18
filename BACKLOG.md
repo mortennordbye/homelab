@@ -125,6 +125,14 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Scope the read (constant path, or `outputFileTracingRoot`/`outputFileTracingExcludes` in `next.config.ts`) until the warning clears without pulling in extra files.
 - **Where:** `portfolio/src/app/api/v1/infra/route.ts`, `portfolio/next.config.ts`.
 
+## Kargo
+
+### git-push not skipped on no-op prod promotion (orphan branches)
+- **What:** In the `promote-via-pr` ClusterPromotionTask, `git-push` carries the same `if: (task.outputs?.['commit']?.commit ?? '') != ''` guard as `git-commit` and `git-open-pr`, but on a no-op promotion (target image already live) `git-commit`/`git-open-pr` are correctly Skipped while `git-push` runs anyway (status Succeeded) and creates a `kargo/promotion/prod.*` branch via `generateTargetBranch: true`. Each no-op retry leaves another orphan branch (~10 accumulated as of 2026-07-18). Harmless but messy; the fatal no-op error was fixed separately by null-safing `wait-pr`'s `prNumber` (PR #385).
+- **Why deferred:** Cosmetic — promotions succeed once #385 lands. Root cause is unclear: `git-push` isn't honoring `if` the way sibling steps do (possible Kargo v1.10.9 quirk), so it needs reproduction/upstream check rather than a blind config tweak.
+- **Unblock:** Repro on a no-op promotion and confirm whether `git-push` ignores `if` or the guard evaluates differently for it; check Kargo issues for the pinned version. Interim option: drop `generateTargetBranch` in favour of a deterministic branch name so retries reuse one branch instead of spawning new ones. Then delete the accumulated `origin/kargo/promotion/prod.*` branches.
+- **Where:** `k8s/talos/infra/kargo-projects/clusterpromotiontask-pr.yaml` (`git-push` step).
+
 ## Cluster / infra
 
 ### Extend Loki PVC after kube-events validated
