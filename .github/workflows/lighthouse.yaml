@@ -25,13 +25,7 @@ concurrency:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        url:
-          - https://nordbye.it/
-          - https://blog.nordbye.it/
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +33,9 @@ jobs:
         id: lighthouse
         uses: treosh/lighthouse-ci-action@v12
         with:
-          urls: ${{ matrix.url }}
+          urls: |
+            https://nordbye.it/
+            https://blog.nordbye.it/
           configPath: ./.github/lighthouse/lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
@@ -93,11 +89,10 @@ jobs:
               f.write("\n".join(out) + "\n")
           PY
 
-      # Publish nordbye.it's scores as JSON for the profile README's Lighthouse
-      # card. Only the nordbye.it matrix job publishes, so there is a single
-      # writer to the data branch (no push race).
+      # Publish both sites' scores as JSON for the profile README's Lighthouse
+      # card. Single job, so one writer to the data branch (no push race).
       - name: Build scores JSON
-        if: ${{ always() && matrix.url == 'https://nordbye.it/' }}
+        if: always()
         env:
           RESULTS_PATH: ${{ steps.lighthouse.outputs.resultsPath }}
         run: |
@@ -106,28 +101,35 @@ jobs:
           from collections import defaultdict
 
           results = os.environ.get("RESULTS_PATH", "")
-          cat = defaultdict(list)
+          scores = defaultdict(lambda: defaultdict(list))
           for f in glob.glob(os.path.join(results, "lhr-*.json")):
               try:
                   d = json.load(open(f))
               except (OSError, ValueError):
                   continue
+              url = d.get("finalDisplayedUrl") or d.get("finalUrl") or d.get("requestedUrl")
               for k, c in d.get("categories", {}).items():
                   if isinstance(c.get("score"), (int, float)):
-                      cat[k].append(c["score"])
+                      scores[url][k].append(c["score"])
 
-          def med(k):
-              v = cat.get(k)
+          def med(url, k):
+              v = scores[url].get(k)
               return round(statistics.median(v) * 100) if v else None
 
+          order = ["https://nordbye.it/", "https://blog.nordbye.it/"]
+          urls = order + [u for u in scores if u not in order]
+          sites = [{
+              "url": u,
+              "performance": med(u, "performance"),
+              "accessibility": med(u, "accessibility"),
+              "bestPractices": med(u, "best-practices"),
+              "seo": med(u, "seo"),
+          } for u in urls if u in scores]
+
           out = {
-              "url": "https://nordbye.it/",
-              "performance": med("performance"),
-              "accessibility": med("accessibility"),
-              "bestPractices": med("best-practices"),
-              "seo": med("seo"),
               "generatedAt": datetime.datetime.now(datetime.timezone.utc)
                   .replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+              "sites": sites,
           }
           os.makedirs("dist", exist_ok=True)
           with open("dist/lighthouse.json", "w") as f:
@@ -136,7 +138,7 @@ jobs:
           PY
 
       - name: Publish to lighthouse-data branch
-        if: ${{ always() && matrix.url == 'https://nordbye.it/' && hashFiles('dist/lighthouse.json') != '' }}
+        if: ${{ always() && hashFiles('dist/lighthouse.json') != '' }}
         uses: crazy-max/ghaction-github-pages@v4
         with:
           target_branch: lighthouse-data
