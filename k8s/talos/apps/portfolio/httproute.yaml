@@ -13,13 +13,19 @@ spec:
     - nordbye.it
     - www.nordbye.it
   rules:
-    - backendRefs:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: portfolio-compress
+      backendRefs:
         - group: ""
           kind: Service
           name: nordbye-service
           port: 8080
           weight: 1
-      matches:
-        - path:
-            type: PathPrefix
-            value: /
