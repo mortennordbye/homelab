@@ -28,18 +28,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Portfolio modern — items deferred during initial build
 
-### Docker build verification
-- **What:** Build and run `portfolio/Dockerfile` end-to-end (`docker build` then `docker run -p 8080:8080`) and confirm `/healthz`, security headers, and routing work as expected.
-- **Why deferred:** Local build was verified via `npm run build` + `npx serve out`; Docker layer not run during the rebuild session.
-- **Unblock:** `cd portfolio && docker build -t portfolio:dev .` then exercise the routes.
-- **Where:** `portfolio/Dockerfile`, `portfolio/nginx/`.
-
-### OG / social-card images
-- **What:** Add `app/opengraph-image.tsx` (root) and `app/work/[slug]/opengraph-image.tsx` so links to the site render rich previews.
-- **Why deferred:** Out of scope for the initial cut — site is functional without it; first-time deploys pull a default OG.
-- **Unblock:** Decide whether to use Next's `ImageResponse` (works under static export) or a build-time script with `@vercel/og`.
-- **Where:** `portfolio/src/app/`.
-
 ### Lighthouse / axe verification on the live stage URL
 - **What:** Run Lighthouse mobile + `@axe-core/cli` against the deployed `portfolio-stage` URL and act on findings (target ≥95 perf / 100 a11y / 100 SEO).
 - **Why deferred:** Site has not yet been deployed to stage — first push to `portfolio/**` will trigger CI and deploy.
