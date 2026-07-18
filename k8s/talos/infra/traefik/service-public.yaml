@@ -18,6 +18,11 @@ spec:
       port: 443
       targetPort: 8443
       protocol: TCP
+    # QUIC / HTTP/3 for the websecure entrypoint (same VIP + port, UDP).
+    - name: websecure-h3
+      port: 443
+      targetPort: 8443
+      protocol: UDP
     - name: plex
       port: 32400
       targetPort: 32400

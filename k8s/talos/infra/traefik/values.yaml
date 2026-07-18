@@ -68,6 +68,13 @@ ports:
     port: 8443
     exposedPort: 443
     protocol: TCP
+    # HTTP/3 (QUIC) on the public HTTPS entrypoint. Traefik also listens UDP on
+    # this port and advertises Alt-Svc: h3=":443" so browsers upgrade. Serving
+    # over UDP/443 additionally needs the port on the public Service and the
+    # CiliumNetworkPolicy (both below), plus a UDP/443 forward on the router.
+    # TCP stays the fallback, so clients that can't reach H3 use HTTP/2.
+    http3:
+      enabled: true
     expose:
       default: true
   web-private:
