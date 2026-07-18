@@ -9,6 +9,13 @@ spec:
   # includedContentTypes limits work to compressible text so already-compressed
   # images and woff2 fonts aren't re-compressed for no gain.
   compress:
+    # Traefik selects by this order, not the client's q-values. Browsers send
+    # "gzip, deflate, br, zstd"; without this it defaults to gzip. Brotli is the
+    # smallest for our HTML/JS and universally supported, so it leads.
+    encodings:
+      - br
+      - zstd
+      - gzip
     minResponseBodyBytes: 1024
     includedContentTypes:
       - text/html
