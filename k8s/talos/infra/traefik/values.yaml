@@ -75,6 +75,11 @@ ports:
     # TCP stays the fallback, so clients that can't reach H3 use HTTP/2.
     http3:
       enabled: true
+      # Advertise h3 on the exposed port (443), not Traefik's internal 8443.
+      # The Service maps 443 -> 8443, so browsers must be told to reach h3 on
+      # 443; without this Traefik advertises alt-svc h3=":8443", which isn't
+      # exposed externally and h3 silently fails.
+      advertisedPort: 443
     expose:
       default: true
   web-private:
