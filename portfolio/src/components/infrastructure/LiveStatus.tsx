@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { statusSnapshot } from "@/content/infrastructure";
 
-/** Shape published to /status.json by the in-cluster CronJob. */
+/** Shape served by /api/v1/infra (the in-cluster CronJob's ConfigMap). */
 type ClusterStatus = {
   generatedAt: string;
   build: string;
@@ -121,12 +121,15 @@ export function LiveStatus() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/status.json", { cache: "no-store" })
+    fetch("/api/v1/infra", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))))
-      .then((data: ClusterStatus) => {
+      .then((data: ClusterStatus & { source?: string }) => {
         if (cancelled) return;
         setStatus(data);
-        setFeed("live");
+        // /api/v1/infra always answers 200; it flags the build-time fallback
+        // with source:"snapshot" (and carries no generatedAt) so the pill
+        // stays honest when the live feed is unavailable.
+        setFeed(data.source === "snapshot" || !data.generatedAt ? "snapshot" : "live");
       })
       .catch(() => {
         if (!cancelled) setFeed("snapshot");

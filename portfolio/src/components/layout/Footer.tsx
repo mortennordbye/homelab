@@ -15,8 +15,8 @@ export function Footer() {
             Built and shipped from a six-node Talos cluster in Oslo.
           </h2>
           <p className="mt-4 max-w-md text-fg-2">
-            Next.js, Tailwind, served by hardened nginx in Kubernetes.
-            Reconciled by ArgoCD.{" "}
+            Next.js and Tailwind, running as a hardened Node server in
+            Kubernetes. Reconciled by ArgoCD.{" "}
             <Link
               href="/infrastructure"
               className="focus-ring text-fg underline decoration-accent decoration-2 underline-offset-4 hover:text-accent"

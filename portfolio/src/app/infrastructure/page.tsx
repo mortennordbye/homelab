@@ -103,35 +103,36 @@ export default function InfrastructurePage() {
 
       <Section
         eyebrow="how the numbers get here"
-        heading="A static site with a live pulse."
+        heading="A live pulse, no cluster keys in the open."
         className="border-t border-line"
       >
         <div className="grid gap-10 md:grid-cols-2 md:gap-12">
           <div className="space-y-4 text-fg-2 leading-relaxed">
             <p>
-              This site is a static export served by nginx. There is no
-              server-side code to query the cluster. Instead, a small CronJob
-              inside the cluster gathers the facts every few minutes, from the
-              Kubernetes API, ArgoCD, and cert-manager, and publishes a single{" "}
+              This site runs as a Next.js server, but the pod serving it still
+              has no access to the Kubernetes API. A small CronJob inside the
+              cluster gathers the facts every few minutes, from the Kubernetes
+              API, ArgoCD, and cert-manager, and writes them to a ConfigMap. The
+              API reads that ConfigMap and serves it at{" "}
               <code className="rounded border border-line bg-surface px-1.5 py-0.5 font-mono text-[0.82em] text-fg">
-                status.json
-              </code>{" "}
-              through the same gateway.
+                /api/v1/infra
+              </code>
+              .
             </p>
             <p>
-              The page fetches it client-side. If the fetch fails, the tiles
-              fall back to a build-time snapshot and say so. The page never
-              breaks because the homelab is having a bad day.
+              The page fetches that endpoint client-side. If the fetch fails,
+              the tiles fall back to a build-time snapshot and say so. The page
+              never breaks because the homelab is having a bad day.
             </p>
             <div className="space-y-4 border-t border-line pt-5 text-sm">
               <p className="eyebrow text-[0.65rem]">design decisions</p>
               <p>
-                The pod serving this page has no Kubernetes API access. A
-                status API would be fresher, but it would put cluster
-                credentials behind a public endpoint for data that changes
-                every few minutes at most. The publisher&apos;s RBAC reads the
-                objects it reports on, pinned to resource names where the API
-                allows it, and writes one ConfigMap.
+                Serving a status endpoint doesn&apos;t mean handing it cluster
+                credentials. The web pod only reads a ConfigMap the publisher
+                writes; it holds no Kubernetes API access of its own. The
+                publisher&apos;s RBAC reads the objects it reports on, pinned to
+                resource names where the API allows it, and writes one
+                ConfigMap.
               </p>
               <p>
                 The pill checks the timestamp too. Data older than 15 minutes
@@ -141,7 +142,7 @@ export default function InfrastructurePage() {
           </div>
           <Reveal className="overflow-hidden rounded-lg border border-line bg-bg-2">
             <div className="flex items-center justify-between border-b border-line px-4 py-2.5 font-mono text-xs">
-              <span className="text-fg-2">GET /status.json</span>
+              <span className="text-fg-2">GET /api/v1/infra</span>
               <span className="text-fg-3">refreshed every 5 min</span>
             </div>
             <pre className="overflow-x-auto p-4 font-mono text-[0.78rem] leading-relaxed text-fg-3">

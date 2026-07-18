@@ -42,9 +42,9 @@ jobs:
         working-directory: portfolio
         run: npm run typecheck
 
-      # Static export catches broken MDX content, bad imports and route
-      # errors that lint/typecheck miss. The deploy workflow rebuilds inside
-      # Docker; this run is the pre-merge gate.
-      - name: Build (static export)
+      # The production build catches broken MDX content, bad imports, route
+      # errors and API-route type failures that lint/typecheck miss. The deploy
+      # workflow rebuilds inside Docker; this run is the pre-merge gate.
+      - name: Build
         working-directory: portfolio
         run: npm run build

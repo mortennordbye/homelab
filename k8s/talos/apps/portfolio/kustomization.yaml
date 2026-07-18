@@ -11,6 +11,7 @@ resources:
 - ciliumnetworkpolicy.yaml
 - scaledobject.yaml
 - status-publisher.yaml
+- externalsecret.yaml
 # Image tag is owned by Kargo (kargo-projects Warehouse/Stage), which rewrites
 # newTag via the kustomize-set-image promotion step. Overrides the inline tag in
 # deployment.yaml.

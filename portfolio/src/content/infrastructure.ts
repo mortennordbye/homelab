@@ -54,7 +54,7 @@ export const requestPath: readonly PipelineHop[] = [
   {
     icon: "package",
     name: "portfolio pod",
-    desc: "Hardened nginx serving the static export",
+    desc: "Hardened Node runtime serving the Next.js app",
     meta: "read-only rootfs",
   },
 ];

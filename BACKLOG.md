@@ -94,6 +94,38 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Wait for an `eslint-config-next` release built on `typescript-eslint@9` (supports ESLint 10 + TS 6). Then bump both, run a containerised `tsc --noEmit` and `next build`, and clear any new `strict`-mode diagnostics TS 6 surfaces.
 - **Where:** `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
 
+## Portfolio API
+
+### Create the Bitwarden item for PORTFOLIO_API_KEY
+- **What:** The `portfolio-api` ExternalSecret references a Bitwarden Secrets Manager item by a placeholder UUID. Until a real item exists and the UUID is filled in, `PORTFOLIO_API_KEY` never syncs, so every write endpoint returns 401 (reads are unaffected).
+- **Why deferred:** The secret value/item is owned by the operator, not committed. The Deployment's `secretKeyRef` is `optional: true` so pods run and reads serve regardless.
+- **Unblock:** Generate a key (`openssl rand -base64 48`), store it as a Bitwarden Secrets Manager item, and replace `REPLACE-WITH-BITWARDEN-ITEM-UUID` with the item UUID. Confirm ESO creates the `portfolio-api` secret and a `POST /api/v1/echo` with the Bearer key returns 200.
+- **Where:** `k8s/talos/apps/portfolio/externalsecret.yaml`.
+
+### Real stateful write endpoints
+- **What:** The write framework ships only a stateless example (`POST /api/v1/echo`). A useful write (e.g. a guestbook, or a "notify me" capture) needs a datastore.
+- **Why deferred:** Scope was the read API + a proven auth seam. Persistence is a separate design (schema, storage, retention, abuse handling).
+- **Unblock:** Pick a store (SQLite on a PVC for a single-writer app, or the existing CNPG Postgres), add a route under `src/app/api/v1/` guarded by `requireApiKey`, and wire storage + any needed CiliumNetworkPolicy egress.
+- **Where:** `portfolio/src/app/api/v1/`, `portfolio/src/lib/api.ts`.
+
+### Authentik forward-auth option for writes
+- **What:** Writes currently authenticate with a static API key. For SSO-consistent, per-user writes, route the write paths through Authentik (Traefik forward-auth / OIDC) instead.
+- **Why deferred:** The static key is simpler and sufficient to ship the framework; Authentik wiring only pays off once a real user-facing write exists.
+- **Unblock:** Add an Authentik provider + Traefik forward-auth middleware on the `/api/v1` POST paths, and relax `requireApiKey` to accept the forwarded identity.
+- **Where:** `portfolio/src/lib/api.ts`, `k8s/talos/apps/portfolio/httproute.yaml`, Authentik config.
+
+### Response compression on the Node runtime
+- **What:** The old nginx stage did `gzip_static`/`gzip`. The distroless Node server serves uncompressed; text assets are larger over the wire.
+- **Why deferred:** Correctness-neutral; the site works, just heavier. Compression belongs at the edge, not baked into the app.
+- **Unblock:** Add a Traefik `compress` middleware on the portfolio HTTPRoute (or a gateway-wide default). Measure before/after on the largest JS/CSS.
+- **Where:** `k8s/talos/apps/portfolio/httproute.yaml` (Traefik middleware), `k8s/talos/infra/traefik/`.
+
+### Silence the Turbopack NFT over-trace on /api/v1/infra
+- **What:** `next build` warns that the `fs.readFile` in the infra route causes Node File Tracing to sweep the whole project into `.next/standalone` (locally this pulled in `latex/`, `out/`, CV markdown). The shipped Docker image is unaffected because the build stage only `COPY`s `src`/`public`/config, but the warning is noise and the local standalone is bloated.
+- **Why deferred:** Cosmetic; build is green and the runtime image is lean.
+- **Unblock:** Scope the read (constant path, or `outputFileTracingRoot`/`outputFileTracingExcludes` in `next.config.ts`) until the warning clears without pulling in extra files.
+- **Where:** `portfolio/src/app/api/v1/infra/route.ts`, `portfolio/next.config.ts`.
+
 ## Cluster / infra
 
 ### Extend Loki PVC after kube-events validated
