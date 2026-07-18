@@ -5,30 +5,39 @@
 #
 # These files hold real secrets and unversioned work (kubeconfigs, tfvars,
 # drafts, …). They're deliberately git-ignored, so a lost laptop loses them.
-# This bundles the files listed in the repo's manifest into a timestamped .zip,
-# copies it to an SMB share on the NAS (one subfolder per repo), keeps the
+# This bundles the files listed in the repo's backup sources into a timestamped
+# .zip, copies it to an SMB share on the NAS (one subfolder per repo), keeps the
 # newest $KEEP snapshots, and unmounts the share. Plain zip — Synology File
 # Station browses it inline, unlike a .tar.gz.
 #
-# Only file PATHS live in the repo (the manifest) — never their contents.
+# Two backup sources are read and merged (either may be absent): a block between
+# the "# backup:start" / "# backup:end" markers in the repo's .gitignore, and a
+# standalone .backup-manifest. Duplicate paths across the two are collapsed.
+#
+# Only file PATHS live in the repo (both sources) — never their contents.
 #
 # Requires: macOS (mount_smbfs, diskutil), git, and zip/unzip (built in).
 #
 # Reuse in another repo:
 #   1. Copy this script into the repo (e.g. scripts/).
-#   2. Create a .backup-manifest in the repo root listing the files to back up.
+#   2. List the files to back up in either place (or both): a
+#      "# backup:start" / "# backup:end" block in .gitignore, or a
+#      .backup-manifest in the repo root.
 #   3. Run it. The archive and NAS subfolder are named after the repo folder.
 #
 # Usage:
 #   scripts/backup-secrets.sh            # snapshot + copy to the NAS
-#   scripts/backup-secrets.sh --list     # print the manifest and exit
+#   scripts/backup-secrets.sh --list     # print the backup list and exit
 #   scripts/backup-secrets.sh --dry-run  # build the zip in $TMPDIR, skip upload
 #   scripts/backup-secrets.sh --help     # show usage
 #
-# Manifest (.backup-manifest, repo-relative paths, one per line):
-#   # comments and blank lines are ignored
-#   path/to/secret.file
-#   some/dir/*.tfvars            # globs allowed (no spaces in paths)
+# Backup sources (repo-relative paths, one per line; # comments and blank lines
+# ignored; globs allowed, no spaces in paths). Both are read and merged:
+#   - a marker block in .gitignore, so a listed path is git-ignored AND backed up:
+#       # backup:start
+#       path/to/secret.file
+#       # backup:end
+#   - a standalone .backup-manifest listing paths the same way.
 #
 # Config (override via env):
 #   NAS_HOST         NAS hostname             (default nas.local.bigd.no)
@@ -36,6 +45,7 @@
 #   NAS_BACKUP_ROOT  parent dir on the share  (default documents/IT/Repo-Hidden-Files-Backups)
 #   NAS_DIR          already-mounted share root; skip mounting
 #   MANIFEST_FILE    manifest path            (default <repo-root>/.backup-manifest)
+#   GITIGNORE_FILE   file holding the block   (default <repo-root>/.gitignore)
 #   KEEP             snapshots to retain      (0 = keep all, default 14)
 #
 # Auth: always prompts for the SMB username and password (mount_smbfs asks for
@@ -54,6 +64,10 @@ NAS_BACKUP_ROOT="${NAS_BACKUP_ROOT:-documents/IT/Repo-Hidden-Files-Backups}"
 NAS_DIR="${NAS_DIR:-}"
 KEEP="${KEEP:-14}"
 
+# Lines between these two markers in .gitignore are treated as backup paths.
+BACKUP_BEGIN='# backup:start'
+BACKUP_END='# backup:end'
+
 log()  { printf '\033[0;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[0;33m[skip]\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[0;31m[err]\033[0m %s\n' "$*" >&2; exit 1; }
@@ -62,15 +76,15 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") [--list | --dry-run | --help]
 
-Snapshot this repo's git-ignored files (listed in .backup-manifest) into a
-timestamped .zip and copy it to the NAS over SMB.
+Snapshot this repo's git-ignored files (from a .gitignore backup block and/or
+.backup-manifest) into a timestamped .zip and copy it to the NAS over SMB.
 
   (no args)    snapshot + copy to the NAS
-  --list       print the manifest and exit
+  --list       print the backup list and exit
   --dry-run    build the zip in \$TMPDIR, skip the upload
   --help       show this help
 
-Manifest format and env-var config are documented at the top of this script.
+Backup-source format and env-var config are documented at the top of this script.
 EOF
 }
 
@@ -89,27 +103,50 @@ REPO_ROOT="$(git rev-parse --show-toplevel)" || die "not inside the git repo"
 cd "$REPO_ROOT"
 REPO="$(basename "$REPO_ROOT")"
 MANIFEST_FILE="${MANIFEST_FILE:-$REPO_ROOT/.backup-manifest}"
+GITIGNORE_FILE="${GITIGNORE_FILE:-$REPO_ROOT/.gitignore}"
 NAS_SUBDIR="$NAS_BACKUP_ROOT/$REPO"
 
-[[ -f "$MANIFEST_FILE" ]] \
-  || die "no manifest at $MANIFEST_FILE — create one (one repo-relative path or glob per line; # for comments)"
+[[ -f "$MANIFEST_FILE" || -f "$GITIGNORE_FILE" ]] \
+  || die "no backup source — add a '$BACKUP_BEGIN' block to .gitignore or a .backup-manifest at the repo root"
 
-# Load the manifest: present[] = files that exist, missing[] = listed but absent.
+# Emit candidate paths from both sources: the marker block in .gitignore, then
+# the standalone .backup-manifest. Either file may be absent.
+collect_patterns() {
+  if [[ -f "$GITIGNORE_FILE" ]]; then
+    awk -v b="$BACKUP_BEGIN" -v e="$BACKUP_END" \
+      '$0==b {f=1; next} $0==e {f=0} f' "$GITIGNORE_FILE"
+  fi
+  [[ -f "$MANIFEST_FILE" ]] && cat "$MANIFEST_FILE"
+}
+
+# Merge both sources: present[] = files that exist, missing[] = listed but
+# absent. Paths appearing in both sources are collapsed to one entry. Dedup uses
+# space-delimited string sets (bash 3.2 has no associative arrays); safe because
+# backup paths may not contain spaces.
 present=()
 missing=()
+seen_present=" "
+seen_missing=" "
 while IFS= read -r raw || [[ -n "$raw" ]]; do
   line="${raw#"${raw%%[![:space:]]*}"}"   # trim leading whitespace
   line="${line%"${line##*[![:space:]]}"}" # trim trailing whitespace
   [[ -z "$line" || "$line" == '#'* ]] && continue
   if matches="$(compgen -G "$line" 2>/dev/null)"; then
-    while IFS= read -r m; do [[ -f "$m" ]] && present+=("$m"); done <<< "$matches"
+    while IFS= read -r m; do
+      [[ -f "$m" ]] || continue
+      [[ "$seen_present" == *" $m "* ]] && continue
+      seen_present+="$m "
+      present+=("$m")
+    done <<< "$matches"
   else
+    [[ "$seen_missing" == *" $line "* ]] && continue
+    seen_missing+="$line "
     missing+=("$line")
   fi
-done < "$MANIFEST_FILE"
+done < <(collect_patterns)
 
 if [[ "$MODE" == list ]]; then
-  log "Manifest: $MANIFEST_FILE"
+  log "Backup list (.gitignore block + .backup-manifest):"
   if (( ${#present[@]} )); then for f in "${present[@]}"; do printf '  \033[0;32m•\033[0m %s\n' "$f"; done; fi
   if (( ${#missing[@]} )); then for f in "${missing[@]}"; do printf '  \033[0;31m✗\033[0m %s (missing)\n' "$f"; done; fi
   exit 0

@@ -86,6 +86,14 @@ qbittorrent-vpn/
 .claude/settings.local.json
 
 # ──────────────────────────────────────────────────────────────
+# Backup block — paths between the markers are git-ignored AND snapshotted to
+# the NAS by scripts/backup-secrets.sh (merged with .backup-manifest). Add a
+# path here to have it ignored and backed up in one line.
+# ──────────────────────────────────────────────────────────────
+# backup:start
+# backup:end
+
+# ──────────────────────────────────────────────────────────────
 # Logs, temp files, archives
 # ──────────────────────────────────────────────────────────────
 logs/
