@@ -139,6 +139,22 @@ config:
             icon: mdi-head-cog
             href: https://headroom.local.bigd.no
             description: Self-hosted Headroom instance
+        - Mealie:
+            icon: mealie.png
+            href: https://mealie.bigd.no
+            description: Recipe manager and meal planner
+        - LogEveryLift (Local):
+            icon: mdi-dumbbell
+            href: https://logeverylift.local.bigd.no
+            description: Workout logger (local build)
+        - Verksted:
+            icon: mdi-wrench
+            href: https://verksted.local.bigd.no
+            description: Workshop app
+        - BigD:
+            icon: mdi-web
+            href: https://bigd.no
+            description: bigd.no landing page
 
     - Media Management:
         - Radarr:
@@ -196,6 +212,22 @@ config:
             icon: flaresolverr.png
             href: https://flaresolverr.local.bigd.no
             description: Cloudflare bypass
+        - Readarr:
+            icon: readarr.png
+            href: https://readarr.local.bigd.no
+            description: Book and audiobook management
+        - Tdarr:
+            icon: mdi-transcode
+            href: https://tdarr.local.bigd.no
+            description: Transcode automation
+        - Cleanuparr:
+            icon: mdi-broom
+            href: https://cleanuparr.local.bigd.no
+            description: Download queue cleanup
+        - Huntarr:
+            icon: mdi-magnify
+            href: https://huntarr.local.bigd.no
+            description: Missing and upgrade hunter
 
     - Infrastructure:
         - Proxmox Hyper1:
@@ -234,6 +266,10 @@ config:
             icon: https://raw.githubusercontent.com/akuity/kargo/main/ui/public/kargo-logo.png
             href: https://kargo.local.bigd.no
             description: GitOps promotion (portfolio stage to prod)
+        - Authentik:
+            icon: authentik.png
+            href: https://auth.local.bigd.no
+            description: SSO and identity provider
 
     - Torrent Sites:
         - IPTorrents:

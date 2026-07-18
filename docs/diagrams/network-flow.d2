@@ -66,6 +66,7 @@ ops: GitOps & Config {
   eso: External Secrets
   reloader: Reloader
   keda: KEDA {shape: image; icon: ${di}/keda.svg}
+  rollouts: "Argo Rollouts" {shape: image; icon: ${di}/argo-cd.svg}
 }
 
 # ───────────── Public sites ─────────────
@@ -84,6 +85,10 @@ sites: Public Sites {
   ittools: IT-Tools {shape: image; icon: ${di}/it-tools.svg}
   omnitools: Omni-Tools
   headroom: "Headroom\n(personal finance app)"
+  mealie: Mealie {shape: image; icon: ${di}/mealie.svg}
+  logeverylift: "LogEveryLift (local)" {shape: image; icon: ${di}/nextjs.svg; style.opacity: 0.7}
+  verksted: "Verksted\n(workshop)"
+  bigd: "bigd.no" {shape: image; icon: ${di}/nginx.svg}
 }
 
 # ───────────── Media stack ─────────────
@@ -123,6 +128,7 @@ obs: Observability {
   tempo: Tempo {shape: image; icon: ${di}/tempo.svg}
   grafana: Grafana {shape: image; icon: ${di}/grafana.svg}
   metrics: metrics-server {shape: image; icon: ${di}/kubernetes.svg}
+  otel: "OTel Collector"
 }
 
 # ───────────── Security ─────────────
@@ -206,6 +212,7 @@ ops.argocd -> sites: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> media: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> net: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ops.argocd -> obs: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
+ops.rollouts -> sites: canary / blue-green {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 
 # ── Autoscaling (indigo) ──
 # Cron scaling: portfolio & blog 1↔3 off-hours, headroom 0↔1 overnight.
@@ -257,7 +264,8 @@ ops.argocd -> ai: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ai -> store.nfscsi: models + data {style: {stroke: "#d97706"}}
 
 # ── Observability (teal) ──
-net.traefik -> obs.tempo: OTLP traces {style: {stroke: "#0d9488"}}
+net.traefik -> obs.otel: OTLP traces {style: {stroke: "#0d9488"}}
+obs.otel -> obs.tempo: export {style: {stroke: "#0d9488"; stroke-dash: 2}}
 obs.prometheus -> net.traefik: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
 obs.prometheus -> sec.falco: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
 obs.prometheus -> obs.loki: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
