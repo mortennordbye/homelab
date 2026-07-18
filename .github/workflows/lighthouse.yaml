@@ -1,0 +1,42 @@
+name: Lighthouse
+
+# Audits the live public sites with Lighthouse on real GitHub runners (not the
+# qemu-emulated local runs, which throttle CPU and inflate perf metrics).
+# Median of 3 runs per URL. Assertions gate the trustworthy categories (SEO,
+# accessibility, best-practices) and treat performance as a warning, since it
+# varies run-to-run and the 3D globe keeps it borderline. Reports upload to
+# Lighthouse CI's temporary public storage — the run log links each one.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays 06:00 UTC.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        url:
+          - https://nordbye.it/
+          - https://blog.nordbye.it/
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: ${{ matrix.url }}
+          configPath: ./.github/lighthouse/lighthouserc.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
