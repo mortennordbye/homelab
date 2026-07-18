@@ -41,41 +41,40 @@ spec:
       config:
         path: ./repo
         message: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
-    # Steps inside a task reference each other via task.outputs['<alias>'] (plain
-    # outputs.* does not resolve; the task's runtime step alias is not known at
-    # definition time).
+    # No-op promotions (image tag unchanged, e.g. Kargo re-promoting a fresh
+    # Freight for the already-live version) are gated with the `status('<alias>')`
+    # function, the Kargo-canonical way to branch on a skipped step. git-commit
+    # auto-skips when there is nothing to commit, so status('commit') == 'Skipped'
+    # is the no-op signal. Guarding git-push on it makes push actually skip on a
+    # no-op (so no orphan kargo/promotion branch is created), and open-pr/wait-pr
+    # skip in turn. argocd-update/wait stay unguarded so the promotion still ends
+    # green by confirming prod Healthy.
     #
-    # The `if` guards handle a no-op promotion (image tag unchanged, e.g. Kargo
-    # re-promoting a fresh Freight for the already-live version). git-push creates
-    # a branch even with nothing new to push, so branch-presence is not a reliable
-    # signal; git-commit is skipped when there is nothing to commit and emits no
-    # `commit` output, so that is the no-op signal. On a no-op these three git
-    # steps all skip (no orphan branch, no empty PR) and argocd-update/wait below
-    # stay unguarded so the promotion still ends green by confirming prod Healthy.
+    # This replaced home-grown `task.outputs['commit'].commit` guards, which
+    # evaluated unreliably here: with identical guards git-push ran and wait-pr
+    # errored while open-pr skipped, leaking a branch per no-op retry. status() is
+    # purpose-built for skip detection and resolves with the plain step alias
+    # (outputs still need task.outputs[...] scoping inside a task; status() does not).
+    # Output references are also kept null-safe as belt-and-suspenders.
     - uses: git-push
       as: push
-      if: ${{ (task.outputs?.['commit']?.commit ?? '') != '' }}
+      if: ${{ status('commit') != 'Skipped' }}
       config:
         path: ./repo
         generateTargetBranch: true
     - uses: git-open-pr
       as: open-pr
-      if: ${{ (task.outputs?.['commit']?.commit ?? '') != '' }}
+      if: ${{ status('commit') != 'Skipped' }}
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         provider: github
-        sourceBranch: ${{ task.outputs['push'].branch }}
+        sourceBranch: ${{ task.outputs?.['push']?.branch ?? '' }}
         targetBranch: main
         title: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
     # Blocks the promotion until the PR is merged in GitHub.
-    # prNumber must be null-safe: Kargo builds a step's config before evaluating
-    # its `if`, so on a no-op (open-pr skipped, no output) a bare
-    # task.outputs['open-pr'].pr.id throws "cannot fetch id from <nil>" and the
-    # guard never gets to skip the step. The `?? 0` fallback is never used at
-    # runtime because the `if` skips the step whenever open-pr was skipped.
     - uses: git-wait-for-pr
       as: wait-pr
-      if: ${{ (task.outputs?.['commit']?.commit ?? '') != '' }}
+      if: ${{ status('open-pr') != 'Skipped' }}
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         provider: github
