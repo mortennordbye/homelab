@@ -98,8 +98,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  # interval as Kargo normalizes it (5m -> 5m0s), to avoid ArgoCD drift.
-  interval: 5m0s
+  # interval as Kargo normalizes it (1m -> 1m0s), to avoid ArgoCD drift.
+  interval: 1m0s
   freightCreationPolicy: Automatic
   subscriptions:
     - image:
