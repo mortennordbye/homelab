@@ -2,6 +2,14 @@
 
 Known gaps the team has agreed to leave for later. Each entry: **what**, **why deferred**, **what unblocks**, **where**.
 
+## Apps
+
+### Remove the old `workout` app after logeverylift cutover
+- **What:** `logeverylift.com` was cut over from the old `workout` app to the renamed `logeverylift` app (PR #369, 2026-07-18). The `workout` namespace, Deployment, Postgres, and PVC are still present — both `workout-app` and `postgres` are scaled to 0 (ArgoCD ignores `/spec/replicas`; also declared in the manifests). The data is preserved on `postgres-pvc`; scale `postgres` back to 1 to re-access it. Nothing routes to it.
+- **Why deferred:** Kept as rollback until the owner has used `logeverylift.com` for a while and confirmed all data/history is intact. Deleting is one-way (prunes the namespace + PVC).
+- **Unblock:** Once verified, delete `k8s/talos/apps/workout/` (ArgoCD prunes the namespace). Archive `workout_db_full.sql` somewhere durable first (it currently lives only in a session scratchpad). Then optionally give `logeverylift` its own Bitwarden items instead of sharing workout's (see the comment in `k8s/talos/apps/logeverylift/externalsecret.yaml`).
+- **Where:** `k8s/talos/apps/workout/`, `k8s/talos/apps/logeverylift/externalsecret.yaml`.
+
 ## AI / RAG POC
 
 ### Eval harness
