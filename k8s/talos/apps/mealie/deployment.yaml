@@ -42,6 +42,36 @@ spec:
               value: sqlite
             - name: ALLOW_SIGNUP
               value: "false"
+            # UI accent colours matched to the portfolio "arctic blue" palette
+            # (portfolio/src/styles/tokens.css). Themes are shared by all users.
+            - name: THEME_LIGHT_PRIMARY
+              value: "#1f6fda"
+            - name: THEME_LIGHT_ACCENT
+              value: "#1aa39a"
+            - name: THEME_LIGHT_SECONDARY
+              value: "#6552d8"
+            - name: THEME_LIGHT_SUCCESS
+              value: "#1b8f5e"
+            - name: THEME_LIGHT_INFO
+              value: "#1858b8"
+            - name: THEME_LIGHT_WARNING
+              value: "#c1822f"
+            - name: THEME_LIGHT_ERROR
+              value: "#b03544"
+            - name: THEME_DARK_PRIMARY
+              value: "#5db7ff"
+            - name: THEME_DARK_ACCENT
+              value: "#58d2c9"
+            - name: THEME_DARK_SECONDARY
+              value: "#8b7dff"
+            - name: THEME_DARK_SUCCESS
+              value: "#6ad6a8"
+            - name: THEME_DARK_INFO
+              value: "#7fc6ff"
+            - name: THEME_DARK_WARNING
+              value: "#f0b86e"
+            - name: THEME_DARK_ERROR
+              value: "#ef6f7a"
           volumeMounts:
             - name: data
               mountPath: /app/data
