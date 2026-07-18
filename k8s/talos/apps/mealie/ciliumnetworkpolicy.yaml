@@ -1,0 +1,30 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: mealie-policy
+  namespace: mealie
+spec:
+  endpointSelector:
+    matchLabels:
+      app: mealie
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "9000"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": keda
+            "k8s:app.kubernetes.io/component": interceptor
+            "k8s:app.kubernetes.io/part-of": keda-add-ons-http
+      toPorts:
+        - ports:
+            - port: "9000"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
