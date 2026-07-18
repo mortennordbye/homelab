@@ -19,7 +19,10 @@ metadata:
   name: postgres
   namespace: workout
 spec:
-  replicas: 1
+  # Retired alongside workout-app (2026-07-18). Data is preserved on postgres-pvc;
+  # scale back to 1 to re-access for rollback. The apps ApplicationSet ignores
+  # /spec/replicas, so the live scale-to-0 was done imperatively.
+  replicas: 0
   selector:
     matchLabels:
       app: postgres
