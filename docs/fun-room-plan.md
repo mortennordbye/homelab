@@ -4,7 +4,7 @@ An explorable 3D room at `/fun`, reached from a nav entry beside the others. The
 portfolio: the objects in it are the site's sections, and you interact with them instead of
 clicking links.
 
-- Status: **room built and walkable. Printer and sideboard interactive; other objects not started.**
+- Status: **room built and walkable. Printer interactive; other objects not started.**
 - Scope: `portfolio/` frontend.
 - Started 2026-07-19.
 
@@ -47,14 +47,18 @@ Route `/fun`, dynamic-imported with `ssr: false`. Nav entry added in `src/conten
 | Homelab hardware models | `src/components/fun/Devices.tsx` |
 
 The room contains a desk with three monitors, a wall panel above them, two screens on the side
-wall, a task chair, a mushroom lamp, keyboard, mouse, mug, framed prints, a jute rug, a window,
-a plant, a printer on a low cabinet, and the homelab sideboard.
+wall, a chair, a mushroom lamp, keyboard, mouse, mug, framed prints, a jute rug, a panelled
+door, a potted plant, a printer on a low cabinet, and the homelab sideboard.
 
-The sideboard is modelled from reference photos of the real flat. It looks like living-room
-furniture; opening its doors reveals the actual kit at real dimensions: three ThinkCentres stood
-on edge, the ISP router, a UniFi Cloud Gateway Ultra, a fanless mini PC, a Flex Mini, an 8-port
-switch, a 4-bay Synology, and a hub puck, all with live-blinking LEDs. The access point lies
-flat on top, where it actually sits.
+The sideboard is modelled from reference photos of the real flat. It is open-fronted, showing
+the actual kit at real dimensions: three ThinkCentres stood on edge, the ISP router, a UniFi
+Cloud Gateway Ultra, a fanless mini PC, a Flex Mini, an 8-port switch, a 4-bay Synology, and a
+hub puck, all with live-blinking LEDs. The access point lies flat on top, where it actually
+sits.
+
+It had hinged doors that swung open on `E`. They are gone: hiding the one thing the room exists
+to show, behind an interaction someone has to discover first, was the wrong trade. The reveal
+was good, but only for the people who found it.
 
 All six panels read from `/api/v1/infra` through `useInfraFeed`, on a 60 second poll, with the
 same snapshot and staleness rules as `LiveStatus` on the classic page. The seventh panel
@@ -111,10 +115,11 @@ Texture resolution was not the problem. In rough order of what actually mattered
    every join between a leg and the floor took the same fill as an open wall, and the room read
    as decals on a backdrop. The other half was that `ambientLight` 0.5 plus `hemisphereLight`
    0.9 was pouring 1.4 units of directionless light into the scene, which flattens the shading
-   gradient that tells you what shape a thing is. Those dropped to 0.12 and 0.3, the window
-   directional went 0.78 → 2.5, and IBL 0.45 → 0.75. Brightness belongs in something that has a
-   direction and falls off. Both changes are free — no download — and N8AO measured at no
-   detectable frame cost.
+   gradient that tells you what shape a thing is. They dropped hard, IBL went 0.45 → 0.75, and
+   the key moved into a fitting. Brightness belongs in something that has a direction and falls
+   off. Both changes are free — no download — and N8AO measured at no detectable frame cost.
+   Current values live in `Lighting` in `FunRoom.tsx`; they moved again when the window came
+   out, so read them there rather than trusting a number written here.
 
 1. **Shadows.** One shadow-casting spot light. Contact shadows are the strongest single cue that
    an object is sitting on a surface rather than pasted over it.
@@ -127,7 +132,29 @@ Texture resolution was not the problem. In rough order of what actually mattered
 5. **Rounded edges.** `RoundedBox` everywhere. Real objects have a chamfer that catches a
    highlight; perfect 90 degree edges are why primitives look like primitives.
 
-Two traps worth remembering. Anything that suspends (`Environment`, `useTexture`) must sit
+### Depth is what makes hand-built joinery read
+
+The window and the sideboard doors came out; the flat plane standing in for a door was replaced
+with a real one. Three things fell out of that.
+
+A door group sat on the far wall is rotated 180 degrees, which flips the sign of every depth
+offset inside it. Building the door against local `-z` buried it in the wall and left an 8mm
+sliver of the leaf poking through as a featureless white slab. Depth offsets in a rotated group
+should be written against "away from the wall", not a raw axis.
+
+Panel detail has to be real geometry. The first attempt stacked a sunk field and a moulding on
+a solid slab, giving a 5mm step that disappeared under any light. The leaf is now a frame —
+three stiles, three rails, thin back panel — so the frame stands ~28mm proud and throws an
+actual shadow line. This is the same lesson as the sideboard carcass: a solid box with detail
+laid on top reads as a solid box.
+
+Removing the window removed the motivation for the daylight. A strong directional raking in
+from a blank wall is light from a source you can look straight at and not find, so the pendant
+became the main shadow-casting source. One pendant in the middle of a 5.2 x 4.8m room leaves
+the far end a cave, and the fix was a second warm source down there rather than more ambient,
+which would have flattened the whole room to solve a problem in one corner.
+
+Two more traps. Anything that suspends (`Environment`, `useTexture`) must sit
 inside the same Suspense boundary as `EffectComposer`, or React tears the Canvas subtree down
 mid-flight and the composer builds against a renderer whose GL context is already gone, failing
 with `Cannot read properties of null (reading 'alpha')`. And a single point light standing in
@@ -169,8 +196,13 @@ one asset at a time.
 | Model | Replaces |
 |---|---|
 | `dining_chair_02` | a chair built from four boxes |
-| `calathea_orbifolia_01` | a plant built from icosahedron blobs |
+| `potted_plant_04` | a plant built from icosahedron blobs |
 | `modern_ceiling_lamp_01` | a flat emissive square on the ceiling plane |
+
+The plant was first `calathea_orbifolia_01`, which is foliage only, so it grew straight out of
+the floorboards. `potted_plant_04` ships plant and pot as one asset for 0.2MB more. Where a
+scanned asset includes the thing it stands in, take it whole rather than parenting a hand-built
+pot under scanned leaves and matching the scale by eye.
 
 3.2MB of 1K glTF. Loaded through `Prop` in `props.tsx`, which measures each model's bounding
 box after load and seats it on its own base, because scanned assets share no convention for
@@ -215,7 +247,7 @@ already exists as structured data in `src/content/`, so this is staging, not aut
 | Object | Section | Source |
 |---|---|---|
 | Printer ✅ | CV download | `cv-variants.ts`, `cv-manifest.json` |
-| Sideboard ✅ | the hardware itself | reference photos |
+| Sideboard ✅ | the hardware itself, always visible | reference photos |
 | Desk monitors | infrastructure | `/api/v1/infra`, already wired |
 | Shelf of files or binders | work | `src/content/work/*.mdx` |
 | Framed certificates | resume | `resume.ts` certifications |

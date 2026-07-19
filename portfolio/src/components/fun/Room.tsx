@@ -71,9 +71,129 @@ function MushroomLamp({ position }: { position: [number, number, number] }) {
   );
 }
 
-/** Calathea orbifolia in a pot — a scanned model, per the note on Chair. */
+/* A scanned plant that ships with its own pot. The previous model was foliage
+   only, so it sat on the floor as a bush growing out of the floorboards. Where
+   a plant and its pot come as one asset, take them as one asset rather than
+   parenting a hand-built pot under scanned leaves and matching the scale by
+   eye. */
 function Plant({ position }: { position: [number, number, number] }) {
-  return <Prop name="calathea_orbifolia_01" position={position} height={0.78} />;
+  return <Prop name="potted_plant_04" position={position} height={0.78} />;
+}
+
+/**
+ * A panelled interior door at joinery dimensions: 825 x 2040 x 40mm leaf in a
+ * lining, with an architrave, four recessed panels, two hinges and a lever on
+ * a rose.
+ *
+ * Hand-built rather than scanned because Poly Haven's only CC0 doors are a
+ * castle door and a roller shutter. That is survivable here for the same
+ * reason the network switches are: a door is genuinely an assembly of flat
+ * rectangles, so the shapes are not an approximation of something organic.
+ * What sells it is depth. The flat plane this replaced had none, so it read as
+ * a white rectangle painted on the wall. Every part here is proud of or
+ * recessed into its neighbour by a few millimetres, which gives ambient
+ * occlusion the creases it needs to draw the outline of a real door.
+ */
+function Door({
+  position,
+  rotation = [0, 0, 0],
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+}) {
+  const W = 0.825;
+  const H = 2.04;
+  const T = 0.04;
+  const white = "#e9e6df";
+  const trim = "#f1eee7";
+
+  // Two panel columns, two rows: stile 110mm, rails 130/180/230mm.
+  const stile = 0.11;
+  const midRail = 0.13;
+  const lowerH = 0.86;
+
+  // Local +z points into the room. The caller rotates this group 180 degrees to
+  // sit it on the far wall, which flips the sign of every depth offset, so
+  // building against "away from the wall" rather than a raw axis keeps the
+  // stack-up readable. Getting this backwards buried the whole door inside the
+  // wall and left an 8mm sliver of the leaf poking through as a white slab.
+  const leafFront = T + 0.006;
+
+  return (
+    <group position={position} rotation={rotation}>
+      {/* architrave: the casing standing proud of the wall face */}
+      {(
+        [
+          [0, H + 0.055, W + 0.22, 0.11],
+          [-(W / 2 + 0.055), (H + 0.11) / 2, 0.11, H + 0.11],
+          [W / 2 + 0.055, (H + 0.11) / 2, 0.11, H + 0.11],
+        ] as [number, number, number, number][]
+      ).map(([x, y, w, h], i) => (
+        <mesh key={i} position={[x, y, 0.014]} castShadow receiveShadow>
+          <boxGeometry args={[w, h, 0.028]} />
+          <meshStandardMaterial color={trim} roughness={0.55} />
+        </mesh>
+      ))}
+
+      {/* lining, set back inside the opening */}
+      <mesh position={[0, H / 2, -0.045]} receiveShadow>
+        <boxGeometry args={[W + 0.03, H + 0.015, 0.09]} />
+        <meshStandardMaterial color="#ded9d0" roughness={0.7} />
+      </mesh>
+
+      {/* The leaf is a frame with a thin back panel, not a slab with panel
+          shapes laid on it. An earlier version stacked a sunk field and a
+          moulding on a solid box, which gave a 5mm step that vanished under
+          any light — a panelled door reads as panelled because the frame
+          stands ~28mm proud of the panel and throws a real shadow line, so
+          the recess has to be actual space. */}
+      <mesh position={[0, H / 2, 0.006]} castShadow receiveShadow>
+        <boxGeometry args={[W, H, 0.012]} />
+        <meshStandardMaterial color="#e2ded6" roughness={0.7} />
+      </mesh>
+      {(
+        [
+          // stiles: outer left, outer right, centre
+          [-(W - stile) / 2, H / 2, stile, H],
+          [(W - stile) / 2, H / 2, stile, H],
+          [0, H / 2, stile, H],
+          // rails: bottom, middle, top
+          [0, 0.115, W, 0.23],
+          [0, 0.23 + lowerH + midRail / 2, W, midRail],
+          [0, H - 0.09, W, 0.18],
+        ] as [number, number, number, number][]
+      ).map(([x, y, w, h], i) => (
+        <mesh key={i} position={[x, y, T / 2 + 0.006]} castShadow receiveShadow>
+          <boxGeometry args={[w, h, T]} />
+          <meshStandardMaterial color={white} roughness={0.62} />
+        </mesh>
+      ))}
+
+      {/* lever on a rose, hinges on the opposite stile */}
+      <mesh
+        position={[-W / 2 + 0.075, 1.04, leafFront + 0.006]}
+        rotation={[Math.PI / 2, 0, 0]}
+        castShadow
+      >
+        <cylinderGeometry args={[0.031, 0.031, 0.012, 20]} />
+        <meshStandardMaterial color="#9aa0a6" roughness={0.28} metalness={0.92} />
+      </mesh>
+      <mesh
+        position={[-W / 2 + 0.105, 1.04, leafFront + 0.022]}
+        rotation={[0, 0, Math.PI / 2]}
+        castShadow
+      >
+        <cylinderGeometry args={[0.0115, 0.0115, 0.115, 14]} />
+        <meshStandardMaterial color="#9aa0a6" roughness={0.28} metalness={0.92} />
+      </mesh>
+      {[0.32, 1.72].map((y) => (
+        <mesh key={y} position={[W / 2 - 0.004, y, T / 2]} castShadow>
+          <boxGeometry args={[0.016, 0.1, T + 0.004]} />
+          <meshStandardMaterial color="#a8adb3" roughness={0.34} metalness={0.85} />
+        </mesh>
+      ))}
+    </group>
+  );
 }
 
 /** Framed print, like the ones above the sideboard. */
@@ -201,32 +321,6 @@ export function Room({
         </mesh>
       ))}
 
-      {/* window on the right wall: the daylight source, and the reason the
-          room is bright rather than a cave */}
-      <group position={[hw - 0.02, 1.45, 0.55]} rotation={[0, -Math.PI / 2, 0]}>
-        <mesh>
-          <planeGeometry args={[1.5, 1.25]} />
-          <meshBasicMaterial color="#eef4fb" />
-        </mesh>
-        {/* frame + glazing bar */}
-        <RoundedBox position={[0, 0, 0.03]} args={[1.58, 1.33, 0.05]} radius={0.006} smoothness={3} castShadow>
-          <meshStandardMaterial color="#f0ede6" roughness={0.7} />
-        </RoundedBox>
-        <mesh position={[0, 0, 0.045]}>
-          <planeGeometry args={[1.44, 1.19]} />
-          <meshBasicMaterial color="#eef4fb" />
-        </mesh>
-        <mesh position={[0, 0, 0.05]}>
-          <boxGeometry args={[0.022, 1.19, 0.012]} />
-          <meshStandardMaterial color="#f0ede6" roughness={0.7} />
-        </mesh>
-        {/* sill */}
-        <mesh position={[0, -0.68, 0.08]} castShadow receiveShadow>
-          <boxGeometry args={[1.62, 0.04, 0.16]} />
-          <meshStandardMaterial color="#efece4" roughness={0.7} />
-        </mesh>
-      </group>
-
       {/* prints above the desk, thin wood frames */}
       <FramedPrint position={[-1.72, 1.72, -hd + 0.03]} w={0.38} h={0.5} art="#7f9a63" />
       <FramedPrint position={[1.78, 1.68, -hd + 0.03]} w={0.34} h={0.44} art="#7d9db4" />
@@ -244,16 +338,7 @@ export function Room({
       </mesh>
 
       {/* door, back-right on the wall behind you */}
-      <group position={[1.55, 0, hd - 0.015]} rotation={[0, Math.PI, 0]}>
-        <mesh position={[0, 1.02, 0]}>
-          <planeGeometry args={[0.88, 2.04]} />
-          <meshStandardMaterial color="#ece9e2" roughness={0.8} />
-        </mesh>
-        <mesh position={[-0.33, 1.0, -0.02]}>
-          <boxGeometry args={[0.1, 0.028, 0.028]} />
-          <meshStandardMaterial color="#8d939a" roughness={0.3} metalness={0.9} />
-        </mesh>
-      </group>
+      <Door position={[1.55, 0, hd - 0.02]} rotation={[0, Math.PI, 0]} />
 
       {/* desk against the screen wall */}
       <group position={[0, 0, -hd + 0.38]}>

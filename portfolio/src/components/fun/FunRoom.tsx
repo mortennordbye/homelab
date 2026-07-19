@@ -112,49 +112,48 @@ function Lighting({ poweredCount }: { poweredCount: number }) {
   const lit = poweredCount / PLACEMENTS.length;
   return (
     <>
-      {/* Nordic daylight: a bright, soft, warm room rather than a dark one.
-          The window does most of the fill, the ceiling fitting and the desk
-          lamp add warmth, and the monitors contribute rather than dominate.
-          Only the daylight casts shadows — one shadow map is plenty.
+      {/* An interior room lit by its own fittings. The window came out, so the
+          pendant is now the main source and casts the shadows; a strong
+          directional raking in from a wall with nothing in it would be light
+          arriving from a source you can look straight at and not find.
 
           Ambient and hemisphere are kept deliberately low. They add light from
           everywhere at once, which no real room does, and every unit of it
           flattens the shading gradient that tells you what shape a thing is.
           An earlier pass ran these at 0.5 and 0.9 to brighten the room and the
-          result was uniformly lit and fake. Brightness belongs in the window
-          and the fittings, where it arrives from a direction and falls off. */}
-      <ambientLight intensity={0.12} color="#f2ece2" />
-      <hemisphereLight args={["#e8f0fb", "#9d8a6a", 0.3]} />
+          result was uniformly lit and fake. Brightness belongs in the fittings,
+          where it arrives from a direction and falls off. */}
+      <ambientLight intensity={0.24} color="#f4ece0" />
+      <hemisphereLight args={["#ffeeda", "#a08b6a", 0.55]} />
 
-      {/* soft daylight from the window on the right wall */}
-      <directionalLight
-        position={[4.4, 2.1, 1.2]}
-        intensity={2.5}
-        color="#eaf1fb"
+      {/* the pendant, hanging where the model is: main light, casts shadows */}
+      <pointLight
+        position={[0, ROOM.h - 0.52, 0.2]}
+        intensity={22}
+        distance={14}
+        decay={1.45}
+        color="#ffd9a6"
         castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0012}
-        shadow-normalBias={0.02}
-        shadow-camera-left={-4}
-        shadow-camera-right={4}
-        shadow-camera-top={3}
-        shadow-camera-bottom={-3}
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.0015}
+        shadow-normalBias={0.03}
       />
+      {/* A second warm bounce toward the door end. One pendant in the middle
+          of a 5.2 x 4.8m room leaves the far wall a cave, and the fix is a
+          source down there rather than more ambient, which would flatten
+          everything again to solve a problem in one corner. */}
       <pointLight
-        position={[2.0, 1.62, 1.15]}
-        intensity={1.25}
-        distance={5.5}
-        decay={1.9}
-        color="#dfeaf7"
+        position={[-0.5, 1.95, ROOM.d / 2 - 1.5]}
+        intensity={3.4}
+        distance={6}
+        decay={1.7}
+        color="#ffdcb0"
       />
-
-      {/* warm ceiling fitting */}
-      <pointLight
-        position={[0, ROOM.h - 0.16, 0.2]}
-        intensity={5}
-        distance={9}
-        decay={1.8}
-        color="#ffdcae"
+      {/* a soft top-down key so shapes still read away from the pendant */}
+      <directionalLight
+        position={[2.6, 3.4, 1.6]}
+        intensity={0.7}
+        color="#f4efe4"
       />
       {/* the mushroom lamp on the desk */}
       <pointLight

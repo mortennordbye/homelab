@@ -2,17 +2,16 @@
 
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { Interactive } from "./interaction";
 
 /**
  * The real homelab, modelled from reference photos of the actual flat.
  *
- * It does not live on a rack or an open shelf. It lives inside a pale oak
- * sideboard in the living room, behind doors, which is both the truth and a
- * better reveal than a shelf: you open something that looks like furniture and
- * find a Kubernetes cluster in it.
+ * It lives in a pale oak sideboard in the living room rather than on a rack.
+ * The unit is open-fronted: it had hinged doors you pressed E to swing, but
+ * hiding the one thing the room exists to show, behind an interaction someone
+ * has to discover first, was the wrong trade.
  *
  * Dimensions are the real products in metres. Getting relative scale right
  * does more for believability than detail does — a NAS the same size as a
@@ -313,44 +312,7 @@ export function UnifiAccessPoint({ position }: { position: [number, number, numb
   );
 }
 
-/** One hinged cabinet door, swinging about its outer edge. */
-function Door({
-  hingeX,
-  width,
-  height,
-  open,
-  /** -1 hinges on the left, +1 on the right. */
-  swing,
-}: {
-  hingeX: number;
-  width: number;
-  height: number;
-  open: boolean;
-  swing: number;
-}) {
-  const ref = useRef<THREE.Group>(null);
-  useFrame((_, d) => {
-    if (!ref.current) return;
-    const target = open ? swing * -2.0 : 0;
-    ref.current.rotation.y = THREE.MathUtils.damp(ref.current.rotation.y, target, 4.5, d);
-  });
-  return (
-    <group ref={ref} position={[hingeX, 0, 0]}>
-      <RoundedBox
-        position={[(width / 2) * -swing, 0, 0]}
-        args={[width, height, 0.018]}
-        radius={0.003}
-        smoothness={3}
-        castShadow
-        receiveShadow
-      >
-        <meshStandardMaterial color="#b39a72" roughness={0.66} />
-      </RoundedBox>
-    </group>
-  );
-}
-
-/** The sideboard. Looks like living-room furniture until you open it. */
+/** The sideboard: an open-fronted oak unit with the homelab living in it. */
 export function Sideboard({
   position,
   rotation = [0, 0, 0],
@@ -358,7 +320,6 @@ export function Sideboard({
   position: [number, number, number];
   rotation?: [number, number, number];
 }) {
-  const [open, setOpen] = useState(false);
 
   const W = 1.92;
   const H = 0.6;
@@ -438,27 +399,6 @@ export function Sideboard({
       <SynologyNas position={[0.68, floorY + 0.083, -0.02]} />
       <UnifiSwitch8 position={[0.44, floorY + 0.013, 0.09]} />
       <HubPuck position={[0.46, floorY + 0.012, -0.11]} />
-
-      {/* Doors are visuals only. The interaction target is a fixed invisible
-          face across the cabinet front: once the doors swing away they are no
-          longer under the crosshair, so hanging the interaction on them would
-          leave an open cabinet you cannot close. */}
-      <group position={[0, bodyY, D / 2 + 0.002]}>
-        <Door hingeX={-W / 2 + 0.01} width={W / 3 - 0.012} height={bodyH - 0.02} open={open} swing={-1} />
-        <Door hingeX={-W / 6 + 0.004} width={W / 3 - 0.012} height={bodyH - 0.02} open={open} swing={-1} />
-        <Door hingeX={W / 2 - 0.01} width={W / 3 - 0.012} height={bodyH - 0.02} open={open} swing={1} />
-      </group>
-
-      <Interactive
-        label="the cabinet"
-        verb={open ? "close" : "open"}
-        onActivate={() => setOpen((v) => !v)}
-      >
-        <mesh position={[0, bodyY, D / 2 + 0.01]} visible={false}>
-          <boxGeometry args={[W, bodyH, 0.05]} />
-          <meshBasicMaterial />
-        </mesh>
-      </Interactive>
 
       {/* access point on top, flat, where a TV would sit in front of it */}
       <UnifiAccessPoint position={[0.62, H + 0.032, -0.1]} />
