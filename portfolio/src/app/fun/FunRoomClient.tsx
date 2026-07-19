@@ -7,7 +7,7 @@
 // and the shelf is populated the moment the room mounts.
 
 import dynamic from "next/dynamic";
-import type { ShelfData } from "@/components/fun/shelf";
+import type { CareerData, ShelfData } from "@/components/fun/shelf";
 
 const FunRoom = dynamic(() => import("@/components/fun/FunRoom"), {
   ssr: false,
@@ -18,6 +18,12 @@ const FunRoom = dynamic(() => import("@/components/fun/FunRoom"), {
   ),
 });
 
-export default function FunRoomClient({ shelf }: { shelf: ShelfData }) {
-  return <FunRoom shelf={shelf} />;
+export default function FunRoomClient({
+  shelf,
+  career,
+}: {
+  shelf: ShelfData;
+  career: CareerData;
+}) {
+  return <FunRoom shelf={shelf} career={career} />;
 }

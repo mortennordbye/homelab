@@ -9,8 +9,8 @@
 // certifications in src/content/resume. Adding either puts it in the room.
 
 import { getAllWork } from "@/lib/work";
-import { certs } from "@/content/resume";
-import type { ShelfData } from "@/components/fun/shelf";
+import { certs, education, experience } from "@/content/resume";
+import type { CareerData, ShelfData } from "@/components/fun/shelf";
 import FunRoomClient from "./FunRoomClient";
 
 export default function FunPage() {
@@ -32,5 +32,18 @@ export default function FunPage() {
     })),
   };
 
-  return <FunRoomClient shelf={shelf} />;
+  const career: CareerData = {
+    roles: experience.map((e) => ({
+      role: e.role,
+      company: e.company,
+      period: e.period,
+    })),
+    education: education.map((e) => ({
+      title: e.title,
+      institution: e.institution,
+      period: e.period,
+    })),
+  };
+
+  return <FunRoomClient shelf={shelf} career={career} />;
 }

@@ -21,7 +21,8 @@ import { ROOM, Room } from "./Room";
 import { Screen } from "./Screen";
 import { Crosshair, InfoPanel, InteractPrompt, Keybinds, type InfoCard } from "./Hud";
 import type { Hardware } from "./hardware";
-import type { ShelfBook, ShelfCert, ShelfData } from "./shelf";
+import type { CareerData, ShelfBook, ShelfCert, ShelfData } from "./shelf";
+import { TerminalScreen } from "./Terminal";
 import { InteractionProvider, type Prompt } from "./interaction";
 import { useInfraFeed } from "./feed";
 import { preloadProps } from "./props";
@@ -65,8 +66,12 @@ const PLACEMENTS: Placement[] = [
   { position: [-0.72, 1.09, DESK_Z - 0.2], rotation: [0, 0.3, 0], width: 0.62 },
   { position: [0, 1.1, DESK_Z - 0.24], rotation: [0, 0, 0], width: 0.62 },
   { position: [0.72, 1.09, DESK_Z - 0.2], rotation: [0, -0.3, 0], width: 0.62 },
-  // wall-mounted panel above the desk
-  { position: [0, 1.87, -ROOM.d / 2 + 0.04], rotation: [0, 0, 0], width: 1.42 },
+  // The big panel stands on the sideboard rather than hanging over the desk,
+  // which is where a television actually lives. Centred at z 0.15 rather than
+  // on the sideboard's own centre so it does not stand in front of the access
+  // point on the top at z 0.97 — a 1.42m screen there would occlude it, and an
+  // occluded device is one that can never be looked at.
+  { position: [2.28, 1.09, 0.15], rotation: [0, -Math.PI / 2, 0], width: 1.42 },
   // side wall pair
   { position: [-ROOM.w / 2 + 0.04, 1.5, -1.15], rotation: [0, Math.PI / 2, 0], width: 0.7 },
   { position: [-ROOM.w / 2 + 0.04, 1.5, -0.3], rotation: [0, Math.PI / 2, 0], width: 0.7 },
@@ -84,6 +89,9 @@ const PLACEMENTS: Placement[] = [
  * screens, reintroduce it scored by distance *and* view angle, not distance
  * alone.
  */
+/** Index into PLACEMENTS that the terminal occupies instead of a data panel. */
+export const TERMINAL_SLOT = 1;
+
 function ScreenWall({
   data,
   poweredCount,
@@ -93,7 +101,8 @@ function ScreenWall({
 }) {
   return (
     <>
-      {PANELS.slice(0, PLACEMENTS.length).map((panel, i) => (
+      {PANELS.slice(0, PLACEMENTS.length).map((panel, i) =>
+        i === TERMINAL_SLOT ? null : (
         <Screen
           key={panel.id}
           panel={panel}
@@ -104,7 +113,8 @@ function ScreenWall({
           powered={i < poweredCount}
           mounted
         />
-      ))}
+        ),
+      )}
     </>
   );
 }
@@ -219,9 +229,16 @@ function Scene({
   onPrompt,
   onPrinterStatus,
   shelf,
+  career,
   onInspect,
   onOpenBook,
   onOpenCert,
+  onOpenCard,
+  onOpenBlog,
+  terminalActive,
+  onTerminalEnter,
+  onTerminalExit,
+  paused,
 }: {
   data: PanelProps;
   phase: Phase;
@@ -232,9 +249,16 @@ function Scene({
   onPrompt: (p: Prompt) => void;
   onPrinterStatus: (msg: string | null) => void;
   shelf: ShelfData;
+  career: CareerData;
   onInspect: (hw: Hardware) => void;
   onOpenBook: (b: ShelfBook) => void;
   onOpenCert: (c: ShelfCert) => void;
+  onOpenCard: (c: InfoCard) => void;
+  onOpenBlog: () => void;
+  terminalActive: boolean;
+  onTerminalEnter: () => void;
+  onTerminalExit: () => void;
+  paused: boolean;
 }) {
   const [poweredCount, setPoweredCount] = useState(0);
   const snap = useSnapToOperator();
@@ -276,7 +300,7 @@ function Scene({
       <color attach="background" args={["#cfd6dd"]} />
       <fog attach="fog" args={["#dcd8cc", 16, 42]} />
       <Lighting poweredCount={poweredCount} />
-      <InteractionProvider enabled={interacting} onPrompt={onPrompt}>
+      <InteractionProvider enabled={interacting && !paused} onPrompt={onPrompt}>
       <Suspense fallback={null}>
         {/* Image-based lighting. Does most of the work on specular: without an
             environment map, metal and plastic have nothing to reflect and every
@@ -288,19 +312,31 @@ function Scene({
         <Room
           onPrinterStatus={onPrinterStatus}
           shelf={shelf}
+          career={career}
           onInspect={onInspect}
           onOpenBook={onOpenBook}
           onOpenCert={onOpenCert}
+          onOpenCard={onOpenCard}
+          onOpenBlog={onOpenBlog}
         />
         <Post />
       </Suspense>
       <ScreenWall data={data} poweredCount={poweredCount} />
+      <TerminalScreen
+        position={PLACEMENTS[TERMINAL_SLOT].position}
+        rotation={PLACEMENTS[TERMINAL_SLOT].rotation}
+        width={PLACEMENTS[TERMINAL_SLOT].width}
+        shelf={shelf}
+        active={terminalActive}
+        onActivate={onTerminalEnter}
+        onExit={onTerminalExit}
+      />
       <EntrySequence
         active={phase === "entering" && !reduced}
         onDone={onEntryDone}
       />
       </InteractionProvider>
-      <FirstPerson enabled={phase === "exploring"} />
+      <FirstPerson enabled={phase === "exploring" && !paused} />
       <PointerLockControls ref={controlsRef} selector="#fun-lock-target" />
     </>
   );
@@ -347,7 +383,13 @@ function certCard(c: ShelfCert): InfoCard {
   };
 }
 
-export default function FunRoom({ shelf }: { shelf: ShelfData }) {
+export default function FunRoom({
+  shelf,
+  career,
+}: {
+  shelf: ShelfData;
+  career: CareerData;
+}) {
   const { status, feed, stale, ok, nodes, argocd } = useInfraFeed();
   const [phase, setPhase] = useState<Phase>("idle");
   const [locked, setLocked] = useState(false);
@@ -357,14 +399,76 @@ export default function FunRoom({ shelf }: { shelf: ShelfData }) {
   const [showBinds, setShowBinds] = useState(true);
   const [coarse, setCoarse] = useState(false);
   const [card, setCard] = useState<InfoCard | null>(null);
+  const [terminalActive, setTerminalActive] = useState(false);
   const controlsRef = useRef<PointerLockControlsImpl | null>(null);
+
+  /* Movement and look-at picking stop whenever something has taken focus.
+     Without this, WASD still walks you across the room while a card is open
+     or you are typing at the terminal — the pointer is released but the key
+     handlers are on window and do not know that. */
+  const paused = card !== null || terminalActive;
 
   /* Opening a card releases the pointer, because the card is a DOM panel and
      the visitor needs a cursor to click its link. Closing it hands the pointer
      straight back so they are not left looking at a room they cannot move in. */
   const openCard = useCallback((c: InfoCard) => {
     setCard(c);
+    setTerminalActive(false);
     controlsRef.current?.unlock();
+  }, []);
+
+  /* The terminal needs the cursor released to take keystrokes, same as a card,
+     but it stays in the room rather than opening an overlay. */
+  const enterTerminal = useCallback(() => {
+    setTerminalActive(true);
+    controlsRef.current?.unlock();
+  }, []);
+  const exitTerminal = useCallback(() => {
+    setTerminalActive(false);
+    controlsRef.current?.lock();
+  }, []);
+
+  /* The blog card fetches when opened rather than on mount: most visits never
+     look at it, and it is a request to a different origin's feed. */
+  const openBlog = useCallback(async () => {
+    setTerminalActive(false);
+    controlsRef.current?.unlock();
+    setCard({
+      kicker: "blog",
+      title: "Latest posts",
+      rows: [],
+      body: "Loading…",
+    });
+    try {
+      const res = await fetch("/api/v1/blog", { cache: "no-store" });
+      const json = (await res.json()) as {
+        posts?: { title: string; url: string; publishedAt: string | null }[];
+      };
+      const posts = json.posts ?? [];
+      setCard({
+        kicker: "blog",
+        title: "Latest posts",
+        subtitle: "blog.nordbye.it",
+        rows: posts.map((p) => ({
+          k: p.publishedAt ? p.publishedAt.slice(0, 10) : "",
+          v: p.title,
+        })),
+        body: posts.length
+          ? undefined
+          : "The feed returned nothing just now.",
+        href: "https://blog.nordbye.it",
+        hrefLabel: "open the blog",
+      });
+    } catch {
+      setCard({
+        kicker: "blog",
+        title: "Latest posts",
+        rows: [],
+        body: "Could not reach the feed.",
+        href: "https://blog.nordbye.it",
+        hrefLabel: "open the blog",
+      });
+    }
   }, []);
   const closeCard = useCallback(() => {
     setCard(null);
@@ -380,16 +484,19 @@ export default function FunRoom({ shelf }: { shelf: ShelfData }) {
   // releasing the cursor, but the cursor is deliberately released while a card
   // is up, so Esc has nothing else to do and closing is what you expect.
   useEffect(() => {
-    if (!card) return;
+    if (!card && !terminalActive) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Escape") closeCard();
+      if (e.code !== "Escape") return;
+      if (card) closeCard();
+      else exitTerminal();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [card, closeCard]);
+  }, [card, terminalActive, closeCard, exitTerminal]);
 
   // H hides the keybind card, for people who want a clean look.
   useEffect(() => {
+    if (paused) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "KeyH") setShowBinds((v) => !v);
     };
@@ -465,9 +572,16 @@ export default function FunRoom({ shelf }: { shelf: ShelfData }) {
             onPrompt={setPrompt}
             onPrinterStatus={setPrinterStatus}
             shelf={shelf}
+            career={career}
             onInspect={(hw) => openCard(hardwareCard(hw))}
             onOpenBook={(b) => openCard(bookCard(b))}
             onOpenCert={(c) => openCard(certCard(c))}
+            onOpenCard={openCard}
+            onOpenBlog={openBlog}
+            terminalActive={terminalActive}
+            onTerminalEnter={enterTerminal}
+            onTerminalExit={exitTerminal}
+            paused={paused}
           />
         </Canvas>
       </div>
@@ -509,7 +623,7 @@ export default function FunRoom({ shelf }: { shelf: ShelfData }) {
         exit
       </Link>
 
-      {phase === "exploring" && !card && (
+      {phase === "exploring" && !paused && (
         <div className="pointer-events-none absolute inset-0 z-20">
           <Crosshair active={prompt !== null} />
           <InteractPrompt prompt={prompt} />
@@ -556,7 +670,7 @@ export default function FunRoom({ shelf }: { shelf: ShelfData }) {
       {/* paused: pointer lock released */}
       {/* Not while a card is open: the card unlocks the pointer on purpose, and
           showing "click to resume" behind it reads as two competing dialogs. */}
-      {phase === "exploring" && !locked && !coarse && !card && (
+      {phase === "exploring" && !locked && !coarse && !paused && (
         <div className="absolute inset-0 z-30 grid place-content-center bg-black/55 text-center backdrop-blur-[2px]">
           <p className="font-mono text-sm text-white/70">pointer released</p>
           <button

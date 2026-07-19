@@ -33,6 +33,8 @@ Route `/fun`, dynamic-imported with `ssr: false`. Nav entry added in `src/conten
 
 | Piece | File |
 |---|---|
+| Shell on the middle monitor | `src/components/fun/Terminal.tsx` |
+| Socials, contact, blog, interests, timeline | `src/components/fun/Objects.tsx` |
 | Bookshelf: case studies and certificates | `src/components/fun/Bookshelf.tsx` |
 | Shelf data types | `src/components/fun/shelf.ts` |
 | Hardware inventory, from the README | `src/components/fun/hardware.ts` |
@@ -296,6 +298,47 @@ added inside furniture should follow the same rule, and the general lesson is to
 suspected cause before writing the fix — the fix landed first here, proved nothing, and its
 comment would have recorded a false explanation permanently.
 
+### A shell, not a desktop
+
+A desktop environment was the obvious next move and was rejected. Pointer lock means there is
+no cursor in the room, so anything window-and-icon shaped has to become a fullscreen overlay —
+a second website inside the website, holding a second copy of content the real pages already
+own, to be maintained twice. It also undoes the reason the room is interesting, which is that
+content became objects.
+
+A shell on the middle monitor adds something instead. It drives the public API, which is the
+genuinely unusual thing about this portfolio and had no representation anywhere in the room,
+and `curl /api/v1/profile` returns the real response rather than a mock. `ls work`, `cat
+work/<slug>`, `social`, `contact` read data the room already holds.
+
+The mechanic is the same one the info cards use: `E` releases the pointer so keystrokes reach
+the DOM, and Esc gives it back. That forced a fix worth noting — movement and picking now stop
+whenever anything has focus. Before this, WASD kept walking you across the room while a card
+was open, because the key handlers are on `window` and had no idea the pointer had been
+released.
+
+### Icons have to be vector, not geometry
+
+The social links were first stickers on a laptop lid on the desk, which is what a real desk
+looks like. It failed for the reason the certificates failed, in a different way: a 10cm sticker
+carrying a logo built from primitives is unreadable from anywhere you would stand, and a social
+link that is not recognisable at a glance is not doing its job.
+
+They are now a row of framed tiles on the wall above the desk, in the slot the big panel left
+behind, drawn with real Simple Icons (CC0) marks through drei `Html` — the same real-DOM trick
+the monitors use, so the marks are vector and stay sharp at any distance. The SVGs are applied
+as a CSS mask so each takes its own brand colour. One `Html` layer holds all four tiles with a
+separate invisible mesh per tile for picking, since the DOM layer is the expensive part and
+picking geometry is nearly free.
+
+### The television
+
+The big panel hangs on nothing now — it stands on the sideboard, where a television actually
+lives. It is centred at z 0.15 rather than on the sideboard's own centre, because a 1.42m screen
+on the centre line stands directly in front of the access point on the top at z 0.97, and an
+occluded device is one that can never be looked at. That is the third time that rule has caught
+something.
+
 ### Verifying interaction without a pointer lock
 
 Pointer lock does not work in headless Chromium, and `FirstPerson` overwrites the camera every
@@ -317,9 +360,12 @@ Fun link. Scope the query to the prompt element.
 | Desk monitors ✅ | infrastructure | `/api/v1/infra`, already wired |
 | Bookshelf ✅ | work | `src/content/work/*.mdx` |
 | Certificates ✅ | resume | `resume.ts` certifications |
-| Pinboard or whiteboard | about | `site.ts`, `interests.ts` |
-| Printed articles or a second screen | blog | `/api/v1/blog` |
-| Desk phone or notepad | contact | `site.ts` |
+| Social wall ✅ | socials | `site.ts` socials |
+| Terminal ✅ | the public API | `/api/v1/*`, live |
+| Gym bag ✅ | about / interests | `interests.ts` |
+| Printed posts ✅ | blog | `/api/v1/blog`, fetched on open |
+| Notepad ✅ | contact | `site.ts` |
+| Framed timeline ✅ | career and education | `resume.ts` |
 
 **The printer is built.** Four rocker switches on the lid map to the same four flags the CV
 customizer uses; the green button resolves them against `cv-manifest.json`, feeds a sheet out of

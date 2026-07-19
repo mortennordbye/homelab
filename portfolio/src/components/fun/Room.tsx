@@ -1,14 +1,14 @@
 "use client";
 
 import { MeshReflectorMaterial, RoundedBox } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Bookshelf } from "./Bookshelf";
 import { Sideboard } from "./Devices";
 import type { Hardware } from "./hardware";
+import type { InfoCard } from "./Hud";
+import { BlogStack, CareerFrame, GymBag, Notepad, SocialWall } from "./Objects";
 import { Printer } from "./Printer";
-import type { ShelfBook, ShelfCert, ShelfData } from "./shelf";
+import type { CareerData, ShelfBook, ShelfCert, ShelfData } from "./shelf";
 import { Prop } from "./props";
 import { useSurface } from "./textures";
 
@@ -233,15 +233,21 @@ function FramedPrint({
 export function Room({
   onPrinterStatus,
   shelf,
+  career,
   onInspect,
   onOpenBook,
   onOpenCert,
+  onOpenCard,
+  onOpenBlog,
 }: {
   onPrinterStatus: (msg: string | null) => void;
   shelf: ShelfData;
+  career: CareerData;
   onInspect: (hw: Hardware) => void;
   onOpenBook: (b: ShelfBook) => void;
   onOpenCert: (c: ShelfCert) => void;
+  onOpenCard: (c: InfoCard) => void;
+  onOpenBlog: () => void;
 }) {
   const hw = ROOM.w / 2;
   const hd = ROOM.d / 2;
@@ -333,8 +339,18 @@ export function Room({
       ))}
 
       {/* prints above the desk, thin wood frames */}
-      <FramedPrint position={[-1.72, 1.72, -hd + 0.03]} w={0.38} h={0.5} art="#7f9a63" />
+      {/* The career timeline takes the left wall slot the abstract print had.
+          A framed thing on the wall is already the shape a timeline wants. */}
+      <CareerFrame
+        position={[-1.72, 1.68, -hd + 0.04]}
+        career={career}
+        onOpen={onOpenCard}
+      />
       <FramedPrint position={[1.78, 1.68, -hd + 0.03]} w={0.34} h={0.44} art="#7d9db4" />
+
+      {/* Social links take the wall above the desk, which the big panel used to
+          occupy before it moved onto the sideboard. */}
+      <SocialWall position={[0, 1.78, -hd + 0.05]} onOpen={onOpenCard} />
 
       {/* jute rug */}
       <mesh position={[0, 0.004, 0.15]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -377,7 +393,25 @@ export function Room({
         <Stand position={[0, 0.755, -0.24]} />
         <Stand position={[0.72, 0.755, -0.2]} />
         <MushroomLamp position={[-1.02, 0.755, -0.1]} />
+
+        <Notepad
+          position={[0.62, 0.758, 0.19]}
+          rotation={[0, -0.22, 0]}
+          onOpen={onOpenCard}
+        />
+        <BlogStack
+          position={[1.02, 0.755, 0.1]}
+          rotation={[0, -0.14, 0]}
+          onOpen={onOpenBlog}
+        />
       </group>
+
+      {/* Outside work: the gym bag by the door, the homelab in the sideboard. */}
+      <GymBag
+        position={[-hw + 0.52, 0, hd - 0.62]}
+        rotation={[0, 0.42, 0]}
+        onOpen={onOpenCard}
+      />
 
       {/* y=0: Prop seats a model on its own base, so no manual lift. */}
       <Plant position={[hw - 0.42, 0, hd - 0.55]} />

@@ -33,3 +33,21 @@ export type ShelfData = {
   books: ShelfBook[];
   certs: ShelfCert[];
 };
+
+/** Roles and education for the framed timeline, from `resume.ts`. */
+export type CareerRole = {
+  role: string;
+  company: string;
+  period: string;
+};
+
+export type CareerEducation = {
+  title: string;
+  institution: string;
+  period: string;
+};
+
+export type CareerData = {
+  roles: CareerRole[];
+  education: CareerEducation[];
+};

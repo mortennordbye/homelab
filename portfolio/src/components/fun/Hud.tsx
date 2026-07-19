@@ -116,6 +116,8 @@ export type InfoCard = {
   tags?: string[];
   note?: string;
   href?: string;
+  /** Link text. Defaults to the case-study wording the shelf uses. */
+  hrefLabel?: string;
 };
 
 /**
@@ -195,7 +197,7 @@ export function InfoPanel({
               href={card.href}
               className="focus-ring font-mono text-xs text-accent underline-offset-4 hover:underline"
             >
-              read the full case study
+              {card.hrefLabel ?? "read the full case study"}
             </a>
           )}
         </div>
