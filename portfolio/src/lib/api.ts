@@ -58,5 +58,3 @@ export function requireApiKey(req: Request): boolean {
   const b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
 }
-
-export const API_VERSION = "v1";
