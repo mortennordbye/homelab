@@ -11,6 +11,7 @@
 import { getAllWork } from "@/lib/work";
 import { certs, education, experience } from "@/content/resume";
 import type { CareerData, ShelfData } from "@/components/fun/shelf";
+import { sourceExcerpt } from "@/lib/source-excerpt";
 import FunRoomClient from "./FunRoomClient";
 
 export default function FunPage() {
@@ -45,5 +46,7 @@ export default function FunPage() {
     })),
   };
 
-  return <FunRoomClient shelf={shelf} career={career} />;
+  // Real code off disk for the desk monitor. Server-side because it is a
+  // filesystem read, and it is the same reason this page is not a client one.
+  return <FunRoomClient shelf={shelf} career={career} source={sourceExcerpt()} />;
 }

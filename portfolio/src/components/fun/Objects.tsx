@@ -178,8 +178,20 @@ export function SocialWall({
   );
 }
 
-/** Notepad with the contact details written on it. */
-export function Notepad({
+/**
+ * A contact card standing in a holder on the desk.
+ *
+ * This replaces a ruled notepad with a pen on it. The notepad was legible as an
+ * object and useless as a signpost: a blank pad tells you nothing about what
+ * pressing E will do, so the only way to discover it held contact details was
+ * to walk up and read the hover prompt. Anything whose whole job is to say
+ * "here is how to reach me" should say that at a glance, from across the desk.
+ *
+ * The text is real DOM through `Html`, for the reason the social icons are SVG:
+ * lettering built from geometry is unreadable at any distance a visitor
+ * actually stands at.
+ */
+export function ContactCard({
   position,
   rotation = [0, 0, 0],
   onOpen,
@@ -188,11 +200,19 @@ export function Notepad({
   rotation?: [number, number, number];
   onOpen: (card: InfoCard) => void;
 }) {
+  const W = 0.148;
+  const H = 0.092;
+  const PX_W = 592;
+  const PX_H = 368;
+  /* Leaned back like a card in a stand. Upright would present the best face to
+     the room, but a card standing dead vertical on a desk reads as a screen. */
+  const LEAN = -0.34;
+
   return (
     <Interactive
-      label="the notepad"
+      label="my contact card"
       verb="read"
-      detail="how to get hold of me"
+      detail={site.email}
       onActivate={() =>
         onOpen({
           kicker: "contact",
@@ -211,96 +231,87 @@ export function Notepad({
     >
       {(hovered) => (
         <group position={position} rotation={rotation}>
+          {/* brushed steel holder */}
           <RoundedBox
-            args={[0.15, 0.006, 0.21]}
-            radius={0.002}
+            position={[0, 0.006, 0.004]}
+            args={[W + 0.03, 0.012, 0.038]}
+            radius={0.003}
             smoothness={3}
+            castShadow
             receiveShadow
           >
-            <meshStandardMaterial
-              color={hovered ? "#fffaf0" : "#f3efe4"}
-              roughness={0.9}
-              emissive={hovered ? "#ffd9a6" : "#000000"}
-              emissiveIntensity={hovered ? 0.3 : 0}
-            />
+            <meshStandardMaterial color="#9aa0a6" roughness={0.34} metalness={0.85} />
           </RoundedBox>
-          {/* ruled lines */}
-          {[-0.06, -0.03, 0, 0.03, 0.06].map((z) => (
-            <mesh key={z} position={[0, 0.0031, z]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[0.11, 0.0016]} />
-              <meshBasicMaterial color="#b9c4cf" />
-            </mesh>
-          ))}
-          {/* pen */}
-          <mesh
-            position={[0.085, 0.006, 0.02]}
-            rotation={[0, 0.24, Math.PI / 2]}
-            castShadow
-          >
-            <cylinderGeometry args={[0.005, 0.005, 0.13, 12]} />
-            <meshStandardMaterial color="#1f2429" roughness={0.4} metalness={0.3} />
-          </mesh>
-        </group>
-      )}
-    </Interactive>
-  );
-}
 
-/** A stack of printed blog posts. Reads the live feed when opened. */
-export function BlogStack({
-  position,
-  rotation = [0, 0, 0],
-  onOpen,
-}: {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-  onOpen: () => void;
-}) {
-  const sheets = [0, 1, 2, 3];
-  return (
-    <Interactive
-      label="the printed posts"
-      verb="read"
-      detail="latest from the blog"
-      onActivate={onOpen}
-    >
-      {(hovered) => (
-        <group position={position} rotation={rotation}>
-          {sheets.map((i) => (
-            <mesh
-              key={i}
-              position={[
-                (i % 2 === 0 ? 1 : -1) * 0.004 * i,
-                0.003 + i * 0.0055,
-                (i % 3 === 0 ? -1 : 1) * 0.005 * i,
-              ]}
-              rotation={[0, (i - 1.5) * 0.035, 0]}
-              receiveShadow
-            >
-              <boxGeometry args={[0.19, 0.005, 0.26]} />
+          <group position={[0, 0.012 + (H / 2) * Math.cos(LEAN), 0]} rotation={[LEAN, 0, 0]}>
+            {/* the card itself */}
+            <mesh castShadow receiveShadow>
+              <boxGeometry args={[W, H, 0.0022]} />
               <meshStandardMaterial
-                color={hovered ? "#fffdf7" : "#f5f2ea"}
-                roughness={0.92}
+                color={hovered ? "#fffdf8" : "#f6f3ec"}
+                roughness={0.86}
                 emissive={hovered ? "#ffd9a6" : "#000000"}
-                emissiveIntensity={hovered ? 0.26 : 0}
+                emissiveIntensity={hovered ? 0.34 : 0}
               />
             </mesh>
-          ))}
-          {/* printed text blocks on the top sheet */}
-          <mesh position={[0.006, 0.0245, -0.06]} rotation={[-Math.PI / 2, 0, 0.017]}>
-            <planeGeometry args={[0.13, 0.012]} />
-            <meshBasicMaterial color="#5d6873" />
-          </mesh>
-          {[-0.01, 0.01, 0.03, 0.05].map((z) => (
-            <mesh
-              key={z}
-              position={[0.006, 0.0245, z]}
-              rotation={[-Math.PI / 2, 0, 0.017]}
+            <Html
+              transform
+              occlude="blending"
+              distanceFactor={(W / PX_W) * 400}
+              position={[0, 0, 0.0016]}
+              zIndexRange={[10, 0]}
+              style={{
+                width: `${PX_W}px`,
+                height: `${PX_H}px`,
+                pointerEvents: "none",
+                userSelect: "none",
+              }}
             >
-              <planeGeometry args={[0.15, 0.004]} />
-              <meshBasicMaterial color="#aeb8c2" />
-            </mesh>
-          ))}
+              {/* The card stock is painted here, not left to the mesh behind.
+                  A transparent layer over a thin card on a dark desk renders as
+                  light text on black — the whiteboard taught this exact lesson
+                  one wall away. */}
+              <div
+                className="flex h-full w-full flex-col justify-center"
+                style={{
+                  padding: "0 46px",
+                  color: "#1e2732",
+                  background: "linear-gradient(150deg, #fdfbf6 0%, #f2eee5 100%)",
+                }}
+              >
+                <div style={{ fontSize: "46px", fontWeight: 600, lineHeight: 1.1 }}>
+                  {site.firstName} {site.lastName}
+                </div>
+                <div
+                  className="font-mono"
+                  style={{
+                    fontSize: "25px",
+                    letterSpacing: "0.1em",
+                    color: "#7c8894",
+                    marginTop: "10px",
+                  }}
+                >
+                  {site.role.toUpperCase()}
+                </div>
+                <div
+                  style={{
+                    height: "2px",
+                    background: "#d6d0c4",
+                    margin: "22px 0 20px",
+                  }}
+                />
+                <div className="font-mono" style={{ fontSize: "27px", color: "#2b3642" }}>
+                  {site.email}
+                </div>
+                <div
+                  className="font-mono"
+                  style={{ fontSize: "27px", color: "#6b7683", marginTop: "8px" }}
+                >
+                  {site.phoneDisplay}
+                </div>
+              </div>
+            </Html>
+          </group>
         </group>
       )}
     </Interactive>
@@ -369,10 +380,18 @@ export function GymBag({
 }
 
 /**
- * The career timeline, framed on the wall.
+ * The career timeline, framed on the wall above the desk.
  *
- * Roles are drawn as a rail with a marker per position, generated from
- * `resume.ts`, so a new job adds a marker rather than needing the art redrawn.
+ * Rebuilt from geometry to text. The first version drew the timeline as a rail
+ * with dots and small coloured rectangles standing in for the labels — which is
+ * the mistake the social icons already taught: shapes standing in for words are
+ * not a timeline, they are a diagram of one. You could see that something was
+ * being charted and never what.
+ *
+ * It also turned the long way round. A career is a list of lines of text, and
+ * lines of text stack vertically; laid out horizontally, six roles gave each
+ * entry 80px of width to hold a job title in. Portrait frame, vertical rail,
+ * real type.
  */
 export function CareerFrame({
   position,
@@ -385,10 +404,11 @@ export function CareerFrame({
   career: CareerData;
   onOpen: (card: InfoCard) => void;
 }) {
-  const W = 0.72;
-  const H = 0.46;
-  const n = Math.max(career.roles.length, 1);
-  const usable = W - 0.16;
+  const W = 0.62;
+  const H = 0.78;
+  const PX_W = 520;
+  const PX_H = 654;
+  const PAD = 34;
 
   return (
     <Interactive
@@ -417,7 +437,8 @@ export function CareerFrame({
     >
       {(hovered) => (
         <group position={position} rotation={rotation}>
-          <RoundedBox args={[W, H, 0.02]} radius={0.004} smoothness={3} castShadow>
+          {/* frame */}
+          <RoundedBox args={[W, H, 0.022]} radius={0.004} smoothness={3} castShadow>
             <meshStandardMaterial
               color="#8d7350"
               roughness={0.6}
@@ -425,42 +446,126 @@ export function CareerFrame({
               emissiveIntensity={hovered ? 0.26 : 0}
             />
           </RoundedBox>
-          <mesh position={[0, 0, 0.012]}>
+          {/* mount board, so the print sits inside a border rather than
+              filling the frame edge to edge */}
+          <mesh position={[0, 0, 0.0115]}>
             <planeGeometry args={[W - 0.03, H - 0.03]} />
-            <meshStandardMaterial color="#f4f1e8" roughness={0.9} />
+            <meshStandardMaterial color="#efece3" roughness={0.9} />
           </mesh>
-          {/* rail */}
-          <mesh position={[0, -0.03, 0.013]}>
-            <planeGeometry args={[usable, 0.004]} />
-            <meshBasicMaterial color="#9aa6b2" />
-          </mesh>
-          {/* one marker per role, newest on the right */}
-          {career.roles.map((r, i) => {
-            const x =
-              -usable / 2 + (usable * (n - 1 - i)) / Math.max(n - 1, 1);
-            return (
-              <group key={`${r.company}-${r.period}`} position={[x, 0, 0.014]}>
-                <mesh position={[0, -0.03, 0]}>
-                  <circleGeometry args={[i === 0 ? 0.014 : 0.009, 18]} />
-                  <meshBasicMaterial color={i === 0 ? "#b4653a" : "#6d7a86"} />
-                </mesh>
-                {/* stem + label block, alternating above and below the rail */}
-                <mesh position={[0, i % 2 === 0 ? 0.01 : -0.07, 0]}>
-                  <planeGeometry args={[0.0025, 0.055]} />
-                  <meshBasicMaterial color="#c2ccd6" />
-                </mesh>
-                <mesh position={[0, i % 2 === 0 ? 0.052 : -0.112, 0]}>
-                  <planeGeometry args={[0.062, 0.03]} />
-                  <meshBasicMaterial color="#dde3ea" />
-                </mesh>
-              </group>
-            );
-          })}
-          {/* title block */}
-          <mesh position={[0, H / 2 - 0.06, 0.013]}>
-            <planeGeometry args={[0.26, 0.016]} />
-            <meshBasicMaterial color="#5d6873" />
-          </mesh>
+
+          <Html
+            transform
+            occlude="blending"
+            distanceFactor={((W - 0.06) / PX_W) * 400}
+            position={[0, 0, 0.013]}
+            zIndexRange={[10, 0]}
+            style={{
+              width: `${PX_W}px`,
+              height: `${PX_H}px`,
+              pointerEvents: "none",
+              userSelect: "none",
+            }}
+          >
+            {/* Paper painted here, not left to the mesh — this wall faces away
+                from both lamps and an unlit plane behind a transparent layer
+                comes out black. */}
+            <div
+              className="flex h-full w-full flex-col"
+              style={{
+                padding: `${PAD}px`,
+                background: "linear-gradient(160deg, #fbf8f1 0%, #f2eee3 100%)",
+                color: "#26313d",
+              }}
+            >
+              <div className="flex items-baseline justify-between">
+                <span
+                  className="font-mono"
+                  style={{ fontSize: "23px", letterSpacing: "0.22em", fontWeight: 600 }}
+                >
+                  CAREER
+                </span>
+                <span
+                  className="font-mono"
+                  style={{ fontSize: "15px", color: "#8b8271" }}
+                >
+                  {career.roles.length} roles
+                </span>
+              </div>
+              <div style={{ height: "2px", background: "#ddd6c7", margin: "14px 0 16px" }} />
+
+              {/* The rail is a left border on the list rather than its own
+                  element, so it cannot fall out of step with the entries. */}
+              <div
+                className="flex-1"
+                style={{ borderLeft: "2px solid #cfc6b4", paddingLeft: "20px" }}
+              >
+                {career.roles.map((r, i) => (
+                  <div
+                    key={`${r.company}-${r.period}`}
+                    style={{ position: "relative", marginBottom: "15px" }}
+                  >
+                    {/* dot, pulled back onto the rail; the current role is
+                        filled and larger so "now" reads without a legend */}
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: i === 0 ? "-27px" : "-25px",
+                        top: "6px",
+                        width: i === 0 ? "12px" : "8px",
+                        height: i === 0 ? "12px" : "8px",
+                        borderRadius: "50%",
+                        background: i === 0 ? "#b4653a" : "#efece3",
+                        border: i === 0 ? "none" : "2px solid #a79c88",
+                      }}
+                    />
+                    <div
+                      className="font-mono"
+                      style={{ fontSize: "14px", color: "#8b8271", letterSpacing: "0.04em" }}
+                    >
+                      {r.period}
+                    </div>
+                    <div style={{ fontSize: "19px", fontWeight: 600, lineHeight: 1.2 }}>
+                      {r.role}
+                    </div>
+                    <div style={{ fontSize: "16px", color: "#5d6875", lineHeight: 1.25 }}>
+                      {r.company}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {career.education.length > 0 && (
+                <>
+                  <div
+                    style={{ height: "1px", background: "#ddd6c7", margin: "4px 0 12px" }}
+                  />
+                  <div
+                    className="font-mono"
+                    style={{
+                      fontSize: "13px",
+                      letterSpacing: "0.18em",
+                      color: "#8b8271",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    EDUCATION
+                  </div>
+                  {career.education.map((e) => (
+                    <div
+                      key={`${e.institution}-${e.period}`}
+                      className="flex items-baseline justify-between"
+                      style={{ fontSize: "15px", marginBottom: "4px" }}
+                    >
+                      <span style={{ color: "#3c4753" }}>{e.title}</span>
+                      <span className="font-mono" style={{ fontSize: "13px", color: "#8b8271" }}>
+                        {e.period}
+                      </span>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </Html>
         </group>
       )}
     </Interactive>

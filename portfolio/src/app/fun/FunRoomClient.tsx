@@ -8,6 +8,7 @@
 
 import dynamic from "next/dynamic";
 import type { CareerData, ShelfData } from "@/components/fun/shelf";
+import type { SourceExcerpt } from "@/lib/source-excerpt";
 
 const FunRoom = dynamic(() => import("@/components/fun/FunRoom"), {
   ssr: false,
@@ -21,9 +22,11 @@ const FunRoom = dynamic(() => import("@/components/fun/FunRoom"), {
 export default function FunRoomClient({
   shelf,
   career,
+  source,
 }: {
   shelf: ShelfData;
   career: CareerData;
+  source: SourceExcerpt;
 }) {
-  return <FunRoom shelf={shelf} career={career} />;
+  return <FunRoom shelf={shelf} career={career} source={source} />;
 }

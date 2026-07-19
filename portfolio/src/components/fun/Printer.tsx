@@ -1,6 +1,6 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { Html, RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -25,6 +25,28 @@ const SWITCHES: { key: keyof ToggleFlags; label: string }[] = [
   { key: "homeLab", label: "home lab" },
   { key: "photo", label: "photo" },
 ];
+
+/** Where switch `i` sits on the lid. The printed legend reads this too, so a
+ *  label can never end up over the wrong switch. */
+const switchX = (i: number) => -0.105 + i * 0.07;
+
+/**
+ * The printed legend on the lid, and the canvas it is authored on.
+ *
+ * `LEGEND_Y` is above the lid's top face, not level with it. The lid box spans
+ * y 0.107 to 0.123, and the first version of this panel sat at 0.1185 — inside
+ * the lid, occluded by the very thing it was printed on, and therefore
+ * completely invisible.
+ *
+ * It sits *behind* the switch row rather than in front, so each label reads as
+ * belonging to the switch directly ahead of it, the way a control panel legend
+ * does. In front, it would have collided with the print button.
+ */
+const LEGEND_W = 0.4;
+const LEGEND_PX_W = 660;
+const LEGEND_PX_H = 148;
+const LEGEND_Y = 0.1235;
+const LEGEND_Z = -0.085;
 
 function resolveUrl(variants: ManifestEntry[] | null, flags: ToggleFlags) {
   if (!variants) return null;
@@ -228,10 +250,102 @@ export function Printer({
         </mesh>
       </group>
 
+      {/* The lid legend.
+          Four unlabelled rocker switches told a visitor nothing — you had to
+          put the crosshair on each one in turn to discover what it did, and
+          nothing at all announced that this machine builds a CV. The panel is
+          real DOM for the same reason the monitors are: lettering at this size
+          has to be text, not geometry.
+
+          It is laid out to sit directly above the physical switches, so the
+          label and the thing it labels are unambiguously paired. Both are
+          placed off the same `switchX`. */}
+      <Html
+        transform
+        occlude="blending"
+        distanceFactor={(LEGEND_W / LEGEND_PX_W) * 400}
+        position={[0, LEGEND_Y, LEGEND_Z]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        zIndexRange={[10, 0]}
+        style={{
+          width: `${LEGEND_PX_W}px`,
+          height: `${LEGEND_PX_H}px`,
+          pointerEvents: "none",
+          userSelect: "none",
+        }}
+      >
+        {/* A printed label, with its own stock. Dark text on a transparent
+            layer over a charcoal lid is invisible — which is exactly how the
+            first version of this panel shipped. */}
+        <div
+          className="flex h-full w-full flex-col font-mono"
+          style={{
+            color: "#0d1014",
+            padding: "8px 12px 6px",
+            background: "linear-gradient(150deg, #e8e6e1 0%, #d6d3cc 100%)",
+            borderRadius: "3px",
+          }}
+        >
+          <div className="flex items-baseline justify-between">
+            <span style={{ fontSize: "26px", letterSpacing: "0.22em", fontWeight: 700 }}>
+              CV BUILDER
+            </span>
+            <span style={{ fontSize: "17px", color: "#5c646d", letterSpacing: "0.1em" }}>
+              {ready ? "READY" : "OFFLINE"}
+            </span>
+          </div>
+          <div
+            style={{ height: "2px", background: "#8f959c", margin: "7px 0 10px" }}
+          />
+          {/* Columns are centred on `switchX(i)` converted back into legend
+              pixels, so each label sits directly behind its own switch however
+              the row is spaced. */}
+          <div className="relative flex-1">
+            {SWITCHES.map((s, i) => (
+              <div
+                key={s.key}
+                className="absolute flex flex-col items-center"
+                style={{
+                  width: "150px",
+                  left: `${LEGEND_PX_W / 2 + (switchX(i) / LEGEND_W) * LEGEND_PX_W - 75}px`,
+                  top: 0,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "18px",
+                    letterSpacing: "0.06em",
+                    textAlign: "center",
+                    lineHeight: 1.15,
+                    color: "#1b2027",
+                  }}
+                >
+                  {s.label.toUpperCase()}
+                </span>
+                <span
+                  style={{
+                    marginTop: "6px",
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    letterSpacing: "0.1em",
+                    padding: "2px 9px",
+                    borderRadius: "9px",
+                    color: flags[s.key] ? "#07331f" : "#4a5058",
+                    background: flags[s.key] ? "#3ddc97" : "#c3c7cc",
+                  }}
+                >
+                  {flags[s.key] ? "ON" : "OFF"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Html>
+
       {SWITCHES.map((s, i) => (
         <Switch
           key={s.key}
-          x={-0.105 + i * 0.07}
+          x={switchX(i)}
           on={flags[s.key]}
           label={`${s.label} — ${flags[s.key] ? "on" : "off"}`}
           onToggle={() => toggle(s.key)}
