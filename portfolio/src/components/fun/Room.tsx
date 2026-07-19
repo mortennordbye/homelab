@@ -1,0 +1,342 @@
+"use client";
+
+import { MeshReflectorMaterial, RoundedBox } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
+import * as THREE from "three";
+import { Sideboard } from "./Devices";
+import { Printer } from "./Printer";
+import { useSurface } from "./textures";
+
+// A small personal room, not a corporate NOC. Roughly 5.2 x 4.8m with a 2.5m
+// ceiling: a spare room with a desk in it, which is what a homelab actually
+// lives in.
+export const ROOM = { w: 5.2, d: 4.8, h: 2.5 };
+
+/** Desk task chair, pushed back from the desk. */
+function Chair({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position} rotation={[0, Math.PI, 0]}>
+      <mesh position={[0, 0.03, 0]}>
+        <cylinderGeometry args={[0.28, 0.3, 0.04, 16]} />
+        <meshStandardMaterial color="#141619" roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 0.26, 0]}>
+        <cylinderGeometry args={[0.04, 0.04, 0.44, 12]} />
+        <meshStandardMaterial color="#1b1e21" roughness={0.4} metalness={0.7} />
+      </mesh>
+      <RoundedBox position={[0, 0.5, 0]} args={[0.46, 0.08, 0.44]} radius={0.022} smoothness={4} castShadow>
+        <meshStandardMaterial color="#16191c" roughness={0.98} />
+      </RoundedBox>
+      <RoundedBox position={[0, 0.82, -0.19]} rotation={[0.18, 0, 0]} args={[0.42, 0.56, 0.07]} radius={0.026} smoothness={4} castShadow>
+        <meshStandardMaterial color="#16191c" roughness={0.98} />
+      </RoundedBox>
+    </group>
+  );
+}
+
+/** Monitor stand. The panel itself is a <Screen>, mounted just above this. */
+function Stand({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <RoundedBox position={[0, 0.008, 0]} args={[0.2, 0.016, 0.14]} radius={0.005} smoothness={3} castShadow>
+        <meshStandardMaterial color="#4a4d52" roughness={0.5} metalness={0.5} />
+      </RoundedBox>
+      <RoundedBox position={[0, 0.11, 0]} args={[0.035, 0.2, 0.03]} radius={0.008} smoothness={3} castShadow>
+        <meshStandardMaterial color="#4a4d52" roughness={0.5} metalness={0.5} />
+      </RoundedBox>
+    </group>
+  );
+}
+
+/** Mushroom lamp: cream glass dome on a small base. */
+function MushroomLamp({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh castShadow receiveShadow>
+        <cylinderGeometry args={[0.052, 0.062, 0.014, 24]} />
+        <meshStandardMaterial color="#cfc3ae" roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.05, 0]} castShadow>
+        <cylinderGeometry args={[0.032, 0.04, 0.086, 20]} />
+        <meshStandardMaterial color="#e0d5c0" roughness={0.55} />
+      </mesh>
+      {/* the dome, lit from inside */}
+      <mesh position={[0, 0.118, 0]} castShadow>
+        <sphereGeometry args={[0.078, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.62]} />
+        <meshStandardMaterial
+          color="#fdf4e4"
+          roughness={0.42}
+          emissive="#ffd9a4"
+          emissiveIntensity={0.85}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * Potted plant. Overlapping squashed spheres rather than crossed billboards:
+ * flat quads with no alpha texture read as cardboard from every angle.
+ */
+function Plant({ position }: { position: [number, number, number] }) {
+  const blobs: [number, number, number, number][] = [
+    [0, 0.24, 0, 0.115],
+    [-0.08, 0.19, 0.05, 0.085],
+    [0.09, 0.2, -0.04, 0.08],
+    [0.02, 0.31, 0.06, 0.07],
+  ];
+  return (
+    <group position={position}>
+      <mesh castShadow receiveShadow>
+        <cylinderGeometry args={[0.072, 0.056, 0.13, 20]} />
+        <meshStandardMaterial color="#d8cdb8" roughness={0.84} />
+      </mesh>
+      <mesh position={[0, 0.068, 0]}>
+        <cylinderGeometry args={[0.066, 0.066, 0.012, 20]} />
+        <meshStandardMaterial color="#4a3f31" roughness={0.95} />
+      </mesh>
+      {blobs.map(([x, y, z, r], i) => (
+        <mesh key={i} position={[x, y, z]} scale={[1, 0.8, 1]} castShadow>
+          <icosahedronGeometry args={[r, 1]} />
+          <meshStandardMaterial
+            color={i % 2 === 0 ? "#57694b" : "#627454"}
+            roughness={0.9}
+            flatShading
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** Framed print, like the ones above the sideboard. */
+function FramedPrint({
+  position,
+  rotation = [0, 0, 0],
+  w = 0.4,
+  h = 0.54,
+  art = "#8ea174",
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  w?: number;
+  h?: number;
+  art?: string;
+}) {
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox args={[w, h, 0.018]} radius={0.003} smoothness={3} castShadow>
+        <meshStandardMaterial color="#b99a6f" roughness={0.6} />
+      </RoundedBox>
+      <mesh position={[0, 0, 0.011]}>
+        <planeGeometry args={[w - 0.05, h - 0.05]} />
+        <meshStandardMaterial color="#f2efe6" roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 0.01, 0.012]}>
+        <planeGeometry args={[w - 0.12, h - 0.16]} />
+        <meshStandardMaterial color={art} roughness={0.88} />
+      </mesh>
+    </group>
+  );
+}
+
+export function Room({
+  onPrinterStatus,
+}: {
+  onPrinterStatus: (msg: string | null) => void;
+}) {
+  const hw = ROOM.w / 2;
+  const hd = ROOM.d / 2;
+  // Tiling is in real units: roughly one texture tile per 1.3m of floor and
+  // 1.7m of wall, so the grain reads at the right physical scale.
+  const floorOak = useSurface("laminate_floor_02", [3.4, 3.1]);
+  const wallBack = useSurface("plastered_wall_04", [3, 1.45]);
+  const wallSide = useSurface("plastered_wall_04", [2.8, 1.45]);
+  const ceiling = useSurface("plastered_wall_04", [3.6, 3.3]);
+  const oak = useSurface("oak_veneer_01", [2.4, 0.7]);
+  const rug = useSurface("dirty_carpet", [3, 2.1]);
+
+  return (
+    <group>
+      {/* floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[ROOM.w, ROOM.d]} />
+        <MeshReflectorMaterial
+          resolution={256}
+          mirror={0.12}
+          mixBlur={14}
+          mixStrength={1.1}
+          blur={[500, 200]}
+          depthScale={0.4}
+          minDepthThreshold={0.6}
+          maxDepthThreshold={1.4}
+          {...floorOak}
+          color="#c3bdb2"
+          roughness={0.98}
+          metalness={0}
+        />
+      </mesh>
+
+      {/* plain painted ceiling, one light fitting. No office grid. */}
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, ROOM.h, 0]}>
+        <planeGeometry args={[ROOM.w, ROOM.d]} />
+        <meshStandardMaterial
+          {...ceiling}
+          color="#f2f0ea"
+          roughness={0.98}
+          metalness={0}
+          normalScale={[0.12, 0.12]}
+        />
+      </mesh>
+      <mesh position={[0, ROOM.h - 0.02, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[0.62, 0.62]} />
+        <meshBasicMaterial color="#f6f1e6" />
+      </mesh>
+
+      {/* walls */}
+      <mesh position={[0, ROOM.h / 2, -hd]} receiveShadow>
+        <planeGeometry args={[ROOM.w, ROOM.h]} />
+        <meshStandardMaterial {...wallBack} color="#aebaa6" roughness={0.96} metalness={0} normalScale={[0.42, 0.42]} />
+      </mesh>
+      <mesh position={[0, ROOM.h / 2, hd]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[ROOM.w, ROOM.h]} />
+        <meshStandardMaterial {...wallSide} color="#b4c0ac" roughness={0.96} metalness={0} normalScale={[0.42, 0.42]} />
+      </mesh>
+      <mesh position={[-hw, ROOM.h / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+        <planeGeometry args={[ROOM.d, ROOM.h]} />
+        <meshStandardMaterial {...wallSide} color="#b0bca8" roughness={0.96} metalness={0} normalScale={[0.42, 0.42]} />
+      </mesh>
+      <mesh position={[hw, ROOM.h / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+        <planeGeometry args={[ROOM.d, ROOM.h]} />
+        <meshStandardMaterial {...wallSide} color="#b0bca8" roughness={0.96} metalness={0} normalScale={[0.42, 0.42]} />
+      </mesh>
+
+      {/* skirting */}
+      {(
+        [
+          { p: [0, 0.05, -hd + 0.012], r: [0, 0, 0], w: ROOM.w },
+          { p: [0, 0.05, hd - 0.012], r: [0, Math.PI, 0], w: ROOM.w },
+          { p: [-hw + 0.012, 0.05, 0], r: [0, Math.PI / 2, 0], w: ROOM.d },
+          { p: [hw - 0.012, 0.05, 0], r: [0, -Math.PI / 2, 0], w: ROOM.d },
+        ] as { p: [number, number, number]; r: [number, number, number]; w: number }[]
+      ).map((s, i) => (
+        <mesh key={i} position={s.p} rotation={s.r}>
+          <planeGeometry args={[s.w, 0.1]} />
+          <meshStandardMaterial color="#ece9e2" roughness={0.72} />
+        </mesh>
+      ))}
+
+      {/* window on the right wall: the daylight source, and the reason the
+          room is bright rather than a cave */}
+      <group position={[hw - 0.02, 1.45, 0.55]} rotation={[0, -Math.PI / 2, 0]}>
+        <mesh>
+          <planeGeometry args={[1.5, 1.25]} />
+          <meshBasicMaterial color="#eef4fb" />
+        </mesh>
+        {/* frame + glazing bar */}
+        <RoundedBox position={[0, 0, 0.03]} args={[1.58, 1.33, 0.05]} radius={0.006} smoothness={3} castShadow>
+          <meshStandardMaterial color="#f0ede6" roughness={0.7} />
+        </RoundedBox>
+        <mesh position={[0, 0, 0.045]}>
+          <planeGeometry args={[1.44, 1.19]} />
+          <meshBasicMaterial color="#eef4fb" />
+        </mesh>
+        <mesh position={[0, 0, 0.05]}>
+          <boxGeometry args={[0.022, 1.19, 0.012]} />
+          <meshStandardMaterial color="#f0ede6" roughness={0.7} />
+        </mesh>
+        {/* sill */}
+        <mesh position={[0, -0.68, 0.08]} castShadow receiveShadow>
+          <boxGeometry args={[1.62, 0.04, 0.16]} />
+          <meshStandardMaterial color="#efece4" roughness={0.7} />
+        </mesh>
+      </group>
+
+      {/* prints above the desk, thin wood frames */}
+      <FramedPrint position={[-1.72, 1.72, -hd + 0.03]} w={0.38} h={0.5} art="#7f9a63" />
+      <FramedPrint position={[1.78, 1.68, -hd + 0.03]} w={0.34} h={0.44} art="#7d9db4" />
+
+      {/* jute rug */}
+      <mesh position={[0, 0.004, 0.15]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[3.0, 2.1]} />
+        <meshStandardMaterial
+          {...rug}
+          color="#8a7550"
+          roughness={0.98}
+          metalness={0}
+          normalScale={[0.8, 0.8]}
+        />
+      </mesh>
+
+      {/* door, back-right on the wall behind you */}
+      <group position={[1.55, 0, hd - 0.015]} rotation={[0, Math.PI, 0]}>
+        <mesh position={[0, 1.02, 0]}>
+          <planeGeometry args={[0.88, 2.04]} />
+          <meshStandardMaterial color="#ece9e2" roughness={0.8} />
+        </mesh>
+        <mesh position={[-0.33, 1.0, -0.02]}>
+          <boxGeometry args={[0.1, 0.028, 0.028]} />
+          <meshStandardMaterial color="#8d939a" roughness={0.3} metalness={0.9} />
+        </mesh>
+      </group>
+
+      {/* desk against the screen wall */}
+      <group position={[0, 0, -hd + 0.38]}>
+        <RoundedBox position={[0, 0.735, 0]} args={[2.6, 0.04, 0.72]} radius={0.008} smoothness={3} castShadow receiveShadow>
+          <meshStandardMaterial {...oak} color="#d2bd97" roughness={0.62} metalness={0} normalScale={[0.45, 0.45]} />
+        </RoundedBox>
+        {[-1.24, 1.24].map((x) => (
+          <RoundedBox key={x} position={[x, 0.36, 0]} args={[0.05, 0.72, 0.66]} radius={0.006} smoothness={3} castShadow receiveShadow>
+            <meshStandardMaterial {...oak} color="#c9b48d" roughness={0.66} metalness={0} />
+          </RoundedBox>
+        ))}
+        {/* keyboard + mouse + mug */}
+        <RoundedBox position={[-0.05, 0.765, 0.19]} args={[0.43, 0.018, 0.14]} radius={0.004} smoothness={3} castShadow>
+          <meshStandardMaterial color="#1c1f22" roughness={0.8} />
+        </RoundedBox>
+        <RoundedBox position={[0.33, 0.768, 0.19]} args={[0.06, 0.025, 0.1]} radius={0.011} smoothness={4} castShadow>
+          <meshStandardMaterial color="#1c1f22" roughness={0.8} />
+        </RoundedBox>
+        <mesh position={[0.72, 0.795, 0.16]}>
+          <cylinderGeometry args={[0.042, 0.038, 0.095, 16]} />
+          <meshStandardMaterial color="#8d8378" roughness={0.85} />
+        </mesh>
+
+        <Stand position={[-0.72, 0.755, -0.2]} />
+        <Stand position={[0, 0.755, -0.24]} />
+        <Stand position={[0.72, 0.755, -0.2]} />
+        <MushroomLamp position={[-1.02, 0.755, -0.1]} />
+      </group>
+
+      <Plant position={[hw - 0.42, 0.065, hd - 0.55]} />
+      <Chair position={[0, 0, -0.72]} />
+
+      {/* The homelab: a sideboard that looks like living-room furniture until
+          you open it. Against the right wall, facing into the room. */}
+      <group position={[hw - 0.28, 0, 0.35]} rotation={[0, -Math.PI / 2, 0]}>
+        <Sideboard position={[0, 0, 0]} />
+      </group>
+
+      {/* printer on a low cabinet, left wall */}
+      <group position={[-hw + 0.34, 0, -0.95]}>
+        <RoundedBox
+          position={[0, 0.3, 0]}
+          args={[0.46, 0.6, 0.44]}
+          radius={0.008}
+          smoothness={3}
+          castShadow
+          receiveShadow
+        >
+          <meshStandardMaterial {...oak} color="#cdb992" roughness={0.66} metalness={0} />
+        </RoundedBox>
+        <Printer
+          position={[0, 0.6, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+          onStatus={onPrinterStatus}
+        />
+      </group>
+    </group>
+  );
+}

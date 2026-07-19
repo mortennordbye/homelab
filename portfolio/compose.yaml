@@ -38,6 +38,11 @@ services:
       - next-cache:/app/.next
     environment:
       NEXT_TELEMETRY_DISABLED: "1"
+      # Point /api/v1/infra at a local fixture instead of the ConfigMap the
+      # cluster mounts at /config/status.json. Same code path, local data —
+      # without it the endpoint falls back to the two-field build-time
+      # snapshot and the fun room has almost nothing to display.
+      STATUS_FILE: "/app/dev/status.json"
     depends_on:
       cv-bundle:
         condition: service_completed_successfully

@@ -1,0 +1,241 @@
+{
+  "generatedAt": "2026-07-19T12:39:26Z",
+  "build": "72088b9",
+  "deployedAt": "2026-07-18T19:33:03Z",
+  "argocd": {
+    "sync": "Synced",
+    "health": "Healthy",
+    "syncedAt": "2026-07-18T19:32:03Z"
+  },
+  "nodes": {
+    "ready": 6,
+    "total": 6
+  },
+  "versions": {
+    "talos": "v1.11.6",
+    "kubernetes": "v1.34.0"
+  },
+  "cert": {
+    "notAfter": "2026-09-25T11:41:28Z"
+  },
+  "history": [
+    {
+      "d": "2026-06-20",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-06-21",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-06-22",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-06-23",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-06-24",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-06-25",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-06-26",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-06-27",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-06-28",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-06-29",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-06-30",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-01",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-02",
+      "ok": 272,
+      "total": 288
+    },
+    {
+      "d": "2026-07-03",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-04",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-05",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-06",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-07",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-08",
+      "ok": 0,
+      "total": 0
+    },
+    {
+      "d": "2026-07-09",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-10",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-11",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-12",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-13",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-14",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-15",
+      "ok": 278,
+      "total": 288
+    },
+    {
+      "d": "2026-07-16",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-17",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-18",
+      "ok": 288,
+      "total": 288
+    },
+    {
+      "d": "2026-07-19",
+      "ok": 288,
+      "total": 288
+    }
+  ],
+  "apps": [
+    {
+      "name": "portfolio",
+      "sync": "Synced",
+      "health": "Healthy"
+    },
+    {
+      "name": "blog",
+      "sync": "Synced",
+      "health": "Healthy"
+    },
+    {
+      "name": "headroom",
+      "sync": "Synced",
+      "health": "Healthy"
+    },
+    {
+      "name": "homepage",
+      "sync": "Synced",
+      "health": "Healthy"
+    },
+    {
+      "name": "it-tools",
+      "sync": "Synced",
+      "health": "Healthy"
+    },
+    {
+      "name": "logeverylift",
+      "sync": "Synced",
+      "health": "Healthy"
+    },
+    {
+      "name": "mealie",
+      "sync": "Synced",
+      "health": "Degraded"
+    },
+    {
+      "name": "audiobookshelf",
+      "sync": "OutOfSync",
+      "health": "Healthy"
+    }
+  ],
+  "capacity": {
+    "cpuRequested": 41,
+    "cpuAllocatable": 96,
+    "memRequestedGi": 63,
+    "memAllocatableGi": 188,
+    "pods": 147,
+    "podCapacity": 660
+  },
+  "certs": [
+    {
+      "name": "nordbye.it",
+      "daysLeft": 67
+    },
+    {
+      "name": "blog.nordbye.it",
+      "daysLeft": 67
+    },
+    {
+      "name": "argocd.nordbye.it",
+      "daysLeft": 52
+    },
+    {
+      "name": "grafana.nordbye.it",
+      "daysLeft": 52
+    }
+  ]
+}
