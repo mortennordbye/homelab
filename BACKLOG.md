@@ -26,25 +26,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Pick the prober, publish daily results as JSON the page can fetch (second file next to `status.json`, or merged into it), then swap the strip's data source and drop the "observed in-cluster" qualifier.
 - **Where:** `portfolio/src/components/infrastructure/LiveStatus.tsx` (`buildUptime`), `k8s/talos/apps/portfolio/status-publisher.yaml` (history merge step).
 
-## Portfolio modern — items deferred during initial build
-
-### Lighthouse / axe verification on the live stage URL
-- **What:** Run Lighthouse mobile + `@axe-core/cli` against the deployed `portfolio-stage` URL and act on findings (target ≥95 perf / 100 a11y / 100 SEO).
-- **Why deferred:** Site has not yet been deployed to stage — first push to `portfolio/**` will trigger CI and deploy.
-- **Unblock:** Push the branch, wait for ArgoCD sync, run Lighthouse against `portfolio-stage.local.bigd.no`.
-- **Where:** Run from `portfolio/` after deploy.
-
-### CI auto-rebuild of CV/résumé PDFs on content change
-- **What:** GitHub Action that runs `cd portfolio && make cv` (with TeX Live in CI) when `src/content/{site,resume,skills}.ts` changes, then commits the refreshed `public/{resume,cv}.pdf` back to the branch.
-- **Why deferred:** Manual `make cv` works fine for now; user can re-run locally and commit the PDFs. Adding CI = an extra ~3 GB Docker layer or a `xu-cheng/latex-action` step in the workflow.
-- **Unblock:** Decide whether the CI runs the full TeX Live image (slow but cached) or a slim variant. Add a `.github/workflows/build-cv.yaml`.
-- **Where:** `.github/workflows/`, `portfolio/Makefile` already has the targets.
-
-### Tighten résumé bullet copy for PDF density
-- **What:** The website resume bullets read more like LinkedIn paragraphs than CV bullets — fine for the web (long-form) but pushes the PDF to 2 pages with dense text. Tightening to 1 sentence per `\item` would let the résumé fit on a single page.
-- **Why deferred:** Single-source-of-truth design means tightening for the PDF would shorten the website too — that's a content-voice decision, not a tooling fix.
-- **Unblock:** Edit each `description` array in `src/content/resume.ts` to 1 punchy sentence per element.
-- **Where:** `portfolio/src/content/resume.ts`.
+## Portfolio
 
 ### Image optimization pass
 - **What:** Re-encode the migrated case-study images via `sharp` to a normalised max-width and AVIF + WebP. Drop any unused PNGs that weren't migrated.
@@ -64,10 +46,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Decide the route/assertion list, add `portfolio/tests/` with a Playwright config running via `mcr.microsoft.com/playwright` Docker image, add the CI job.
 - **Where:** `.github/workflows/ci-portfolio.yaml`, new `portfolio/tests/`.
 
-### ESLint 9 → 10 and TypeScript 5 → 6 bump
-- **What:** Bump `eslint` to `^10` and `typescript` to `^6` in `portfolio/package.json`. Held back during the 2026-06-16 dependency-upgrade pass (which shipped Node 22, Next 16.2.9, React 19.2.7, and the patch/minor batch).
-- **Why deferred:** `eslint-config-next@16.2.9` transitively bundles `typescript-eslint@8`, whose ESLint peer range tops out at 9 and which warns on TS 6.x. Forcing either major now risks a peer/plugin mismatch with zero runtime benefit (lint + typecheck only). The two unblock together.
-- **Unblock:** Wait for an `eslint-config-next` release built on `typescript-eslint@9` (supports ESLint 10 + TS 6). Then bump both, run a containerised `tsc --noEmit` and `next build`, and clear any new `strict`-mode diagnostics TS 6 surfaces.
+### ESLint 9 → 10 bump
+- **What:** Bump `eslint` to `^10` in `portfolio/package.json`. Originally paired with a TypeScript 5 → 6 bump; the TS half has since shipped (`typescript` is now `^6.0.0`), leaving only ESLint.
+- **Why deferred:** `eslint-config-next@16.2.10` transitively bundles `typescript-eslint@8`, whose ESLint peer range tops out at 9. Forcing the major risks a peer/plugin mismatch with zero runtime benefit (lint only).
+- **Unblock:** Wait for an `eslint-config-next` release built on `typescript-eslint@9` (supports ESLint 10). Then bump, and run a containerised `make lint` to confirm the config still loads.
 - **Where:** `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
 
 ## Portfolio API
