@@ -5,6 +5,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import {
   Bloom,
   EffectComposer,
+  N8AO,
   ToneMapping,
   Vignette,
 } from "@react-three/postprocessing";
@@ -21,6 +22,19 @@ import { Screen } from "./Screen";
 import { Crosshair, InteractPrompt, Keybinds } from "./Hud";
 import { InteractionProvider, type Prompt } from "./interaction";
 import { useInfraFeed } from "./feed";
+import { preloadProps } from "./props";
+import { preloadSurfaces } from "./textures";
+
+// Kick both caches at module scope. This route is dynamic-imported behind a
+// nav click, so the module only evaluates once someone is heading here, and
+// the fetches then overlap the entry sequence instead of popping in surface by
+// surface after the room appears.
+//
+// These were previously exported and never called, which is worth flagging:
+// a dead preload is invisible, because everything still loads correctly, just
+// later and one at a time.
+preloadSurfaces();
+preloadProps();
 
 // -----------------------------------------------------------------------------
 // Screen placement. Four on the wall you face, two on the left, one on the right,
@@ -101,14 +115,21 @@ function Lighting({ poweredCount }: { poweredCount: number }) {
       {/* Nordic daylight: a bright, soft, warm room rather than a dark one.
           The window does most of the fill, the ceiling fitting and the desk
           lamp add warmth, and the monitors contribute rather than dominate.
-          Only the daylight casts shadows — one shadow map is plenty. */}
-      <ambientLight intensity={0.5} color="#f2ece2" />
-      <hemisphereLight args={["#fff4e4", "#bdae94", 0.9]} />
+          Only the daylight casts shadows — one shadow map is plenty.
+
+          Ambient and hemisphere are kept deliberately low. They add light from
+          everywhere at once, which no real room does, and every unit of it
+          flattens the shading gradient that tells you what shape a thing is.
+          An earlier pass ran these at 0.5 and 0.9 to brighten the room and the
+          result was uniformly lit and fake. Brightness belongs in the window
+          and the fittings, where it arrives from a direction and falls off. */}
+      <ambientLight intensity={0.12} color="#f2ece2" />
+      <hemisphereLight args={["#e8f0fb", "#9d8a6a", 0.3]} />
 
       {/* soft daylight from the window on the right wall */}
       <directionalLight
         position={[4.4, 2.1, 1.2]}
-        intensity={0.78}
+        intensity={2.5}
         color="#eaf1fb"
         castShadow
         shadow-mapSize={[2048, 2048]}
@@ -157,14 +178,28 @@ function Lighting({ poweredCount }: { poweredCount: number }) {
 
 /* Raw WebGL output is most of what reads as "someone's three.js demo".
    Filmic tone mapping, a little bloom on the screens, and a vignette do more
-   for perceived quality than any texture resolution. */
+   for perceived quality than any texture resolution.
+
+   Ambient occlusion comes first in the chain and matters most. Direct lights
+   cannot darken a crease, so without AO every corner, every join between leg
+   and floor, every gap behind a device receives the same fill as an open wall
+   and the eye reads the whole room as decals on a backdrop. AO is what makes
+   objects look like they are resting on things. It costs no download, which
+   is why it belongs ahead of any asset work. */
 function Post() {
   return (
     <EffectComposer multisampling={4} enableNormalPass={false}>
+      <N8AO
+        aoRadius={0.55}
+        intensity={2.6}
+        distanceFalloff={0.9}
+        color="#2b2a26"
+        halfRes
+      />
       <Bloom
-        intensity={0.42}
-        luminanceThreshold={0.62}
-        luminanceSmoothing={0.28}
+        intensity={0.32}
+        luminanceThreshold={0.72}
+        luminanceSmoothing={0.22}
         mipmapBlur
       />
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
@@ -239,7 +274,7 @@ function Scene({
             surface reads as flat paint. */}
         <Environment
           files="/textures/fun/env_studio_1k.hdr"
-          environmentIntensity={0.45}
+          environmentIntensity={0.75}
         />
         <Room onPrinterStatus={onPrinterStatus} />
         <Post />

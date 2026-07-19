@@ -106,6 +106,16 @@ Recorded because the ordering was counter-intuitive and cost several iterations.
 
 Texture resolution was not the problem. In rough order of what actually mattered:
 
+0. **Ambient occlusion, and less ambient light.** Added after the first commit, when the room
+   still read as flat. Direct lights cannot darken a crease, so with no AO every corner and
+   every join between a leg and the floor took the same fill as an open wall, and the room read
+   as decals on a backdrop. The other half was that `ambientLight` 0.5 plus `hemisphereLight`
+   0.9 was pouring 1.4 units of directionless light into the scene, which flattens the shading
+   gradient that tells you what shape a thing is. Those dropped to 0.12 and 0.3, the window
+   directional went 0.78 → 2.5, and IBL 0.45 → 0.75. Brightness belongs in something that has a
+   direction and falls off. Both changes are free — no download — and N8AO measured at no
+   detectable frame cost.
+
 1. **Shadows.** One shadow-casting spot light. Contact shadows are the strongest single cue that
    an object is sitting on a surface rather than pasted over it.
 2. **Post-processing.** ACES filmic tone mapping, mild bloom, vignette, composer MSAA. Raw WebGL
@@ -139,10 +149,32 @@ CC0 from Poly Haven, downscaled to 1K, WebP for surfaces. In `portfolio/public/t
 Total 3.1MB. Attribution is rendered bottom-right inside the room.
 
 Two surface sets were dropped before the first commit: `ceiling_interior` (the ceiling uses
-`plastered_wall_04`) and `wood_table_001` (superseded by `oak_veneer_01`). `ceiling_interior`
-was still in `preloadSurfaces`, so it was costing every visitor a 650KB download for maps
-nothing sampled. Worth checking the preload list against actual `useSurface` calls whenever a
-surface is swapped.
+`plastered_wall_04`) and `wood_table_001` (superseded by `oak_veneer_01`). Both were dead
+files nothing sampled.
+
+A correction worth recording, because the first version of this note was wrong. It claimed
+`ceiling_interior` was costing every visitor a 650KB download because it was still listed in
+`preloadSurfaces`. It was not: `preloadSurfaces` was exported and never called from anywhere,
+so no preloading happened at all and the browser only ever fetched what a material actually
+bound. The measurement that would have caught this was in hand the whole time — the network
+panel showed 13 texture requests while 16 files existed on disk. Reading the call graph, not
+just the file, is the check.
+
+`preloadSurfaces` and `preloadProps` are now both invoked at module scope in `FunRoom.tsx`.
+A dead preload is invisible in the worst way: everything still loads correctly, just later and
+one asset at a time.
+
+### Models
+
+| Model | Replaces |
+|---|---|
+| `dining_chair_02` | a chair built from four boxes |
+| `calathea_orbifolia_01` | a plant built from icosahedron blobs |
+| `modern_ceiling_lamp_01` | a flat emissive square on the ceiling plane |
+
+3.2MB of 1K glTF. Loaded through `Prop` in `props.tsx`, which measures each model's bounding
+box after load and seats it on its own base, because scanned assets share no convention for
+origin or units and hand-tuned per-model offsets drift the moment an asset is re-exported.
 
 ---
 
@@ -220,13 +252,27 @@ every render.
 4. WebGL failure and context loss. No handling. Must not be a blank canvas.
 5. Publisher extension so `apps`, `capacity` and `certs` are real in production, not just in the
    local fixture.
-7. CDN or object store for assets, per section 6.
+6. **The desk.** Now the most obviously fake object in the room, and worth naming as a general
+   effect: putting one scanned object next to hand-built ones does not lift them, it exposes
+   them. The chair went photoreal and the desk beside it immediately read as cardboard. Either
+   the desk becomes a model too or the room ends up visibly mixed. The same will be true of the
+   framed prints and the mushroom lamp.
+7. CDN or object store for assets, per section 6. Now 6.3MB total and growing with every model,
+   so this is closer to blocking than it was.
 8. One room or several. Recommendation is firmly one: a well-dressed single room beats five
    sparse ones and is a fraction of the work.
 
 ---
 
 ## 9. Housekeeping
+
+**New files in `public/` do not reach the dev container.** Adding `public/models/fun/` and
+reloading gave a 404 on every `.gltf` while the files were plainly on the host. `/app/public`
+is the read-only `cv-bundle` named volume, not the bind mount — the compose file says so in a
+comment. The volume is filled once by the `cv-bundle` one-shot service copying out of the
+image, so anything new in `public/` needs `make clean && make build` before the container can
+see it. Same symptom as the rename trap below, different mechanism, and both come down to
+named volumes surviving a plain rebuild.
 
 **Renaming a route directory needs a cache wipe.** After moving `components/ops` to
 `components/fun`, the dev server returned 404 for every non-root route while the files were

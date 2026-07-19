@@ -6,6 +6,7 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Sideboard } from "./Devices";
 import { Printer } from "./Printer";
+import { Prop } from "./props";
 import { useSurface } from "./textures";
 
 // A small personal room, not a corporate NOC. Roughly 5.2 x 4.8m with a 2.5m
@@ -14,24 +15,18 @@ import { useSurface } from "./textures";
 export const ROOM = { w: 5.2, d: 4.8, h: 2.5 };
 
 /** Desk task chair, pushed back from the desk. */
+/* The chair and the plant are scanned models rather than primitives. They were
+   the two worst offenders: a chair assembled from four boxes and a plant made
+   of icosahedron blobs are both shapes the eye knows far too well to be fooled
+   by an approximation. See props.tsx for why only some objects are swapped. */
 function Chair({ position }: { position: [number, number, number] }) {
   return (
-    <group position={position} rotation={[0, Math.PI, 0]}>
-      <mesh position={[0, 0.03, 0]}>
-        <cylinderGeometry args={[0.28, 0.3, 0.04, 16]} />
-        <meshStandardMaterial color="#141619" roughness={0.85} />
-      </mesh>
-      <mesh position={[0, 0.26, 0]}>
-        <cylinderGeometry args={[0.04, 0.04, 0.44, 12]} />
-        <meshStandardMaterial color="#1b1e21" roughness={0.4} metalness={0.7} />
-      </mesh>
-      <RoundedBox position={[0, 0.5, 0]} args={[0.46, 0.08, 0.44]} radius={0.022} smoothness={4} castShadow>
-        <meshStandardMaterial color="#16191c" roughness={0.98} />
-      </RoundedBox>
-      <RoundedBox position={[0, 0.82, -0.19]} rotation={[0.18, 0, 0]} args={[0.42, 0.56, 0.07]} radius={0.026} smoothness={4} castShadow>
-        <meshStandardMaterial color="#16191c" roughness={0.98} />
-      </RoundedBox>
-    </group>
+    <Prop
+      name="dining_chair_02"
+      position={position}
+      rotation={[0, Math.PI, 0]}
+      height={0.92}
+    />
   );
 }
 
@@ -76,39 +71,9 @@ function MushroomLamp({ position }: { position: [number, number, number] }) {
   );
 }
 
-/**
- * Potted plant. Overlapping squashed spheres rather than crossed billboards:
- * flat quads with no alpha texture read as cardboard from every angle.
- */
+/** Calathea orbifolia in a pot — a scanned model, per the note on Chair. */
 function Plant({ position }: { position: [number, number, number] }) {
-  const blobs: [number, number, number, number][] = [
-    [0, 0.24, 0, 0.115],
-    [-0.08, 0.19, 0.05, 0.085],
-    [0.09, 0.2, -0.04, 0.08],
-    [0.02, 0.31, 0.06, 0.07],
-  ];
-  return (
-    <group position={position}>
-      <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[0.072, 0.056, 0.13, 20]} />
-        <meshStandardMaterial color="#d8cdb8" roughness={0.84} />
-      </mesh>
-      <mesh position={[0, 0.068, 0]}>
-        <cylinderGeometry args={[0.066, 0.066, 0.012, 20]} />
-        <meshStandardMaterial color="#4a3f31" roughness={0.95} />
-      </mesh>
-      {blobs.map(([x, y, z, r], i) => (
-        <mesh key={i} position={[x, y, z]} scale={[1, 0.8, 1]} castShadow>
-          <icosahedronGeometry args={[r, 1]} />
-          <meshStandardMaterial
-            color={i % 2 === 0 ? "#57694b" : "#627454"}
-            roughness={0.9}
-            flatShading
-          />
-        </mesh>
-      ))}
-    </group>
-  );
+  return <Prop name="calathea_orbifolia_01" position={position} height={0.78} />;
 }
 
 /** Framed print, like the ones above the sideboard. */
@@ -190,8 +155,16 @@ export function Room({
           normalScale={[0.12, 0.12]}
         />
       </mesh>
-      <mesh position={[0, ROOM.h - 0.02, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[0.62, 0.62]} />
+      {/* A real pendant fitting. The flat emissive square this replaced was
+          the giveaway that the ceiling was a plane with a decal on it. */}
+      <Prop
+        name="modern_ceiling_lamp_01"
+        position={[0, ROOM.h - 0.44, 0.2]}
+        height={0.42}
+        receiveShadow={false}
+      />
+      <mesh position={[0, ROOM.h - 0.012, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[0.34, 0.34]} />
         <meshBasicMaterial color="#f6f1e6" />
       </mesh>
 
@@ -310,7 +283,8 @@ export function Room({
         <MushroomLamp position={[-1.02, 0.755, -0.1]} />
       </group>
 
-      <Plant position={[hw - 0.42, 0.065, hd - 0.55]} />
+      {/* y=0: Prop seats a model on its own base, so no manual lift. */}
+      <Plant position={[hw - 0.42, 0, hd - 0.55]} />
       <Chair position={[0, 0, -0.72]} />
 
       {/* The homelab: a sideboard that looks like living-room furniture until
