@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portfolio
+  namespace: portfolio
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: portfolio
+  template:
+    metadata:
+      labels:
+        app: portfolio
+    spec:
+      # Best-effort spread across hypervisors (zones) so a single host loss
+      # can't take a disproportionate share of replicas. Soft, so rollouts and
+      # constrained scheduling never block.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: portfolio
+                topologyKey: topology.kubernetes.io/zone
+      terminationGracePeriodSeconds: 15
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        seccompProfile: { type: RuntimeDefault }
+        runAsNonRoot: true
+        # Distroless nodejs runs as the built-in `nonroot` user (uid 65532).
+        runAsUser: 65532
+        runAsGroup: 65532
+        # fsGroup chowns the writable emptyDirs to gid 65532 so the Node
+        # process can write the .next cache and /tmp under readOnlyRootFilesystem.
+        fsGroup: 65532
+      containers:
+        - name: portfolio
+          image: ghcr.io/mortennordbye/homelab/portfolio:caa53f4
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            capabilities: { drop: ["ALL"] }
+            seccompProfile: { type: RuntimeDefault }
+          env:
+            # Path the /api/v1/infra route reads (the status ConfigMap mount).
+            - name: STATUS_FILE
+              value: /config/status.json
+            # Bearer key that gates the write endpoints. Optional so pods start
+            # before ESO syncs the secret; writes just refuse until it exists.
+            - name: PORTFOLIO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: portfolio-api
+                  key: PORTFOLIO_API_KEY
+                  optional: true
+          volumeMounts:
+            # Next's ISR/fetch cache — the only path the server writes at runtime.
+            - name: next-cache
+              mountPath: /app/.next/cache
+            - name: tmp
+              mountPath: /tmp
+            # Live cluster status written by the status-publisher CronJob.
+            # Read by /api/v1/infra; optional so pods start without it.
+            - name: status
+              mountPath: /config
+              readOnly: true
+          resources:
+            requests: { cpu: 100m, memory: 192Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+              httpHeaders: [{ name: Host, value: nordbye.it }]
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+              httpHeaders: [{ name: Host, value: nordbye.it }]
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            failureThreshold: 3
+      volumes:
+        - name: next-cache
+          emptyDir:
+            sizeLimit: 256Mi
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 32Mi
+        - name: status
+          configMap:
+            name: portfolio-status
+            optional: true
