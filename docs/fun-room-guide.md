@@ -55,19 +55,21 @@ All under `portfolio/src/`.
 |---|---|
 | `app/fun/page.tsx` | **Server** component. Reads case studies, certs, career from disk and passes them down. |
 | `app/fun/FunRoomClient.tsx` | Thin client wrapper — `next/dynamic` with `ssr:false` is illegal in a Server Component. |
-| `components/fun/FunRoom.tsx` | Scene composition, lighting, post-processing, HUD, all card state. The root. |
-| `components/fun/Room.tsx` | Room shell and furniture: walls, floor, desk, door, sideboard placement, object placement. |
+| `components/fun/FunRoom.tsx` | Scene composition, lighting, post-processing, HUD, all card state, the loading screen. The root. |
+| `components/fun/Room.tsx` | Room shell and furniture: walls, floor, desk, door, lantern, sideboard placement, object placement. Also owns `DESK_SCREEN` / `DESK_TERMINAL` / `CHAIR_Z`, because the stands and the collision boxes have to agree with them. Holds the shelf lamp's light, whose height comes from `shelfHeight(shelf)`. |
 | `components/fun/Devices.tsx` | Homelab hardware models + the sideboard. |
 | `components/fun/hardware.ts` | Hardware names and specs, transcribed from the repo README. |
 | `components/fun/Bookshelf.tsx` | Case studies as books, certificates as framed prints. Self-sizing. |
-| `components/fun/Objects.tsx` | Social wall, notepad, blog stack, gym bag, career frame. |
+| `components/fun/Objects.tsx` | Social wall, contact card, gym bag, career frame. |
+| `components/fun/Sonos.tsx` | The speaker on the sideboard and the Web Audio rickroll it plays. No audio files — melody and drum kit are synthesised. |
+| `components/fun/BlogBoard.tsx` | Whiteboard on the left wall. Lays itself out from `/api/v1/blog`, cover images included. Nothing to add here per post. |
 | `components/fun/Terminal.tsx` | The shell on the middle monitor. |
-| `components/fun/Screen.tsx` | Monitor mesh + DOM panel mount. |
-| `components/fun/Panels.tsx` | Content of the live infra panels. |
+| `components/fun/Screen.tsx` | Monitor mesh + DOM panel mount. `Screen` is one panel; `Dashboard` is the television carrying six at once; `PanelCard` is the chrome both share. |
+| `components/fun/Panels.tsx` | Content of the live infra panels. Authored at one size (640x376) — the television scales them down, so there is no second "small" variant to keep in step. |
 | `components/fun/feed.ts` | `/api/v1/infra` polling and staleness rules. |
 | `components/fun/interaction.tsx` | Look-at-and-press: raycast registry, `Interactive` wrapper. |
 | `components/fun/Hud.tsx` | Crosshair, look-at prompt, keybinds, `InfoPanel` card. |
-| `components/fun/FirstPerson.tsx` | WASD, collision, head bob. |
+| `components/fun/FirstPerson.tsx` | WASD, collision, head bob. Writes the camera position **every frame it is enabled**, `y` included — anything else that moves the camera has to switch it off first. |
 | `components/fun/props.tsx` | Scanned glTF prop loader (`Prop`). |
 | `components/fun/textures.ts` | PBR surface loader (`useSurface`). |
 | `components/fun/shelf.ts` | Shared data types for shelf and career. |
@@ -93,8 +95,9 @@ FunRoomClient.tsx  (client, dynamic import)
 FunRoom.tsx → Room.tsx → Bookshelf / Objects / Devices
 ```
 
-Live data is different: `feed.ts` polls `/api/v1/infra` every 60s, and the blog fetches
-`/api/v1/blog` only when the printed posts are opened.
+Live data is different: `feed.ts` polls `/api/v1/infra` every 60s, and `BlogBoard` fetches
+`/api/v1/blog` once when the room loads, because six cover images have to be on the wall before
+anyone looks at the wall.
 
 Locally `compose.yaml` sets `STATUS_FILE=/app/dev/status.json` so `/api/v1/infra` takes the same
 code path as the cluster against a fixture. The fixture carries `apps`, `capacity` and `certs`,
@@ -132,11 +135,18 @@ inventing numbers.
 One `switch` case in `useCommands` in `Terminal.tsx`. `curl` only accepts same-origin `/api/`
 paths — keep it that way.
 
+### A new blog post
+
+Nothing to do here at all. Publish it and the whiteboard picks it up from the RSS feed on the
+next load, cover image included — Hugo emits the cover as `<media:content>`, which
+`/api/v1/blog` reads. The board shows the newest six.
+
 ### A new case study, certification or social link
 
 Nothing to do here. Add it to `src/content/work/*.mdx`, `resume.ts` or `site.ts` and it appears:
 the shelf lays out from array length and grows its own height, and the social wall sizes from
-`site.socials`. For a new social you also need a mark in `public/icons/social/` and an entry in
+`site.socials`. The lamp standing on the shelf follows, because it is placed from
+`shelfHeight(shelf)` rather than a measured constant — do not replace that with a number. For a new social you also need a mark in `public/icons/social/` and an entry in
 `SOCIAL_ICON` in `Objects.tsx`.
 
 ---
@@ -167,10 +177,104 @@ local `-z` pointing *into* the wall. Write offsets as "away from the wall", not 
 that tells you what shape a thing is. Keep `ambientLight`/`hemisphereLight` low; put brightness
 in fittings that have a direction and fall off.
 
+**A warm room needs a cool fill.** The obvious way to make the room feel warm — tint every
+source amber, ambient included — produces a uniform sepia in which the sage walls disappear and
+nothing reads as *lit*, because there is nothing left for the lamplight to be warmer than. The
+fill is cool (`#9fb2b8`) and only the fittings are warm. Warmth is a relationship, not a value.
+
+**Emissive surfaces in front of their own lamp clip to white.** The lantern's panels sit
+directly in front of its point light, so a light base colour gets lit *and* emits; the two sum
+past what ACES can hold and a paper shade renders as a flat white slab. Emit from a near-black
+base (`#2a1405`) and the panel keeps its colour at any brightness.
+
+**A fitting must not shadow the room from a light it encloses.** The lantern's top rails cast a
+hard-edged box onto the ceiling directly above it, which reads as a rendering artifact rather
+than a shadow. Frame members that surround a light source should not cast; the ones that are
+side-on to it, like the corner posts striping the floor pool, should.
+
+**An unlit mesh behind a DOM layer is a black rectangle.** The whiteboard's surface was modelled
+as a white plane with the posts on a transparent `Html` over it. It hangs on the one wall neither
+lamp reaches, so the plane rendered near-black and the whole thing looked like a switched-off
+television. Where a DOM layer is the face of an object, paint the face in the DOM — it is not
+subject to scene lighting, which is the point. Tint it warm, though: pure white is the only cold
+bright thing in a room lit at nine in the evening and it reads as a hole in the wall.
+
+**No gate, and no fly-in.** `/fun` opens on a black screen with a bar and drops you into the
+room standing. It used to show a "press to enter" card over an already-loaded room, then fly the
+camera in over 3.4 seconds — a cutscene you cannot steer, which reads as a screensaver rather
+than a place. The bar tracks real assets via `useProgress`, gated on the Suspense boundary
+resolving (`SceneReady`), not on the percentage: progress hits 100 while the last texture is
+still uploading.
+
+**Pointer lock still costs one click and there is no way around it.** It needs a user gesture,
+and the nav click that got the visitor here does not survive the navigation. WASD works
+immediately; mouse-look needs one click anywhere. That is why the overlay is a line of text in
+the corner rather than the modal that used to sit there — and why the loading screen is
+`pointer-events-none` throughout, so the first click lands on the canvas instead of being eaten.
+
+**Two things must not drive the camera at once.** `TerminalFocus` eases the view in when you sit
+down at the shell and back out when you leave. `paused` covers the way in, but by the time it
+eases *back* `terminalActive` is already false, so `FirstPerson` would grab the camera mid-move
+and snap it to eye height. Hence the `settling` flag: the focus owns a window nothing else may
+touch. The return pose is **captured, not recomputed** — sending the visitor to a "sensible" spot
+would quietly relocate them.
+
+**Screens are furniture, not slots.** The room ran six of them — three on the desk, two on the
+side wall — because each new panel got its own screen. That is a trading floor. It is now two
+monitors on the desk, one landscape and one stood on its end for the shell, plus the television
+carrying the whole observability wall in a grid. Panels are cheap; screens are not, and a screen
+nobody stands in front of is a live DOM layer being composited for no one.
+
+**A monitor pair is one object.** Positioned separately they ended up 38cm apart, which reads as
+two screens sharing a desk rather than a setup. They are placed from one origin now, bezels
+almost touching, centred on the chair — and the arithmetic has to use `width·cos(toe-in)`,
+because a toed-in screen occupies less of the desk than its width suggests.
+
+**Anything positioned against furniture must read the furniture's numbers.** The monitor stands,
+the chair's collision box and the shelf lamp are all placed from exported constants rather than
+copied coordinates. The chair moved in against the desk and its blocker did not follow, which
+left a chair you walked through beside floor you could not cross.
+
+**Text on a screen has a width budget, and it is measurable.** The shell's help output is two
+columns held apart with `padEnd`, so it reads as aligned output only while every line fits on
+one row — wrapped, it just looks broken. `PORTRAIT_PX_W` is derived: 7.8px per character at 13px
+JetBrains Mono, 57 characters in the longest line, 40px of padding. Measure it in the browser
+rather than guessing; the first guess was 36px short.
+
+**Three pools beat one.** One bright source leaves the rest of the room a cave and invites the
+ambient-raising fix that ruins it. The room runs three small warm fittings — lantern, desk
+mushroom, shelf lamp — placed so that every wall has one within reach of it. The shelf lamp
+exists because the case studies, the most worth-reading thing in the room, were in shadow.
+
 **Shadows are what cost frames, not picking.** The main light is a *point* light, so its shadow
 map is a cube and every caster renders six extra times. Sixty small meshes in a shelf halved the
 frame rate. Set `castShadow={false}` on anything small inside furniture. The interaction raycast
 measured free at ~30 targets — do not "optimise" it without measuring first.
+
+**...but by 2026 the shadows were not the problem, and the profile says so.** A later pass
+measured the frame at 8 Mpx, and the intuitions above no longer held. Attribution of a 13.6ms
+frame:
+
+| suspect | cost |
+|---|---|
+| **N8AO** | **5.2ms** |
+| `multisampling={4}` | 1.8ms |
+| shadow map pass | 1.5ms |
+| **100 shadow casters** | **0ms** |
+| **10 live DOM layers** | **0ms** |
+| fill | ~0.74ms per Mpx |
+
+The caster count and the DOM layers — the two things this file spent years warning about — were
+free. AO was 38% of the frame on its own, and `quality="performance"` only recovered 0.5ms of it,
+so the cost is structural (its own depth pass over 336 meshes), not sample count. Fixes applied
+were the dpr cap (1.8 → 1.5) and multisampling (4 → 2): 74 → 91fps at a Retina 2056x1202 window,
+with AO kept because it is still what makes objects look like they rest on things.
+
+**The lesson is the method, not the numbers.** Every guess in that table was wrong. Bisect with
+the component actually removed and *verify it is gone* — an early A/B here "proved" the blog
+board was innocent using a build where the board was still mounted, which happened to be the
+right answer for the wrong reason. And check the window size before blaming the code: the drop
+that started this investigation was 1.6 Mpx versus 8.0.
 
 **Preloads are invisible when broken.** `preloadSurfaces` was exported and never called for
 weeks; everything still loaded, just later and one at a time. Both preloads are now invoked at
@@ -234,8 +338,11 @@ Always confirm the hooks are gone before committing: `grep -n "__cam\|TempCam" s
   (`FirstPerson`, `ArchitectureDiagram`, `CommandPalette`, `InlineGlobe`); if the count rises,
   the new one is yours.
 - Routes 200: `/`, `/fun`, `/infrastructure`, `/work/<slug>`.
-- Frame rate: 120fps median / ~8.3ms in headless Chromium at 1600x1000. A drop to 61 means
-  something started casting shadows.
+- Frame rate: **always state the pixel count, not the window size.** 120fps / 8.3ms in headless
+  Chromium at 1600x1000 is 1.6 Mpx, because Playwright runs at dpr 1. A real Retina Mac at a
+  2056x1202 window renders 5.6 Mpx with the dpr cap at 1.5 — 3.5x the work. Comparing a headless
+  number against a desktop one is meaningless. Read the true figure off
+  `gl.domElement.width * height`.
 - No `__cam` / `TempCam` / `TEMP` left in `src/components/fun/`.
 - Commit messages: describe the change, no AI attribution, no `Claude-Session` trailer,
   no `Co-Authored-By`.

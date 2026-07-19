@@ -40,6 +40,18 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Portfolio
 
+### The fun room's desk monitor never shows its ArgoCD view
+- **What:** The desk monitor in `/fun` is built to alternate between the deployment manifest and an ArgoCD applications view. Only the manifest ever displays. The ArgoCD view renders correctly when forced, and both tab labels are present in the DOM, but the tab value never changes. Three approaches were tried and all failed the same way: a `E` toggle whose `onActivate` never fired (proved with an instrumented `console.log`), a local `setInterval` that ticked 8 times while the value stayed at its initial state across 18 renders, and the same state lifted into `Scene` next to `poweredCount`, which does work for the screen power-on stagger.
+- **Why deferred:** Root cause not found. Ruled out: Turbopack staleness (reproduced after `make clean && make build`), the loading phase (`exploring` is reached), and the render logic itself. Everything else in the room shipped and works, so this is one dark panel rather than a blocker.
+- **Unblock:** Check it in a real browser first — headless Chromium has no pointer lock, so it may be a test-harness artifact rather than a real fault. **The printer's rocker switches show the identical symptom** (prompt reads correctly, `E` produces no visible change), and that predates this work, so the two are probably the same bug. If they are, the fault is in activation or re-render under `Interactive`/`Html`, not in either component. Pressing `E` on a printer switch and watching the ON/OFF pill is the cheapest test.
+- **Where:** `portfolio/src/components/fun/CodeScreen.tsx` (`ArgoView`, the `tab` prop), `portfolio/src/components/fun/FunRoom.tsx` (`deskTab` state in `Scene`), `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`.
+
+### Fun room: melody, mobile, and a real-browser pass
+- **What:** Three loose ends in `/fun`. The synthesised rickroll's third line ("never gonna run around and desert you") is the least confident transcription and has never been listened to by anyone. The room has never been driven in a real browser with working pointer lock, so mouse-look, terminal typing, and the cold-load loading bar are unverified. Mobile remains broken (no pointer lock), which predates this work.
+- **Why deferred:** All three need a human at a real browser with sound; none are checkable from headless Chromium.
+- **Unblock:** Open `/fun`, listen, type in the shell, hard-reload with cache disabled to see the loading bar, and decide whether mobile gets drag-to-look or a redirect.
+- **Where:** `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Terminal.tsx`, `docs/fun-room-guide.md` (known gaps).
+
 ### Image optimization pass
 - **What:** Re-encode the migrated case-study images via `sharp` to a normalised max-width and AVIF + WebP. Drop any unused PNGs that weren't migrated.
 - **Why deferred:** Existing WebPs work fine; this is a perf optimisation, not a blocker.
