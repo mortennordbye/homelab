@@ -63,15 +63,19 @@ function Row({
   label: string;
   value: string;
 }) {
+  // A <dl> may only contain <dt>/<dd> groups, optionally wrapped in a single
+  // <div> — the icon <span> sitting alongside them failed axe's definition-list
+  // rule. `display: contents` on the <dt> keeps the icon and label as direct
+  // grid items, so the rendered layout is unchanged.
   return (
-    <div className="flex items-start gap-4 py-5">
-      <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md border border-line-2 text-accent">
-        {icon}
-      </span>
-      <div>
-        <dt className="eyebrow">{label}</dt>
-        <dd className="mt-1 text-fg">{value}</dd>
-      </div>
+    <div className="grid grid-cols-[2rem_1fr] items-start gap-x-4 py-5">
+      <dt className="contents">
+        <span className="col-start-1 row-span-2 mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md border border-line-2 text-accent">
+          {icon}
+        </span>
+        <span className="eyebrow col-start-2">{label}</span>
+      </dt>
+      <dd className="col-start-2 mt-1 text-fg">{value}</dd>
     </div>
   );
 }
