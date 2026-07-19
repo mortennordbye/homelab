@@ -9,6 +9,9 @@ export function PortraitCard() {
           alt="Morten Nordbye, Cloud Engineer & Architect, Oslo"
           fill
           priority
+          // `priority` emits the preload link but not the attribute itself;
+          // this image is the measured LCP element, so hint it explicitly.
+          fetchPriority="high"
           sizes="(max-width: 768px) 100vw, 33vw"
           className="object-cover saturate-[0.92] contrast-[1.05]"
           style={{ objectPosition: "center top" }}
