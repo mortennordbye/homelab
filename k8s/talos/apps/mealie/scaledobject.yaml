@@ -6,12 +6,14 @@ metadata:
 spec:
   scaleTargetRef:
     name: mealie
-  minReplicaCount: 0
+  minReplicaCount: 1
   maxReplicaCount: 1
-  cooldownPeriod: 300
-  # Cron keeps 1 replica warm through the day (07:00-23:00 Oslo) so the app
-  # doesn't cold-start on every visit; at night it scales to zero and the HTTP
-  # trigger wakes it on demand. KEDA scales to the max of the two triggers.
+  # Mealie is pinned to 1 replica and deliberately never scales to zero.
+  # Its frontend clears the auth cookie and redirects to /login on any failed
+  # request (mealie-recipes/mealie#6311), so every cold start risked signing
+  # users out mid-session. 256Mi is cheap next to that.
+  # The triggers below are inert while min == max == 1; they are kept so the
+  # wake-from-zero wiring can be restored if upstream fixes the logout bug.
   triggers:
     - type: cron
       metadata:
