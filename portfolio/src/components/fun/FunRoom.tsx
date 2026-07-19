@@ -19,7 +19,9 @@ import { FirstPerson } from "./FirstPerson";
 import { ACCENT, PANELS, type PanelProps } from "./Panels";
 import { ROOM, Room } from "./Room";
 import { Screen } from "./Screen";
-import { Crosshair, InteractPrompt, Keybinds } from "./Hud";
+import { Crosshair, InfoPanel, InteractPrompt, Keybinds, type InfoCard } from "./Hud";
+import type { Hardware } from "./hardware";
+import type { ShelfBook, ShelfCert, ShelfData } from "./shelf";
 import { InteractionProvider, type Prompt } from "./interaction";
 import { useInfraFeed } from "./feed";
 import { preloadProps } from "./props";
@@ -216,6 +218,10 @@ function Scene({
   interacting,
   onPrompt,
   onPrinterStatus,
+  shelf,
+  onInspect,
+  onOpenBook,
+  onOpenCert,
 }: {
   data: PanelProps;
   phase: Phase;
@@ -225,6 +231,10 @@ function Scene({
   interacting: boolean;
   onPrompt: (p: Prompt) => void;
   onPrinterStatus: (msg: string | null) => void;
+  shelf: ShelfData;
+  onInspect: (hw: Hardware) => void;
+  onOpenBook: (b: ShelfBook) => void;
+  onOpenCert: (c: ShelfCert) => void;
 }) {
   const [poweredCount, setPoweredCount] = useState(0);
   const snap = useSnapToOperator();
@@ -275,7 +285,13 @@ function Scene({
           files="/textures/fun/env_studio_1k.hdr"
           environmentIntensity={0.75}
         />
-        <Room onPrinterStatus={onPrinterStatus} />
+        <Room
+          onPrinterStatus={onPrinterStatus}
+          shelf={shelf}
+          onInspect={onInspect}
+          onOpenBook={onOpenBook}
+          onOpenCert={onOpenCert}
+        />
         <Post />
       </Suspense>
       <ScreenWall data={data} poweredCount={poweredCount} />
@@ -292,7 +308,46 @@ function Scene({
 
 type Phase = "idle" | "entering" | "exploring";
 
-export default function FunRoom() {
+/* Card builders. Hardware, case studies and certificates all reduce to the same
+   shape, so InfoPanel renders one layout rather than three that drift apart. */
+
+function hardwareCard(hw: Hardware): InfoCard {
+  return {
+    kicker: "hardware",
+    title: hw.name,
+    subtitle: hw.role,
+    rows: hw.specs.map((s) => ({ k: s.k, v: s.v })),
+    note: hw.unlisted
+      ? "Not in the README hardware tables, so no specification is quoted for it here."
+      : "Specifications from the hardware tables in the Homelab README.",
+  };
+}
+
+function bookCard(b: ShelfBook): InfoCard {
+  return {
+    kicker: b.kind,
+    title: b.title,
+    subtitle: `${b.client} · ${b.period}`,
+    rows: [],
+    body: b.summary,
+    tags: b.stack,
+    href: `/work/${b.slug}`,
+  };
+}
+
+function certCard(c: ShelfCert): InfoCard {
+  return {
+    kicker: "certification",
+    title: c.title,
+    subtitle: c.issuer,
+    rows: [
+      { k: "Issued", v: c.date },
+      ...(c.credentialId ? [{ k: "Credential", v: c.credentialId }] : []),
+    ],
+  };
+}
+
+export default function FunRoom({ shelf }: { shelf: ShelfData }) {
   const { status, feed, stale, ok, nodes, argocd } = useInfraFeed();
   const [phase, setPhase] = useState<Phase>("idle");
   const [locked, setLocked] = useState(false);
@@ -301,12 +356,37 @@ export default function FunRoom() {
   const [printerStatus, setPrinterStatus] = useState<string | null>(null);
   const [showBinds, setShowBinds] = useState(true);
   const [coarse, setCoarse] = useState(false);
+  const [card, setCard] = useState<InfoCard | null>(null);
   const controlsRef = useRef<PointerLockControlsImpl | null>(null);
+
+  /* Opening a card releases the pointer, because the card is a DOM panel and
+     the visitor needs a cursor to click its link. Closing it hands the pointer
+     straight back so they are not left looking at a room they cannot move in. */
+  const openCard = useCallback((c: InfoCard) => {
+    setCard(c);
+    controlsRef.current?.unlock();
+  }, []);
+  const closeCard = useCallback(() => {
+    setCard(null);
+    controlsRef.current?.lock();
+  }, []);
 
   useEffect(() => {
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     setCoarse(window.matchMedia("(pointer: coarse)").matches);
   }, []);
+
+  // Esc closes an open card. PointerLockControls already owns Esc for
+  // releasing the cursor, but the cursor is deliberately released while a card
+  // is up, so Esc has nothing else to do and closing is what you expect.
+  useEffect(() => {
+    if (!card) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === "Escape") closeCard();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [card, closeCard]);
 
   // H hides the keybind card, for people who want a clean look.
   useEffect(() => {
@@ -384,6 +464,10 @@ export default function FunRoom() {
             interacting={phase === "exploring"}
             onPrompt={setPrompt}
             onPrinterStatus={setPrinterStatus}
+            shelf={shelf}
+            onInspect={(hw) => openCard(hardwareCard(hw))}
+            onOpenBook={(b) => openCard(bookCard(b))}
+            onOpenCert={(c) => openCard(certCard(c))}
           />
         </Canvas>
       </div>
@@ -425,13 +509,15 @@ export default function FunRoom() {
         exit
       </Link>
 
-      {phase === "exploring" && (
+      {phase === "exploring" && !card && (
         <div className="pointer-events-none absolute inset-0 z-20">
           <Crosshair active={prompt !== null} />
           <InteractPrompt prompt={prompt} />
           <Keybinds visible={showBinds} />
         </div>
       )}
+
+      <InfoPanel card={card} onClose={closeCard} />
 
       {printerStatus && (
         <div className="pointer-events-none absolute bottom-24 left-1/2 z-20 -translate-x-1/2 rounded-[5px] border border-accent/40 bg-black/75 px-4 py-2 font-mono text-xs text-accent">
@@ -468,7 +554,9 @@ export default function FunRoom() {
       )}
 
       {/* paused: pointer lock released */}
-      {phase === "exploring" && !locked && !coarse && (
+      {/* Not while a card is open: the card unlocks the pointer on purpose, and
+          showing "click to resume" behind it reads as two competing dialogs. */}
+      {phase === "exploring" && !locked && !coarse && !card && (
         <div className="absolute inset-0 z-30 grid place-content-center bg-black/55 text-center backdrop-blur-[2px]">
           <p className="font-mono text-sm text-white/70">pointer released</p>
           <button

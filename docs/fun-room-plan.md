@@ -4,7 +4,7 @@ An explorable 3D room at `/fun`, reached from a nav entry beside the others. The
 portfolio: the objects in it are the site's sections, and you interact with them instead of
 clicking links.
 
-- Status: **room built and walkable. Printer interactive; other objects not started.**
+- Status: **room built and walkable. Printer, hardware, bookshelf and certificates interactive; pinboard, blog screen and contact object not started.**
 - Scope: `portfolio/` frontend.
 - Started 2026-07-19.
 
@@ -33,6 +33,9 @@ Route `/fun`, dynamic-imported with `ssr: false`. Nav entry added in `src/conten
 
 | Piece | File |
 |---|---|
+| Bookshelf: case studies and certificates | `src/components/fun/Bookshelf.tsx` |
+| Shelf data types | `src/components/fun/shelf.ts` |
+| Hardware inventory, from the README | `src/components/fun/hardware.ts` |
 | Scene composition, lighting, post, HUD | `src/components/fun/FunRoom.tsx` |
 | Room geometry and props | `src/components/fun/Room.tsx` |
 | Screen mesh plus DOM panel mount | `src/components/fun/Screen.tsx` |
@@ -48,7 +51,7 @@ Route `/fun`, dynamic-imported with `ssr: false`. Nav entry added in `src/conten
 
 The room contains a desk with three monitors, a wall panel above them, two screens on the side
 wall, a chair, a mushroom lamp, keyboard, mouse, mug, framed prints, a jute rug, a panelled
-door, a potted plant, a printer on a low cabinet, and the homelab sideboard.
+door, a potted plant, a printer on a low cabinet, a bookshelf, and the homelab sideboard.
 
 The sideboard is modelled from reference photos of the real flat. It is open-fronted, showing
 the actual kit at real dimensions: three ThinkCentres stood on edge, the ISP router, a UniFi
@@ -244,13 +247,76 @@ expansion in section 7, not a nice-to-have.
 The room is furniture right now. The point is interaction. Each object maps to a section that
 already exists as structured data in `src/content/`, so this is staging, not authoring.
 
+### Everything named, and the shelf that grows itself
+
+Two interaction passes landed together.
+
+**Hardware is named.** Every device in the sideboard is wrapped in an `Interactive` whose label
+is the real product name and whose detail line is its role, both transcribed into
+`hardware.ts` from the README hardware tables. Looking at a device names it; `E` opens a card
+with the full specification. The three ThinkCentres are three different machines and are
+labelled individually rather than as "a ThinkCentre" three times.
+
+The README is the source of truth for this. One device in the room has no README row, the UniFi
+Flex Mini, and it carries no spec line rather than an invented one — its card says so.
+
+**The shelf is generated.** `Bookshelf.tsx` lays books out from `src/content/work/*.mdx` and
+certificates from `certs` in `resume.ts`, both read on the server in `app/fun/page.tsx` and
+passed down as plain data. Rows fill left to right and wrap; the unit's height is then derived
+from the row count. Adding a case study or a certification puts it in the room with no change
+to the room's code, which was the requirement.
+
+Three things worth keeping from building it.
+
+Bay height has to be fixed with the unit growing to fit, not the other way round. The first
+version divided a fixed 1.9m unit into however many bays the content needed, and because
+thirteen books happen to fit on one shelf that produced two 0.9m bays with a row of paperbacks
+lost at the bottom of each.
+
+Spine width, height, colour and lean are hashed from the slug rather than randomised, so a case
+study is always the same book in the same place. Random dressing reshuffles on every render and
+makes the room feel unreliable in a way that is easy to notice and hard to name.
+
+A label is only real if the crosshair can reach it, and two things failed that. The Hue Bridge
+sat directly behind the 8-port switch and was permanently occluded. Worse, the certificates were
+first modelled the way they really sit in a drawer — a flat stack of sheets — and from a
+standing eye line only the top two of six could ever be put under the crosshair, because looking
+down at a horizontal stack always hits the top sheet. They stand upright now. Anything meant to
+be looked at has to present a face to the room; that is also why books work fine at ankle
+height.
+
+**Shadows, not picking, is what costs frames.** Adding the shelf halved the frame rate, 120fps
+to 61. The obvious suspect was the interaction loop, which raycasts every registered target
+every frame and had just gained thirty of them. That was wrong: a distance-reject added on that
+assumption changed nothing and was removed again. The real cause is that the room's main light
+is a *point* light, so its shadow map is a cube and every caster is rendered six more times.
+Sixty small meshes inside a shelf were paying that for shadows ambient occlusion already
+accounts for. `castShadow={false}` on books and certificates restored exactly 120fps. Anything
+added inside furniture should follow the same rule, and the general lesson is to measure the
+suspected cause before writing the fix — the fix landed first here, proved nothing, and its
+comment would have recorded a false explanation permanently.
+
+### Verifying interaction without a pointer lock
+
+Pointer lock does not work in headless Chromium, and `FirstPerson` overwrites the camera every
+frame, so neither manual camera placement nor mouse-look is available to test with. What works
+is temporarily parking `FirstPerson`, then stepping a scripted camera across the room and
+reading the HUD prompt out of the DOM at each position. That turns "does every device have a
+reachable label" into a list rather than a guess, and it is how the occluded Hue Bridge showed
+up. Both temporary edits are reverted before commit.
+
+One trap in reading the DOM this way: the site's command palette indexes page content, so
+certificate titles and nav labels are present in the DOM whether or not the room is showing
+them. An early check matched `.text-accent` and "confirmed" a prompt that was actually the nav's
+Fun link. Scope the query to the prompt element.
+
 | Object | Section | Source |
 |---|---|---|
 | Printer ✅ | CV download | `cv-variants.ts`, `cv-manifest.json` |
-| Sideboard ✅ | the hardware itself, always visible | reference photos |
-| Desk monitors | infrastructure | `/api/v1/infra`, already wired |
-| Shelf of files or binders | work | `src/content/work/*.mdx` |
-| Framed certificates | resume | `resume.ts` certifications |
+| Sideboard ✅ | the hardware itself, named and inspectable | README hardware tables |
+| Desk monitors ✅ | infrastructure | `/api/v1/infra`, already wired |
+| Bookshelf ✅ | work | `src/content/work/*.mdx` |
+| Certificates ✅ | resume | `resume.ts` certifications |
 | Pinboard or whiteboard | about | `site.ts`, `interests.ts` |
 | Printed articles or a second screen | blog | `/api/v1/blog` |
 | Desk phone or notepad | contact | `site.ts` |

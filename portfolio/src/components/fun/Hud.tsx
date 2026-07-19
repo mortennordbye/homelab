@@ -75,17 +75,130 @@ export function Crosshair({ active }: { active: boolean }) {
   );
 }
 
-/** The "press E to do the thing" label, just under the reticle. */
+/**
+ * The look-at label under the reticle.
+ *
+ * The name is the point. Most things in the room are worth identifying but not
+ * worth opening, so looking at a device names it and gives its role, and the
+ * E key is offered underneath rather than being the only way to learn anything.
+ */
 export function InteractPrompt({ prompt }: { prompt: Prompt }) {
   if (!prompt) return null;
   return (
-    <div className="pointer-events-none absolute left-1/2 top-[calc(50%+30px)] -translate-x-1/2 whitespace-nowrap">
-      <div className="flex items-center gap-2.5 rounded-[5px] border border-white/15 bg-black/70 px-3 py-2 shadow-lg">
-        <Key>E</Key>
-        <span className="font-mono text-xs text-white/90">
-          {prompt.verb}{" "}
-          <span className="text-accent">{prompt.label}</span>
-        </span>
+    <div className="pointer-events-none absolute left-1/2 top-[calc(50%+30px)] -translate-x-1/2">
+      <div className="max-w-[22rem] rounded-[5px] border border-white/15 bg-black/70 px-3.5 py-2.5 text-center shadow-lg">
+        <p className="font-mono text-[13px] leading-tight text-accent">
+          {prompt.label}
+        </p>
+        {prompt.detail && (
+          <p className="mt-1 font-mono text-[11px] leading-tight text-white/55">
+            {prompt.detail}
+          </p>
+        )}
+        <p className="mt-2 flex items-center justify-center gap-2 font-mono text-[11px] text-white/70">
+          <Key>E</Key>
+          {prompt.verb}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** A field in an InfoCard. */
+export type InfoRow = { k: string; v: string };
+
+export type InfoCard = {
+  kicker: string;
+  title: string;
+  subtitle?: string;
+  rows: InfoRow[];
+  body?: string;
+  tags?: string[];
+  note?: string;
+  href?: string;
+};
+
+/**
+ * The panel opened with E. One component for hardware, case studies and
+ * certificates: they are all "a name, some fields, some prose", and three
+ * near-identical panels would drift apart the first time one was edited.
+ */
+export function InfoPanel({
+  card,
+  onClose,
+}: {
+  card: InfoCard | null;
+  onClose: () => void;
+}) {
+  if (!card) return null;
+  return (
+    <div className="absolute inset-0 z-30 grid place-content-center bg-black/55 px-6">
+      <div className="max-h-[80vh] w-[min(34rem,90vw)] overflow-y-auto rounded-[6px] border border-white/15 bg-[#12100d]/95 p-6 shadow-2xl">
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/35">
+          {card.kicker}
+        </p>
+        <h2 className="mt-2 font-mono text-lg leading-tight text-white">
+          {card.title}
+        </h2>
+        {card.subtitle && (
+          <p className="mt-1 font-mono text-xs text-white/50">{card.subtitle}</p>
+        )}
+
+        {card.rows.length > 0 && (
+          <dl className="mt-5 space-y-2">
+            {card.rows.map((r) => (
+              <div key={r.k} className="flex gap-3">
+                <dt className="w-24 shrink-0 font-mono text-[11px] uppercase tracking-wider text-white/35">
+                  {r.k}
+                </dt>
+                <dd className="font-mono text-[12px] text-white/80">{r.v}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        {card.body && (
+          <p className="mt-5 text-[13px] leading-relaxed text-white/70">
+            {card.body}
+          </p>
+        )}
+
+        {card.tags && card.tags.length > 0 && (
+          <ul className="mt-4 flex flex-wrap gap-1.5">
+            {card.tags.map((t) => (
+              <li
+                key={t}
+                className="rounded-[3px] border border-white/12 px-2 py-1 font-mono text-[10px] text-white/55"
+              >
+                {t}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {card.note && (
+          <p className="mt-5 border-t border-white/10 pt-4 font-mono text-[11px] leading-relaxed text-white/40">
+            {card.note}
+          </p>
+        )}
+
+        <div className="mt-6 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="focus-ring border border-white/25 px-4 py-2 font-mono text-xs text-white transition-colors hover:border-white/60 hover:bg-white/5"
+          >
+            close
+          </button>
+          {card.href && (
+            <a
+              href={card.href}
+              className="focus-ring font-mono text-xs text-accent underline-offset-4 hover:underline"
+            >
+              read the full case study
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

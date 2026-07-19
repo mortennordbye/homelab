@@ -4,6 +4,8 @@ import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { HARDWARE, type Hardware } from "./hardware";
+import { Interactive } from "./interaction";
 
 /**
  * The real homelab, modelled from reference photos of the actual flat.
@@ -313,12 +315,43 @@ export function UnifiAccessPoint({ position }: { position: [number, number, numb
 }
 
 /** The sideboard: an open-fronted oak unit with the homelab living in it. */
+/**
+ * Wraps a device so looking at it names it.
+ *
+ * The wrapper sits here rather than inside each device component so the models
+ * stay pure geometry and every device gets identified the same way. Adding a
+ * device to the sideboard and forgetting to label it should look obviously
+ * wrong at the call site.
+ */
+function Inspectable({
+  hw,
+  onInspect,
+  children,
+}: {
+  hw: Hardware;
+  onInspect: (hw: Hardware) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Interactive
+      label={hw.name}
+      verb="inspect"
+      detail={hw.role}
+      onActivate={() => onInspect(hw)}
+    >
+      {children}
+    </Interactive>
+  );
+}
+
 export function Sideboard({
   position,
   rotation = [0, 0, 0],
+  onInspect,
 }: {
   position: [number, number, number];
   rotation?: [number, number, number];
+  onInspect: (hw: Hardware) => void;
 }) {
 
   const W = 1.92;
@@ -386,22 +419,52 @@ export function Sideboard({
         </mesh>
       ))}
 
-      {/* the kit, laid out left to right as in the photos */}
-      <ThinkCentre position={[-0.78, floorY + 0.0915, 0.02]} />
-      <ThinkCentre position={[-0.72, floorY + 0.0915, 0.02]} />
-      <ThinkCentre position={[-0.66, floorY + 0.0915, 0.02]} />
-      <IspRouter position={[-0.44, floorY + 0.1, 0.01]} />
+      {/* The kit, laid out left to right as in the photos. Names and specs come
+          from the README hardware tables via ./hardware — the three ThinkCentres
+          are three different machines, so they are labelled individually rather
+          than as "a ThinkCentre" three times. */}
+      <Inspectable hw={HARDWARE.hyper1} onInspect={onInspect}>
+        <ThinkCentre position={[-0.78, floorY + 0.0915, 0.02]} />
+      </Inspectable>
+      <Inspectable hw={HARDWARE.hyper2} onInspect={onInspect}>
+        <ThinkCentre position={[-0.72, floorY + 0.0915, 0.02]} />
+      </Inspectable>
+      <Inspectable hw={HARDWARE.hyper3} onInspect={onInspect}>
+        <ThinkCentre position={[-0.66, floorY + 0.0915, 0.02]} />
+      </Inspectable>
+      <Inspectable hw={HARDWARE.modem} onInspect={onInspect}>
+        <IspRouter position={[-0.44, floorY + 0.1, 0.01]} />
+      </Inspectable>
 
-      <CloudGateway position={[-0.16, floorY + 0.015, 0.03]} />
-      <FanlessBox position={[0.09, floorY + 0.019, -0.02]} />
-      <UnifiFlexMini position={[0.16, floorY + 0.011, 0.12]} />
+      <Inspectable hw={HARDWARE.gateway} onInspect={onInspect}>
+        <CloudGateway position={[-0.16, floorY + 0.015, 0.03]} />
+      </Inspectable>
+      <Inspectable hw={HARDWARE.homeAssistant} onInspect={onInspect}>
+        <FanlessBox position={[0.09, floorY + 0.019, -0.02]} />
+      </Inspectable>
+      <Inspectable hw={HARDWARE.flexMini} onInspect={onInspect}>
+        <UnifiFlexMini position={[0.16, floorY + 0.011, 0.12]} />
+      </Inspectable>
 
-      <SynologyNas position={[0.68, floorY + 0.083, -0.02]} />
-      <UnifiSwitch8 position={[0.44, floorY + 0.013, 0.09]} />
-      <HubPuck position={[0.46, floorY + 0.012, -0.11]} />
+      <Inspectable hw={HARDWARE.nas} onInspect={onInspect}>
+        <SynologyNas position={[0.68, floorY + 0.083, -0.02]} />
+      </Inspectable>
+      <Inspectable hw={HARDWARE.switch8} onInspect={onInspect}>
+        <UnifiSwitch8 position={[0.44, floorY + 0.013, 0.09]} />
+      </Inspectable>
+      {/* Clear of the 8-port switch rather than tucked in behind it. Sat at
+          x 0.46 it was permanently occluded by the switch at 0.44, so the
+          crosshair could never land on it and it was the one device in the
+          room you could not name. Anything given a label has to be lookable
+          at from where a visitor can actually stand. */}
+      <Inspectable hw={HARDWARE.hueBridge} onInspect={onInspect}>
+        <HubPuck position={[0.26, floorY + 0.012, -0.09]} />
+      </Inspectable>
 
       {/* access point on top, flat, where a TV would sit in front of it */}
-      <UnifiAccessPoint position={[0.62, H + 0.032, -0.1]} />
+      <Inspectable hw={HARDWARE.accessPoint} onInspect={onInspect}>
+        <UnifiAccessPoint position={[0.62, H + 0.032, -0.1]} />
+      </Inspectable>
     </group>
   );
 }

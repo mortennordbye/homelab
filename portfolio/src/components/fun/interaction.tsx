@@ -27,6 +27,10 @@ type Target = {
   label: string;
   /** Short verb shown in the prompt, e.g. "flip", "press". */
   verb: string;
+  /** Optional second line, e.g. what a device is for. Shown on look, not on
+   *  press, so the room answers "what is that?" without asking for a keystroke
+   *  first — most things in here are worth naming but not worth opening. */
+  detail?: string;
   onActivate: () => void;
   disabled?: boolean;
 };
@@ -51,7 +55,7 @@ type Registry = {
 const RegistryCtx = createContext<Registry | null>(null);
 const HoverCtx = createContext<THREE.Object3D | null>(null);
 
-export type Prompt = { label: string; verb: string } | null;
+export type Prompt = { label: string; verb: string; detail?: string } | null;
 
 export function InteractionProvider({
   enabled,
@@ -101,6 +105,11 @@ export function InteractionProvider({
     raycaster.setFromCamera(centre, camera);
     raycaster.far = REACH;
 
+    /* Raycasting every registered target every frame looks like it should be
+       the expensive part here, and it is not. With ~30 targets it measured as
+       free; a distance-reject added on that assumption changed nothing. The
+       frame cost that did show up came from shadows, not picking — see the
+       note in Bookshelf.tsx. Measure before optimising this loop. */
     let best: { root: THREE.Object3D; dist: number } | null = null;
     for (const [root] of targets.current) {
       const hits = raycaster.intersectObject(root, true);
@@ -116,8 +125,13 @@ export function InteractionProvider({
     }
 
     const t = next ? targets.current.get(next)?.current : null;
-    const prompt = t && !t.disabled ? { label: t.label, verb: t.verb } : null;
-    const key = prompt ? `${prompt.verb}\u0000${prompt.label}` : null;
+    const prompt =
+      t && !t.disabled
+        ? { label: t.label, verb: t.verb, detail: t.detail }
+        : null;
+    const key = prompt
+      ? `${prompt.verb}\u0000${prompt.label}\u0000${prompt.detail ?? ""}`
+      : null;
     if (key !== lastPrompt.current) {
       lastPrompt.current = key;
       onPrompt(prompt);
@@ -157,12 +171,14 @@ export function InteractionProvider({
 export function Interactive({
   label,
   verb = "use",
+  detail,
   onActivate,
   disabled,
   children,
 }: {
   label: string;
   verb?: string;
+  detail?: string;
   onActivate: () => void;
   disabled?: boolean;
   children: React.ReactNode | ((hovered: boolean) => React.ReactNode);
@@ -177,9 +193,9 @@ export function Interactive({
   // without the registration effect having to re-run. Updated in an effect
   // rather than during render; activation only ever happens on user input,
   // which is well after effects have flushed.
-  const target = useRef<Target>({ label, verb, onActivate, disabled });
+  const target = useRef<Target>({ label, verb, detail, onActivate, disabled });
   useEffect(() => {
-    target.current = { label, verb, onActivate, disabled };
+    target.current = { label, verb, detail, onActivate, disabled };
   });
 
   useEffect(() => {

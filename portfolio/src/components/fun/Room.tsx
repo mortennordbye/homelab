@@ -4,8 +4,11 @@ import { MeshReflectorMaterial, RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { Bookshelf } from "./Bookshelf";
 import { Sideboard } from "./Devices";
+import type { Hardware } from "./hardware";
 import { Printer } from "./Printer";
+import type { ShelfBook, ShelfCert, ShelfData } from "./shelf";
 import { Prop } from "./props";
 import { useSurface } from "./textures";
 
@@ -229,8 +232,16 @@ function FramedPrint({
 
 export function Room({
   onPrinterStatus,
+  shelf,
+  onInspect,
+  onOpenBook,
+  onOpenCert,
 }: {
   onPrinterStatus: (msg: string | null) => void;
+  shelf: ShelfData;
+  onInspect: (hw: Hardware) => void;
+  onOpenBook: (b: ShelfBook) => void;
+  onOpenCert: (c: ShelfCert) => void;
 }) {
   const hw = ROOM.w / 2;
   const hd = ROOM.d / 2;
@@ -372,11 +383,21 @@ export function Room({
       <Plant position={[hw - 0.42, 0, hd - 0.55]} />
       <Chair position={[0, 0, -0.72]} />
 
-      {/* The homelab: a sideboard that looks like living-room furniture until
-          you open it. Against the right wall, facing into the room. */}
+      {/* The homelab, in an open-fronted sideboard against the right wall.
+          Every device in it is named from the README hardware tables. */}
       <group position={[hw - 0.28, 0, 0.35]} rotation={[0, -Math.PI / 2, 0]}>
-        <Sideboard position={[0, 0, 0]} />
+        <Sideboard position={[0, 0, 0]} onInspect={onInspect} />
       </group>
+
+      {/* The case studies as books, certificates on the bottom shelf. Left
+          wall, opposite the homelab. Shelf count follows the content. */}
+      <Bookshelf
+        position={[-hw + 0.16, 0, 0.72]}
+        rotation={[0, Math.PI / 2, 0]}
+        shelf={shelf}
+        onOpenBook={onOpenBook}
+        onOpenCert={onOpenCert}
+      />
 
       {/* printer on a low cabinet, left wall */}
       <group position={[-hw + 0.34, 0, -0.95]}>
