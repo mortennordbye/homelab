@@ -23,6 +23,13 @@ export function Footer() {
             >
               See how this page reaches you
             </Link>
+            , or read it as{" "}
+            <Link
+              href="/api"
+              className="focus-ring text-fg underline decoration-accent decoration-2 underline-offset-4 hover:text-accent"
+            >
+              JSON over the public API
+            </Link>
             .
           </p>
         </div>
