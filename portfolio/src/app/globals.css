@@ -245,6 +245,21 @@ body {
   .oslo-marker::after { animation: none; opacity: 0; }
 }
 
+/* Operations centre — the room takes the whole viewport, so the site header,
+   footer and scroll affordances step aside while it is mounted. The class is
+   added/removed by FunRoom on mount rather than by a route layout, because the
+   root layout renders the chrome for every route. */
+body.fun-immersive {
+  overflow: hidden;
+}
+body.fun-immersive > header,
+body.fun-immersive > footer {
+  display: none;
+}
+body.fun-immersive > main {
+  flex: none;
+}
+
 /* Infrastructure page — packet dot travelling along a pipeline connector */
 @keyframes packet-flow {
   0%   { left: 4px; opacity: 0; }

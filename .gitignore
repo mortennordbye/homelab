@@ -120,3 +120,6 @@ Thumbs.db
 *~
 .vscode/
 .idea/
+
+# Local reference photos (interior/hardware). Not part of the repo.
+.inspiration/

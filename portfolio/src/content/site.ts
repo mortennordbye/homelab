@@ -50,6 +50,7 @@ export const site = {
     { label: "Infrastructure", href: "/infrastructure" },
     { label: "Blog", href: "/#blog" },
     { label: "Contact", href: "/#contact" },
+    { label: "Fun", href: "/fun" },
   ] as readonly { href: string; label: string }[],
 } as const;
 

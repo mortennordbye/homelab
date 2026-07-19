@@ -1,0 +1,365 @@
+"use client";
+
+import { Html, RoundedBox } from "@react-three/drei";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { site } from "@/content/site";
+import { Interactive } from "./interaction";
+import {
+  PANEL_PX_H,
+  PANEL_PX_W,
+  PORTRAIT_PX_H,
+  PORTRAIT_PX_W,
+  distanceFactor,
+} from "./Screen";
+import type { ShelfData } from "./shelf";
+
+/**
+ * A working shell on the middle desk monitor.
+ *
+ * This exists instead of a desktop environment, and the reason is worth
+ * keeping. Pointer lock means there is no cursor in the room, so anything
+ * window-and-icon shaped has to become a fullscreen overlay — a second website
+ * inside the website, holding a second copy of content the real pages already
+ * own. A shell adds something the site does not have anywhere else: it drives
+ * the public API, which is the genuinely unusual thing about this portfolio,
+ * and it reads as the tool a cloud engineer would actually have open.
+ *
+ * The commands are thin. Most read data already in the room; `curl` does a real
+ * fetch against the real endpoints, so the output is not a mock.
+ */
+
+const ACCENT = "#7fd6ff";
+
+type Line = { kind: "in" | "out" | "err" | "note"; text: string };
+
+const BANNER: Line[] = [
+  { kind: "note", text: "nordbye.it — shell" },
+  { kind: "note", text: "type `help` for commands, `exit` to step back" },
+];
+
+function useCommands(shelf: ShelfData, onOpen: (url: string) => void) {
+  return useCallback(
+    async (raw: string): Promise<Line[]> => {
+      const [cmd, ...rest] = raw.trim().split(/\s+/);
+      const arg = rest.join(" ");
+      const out = (...t: string[]): Line[] =>
+        t.map((text) => ({ kind: "out", text }) as Line);
+      const err = (t: string): Line[] => [{ kind: "err", text: t }];
+
+      switch (cmd) {
+        case "":
+          return [];
+
+        case "help":
+          return out(
+            "whoami              who you are talking to",
+            "ls [work|certs]     list case studies or certifications",
+            "cat work/<slug>     read one case study",
+            "social [name]       list social links, or open one",
+            "contact             email and phone",
+            // Kept to 57 characters. The portrait monitor fits 60 before the
+            // second column wraps — see PORTRAIT_PX_W in Screen.tsx.
+            "curl <path>         GET an endpoint, e.g. /api/v1/profile",
+            "api                 list the public API endpoints",
+            "clear               clear the screen",
+            "exit                step back from the desk",
+          );
+
+        case "whoami":
+          return out(
+            `${site.firstName} ${site.lastName}`,
+            site.role,
+            site.location,
+            "",
+            site.hero.sub,
+          );
+
+        case "ls": {
+          const what = arg || "work";
+          if (what === "work" || what === "work/")
+            return out(
+              ...shelf.books.map(
+                (b) => `${b.slug.padEnd(36)} ${b.period}`,
+              ),
+              "",
+              `${shelf.books.length} case studies · cat work/<slug> to read one`,
+            );
+          if (what === "certs" || what === "certs/")
+            return out(
+              ...shelf.certs.map((c) => `${c.date.padEnd(10)} ${c.title}`),
+            );
+          return err(`ls: ${what}: no such directory (try work or certs)`);
+        }
+
+        case "cat": {
+          const slug = arg.replace(/^work\//, "").replace(/\/$/, "");
+          const b = shelf.books.find((x) => x.slug === slug);
+          if (!b) return err(`cat: ${arg || "(nothing)"}: no such case study`);
+          return out(
+            b.title,
+            `${b.client} · ${b.period}`,
+            "",
+            b.summary,
+            "",
+            `stack: ${b.stack.join(", ")}`,
+            `read:  ${site.url}/work/${b.slug}`,
+          );
+        }
+
+        case "social": {
+          if (!arg)
+            return out(
+              ...site.socials.map((s) => `${s.label.padEnd(10)} ${s.href}`),
+              "",
+              "social <name> to open one",
+            );
+          const match = site.socials.find(
+            (s) => s.label.toLowerCase() === arg.toLowerCase(),
+          );
+          if (!match) return err(`social: ${arg}: not one of mine`);
+          onOpen(match.href);
+          return out(`opening ${match.href}`);
+        }
+
+        case "contact":
+          return out(
+            `email  ${site.email}`,
+            `phone  ${site.phoneDisplay}`,
+            `site   ${site.url}`,
+          );
+
+        case "api":
+        case "curl": {
+          const path = cmd === "api" ? "/api/v1" : arg;
+          if (!path) return err("curl: needs a path, e.g. curl /api/v1/profile");
+          if (!path.startsWith("/api/"))
+            return err("curl: only this site's /api/ paths, no proxying");
+          try {
+            const res = await fetch(path, { cache: "no-store" });
+            const text = await res.text();
+            let body = text;
+            try {
+              body = JSON.stringify(JSON.parse(text), null, 2);
+            } catch {
+              /* not JSON: print as-is */
+            }
+            return [
+              { kind: "note", text: `HTTP ${res.status} ${path}` },
+              // Long responses are trimmed rather than scrolling forever; the
+              // point is to show the endpoint is real, not to be a JSON viewer.
+              ...body.split("\n").slice(0, 40).map(
+                (text) => ({ kind: "out", text }) as Line,
+              ),
+              ...(body.split("\n").length > 40
+                ? [{ kind: "note", text: "… truncated" } as Line]
+                : []),
+            ];
+          } catch {
+            return err(`curl: ${path}: request failed`);
+          }
+        }
+
+        default:
+          return err(`${cmd}: command not found — try \`help\``);
+      }
+    },
+    [shelf, onOpen],
+  );
+}
+
+export function TerminalScreen({
+  position,
+  rotation,
+  width,
+  shelf,
+  active,
+  onActivate,
+  onExit,
+  /** Stand the monitor on its end. The shell is the one thing in the room a
+   *  tall narrow screen genuinely suits — output scrolls vertically. */
+  portrait = false,
+}: {
+  position: [number, number, number];
+  rotation: [number, number, number];
+  width: number;
+  shelf: ShelfData;
+  active: boolean;
+  onActivate: () => void;
+  onExit: () => void;
+  portrait?: boolean;
+}) {
+  const [lines, setLines] = useState<Line[]>(BANNER);
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const openUrl = useCallback((url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }, []);
+  const run = useCommands(shelf, openUrl);
+
+  // Focus the input when the visitor sits down, so they can just start typing.
+  useEffect(() => {
+    if (active) inputRef.current?.focus();
+  }, [active]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [lines]);
+
+  const submit = useCallback(async () => {
+    const raw = value;
+    setValue("");
+    if (raw.trim() === "clear") {
+      setLines(BANNER);
+      return;
+    }
+    if (raw.trim() === "exit") {
+      setLines((l) => [...l, { kind: "in", text: raw }]);
+      onExit();
+      return;
+    }
+    setLines((l) => [...l, { kind: "in", text: raw }]);
+    setBusy(true);
+    const result = await run(raw);
+    setBusy(false);
+    setLines((l) => [...l, ...result]);
+  }, [value, run, onExit]);
+
+  const pxW = portrait ? PORTRAIT_PX_W : PANEL_PX_W;
+  const pxH = portrait ? PORTRAIT_PX_H : PANEL_PX_H;
+  const h = width * (pxH / pxW);
+
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox
+        position={[0, 0, -0.018]}
+        args={[width + 0.022, h + 0.022, 0.03]}
+        radius={0.005}
+        smoothness={4}
+        castShadow
+      >
+        <meshStandardMaterial color="#121417" roughness={0.62} metalness={0.25} />
+      </RoundedBox>
+      <mesh>
+        <planeGeometry args={[width, h]} />
+        <meshBasicMaterial color="#060b11" />
+      </mesh>
+
+      {/* The whole panel is the interaction target. Sitting down is `E`; the
+          shell only accepts typing once the pointer is released, because a
+          locked pointer swallows keystrokes the room needs for movement. */}
+      {!active && (
+        <Interactive
+          label="the terminal"
+          verb="use"
+          detail="a shell on the public API"
+          onActivate={onActivate}
+        >
+          <mesh position={[0, 0, 0.01]} visible={false}>
+            <planeGeometry args={[width, h]} />
+            <meshBasicMaterial />
+          </mesh>
+        </Interactive>
+      )}
+
+      <Html
+        transform
+        occlude="blending"
+        distanceFactor={distanceFactor(width, pxW)}
+        position={[0, 0, 0.008]}
+        zIndexRange={[10, 0]}
+        style={{
+          width: `${pxW}px`,
+          height: `${pxH}px`,
+          pointerEvents: active ? "auto" : "none",
+          userSelect: active ? "text" : "none",
+        }}
+      >
+        <div
+          className="relative flex h-full w-full flex-col overflow-hidden font-mono"
+          style={{
+            background:
+              "linear-gradient(160deg, #0a1119 0%, #070d14 55%, #060a10 100%)",
+            border: `1px solid ${ACCENT}3d`,
+            boxShadow: `inset 0 0 60px ${ACCENT}14`,
+            color: "#c8d8e8",
+            padding: "18px 20px 16px",
+            fontSize: "13px",
+          }}
+          onClick={() => active && inputRef.current?.focus()}
+        >
+          <div
+            className="mb-3 flex items-center justify-between border-b pb-2"
+            style={{ borderColor: `${ACCENT}26` }}
+          >
+            <span
+              className="text-[12px] tracking-[0.22em]"
+              style={{ color: ACCENT }}
+            >
+              SHELL
+            </span>
+            <span className="text-[10px] tracking-[0.14em] text-[#3f4d5c]">
+              {active ? "esc to step back" : "press E to use"}
+            </span>
+          </div>
+
+          <div ref={scrollRef} className="flex-1 overflow-y-auto pr-1 leading-[1.5]">
+            {lines.map((l, i) => (
+              <div
+                key={i}
+                className="whitespace-pre-wrap break-words"
+                style={{
+                  color:
+                    l.kind === "in"
+                      ? "#e8f2fb"
+                      : l.kind === "err"
+                        ? "#ff9d8a"
+                        : l.kind === "note"
+                          ? "#5d768a"
+                          : "#9fb6cc",
+                }}
+              >
+                {l.kind === "in" ? `$ ${l.text}` : l.text}
+              </div>
+            ))}
+            {busy && <div style={{ color: "#5d768a" }}>…</div>}
+          </div>
+
+          <form
+            className="mt-2 flex items-center gap-2 border-t pt-2"
+            style={{ borderColor: `${ACCENT}1f` }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!busy) void submit();
+            }}
+          >
+            <span style={{ color: ACCENT }}>$</span>
+            <input
+              ref={inputRef}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              disabled={!active}
+              spellCheck={false}
+              autoComplete="off"
+              className="flex-1 bg-transparent outline-none"
+              style={{ color: "#e8f2fb", fontSize: "13px" }}
+              placeholder={active ? "" : "press E to use"}
+            />
+          </form>
+
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "repeating-linear-gradient(0deg, rgba(255,255,255,0.028) 0px, rgba(255,255,255,0.028) 1px, transparent 1px, transparent 3px)",
+            }}
+          />
+        </div>
+      </Html>
+    </group>
+  );
+}

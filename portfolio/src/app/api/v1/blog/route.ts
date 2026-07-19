@@ -5,7 +5,9 @@ import { json, apiError } from "@/lib/api";
 export const revalidate = 3600;
 
 const FEED_URL = "https://blog.nordbye.it/index.xml";
-const LIMIT = 5;
+// Six rather than five: the board in /fun lays them out three across, and five
+// leaves a hole in the grid.
+const LIMIT = 6;
 
 function decode(s: string): string {
   return s
@@ -14,6 +16,14 @@ function decode(s: string): string {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;|&apos;/g, "'")
+    // Typographic entities Hugo emits in prose. Without these a summary reads
+    // "How do I get started with &ldquo;Kubernetes&rdquo;" on the board.
+    .replace(/&ldquo;|&rdquo;/g, '"')
+    .replace(/&lsquo;|&rsquo;/g, "'")
+    .replace(/&mdash;/g, "—")
+    .replace(/&ndash;/g, "–")
+    .replace(/&hellip;/g, "…")
+    .replace(/&nbsp;/g, " ")
     // &amp; last: unescaping it earlier would double-unescape inputs like
     // "&amp;lt;" into "<" (CodeQL js/double-escaping).
     .replace(/&amp;/g, "&")
@@ -23,6 +33,30 @@ function decode(s: string): string {
 function tag(item: string, name: string): string | null {
   const m = item.match(new RegExp(`<${name}>([\\s\\S]*?)</${name}>`));
   return m ? decode(m[1]) : null;
+}
+
+/** Cover image. Hugo emits it as `<media:content url="...">`, not an enclosure. */
+function cover(item: string): string | null {
+  const m = item.match(/<media:content[^>]*\surl="([^"]*)"/);
+  return m ? decode(m[1]) : null;
+}
+
+/**
+ * First paragraph of the post, as plain text.
+ *
+ * The description is a full HTML render whose first element is the title as an
+ * <h1> complete with anchor markup, so taking the opening characters gives you
+ * the title twice. Pulling the first <p> skips it.
+ */
+function summarise(item: string): string | null {
+  const desc = tag(item, "description");
+  if (!desc) return null;
+  const p = desc.match(/<p>([\s\S]*?)<\/p>/);
+  const text = (p ? p[1] : desc)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text ? text.slice(0, 200) : null;
 }
 
 export async function GET() {
@@ -44,6 +78,8 @@ export async function GET() {
         url: tag(item, "link"),
         publishedAt: pub ? new Date(pub).toISOString() : null,
         published: pub,
+        image: cover(item),
+        summary: summarise(item),
       };
     })
     .filter((p) => p.title && p.url)

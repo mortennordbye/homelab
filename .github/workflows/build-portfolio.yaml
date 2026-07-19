@@ -87,6 +87,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      # The room's desk monitor displays this manifest as real code. The Docker
+      # build context is ./portfolio, so the manifest has to be copied inside it
+      # to reach the image. Refreshing it here rather than trusting the copy in
+      # git means what ships is always the manifest that is actually deployed,
+      # even if someone edits k8s/ without remembering the copy.
+      - name: Sync deployment manifest into the build context
+        run: cp k8s/talos/apps/portfolio/deployment.yaml portfolio/src/content/k8s/deployment.yaml
+
       - uses: docker/build-push-action@v7
         with:
           context: ./portfolio
