@@ -3,7 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { ROOM } from "./Room";
+import { CHAIR_Z, DESK_D, DESK_Z, ROOM } from "./Room";
 
 export const EYE = 1.66;
 const WALK = 1.9;
@@ -14,9 +14,12 @@ const DAMP = 9;
 /** Axis-aligned boxes the camera cannot walk into. Cheap stand-in for real
  *  collision meshes, which is all a room this simple needs. */
 const BLOCKERS: { x: number; z: number; hx: number; hz: number }[] = [
-  { x: 0, z: -ROOM.d / 2 + 0.38, hx: 1.3, hz: 0.36 }, // desk
-  { x: 0, z: -0.72, hx: 0.3, hz: 0.3 }, // chair
-  { x: ROOM.w / 2 - 0.42, z: -1.15, hx: 0.36, hz: 0.21 }, // shelf
+  { x: 0, z: DESK_Z, hx: 1.3, hz: DESK_D / 2 }, // desk
+  // Reads CHAIR_Z rather than repeating it. The chair moved in against the desk
+  // and its box did not follow, which for one build left a chair you walked
+  // straight through standing next to empty floor you could not cross.
+  { x: 0, z: CHAIR_Z, hx: 0.3, hz: 0.3 }, // chair
+  { x: ROOM.w / 2 - 0.42, z: -1.15, hx: 0.36, hz: 0.21 }, // lantern
 ];
 
 const PLAYER_R = 0.34;

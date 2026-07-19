@@ -5,7 +5,9 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { HARDWARE, type Hardware } from "./hardware";
+import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
+import { Sonos } from "./Sonos";
 
 /**
  * The real homelab, modelled from reference photos of the actual flat.
@@ -348,10 +350,12 @@ export function Sideboard({
   position,
   rotation = [0, 0, 0],
   onInspect,
+  onOpenCard,
 }: {
   position: [number, number, number];
   rotation?: [number, number, number];
   onInspect: (hw: Hardware) => void;
+  onOpenCard: (card: InfoCard) => void;
 }) {
 
   const W = 1.92;
@@ -465,6 +469,16 @@ export function Sideboard({
       <Inspectable hw={HARDWARE.accessPoint} onInspect={onInspect}>
         <UnifiAccessPoint position={[0.62, H + 0.032, -0.1]} />
       </Inspectable>
+
+      {/* The Sonos, on the free end of the top past the television.
+          Not in HARDWARE and not an <Inspectable>: it is a speaker in the
+          living room, not homelab kit, and the README rule exists so the room
+          never claims infrastructure that does not exist. It carries its own
+          label and its own card instead.
+          Placed at x 0.85 rather than tucked beside the access point at 0.62,
+          which the two of them would fight over — the access point has been
+          occluded once already and is not being buried a second time. */}
+      <Sonos position={[0.85, H + 0.021, 0.1]} onOpen={onOpenCard} />
     </group>
   );
 }

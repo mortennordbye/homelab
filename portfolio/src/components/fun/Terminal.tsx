@@ -4,7 +4,13 @@ import { Html, RoundedBox } from "@react-three/drei";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { site } from "@/content/site";
 import { Interactive } from "./interaction";
-import { PANEL_PX_H, PANEL_PX_W } from "./Screen";
+import {
+  PANEL_PX_H,
+  PANEL_PX_W,
+  PORTRAIT_PX_H,
+  PORTRAIT_PX_W,
+  distanceFactor,
+} from "./Screen";
 import type { ShelfData } from "./shelf";
 
 /**
@@ -51,7 +57,9 @@ function useCommands(shelf: ShelfData, onOpen: (url: string) => void) {
             "cat work/<slug>     read one case study",
             "social [name]       list social links, or open one",
             "contact             email and phone",
-            "curl <path>         GET a real endpoint, e.g. /api/v1/profile",
+            // Kept to 57 characters. The portrait monitor fits 60 before the
+            // second column wraps — see PORTRAIT_PX_W in Screen.tsx.
+            "curl <path>         GET an endpoint, e.g. /api/v1/profile",
             "api                 list the public API endpoints",
             "clear               clear the screen",
             "exit                step back from the desk",
@@ -167,6 +175,9 @@ export function TerminalScreen({
   active,
   onActivate,
   onExit,
+  /** Stand the monitor on its end. The shell is the one thing in the room a
+   *  tall narrow screen genuinely suits — output scrolls vertically. */
+  portrait = false,
 }: {
   position: [number, number, number];
   rotation: [number, number, number];
@@ -175,6 +186,7 @@ export function TerminalScreen({
   active: boolean;
   onActivate: () => void;
   onExit: () => void;
+  portrait?: boolean;
 }) {
   const [lines, setLines] = useState<Line[]>(BANNER);
   const [value, setValue] = useState("");
@@ -216,7 +228,9 @@ export function TerminalScreen({
     setLines((l) => [...l, ...result]);
   }, [value, run, onExit]);
 
-  const h = width * (PANEL_PX_H / PANEL_PX_W);
+  const pxW = portrait ? PORTRAIT_PX_W : PANEL_PX_W;
+  const pxH = portrait ? PORTRAIT_PX_H : PANEL_PX_H;
+  const h = width * (pxH / pxW);
 
   return (
     <group position={position} rotation={rotation}>
@@ -254,12 +268,12 @@ export function TerminalScreen({
       <Html
         transform
         occlude="blending"
-        distanceFactor={(width / PANEL_PX_W) * 400}
+        distanceFactor={distanceFactor(width, pxW)}
         position={[0, 0, 0.008]}
         zIndexRange={[10, 0]}
         style={{
-          width: `${PANEL_PX_W}px`,
-          height: `${PANEL_PX_H}px`,
+          width: `${pxW}px`,
+          height: `${pxH}px`,
           pointerEvents: active ? "auto" : "none",
           userSelect: active ? "text" : "none",
         }}
