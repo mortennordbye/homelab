@@ -37,7 +37,13 @@ import { useSurface } from "./textures";
  * the wrong way round gave two 0.9m-tall bays with a row of paperbacks lost at
  * the bottom of each, because thirteen books happen to fit on one shelf.
  */
-const UNIT = { w: 0.52, d: 0.28 };
+/* Widened from 0.52m. At the old width a row held about six books, so the unit
+   answered every new case study by growing another shelf upward, and it was
+   heading for something taller than the door. A 0.92m bay is a normal piece of
+   furniture and roughly doubles what fits per row, which buys a lot of runway
+   before the layout has to grow again. Nothing else changes: rows still wrap
+   from INNER_W and the unit still sizes itself from the row count. */
+const UNIT = { w: 0.92, d: 0.28 };
 const PLINTH = 0.08;
 const BOARD = 0.022;
 const BAY = 0.32;
@@ -66,6 +72,22 @@ function hash01(s: string, salt = 0): number {
 }
 
 type Placed<T> = { item: T; x: number; row: number; w: number; h: number };
+
+/**
+ * How tall the unit comes out for a given set of content.
+ *
+ * Exported because the room stands a lamp on top of the shelf, and the shelf
+ * grows a row whenever the content outgrows the current one. A hard-coded
+ * height there would leave the lamp floating in mid-air or buried in a board
+ * the first time a case study is added — which is the same failure the shelf
+ * was written to avoid for its own contents.
+ */
+export function shelfHeight(shelf: ShelfData): number {
+  const rows =
+    layout(shelf.books, (b) => 0.04 + hash01(b.slug, 1) * 0.035, () => 0).rows +
+    layout(shelf.certs, () => CERT_W, () => 0).rows;
+  return PLINTH + BOARD + rows * BAY;
+}
 
 /**
  * Fills rows left to right, wrapping to a new row when the next item would

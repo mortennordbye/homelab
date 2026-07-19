@@ -1,7 +1,7 @@
 "use client";
 
-import { Environment, PointerLockControls } from "@react-three/drei";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Environment, PointerLockControls, useProgress } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Bloom,
   EffectComposer,
@@ -11,17 +11,26 @@ import {
 } from "@react-three/postprocessing";
 import { BlendFunction, ToneMappingMode } from "postprocessing";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { PointerLockControls as PointerLockControlsImpl } from "three-stdlib";
-import { EntrySequence, useSnapToOperator } from "./EntrySequence";
-import { FirstPerson } from "./FirstPerson";
+import { EYE, FirstPerson } from "./FirstPerson";
 import { ACCENT, PANELS, type PanelProps } from "./Panels";
-import { ROOM, Room } from "./Room";
-import { Screen } from "./Screen";
+import {
+  DESK_SCREEN,
+  DESK_TERMINAL,
+  LANTERN,
+  ROOM,
+  Room,
+  type Placement,
+} from "./Room";
+import { CodeScreen, type Tab } from "./CodeScreen";
+import { Dashboard } from "./Screen";
 import { Crosshair, InfoPanel, InteractPrompt, Keybinds, type InfoCard } from "./Hud";
 import type { Hardware } from "./hardware";
 import type { CareerData, ShelfBook, ShelfCert, ShelfData } from "./shelf";
+import type { SourceExcerpt } from "@/lib/source-excerpt";
 import { TerminalScreen } from "./Terminal";
 import { InteractionProvider, type Prompt } from "./interaction";
 import { useInfraFeed } from "./feed";
@@ -40,140 +49,294 @@ preloadSurfaces();
 preloadProps();
 
 // -----------------------------------------------------------------------------
-// Screen placement. Four on the wall you face, two on the left, one on the right,
-// so there is a reason to turn around.
+// Screen placement.
+//
+// The room ran six screens: three on the desk and two more on the side wall.
+// That is a trading floor, not a flat. It is now two monitors on the desk —
+// one landscape, one stood on its end for the shell — and the television,
+// which carries the whole observability wall on its own.
+//
+// The side-wall pair is gone entirely rather than relocated. Two panels facing
+// the bookshelf were screens nobody stood in front of, and every one of them
+// was a live DOM layer being composited whether or not it was in view.
 // -----------------------------------------------------------------------------
-type Placement = {
-  position: [number, number, number];
-  rotation: [number, number, number];
-  /** Physical width in metres. */
-  width: number;
+/* The desk pair lives in Room.tsx, because the monitor stands have to stand
+   under the monitors and the desk owns those. Two sets of numbers that must
+   agree is one set too many. */
+
+/**
+ * The television, on the sideboard where a television actually lives.
+ *
+ * Centred at z 0.15 rather than on the sideboard's own centre so it does not
+ * stand in front of the access point on the top at z 0.97 — a 1.42m screen
+ * there would occlude it, and an occluded device is one that can never be
+ * looked at.
+ */
+const WALL_SCREEN: Placement = {
+  position: [2.28, 1.09, 0.15],
+  rotation: [0, -Math.PI / 2, 0],
+  width: 1.42,
 };
 
-const DESK_Z = -ROOM.d / 2 + 0.38;
-
 /**
- * Six screens, sized and placed like real hardware in a small room:
- * three 24" monitors on the desk, one large panel on the wall above them, and
- * two smaller ones on the side wall.
+ * Everything cluster-shaped goes on the television.
  *
- * The seventh panel (FEED STATUS) has no screen. It would be redundant: the
- * HUD already carries the live/stale/snapshot state persistently, in view from
- * anywhere in the room, which is where that information belongs.
+ * FEED STATUS is filtered out and has no screen at all, which is where it
+ * started: the HUD status chip carries live/stale/snapshot from anywhere in the
+ * room, so a panel repeating it was always redundant. The desk monitor it
+ * briefly occupied now shows source instead.
  */
-const PLACEMENTS: Placement[] = [
-  // desk monitors, outer two toed in toward the chair
-  { position: [-0.72, 1.09, DESK_Z - 0.2], rotation: [0, 0.3, 0], width: 0.62 },
-  { position: [0, 1.1, DESK_Z - 0.24], rotation: [0, 0, 0], width: 0.62 },
-  { position: [0.72, 1.09, DESK_Z - 0.2], rotation: [0, -0.3, 0], width: 0.62 },
-  // The big panel stands on the sideboard rather than hanging over the desk,
-  // which is where a television actually lives. Centred at z 0.15 rather than
-  // on the sideboard's own centre so it does not stand in front of the access
-  // point on the top at z 0.97 — a 1.42m screen there would occlude it, and an
-  // occluded device is one that can never be looked at.
-  { position: [2.28, 1.09, 0.15], rotation: [0, -Math.PI / 2, 0], width: 1.42 },
-  // side wall pair
-  { position: [-ROOM.w / 2 + 0.04, 1.5, -1.15], rotation: [0, Math.PI / 2, 0], width: 0.7 },
-  { position: [-ROOM.w / 2 + 0.04, 1.5, -0.3], rotation: [0, Math.PI / 2, 0], width: 0.7 },
-];
+const WALL_PANELS = PANELS.filter((p) => p.id !== "feed");
 
-/**
- * Plan 5.4 capped the live DOM layers at four and promoted by camera distance.
- * With seven screens that made things worse, not better: pure distance ranking
- * favours the side-wall screens behind you over the wall you are facing, so
- * the panels you are looking at were the ones going dark.
- *
- * Phase 0 measured no detectable cost for four panels at 8.3 Mpx, and seven
- * measures the same, so all of them stay mounted and the culling machinery is
- * gone until there is a reason for it. If the room ever grows past a dozen
- * screens, reintroduce it scored by distance *and* view angle, not distance
- * alone.
- */
-/** Index into PLACEMENTS that the terminal occupies instead of a data panel. */
-export const TERMINAL_SLOT = 1;
+/** How many things stagger on at boot: the desk monitor, then the television. */
+const POWER_STEPS = 2;
 
 function ScreenWall({
   data,
+  source,
+  deskTab,
   poweredCount,
 }: {
   data: PanelProps;
+  source: SourceExcerpt;
+  deskTab: Tab;
   poweredCount: number;
 }) {
   return (
     <>
-      {PANELS.slice(0, PLACEMENTS.length).map((panel, i) =>
-        i === TERMINAL_SLOT ? null : (
-        <Screen
-          key={panel.id}
-          panel={panel}
-          data={data}
-          position={PLACEMENTS[i].position}
-          rotation={PLACEMENTS[i].rotation}
-          width={PLACEMENTS[i].width}
-          powered={i < poweredCount}
-          mounted
-        />
-        ),
-      )}
+      <CodeScreen
+        source={source}
+        data={data}
+        tab={deskTab}
+        position={DESK_SCREEN.position}
+        rotation={DESK_SCREEN.rotation}
+        width={DESK_SCREEN.width}
+        powered={poweredCount > 0}
+      />
+      <Dashboard
+        panels={WALL_PANELS}
+        data={data}
+        position={WALL_SCREEN.position}
+        rotation={WALL_SCREEN.rotation}
+        width={WALL_SCREEN.width}
+        powered={poweredCount > 1}
+      />
     </>
   );
 }
 
+function TempCam() {
+  const { camera } = useThree();
+  useEffect(() => {
+    (window as unknown as { __cam: unknown }).__cam = camera;
+  }, [camera]);
+  return null;
+}
+
+/** Mounts inside the Suspense boundary, so its effect cannot run until every
+ *  asset under it has resolved. */
+function SceneReady({ onReady }: { onReady: () => void }) {
+  useEffect(() => onReady(), [onReady]);
+  return null;
+}
+
+/**
+ * Black screen with a bar, and then you are in the room.
+ *
+ * This replaces a "press to enter" gate. The gate existed because pointer lock
+ * needs a user gesture and a button is the obvious place to take one — but it
+ * charged every visitor a click to see a thing they had already clicked a nav
+ * link to see, and it sat in front of a room that was by then fully loaded.
+ *
+ * The bar tracks real asset bytes through `useProgress`, not a timer. It is
+ * held to whichever is slower, the assets or a short floor, so a warm cache
+ * does not produce a single frame of flash before the room appears.
+ */
+function LoadingScreen({ progress, done }: { progress: number; done: boolean }) {
+  return (
+    <div
+      aria-hidden={done}
+      className="pointer-events-none absolute inset-0 z-40 grid place-content-center bg-[#04070a] transition-opacity duration-700"
+      style={{ opacity: done ? 0 : 1 }}
+    >
+      <p className="eyebrow mb-6 text-center text-[0.65rem] text-white/35">
+        nordbye.it · the room
+      </p>
+      <div className="h-[3px] w-[260px] overflow-hidden rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full bg-accent transition-[width] duration-300 ease-out"
+          style={{ width: `${Math.max(4, Math.round(progress))}%` }}
+        />
+      </div>
+      <p className="mt-4 text-center font-mono text-[11px] tabular-nums text-white/30">
+        {done ? "ready" : `loading the room · ${Math.round(progress)}%`}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * How far back from the panel the seated view sits. Set so the 0.72m portrait
+ * screen fills most of a 72° view without its edges reaching the frame.
+ */
+const TERMINAL_VIEW_DIST = 0.72;
+
+/**
+ * Leans the camera in when you sit down at the terminal, and puts it back
+ * exactly where it was when you step away.
+ *
+ * Reading a shell from standing height across a desk was the problem this
+ * solves: the text is sized for a monitor, not for the far side of a room.
+ *
+ * Two things make this fiddlier than a lerp. FirstPerson writes the camera
+ * position every frame it is enabled — including `y = EYE` — so it has to stay
+ * switched off for the whole move, and that includes the way *back*, which is
+ * after `terminalActive` has already gone false. Hence `onSettling`: the focus
+ * owns a short window where nothing else may touch the camera.
+ *
+ * And the return pose is captured, not recomputed. Sending the visitor back to
+ * a "sensible" spot in front of the desk would quietly relocate them; they
+ * should end up standing exactly where they were when they leaned in.
+ */
+function TerminalFocus({
+  active,
+  onSettling,
+}: {
+  active: boolean;
+  onSettling: (busy: boolean) => void;
+}) {
+  const { camera } = useThree();
+  const saved = useRef<{ pos: THREE.Vector3; quat: THREE.Quaternion } | null>(null);
+  const mode = useRef<"idle" | "in" | "out">("idle");
+
+  const view = useMemo(() => {
+    const screen = new THREE.Vector3(...DESK_TERMINAL.position);
+    // The panel faces its local +z, so the seat is that far along the normal.
+    const normal = new THREE.Vector3(0, 0, 1).applyEuler(
+      new THREE.Euler(...DESK_TERMINAL.rotation),
+    );
+    const pos = screen.clone().addScaledVector(normal, TERMINAL_VIEW_DIST);
+    const quat = new THREE.Quaternion().setFromRotationMatrix(
+      new THREE.Matrix4().lookAt(pos, screen, new THREE.Vector3(0, 1, 0)),
+    );
+    return { pos, quat };
+  }, []);
+
+  useEffect(() => {
+    if (active) {
+      mode.current = "in";
+    } else if (saved.current) {
+      mode.current = "out";
+      onSettling(true);
+    }
+  }, [active, onSettling]);
+
+  useFrame((_, rawDelta) => {
+    if (mode.current === "idle") return;
+    const delta = Math.min(rawDelta, 0.05);
+    // Frame-rate independent ease, so the move takes the same time at 60fps as
+    // at 120 rather than running twice as fast.
+    const k = 1 - Math.pow(0.0004, delta);
+
+    if (mode.current === "in") {
+      if (!saved.current) {
+        saved.current = {
+          pos: camera.position.clone(),
+          quat: camera.quaternion.clone(),
+        };
+      }
+      camera.position.lerp(view.pos, k);
+      camera.quaternion.slerp(view.quat, k);
+      return;
+    }
+
+    const back = saved.current;
+    if (!back) {
+      mode.current = "idle";
+      return;
+    }
+    camera.position.lerp(back.pos, k);
+    camera.quaternion.slerp(back.quat, k);
+    if (camera.position.distanceTo(back.pos) < 0.005) {
+      camera.position.copy(back.pos);
+      camera.quaternion.copy(back.quat);
+      saved.current = null;
+      mode.current = "idle";
+      onSettling(false);
+    }
+  });
+
+  return null;
+}
+
 /** Screens are the light source, so the fill has to follow them on. */
 function Lighting({ poweredCount }: { poweredCount: number }) {
-  const lit = poweredCount / PLACEMENTS.length;
+  const lit = poweredCount / POWER_STEPS;
   return (
     <>
-      {/* An interior room lit by its own fittings. The window came out, so the
-          pendant is now the main source and casts the shadows; a strong
-          directional raking in from a wall with nothing in it would be light
-          arriving from a source you can look straight at and not find.
+      {/* A room lit the way a living room is at nine in the evening: nothing
+          overhead, two warm lamps at lamp height, and the ceiling lit only by
+          what bounces off them.
 
           Ambient and hemisphere are kept deliberately low. They add light from
           everywhere at once, which no real room does, and every unit of it
           flattens the shading gradient that tells you what shape a thing is.
           An earlier pass ran these at 0.5 and 0.9 to brighten the room and the
           result was uniformly lit and fake. Brightness belongs in the fittings,
-          where it arrives from a direction and falls off. */}
-      <ambientLight intensity={0.24} color="#f4ece0" />
-      <hemisphereLight args={["#ffeeda", "#a08b6a", 0.55]} />
+          where it arrives from a direction and falls off.
 
-      {/* the pendant, hanging where the model is: main light, casts shadows */}
+          They are deliberately *cool*, which looks backwards for a warm room
+          and is the thing that makes it work. Warmth only reads as warmth
+          against something colder: tinting the fill orange too made every
+          surface the same sepia and the sage walls disappeared entirely. This
+          is the blue evening light in the room the lamps are fighting, and it
+          is what leaves the walls green and the lamplight orange. */}
+      <ambientLight intensity={0.16} color="#9fb2b8" />
+      <hemisphereLight args={["#aac2c8", "#4a3a2c", 0.38]} />
+
+      {/* The lantern. Main light and the only shadow caster, sitting inside
+          the shade at the height the shade actually is. A point light this low
+          throws long shadows across the floor rather than short ones straight
+          down, which is most of what separates lamplight from daylight. */}
       <pointLight
-        position={[0, ROOM.h - 0.52, 0.2]}
-        intensity={22}
-        distance={14}
-        decay={1.45}
-        color="#ffd9a6"
+        position={[LANTERN.x, 0.96, LANTERN.z]}
+        intensity={26}
+        distance={8.5}
+        decay={1.5}
+        color="#ffa758"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0015}
         shadow-normalBias={0.03}
       />
-      {/* A second warm bounce toward the door end. One pendant in the middle
-          of a 5.2 x 4.8m room leaves the far wall a cave, and the fix is a
-          source down there rather than more ambient, which would flatten
-          everything again to solve a problem in one corner. */}
+      {/* The bounce the lantern throws up the wall and across the ceiling.
+          This is the single detail that makes a warm lamp look like it is in
+          the room rather than pasted over it: without a lit patch above it the
+          ceiling stays flat grey and quietly contradicts the fitting. */}
       <pointLight
-        position={[-0.5, 1.95, ROOM.d / 2 - 1.5]}
-        intensity={3.4}
-        distance={6}
-        decay={1.7}
-        color="#ffdcb0"
+        position={[LANTERN.x - 0.5, ROOM.h - 0.5, LANTERN.z]}
+        intensity={5}
+        distance={4.4}
+        decay={1.9}
+        color="#ff9a45"
       />
-      {/* a soft top-down key so shapes still read away from the pendant */}
-      <directionalLight
-        position={[2.6, 3.4, 1.6]}
-        intensity={0.7}
-        color="#f4efe4"
-      />
-      {/* the mushroom lamp on the desk */}
+      {/* the mushroom lamp on the desk, the second pool of warm */}
       <pointLight
         position={[-1.0, 1.0, -ROOM.d / 2 + 0.55]}
-        intensity={3.2}
-        distance={2.8}
-        decay={2}
-        color="#ffcf94"
+        intensity={8.5}
+        distance={3.6}
+        decay={1.9}
+        color="#ffb066"
+      />
+      {/* A low warm fill at the door end, which neither lamp reaches. Kept
+          weak and warm enough to read as spill rather than as a third lamp the
+          visitor can never find. */}
+      <pointLight
+        position={[-0.4, 1.5, ROOM.d / 2 - 1.4]}
+        intensity={3.6}
+        distance={5.4}
+        decay={1.8}
+        color="#ffb877"
       />
       {/* monitor spill */}
       <pointLight
@@ -199,7 +362,11 @@ function Lighting({ poweredCount }: { poweredCount: number }) {
    is why it belongs ahead of any asset work. */
 function Post() {
   return (
-    <EffectComposer multisampling={4} enableNormalPass={false}>
+    /* multisampling 2, down from 4. Measured at 1.8ms a frame for the step
+       from 4 to 0 at 8 Mpx, and half of that comes back for free at 2 — which
+       still resolves the room's many straight edges (door stiles, shelf
+       boards, bezels) without the shimmer that 0 would bring. */
+    <EffectComposer multisampling={2} enableNormalPass={false}>
       <N8AO
         aoRadius={0.55}
         intensity={2.6}
@@ -207,10 +374,13 @@ function Post() {
         color="#2b2a26"
         halfRes
       />
+      {/* Threshold lowered so the lamp shades bloom, not just the screens.
+          The glow around a warm shade is doing real work here — it is what
+          makes the lantern look like it is emitting rather than painted. */}
       <Bloom
-        intensity={0.32}
-        luminanceThreshold={0.72}
-        luminanceSmoothing={0.22}
+        intensity={0.42}
+        luminanceThreshold={0.58}
+        luminanceSmoothing={0.26}
         mipmapBlur
       />
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
@@ -221,9 +391,10 @@ function Post() {
 
 function Scene({
   data,
+  source,
   phase,
   reduced,
-  onEntryDone,
+  onSceneReady,
   controlsRef,
   interacting,
   onPrompt,
@@ -234,16 +405,17 @@ function Scene({
   onOpenBook,
   onOpenCert,
   onOpenCard,
-  onOpenBlog,
+  onExitRoom,
   terminalActive,
   onTerminalEnter,
   onTerminalExit,
   paused,
 }: {
   data: PanelProps;
+  source: SourceExcerpt;
   phase: Phase;
   reduced: boolean;
-  onEntryDone: () => void;
+  onSceneReady: () => void;
   controlsRef: React.RefObject<PointerLockControlsImpl | null>;
   interacting: boolean;
   onPrompt: (p: Prompt) => void;
@@ -254,60 +426,75 @@ function Scene({
   onOpenBook: (b: ShelfBook) => void;
   onOpenCert: (c: ShelfCert) => void;
   onOpenCard: (c: InfoCard) => void;
-  onOpenBlog: () => void;
+  onExitRoom: () => void;
   terminalActive: boolean;
   onTerminalEnter: () => void;
   onTerminalExit: () => void;
   paused: boolean;
 }) {
   const [poweredCount, setPoweredCount] = useState(0);
-  const snap = useSnapToOperator();
+  /* True while the camera is easing back out of the terminal. `paused` has
+     already gone false by then, so without this FirstPerson would grab the
+     camera mid-move and snap it to eye height. */
+  const [settling, setSettling] = useState(false);
+  /* The desk monitor alternates between the manifest and the ArgoCD view.
+     Held here rather than inside CodeScreen — see the note on its `tab` prop. */
+  const [deskTab, setDeskTab] = useState<Tab>("code");
+  useEffect(() => {
+    if (phase !== "exploring") return;
+    const t = setInterval(
+      () => setDeskTab((v) => (v === "code" ? "argocd" : "code")),
+      9000,
+    );
+    return () => clearInterval(t);
+  }, [phase]);
   const { camera } = useThree();
 
-  // Stagger the screens on once the visitor has committed to entering.
+  // Screens come on once the room is up.
   useEffect(() => {
-    if (phase === "idle") {
+    if (phase !== "exploring") {
       setPoweredCount(0);
       return;
     }
     if (reduced) {
-      setPoweredCount(PLACEMENTS.length);
+      setPoweredCount(POWER_STEPS);
       return;
     }
-    const timers = PLACEMENTS.map((_, i) =>
-      setTimeout(() => setPoweredCount((c) => Math.max(c, i + 1)), 700 + i * 260),
+    const timers = Array.from({ length: POWER_STEPS }, (_, i) =>
+      setTimeout(() => setPoweredCount((c) => Math.max(c, i + 1)), 500 + i * 320),
     );
     return () => timers.forEach(clearTimeout);
   }, [phase, reduced]);
 
-  // Reduced motion skips the fly-in entirely.
+  /* Stand the visitor up just inside the door, facing the desk.
+     This runs once, behind the loading screen, so the first frame anyone sees
+     is already the view they will be walking from. There is no fly-in any more:
+     an animated approach means the first few seconds of the room are a cutscene
+     you cannot steer, and it read as a screensaver rather than a place. */
   useEffect(() => {
-    if (phase === "entering" && reduced) {
-      snap();
-      onEntryDone();
-    }
-  }, [phase, reduced, snap, onEntryDone]);
-
-  // Park the camera somewhere presentable while the enter overlay is up.
-  useEffect(() => {
-    if (phase !== "idle") return;
-    camera.position.set(0, 1.5, ROOM.d / 2 - 1.2);
-    camera.lookAt(0, 1.8, -ROOM.d / 2);
+    if (phase !== "exploring") return;
+    camera.position.set(0, EYE, ROOM.d / 2 - 1.1);
+    camera.lookAt(0, 1.45, -ROOM.d / 2);
   }, [phase, camera]);
 
   return (
     <>
-      <color attach="background" args={["#cfd6dd"]} />
-      <fog attach="fog" args={["#dcd8cc", 16, 42]} />
+      <color attach="background" args={["#1b1410"]} />
+      <fog attach="fog" args={["#241a13", 16, 42]} />
       <Lighting poweredCount={poweredCount} />
       <InteractionProvider enabled={interacting && !paused} onPrompt={onPrompt}>
       <Suspense fallback={null}>
         {/* Image-based lighting. Does most of the work on specular: without an
             environment map, metal and plastic have nothing to reflect and every
-            surface reads as flat paint. */}
+            surface reads as flat paint.
+
+            Turned well down from 0.75. The map is a neutral studio, so at full
+            strength it is a large cool source washing the whole room, and it
+            was quietly cancelling out the warmth the lamps put in. It is here
+            for reflections now, not for illumination. */}
         <Environment
           files="/textures/fun/env_studio_1k.hdr"
-          environmentIntensity={0.75}
+          environmentIntensity={0.28}
         />
         <Room
           onPrinterStatus={onPrinterStatus}
@@ -317,32 +504,37 @@ function Scene({
           onOpenBook={onOpenBook}
           onOpenCert={onOpenCert}
           onOpenCard={onOpenCard}
-          onOpenBlog={onOpenBlog}
+          onExitRoom={onExitRoom}
         />
         <Post />
+        {/* Fires only once everything above has resolved, which is the honest
+            "the room is ready" signal. Progress percentage alone is not: it
+            hits 100 while the last texture is still being uploaded and the
+            scene has yet to mount, so a bar driven purely by it finishes to a
+            blank canvas. */}
+        <SceneReady onReady={onSceneReady} />
       </Suspense>
-      <ScreenWall data={data} poweredCount={poweredCount} />
+      <ScreenWall data={data} source={source} deskTab={deskTab} poweredCount={poweredCount} />
       <TerminalScreen
-        position={PLACEMENTS[TERMINAL_SLOT].position}
-        rotation={PLACEMENTS[TERMINAL_SLOT].rotation}
-        width={PLACEMENTS[TERMINAL_SLOT].width}
+        position={DESK_TERMINAL.position}
+        rotation={DESK_TERMINAL.rotation}
+        width={DESK_TERMINAL.width}
+        portrait
         shelf={shelf}
         active={terminalActive}
         onActivate={onTerminalEnter}
         onExit={onTerminalExit}
       />
-      <EntrySequence
-        active={phase === "entering" && !reduced}
-        onDone={onEntryDone}
-      />
       </InteractionProvider>
-      <FirstPerson enabled={phase === "exploring" && !paused} />
+      <TempCam />
+      <TerminalFocus active={terminalActive} onSettling={setSettling} />
+      <FirstPerson enabled={phase === "exploring" && !paused && !settling} />
       <PointerLockControls ref={controlsRef} selector="#fun-lock-target" />
     </>
   );
 }
 
-type Phase = "idle" | "entering" | "exploring";
+type Phase = "loading" | "exploring";
 
 /* Card builders. Hardware, case studies and certificates all reduce to the same
    shape, so InfoPanel renders one layout rather than three that drift apart. */
@@ -386,12 +578,18 @@ function certCard(c: ShelfCert): InfoCard {
 export default function FunRoom({
   shelf,
   career,
+  source,
 }: {
   shelf: ShelfData;
   career: CareerData;
+  source: SourceExcerpt;
 }) {
+  const router = useRouter();
   const { status, feed, stale, ok, nodes, argocd } = useInfraFeed();
-  const [phase, setPhase] = useState<Phase>("idle");
+  const [phase, setPhase] = useState<Phase>("loading");
+  const [sceneReady, setSceneReady] = useState(false);
+  const [floorDone, setFloorDone] = useState(false);
+  const { progress } = useProgress();
   const [locked, setLocked] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [prompt, setPrompt] = useState<Prompt>(null);
@@ -428,48 +626,16 @@ export default function FunRoom({
     controlsRef.current?.lock();
   }, []);
 
-  /* The blog card fetches when opened rather than on mount: most visits never
-     look at it, and it is a request to a different origin's feed. */
-  const openBlog = useCallback(async () => {
-    setTerminalActive(false);
+  /* Walking out of the door leaves the room. Uses the router rather than
+     window.location so it is a client navigation like any other nav link —
+     the visitor lands on the site proper, not on a full page reload.
+     The pointer is released first: leaving with the pointer still locked
+     drops you onto the front page unable to move the mouse. */
+  const exitRoom = useCallback(() => {
     controlsRef.current?.unlock();
-    setCard({
-      kicker: "blog",
-      title: "Latest posts",
-      rows: [],
-      body: "Loading…",
-    });
-    try {
-      const res = await fetch("/api/v1/blog", { cache: "no-store" });
-      const json = (await res.json()) as {
-        posts?: { title: string; url: string; publishedAt: string | null }[];
-      };
-      const posts = json.posts ?? [];
-      setCard({
-        kicker: "blog",
-        title: "Latest posts",
-        subtitle: "blog.nordbye.it",
-        rows: posts.map((p) => ({
-          k: p.publishedAt ? p.publishedAt.slice(0, 10) : "",
-          v: p.title,
-        })),
-        body: posts.length
-          ? undefined
-          : "The feed returned nothing just now.",
-        href: "https://blog.nordbye.it",
-        hrefLabel: "open the blog",
-      });
-    } catch {
-      setCard({
-        kicker: "blog",
-        title: "Latest posts",
-        rows: [],
-        body: "Could not reach the feed.",
-        href: "https://blog.nordbye.it",
-        hrefLabel: "open the blog",
-      });
-    }
-  }, []);
+    router.push("/");
+  }, [router]);
+
   const closeCard = useCallback(() => {
     setCard(null);
     controlsRef.current?.lock();
@@ -479,6 +645,30 @@ export default function FunRoom({
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     setCoarse(window.matchMedia("(pointer: coarse)").matches);
   }, []);
+
+  /* A floor on how briefly the loading screen can exist. On a warm cache the
+     room is ready in well under a second, and a bar that flashes to 100 and
+     vanishes reads as a glitch rather than as loading. */
+  useEffect(() => {
+    const t = setTimeout(() => setFloorDone(true), 900);
+    return () => clearTimeout(t);
+  }, []);
+
+  /* Into the room the moment it is actually ready — no gate, no click.
+     Both conditions matter: `sceneReady` is the Suspense boundary resolving,
+     which is the real signal, and the floor keeps the transition legible. */
+  useEffect(() => {
+    if (sceneReady && floorDone) {
+      const t = setTimeout(() => setPhase("exploring"), 260);
+      return () => clearTimeout(t);
+    }
+  }, [sceneReady, floorDone]);
+
+  const onSceneReady = useCallback(() => setSceneReady(true), []);
+
+  /* The bar cannot show real progress and also wait on the floor, so it shows
+     whichever is further behind. It never goes backwards. */
+  const shownProgress = sceneReady ? 100 : Math.min(progress, 96);
 
   // Esc closes an open card. PointerLockControls already owns Esc for
   // releasing the cursor, but the cursor is deliberately released while a card
@@ -515,13 +705,6 @@ export default function FunRoom({
     [status, feed, stale, ok, nodes, argocd],
   );
 
-  const enter = useCallback(() => {
-    setPhase("entering");
-    if (!coarse) controlsRef.current?.lock();
-  }, [coarse]);
-
-  const onEntryDone = useCallback(() => setPhase("exploring"), []);
-
   useEffect(() => {
     const c = controlsRef.current;
     if (!c) return;
@@ -554,7 +737,13 @@ export default function FunRoom({
         <Canvas
           camera={{ fov: 72, near: 0.1, far: 60, position: [0, 1.5, ROOM.d / 2 - 1.2] }}
           shadows="soft"
-          dpr={[1, 1.8]}
+          /* Capped at 1.5, down from 1.8. The room is fill-rate bound and this
+             is the cheapest frame time in the build: on a Retina display at a
+             2056x1202 window, 1.8 renders 8.0 Mpx against 5.6 at 1.5, for a
+             sharpness difference that is very hard to see and 1.9ms a frame
+             that is not. Measured 74 -> 91fps together with the multisampling
+             change below. */
+          dpr={[1, 1.5]}
           gl={{
             antialias: false, // the composer multisamples instead
             powerPreference: "high-performance",
@@ -564,9 +753,10 @@ export default function FunRoom({
         >
           <Scene
             data={data}
+            source={source}
             phase={phase}
             reduced={reduced}
-            onEntryDone={onEntryDone}
+            onSceneReady={onSceneReady}
             controlsRef={controlsRef}
             interacting={phase === "exploring"}
             onPrompt={setPrompt}
@@ -577,7 +767,7 @@ export default function FunRoom({
             onOpenBook={(b) => openCard(bookCard(b))}
             onOpenCert={(c) => openCard(certCard(c))}
             onOpenCard={openCard}
-            onOpenBlog={openBlog}
+            onExitRoom={exitRoom}
             terminalActive={terminalActive}
             onTerminalEnter={enterTerminal}
             onTerminalExit={exitTerminal}
@@ -639,47 +829,26 @@ export default function FunRoom({
         </div>
       )}
 
-      {/* enter gate */}
-      {phase === "idle" && (
-        <div className="absolute inset-0 z-30 grid place-content-center bg-black/55 text-center backdrop-blur-[2px]">
-          <p className="eyebrow mb-4 text-[0.65rem] text-white/40">
-            nordbye.it · the room
-          </p>
-          <h1 className="text-4xl font-semibold tracking-tight text-white">
-            Step inside the cluster.
-          </h1>
-          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/55">
-            A small room with my homelab in it. The screens are reading live
-            from the cluster right now. Walk up and look.
-          </p>
-          <button
-            type="button"
-            onClick={enter}
-            className="focus-ring mx-auto mt-8 border border-white/25 px-7 py-3 font-mono text-sm text-white transition-colors hover:border-white/60 hover:bg-white/5"
-          >
-            enter the room
-          </button>
-          <p className="mt-5 font-mono text-[11px] text-white/30">
-            {coarse
-              ? "drag to look · touch controls"
-              : "WASD to move · mouse to look · esc to release"}
-          </p>
-        </div>
-      )}
+      {/* Stays mounted and fades rather than unmounting, so the room is already
+          rendering behind it as it goes. pointer-events-none throughout, which
+          is what lets the very first click land on the canvas and take the
+          pointer lock instead of being eaten by an overlay. */}
+      <LoadingScreen progress={shownProgress} done={phase === "exploring"} />
 
-      {/* paused: pointer lock released */}
-      {/* Not while a card is open: the card unlocks the pointer on purpose, and
-          showing "click to resume" behind it reads as two competing dialogs. */}
+      {/* A hint, not a gate.
+          Pointer lock cannot be taken without a user gesture, and the click on
+          the nav link that got us here does not carry across the navigation —
+          so mouse-look genuinely needs one click and there is no way around it.
+          WASD works immediately, which is why this is a line of text in the
+          corner rather than the modal that used to sit here: the visitor is in
+          the room and moving, and the click buys them the mouse when they want
+          it. Not shown while a card is open, which releases the pointer on
+          purpose. */}
       {phase === "exploring" && !locked && !coarse && !paused && (
-        <div className="absolute inset-0 z-30 grid place-content-center bg-black/55 text-center backdrop-blur-[2px]">
-          <p className="font-mono text-sm text-white/70">pointer released</p>
-          <button
-            type="button"
-            onClick={() => controlsRef.current?.lock()}
-            className="focus-ring mx-auto mt-5 border border-white/25 px-6 py-2.5 font-mono text-sm text-white transition-colors hover:border-white/60 hover:bg-white/5"
-          >
-            click to resume
-          </button>
+        <div className="pointer-events-none absolute bottom-6 left-1/2 z-30 -translate-x-1/2">
+          <p className="border border-white/10 bg-black/45 px-3.5 py-2 font-mono text-[11px] text-white/45 backdrop-blur">
+            click to look around · WASD to move
+          </p>
         </div>
       )}
     </div>
