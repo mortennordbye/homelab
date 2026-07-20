@@ -51,10 +51,15 @@ data:
             # The UI computes this in the browser from window.location.
             - matching_mode: strict
               url: https://kargo.local.bigd.no/login
-            # `kargo login` binds an ephemeral localhost port (--port defaults to
-            # 0, meaning any free port), so no strict URI can cover the CLI.
-            - matching_mode: regex
-              url: http://localhost:[0-9]{1,5}/auth/callback
+            # The CLI port is pinned rather than matched by regex, and the port
+            # must stay a literal integer. authentik's cors_allow() runs
+            # urlparse().port over every redirect_uri of the provider without
+            # stopping at the first match, so a regex port raises there and the
+            # discovery endpoint 500s for any request carrying an Origin header.
+            # Kargo's UI resolves discovery in the browser, so that breaks SSO
+            # outright. Use `kargo login --port 8087` from the CLI.
+            - matching_mode: strict
+              url: http://localhost:8087/auth/callback
           # Kargo reads claims from the ID token only, never from userinfo, so
           # the groups claim has to be minted into the token. offline_access is
           # auto-requested by both UI and CLI when discovery advertises it.
