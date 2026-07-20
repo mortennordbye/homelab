@@ -16,6 +16,8 @@ authentik:
 blueprints:
   configMaps:
     - authentik-blueprint-argocd
+    - authentik-blueprint-kargo
+    - authentik-blueprint-grafana
 
 server:
   env:
