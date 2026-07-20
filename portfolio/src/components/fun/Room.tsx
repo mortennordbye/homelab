@@ -8,7 +8,14 @@ import { GithubWall } from "./GithubWall";
 import { Sideboard } from "./Devices";
 import type { Hardware } from "./hardware";
 import type { InfoCard } from "./Hud";
-import { CareerFrame, ContactCard, GymBag, SocialWall } from "./Objects";
+import {
+  CareerFrame,
+  ContactCard,
+  GymBag,
+  ServiceRack,
+  SkillPlate,
+  SocialWall,
+} from "./Objects";
 import { Printer } from "./Printer";
 import { Interactive } from "./interaction";
 import { Html } from "@react-three/drei";
@@ -494,6 +501,11 @@ export function Room({
           occupy before it moved onto the sideboard. */}
       <SocialWall position={[0, 1.78, -hd + 0.05]} onOpen={onOpenCard} />
 
+      {/* Skills mirror the career frame across the desk, at the same height and
+          size. Two objects of equal weight either side of the socials is the
+          only arrangement that does not leave this wall looking lopsided. */}
+      <SkillPlate position={[1.75, 1.72, -hd + 0.04]} onOpen={onOpenCard} />
+
       {/* jute rug */}
       <mesh position={[0, 0.004, 0.15]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[3.0, 2.1]} />
@@ -512,6 +524,16 @@ export function Room({
           runs -1.85 to 0.35, the door architrave starts at about 1.03. */}
       <GithubWall
         position={[-0.75, 1.45, hd - 0.05]}
+        rotation={[0, Math.PI, 0]}
+        onOpen={onOpenCard}
+      />
+
+      {/* Services fill the gap between that board and the door architrave —
+          x 0.35 to 1.03, so the rack centres on 0.69 and is 0.49 wide. Last
+          thing on the wall before the way out, which is where a leaflet rack
+          belongs. */}
+      <ServiceRack
+        position={[0.69, 1.42, hd - 0.05]}
         rotation={[0, Math.PI, 0]}
         onOpen={onOpenCard}
       />

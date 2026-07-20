@@ -15,7 +15,8 @@ import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { PointerLockControls as PointerLockControlsImpl } from "three-stdlib";
-import { EYE, FirstPerson } from "./FirstPerson";
+import { EYE, FirstPerson, isTyping, type MoveInput } from "./FirstPerson";
+import { TouchLook, TouchStick } from "./Touch";
 import { ACCENT, PANELS, type PanelProps } from "./Panels";
 import {
   DESK_SCREEN,
@@ -45,8 +46,47 @@ import { preloadSurfaces } from "./textures";
 // These were previously exported and never called, which is worth flagging:
 // a dead preload is invisible, because everything still loads correctly, just
 // later and one at a time.
-preloadSurfaces();
-preloadProps();
+//
+// Not on touch, though. Module scope evaluates the moment the dynamic import
+// resolves — before the first render, and therefore before the gate that asks
+// a phone visitor whether they want 6.5MB off their mobile data. Preloading
+// here regardless would make that question theatre, since the answer would
+// arrive long after the bytes. Touch visitors preload on the way in instead.
+//
+// And not at all without WebGL: those bytes would only ever feed a canvas that
+// cannot draw them.
+
+/**
+ * Can this machine draw the room at all?
+ *
+ * Asked once, at module scope, because it gates both the preload and whether
+ * the Canvas mounts — and a Canvas that mounts on a machine with no WebGL is
+ * precisely the blank black rectangle this is here to avoid.
+ */
+function hasWebGL(): boolean {
+  try {
+    const probe = document.createElement("canvas");
+    const gl = probe.getContext("webgl2") ?? probe.getContext("webgl");
+    if (!gl) return false;
+    // Hand it straight back. Browsers cap how many live contexts a page may
+    // hold, and this one exists only to answer the question.
+    (gl as WebGLRenderingContext)
+      .getExtension("WEBGL_lose_context")
+      ?.loseContext();
+    return true;
+  } catch {
+    // Some browsers throw rather than return null when WebGL is disabled by
+    // policy or blocklisted driver. Same answer either way.
+    return false;
+  }
+}
+
+const WEBGL_OK = hasWebGL();
+
+if (WEBGL_OK && !window.matchMedia("(pointer: coarse)").matches) {
+  preloadSurfaces();
+  preloadProps();
+}
 
 // -----------------------------------------------------------------------------
 // Screen placement.
@@ -130,6 +170,73 @@ function TempCam() {
   useEffect(() => {
     (window as unknown as { __cam: unknown }).__cam = camera;
   }, [camera]);
+  return null;
+}
+
+/**
+ * The full-screen panel the room shows instead of itself.
+ *
+ * Three things need it — the touch entry gate, the no-WebGL fallback and the
+ * lost-context notice — and they are the same panel with different words, so
+ * they share one rather than drifting apart in three places.
+ */
+function Notice({
+  title,
+  body,
+  children,
+}: {
+  title: string;
+  body: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-[210] grid place-content-center bg-[#04070a] px-8">
+      <p className="eyebrow mb-5 text-[0.65rem] text-white/35">
+        nordbye.it · the room
+      </p>
+      <h1 className="font-mono text-xl leading-snug text-white">{title}</h1>
+      <p className="mt-4 max-w-[42ch] text-[13px] leading-relaxed text-white/60">
+        {body}
+      </p>
+      <div className="mt-8 flex flex-wrap items-center gap-3">{children}</div>
+    </div>
+  );
+}
+
+const NOTICE_BUTTON =
+  "focus-ring border border-white/25 px-4 py-2.5 font-mono text-xs text-white transition-colors hover:border-white/60 hover:bg-white/5";
+const NOTICE_LINK =
+  "focus-ring font-mono text-xs text-accent underline-offset-4 hover:underline";
+
+/**
+ * Watches for the GPU dropping the canvas out from under us.
+ *
+ * A lost context is not something React hears about on its own: the canvas
+ * stops updating and the room looks fine while having quietly stopped being a
+ * room. Driver resets, laptops waking, and the browser reclaiming memory from
+ * a backgrounded tab all cause it.
+ *
+ * Reporting it is all this does, and the caller must respond by unmounting the
+ * Canvas rather than re-rendering it. That is not a stylistic preference. Any
+ * re-render of the scene against a dead context reaches `EffectComposer`,
+ * which throws `Cannot read properties of null` out of `addPass`, and the
+ * throw lands in Next's error boundary — which owns the whole page, so the
+ * result is the error overlay in dev and `app/error.tsx` in production,
+ * neither of which is the notice we are trying to show. The first version of
+ * this component caused exactly that: setting state was itself enough to
+ * re-render `Post` and blow up the page it was meant to rescue.
+ *
+ * Unmounting also means there is no canvas left to receive
+ * `webglcontextrestored`, so recovery is a reload. Hence no restore handler,
+ * and a notice that does not promise one.
+ */
+function ContextGuard({ onLost }: { onLost: () => void }) {
+  const { gl } = useThree();
+  useEffect(() => {
+    const el = gl.domElement;
+    el.addEventListener("webglcontextlost", onLost);
+    return () => el.removeEventListener("webglcontextlost", onLost);
+  }, [gl, onLost]);
   return null;
 }
 
@@ -410,11 +517,15 @@ function Scene({
   onTerminalEnter,
   onTerminalExit,
   paused,
+  coarse,
+  touchMove,
 }: {
   data: PanelProps;
   source: SourceExcerpt;
   phase: Phase;
   reduced: boolean;
+  coarse: boolean;
+  touchMove: React.RefObject<MoveInput>;
   onSceneReady: () => void;
   controlsRef: React.RefObject<PointerLockControlsImpl | null>;
   interacting: boolean;
@@ -521,14 +632,23 @@ function Scene({
         width={DESK_TERMINAL.width}
         portrait
         shelf={shelf}
+        data={data}
         active={terminalActive}
         onActivate={onTerminalEnter}
         onExit={onTerminalExit}
       />
+      {/* Must sit inside the provider, not merely inside the Canvas: a tap
+          resolves through the same pick registry the crosshair uses, and
+          outside this boundary that context reads null and every tap silently
+          does nothing. */}
+      <TouchLook enabled={coarse && phase === "exploring" && !paused && !settling} />
       </InteractionProvider>
       <TempCam />
       <TerminalFocus active={terminalActive} onSettling={setSettling} />
-      <FirstPerson enabled={phase === "exploring" && !paused && !settling} />
+      <FirstPerson
+        enabled={phase === "exploring" && !paused && !settling}
+        move={touchMove}
+      />
       <PointerLockControls ref={controlsRef} selector="#fun-lock-target" />
     </>
   );
@@ -595,7 +715,19 @@ export default function FunRoom({
   const [prompt, setPrompt] = useState<Prompt>(null);
   const [printerStatus, setPrinterStatus] = useState<string | null>(null);
   const [showBinds, setShowBinds] = useState(true);
-  const [coarse, setCoarse] = useState(false);
+  /* Read during the first render rather than in an effect, unlike `reduced`
+     below. It gates whether the Canvas mounts at all, and a Canvas that mounts
+     for one frame before the gate appears has already started pulling the
+     6.5MB of textures the gate exists to ask about. Safe to touch `window`
+     here: this component is dynamic-imported with ssr:false. */
+  const [coarse] = useState(() =>
+    window.matchMedia("(pointer: coarse)").matches,
+  );
+  /** Touch visitors opt in explicitly; desktop is never gated. */
+  const [entered, setEntered] = useState(false);
+  const touchMove = useRef<MoveInput>({ x: 0, y: 0 });
+  const [contextLost, setContextLost] = useState(false);
+  const onContextLost = useCallback(() => setContextLost(true), []);
   const [card, setCard] = useState<InfoCard | null>(null);
   const [terminalActive, setTerminalActive] = useState(false);
   const controlsRef = useRef<PointerLockControlsImpl | null>(null);
@@ -643,7 +775,6 @@ export default function FunRoom({
 
   useEffect(() => {
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    setCoarse(window.matchMedia("(pointer: coarse)").matches);
   }, []);
 
   /* A floor on how briefly the loading screen can exist. On a warm cache the
@@ -688,6 +819,9 @@ export default function FunRoom({
   useEffect(() => {
     if (paused) return;
     const onKey = (e: KeyboardEvent) => {
+      // Same trap as the movement keys: `help` is the shell's most-typed
+      // command and every `h` in it was toggling the keybind card.
+      if (isTyping(e.target)) return;
       if (e.code === "KeyH") setShowBinds((v) => !v);
     };
     window.addEventListener("keydown", onKey);
@@ -731,6 +865,79 @@ export default function FunRoom({
             ? "all systems operational"
             : "partially degraded";
 
+  /* No WebGL, no room. Checked before everything else because it is the one
+     condition with no version of this page that works — the touch gate below
+     offers a choice, this one only explains. The site proper carries every
+     section the room does, which is what makes saying so honest rather than
+     an apology. */
+  if (!WEBGL_OK) {
+    return (
+      <Notice
+        title="This room needs WebGL."
+        body="Your browser cannot render 3D on this machine, usually because WebGL is switched off or the graphics driver is blocked. Everything in here also exists on the site proper, which needs nothing special."
+      >
+        <Link href="/" className={NOTICE_BUTTON}>
+          go to the site
+        </Link>
+      </Notice>
+    );
+  }
+
+  /* Replaces the room rather than covering it, which is what takes the Canvas
+     out of the tree — see ContextGuard for why re-rendering it instead takes
+     the whole page down with it. */
+  if (contextLost) {
+    return (
+      <Notice
+        title="The room lost its graphics context."
+        body="The browser handed the canvas back to the system, which usually means a driver reset or the tab being reclaimed while it sat in the background. Reloading rebuilds it."
+      >
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className={NOTICE_BUTTON}
+        >
+          reload the room
+        </button>
+        <Link href="/" className={NOTICE_LINK}>
+          go to the site instead
+        </Link>
+      </Notice>
+    );
+  }
+
+  /* The one screen a phone visitor sees before anything heavy loads.
+     Two honest facts and two ways out: the room costs real bandwidth (no CDN
+     in front of it, so every megabyte comes off a home uplink), and the site
+     proper has all of the same content. Nobody arrives here by accident —
+     /fun is a nav link — so this asks rather than redirects. */
+  if (coarse && !entered) {
+    return (
+      <Notice
+        title="A walkable version of this portfolio."
+        body="Drag to look around, use the stick to walk, tap an object to open it. It downloads about 6.5MB of textures and models, served straight from the cluster in Oslo, so it is worth being on wifi."
+      >
+        <button
+          type="button"
+          onClick={() => {
+            // The module-scope preload skipped touch, so kick it here. Both
+            // are cache-backed, so this stays the overlap it is on desktop
+            // rather than a second round of fetches.
+            preloadSurfaces();
+            preloadProps();
+            setEntered(true);
+          }}
+          className={NOTICE_BUTTON}
+        >
+          enter the room
+        </button>
+        <Link href="/" className={NOTICE_LINK}>
+          go to the site instead
+        </Link>
+      </Notice>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-[200] bg-[#04070a]">
       <div id="fun-lock-target" className="absolute inset-0 z-0">
@@ -772,7 +979,10 @@ export default function FunRoom({
             onTerminalEnter={enterTerminal}
             onTerminalExit={exitTerminal}
             paused={paused}
+            coarse={coarse}
+            touchMove={touchMove}
           />
+          <ContextGuard onLost={onContextLost} />
         </Canvas>
       </div>
 
@@ -816,8 +1026,11 @@ export default function FunRoom({
       {phase === "exploring" && !paused && (
         <div className="pointer-events-none absolute inset-0 z-20">
           <Crosshair active={prompt !== null} />
-          <InteractPrompt prompt={prompt} />
-          <Keybinds visible={showBinds} />
+          <InteractPrompt prompt={prompt} touch={coarse} />
+          {/* Every bind on that card is a key, and touch has no keyboard —
+              it would sit under the walk stick advertising controls that do
+              not exist. The touch hint bottom-right says the equivalent. */}
+          {!coarse && <Keybinds visible={showBinds} />}
         </div>
       )}
 
@@ -850,6 +1063,22 @@ export default function FunRoom({
             click to look around · WASD to move
           </p>
         </div>
+      )}
+
+      {/* Touch walk stick, and the one line that explains the controls it does
+          not cover. Both drop away while a card or the terminal has focus —
+          the stick would sit on top of the panel, and the hint is answered. */}
+      {coarse && phase === "exploring" && !paused && (
+        <>
+          <TouchStick move={touchMove} />
+          <div className="pointer-events-none absolute bottom-8 right-8 z-30 max-w-[46vw]">
+            <p className="border border-white/10 bg-black/45 px-3 py-2 text-right font-mono text-[10px] leading-relaxed text-white/45 backdrop-blur">
+              drag to look
+              <br />
+              tap an object to open it
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

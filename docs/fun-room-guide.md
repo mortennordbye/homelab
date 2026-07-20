@@ -60,7 +60,8 @@ All under `portfolio/src/`.
 | `components/fun/Devices.tsx` | Homelab hardware models + the sideboard. |
 | `components/fun/hardware.ts` | Hardware names and specs, transcribed from the repo README. |
 | `components/fun/Bookshelf.tsx` | Case studies as books, certificates as framed prints. Self-sizing. |
-| `components/fun/Objects.tsx` | Social wall, contact card, gym bag, career frame. |
+| `components/fun/Objects.tsx` | Social wall, contact card, gym bag, career frame, skills faceplate, services leaflet rack. |
+| `components/fun/Touch.tsx` | Phone controls. `TouchLook` (inside the Canvas **and** inside `InteractionProvider`) does drag-to-look and tap-to-activate; `TouchStick` is the DOM walk stick. |
 | `components/fun/Sonos.tsx` | The speaker on the sideboard and the Web Audio rickroll it plays. No audio files — melody and drum kit are synthesised. |
 | `components/fun/BlogBoard.tsx` | Whiteboard on the left wall. Lays itself out from `/api/v1/blog`, cover images included. Nothing to add here per post. |
 | `components/fun/Terminal.tsx` | The shell on the middle monitor. |
@@ -122,6 +123,13 @@ Wrap it in `Interactive`. `label` is the name shown when looked at, `detail` is 
 Cards are built by the helpers at the bottom of `FunRoom.tsx` (`hardwareCard`, `bookCard`,
 `certCard`) and rendered by one `InfoPanel`. Add a builder rather than a second panel.
 
+Touch needs nothing extra: a tap resolves through the same registry and the same `REACH`, so
+anything reachable with `E` is reachable with a finger. `verb` has to read correctly after both
+"E" and "tap to", which is why they are all bare infinitives — "read", "open", "take one".
+
+`InfoCard.tags` renders 10px chips sized for stack labels. Sentences in them read as a layout
+accident; the services leaflets drop their bullets and link out to the section instead.
+
 ### A new device in the sideboard
 
 Add the model to `Devices.tsx`, add its entry to `HARDWARE` in `hardware.ts` **copied from the
@@ -134,6 +142,14 @@ inventing numbers.
 
 One `switch` case in `useCommands` in `Terminal.tsx`. `curl` only accepts same-origin `/api/`
 paths — keep it that way.
+
+Commands that report cluster state read the `data: PanelProps` the shell is handed, never their
+own fetch: two pollers on their own schedules will eventually disagree, and a shell contradicting
+the television one desk away is worse than no shell. `kubectl get applications|nodes|certs` is the
+worked example. Each of its branches also prints how much to trust what it just printed — stale
+feed, or build-time snapshot — because a bare table is exactly the kind of green light on old
+data the room's rules forbid. Keep output inside 60 characters; the portrait monitor wraps past
+that.
 
 ### A new blog post
 
@@ -172,6 +188,33 @@ leaf is a frame of stiles and rails; the sideboard carcass is five panels with a
 
 **Depth offsets in a rotated group flip sign.** A group rotated 180° onto the far wall has its
 local `-z` pointing *into* the wall. Write offsets as "away from the wall", not a raw axis.
+
+**An `Html` layer laid flush with its own backing box tears.** The skills faceplate is a
+`RoundedBox` 0.024 deep, so its front face is at local z 0.012 — and putting the `Html` there too
+produced a diagonal rip across the panel that looks like a shader bug and is plain z-fighting.
+Everything drawn on a plate has to clear the plate. The career frame gets this right by accident
+of being 0.022 deep with its `Html` at 0.013.
+
+**A module-scope preload defeats any gate you put in front of it.** `preloadSurfaces()` and
+`preloadProps()` run when the dynamic import resolves, which is before the first render — so the
+touch entry gate asking "may I use 6.5MB of your data?" was firing long after the fetches had
+started, and the honest-looking question was theatre. Preloads are now skipped for coarse
+pointers and kicked from the gate's own button instead.
+
+**A lost WebGL context must unmount the Canvas, never re-render it.** `postprocessing`'s
+`EffectComposer` throws `Cannot read properties of null` out of `addPass` the moment it renders
+against a dead context, and that throw lands in Next's error boundary — which owns the whole
+page, so you get the dev overlay or `app/error.tsx` instead of anything you wrote. The first
+`ContextGuard` showed the notice as an overlay *over* the room, which meant setting the state was
+itself enough to re-render `Post` and take down the page the notice existed to rescue. It is an
+early `return` now. The consequence to know: there is no canvas left to receive
+`webglcontextrestored`, so recovery is a reload and the copy must not promise otherwise.
+
+**Anything that needs the pick registry must sit inside `InteractionProvider`, not merely inside
+the `Canvas`.** `TouchLook` was first mounted next to `FirstPerson`, one line below the closing
+`</InteractionProvider>`. It rendered, its listeners attached, drag-to-look worked perfectly —
+and every tap silently did nothing, because `useActivateAt()` read a null context. A context this
+component needs but does not visibly use is easy to place wrong and gives no error when you do.
 
 **Ambient light is the enemy of shape.** Light from everywhere at once flattens the gradient
 that tells you what shape a thing is. Keep `ambientLight`/`hemisphereLight` low; put brightness
@@ -351,15 +394,18 @@ Always confirm the hooks are gone before committing: `grep -n "__cam\|TempCam" s
 
 ## Known gaps
 
-1. **Mobile is broken.** Pointer lock does not exist there. Untouched so far — decide between
-   drag-to-look, a guided mode, or redirecting to the classic site.
-2. **No WebGL failure or context-loss handling.** A machine that cannot run this gets a blank
-   canvas.
-3. **Reduced motion** has a skip-entry path that has never been verified.
-4. **No loading screen** beyond a bare "warming up" fallback.
-5. **Assets need a CDN.** 6.5MB and growing, served from the cluster with no CDN in front
+1. **Assets need a CDN.** 6.5MB and growing, served from the cluster with no CDN in front
    (Cloudflare is DNS-only), so every megabyte is home-uplink bandwidth per cold visitor. This is
-   closer to blocking than it was.
-6. **The publisher does not emit `apps`, `capacity`, `certs`** — those panels are fixture-only
-   and empty in production.
-7. Sections still without an object: skills, services.
+   closer to blocking than it was. Touch visitors now at least get asked first, and machines
+   without WebGL no longer download any of it, but neither is a fix.
+2. **The publisher does not emit `apps`, `capacity`, `certs`** — those panels are fixture-only
+   and empty in production. There are two consumers now, not one: the desk monitor's ArgoCD view
+   and `kubectl get applications` in the shell. Both degrade honestly, and both look far better
+   locally against the fixture than they do in production, which is the trap.
+3. **Touch has only been driven through synthetic events**, never a real phone. Drag, tap, the
+   stick, and the entry gate were all verified by dispatching `TouchEvent`s in headless
+   Chromium, which proves the wiring and nothing about how any of it feels in a hand.
+4. **Reduced motion** has a skip-entry path that has never been verified.
+
+Two entries that used to live here were found stale rather than fixed — the ArgoCD desk view and
+the loading screen both already worked. Check a gap still reproduces before planning work off it.

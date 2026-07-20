@@ -3,7 +3,9 @@
 import { Html, RoundedBox } from "@react-three/drei";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { site } from "@/content/site";
+import { certDaysLeft } from "./feed";
 import { Interactive } from "./interaction";
+import type { PanelProps } from "./Panels";
 import {
   PANEL_PX_H,
   PANEL_PX_W,
@@ -37,7 +39,11 @@ const BANNER: Line[] = [
   { kind: "note", text: "type `help` for commands, `exit` to step back" },
 ];
 
-function useCommands(shelf: ShelfData, onOpen: (url: string) => void) {
+function useCommands(
+  shelf: ShelfData,
+  data: PanelProps,
+  onOpen: (url: string) => void,
+) {
   return useCallback(
     async (raw: string): Promise<Line[]> => {
       const [cmd, ...rest] = raw.trim().split(/\s+/);
@@ -61,6 +67,7 @@ function useCommands(shelf: ShelfData, onOpen: (url: string) => void) {
             // second column wraps — see PORTRAIT_PX_W in Screen.tsx.
             "curl <path>         GET an endpoint, e.g. /api/v1/profile",
             "api                 list the public API endpoints",
+            "kubectl get <kind>  apps, nodes or certs from the feed",
             "clear               clear the screen",
             "exit                step back from the desk",
           );
@@ -128,6 +135,112 @@ function useCommands(shelf: ShelfData, onOpen: (url: string) => void) {
             `site   ${site.url}`,
           );
 
+        /**
+         * Reads the same feed object the screens read, rather than fetching
+         * separately. Two callers polling the same endpoint on their own
+         * schedules would eventually disagree, and a shell contradicting the
+         * television in the same room is worse than having no shell.
+         *
+         * Every branch that prints cluster state also prints how much to trust
+         * it. The room's standing rule is that a green light on old data is a
+         * lie, and a bare table is exactly that kind of green light.
+         */
+        case "k":
+        case "kubectl": {
+          const [verb, kind] = rest;
+          const trust: Line[] =
+            data.feed === "snapshot"
+              ? [{ kind: "note", text: "# build-time snapshot, not the cluster" }]
+              : data.stale
+                ? [{ kind: "note", text: "# stale — last publish over 15 min ago" }]
+                : [];
+
+          if (verb === "version") {
+            const v = data.status?.versions;
+            return [
+              ...out(
+                `Server Version:  ${v?.kubernetes ?? "unknown"}`,
+                `Talos Version:   ${v?.talos ?? "unknown"}`,
+              ),
+              ...trust,
+            ];
+          }
+
+          if (verb !== "get")
+            return err("kubectl: try `kubectl get applications|nodes|certs`");
+
+          // Widths chosen against PORTRAIT_PX_W's 60-character line, same as
+          // the help text above.
+          const row = (a: string, b: string, c: string) =>
+            `${a.padEnd(17)}${b.padEnd(12)}${c}`;
+
+          switch (kind) {
+            case "applications":
+            case "application":
+            case "apps":
+            case "app": {
+              const apps = data.status?.apps ?? [];
+              // Mirrors ArgoView on the desk monitor: when the publisher sends
+              // only the root rollup, show the root rather than an empty list
+              // that reads as "no applications".
+              if (!apps.length)
+                return [
+                  ...out(
+                    row("NAME", "SYNC", "HEALTH"),
+                    row("genesis (root)", data.argocd.sync, data.argocd.health),
+                  ),
+                  { kind: "note", text: "# publisher sends the root app only" },
+                  ...trust,
+                ];
+              return [
+                ...out(
+                  row("NAME", "SYNC", "HEALTH"),
+                  ...apps.map((a) => row(a.name, a.sync, a.health)),
+                ),
+                ...trust,
+              ];
+            }
+
+            case "nodes":
+            case "node":
+            case "no":
+              return [
+                ...out(`${data.nodes.ready}/${data.nodes.total} Ready`),
+                { kind: "note", text: "# the feed carries counts, not names" },
+                ...trust,
+              ];
+
+            case "certificates":
+            case "certificate":
+            case "certs":
+            case "cert": {
+              const certs = data.status?.certs ?? [];
+              const head = `${"NAME".padEnd(24)}EXPIRES`;
+              if (!certs.length) {
+                // The publisher always sends the site's own leaf; the per-cert
+                // list is one of the optional additions.
+                const days = certDaysLeft(data.status?.cert?.notAfter);
+                if (days === null)
+                  return err("kubectl: the feed reports no certificates");
+                const host = site.url.replace(/^https?:\/\//, "");
+                return [...out(head, `${host.padEnd(24)}${days}d`), ...trust];
+              }
+              return [
+                ...out(
+                  head,
+                  ...certs.map((c) => `${c.name.padEnd(24)}${c.daysLeft}d`),
+                ),
+                ...trust,
+              ];
+            }
+
+            default:
+              return err(
+                `kubectl: ${kind || "(nothing)"}: try applications, nodes or certs`,
+              );
+          }
+        }
+
         case "api":
         case "curl": {
           const path = cmd === "api" ? "/api/v1" : arg;
@@ -163,7 +276,7 @@ function useCommands(shelf: ShelfData, onOpen: (url: string) => void) {
           return err(`${cmd}: command not found — try \`help\``);
       }
     },
-    [shelf, onOpen],
+    [shelf, data, onOpen],
   );
 }
 
@@ -172,6 +285,7 @@ export function TerminalScreen({
   rotation,
   width,
   shelf,
+  data,
   active,
   onActivate,
   onExit,
@@ -183,6 +297,7 @@ export function TerminalScreen({
   rotation: [number, number, number];
   width: number;
   shelf: ShelfData;
+  data: PanelProps;
   active: boolean;
   onActivate: () => void;
   onExit: () => void;
@@ -197,7 +312,7 @@ export function TerminalScreen({
   const openUrl = useCallback((url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
   }, []);
-  const run = useCommands(shelf, openUrl);
+  const run = useCommands(shelf, data, openUrl);
 
   // Focus the input when the visitor sits down, so they can just start typing.
   useEffect(() => {

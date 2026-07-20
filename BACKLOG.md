@@ -40,17 +40,17 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Portfolio
 
-### The fun room's desk monitor never shows its ArgoCD view
-- **What:** The desk monitor in `/fun` is built to alternate between the deployment manifest and an ArgoCD applications view. Only the manifest ever displays. The ArgoCD view renders correctly when forced, and both tab labels are present in the DOM, but the tab value never changes. Three approaches were tried and all failed the same way: a `E` toggle whose `onActivate` never fired (proved with an instrumented `console.log`), a local `setInterval` that ticked 8 times while the value stayed at its initial state across 18 renders, and the same state lifted into `Scene` next to `poweredCount`, which does work for the screen power-on stagger.
-- **Why deferred:** Root cause not found. Ruled out: Turbopack staleness (reproduced after `make clean && make build`), the loading phase (`exploring` is reached), and the render logic itself. Everything else in the room shipped and works, so this is one dark panel rather than a blocker.
-- **Unblock:** Check it in a real browser first — headless Chromium has no pointer lock, so it may be a test-harness artifact rather than a real fault. **The printer's rocker switches show the identical symptom** (prompt reads correctly, `E` produces no visible change), and that predates this work, so the two are probably the same bug. If they are, the fault is in activation or re-render under `Interactive`/`Html`, not in either component. Pressing `E` on a printer switch and watching the ON/OFF pill is the cheapest test.
-- **Where:** `portfolio/src/components/fun/CodeScreen.tsx` (`ArgoView`, the `tab` prop), `portfolio/src/components/fun/FunRoom.tsx` (`deskTab` state in `Scene`), `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`.
+### The fun room's printer switches may not respond to `E`
+- **What:** The printer's rocker switches read their prompt correctly under the crosshair, but pressing `E` was reported to produce no visible change in the ON/OFF pill. Never reproduced in a browser with working pointer lock, so it may be a headless-harness artifact rather than a real fault.
+- **Why deferred:** Needs pointer lock, which headless Chromium does not have, so it cannot be checked from the test harness at all.
+- **Unblock:** Open `/fun` in a real browser, look at a printer switch, press `E`, and watch the pill. If it does not flip, instrument `onActivate` in `Interactive` — the registry hands activation the ref payload, so the suspect is either hover resolution or the keydown listener's `enabled` gate.
+- **Where:** `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`.
 
-### Fun room: melody, mobile, and a real-browser pass
-- **What:** Three loose ends in `/fun`. The synthesised rickroll's third line ("never gonna run around and desert you") is the least confident transcription and has never been listened to by anyone. The room has never been driven in a real browser with working pointer lock, so mouse-look, terminal typing, and the cold-load loading bar are unverified. Mobile remains broken (no pointer lock), which predates this work.
-- **Why deferred:** All three need a human at a real browser with sound; none are checkable from headless Chromium.
-- **Unblock:** Open `/fun`, listen, type in the shell, hard-reload with cache disabled to see the loading bar, and decide whether mobile gets drag-to-look or a redirect.
-- **Where:** `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Terminal.tsx`, `docs/fun-room-guide.md` (known gaps).
+### Fun room: melody, and a real-device pass
+- **What:** Two loose ends in `/fun`. The synthesised rickroll's third line ("never gonna run around and desert you") is the least confident transcription and has never been listened to by anyone. Separately, nothing here has been driven on real hardware: mouse-look and the cold-load loading bar have never run in a browser with working pointer lock, and the touch controls added 2026-07-20 (drag-to-look, tap-to-activate, walk stick, entry gate) were verified only by dispatching synthetic `TouchEvent`s in headless Chromium. That proves the wiring and says nothing about feel — look sensitivity, stick size and placement, and the tap slop threshold are all guesses at this point.
+- **Why deferred:** Both need a human: one at a real browser with sound, one on an actual phone. Neither is checkable from headless Chromium.
+- **Unblock:** Open `/fun` on a desktop, listen to the melody, hard-reload with cache disabled to see the loading bar. Then open it on a phone and tune `LOOK_SENS`, `TAP_SLOP_PX` and `STICK_R` in `Touch.tsx` against how it actually feels.
+- **Where:** `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Touch.tsx`, `docs/fun-room-guide.md` (known gaps).
 
 ### Image optimization pass
 - **What:** Re-encode the migrated case-study images via `sharp` to a normalised max-width and AVIF + WebP. Drop any unused PNGs that weren't migrated.
@@ -62,7 +62,8 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI.
 - **Why deferred:** Fixing them means refactoring 5 working components (effect restructuring, moving three.js texture setup into the loader callback) with visual/behavioral risk that needs browser re-verification — out of scope for the CI-wiring change that surfaced them. The R3F texture mutations may be acceptable as-is (idiomatic three.js); decide per-case rather than blanket-refactor.
 - **Unblock:** Refactor each component (or add per-line disables where the pattern is intentional), verify in the browser via `make up`, then remove the two `warn` overrides from `eslint.config.mjs`.
-- **Where:** `portfolio/eslint.config.mjs`, `portfolio/src/components/{CommandPalette,FooterStamp,InlineGlobe,InlineGlobeScene}.tsx`, `portfolio/src/components/work/ArchitectureDiagram.tsx`.
+- **Also:** the fun room's touch support (2026-07-20) took the count from 17 to 24 warnings, all `react-hooks/immutability` and all the same two intentional patterns: mutating the three.js camera inside `useFrame`, and writing to a ref that arrives as a prop (`move.current` in `TouchStick`). Both are correct React/R3F; they need per-line disables rather than a refactor.
+- **Where:** `portfolio/eslint.config.mjs`, `portfolio/src/components/{CommandPalette,FooterStamp,InlineGlobe,InlineGlobeScene}.tsx`, `portfolio/src/components/work/ArchitectureDiagram.tsx`, `portfolio/src/components/fun/{Touch,FirstPerson,interaction}.tsx`.
 
 ### Playwright smoke test suite for portfolio
 - **What:** A small containerized Playwright suite that builds the prod image, runs the container, and asserts key routes return 200 with expected content plus `/healthz`. Wire into `.github/workflows/ci-portfolio.yaml` as a job after lint/typecheck/build.
