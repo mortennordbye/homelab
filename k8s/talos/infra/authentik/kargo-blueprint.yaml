@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-kargo
+  namespace: identity
+  annotations:
+    # Ahead of the chart-inflated worker Deployment (wave 0), which mounts this.
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  kargo.yaml: |
+    version: 1
+    metadata:
+      name: kargo-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      - model: authentik_core.group
+        id: group-kargo-admins
+        state: present
+        identifiers:
+          name: kargo-admins
+        attrs:
+          is_superuser: false
+          # Membership is declared here on purpose, so a rebuilt cluster grants
+          # Kargo access without anyone touching the UI. Reconciliation resets
+          # this list, so add members here rather than in authentik.
+          users:
+            - !Find [authentik_core.user, [username, akadmin]]
+
+      - model: authentik_providers_oauth2.oauth2provider
+        id: provider-kargo
+        state: present
+        identifiers:
+          name: kargo
+        attrs:
+          name: kargo
+          # Public, not confidential: Kargo's UI sends
+          # token_endpoint_auth_method=none and its CLI never sets a client
+          # secret. It is a PKCE client by design, so there is no credential to
+          # store and client_id is safe in git.
+          client_type: public
+          client_id: kargo
+          # Empty by default in 2026.5. Unset here means every grant is rejected.
+          grant_types:
+            - authorization_code
+            - refresh_token
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
+          redirect_uris:
+            # The UI computes this in the browser from window.location.
+            - matching_mode: strict
+              url: https://kargo.local.bigd.no/login
+            # `kargo login` binds an ephemeral localhost port (--port defaults to
+            # 0, meaning any free port), so no strict URI can cover the CLI.
+            - matching_mode: regex
+              url: http://localhost:[0-9]{1,5}/auth/callback
+          # Kargo reads claims from the ID token only, never from userinfo, so
+          # the groups claim has to be minted into the token. offline_access is
+          # auto-requested by both UI and CLI when discovery advertises it.
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-offline_access]]
+          sub_mode: hashed_user_id
+          issuer_mode: per_provider
+          include_claims_in_id_token: true
+
+      - model: authentik_core.application
+        id: app-kargo
+        state: present
+        identifiers:
+          slug: kargo
+        attrs:
+          name: Kargo
+          # The slug forms the issuer URL that api.oidc.issuerURL must match:
+          # https://auth.local.bigd.no/application/o/kargo/
+          slug: kargo
+          provider: !KeyOf provider-kargo
+          policy_engine_mode: any
+          meta_launch_url: https://kargo.local.bigd.no

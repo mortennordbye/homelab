@@ -7,6 +7,8 @@ resources:
   - namespace.yaml
   - authentik-secrets.yaml
   - argocd-blueprint.yaml
+  - kargo-blueprint.yaml
+  - grafana-blueprint.yaml
 
 helmCharts:
   - name: authentik

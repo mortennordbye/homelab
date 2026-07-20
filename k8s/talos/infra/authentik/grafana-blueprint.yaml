@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-grafana
+  namespace: identity
+  annotations:
+    # Ahead of the chart-inflated worker Deployment (wave 0), which mounts this.
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  grafana.yaml: |
+    version: 1
+    metadata:
+      name: grafana-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      - model: authentik_core.group
+        id: group-grafana-admins
+        state: present
+        identifiers:
+          name: grafana-admins
+        attrs:
+          is_superuser: false
+          # Membership is declared here on purpose, so a rebuilt cluster grants
+          # Grafana access without anyone touching the UI. Reconciliation resets
+          # this list, so add members here rather than in authentik.
+          users:
+            - !Find [authentik_core.user, [username, akadmin]]
+
+      - model: authentik_providers_oauth2.oauth2provider
+        id: provider-grafana
+        state: present
+        identifiers:
+          name: grafana
+        attrs:
+          name: grafana
+          client_type: confidential
+          # Sourced from authentik-secrets via envFrom on the worker pod, so the
+          # credentials never land in git.
+          client_id: !Env GRAFANA_OIDC_CLIENT_ID
+          client_secret: !Env GRAFANA_OIDC_CLIENT_SECRET
+          # Empty by default in 2026.5. Unset here means every grant is rejected.
+          # No refresh_token: Grafana's use_refresh_token defaults to false, so a
+          # refresh token would be issued and never redeemed.
+          grant_types:
+            - authorization_code
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
+          redirect_uris:
+            - matching_mode: strict
+              url: https://grafana.local.bigd.no/login/generic_oauth
+          # The groups claim that role_attribute_path keys on is emitted by
+          # profile; authentik has no groups scope. No offline_access, matching
+          # the grant_types above.
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+          sub_mode: hashed_user_id
+          issuer_mode: per_provider
+          include_claims_in_id_token: true
+
+      - model: authentik_core.application
+        id: app-grafana
+        state: present
+        identifiers:
+          slug: grafana
+        attrs:
+          name: Grafana
+          # The slug forms the issuer URL. Note only the issuer and the
+          # discovery document are per-application; authorize/token/userinfo are
+          # mounted globally without the slug.
+          slug: grafana
+          provider: !KeyOf provider-grafana
+          policy_engine_mode: any
+          meta_launch_url: https://grafana.local.bigd.no

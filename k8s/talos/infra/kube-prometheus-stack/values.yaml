@@ -52,10 +52,48 @@ grafana:
     limits:
       memory: 512Mi
 
+  # OIDC client credentials, so they stay out of git. The chart's
+  # assertNoLeakedSecrets helper fails the render on a literal client_secret,
+  # so the $__env indirection below is required rather than stylistic.
+  envFromSecret: grafana-oidc
+
   # Grafana configuration
   grafana.ini:
     server:
       domain: grafana.local.bigd.no
+      # Required. Without it Grafana derives http://grafana.local.bigd.no:3000/
+      # from domain plus http_port and sends that as the OAuth redirect, which
+      # fails authentik's strict matching. TLS terminates at Traefik; this is
+      # the browser-facing URL, not how the pod is reached.
+      root_url: https://grafana.local.bigd.no
+    auth:
+      # Both already default to false. Spelled out because keeping the local
+      # admin login working is a hard requirement, and a later edit flipping
+      # either of these would silently remove the break-glass path.
+      disable_login_form: false
+      oauth_auto_login: false
+    auth.generic_oauth:
+      enabled: true
+      name: authentik
+      client_id: $__env{GF_OAUTH_CLIENT_ID}
+      client_secret: $__env{GF_OAUTH_CLIENT_SECRET}
+      # groups rides on profile; authentik has no groups scope. No
+      # offline_access, since use_refresh_token defaults to false.
+      scopes: openid profile email
+      # Slug-less on purpose: authentik mounts authorize/token/userinfo
+      # globally. Only the issuer and discovery document are per-application.
+      auth_url: https://auth.local.bigd.no/application/o/authorize/
+      token_url: https://auth.local.bigd.no/application/o/token/
+      api_url: https://auth.local.bigd.no/application/o/userinfo/
+      role_attribute_path: contains(groups[*], 'grafana-admins') && 'GrafanaAdmin' || 'Viewer'
+      # GrafanaAdmin above grants server admin rather than just org admin, but
+      # only because this is set; without it the value degrades to org Admin.
+      allow_assign_grafana_admin: true
+      # false so an SSO user in no group lands as Viewer instead of being
+      # denied login outright.
+      role_attribute_strict: false
+      allow_sign_up: true
+      use_pkce: true
 
   additionalDataSources:
     - name: Loki

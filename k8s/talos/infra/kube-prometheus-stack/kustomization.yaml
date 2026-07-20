@@ -7,6 +7,7 @@ resources:
   - namespace.yaml
   - httproutes.yaml
   - grafana-admin-credentials-secret.yaml
+  - grafana-oidc-secret.yaml
   - alertmanager-discord-webhook-secret.yaml
   - homelab-alerts.yaml
   - alertmanager-pdb.yaml

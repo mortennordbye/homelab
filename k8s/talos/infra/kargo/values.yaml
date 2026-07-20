@@ -18,8 +18,28 @@ api:
   tls:
     enabled: false
     terminatedUpstream: true
-  # Homelab: admin-account login only for now, bundled Dex OIDC disabled.
+  # SSO via authentik. The admin account stays enabled (chart default) as
+  # break-glass: an authentik outage must not lock us out of promotions.
   oidc:
+    enabled: true
+    # Trailing slash is load-bearing; it must match authentik's advertised
+    # issuer exactly or OIDC discovery fails. The path segment is the
+    # authentik application slug.
+    issuerURL: https://auth.local.bigd.no/application/o/kargo/
+    # Public PKCE client, so this is not a credential.
+    clientID: kargo
+    # Must be explicitly emptied. The chart default is ["groups"], and authentik
+    # has no groups scope, so the default returns invalid_scope. openid, profile
+    # and email are always sent regardless, and profile is what carries groups.
+    additionalScopes: []
+    usernameClaim: email
+    admins:
+      # Rendered onto the chart's kargo-admin ServiceAccount as
+      # rbac.kargo.akuity.io/claims. kargo-admin is cluster-wide across every
+      # Project, which is all a single-operator homelab needs.
+      claims:
+        groups:
+          - kargo-admins
     dex:
       enabled: false
 
