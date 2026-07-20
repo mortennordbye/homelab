@@ -8,6 +8,7 @@ resources:
   - apps.yaml
   - infra.yaml
   - httproute.yaml
+  - argocd-oidc-secret.yaml
   - ciliumnetworkpolicy.yaml
 namespace: argocd
 

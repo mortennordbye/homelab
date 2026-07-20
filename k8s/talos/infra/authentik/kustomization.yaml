@@ -6,6 +6,7 @@ namespace: identity
 resources:
   - namespace.yaml
   - authentik-secrets.yaml
+  - argocd-blueprint.yaml
 
 helmCharts:
   - name: authentik

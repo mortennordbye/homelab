@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-argocd
+  namespace: identity
+  annotations:
+    # Ahead of the chart-inflated worker Deployment (wave 0), which mounts this.
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  argocd.yaml: |
+    version: 1
+    metadata:
+      name: argocd-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      - model: authentik_core.group
+        id: group-argocd-admins
+        state: present
+        identifiers:
+          name: argocd-admins
+        attrs:
+          is_superuser: false
+
+      - model: authentik_providers_oauth2.oauth2provider
+        id: provider-argocd
+        state: present
+        identifiers:
+          name: argocd
+        attrs:
+          name: argocd
+          client_type: confidential
+          # Sourced from authentik-secrets via envFrom on the worker pod, so the
+          # credentials never land in git. No !Env default: a missing variable
+          # should fail the blueprint import loudly rather than quietly create a
+          # provider with an empty secret.
+          client_id: !Env ARGOCD_OIDC_CLIENT_ID
+          client_secret: !Env ARGOCD_OIDC_CLIENT_SECRET
+          # Empty by default in 2026.5. Unset here means every grant is rejected.
+          grant_types:
+            - authorization_code
+            - refresh_token
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
+          redirect_uris:
+            - matching_mode: strict
+              url: https://argocd.local.bigd.no/auth/callback
+            # For `argocd login --sso` from the CLI.
+            - matching_mode: strict
+              url: http://localhost:8085/auth/callback
+          # Matched on `managed`, the stable identifier in authentik's own system
+          # blueprints, rather than the mutable scope_name. The groups claim that
+          # Argo CD RBAC keys on is emitted by `profile`; there is no groups scope.
+          # offline_access is required for the refresh_token grant to issue tokens.
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-offline_access]]
+          sub_mode: hashed_user_id
+          issuer_mode: per_provider
+          include_claims_in_id_token: true
+
+      - model: authentik_core.application
+        id: app-argocd
+        state: present
+        identifiers:
+          slug: argocd
+        attrs:
+          name: ArgoCD
+          # The slug forms the issuer URL that argocd-cm must match exactly:
+          # https://auth.local.bigd.no/application/o/argocd/
+          slug: argocd
+          provider: !KeyOf provider-argocd
+          policy_engine_mode: any
+          meta_launch_url: https://argocd.local.bigd.no
