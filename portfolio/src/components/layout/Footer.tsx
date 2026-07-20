@@ -30,6 +30,13 @@ export function Footer() {
             >
               JSON over the public API
             </Link>
+            . If you would rather look around than read, the same work is{" "}
+            <Link
+              href="/fun"
+              className="focus-ring text-fg underline decoration-accent decoration-2 underline-offset-4 hover:text-accent"
+            >
+              a room you can walk through
+            </Link>
             .
           </p>
         </div>
