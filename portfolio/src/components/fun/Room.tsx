@@ -28,6 +28,14 @@ import { useSurface } from "./textures";
 // lives in.
 export const ROOM = { w: 5.2, d: 4.8, h: 2.5 };
 
+/** The room's three switchable fittings, each with its own switch.
+ *  The two point lights that are not fittings — the lantern's ceiling bounce
+ *  and the door-end fill — are not keys here: the bounce belongs to the
+ *  lantern, and the fill is spill that follows whether anything is lit at all.
+ *  See the rig in FunRoom. */
+export type LightKey = "lantern" | "desk" | "shelf";
+export type Lights = Record<LightKey, boolean>;
+
 /** Where the lantern stands. The lighting rig hangs its sources off this, so
  *  the fitting and the light it casts cannot drift apart. */
 export const LANTERN = { x: ROOM.w / 2 - 0.34, z: -1.25 };
@@ -140,7 +148,15 @@ function Stand({ position }: { position: [number, number, number] }) {
  * The shade sits high on the frame so the light source is near eye height. A
  * lantern glowing down by your ankles lights the floor and nothing else.
  */
-function Lantern({ position }: { position: [number, number, number] }) {
+function Lantern({
+  position,
+  on,
+  onToggle,
+}: {
+  position: [number, number, number];
+  on: boolean;
+  onToggle: () => void;
+}) {
   const S = 0.3; // outside width and depth
   const H = 1.46; // overall height
   const POST = 0.028;
@@ -157,102 +173,135 @@ function Lantern({ position }: { position: [number, number, number] }) {
   ];
 
   return (
-    <group position={position}>
-      {/* Four corner posts, full height. Nothing on the frame casts — see the
-          rails below. The posts were left casting at first on the theory that
-          striping the floor pool would look good; what they actually did was
-          throw two hard diagonal streaks up the wall and across the ceiling,
-          because the light is level with them and they are thin. A fitting
-          should not shadow the room from a light it encloses, and that turns
-          out to apply to every part of it. */}
-      {corners.map(([x, z], i) => (
-        <mesh key={i} position={[x, H / 2, z]}>
-          <boxGeometry args={[POST, H, POST]} />
-          <meshStandardMaterial color={oakCol} roughness={0.6} />
+    <Interactive
+      label="the lantern"
+      verb={on ? "turn off" : "turn on"}
+      detail="the room's main light"
+      onActivate={onToggle}
+    >
+      <group position={position}>
+        {/* Four corner posts, full height. Nothing on the frame casts — see the
+            rails below. The posts were left casting at first on the theory that
+            striping the floor pool would look good; what they actually did was
+            throw two hard diagonal streaks up the wall and across the ceiling,
+            because the light is level with them and they are thin. A fitting
+            should not shadow the room from a light it encloses, and that turns
+            out to apply to every part of it. */}
+        {corners.map(([x, z], i) => (
+          <mesh key={i} position={[x, H / 2, z]}>
+            <boxGeometry args={[POST, H, POST]} />
+            <meshStandardMaterial color={oakCol} roughness={0.6} />
+          </mesh>
+        ))}
+
+        {/* Rails: at the foot, under and over the shade, and at the top. A
+            casting top rail silhouettes itself onto the ceiling directly above
+            as a hard-edged floating box. */}
+        {[0.07, SHADE_Y, SHADE_Y + SHADE_H, H - POST / 2].map((y) => (
+          <group key={y} position={[0, y, 0]}>
+            {[-half, half].map((z) => (
+              <mesh key={`x${z}`} position={[0, 0, z]}>
+                <boxGeometry args={[S - POST, POST, POST]} />
+                <meshStandardMaterial color={oakCol} roughness={0.6} />
+              </mesh>
+            ))}
+            {[-half, half].map((x) => (
+              <mesh key={`z${x}`} position={[x, 0, 0]}>
+                <boxGeometry args={[POST, POST, S - POST]} />
+                <meshStandardMaterial color={oakCol} roughness={0.6} />
+              </mesh>
+            ))}
+          </group>
+        ))}
+
+        {/* a board across the foot rails, so it stands like furniture */}
+        <mesh position={[0, 0.086, 0]} receiveShadow>
+          <boxGeometry args={[S - POST, 0.014, S - POST]} />
+          <meshStandardMaterial color={oakCol} roughness={0.68} />
         </mesh>
-      ))}
 
-      {/* Rails: at the foot, under and over the shade, and at the top. A
-          casting top rail silhouettes itself onto the ceiling directly above
-          as a hard-edged floating box. */}
-      {[0.07, SHADE_Y, SHADE_Y + SHADE_H, H - POST / 2].map((y) => (
-        <group key={y} position={[0, y, 0]}>
-          {[-half, half].map((z) => (
-            <mesh key={`x${z}`} position={[0, 0, z]}>
-              <boxGeometry args={[S - POST, POST, POST]} />
-              <meshStandardMaterial color={oakCol} roughness={0.6} />
-            </mesh>
-          ))}
-          {[-half, half].map((x) => (
-            <mesh key={`z${x}`} position={[x, 0, 0]}>
-              <boxGeometry args={[POST, POST, S - POST]} />
-              <meshStandardMaterial color={oakCol} roughness={0.6} />
-            </mesh>
-          ))}
-        </group>
-      ))}
-
-      {/* a board across the foot rails, so it stands like furniture */}
-      <mesh position={[0, 0.086, 0]} receiveShadow>
-        <boxGeometry args={[S - POST, 0.014, S - POST]} />
-        <meshStandardMaterial color={oakCol} roughness={0.68} />
-      </mesh>
-
-      {/* The four paper panels.
-          The base colour is nearly black on purpose. These sit directly in
-          front of the lamp's own point light, so a light base colour gets lit
-          *and* emits, the two sum past what the tone mapper can hold, and the
-          shade clips to flat white — a paper lantern rendered as a lightbulb.
-          Emitting from a dark base is the only way the panel keeps its colour
-          at this brightness. */}
-      {([0, Math.PI / 2, Math.PI, -Math.PI / 2] as const).map((ry, i) => (
-        <mesh
-          key={i}
-          position={[
-            Math.sin(ry) * (S / 2 - 0.004),
-            SHADE_Y + SHADE_H / 2,
-            Math.cos(ry) * (S / 2 - 0.004),
-          ]}
-          rotation={[0, ry, 0]}
-        >
-          <planeGeometry args={[S - POST * 1.6, SHADE_H - POST]} />
-          <meshStandardMaterial
-            color="#2a1405"
-            emissive="#ff6408"
-            emissiveIntensity={2.3}
-            roughness={0.92}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      ))}
-    </group>
+        {/* The four paper panels.
+            The base colour is nearly black on purpose. These sit directly in
+            front of the lamp's own point light, so a light base colour gets lit
+            *and* emits, the two sum past what the tone mapper can hold, and the
+            shade clips to flat white — a paper lantern rendered as a lightbulb.
+            Emitting from a dark base is the only way the panel keeps its colour
+            at this brightness. */}
+        {([0, Math.PI / 2, Math.PI, -Math.PI / 2] as const).map((ry, i) => (
+          <mesh
+            key={i}
+            position={[
+              Math.sin(ry) * (S / 2 - 0.004),
+              SHADE_Y + SHADE_H / 2,
+              Math.cos(ry) * (S / 2 - 0.004),
+            ]}
+            rotation={[0, ry, 0]}
+          >
+            <planeGeometry args={[S - POST * 1.6, SHADE_H - POST]} />
+            <meshStandardMaterial
+              color="#2a1405"
+              emissive="#ff6408"
+              /* Goes fully dark with the light. The base colour is nearly black
+                 by design (see above), so dropping the emission leaves unlit
+                 paper rather than a grey panel — a shade that stops glowing but
+                 still reads as a shade. */
+              emissiveIntensity={on ? 2.3 : 0}
+              roughness={0.92}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        ))}
+      </group>
+    </Interactive>
   );
 }
 
-/** Mushroom lamp: cream glass dome on a small base. */
-function MushroomLamp({ position }: { position: [number, number, number] }) {
+/** Mushroom lamp: cream glass dome on a small base.
+ *  Takes its own label because there are two of them — one on the desk, one on
+ *  top of the bookshelf — and "the lamp" twice would name them identically in
+ *  the crosshair prompt. */
+function MushroomLamp({
+  position,
+  label,
+  detail,
+  on,
+  onToggle,
+}: {
+  position: [number, number, number];
+  label: string;
+  detail: string;
+  on: boolean;
+  onToggle: () => void;
+}) {
   return (
-    <group position={position}>
-      <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[0.052, 0.062, 0.014, 24]} />
-        <meshStandardMaterial color="#cfc3ae" roughness={0.6} />
-      </mesh>
-      <mesh position={[0, 0.05, 0]} castShadow>
-        <cylinderGeometry args={[0.032, 0.04, 0.086, 20]} />
-        <meshStandardMaterial color="#e0d5c0" roughness={0.55} />
-      </mesh>
-      {/* the dome, lit from inside */}
-      <mesh position={[0, 0.118, 0]} castShadow>
-        <sphereGeometry args={[0.078, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.62]} />
-        <meshStandardMaterial
-          color="#ffdcae"
-          roughness={0.42}
-          emissive="#ffa74e"
-          emissiveIntensity={1.5}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-    </group>
+    <Interactive
+      label={label}
+      verb={on ? "turn off" : "turn on"}
+      detail={detail}
+      onActivate={onToggle}
+    >
+      <group position={position}>
+        <mesh castShadow receiveShadow>
+          <cylinderGeometry args={[0.052, 0.062, 0.014, 24]} />
+          <meshStandardMaterial color="#cfc3ae" roughness={0.6} />
+        </mesh>
+        <mesh position={[0, 0.05, 0]} castShadow>
+          <cylinderGeometry args={[0.032, 0.04, 0.086, 20]} />
+          <meshStandardMaterial color="#e0d5c0" roughness={0.55} />
+        </mesh>
+        {/* the dome, lit from inside */}
+        <mesh position={[0, 0.118, 0]} castShadow>
+          <sphereGeometry args={[0.078, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.62]} />
+          <meshStandardMaterial
+            color="#ffdcae"
+            roughness={0.42}
+            emissive="#ffa74e"
+            emissiveIntensity={on ? 1.5 : 0}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      </group>
+    </Interactive>
   );
 }
 
@@ -391,6 +440,8 @@ export function Room({
   onOpenCert,
   onOpenCard,
   onExitRoom,
+  lights,
+  onToggleLight,
 }: {
   onPrinterStatus: (msg: string | null) => void;
   shelf: ShelfData;
@@ -400,6 +451,8 @@ export function Room({
   onOpenCert: (c: ShelfCert) => void;
   onOpenCard: (c: InfoCard) => void;
   onExitRoom: () => void;
+  lights: Lights;
+  onToggleLight: (k: LightKey) => void;
 }) {
   const hw = ROOM.w / 2;
   const hd = ROOM.d / 2;
@@ -624,7 +677,13 @@ export function Room({
             cannot be nudged without the feet following. */}
         <Stand position={[DESK_SCREEN.position[0], 0.755, SCREEN_DZ]} />
         <Stand position={[DESK_TERMINAL.position[0], 0.755, SCREEN_DZ]} />
-        <MushroomLamp position={[-1.02, 0.755, -0.1]} />
+        <MushroomLamp
+          position={[-1.02, 0.755, -0.1]}
+          label="the desk lamp"
+          detail="the desk"
+          on={lights.desk}
+          onToggle={() => onToggleLight("desk")}
+        />
 
         {/* The stack of printed blog posts that used to sit by the lamp is
             gone. The whiteboard on the left wall carries the blog now, with
@@ -658,7 +717,11 @@ export function Room({
       {/* The lantern, in the gap on the right wall between the desk end and the
           sideboard. It stands where the room was previously darkest and where
           it is in view from the door, which is the whole point of it. */}
-      <Lantern position={[LANTERN.x, 0, LANTERN.z]} />
+      <Lantern
+        position={[LANTERN.x, 0, LANTERN.z]}
+        on={lights.lantern}
+        onToggle={() => onToggleLight("lantern")}
+      />
 
       {/* y=0: Prop seats a model on its own base, so no manual lift. */}
       <Plant position={[hw - 0.42, 0, hd - 0.55]} />
@@ -694,10 +757,16 @@ export function Room({
           the edge. Reading the shelf's own position is the only way this stays
           right if the unit ever moves or gets deeper. */}
       <group position={[SHELF_AT[0], shelfHeight(shelf), SHELF_AT[2]]}>
-        <MushroomLamp position={[0, 0, 0]} />
+        <MushroomLamp
+          position={[0, 0, 0]}
+          label="the shelf lamp"
+          detail="the case studies"
+          on={lights.shelf}
+          onToggle={() => onToggleLight("shelf")}
+        />
         <pointLight
           position={[0, 0.12, 0]}
-          intensity={4.2}
+          intensity={lights.shelf ? 4.2 : 0}
           distance={3.2}
           decay={1.9}
           color="#ffb066"

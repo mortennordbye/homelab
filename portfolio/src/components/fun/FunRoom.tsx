@@ -24,6 +24,8 @@ import {
   LANTERN,
   ROOM,
   Room,
+  type LightKey,
+  type Lights,
   type Placement,
 } from "./Room";
 import { CodeScreen, type Tab } from "./CodeScreen";
@@ -377,8 +379,19 @@ function TerminalFocus({
 }
 
 /** Screens are the light source, so the fill has to follow them on. */
-function Lighting({ poweredCount }: { poweredCount: number }) {
+function Lighting({
+  poweredCount,
+  lights,
+}: {
+  poweredCount: number;
+  lights: Lights;
+}) {
   const lit = poweredCount / POWER_STEPS;
+  /* Each fitting reads its own switch. The two sources that are not
+     fittings follow something else: the ceiling bounce belongs to the lantern
+     that throws it, and the door-end fill is spill, so it tracks whether the
+     room is lit at all rather than glowing with no source behind it. */
+  const anyOn = lights.lantern || lights.desk || lights.shelf;
   return (
     <>
       {/* A room lit the way a living room is at nine in the evening: nothing
@@ -398,8 +411,14 @@ function Lighting({ poweredCount }: { poweredCount: number }) {
           surface the same sepia and the sage walls disappeared entirely. This
           is the blue evening light in the room the lamps are fighting, and it
           is what leaves the walls green and the lamplight orange. */}
-      <ambientLight intensity={0.16} color="#9fb2b8" />
-      <hemisphereLight args={["#aac2c8", "#4a3a2c", 0.38]} />
+      {/* With the lamps off these come up rather than staying put. At the lit
+          values the room goes almost black, and a visitor who switched the
+          light off across the room then cannot see the lamp well enough to
+          switch it back on — the same dead end the terminal used to be. Raised,
+          it reads as a room at night with the lamps off: cool, low, navigable,
+          and still obviously unlit, because the warmth is what actually left. */}
+      <ambientLight intensity={anyOn ? 0.16 : 0.34} color="#9fb2b8" />
+      <hemisphereLight args={["#aac2c8", "#4a3a2c", anyOn ? 0.38 : 0.62]} />
 
       {/* The lantern. Main light and the only shadow caster, sitting inside
           the shade at the height the shade actually is. A point light this low
@@ -407,7 +426,7 @@ function Lighting({ poweredCount }: { poweredCount: number }) {
           down, which is most of what separates lamplight from daylight. */}
       <pointLight
         position={[LANTERN.x, 0.96, LANTERN.z]}
-        intensity={26}
+        intensity={lights.lantern ? 26 : 0}
         distance={8.5}
         decay={1.5}
         color="#ffa758"
@@ -422,7 +441,7 @@ function Lighting({ poweredCount }: { poweredCount: number }) {
           ceiling stays flat grey and quietly contradicts the fitting. */}
       <pointLight
         position={[LANTERN.x - 0.5, ROOM.h - 0.5, LANTERN.z]}
-        intensity={5}
+        intensity={lights.lantern ? 5 : 0}
         distance={4.4}
         decay={1.9}
         color="#ff9a45"
@@ -430,7 +449,7 @@ function Lighting({ poweredCount }: { poweredCount: number }) {
       {/* the mushroom lamp on the desk, the second pool of warm */}
       <pointLight
         position={[-1.0, 1.0, -ROOM.d / 2 + 0.55]}
-        intensity={8.5}
+        intensity={lights.desk ? 8.5 : 0}
         distance={3.6}
         decay={1.9}
         color="#ffb066"
@@ -440,7 +459,7 @@ function Lighting({ poweredCount }: { poweredCount: number }) {
           visitor can never find. */}
       <pointLight
         position={[-0.4, 1.5, ROOM.d / 2 - 1.4]}
-        intensity={3.6}
+        intensity={anyOn ? 3.6 : 0}
         distance={5.4}
         decay={1.8}
         color="#ffb877"
@@ -519,6 +538,8 @@ function Scene({
   paused,
   coarse,
   touchMove,
+  lights,
+  onToggleLight,
 }: {
   data: PanelProps;
   source: SourceExcerpt;
@@ -542,6 +563,8 @@ function Scene({
   onTerminalEnter: () => void;
   onTerminalExit: () => void;
   paused: boolean;
+  lights: Lights;
+  onToggleLight: (k: LightKey) => void;
 }) {
   const [poweredCount, setPoweredCount] = useState(0);
   /* True while the camera is easing back out of the terminal. `paused` has
@@ -592,7 +615,7 @@ function Scene({
     <>
       <color attach="background" args={["#1b1410"]} />
       <fog attach="fog" args={["#241a13", 16, 42]} />
-      <Lighting poweredCount={poweredCount} />
+      <Lighting poweredCount={poweredCount} lights={lights} />
       <InteractionProvider enabled={interacting && !paused} onPrompt={onPrompt}>
       <Suspense fallback={null}>
         {/* Image-based lighting. Does most of the work on specular: without an
@@ -616,6 +639,8 @@ function Scene({
           onOpenCert={onOpenCert}
           onOpenCard={onOpenCard}
           onExitRoom={onExitRoom}
+          lights={lights}
+          onToggleLight={onToggleLight}
         />
         <Post />
         {/* Fires only once everything above has resolved, which is the honest
@@ -649,7 +674,23 @@ function Scene({
         enabled={phase === "exploring" && !paused && !settling}
         move={touchMove}
       />
-      <PointerLockControls ref={controlsRef} selector="#fun-lock-target" />
+      {/* The selector is swapped for one that matches nothing while something
+          has focus, and that is load-bearing rather than cosmetic. drei binds
+          a click -> lock() handler to every element matching `selector`, and
+          it does that regardless of `enabled`. The terminal's `Html` portals
+          into the canvas wrapper, so it lives *inside* #fun-lock-target: the
+          very click that focuses the shell input bubbles up and re-locks the
+          pointer. Esc is then eaten by the browser to release that lock and
+          never reaches the handler below, which left the visitor stuck at the
+          terminal with no way out but leaving the site. Pointing the selector
+          at nothing unbinds the handler (`selector` is in drei's effect deps,
+          so it genuinely rebinds). Cards are unaffected either way — they
+          render outside the lock target — but they go through the same gate
+          so a future zoomed surface cannot reintroduce this. */}
+      <PointerLockControls
+        ref={controlsRef}
+        selector={paused ? "#fun-lock-inert" : "#fun-lock-target"}
+      />
     </>
   );
 }
@@ -730,6 +771,19 @@ export default function FunRoom({
   const onContextLost = useCallback(() => setContextLost(true), []);
   const [card, setCard] = useState<InfoCard | null>(null);
   const [terminalActive, setTerminalActive] = useState(false);
+  /* All on from the start, always. The room is a lamplit evening and that is
+     what it should be the first time you see it — the switches are something to
+     find, not a state to arrive in. Not persisted for the same reason: a return
+     visit opening into a dark room would read as broken, not as remembered. */
+  const [lights, setLights] = useState<Lights>({
+    lantern: true,
+    desk: true,
+    shelf: true,
+  });
+  const toggleLight = useCallback(
+    (k: LightKey) => setLights((l) => ({ ...l, [k]: !l[k] })),
+    [],
+  );
   const controlsRef = useRef<PointerLockControlsImpl | null>(null);
 
   /* Movement and look-at picking stop whenever something has taken focus.
@@ -753,9 +807,14 @@ export default function FunRoom({
     setTerminalActive(true);
     controlsRef.current?.unlock();
   }, []);
+  /* Deliberately does not re-lock. requestPointerLock needs transient user
+     activation, and Esc does not grant it — the call was silently rejected on
+     the most common way out of the terminal, so the visitor landed back in the
+     room unlocked anyway. Leaving the lock to the visitor's next click makes
+     both exits behave the same, and that click is how they locked on the way
+     in. Movement is already restored by `paused` going false. */
   const exitTerminal = useCallback(() => {
     setTerminalActive(false);
-    controlsRef.current?.lock();
   }, []);
 
   /* Walking out of the door leaves the room. Uses the router rather than
@@ -768,9 +827,13 @@ export default function FunRoom({
     router.push("/");
   }, [router]);
 
+  /* Does not re-lock, for the same reason exitTerminal does not — see there.
+     Closing with Esc carries no transient user activation, so the lock request
+     was rejected on that path anyway, and on a touch device it was asking a
+     browser with no pointer lock at all to grant one. Both exits now behave
+     the same, and the next click re-locks. */
   const closeCard = useCallback(() => {
     setCard(null);
-    controlsRef.current?.lock();
   }, []);
 
   useEffect(() => {
@@ -979,6 +1042,8 @@ export default function FunRoom({
             onTerminalEnter={enterTerminal}
             onTerminalExit={exitTerminal}
             paused={paused}
+            lights={lights}
+            onToggleLight={toggleLight}
             coarse={coarse}
             touchMove={touchMove}
           />

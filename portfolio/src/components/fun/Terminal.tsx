@@ -416,9 +416,30 @@ export function TerminalScreen({
             >
               SHELL
             </span>
-            <span className="text-[10px] tracking-[0.14em] text-[#3f4d5c]">
-              {active ? "esc to step back" : "press E to use"}
-            </span>
+            {/* A real target, not just the `esc` hint this used to be. Touch
+                visitors have no Esc key, and entering the terminal pauses the
+                room — which hides the walk stick and the look handler — so the
+                hint was advertising a key they could not press while every
+                other way back was gone. A click also carries user activation,
+                which a keypress does not. */}
+            {active ? (
+              <button
+                type="button"
+                aria-label="leave the terminal"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExit();
+                }}
+                className="focus-ring border px-2 py-0.5 text-[10px] tracking-[0.14em] transition-colors"
+                style={{ borderColor: `${ACCENT}3d`, color: ACCENT }}
+              >
+                close
+              </button>
+            ) : (
+              <span className="text-[10px] tracking-[0.14em] text-[#3f4d5c]">
+                press E to use
+              </span>
+            )}
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto pr-1 leading-[1.5]">
