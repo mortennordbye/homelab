@@ -17,6 +17,35 @@ configs:
           - CiliumIdentity
         clusters:
           - "*"
+    # The provider is defined declaratively in
+    # k8s/talos/infra/authentik/argocd-blueprint.yaml.
+    # `url` is intentionally not set here: the chart derives it from
+    # global.domain, and that is what Argo CD builds the redirect URI from
+    # (so server.insecure still yields an https:// callback).
+    oidc.config: |
+      name: Authentik
+      # Trailing slash required. The path segment is the authentik *application
+      # slug*, not the provider name. Mismatch here gives "oidc: issuer did not match".
+      issuer: https://auth.local.bigd.no/application/o/argocd/
+      clientID: 5dbfc17206b0310cad6e088795218914
+      clientSecret: $argocd-oidc:clientSecret
+      # No `groups` scope exists in authentik; the groups claim rides on `profile`.
+      # Requesting it explicitly would return invalid_scope.
+      requestedScopes:
+        - openid
+        - profile
+        - email
+        - offline_access
+      requestedIDTokenClaims:
+        groups:
+          essential: true
+  rbac:
+    # Authenticated but unmapped SSO users get nothing. The built-in local admin
+    # bypasses RBAC entirely and stays enabled as break-glass.
+    policy.default: ""
+    scopes: "[groups]"
+    policy.csv: |
+      g, argocd-admins, role:admin
 
 server:
   replicas: 2
