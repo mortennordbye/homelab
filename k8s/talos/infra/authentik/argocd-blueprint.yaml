@@ -21,6 +21,11 @@ data:
           name: argocd-admins
         attrs:
           is_superuser: false
+          # Membership is declared here on purpose, so a rebuilt cluster grants
+          # Argo CD access without anyone touching the UI. Reconciliation resets
+          # this list, so add members here rather than in authentik.
+          users:
+            - !Find [authentik_core.user, [username, akadmin]]
 
       - model: authentik_providers_oauth2.oauth2provider
         id: provider-argocd
