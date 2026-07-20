@@ -82,7 +82,14 @@ export function Crosshair({ active }: { active: boolean }) {
  * worth opening, so looking at a device names it and gives its role, and the
  * E key is offered underneath rather than being the only way to learn anything.
  */
-export function InteractPrompt({ prompt }: { prompt: Prompt }) {
+export function InteractPrompt({
+  prompt,
+  /** Touch has no E key; the same line has to offer the tap instead. */
+  touch = false,
+}: {
+  prompt: Prompt;
+  touch?: boolean;
+}) {
   if (!prompt) return null;
   return (
     <div className="pointer-events-none absolute left-1/2 top-[calc(50%+30px)] -translate-x-1/2">
@@ -96,7 +103,7 @@ export function InteractPrompt({ prompt }: { prompt: Prompt }) {
           </p>
         )}
         <p className="mt-2 flex items-center justify-center gap-2 font-mono text-[11px] text-white/70">
-          <Key>E</Key>
+          {touch ? "tap to" : <Key>E</Key>}
           {prompt.verb}
         </p>
       </div>

@@ -3,8 +3,12 @@
 import { Html, RoundedBox } from "@react-three/drei";
 import { site } from "@/content/site";
 import { interests } from "@/content/interests";
+import { services } from "@/content/services";
+import { skills } from "@/content/skills";
+import type { Skill } from "@/content/schemas";
 import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
+import { ACCENT } from "./Panels";
 import type { CareerData } from "./shelf";
 
 /**
@@ -315,6 +319,429 @@ export function ContactCard({
         </group>
       )}
     </Interactive>
+  );
+}
+
+/**
+ * The skills, as a rack faceplate on the wall right of the desk.
+ *
+ * Mirrors the career frame across the desk, and deliberately does not look like
+ * it: a second framed print on the same wall would read as a pair of pictures
+ * rather than as two different kinds of information. A brushed plate with lit
+ * bars is the piece of equipment a room full of homelab hardware would actually
+ * have on the wall, and a 0-100 level has an obvious physical form as bar fill.
+ *
+ * The bars are DOM rather than geometry for the reason the social icons are
+ * SVG — twelve labels built from primitives are unreadable from anywhere you
+ * would stand. Being DOM also makes them self-lit, which is what sells them as
+ * LEDs: this wall faces away from both lamps, so anything relying on the room's
+ * light to be bright would sit dim.
+ */
+const SKILL_GROUPS: { id: Skill["group"]; label: string }[] = [
+  { id: "platform", label: "PLATFORM" },
+  { id: "delivery", label: "DELIVERY" },
+  { id: "ops", label: "OPERATIONS" },
+  { id: "soft", label: "TEAM" },
+];
+
+export function SkillPlate({
+  position,
+  rotation = [0, 0, 0],
+  onOpen,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  onOpen: (card: InfoCard) => void;
+}) {
+  const W = 0.62;
+  const H = 0.78;
+  const PX_W = 520;
+  const PX_H = 654;
+  const PAD = 30;
+  /** Inset of the lit face from the plate edge, so the plate reads as a bezel.
+   *  Wide enough to clear the corner screws, which would otherwise sit on the
+   *  boundary and punch through the lit face. */
+  const BEZEL = 0.06;
+  /* The plate is 0.024 deep, so its front face is at z 0.012. Everything drawn
+     on top has to clear that: laid flush, the lit face and the plate front
+     z-fight and the panel tears along a diagonal. */
+  const FACE_Z = 0.0126;
+
+  const top = [...skills].sort((a, b) => b.level - a.level)[0];
+
+  return (
+    <Interactive
+      label="the skills panel"
+      verb="read"
+      detail={`${skills.length} across ${SKILL_GROUPS.length} groups`}
+      onActivate={() =>
+        onOpen({
+          kicker: "skills",
+          title: "What I work with",
+          subtitle: top ? `Strongest: ${top.label}` : undefined,
+          rows: skills.map((s) => ({ k: s.label, v: `${s.level}` })),
+          body: "Levels are self-assessed and carried over from the published skill bars on the site, not scored by anyone else.",
+          href: "/#about",
+          hrefLabel: "see these on the site",
+        })
+      }
+    >
+      {(hovered) => (
+        <group position={position} rotation={rotation}>
+          {/* the plate */}
+          <RoundedBox args={[W, H, 0.024]} radius={0.005} smoothness={3} castShadow>
+            <meshStandardMaterial
+              color="#3c434a"
+              roughness={0.38}
+              metalness={0.72}
+              emissive={hovered ? "#ffd9a6" : "#000000"}
+              emissiveIntensity={hovered ? 0.22 : 0}
+            />
+          </RoundedBox>
+
+          {/* Rack screws, one per corner. Real geometry rather than painted
+              dots: at this size a printed screw head vanishes, and four of them
+              are most of what makes a flat rectangle read as a faceplate. */}
+          {[-1, 1].map((sx) =>
+            [-1, 1].map((sy) => (
+              <mesh
+                key={`${sx}${sy}`}
+                position={[sx * (W / 2 - 0.016), sy * (H / 2 - 0.016), 0.0125]}
+                rotation={[Math.PI / 2, 0, 0]}
+                castShadow
+              >
+                <cylinderGeometry args={[0.007, 0.007, 0.004, 12]} />
+                <meshStandardMaterial color="#8f979e" roughness={0.3} metalness={0.9} />
+              </mesh>
+            )),
+          )}
+
+          {/* The lit face, inside the bezel. */}
+          <mesh position={[0, 0, FACE_Z]}>
+            <planeGeometry args={[W - BEZEL, H - BEZEL]} />
+            <meshStandardMaterial color="#0b0f14" roughness={0.9} />
+          </mesh>
+
+          <Html
+            transform
+            occlude="blending"
+            distanceFactor={((W - BEZEL) / PX_W) * 400}
+            position={[0, 0, FACE_Z + 0.001]}
+            zIndexRange={[10, 0]}
+            style={{
+              width: `${PX_W}px`,
+              height: `${PX_H}px`,
+              pointerEvents: "none",
+              userSelect: "none",
+            }}
+          >
+            <div
+              className="flex h-full w-full flex-col font-mono"
+              style={{
+                padding: `${PAD}px`,
+                background:
+                  "linear-gradient(165deg, #0e141b 0%, #0a0f15 60%, #080c11 100%)",
+                color: "#c2d0de",
+              }}
+            >
+              <div className="flex items-baseline justify-between">
+                <span
+                  style={{
+                    fontSize: "23px",
+                    letterSpacing: "0.22em",
+                    color: "#e6eef7",
+                  }}
+                >
+                  SKILLS
+                </span>
+                <span style={{ fontSize: "14px", color: "#55677a" }}>
+                  self-assessed
+                </span>
+              </div>
+              <div
+                style={{
+                  height: "1px",
+                  background: `${ACCENT.blue}3d`,
+                  margin: "12px 0 14px",
+                }}
+              />
+
+              {SKILL_GROUPS.map((g) => {
+                const rows = skills.filter((s) => s.group === g.id);
+                if (!rows.length) return null;
+                return (
+                  <div key={g.id} style={{ marginBottom: "13px" }}>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        letterSpacing: "0.2em",
+                        color: "#4d5f72",
+                        marginBottom: "7px",
+                      }}
+                    >
+                      {g.label}
+                    </div>
+                    {rows.map((s) => (
+                      <div
+                        key={s.label}
+                        className="flex items-center"
+                        style={{ gap: "10px", marginBottom: "6px" }}
+                      >
+                        <span
+                          style={{
+                            flex: 1,
+                            fontSize: "16px",
+                            color: "#9fb6cc",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {s.label}
+                        </span>
+                        {/* track */}
+                        <span
+                          style={{
+                            width: "176px",
+                            height: "9px",
+                            background: "#141c25",
+                            border: "1px solid #1e2a36",
+                            position: "relative",
+                            flex: "0 0 176px",
+                          }}
+                        >
+                          {/* fill, glowing so it reads as lit rather than painted */}
+                          <span
+                            style={{
+                              position: "absolute",
+                              inset: "0 auto 0 0",
+                              width: `${s.level}%`,
+                              background: ACCENT.blue,
+                              boxShadow: `0 0 9px ${ACCENT.blue}b3`,
+                            }}
+                          />
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </Html>
+        </group>
+      )}
+    </Interactive>
+  );
+}
+
+/**
+ * The three services, as a leaflet rack on the wall by the door.
+ *
+ * Placed on the way out rather than near the desk, and that is the whole idea:
+ * services are the one section that is an offer rather than a fact, and an
+ * offer belongs where a visitor is already leaving. It also keeps it out of a
+ * competition it would lose — next to the monitors nobody reads a leaflet.
+ *
+ * The pockets are real geometry. A printed pocket on a flat board is the recess
+ * mistake the door and sideboard already taught: it reads as a flat board.
+ */
+const SERVICE_TONE: Record<string, string> = {
+  arctic: ACCENT.blue,
+  copper: ACCENT.copper,
+  teal: ACCENT.teal,
+};
+
+export function ServiceRack({
+  position,
+  rotation = [0, 0, 0],
+  onOpen,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  onOpen: (card: InfoCard) => void;
+}) {
+  const LEAF_W = 0.135;
+  const LEAF_H = 0.205;
+  const GAP = 0.022;
+  /** Authoring width of one leaflet inside the shared layer. */
+  const LEAF_PX = 300;
+  /** How much of the leaflet the pocket lip hides. Titles live above it. */
+  const LIP_H = 0.058;
+
+  const n = services.length;
+  const totalW = n * LEAF_W + (n - 1) * GAP;
+  const xOf = (i: number) => -totalW / 2 + LEAF_W / 2 + i * (LEAF_W + GAP);
+
+  /* One DOM layer for all three leaflets, not one each — the same trade the
+     social wall makes, and for the same reason: an `Html` layer is composited
+     every frame whether or not it is in view, while the invisible plane that
+     makes each leaflet pickable is nearly free. Three layers here was 3 of the
+     room's 14, a fifth of the total, for one object on a wall behind you.
+
+     This is also why the leaflets do not lean. Individually rotated paper
+     cannot share a flat layer, and readability wanted them upright anyway. */
+  const pxW = Math.round((totalW / LEAF_W) * LEAF_PX);
+  const pxH = Math.round((LEAF_H / LEAF_W) * LEAF_PX);
+  const gapPx = (GAP / LEAF_W) * LEAF_PX;
+
+  /* This group is turned 180° onto the front wall, so local +z points into the
+     room. Every offset below is written as "toward the visitor". */
+  return (
+    <group position={position} rotation={rotation}>
+      {/* backboard */}
+      <RoundedBox
+        position={[0, 0, -0.008]}
+        args={[totalW + 0.05, LEAF_H + 0.02, 0.016]}
+        radius={0.004}
+        smoothness={3}
+        castShadow
+        receiveShadow
+      >
+        <meshStandardMaterial color="#2f353b" roughness={0.62} metalness={0.35} />
+      </RoundedBox>
+
+      {/* The paper, the pockets, and the picking planes. Text comes from the
+          single layer below. */}
+      {services.map((svc, i) => (
+        <group key={svc.slug} position={[xOf(i), 0, 0]}>
+          {/* pocket lip, standing proud of the board so the leaflet sits in
+              something rather than against it */}
+          <RoundedBox
+            position={[0, -LEAF_H / 2 + LIP_H / 2, 0.026]}
+            args={[LEAF_W + 0.014, LIP_H, 0.012]}
+            radius={0.003}
+            smoothness={3}
+            castShadow
+          >
+            <meshStandardMaterial color="#3a4148" roughness={0.55} metalness={0.4} />
+          </RoundedBox>
+          {/* pocket sides */}
+          {[-1, 1].map((sx) => (
+            <mesh
+              key={sx}
+              position={[sx * (LEAF_W / 2 + 0.006), -LEAF_H / 2 + LIP_H / 2, 0.019]}
+              castShadow
+            >
+              <boxGeometry args={[0.004, LIP_H, 0.03]} />
+              <meshStandardMaterial color="#343b41" roughness={0.6} metalness={0.4} />
+            </mesh>
+          ))}
+
+          {/* the sheet itself, for thickness and a shadow in the pocket */}
+          <mesh position={[0, 0.012, 0.0155]} castShadow receiveShadow>
+            <boxGeometry args={[LEAF_W, LEAF_H, 0.005]} />
+            <meshStandardMaterial color="#f4f1ea" roughness={0.88} />
+          </mesh>
+
+          <Interactive
+              label={svc.title}
+              verb="take one"
+              detail={svc.blurb}
+              onActivate={() =>
+                onOpen({
+                  kicker: "services",
+                  title: svc.title,
+                  subtitle: svc.blurb,
+                  rows: svc.proof ? [{ k: "Proof", v: svc.proof.label }] : [],
+                  body: svc.summary,
+                  /* The bullets deliberately do not come along. `tags` renders
+                     10px chips for stack labels, and a full sentence in one
+                     reads as a layout accident; the section on the site is one
+                     click away and lays them out properly. */
+                  href: "/#services",
+                  hrefLabel: "see all services",
+                })
+              }
+            >
+            {(hovered) => (
+              <group position={[0, 0.012, 0.017]}>
+                <mesh visible={false}>
+                  <planeGeometry args={[LEAF_W, LEAF_H]} />
+                  <meshBasicMaterial />
+                </mesh>
+                {/* Hover shows as a ring peeking around the sheet rather than
+                    a glow on it: the layer above paints the paper opaquely, so
+                    lighting the mesh underneath would never be seen. */}
+                <mesh position={[0, 0, -0.004]} visible={hovered}>
+                  <planeGeometry args={[LEAF_W + 0.018, LEAF_H + 0.018]} />
+                  <meshBasicMaterial color="#ffd9a6" />
+                </mesh>
+              </group>
+            )}
+          </Interactive>
+        </group>
+      ))}
+
+      <Html
+        transform
+        occlude="blending"
+        distanceFactor={(totalW / pxW) * 400}
+        position={[0, 0.012, 0.0185]}
+        zIndexRange={[10, 0]}
+        style={{
+          width: `${pxW}px`,
+          height: `${pxH}px`,
+          pointerEvents: "none",
+          userSelect: "none",
+        }}
+      >
+        <div className="flex h-full w-full" style={{ gap: `${gapPx}px` }}>
+          {services.map((svc) => {
+            const tone = SERVICE_TONE[svc.accent] ?? ACCENT.blue;
+            return (
+              <div
+                key={svc.slug}
+                className="flex flex-col"
+                style={{
+                  width: `${LEAF_PX}px`,
+                  flex: `0 0 ${LEAF_PX}px`,
+                  padding: "27px 21px",
+                  /* Paper painted here, not left to the mesh — this wall faces
+                     away from the lamps, same as the career frame. */
+                  background: "linear-gradient(160deg, #fbf8f1 0%, #efeae0 100%)",
+                  color: "#26313d",
+                }}
+              >
+                <div
+                  className="font-mono"
+                  style={{
+                    fontSize: "15px",
+                    letterSpacing: "0.18em",
+                    color: tone,
+                    filter: "brightness(0.72)",
+                  }}
+                >
+                  SERVICE
+                </div>
+                <div
+                  style={{
+                    height: "3px",
+                    background: tone,
+                    margin: "10px 0 14px",
+                    width: "44px",
+                  }}
+                />
+                <div
+                  style={{ fontSize: "27px", fontWeight: 600, lineHeight: 1.15 }}
+                >
+                  {svc.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: "16px",
+                    lineHeight: 1.35,
+                    color: "#5d6875",
+                    marginTop: "13px",
+                  }}
+                >
+                  {svc.blurb}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Html>
+    </group>
   );
 }
 

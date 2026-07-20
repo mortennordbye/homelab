@@ -50,6 +50,15 @@ type Target = {
 type Registry = {
   register: (obj: THREE.Object3D, target: React.RefObject<Target>) => void;
   unregister: (obj: THREE.Object3D) => void;
+  /**
+   * Activate whatever sits under a point in normalised device coordinates.
+   *
+   * Touch has no crosshair to aim and no key to press, so a tap has to do both
+   * jobs at once. Everything else about picking is shared with the look-at
+   * path — same registry, same REACH — so a tap can never reach something a
+   * walk-up-and-press could not.
+   */
+  activateAt: (ndc: THREE.Vector2) => boolean;
 };
 
 const RegistryCtx = createContext<Registry | null>(null);
@@ -154,7 +163,35 @@ export function InteractionProvider({
     return () => window.removeEventListener("keydown", onKey);
   }, [enabled]);
 
-  const registry = useMemo(() => ({ register, unregister }), [register, unregister]);
+  /* Deliberately not folded into the useFrame pick above. That one tracks what
+     the crosshair is on; this one answers "what did the finger land on", which
+     is a different point on the screen and has to be resolved at the moment of
+     the tap rather than a frame later. */
+  const activateAt = useCallback(
+    (ndc: THREE.Vector2) => {
+      if (!enabled) return false;
+      raycaster.setFromCamera(ndc, camera);
+      raycaster.far = REACH;
+      let best: { root: THREE.Object3D; dist: number } | null = null;
+      for (const [root] of targets.current) {
+        const hits = raycaster.intersectObject(root, true);
+        if (hits.length && (!best || hits[0].distance < best.dist)) {
+          best = { root, dist: hits[0].distance };
+        }
+      }
+      if (!best) return false;
+      const t = targets.current.get(best.root)?.current;
+      if (!t || t.disabled) return false;
+      t.onActivate();
+      return true;
+    },
+    [enabled, raycaster, camera],
+  );
+
+  const registry = useMemo(
+    () => ({ register, unregister, activateAt }),
+    [register, unregister, activateAt],
+  );
 
   return (
     <RegistryCtx.Provider value={registry}>
@@ -211,4 +248,9 @@ export function Interactive({
       {typeof children === "function" ? children(hovered) : children}
     </group>
   );
+}
+
+/** Lets the touch layer drive activation without reaching into the registry. */
+export function useActivateAt() {
+  return useContext(RegistryCtx)?.activateAt ?? null;
 }
