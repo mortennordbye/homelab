@@ -31,7 +31,7 @@ const TAP_SLOP_PX = 9;
 const TAP_MS = 400;
 
 export function TouchLook({ enabled }: { enabled: boolean }) {
-  const { camera, gl } = useThree();
+  const { camera, gl, events } = useThree();
   const activateAt = useActivateAt();
   const euler = useRef(new THREE.Euler(0, 0, 0, "YXZ"));
   const ndc = useRef(new THREE.Vector2());
@@ -47,7 +47,45 @@ export function TouchLook({ enabled }: { enabled: boolean }) {
 
   useEffect(() => {
     if (!enabled) return;
-    const el = gl.domElement;
+    /* r3f's own event target, not the canvas and not the canvas's parent.
+       Two separate things push this outwards, and stopping at either one
+       leaves a hole:
+
+       The canvas itself is never a hit target. drei's `Html` sets
+       `pointer-events: none` straight onto gl.domElement whenever any instance
+       uses occlude="blending" (the layout effect in drei/web/Html.js), and
+       every in-world screen here does. Touches fall through it, so listeners
+       bound there never fire at all — which is why look-drag was dead on every
+       phone while the walk stick, its own DOM outside the canvas, kept working.
+       Desktop never noticed, because PointerLockControls listens on `document`.
+
+       One level up is still too shallow. r3f nests an outer div over the
+       canvas's container, and drei portals every `Html` into `events.connected`
+       — the outer one. So the screens, the shell, the blog wall and the GitHub
+       wall are all *siblings* of the canvas's container, not descendants: a
+       drag or tap starting on any panel bubbles past a listener bound there.
+       That left the terminal untappable on touch, which is worth spelling out,
+       because the close button was added for exactly the visitors who could
+       not get in to use it.
+
+       `events.connected` is the element r3f binds its own pointer events to,
+       so it is the one place guaranteed to see both. It fills the same rect as
+       the canvas, so the tap-to-NDC maths below is unchanged. */
+    const el =
+      (events.connected as HTMLElement | null) ??
+      gl.domElement.parentElement?.parentElement ??
+      gl.domElement;
+
+    /* No `touch-action: none` to go with this, deliberately. It looks like the
+       obvious companion fix and it is measurably unnecessary: `move` below
+       preventDefaults on a non-passive listener, which already stops the
+       browser panning, and look-drag behaves identically with and without it.
+       It would also cost something. Pointer Events L3 checks panning only up to
+       the nearest scroll container, but checks *zooming* all the way to the
+       document element, so `none` anywhere above here takes pinch-zoom away
+       from the whole room — including the terminal's 13px scrollback, where a
+       visitor is most likely to want it. */
+
     /* Gesture state in a ref rather than closure locals. Same behaviour, but
        plain `let`s captured by handlers read as mutate-after-render to the
        react-hooks immutability rule, and a drag is exactly the kind of state a
@@ -119,7 +157,7 @@ export function TouchLook({ enabled }: { enabled: boolean }) {
       el.removeEventListener("touchend", end);
       el.removeEventListener("touchcancel", end);
     };
-  }, [enabled, camera, gl, activateAt]);
+  }, [enabled, camera, gl, events.connected, activateAt]);
 
   return null;
 }
