@@ -128,6 +128,12 @@ export function CommandPalette({ work, services }: Props) {
           ]),
       },
       {
+        id: "cd fun",
+        label: "cd fun",
+        hint: "/fun",
+        run: () => jump("/fun"),
+      },
+      {
         id: "clear",
         label: "clear",
         hint: "clear buffer",
