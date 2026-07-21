@@ -213,6 +213,27 @@ export function InfoPanel({
   );
 }
 
+/**
+ * The way out of the chair, shown for as long as you are in it.
+ *
+ * Sitting takes walking away, so unlike every other state in the room there is
+ * no way to leave it by accident and no object to look at that offers the exit.
+ * A prompt that only appeared on hover would leave the visitor holding W at a
+ * view that will not move.
+ */
+export function SeatedHint({ touch = false }: { touch?: boolean }) {
+  return (
+    <div className="pointer-events-none absolute left-1/2 top-[calc(50%+30px)] -translate-x-1/2">
+      <div className="rounded-[5px] border border-white/15 bg-black/70 px-3.5 py-2.5 text-center shadow-lg">
+        <p className="flex items-center justify-center gap-2 font-mono text-[11px] text-white/70">
+          {touch ? "tap to" : <Key>E</Key>}
+          stand up
+        </p>
+      </div>
+    </div>
+  );
+}
+
 type Bind = { keys: React.ReactNode; action: string };
 
 const BINDS: Bind[] = [

@@ -49,6 +49,22 @@ export const DESK_D = 0.72;
  *  than no chair. */
 export const CHAIR_Z = -1.32;
 
+/**
+ * Where the camera goes when the visitor takes the chair.
+ *
+ * Pulled in from CHAIR_Z rather than sat on it: the chair's origin is its
+ * centre, and a camera there is behind the backrest looking through it. The
+ * offset puts the eye where a head actually is once you are sitting in it,
+ * which lands ~0.7m off the panels — the same distance the terminal zoom uses,
+ * arrived at independently and a decent sign both are right.
+ *
+ * The height is a seated eye, not a standing one docked downward. At 1.25 the
+ * landscape panel's centre at 1.09 sits just below the horizon and the portrait
+ * one at 1.19 is level, which is the geometry of a desk that has been set up
+ * properly rather than one being loomed over.
+ */
+export const SEAT = { z: CHAIR_Z - 0.18, eye: 1.25 };
+
 /** Where the bookshelf stands. The lamp on top reads its x and z from here. */
 const SHELF_AT: [number, number, number] = [-ROOM.w / 2 + 0.16, 0, 0.72];
 
@@ -442,6 +458,8 @@ export function Room({
   onExitRoom,
   lights,
   onToggleLight,
+  seated,
+  onSit,
 }: {
   onPrinterStatus: (msg: string | null) => void;
   shelf: ShelfData;
@@ -453,6 +471,8 @@ export function Room({
   onExitRoom: () => void;
   lights: Lights;
   onToggleLight: (k: LightKey) => void;
+  seated: boolean;
+  onSit: () => void;
 }) {
   const hw = ROOM.w / 2;
   const hd = ROOM.d / 2;
@@ -725,7 +745,19 @@ export function Room({
 
       {/* y=0: Prop seats a model on its own base, so no manual lift. */}
       <Plant position={[hw - 0.42, 0, hd - 0.55]} />
-      <Chair position={[0, 0, CHAIR_Z]} />
+      {/* Disabled rather than relabelled once seated. Looking down at the chair
+          you are already in should not offer to seat you again, and standing up
+          is handled by the interact-with-nothing path instead — see
+          onEmptyActivate in interaction.tsx for why it cannot live here. */}
+      <Interactive
+        label="the desk chair"
+        verb="sit down"
+        detail="both screens, at reading distance"
+        onActivate={onSit}
+        disabled={seated}
+      >
+        <Chair position={[0, 0, CHAIR_Z]} />
+      </Interactive>
 
       {/* The homelab, in an open-fronted sideboard against the right wall.
           Every device in it is named from the README hardware tables. */}

@@ -24,18 +24,26 @@ import {
   LANTERN,
   ROOM,
   Room,
+  SEAT,
   type LightKey,
   type Lights,
   type Placement,
 } from "./Room";
 import { CodeScreen, type Tab } from "./CodeScreen";
 import { Dashboard } from "./Screen";
-import { Crosshair, InfoPanel, InteractPrompt, Keybinds, type InfoCard } from "./Hud";
+import {
+  Crosshair,
+  InfoPanel,
+  InteractPrompt,
+  Keybinds,
+  SeatedHint,
+  type InfoCard,
+} from "./Hud";
 import type { Hardware } from "./hardware";
 import type { CareerData, ShelfBook, ShelfCert, ShelfData } from "./shelf";
 import type { SourceExcerpt } from "@/lib/source-excerpt";
 import { TerminalScreen } from "./Terminal";
-import { InteractionProvider, type Prompt } from "./interaction";
+import { Interactive, InteractionProvider, type Prompt } from "./interaction";
 import { useInfraFeed } from "./feed";
 import { preloadProps } from "./props";
 import { preloadSurfaces } from "./textures";
@@ -137,24 +145,38 @@ function ScreenWall({
   data,
   source,
   deskTab,
+  onSwitchTab,
   poweredCount,
 }: {
   data: PanelProps;
   source: SourceExcerpt;
   deskTab: Tab;
+  onSwitchTab: () => void;
   poweredCount: number;
 }) {
   return (
     <>
-      <CodeScreen
-        source={source}
-        data={data}
-        tab={deskTab}
-        position={DESK_SCREEN.position}
-        rotation={DESK_SCREEN.rotation}
-        width={DESK_SCREEN.width}
-        powered={poweredCount > 0}
-      />
+      {/* The monitor draws a tab bar, and a tab bar is a promise. It used to be
+          one the room could not keep: the two views alternated on a timer with
+          no input path to them at all, so the highlighted tab read as something
+          you could click and then ignored you. Pressing E switches it and pins
+          it — see the interval in Scene. */}
+      <Interactive
+        label="the desk monitor"
+        verb="switch view"
+        detail={deskTab === "code" ? "show the ArgoCD view" : "show deployment.yaml"}
+        onActivate={onSwitchTab}
+      >
+        <CodeScreen
+          source={source}
+          data={data}
+          tab={deskTab}
+          position={DESK_SCREEN.position}
+          rotation={DESK_SCREEN.rotation}
+          width={DESK_SCREEN.width}
+          powered={poweredCount > 0}
+        />
+      </Interactive>
       <Dashboard
         panels={WALL_PANELS}
         data={data}
@@ -378,6 +400,102 @@ function TerminalFocus({
   return null;
 }
 
+/** How close the seat move has to get before the camera is handed back. */
+const SEAT_ARRIVE = 0.02;
+
+/**
+ * Sits the visitor down at the desk, and stands them back up exactly where they
+ * were.
+ *
+ * Shares its shape with TerminalFocus above, and differs in the one way that
+ * matters: once the move in has landed this lets go of the camera completely.
+ * The terminal zoom holds its quaternion for as long as it is active, which is
+ * right for a single panel you are reading and wrong for a chair — sitting is
+ * somewhere you look around *from*, between the two monitors, up at the prints,
+ * over at the shelf. Holding the view would make the chair a cutscene.
+ *
+ * Letting go is only safe because FirstPerson stays switched off for the whole
+ * time seated, not just for the move. Position frozen, rotation free: that is
+ * the difference between sitting in a chair and hovering in front of one.
+ */
+function SeatedFocus({
+  active,
+  onStandingUp,
+}: {
+  active: boolean;
+  onStandingUp: (busy: boolean) => void;
+}) {
+  const { camera } = useThree();
+  const saved = useRef<{ pos: THREE.Vector3; quat: THREE.Quaternion } | null>(null);
+  const mode = useRef<"idle" | "in" | "held" | "out">("idle");
+
+  const view = useMemo(() => {
+    // Aim at the midpoint of the pair rather than at either panel, so neither
+    // is the one you are "really" looking at. Read off the placements so the
+    // seat cannot drift when the monitors are nudged.
+    const look = new THREE.Vector3(...DESK_SCREEN.position)
+      .add(new THREE.Vector3(...DESK_TERMINAL.position))
+      .multiplyScalar(0.5);
+    const pos = new THREE.Vector3(0, SEAT.eye, SEAT.z);
+    const quat = new THREE.Quaternion().setFromRotationMatrix(
+      new THREE.Matrix4().lookAt(pos, look, new THREE.Vector3(0, 1, 0)),
+    );
+    return { pos, quat };
+  }, []);
+
+  useEffect(() => {
+    if (active) mode.current = "in";
+    else if (saved.current) {
+      mode.current = "out";
+      onStandingUp(true);
+    }
+  }, [active, onStandingUp]);
+
+  useFrame((_, rawDelta) => {
+    if (mode.current === "idle" || mode.current === "held") return;
+    const delta = Math.min(rawDelta, 0.05);
+    const k = 1 - Math.pow(0.0004, delta);
+
+    if (mode.current === "in") {
+      if (!saved.current) {
+        saved.current = {
+          pos: camera.position.clone(),
+          quat: camera.quaternion.clone(),
+        };
+      }
+      camera.position.lerp(view.pos, k);
+      camera.quaternion.slerp(view.quat, k);
+      if (camera.position.distanceTo(view.pos) < SEAT_ARRIVE) {
+        camera.position.copy(view.pos);
+        /* Position is snapped, the quaternion deliberately is not. It is within
+           a degree or so by now, and the visitor's own mouse takes it from
+           here — a snap they did not ask for would be more noticeable than the
+           rounding error it fixes. */
+        mode.current = "held";
+      }
+      return;
+    }
+
+    const back = saved.current;
+    if (!back) {
+      mode.current = "idle";
+      onStandingUp(false);
+      return;
+    }
+    camera.position.lerp(back.pos, k);
+    camera.quaternion.slerp(back.quat, k);
+    if (camera.position.distanceTo(back.pos) < 0.005) {
+      camera.position.copy(back.pos);
+      camera.quaternion.copy(back.quat);
+      saved.current = null;
+      mode.current = "idle";
+      onStandingUp(false);
+    }
+  });
+
+  return null;
+}
+
 /** Screens are the light source, so the fill has to follow them on. */
 function Lighting({
   poweredCount,
@@ -540,6 +658,9 @@ function Scene({
   touchMove,
   lights,
   onToggleLight,
+  seated,
+  onSit,
+  onStand,
 }: {
   data: PanelProps;
   source: SourceExcerpt;
@@ -565,8 +686,16 @@ function Scene({
   paused: boolean;
   lights: Lights;
   onToggleLight: (k: LightKey) => void;
+  seated: boolean;
+  onSit: () => void;
+  onStand: () => void;
 }) {
   const [poweredCount, setPoweredCount] = useState(0);
+  /* True only while the camera is easing back out of the chair. `seated` has
+     already gone false by then, and it is the flag that was keeping FirstPerson
+     off, so without this the walk controller grabs the camera mid-move and
+     snaps it to standing height halfway across the room. */
+  const [standingUp, setStandingUp] = useState(false);
   /* True while the camera is easing back out of the terminal. `paused` has
      already gone false by then, so without this FirstPerson would grab the
      camera mid-move and snap it to eye height. */
@@ -574,14 +703,23 @@ function Scene({
   /* The desk monitor alternates between the manifest and the ArgoCD view.
      Held here rather than inside CodeScreen — see the note on its `tab` prop. */
   const [deskTab, setDeskTab] = useState<Tab>("code");
+  /* Set the first time the visitor switches the monitor themselves. The
+     rotation exists so the second view is seen at all by someone who never
+     touches the monitor; once they have, a timer yanking the screen out from
+     under them is the room overriding a deliberate choice. */
+  const [deskTabPinned, setDeskTabPinned] = useState(false);
   useEffect(() => {
-    if (phase !== "exploring") return;
+    if (phase !== "exploring" || deskTabPinned) return;
     const t = setInterval(
       () => setDeskTab((v) => (v === "code" ? "argocd" : "code")),
       9000,
     );
     return () => clearInterval(t);
-  }, [phase]);
+  }, [phase, deskTabPinned]);
+  const switchDeskTab = useCallback(() => {
+    setDeskTabPinned(true);
+    setDeskTab((v) => (v === "code" ? "argocd" : "code"));
+  }, []);
   const { camera } = useThree();
 
   // Screens come on once the room is up.
@@ -616,7 +754,11 @@ function Scene({
       <color attach="background" args={["#1b1410"]} />
       <fog attach="fog" args={["#241a13", 16, 42]} />
       <Lighting poweredCount={poweredCount} lights={lights} />
-      <InteractionProvider enabled={interacting && !paused} onPrompt={onPrompt}>
+      <InteractionProvider
+        enabled={interacting && !paused}
+        onPrompt={onPrompt}
+        onEmptyActivate={onStand}
+      >
       <Suspense fallback={null}>
         {/* Image-based lighting. Does most of the work on specular: without an
             environment map, metal and plastic have nothing to reflect and every
@@ -641,6 +783,8 @@ function Scene({
           onExitRoom={onExitRoom}
           lights={lights}
           onToggleLight={onToggleLight}
+          seated={seated}
+          onSit={onSit}
         />
         <Post />
         {/* Fires only once everything above has resolved, which is the honest
@@ -650,7 +794,13 @@ function Scene({
             blank canvas. */}
         <SceneReady onReady={onSceneReady} />
       </Suspense>
-      <ScreenWall data={data} source={source} deskTab={deskTab} poweredCount={poweredCount} />
+      <ScreenWall
+        data={data}
+        source={source}
+        deskTab={deskTab}
+        onSwitchTab={switchDeskTab}
+        poweredCount={poweredCount}
+      />
       <TerminalScreen
         position={DESK_TERMINAL.position}
         rotation={DESK_TERMINAL.rotation}
@@ -666,12 +816,23 @@ function Scene({
           resolves through the same pick registry the crosshair uses, and
           outside this boundary that context reads null and every tap silently
           does nothing. */}
-      <TouchLook enabled={coarse && phase === "exploring" && !paused && !settling} />
+      {/* Stays on while seated — look is exactly what the chair keeps — but off
+          for the move back out, which would otherwise fight the drag. */}
+      <TouchLook
+        enabled={
+          coarse && phase === "exploring" && !paused && !settling && !standingUp
+        }
+      />
       </InteractionProvider>
       <TempCam />
       <TerminalFocus active={terminalActive} onSettling={setSettling} />
+      <SeatedFocus active={seated} onStandingUp={setStandingUp} />
+      {/* `seated` covers the move in and the whole time in the chair;
+          `standingUp` covers the move back out, after seated has gone false. */}
       <FirstPerson
-        enabled={phase === "exploring" && !paused && !settling}
+        enabled={
+          phase === "exploring" && !paused && !settling && !seated && !standingUp
+        }
         move={touchMove}
       />
       {/* The selector is swapped for one that matches nothing while something
@@ -771,6 +932,7 @@ export default function FunRoom({
   const onContextLost = useCallback(() => setContextLost(true), []);
   const [card, setCard] = useState<InfoCard | null>(null);
   const [terminalActive, setTerminalActive] = useState(false);
+  const [seated, setSeated] = useState(false);
   /* All on from the start, always. The room is a lamplit evening and that is
      what it should be the first time you see it — the switches are something to
      find, not a state to arrive in. Not persisted for the same reason: a return
@@ -816,6 +978,14 @@ export default function FunRoom({
   const exitTerminal = useCallback(() => {
     setTerminalActive(false);
   }, []);
+
+  const sitDown = useCallback(() => setSeated(true), []);
+  /* Reached by every interact that hit nothing, not only the ones made while
+     seated. That is fine and is why it is written as a plain set rather than a
+     toggle: standing when already standing is a no-op React bails out of, and
+     an empty press should never be able to seat someone who was not aiming at
+     the chair. */
+  const standUp = useCallback(() => setSeated(false), []);
 
   /* Walking out of the door leaves the room. Uses the router rather than
      window.location so it is a client navigation like any other nav link —
@@ -1046,6 +1216,9 @@ export default function FunRoom({
             onToggleLight={toggleLight}
             coarse={coarse}
             touchMove={touchMove}
+            seated={seated}
+            onSit={sitDown}
+            onStand={standUp}
           />
           <ContextGuard onLost={onContextLost} />
         </Canvas>
@@ -1092,6 +1265,10 @@ export default function FunRoom({
         <div className="pointer-events-none absolute inset-0 z-20">
           <Crosshair active={prompt !== null} />
           <InteractPrompt prompt={prompt} touch={coarse} />
+          {/* Both occupy the same spot under the crosshair, so a live prompt
+              wins: while seated and looking at the shell the useful line is
+              "open the terminal", not the way out of a chair. */}
+          {seated && prompt === null && <SeatedHint touch={coarse} />}
           {/* Every bind on that card is a key, and touch has no keyboard —
               it would sit under the walk stick advertising controls that do
               not exist. The touch hint bottom-right says the equivalent. */}
@@ -1133,7 +1310,11 @@ export default function FunRoom({
       {/* Touch walk stick, and the one line that explains the controls it does
           not cover. Both drop away while a card or the terminal has focus —
           the stick would sit on top of the panel, and the hint is answered. */}
-      {coarse && phase === "exploring" && !paused && (
+      {/* The stick goes while seated too: the chair switches walking off, and a
+          joystick that visibly does nothing reads as the room having broken
+          rather than as the chair holding you. Look-drag survives, which is
+          what the remaining hint says. */}
+      {coarse && phase === "exploring" && !paused && !seated && (
         <>
           <TouchStick move={touchMove} />
           <div className="pointer-events-none absolute bottom-8 right-8 z-30 max-w-[46vw]">

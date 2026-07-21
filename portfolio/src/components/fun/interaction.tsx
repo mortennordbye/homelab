@@ -69,10 +69,21 @@ export type Prompt = { label: string; verb: string; detail?: string } | null;
 export function InteractionProvider({
   enabled,
   onPrompt,
+  /**
+   * Called when the visitor presses interact with nothing under the crosshair.
+   *
+   * Sitting down needs this. Standing back up is the one action whose affordance
+   * you cannot look at — you are in the chair, so the chair is under you rather
+   * than in front of you, and there is no object left to aim at. Rather than
+   * bolt a second global key handler onto the window and race this one for the
+   * same keystroke, the registry that already owns E hands the miss back.
+   */
+  onEmptyActivate,
   children,
 }: {
   enabled: boolean;
   onPrompt: (p: Prompt) => void;
+  onEmptyActivate?: () => void;
   children: React.ReactNode;
 }) {
   const targets = useRef(new Map<THREE.Object3D, React.RefObject<Target>>());
@@ -85,6 +96,14 @@ export function InteractionProvider({
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const centre = useMemo(() => new THREE.Vector2(0, 0), []);
   const { camera } = useThree();
+
+  /* Held in a ref for the same reason targets are: the callback is inline at
+     the call site, so putting it in the key effect's deps would rebind the
+     listener on every render. */
+  const emptyActivate = useRef(onEmptyActivate);
+  useEffect(() => {
+    emptyActivate.current = onEmptyActivate;
+  });
 
   const register = useCallback(
     (obj: THREE.Object3D, target: React.RefObject<Target>) => {
@@ -153,9 +172,13 @@ export function InteractionProvider({
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== "KeyE" && e.code !== "Enter") return;
       const obj = hoveredRef.current;
-      if (!obj) return;
-      const t = targets.current.get(obj)?.current;
-      if (!t || t.disabled) return;
+      const t = obj ? targets.current.get(obj)?.current : null;
+      if (!t || t.disabled) {
+        if (!emptyActivate.current) return;
+        e.preventDefault();
+        emptyActivate.current();
+        return;
+      }
       e.preventDefault();
       t.onActivate();
     };
@@ -179,9 +202,16 @@ export function InteractionProvider({
           best = { root, dist: hits[0].distance };
         }
       }
-      if (!best) return false;
-      const t = targets.current.get(best.root)?.current;
-      if (!t || t.disabled) return false;
+      const t = best ? targets.current.get(best.root)?.current : null;
+      /* Same fallback as the key path, and load-bearing rather than symmetric:
+         sitting freezes movement, so a touch visitor whose tap on empty floor
+         did nothing would be stuck in the chair with no keyboard to press E on
+         and no walk stick to leave with. */
+      if (!t || t.disabled) {
+        if (!emptyActivate.current) return false;
+        emptyActivate.current();
+        return true;
+      }
       t.onActivate();
       return true;
     },
