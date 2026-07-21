@@ -48,6 +48,7 @@ export const site = {
     { label: "Resume", href: "/#resume" },
     { label: "Work", href: "/#portfolio" },
     { label: "Infrastructure", href: "/infrastructure" },
+    { label: "Room", href: "/fun" },
     { label: "Blog", href: "/#blog" },
     { label: "Contact", href: "/#contact" },
   ] as readonly { href: string; label: string }[],

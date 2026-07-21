@@ -2,8 +2,10 @@
 
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { site } from "@/content/site";
 import { InlineGlobe } from "@/components/InlineGlobe";
+import { Button } from "@/components/primitives/Button";
 import { Tag } from "@/components/primitives/Tag";
 
 export function Hero() {
@@ -64,6 +66,20 @@ export function Hero() {
             <Tag variant="accent">AZ-305</Tag>
             <Tag variant="muted">4+ yrs production cloud</Tag>
             <Tag variant="muted">Public &amp; private · enterprise scale</Tag>
+          </div>
+
+          <div className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Button
+              href="/fun"
+              variant="secondary"
+              size="lg"
+              iconRight={<ArrowRight size={16} aria-hidden />}
+            >
+              Walk through the room
+            </Button>
+            <p className="text-sm text-fg-3">
+              The same work, as a place you can move around in.
+            </p>
           </div>
         </div>
 
