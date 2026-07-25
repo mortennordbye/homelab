@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: batmotor-storehaug-service
+  namespace: batmotor-storehaug
+spec:
+  selector:
+    app: batmotor-storehaug
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
