@@ -27,7 +27,7 @@ spec:
                       - hyper3
       containers:
         - name: ollama
-          image: ollama/ollama:0.31.2
+          image: ollama/ollama:0.32.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 11434
