@@ -1,7 +1,7 @@
 # Migrating blog.nordbye.it from Blowfish to Northlight
 
 Ordered plan for replacing the Blowfish theme on `blog/` with
-[Northlight](https://github.com/mortennordbye/northlight), pinned at **v0.4.1**.
+[Northlight](https://github.com/mortennordbye/northlight), pinned at **v0.5.0**.
 
 Northlight exists specifically to replace this blog's theme. `docs/SPEC.md` in that repo is an
 audit of what this site actually uses, so the target is a deliberately *smaller* surface than
@@ -37,7 +37,7 @@ from this plan, both in the direction of less work:
 
 | Decision | Choice | Why |
 |---|---|---|
-| Theme version | Pin **v0.4.1** | Was v0.4.0; bumped because the heading-level bug found during this migration was fixed and released as v0.4.1. |
+| Theme version | Pin **v0.5.0** | Started at v0.4.0. v0.4.1 fixed the heading-level bug this migration found; v0.5.0 then shipped the theme's full code audit, pulled in so stage soaks once on the final theme rather than twice. |
 | Staging | Reuse existing `blog-stage` | It already exists and already auto-promotes. No new infra. |
 | Prod gate | Hold the Kargo-opened PR | The auto-opened prod PR is the human gate; do not merge it until phase 5 verification is done. |
 
@@ -52,6 +52,24 @@ v0.4.0 was already much larger than the migration needs. It ships **38 shortcode
 KaTeX maths, series navigation, ten home-page layouts, RTL support and Firebase-backed view/like
 counters. This blog uses none of it, which means the migration has no feature cliff to negotiate:
 nothing has to be given up to make the swap, and anything wanted later is already there.
+
+### Why v0.5.0 rather than v0.4.1
+
+The theme had an open audit branch (`cleanup/audit-findings`, 76 files) that was rebased, merged
+and released as v0.5.0 so the stage soak happens once against the theme prod will actually run.
+
+Two things were worth catching there. The branch predated the heading fix and touched
+`section.html`, so a careless rebase would have silently reverted it — confirmed after rebasing
+that both `(dict "ctx" . "level" 2)` and its test assertion survived. And release-please proposed
+**0.4.2**, a patch, because the squash title said `fix:`; the branch adds a print stylesheet,
+`theme-color` meta tags and ~28 documented config keys, so it was forced to a minor with
+`Release-As: 0.5.0`. Shipping features in a patch would break the version contract for a theme
+published for other people.
+
+Re-verified against v0.5.0 rather than assumed: strict build clean at 74 pages, structural sweep
+69 pages / 0 problems, smoke green, and the home page renders identically to v0.4.1 with
+`recentCount = 5` intact — the audit consolidated the Recent-posts section and had a documented
+3-vs-6 default drift, so that one was checked specifically.
 
 ---
 

@@ -5,7 +5,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 ## Apps
 
 ### Finish the blog's Blowfish → Northlight migration (phases 5–6)
-- **What:** The theme swap and the stage-gate hardening are both done and verified on `feat/blog-northlight-theme`, pinned to Northlight v0.4.1. Remaining: the cutover (merge, soak on stage, hold the Kargo-opened prod PR, purge Cloudflare) and removing the Blowfish submodule once prod is trusted. Two content decisions stay open — the 13 raw `<img style="width:NN%">` tags that bypass the render hooks, and the palette — plus whether the home background image is worth keeping given it is invisible in dark mode.
+- **What:** The theme swap and the stage-gate hardening are both done and verified on `feat/blog-northlight-theme`, pinned to Northlight v0.5.0. Remaining: the cutover (merge, soak on stage, hold the Kargo-opened prod PR, purge Cloudflare) and removing the Blowfish submodule once prod is trusted. Two content decisions stay open — the 13 raw `<img style="width:NN%">` tags that bypass the render hooks, and the palette — plus whether the home background image is worth keeping given it is invisible in dark mode.
 - **Why deferred:** The palette and the image widths are visual judgements that need the stage environment; they cannot be settled from a diff. Blowfish's submodule is kept until prod is trusted so rollback stays a single revert.
 - **Unblock:** Work through phases 5–6 of `docs/northlight-migration.md`, which carries the ordered steps, the verification for each, and the open decisions with the evidence gathered so far.
 - **Where:** `docs/northlight-migration.md`; `blog/config/_default/params.toml`; `.gitmodules` and `blog/themes/blowfish`.
