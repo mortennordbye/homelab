@@ -9,6 +9,30 @@ Blowfish — most of the work below is deleting things, not adding them.
 
 ---
 
+## Status
+
+| Phase | State |
+|---|---|
+| 1 — theme swap, mechanical | **Done** |
+| 2 — params rewrite | **Done** |
+| 3 — delete the overrides | **Done** |
+| 4 — harden the stage gate | Not started |
+| 5 — cutover | Not started |
+| 6 — clean up | Not started |
+
+Phases 1–3 are one commit on `feat/blog-northlight-theme`. Two things went differently
+from this plan, both in the direction of less work:
+
+- **`markup.toml` was not touched at all.** Every setting in it is already what Northlight
+  requires, including the `passthrough` block, which the theme supports.
+- **`params.toml` kept most of its keys.** The plan assumed a wholesale rewrite; in fact
+  v0.4.0 reads `heroStyle`, `layoutBackgroundBlur`, `list.cardView`, `taxonomy.cardView`,
+  `taxonomy.showTermCount`, `header.layout`, `disableImageOptimization`,
+  `defaultBackgroundImage`, `smartTOCHideUnfocusedChildren` and the whole `[footer]` block
+  under the same names Blowfish used. Only the homepage block, the two related-content keys
+  and the analytics/comments plumbing actually moved. Six palettes exist, not three:
+  `periwinkle`, `sage`, `clay`, `plum`, `slate`, `rose`.
+
 ## Decisions already made
 
 | Decision | Choice | Why |
@@ -173,8 +197,15 @@ goes red. An assertion that cannot fail reads as coverage and is worse than none
 `https://blog-stage.local.bigd.no/` and passes on any 2xx. **A visually broken Northlight build
 passes that.** Since phase 5 leans on stage as the gate, the assertions have to be real:
 
-- Grep the response for `id="northlight-strings"` — emitted by Northlight's `baseof.html:43` and
-  by nothing in Blowfish, so it proves *which theme* rendered the page.
+- Grep the response for `northlight-strings` — emitted by Northlight's `baseof.html:43` and by
+  nothing in Blowfish, so it proves *which theme* rendered the page.
+
+  **Grep for the bare string, not `id="northlight-strings"`.** The build runs `--minify`, which
+  strips attribute quotes, so the served markup reads `id=northlight-strings`. An assertion
+  written with the quotes fails against production output while passing against an unminified
+  local build — which is the worst possible failure mode for a gate. This was caught by writing
+  the quoted version first and having it report zero matches on a page that plainly contained
+  the block.
 - Add 200 checks for `/blog/`, `/tags/` and `/index.json` (the search index — an empty or missing
   one is a silent search outage).
 
@@ -224,6 +255,38 @@ Only after prod has been on Northlight long enough to trust it.
 
 ## Open items
 
+### Upstream: heading level skips h1 → h3 on `/blog/`
+
+Found by running the theme's own `tests/structure.py` over the built output: 69 pages, 0 dead
+internal links, **1 problem** — `blog/index.html: heading level jumps h1 to h3`.
+
+It is a bug in Northlight, not in this configuration. `card.html` and `post-item.html` both take
+a `level` parameter for exactly this reason, and `layouts/term.html:15` passes `"level" 2`
+correctly. `layouts/section.html:24` calls `{{ partial "card.html" . }}` with a bare page, so
+`$level` falls back to its default of `3` and every card title on a section index becomes an `h3`
+directly under the page `h1`. The fix is one line — pass `(dict "ctx" . "level" 2)`, matching
+`term.html`.
+
+It only bites when `list.cardView = true`, which is what this blog uses (carried over from
+Blowfish). Northlight's own `exampleSite` never sets it, so the card branch of `section.html` is
+unreachable there and `make check` stays green — a coverage gap in the theme's suite, so the
+upstream fix should also turn `cardView` on somewhere in `exampleSite` or the test cannot catch
+a regression.
+
+**Options:** fix upstream and bump the pin (correct, needs a v0.4.1); or set
+`list.cardView = false` here, which drops to the list view and avoids it at the cost of the card
+design. Not a cutover blocker either way — it is a pre-existing theme defect, not a regression
+introduced by this migration.
+
+### Settled: giscus `data-strict` costs nothing
+
+The theme hardcodes `data-strict="1"` where Blowfish had `strict = false`, which looked like it
+would orphan existing comments. It does not. Querying the giscus discussions API for four posts
+with `strict=false` and `strict=true` returns **identical** results: three are
+`404 Discussion not found` under both settings, and `blog/i-have-a-blog/` returns 200 with a
+comment count of 0 under both. There are no comments on the blog to lose, and `strict` is not
+what produces those 404s. No action needed.
+
 ### Raw `<img>` tags bypass the render hooks
 
 Thirteen raw `<img src="/images/…" style="width:NN%">` tags across four posts:
@@ -262,6 +325,18 @@ Shorter than expected. v0.4.0 turned out to cover almost everything Blowfish did
   with no counterpart. The list and term pages are opinionated here.
 - `[sitemap] excludedKinds` — Northlight ships its own `sitemap.xml`, so taxonomy and term pages
   will appear in it. Check whether that matters before cutover.
+- `homepage.showMoreLink` / `showMoreLinkDest` — no equivalent, so the home page no longer has a
+  "see all posts" link under the recent list. The `Blog` item in the main nav covers it, but it is
+  a real difference. With `recentCount = 5` and six posts, exactly one post is reachable only via
+  the nav.
+- `home.backgroundImage` renders, but **only visibly in light mode.** The image
+  (`assets/images/background.png`) is dark art, so in light mode it reads as a distinct dark hero
+  band and in dark mode it blends into the page background and effectively disappears. Worth
+  deciding on stage whether the home page wants a different layout in dark, a lighter image, or
+  no background at all.
+
+`blog/assets/images/background.svg` is not referenced by any config key and looks unused. Left in
+place rather than deleted — it pre-dates this work.
 
 `author.bio`, the homepage background image (`[params.home] backgroundImage`), `showViews` /
 `showLikes`, the `series` taxonomy and KaTeX maths are all **not** losses — v0.4.0 supports every

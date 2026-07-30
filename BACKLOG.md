@@ -4,6 +4,18 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
+### Finish the blog's Blowfish → Northlight migration (phases 4–6)
+- **What:** The theme swap itself is done and verified on `feat/blog-northlight-theme`. Three phases remain: harden `blog-smoke` so the stage gate can actually fail (it currently passes on any 2xx, which a visually broken theme would satisfy); the cutover itself (merge, soak on stage, hold the Kargo-opened prod PR, purge Cloudflare); and removing the Blowfish submodule once prod is trusted. Two content decisions are also open — the 13 raw `<img style="width:NN%">` tags that bypass the render hooks, and the palette, neither of which can be judged without seeing the new prose measure.
+- **Why deferred:** The swap was scoped as its own reviewable change. Hardening the smoke test is a separate PR on purpose, so its new assertions can be proven green against the current Blowfish build before the theme changes underneath them. The palette and image widths are visual judgements that need the stage environment.
+- **Unblock:** Work through phases 4–6 of `docs/northlight-migration.md`, which carries the ordered steps, the verification for each, and the two open decisions with the evidence gathered so far.
+- **Where:** `docs/northlight-migration.md`; `k8s/talos/infra/kargo-projects/blog.yaml` (the `blog-smoke` AnalysisTemplate); `blog/config/_default/params.toml`; `.gitmodules` and `blog/themes/blowfish`.
+
+### Upstream Northlight bug: heading level skips h1 → h3 on section indexes
+- **What:** `layouts/section.html:24` calls `{{ partial "card.html" . }}` with a bare page, so the partial's `level` falls back to `3` and every card title on a section index renders as an `h3` directly under the page `h1`. `layouts/term.html:15` gets this right by passing `(dict "ctx" . "level" 2)`. Found by running the theme's own `tests/structure.py` over the blog's built output — 69 pages, 1 problem. It only triggers when `list.cardView = true`, which the blog uses.
+- **Why deferred:** It is a defect in the theme repo, not in this one, and fixing it properly means a one-line template change plus a test case plus a release, all in `mortennordbye/northlight`. Not a cutover blocker: it is a pre-existing theme defect rather than a regression introduced by the migration.
+- **Unblock:** Fix `section.html` upstream to pass `"level" 2`, and enable `list.cardView` somewhere in that repo's `exampleSite` — otherwise the card branch is unreachable there and `make check` cannot catch a regression. Then cut v0.4.1 and bump the submodule pin here. Alternatively set `list.cardView = false` in `blog/config/_default/params.toml` to sidestep it at the cost of the card design.
+- **Where:** `blog/themes/northlight/layouts/section.html:24`, `blog/themes/northlight/layouts/term.html:15`, `blog/themes/northlight/layouts/_partials/card.html:9-10`.
+
 ### Remove the old `workout` app after logeverylift cutover
 - **What:** `logeverylift.com` was cut over from the old `workout` app to the renamed `logeverylift` app (PR #369, 2026-07-18). The `workout` namespace, Deployment, Postgres, and PVC are still present — both `workout-app` and `postgres` are scaled to 0 (ArgoCD ignores `/spec/replicas`; also declared in the manifests). The data is preserved on `postgres-pvc`; scale `postgres` back to 1 to re-access it. Nothing routes to it.
 - **Why deferred:** Kept as rollback until the owner has used `logeverylift.com` for a while and confirmed all data/history is intact. Deleting is one-way (prunes the namespace + PVC).
