@@ -17,8 +17,8 @@ Blowfish — most of the work below is deleting things, not adding them.
 | 2 — params rewrite | **Done** |
 | 3 — delete the overrides | **Done** |
 | 4 — harden the stage gate | **Done** |
-| 5 — cutover | Ready — merge to `main`, then hold the prod PR |
-| 6 — clean up | Not started |
+| 5 — cutover | **Done** — live on blog.nordbye.it since 2026-07-30 |
+| 6 — clean up | **Done** — Blowfish submodule removed |
 
 Phases 1–3 are one commit on `feat/blog-northlight-theme`. Two things went differently
 from this plan, both in the direction of less work:
@@ -301,6 +301,25 @@ Only after prod has been on Northlight long enough to trust it.
 - Consider a `git-submodules` manager entry in `renovate.json`. It currently manages neither
   submodules nor the Hugo version, so both Blowfish and the Hugo pin have been bumped by hand.
   Adding it turns future Northlight releases into reviewable PRs.
+
+---
+
+## Phase 6 found a regression in another app
+
+Removing the submodule meant grepping for what still referenced Blowfish, and one hit was not in
+the blog at all: `portfolio/src/lib/blog.ts` parses the blog's RSS to build its cards, and read
+covers out of `<media:content url="...">` — a Blowfish-ism. **Northlight emits a standard RSS
+`<enclosure>` and declares no media namespace**, so from the moment prod cut over, `cover` was
+`undefined` for every post and the portfolio's blog cards silently lost their images. Nothing
+threw and nothing logged; the field just stopped being populated.
+
+Measured against the live feed: the old pattern matched **0 of 6** items, the new one matches
+**6 of 6**. The fix matches either shape, so the feed's cover convention is no longer something
+that file has to be right about.
+
+Worth remembering as the general lesson: the blog's output is an API that another app in this
+repo consumes, and a theme swap changes it. Grepping for the old theme's name is what surfaced
+it — a build-and-look pass on the blog never would have.
 
 ---
 
