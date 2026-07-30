@@ -309,9 +309,14 @@ Only after prod has been on Northlight long enough to trust it.
 Removing the submodule meant grepping for what still referenced Blowfish, and one hit was not in
 the blog at all: `portfolio/src/lib/blog.ts` parses the blog's RSS to build its cards, and read
 covers out of `<media:content url="...">` — a Blowfish-ism. **Northlight emits a standard RSS
-`<enclosure>` and declares no media namespace**, so from the moment prod cut over, `cover` was
-`undefined` for every post and the portfolio's blog cards silently lost their images. Nothing
-threw and nothing logged; the field just stopped being populated.
+`<enclosure>` and declares no media namespace**, so `cover` became `undefined` for every post.
+Nothing threw and nothing logged; the field just stopped being populated.
+
+**The breakage was latent, not live.** `blog.ts` fetches the feed *at build time* with
+`revalidate: false`, so the covers are baked into static HTML — nordbye.it kept showing them
+because it was last built while Blowfish was still serving. It would have broken on the next
+portfolio deploy for any reason at all, with nothing linking the symptom to a blog theme change
+made days earlier. The fix landed in the same commit that triggered that rebuild.
 
 Measured against the live feed: the old pattern matched **0 of 6** items, the new one matches
 **6 of 6**. The fix matches either shape, so the feed's cover convention is no longer something
