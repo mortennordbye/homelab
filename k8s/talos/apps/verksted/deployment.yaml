@@ -39,26 +39,47 @@ spec:
           # The backend serves the built SPA at / — a plain 200 once it is up.
           # Agent auth (claude/codex/agy tokens) is configured interactively in
           # the pod terminal afterwards and persists under HOME=/data/home.
+          # Stays on / — serving the SPA is what "ready" means here. The timeout
+          # matters as much as the liveness one though: a failed readiness probe
+          # pulls the pod out of the Service, which drops every open terminal
+          # websocket. The default 1s was well inside normal NFS jitter.
           readinessProbe:
             httpGet:
               path: /
               port: http
             initialDelaySeconds: 15
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # Deliberately hard to trip: a restart kills the tmux server and with
+          # it every running agent session, so this must fire only for a backend
+          # that is genuinely wedged — never for one that is merely slow. Hence
+          # /api/health (a constant, no disk behind it, unlike / which reads
+          # index.html through the same libuv threadpool as the NFS volume), a
+          # timeout above the default 1s, and 3 minutes of failures before the
+          # kill. CPU throttling and NFS stalls both used to fit inside the old
+          # ~40s window.
           livenessProbe:
             httpGet:
-              path: /
+              path: /api/health
               port: http
             initialDelaySeconds: 30
-            periodSeconds: 20
-            failureThreshold: 3
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+          # Sized to what a working pod actually holds: agent CLIs, headless
+          # chromium per session, and whatever dev servers the agents start add
+          # up to several GiB. The old 512Mi request left the pod many times
+          # over its request and first in line for eviction; the old 2-core
+          # limit had it CFS-throttled ~7% of all scheduling periods, which is
+          # what stalled the health check.
           resources:
             requests:
-              cpu: 250m
-              memory: 512Mi
-            limits:
-              cpu: "2"
+              cpu: "1"
               memory: 4Gi
+            limits:
+              cpu: "6"
+              memory: 8Gi
           volumeMounts:
             - name: data
               mountPath: /data
