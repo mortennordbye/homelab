@@ -46,10 +46,16 @@ function parseItem(itemXml: string): BlogPost | null {
   const pub = pick(itemXml, "pubDate");
   const desc = pick(itemXml, "description");
   if (!title || !link) return null;
-  // Hugo's RSS template emits <media:content url="..."> for feature / cover /
-  // thumbnail images (see blog/themes/blowfish/layouts/_default/rss.xml).
-  const mediaMatch = itemXml.match(/<media:content[^>]*\burl="([^"]+)"/);
-  const cover = mediaMatch ? decode(mediaMatch[1]).trim() : undefined;
+  // The cover image, however the feed chooses to carry it. Blowfish emitted
+  // <media:content url="...">; Northlight emits a standard RSS <enclosure>, and
+  // declares no media namespace at all. Matching only the first meant every card
+  // silently lost its cover the moment the blog changed theme — nothing threw,
+  // `cover` just became undefined. Both are matched so the feed's shape is not a
+  // thing this file has to be right about.
+  const coverMatch =
+    itemXml.match(/<media:content[^>]*\burl="([^"]+)"/) ??
+    itemXml.match(/<enclosure[^>]*\burl="([^"]+)"/);
+  const cover = coverMatch ? decode(coverMatch[1]).trim() : undefined;
   return {
     title: decode(title).trim(),
     url: link.trim(),
