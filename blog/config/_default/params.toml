@@ -9,6 +9,12 @@ colorScheme = "slate"
 defaultAppearance = "dark"
 autoSwitchAppearance = true
 
+# Lets the accent reach section headings, the year rules on the post index, tag
+# chips, a card's hover border and the blockquote edge. New in theme 0.6.0 and off
+# by default there; on here because the arctic blue is the point of the retune
+# above and it was only showing up on links.
+accentEmphasis = true
+
 enableSearch = true
 enableCodeCopy = true
 
