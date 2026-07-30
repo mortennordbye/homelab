@@ -1,29 +1,18 @@
 # --- Stage 1: Build the Site ---
-# Using alpine and installing Hugo extended from GitHub releases
-FROM alpine:3.24 AS builder
+# The official multi-arch Hugo extended image, pinned to an exact version so the
+# build is reproducible. This is the same image and version the Northlight theme
+# is developed and tested against (HUGO_IMAGE in its Makefile), and the theme
+# declares min_version = 0.164.0.
+FROM ghcr.io/gohugoio/hugo:v0.164.0 AS builder
+
+# The image runs as uid 1000; the build writes to /src and /target, both owned by
+# root after COPY.
+USER root
 
 WORKDIR /src
 
-# Install Hugo extended, Node.js and other dependencies
-RUN apk add --no-cache \
-    wget \
-    ca-certificates \
-    nodejs \
-    npm \
-    libstdc++ \
-    gcompat \
-    && wget -O hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v0.161.1/hugo_extended_0.161.1_linux-amd64.tar.gz \
-    && tar -xzf hugo.tar.gz \
-    && mv hugo /usr/bin/hugo \
-    && rm hugo.tar.gz LICENSE README.md \
-    && chmod +x /usr/bin/hugo \
-    && hugo version
-
 # Copy source files including theme
 COPY . .
-
-# Install NPM dependencies if package.json exists
-RUN if [ -f package.json ]; then npm install; fi
 
 # Build the site
 # --minify: Compress HTML

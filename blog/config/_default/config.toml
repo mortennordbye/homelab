@@ -1,8 +1,8 @@
 baseURL = "https://blog.nordbye.it/"
-languageCode = "en"
+locale = "en"
 defaultContentLanguage = "en"
 title = "Morten Victor Nordbye"
-theme = "blowfish"
+theme = "northlight"
 
 enableRobotsTXT = true
 summaryLength = 30
@@ -13,11 +13,30 @@ pagerSize = 10
 [outputs]
 home = ["HTML", "RSS", "JSON"]
 
+# `series` is deliberately absent. The theme supports a series taxonomy and
+# renders series navigation when one is registered, but no post here uses it —
+# register it again the day one does.
 [taxonomies]
 tag = "tags"
-series = "series"
 
 [sitemap]
 changefreq = "daily"
 filename = "sitemap.xml"
 priority = 0.5
+
+# -- Related content --
+# Required for params.article.showRelated. Hugo's default indices cover
+# `keywords`, which this theme does not use, so related posts come back empty
+# without this.
+[related]
+includeNewer = true
+threshold = 80
+toLower = false
+
+[[related.indices]]
+name = "tags"
+weight = 100
+
+[[related.indices]]
+name = "date"
+weight = 10

@@ -112,9 +112,16 @@ spec:
         strictSemvers: true
         discoveryLimit: 20
 ---
-# Stage verification: a one-shot Job that curls the stage URL and fails on any
-# non-2xx. Retries cover the KEDA scale-from-zero cold start (the request also
-# wakes the stage deployment). -k skips TLS verify for the internal local cert.
+# Stage verification: a one-shot Job that exercises the stage site and fails on
+# any non-2xx. Retries on the first request cover the KEDA scale-from-zero cold
+# start (that request also wakes the stage deployment). -k skips TLS verify for
+# the internal local cert.
+#
+# This used to be a single curl of `/` that passed on any 2xx, which meant a
+# site rendering a blank or half-broken page still promoted to prod. nginx
+# serves whatever Hugo produced, so "200 on the home page" says almost nothing.
+# The checks below assert the things that actually break: which theme rendered
+# the page, that each page *kind* builds, and that the search index has content.
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -140,10 +147,51 @@ spec:
                     command:
                       - /bin/sh
                       - -c
-                      - >
-                        curl -fsSk --retry 10 --retry-delay 6 --retry-all-errors
-                        -o /dev/null -w '%{http_code}\n'
-                        https://blog-stage.local.bigd.no/
+                      - |
+                        set -eu
+                        BASE=https://blog-stage.local.bigd.no
+                        # First request carries the long retry: it wakes the
+                        # KEDA-scaled deployment from zero.
+                        curl -fsSk --retry 10 --retry-delay 6 --retry-all-errors \
+                          -o /tmp/home.html "$BASE/"
+
+                        # Which theme rendered this. baseof.html emits this block and
+                        # Blowfish emitted nothing like it, so it is the one cheap
+                        # assertion that the theme swap actually took effect.
+                        #
+                        # Grep the bare string, NOT id="northlight-strings" -- the
+                        # build runs --minify, which strips attribute quotes, so the
+                        # served markup reads id=northlight-strings. The quoted form
+                        # passes against an unminified local build and fails against
+                        # production, which is the worst way for a gate to be wrong.
+                        grep -q 'northlight-strings' /tmp/home.html
+
+                        # One request per page kind. A template that fails to build
+                        # takes its whole kind down while the home page stays fine.
+                        for p in /blog/ /tags/ /404.html /index.xml; do
+                          curl -fsSk --retry 3 --retry-delay 4 --retry-all-errors \
+                            -o /dev/null "$BASE$p"
+                        done
+
+                        # The search index. Missing or empty is a silent search
+                        # outage: the modal opens and simply finds nothing.
+                        curl -fsSk --retry 3 --retry-delay 4 --retry-all-errors \
+                          -o /tmp/index.json "$BASE/index.json"
+                        grep -q '"title"' /tmp/index.json
+
+                        # An article page, the most complex template. The slug comes
+                        # out of the index rather than being hardcoded, so renaming a
+                        # post cannot silently stop this being checked.
+                        # Split on commas first: the index is one minified line, so a
+                        # greedy match against it would return the last url, not the
+                        # first, and which post got checked would drift with ordering.
+                        POST=$(tr ',' '\n' < /tmp/index.json \
+                          | sed -n 's|.*"url":"\([^"]*\)".*|\1|p' | head -1)
+                        test -n "$POST"
+                        curl -fsSk --retry 3 --retry-delay 4 --retry-all-errors \
+                          -o /dev/null "$BASE$POST"
+
+                        echo "smoke OK (theme, 4 kinds, search index, $POST)"
 ---
 # prod verification: same one-shot HTTP check against the live public domain.
 # Confirmed the cluster can reach blog.nordbye.it (no NAT-hairpin issue).
