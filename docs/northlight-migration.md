@@ -245,6 +245,20 @@ Proven to fail, not just to pass. Against the real built site it reports
 marker renamed it stops at the grep and exits 1; against a copy with `/tags/` and `/index.json`
 removed it stops at the `/tags/` request and exits 22.
 
+**The first version of this gate was too slow for its own Job deadline.** `activeDeadlineSeconds`
+was 180, sized for the single curl it replaced. Eight requests with generous retries put the
+worst-case retry delay alone at 132s before a byte moves, on top of the KEDA cold start, so the
+Job hit its deadline and stage verification failed — which is why no prod PR opened for 0.0.88.
+The site was fine; the gate was not. Fixed by raising the deadline to 300s, bounding every
+request with `--max-time`, and cutting the follow-up retries from 3x4s to 2x3s, since the
+deployment is already awake after the first request and long retries there buy nothing. Worst
+case is now 78s of retry delay inside a 300s budget.
+
+The requests that get grepped also send `Accept-Encoding: identity`. The stage route runs through
+a Traefik compress middleware; curl sends no `Accept-Encoding` by default so it should never have
+been compressed, but a `grep` against a gzipped body fails in a way that looks like a missing
+string rather than an encoding problem, and that is an expensive hour for whoever hits it.
+
 **`blog-prod-smoke` was deliberately left as the single one-line curl.** The same assertions would
 be just as valuable there, but prod is served through Cloudflare while stage goes straight to
 Traefik, so the response reaching the check may not be byte-identical to what nginx emitted —
