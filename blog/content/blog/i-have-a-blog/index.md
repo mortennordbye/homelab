@@ -14,16 +14,16 @@ _If you find this useful or just appreciate the over-engineering, drop a ⭐ on 
 
 ## The Stack
 
-The blog runs on Hugo with the Blowfish theme, gets shoved into a Docker container, deploys via GitHub Actions to my Talos Kubernetes cluster, and is babysat by ArgoCD. Static files served by Nginx. Simple? Yes. Over-engineered? Absolutely. That's the point.
+The blog runs on Hugo with the Northlight theme, gets shoved into a Docker container, deploys via GitHub Actions to my Talos Kubernetes cluster, and is babysat by ArgoCD. Static files served by Nginx. Simple? Yes. Over-engineered? Absolutely. That's the point.
 
 All the code referenced in this post is available in my [Homelab repository](https://github.com/mortennordbye/Homelab). You can clone it and adapt it for your own setup.
 
 ## Why Hugo? (Briefly)
 
-It's fast. It builds in milliseconds and outputs plain HTML. I added Blowfish as a git submodule because I have trust issues with `npm` and I like knowing exactly which commit broke my blog.
+It's fast. It builds in milliseconds and outputs plain HTML. I added the theme as a git submodule because I have trust issues with `npm` and I like knowing exactly which commit broke my blog.
 
 ```bash
-git submodule add https://github.com/nunocoracao/blowfish.git blog/themes/blowfish
+git submodule add https://github.com/mortennordbye/northlight.git blog/themes/northlight
 ```
 
 But you're not here for static site generators. You're here for the pipelines.

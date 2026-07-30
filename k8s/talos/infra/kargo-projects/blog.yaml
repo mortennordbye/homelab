@@ -157,7 +157,7 @@ spec:
                           -o /tmp/home.html "$BASE/"
 
                         # Which theme rendered this. baseof.html emits this block and
-                        # Blowfish emitted nothing like it, so it is the one cheap
+                        # no other theme emits anything like it, so it is the one cheap
                         # assertion that the theme swap actually took effect.
                         #
                         # Grep the bare string, NOT id="northlight-strings" -- the
@@ -212,7 +212,7 @@ spec:
         job:
           spec:
             backoffLimit: 2
-            activeDeadlineSeconds: 180
+            activeDeadlineSeconds: 240
             template:
               spec:
                 restartPolicy: Never
@@ -222,10 +222,42 @@ spec:
                     command:
                       - /bin/sh
                       - -c
-                      - >
-                        curl -fsSk --retry 5 --retry-delay 6 --retry-all-errors
-                        -o /dev/null -w '%{http_code}\n'
-                        https://blog.nordbye.it/
+                      - |
+                        set -eu
+                        BASE=https://blog.nordbye.it
+                        # Prod runs minReplicaCount 1, so there is no
+                        # scale-from-zero wait to absorb here and the retries
+                        # only have to cover a rollout or a blip.
+                        curl -fsSk --retry 3 --retry-delay 3 --retry-all-errors \
+                          --max-time 20 -H 'Accept-Encoding: identity' \
+                          -o /tmp/home.html "$BASE/"
+
+                        # Which theme rendered this. Measured against the live
+                        # site through Cloudflare before being made a gate: the
+                        # marker survives identity, default and --compressed
+                        # requests alike, so the edge is not rewriting the
+                        # markup and this is safe to assert here as well as on
+                        # stage. Bare string, not id="...": --minify strips the
+                        # attribute quotes.
+                        grep -q 'northlight-strings' /tmp/home.html
+
+                        for p in /blog/ /tags/ /404.html /index.xml; do
+                          curl -fsSk --retry 3 --retry-delay 3 --retry-all-errors \
+                            --max-time 20 -o /dev/null "$BASE$p"
+                        done
+
+                        curl -fsSk --retry 3 --retry-delay 3 --retry-all-errors \
+                          --max-time 20 -H 'Accept-Encoding: identity' \
+                          -o /tmp/index.json "$BASE/index.json"
+                        grep -q '"title"' /tmp/index.json
+
+                        POST=$(tr ',' '\n' < /tmp/index.json \
+                          | sed -n 's|.*"url":"\([^"]*\)".*|\1|p' | head -1)
+                        test -n "$POST"
+                        curl -fsSk --retry 3 --retry-delay 3 --retry-all-errors \
+                          --max-time 20 -o /dev/null "$BASE$POST"
+
+                        echo "prod smoke OK (theme, 4 kinds, search index, $POST)"
 ---
 # stage: receives new Freight directly from the Warehouse (auto-promoted per
 # ProjectConfig), then verifies with the HTTP smoke test. Only Freight that
