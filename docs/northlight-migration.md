@@ -1,7 +1,7 @@
 # Migrating blog.nordbye.it from Blowfish to Northlight
 
 Ordered plan for replacing the Blowfish theme on `blog/` with
-[Northlight](https://github.com/mortennordbye/northlight), pinned at **v0.4.0**.
+[Northlight](https://github.com/mortennordbye/northlight), pinned at **v0.4.1**.
 
 Northlight exists specifically to replace this blog's theme. `docs/SPEC.md` in that repo is an
 audit of what this site actually uses, so the target is a deliberately *smaller* surface than
@@ -16,8 +16,8 @@ Blowfish — most of the work below is deleting things, not adding them.
 | 1 — theme swap, mechanical | **Done** |
 | 2 — params rewrite | **Done** |
 | 3 — delete the overrides | **Done** |
-| 4 — harden the stage gate | Not started |
-| 5 — cutover | Not started |
+| 4 — harden the stage gate | **Done** |
+| 5 — cutover | Ready — merge to `main`, then hold the prod PR |
 | 6 — clean up | Not started |
 
 Phases 1–3 are one commit on `feat/blog-northlight-theme`. Two things went differently
@@ -37,16 +37,17 @@ from this plan, both in the direction of less work:
 
 | Decision | Choice | Why |
 |---|---|---|
-| Theme version | Pin **v0.4.0** | Already released. Nothing the blog needs is missing — see *Why v0.4.0 is enough*. |
+| Theme version | Pin **v0.4.1** | Was v0.4.0; bumped because the heading-level bug found during this migration was fixed and released as v0.4.1. |
 | Staging | Reuse existing `blog-stage` | It already exists and already auto-promotes. No new infra. |
 | Prod gate | Hold the Kargo-opened PR | The auto-opened prod PR is the human gate; do not merge it until phase 5 verification is done. |
 
-### Why v0.4.0 is enough
+### Why this version is enough
 
-`v0.4.0..origin/main` is a single test-only commit that does not touch `exampleSite/hugo.toml`, so
-the tag is effectively current and its parameter surface is the released surface.
+The pin started at v0.4.0 and moved to v0.4.1 when the heading-level bug found during this
+migration was fixed and released. v0.4.1 differs from v0.4.0 by that one-line template fix and
+its test, so everything below about the v0.4.0 parameter surface still holds.
 
-v0.4.0 is also much larger than the migration needs. It ships **38 shortcodes** — including
+v0.4.0 was already much larger than the migration needs. It ships **38 shortcodes** — including
 `mermaid`, `figure`, `github`, `alert`, `chart` and `typeit`, i.e. the Blowfish surface — plus
 KaTeX maths, series navigation, ten home-page layouts, RTL support and Firebase-backed view/like
 counters. This blog uses none of it, which means the migration has no feature cliff to negotiate:
@@ -211,9 +212,27 @@ passes that.** Since phase 5 leans on stage as the gate, the assertions have to 
 
 Keep the existing `--retry 10 --retry-delay 6`, which covers the KEDA scale-from-zero cold start.
 
-Do this as its own PR against the current Blowfish site *except* the `northlight-strings` grep, so
-the URL and index assertions are proven green on a known-good build before the theme changes
-underneath them.
+**Done**, in the same PR as the swap rather than a separate one — the assertions were verified by
+running the script directly against built output, which turned out to be stronger evidence than
+landing it against Blowfish first would have been.
+
+The script curls `/` with the long retry (which also wakes the deployment), greps for
+`northlight-strings`, requests `/blog/`, `/tags/`, `/404.html` and `/index.xml`, asserts
+`/index.json` contains `"title"`, and finally requests an article page whose slug it *derives from
+the index* rather than hardcoding — so renaming a post cannot silently stop that check running.
+`set -eu`, so any failure fails the Job.
+
+Proven to fail, not just to pass. Against the real built site it reports
+`smoke OK (theme, 4 kinds, search index, /blog/lawless-waf/)`. Against a copy with the theme
+marker renamed it stops at the grep and exits 1; against a copy with `/tags/` and `/index.json`
+removed it stops at the `/tags/` request and exits 22.
+
+**`blog-prod-smoke` was deliberately left as the single one-line curl.** The same assertions would
+be just as valuable there, but prod is served through Cloudflare while stage goes straight to
+Traefik, so the response reaching the check may not be byte-identical to what nginx emitted —
+edge minification or Rocket Loader would break a `grep` for markup, and a gate that fails for a
+reason unrelated to the deploy is worse than the weak one it replaced. Hardening it means
+confirming each assertion against the real prod response first. Recorded in `BACKLOG.md`.
 
 ---
 
@@ -255,7 +274,12 @@ Only after prod has been on Northlight long enough to trust it.
 
 ## Open items
 
-### Upstream: heading level skips h1 → h3 on `/blog/`
+### Fixed upstream: heading level skipped h1 → h3 on `/blog/`
+
+**Resolved in Northlight v0.4.1** ([#28](https://github.com/mortennordbye/northlight/pull/28)).
+The pin here moved from v0.4.0 to v0.4.1, the blog was rebuilt, and the structural sweep now
+reports **69 pages, 0 problems, 0 dead internal links** — down from 1. `/blog/` renders
+`h1` → `h2 class=card-title`. The record of what it was follows.
 
 Found by running the theme's own `tests/structure.py` over the built output: 69 pages, 0 dead
 internal links, **1 problem** — `blog/index.html: heading level jumps h1 to h3`.
@@ -273,10 +297,11 @@ unreachable there and `make check` stays green — a coverage gap in the theme's
 upstream fix should also turn `cardView` on somewhere in `exampleSite` or the test cannot catch
 a regression.
 
-**Options:** fix upstream and bump the pin (correct, needs a v0.4.1); or set
-`list.cardView = false` here, which drops to the list view and avoids it at the cost of the card
-design. Not a cutover blocker either way — it is a pre-existing theme defect, not a regression
-introduced by this migration.
+The fix was one line: `section.html` now passes `(dict "ctx" . "level" 2)` to `card.html`,
+matching what `term.html` already did. The theme's suite gained a source assertion for it, which
+was confirmed to fail on the unfixed template before being kept. The underlying gap — that no page
+in the theme's own `exampleSite` sets `list.cardView`, so the card branch of `section.html` is
+never built by `make check` — is recorded in that repo's `BACKLOG.md`.
 
 ### Settled: giscus `data-strict` costs nothing
 
