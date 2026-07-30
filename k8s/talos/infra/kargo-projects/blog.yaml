@@ -137,7 +137,7 @@ spec:
         job:
           spec:
             backoffLimit: 2
-            activeDeadlineSeconds: 180
+            activeDeadlineSeconds: 300
             template:
               spec:
                 restartPolicy: Never
@@ -153,6 +153,7 @@ spec:
                         # First request carries the long retry: it wakes the
                         # KEDA-scaled deployment from zero.
                         curl -fsSk --retry 10 --retry-delay 6 --retry-all-errors \
+                          --max-time 30 -H 'Accept-Encoding: identity' \
                           -o /tmp/home.html "$BASE/"
 
                         # Which theme rendered this. baseof.html emits this block and
@@ -169,13 +170,14 @@ spec:
                         # One request per page kind. A template that fails to build
                         # takes its whole kind down while the home page stays fine.
                         for p in /blog/ /tags/ /404.html /index.xml; do
-                          curl -fsSk --retry 3 --retry-delay 4 --retry-all-errors \
-                            -o /dev/null "$BASE$p"
+                          curl -fsSk --retry 2 --retry-delay 3 --retry-all-errors \
+                            --max-time 20 -o /dev/null "$BASE$p"
                         done
 
                         # The search index. Missing or empty is a silent search
                         # outage: the modal opens and simply finds nothing.
-                        curl -fsSk --retry 3 --retry-delay 4 --retry-all-errors \
+                        curl -fsSk --retry 2 --retry-delay 3 --retry-all-errors \
+                          --max-time 20 -H 'Accept-Encoding: identity' \
                           -o /tmp/index.json "$BASE/index.json"
                         grep -q '"title"' /tmp/index.json
 
@@ -188,8 +190,8 @@ spec:
                         POST=$(tr ',' '\n' < /tmp/index.json \
                           | sed -n 's|.*"url":"\([^"]*\)".*|\1|p' | head -1)
                         test -n "$POST"
-                        curl -fsSk --retry 3 --retry-delay 4 --retry-all-errors \
-                          -o /dev/null "$BASE$POST"
+                        curl -fsSk --retry 2 --retry-delay 3 --retry-all-errors \
+                          --max-time 20 -o /dev/null "$BASE$POST"
 
                         echo "smoke OK (theme, 4 kinds, search index, $POST)"
 ---
