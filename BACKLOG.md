@@ -4,12 +4,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### `blog-prod-smoke` is still a bare 2xx check
-- **What:** `blog-smoke` (stage) now asserts which theme rendered the page, that each page kind builds, that the search index has content, and that an article page resolves. `blog-prod-smoke` was left as the original single `curl` of `/`, so prod verification still passes on any 2xx — including a blank or half-rendered page.
-- **Why deferred:** Prod is served through Cloudflare; stage goes straight to Traefik. The response reaching the check may not be byte-identical to what nginx emitted, so a `grep` for markup could fail for edge reasons (minification, Rocket Loader) rather than deploy reasons. A gate that fails for the wrong reason is worse than the weak one it replaces, and inventing a prod verification outage during a theme cutover is the wrong time to find out.
-- **Unblock:** Curl `https://blog.nordbye.it/` and `/index.json` from inside the cluster and diff against the origin response. Whichever assertions survive Cloudflare unchanged can be copied over from `blog-smoke`; the per-kind 200 checks are the safest subset and could go first on their own.
-- **Where:** `k8s/talos/infra/kargo-projects/blog.yaml` — the `blog-prod-smoke` AnalysisTemplate, and `blog-smoke` above it as the reference.
-
 ### Remove the old `workout` app after logeverylift cutover
 - **What:** `logeverylift.com` was cut over from the old `workout` app to the renamed `logeverylift` app (PR #369, 2026-07-18). The `workout` namespace, Deployment, Postgres, and PVC are still present — both `workout-app` and `postgres` are scaled to 0 (ArgoCD ignores `/spec/replicas`; also declared in the manifests). The data is preserved on `postgres-pvc`; scale `postgres` back to 1 to re-access it. Nothing routes to it.
 - **Why deferred:** Kept as rollback until the owner has used `logeverylift.com` for a while and confirmed all data/history is intact. Deleting is one-way (prunes the namespace + PVC).

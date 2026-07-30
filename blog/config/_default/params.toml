@@ -1,7 +1,7 @@
 description = "Kubernetes, cloud infrastructure and homelab engineering from a Talos cluster I actually run. Practical guides on observability, networking and GitOps."
 
 # periwinkle | sage | clay | plum | slate | rose
-# Nothing here corresponds to Blowfish's "github" scheme; compare these on stage.
+# periwinkle was picked as the theme default; the others are worth comparing.
 colorScheme = "periwinkle"
 defaultAppearance = "dark"
 autoSwitchAppearance = true
