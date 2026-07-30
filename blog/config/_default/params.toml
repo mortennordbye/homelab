@@ -1,10 +1,19 @@
 description = "Kubernetes, cloud infrastructure and homelab engineering from a Talos cluster I actually run. Practical guides on observability, networking and GitOps."
 
 # periwinkle | sage | clay | plum | slate | rose
-# periwinkle was picked as the theme default; the others are worth comparing.
-colorScheme = "periwinkle"
+# slate is the theme's blue, retuned to the portfolio's arctic blue in
+# assets/css/custom.css so the two sites read as one brand. Dropping that file
+# leaves the site blue, just muted — which is why slate is the base rather than
+# the periwinkle default.
+colorScheme = "slate"
 defaultAppearance = "dark"
 autoSwitchAppearance = true
+
+# Lets the accent reach section headings, the year rules on the post index, tag
+# chips, a card's hover border and the blockquote edge. New in theme 0.6.0 and off
+# by default there; on here because the arctic blue is the point of the retune
+# above and it was only showing up on links.
+accentEmphasis = true
 
 enableSearch = true
 enableCodeCopy = true
@@ -31,8 +40,12 @@ links = [
 layout = "basic"
 
 [home]
-layout = "background"
-backgroundImage = "images/background.png"
+# The `background` layout pins its scrim and text to light-on-dark in both colour
+# modes, because the image behind them does not invert when the palette does. With
+# a near-black backdrop that reads as a solid black band on a light page, so this
+# site takes the ordinary intro instead. `backgroundImage` is gone with it — only
+# the background layout reads it.
+layout = "stack"
 recentCount = 5
 
 [article]
@@ -62,6 +75,10 @@ showTermCount = true
 cardView = false
 
 [footer]
+# The theme cannot default this to its own repository — that URL carries its
+# author's name, and no file inside the theme is allowed to. Unset, the theme name
+# in the attribution line renders as plain text.
+themeURL = "https://github.com/mortennordbye/northlight"
 showMenu = true
 showCopyright = true
 showThemeAttribution = true
