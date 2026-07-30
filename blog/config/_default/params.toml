@@ -1,7 +1,8 @@
 description = "Kubernetes, cloud infrastructure and homelab engineering from a Talos cluster I actually run. Practical guides on observability, networking and GitOps."
-env = "production"
 
-colorScheme = "github"
+# periwinkle | sage | clay | plum | slate | rose
+# Nothing here corresponds to Blowfish's "github" scheme; compare these on stage.
+colorScheme = "periwinkle"
 defaultAppearance = "dark"
 autoSwitchAppearance = true
 
@@ -13,8 +14,6 @@ mainSections = ["blog"]
 disableImageOptimization = false
 defaultBackgroundImage = "images/background.png"
 
-highlightCurrentMenuArea = true
-smartTOC = true
 smartTOCHideUnfocusedChildren = true
 
 [author]
@@ -31,77 +30,36 @@ links = [
 [header]
 layout = "basic"
 
-[homepage]
+[home]
 layout = "background"
-homepageImage = "images/background.png"
-showRecent = true
-showRecentItems = 5
-showMoreLink = true
-showMoreLinkDest = "/blog"
-cardView = false
-cardViewScreenWidth = false
-layoutBackgroundBlur = false
+backgroundImage = "images/background.png"
+recentCount = 5
 
 [article]
 showDate = true
-showViews = false
-showLikes = false
 showDateUpdated = false
 showAuthor = true
 showHero = true
 heroStyle = "basic"
 layoutBackgroundBlur = true
 showBreadcrumbs = true
-showDraftLabel = true
 showEdit = false
-showSummary = true
 showTableOfContents = true
 showTaxonomies = true
 showAuthorsBadges = false
 showWordCount = true
 showComments = true
-showRelatedContent = true
-relatedContentLimit = 3
+showRelated = true
+relatedLimit = 3
 sharingLinks = ["linkedin", "reddit"]
 
 [list]
-showHero = true
-heroStyle = "background"
-layoutBackgroundBlur = true
-showBreadcrumbs = false
-showSummary = false
-showViews = false
-showLikes = false
-showTableOfContents = false
-showCards = true
 groupByYear = true
 cardView = true
-cardViewScreenWidth = false
-constrainItemsWidth = false
-
-[sitemap]
-excludedKinds = ["taxonomy", "term"]
 
 [taxonomy]
 showTermCount = true
-showHero = true
-heroStyle = "background"
-showBreadcrumbs = false
-showViews = false
-showLikes = false
-showTableOfContents = false
 cardView = false
-
-[term]
-showHero = true
-heroStyle = "background"
-showBreadcrumbs = false
-showViews = false
-showLikes = false
-showTableOfContents = true
-groupByYear = false
-cardView = true
-cardViewScreenWidth = false
 
 [footer]
 showMenu = true
@@ -110,18 +68,19 @@ showThemeAttribution = true
 showAppearanceSwitcher = true
 showScrollToTop = true
 
-[comments]
-enabled = true
+# Cloudflare Web Analytics. This token was hardcoded in a local
+# extend-head.html override; the theme reads it from config, so the override is
+# gone and the token lives with the rest of the configuration.
+[analytics.cloudflare]
+token = "47962423c7a84c78a8a932edaf8844cf"
 
+# The theme fixes data-strict, data-emit-metadata, data-input-position and
+# data-theme itself — the last so the widget follows this site's appearance
+# toggle rather than only the OS — so only these five keys are read.
 [comments.giscus]
 repo = "mortennordbye/homelab"
 repoId = "R_kgDOOEXL5g"
 category = "Announcements"
 categoryId = "DIC_kwDOOEXL5s4C06qE"
 mapping = "pathname"
-strict = false
 reactionsEnabled = true
-emitMetadata = false
-inputPosition = "top"
-theme = "preferred_color_scheme"
-lang = "en"
