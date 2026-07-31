@@ -1,0 +1,33 @@
+# Public gateway, not private: Meta's servers have to reach /webhook and fetch
+# cover images from /covers, and they need a publicly valid certificate to do
+# it. cert-manager and external-dns both pick the hostname up from here.
+#
+# Only Meta and the Mac agent ever call this host, so the name is not a
+# doxxing surface. The admin UI (PLAN.md section F) will sit behind Authentik
+# forward-auth on this same route when it lands.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: reelsmith
+  namespace: reelsmith
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: traefik-gateway-public
+      namespace: traefik
+  hostnames:
+    - "gate.nordbye.it"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: reelsmith-gateway
+          port: 8000
+          weight: 1

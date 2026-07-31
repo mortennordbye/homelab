@@ -1,0 +1,43 @@
+# Ingress from Traefik only, egress to Meta only.
+#
+# The egress half is the interesting one. This service holds Instagram tokens
+# with publishing and messaging rights, and it is reachable from the internet
+# because Meta has to POST to it. Pinning egress to graph.instagram.com means a
+# compromise of the process cannot turn those tokens into calls to anywhere
+# else.
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: reelsmith-gateway-policy
+  namespace: reelsmith
+spec:
+  endpointSelector:
+    matchLabels:
+      app: reelsmith-gateway
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+    # kubelet probes and the health checker.
+    - fromEntities:
+        - host
+        - health
+  egress:
+    # DNS to CoreDNS. Required for toFQDNs below to resolve.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports: [{ port: "53", protocol: ANY }]
+    # The Meta Graph API, which is every outbound call this service makes:
+    # private replies, DMs, follower checks, comment polls, token refreshes.
+    - toFQDNs:
+        - matchName: "graph.instagram.com"
+      toPorts:
+        - ports: [{ port: "443", protocol: TCP }]
