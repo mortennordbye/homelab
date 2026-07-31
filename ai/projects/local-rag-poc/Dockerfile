@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.25
+# syntax=docker/dockerfile:1.26
 #
 # Local Hybrid-Retrieval RAG POC — container image.
 #
