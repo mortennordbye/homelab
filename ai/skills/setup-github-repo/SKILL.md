@@ -168,6 +168,13 @@ Ask only what cannot be decided automatically:
    tag-protection ruleset, Phase 6) if yes. Continuously deployed apps (GitOps,
    sha-tagged images, `"private": true` packages) get perpetual meaningless version-bump
    PRs from release automation; skip it for those.
+   **If yes, follow up: should releases carry prebuilt binaries?** Default yes for
+   anything a user installs and runs directly (a CLI, a desktop app); no for libraries
+   that install from a registry, and no for services whose artifact is the container
+   image. Answering yes adds `release.yml` (Phase 3) and changes
+   `can_approve_pull_request_reviews` in Phase 5. Answering no is fine, but then say
+   plainly in the summary that releases are source-only — a release page with no assets
+   otherwise looks like a bug.
 8. **Description / homepage / topics** — propose inferred values, confirm.
 9. **Add an `AGENTS.md` agent guide?** (both profiles) — a short root file that hands
    coding agents (Claude Code and others) the repo's real build/test/lint commands,
@@ -630,8 +637,45 @@ jobs:
   strict mode guarantees this (validated PR titles become the squash commits), but the
   light profile has no title check and allows direct pushes — so when light + releases
   are combined, tell the user their versioning depends on them keeping the convention
-  by hand, and make sure it is documented in the README. Set `release-type`
-  per stack (`simple`, `node`, `go`, `python`, ...):
+  by hand, and make sure it is documented in the README.
+
+  **Use the manifest form, not inline `with:` config.** A `release-type:` passed as a
+  workflow input cannot express per-package settings, and moving to it later means
+  rewriting the workflow. Committing `release-please-config.json` plus
+  `.release-please-manifest.json` costs two small files and is what every non-trivial
+  repo ends up needing. Set `release-type` per stack — `rust` bumps `Cargo.toml` *and*
+  `Cargo.lock`, `node` bumps `package.json`, `simple` bumps only the manifest; `go`,
+  `python`, `terraform-module` likewise. Seed the manifest with the version already in
+  the manifest file of the project (`Cargo.toml`, `package.json`, ...), not `0.0.0`, or
+  the first release PR proposes a version that moves backwards.
+
+  `release-please-config.json`:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "rust",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false
+    }
+  }
+}
+```
+
+  `.release-please-manifest.json` (match the project's current version):
+
+```json
+{
+  ".": "0.1.0"
+}
+```
+
+  `bump-minor-pre-major` matters pre-1.0: without it a `feat:` on a `0.x` project bumps
+  to `1.0.0` on the first feature, which is almost never what the author wants.
 
 ```yaml
 name: Release Please
@@ -640,18 +684,129 @@ on:
   push:
     branches: [main]
 
+# Read-only at the top level, write scoped to the one job that needs it. A
+# workflow-wide write token is handed to every job and every step in it, including any
+# action added later; Scorecard's Token-Permissions check scores exactly this.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   release:
+    name: Release PR
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
-      - uses: googleapis/release-please-action@v4
-        with:
-          release-type: simple
+      # SHA-pinned: this action takes a write token, so a moved tag would be a supply
+      # chain problem rather than an inconvenience. Dependabot keeps the pin current.
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
 ```
+
+  **Strict profile only — the release PR and the PR-title check.** A pull request opened
+  with `GITHUB_TOKEN` does not trigger `pull_request_target` workflows. If `pr-title.yml`
+  runs on `pull_request_target` *and* the Conventional Commits check is a required status
+  check, every release-please PR sits with that check permanently pending and can only be
+  merged by bypassing the ruleset. Run `pr-title.yml` on `pull_request` instead, where it
+  reports normally. No PAT, no GitHub App and no bypass actor are needed.
+
+  **Verify after the first run.** `feat:` and `fix:` produce a release PR; `docs:`,
+  `chore:` and `ci:` on their own produce nothing, and neither do commits that are not
+  Conventional at all. A green Release Please run with no PR is the correct outcome in
+  that case, not a failure — but say so in the summary, or it reads as broken.
+
+- **`.github/workflows/release.yml`** — only when releases were chosen *and* the project
+  produces a runnable artifact users install (a CLI, a desktop binary, a static site
+  bundle). Skip it for libraries, which install from the registry, and for services, which
+  ship the container image the Docker job already publishes.
+
+  Without this, release-please cuts a tag and publishes a release page with **no
+  artifacts**, and "install" means "build from source" — which is easy to miss, because
+  every workflow is green. If you generate release-please, say explicitly in the summary
+  whether binaries are attached or not.
+
+  **The trigger is the part that goes wrong.** `on: release: types: [published]` and
+  `on: push: tags: ['v*']` both look right and both silently never fire, because
+  release-please creates the tag and the release with `GITHUB_TOKEN`, and **GitHub does
+  not start new workflow runs from events raised by that token.** There is no error; the
+  workflow simply never appears. Make the build a *reusable workflow that release-please
+  calls*, so it runs inside the same run where the restriction does not apply:
+
+```yaml
+# in release-please.yml
+jobs:
+  release:
+    # ...
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@<sha> # v5
+        id: release            # `id:` is required for the outputs above to resolve
+
+  binaries:
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.release.outputs.tag_name }}
+```
+
+```yaml
+# release.yml — callable, plus a manual entry point for backfilling an existing tag
+name: Release Binaries
+on:
+  workflow_call:
+    inputs:
+      tag: { required: true, type: string }
+  workflow_dispatch:
+    inputs:
+      tag: { required: true, type: string }
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix: # native runners avoid cross-toolchain setup; ubuntu-24.04-arm is GA
+        include:
+          - { runner: ubuntu-latest,   target: x86_64-unknown-linux-gnu,  arch: x86_64 }
+          - { runner: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu, arch: aarch64 }
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+      # Packaging helpers come from the workflow's ref, not the tag: backfilling assets
+      # onto a tag cut before a helper script existed fails on a missing file otherwise.
+      - uses: actions/checkout@v7
+        with:
+          path: .workflow-ref
+      # ... build, then package into <name>.tar.gz + .sha256 ...
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.tag }}" <assets> --clobber
+```
+
+  **Use `gh release upload`, not `softprops/action-gh-release`.** That action resolves the
+  release from `github.ref`, which is a *branch* when the workflow is called or dispatched
+  rather than triggered by a tag. It finds the release by `tag_name`, then 403s updating
+  it under `refs/heads/main`, with `contents: write` correctly set — an error that reads
+  like a permissions problem and is not one. `gh` takes the tag explicitly and drops a
+  third-party action from the release path.
+
+  **Prefer one fat/universal artifact per OS over per-architecture downloads** where the
+  toolchain supports it (macOS `lipo -create` of two Rust targets, .NET single-file, Go
+  with per-arch builds combined by the packager). Users should not have to know their own
+  CPU. Verify the combined artifact still runs, and that any embedded metadata section
+  survived the merge.
 
 - **`.github/dependabot.yml`** — always include `github-actions` (keeps the pinned
   actions in these very workflows current), plus each detected ecosystem. Scan
@@ -704,7 +859,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/dependency-review-action@v4
+      # NOT `@v4`: this action publishes no moving major tag, so the usual short form
+      # fails at action resolution before doing any work. Pin the full release and let
+      # the pin-resolution check below confirm it still exists.
+      - uses: actions/dependency-review-action@v5.0.0
 ```
 
 - **`.github/workflows/dependabot-automerge.yml`** (strict profile, opt-in from Phase 1)
@@ -893,18 +1051,30 @@ Before committing, validate the generated workflows:
 
 - **`actionlint`** if available — but note it validates *syntax*, not whether a pinned tag
   exists. It will pass a workflow that references a non-existent action version.
-- **Confirm every pinned third-party action tag actually resolves**, because hard-coded
-  versions in this skill go stale (the Trivy pin above is a known offender — its tags are
-  `v`-prefixed and move often). For each non-`actions/*` pin, check the ref and bump to the
-  latest release if it 404s:
+- **Confirm every pinned action tag resolves *and* is current.** Hard-coded versions in
+  this skill go stale in two distinct ways, and checking only the first is not enough:
+
+  1. **The tag does not exist.** `actions/dependency-review-action@v4` is the standing
+     example — that action publishes no moving major tag, so the short form was never
+     valid. A workflow pinned to a missing tag fails at action resolution on its first
+     run, before doing any work.
+  2. **The tag exists but is majors behind.** `actions/checkout@v5` resolves fine while
+     v7 is current. Nothing fails, so the existence check above passes it — and
+     Dependabot opens a bump PR minutes after the first push, which makes the freshly
+     generated scaffold look stale on arrival.
+
+  Check both for every pin, `actions/*` included — the first-party ones move too:
 
   ```bash
-  gh api /repos/aquasecurity/trivy-action/git/ref/tags/v0.36.0 >/dev/null 2>&1 \
-    || gh api /repos/aquasecurity/trivy-action/releases/latest -q .tag_name   # use this instead
+  repo=actions/checkout; tag=v5
+  gh api "/repos/$repo/git/matching-refs/tags/$tag" -q '.[].ref' | grep -qx "refs/tags/$tag" \
+    || echo "$repo@$tag does not exist"
+  gh api "/repos/$repo/releases/latest" -q .tag_name   # compare majors; bump if behind
   ```
 
-  A workflow pinned to a missing tag fails at action resolution on its first run, before
-  doing any work — Phase 7 catches it only if it checks that workflow's run (it does).
+  Use `matching-refs`, not `git/ref/tags/<tag>`: the latter returns prefix matches, so it
+  reports success for `v4` purely because `v4.8.0` exists. Prefer a floating major tag
+  when the action publishes one, and the full `vX.Y.Z` when it does not.
 
 ## Phase 4 — Commit
 
@@ -997,6 +1167,43 @@ gh api -X PATCH /repos/{owner}/{repo}/code-scanning/default-setup -f state=confi
 # Actions token read-only by default; workflows request write per-job via permissions:
 gh api -X PUT /repos/{owner}/{repo}/actions/permissions/workflow \
   -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false
+
+# ...BUT if release-please was chosen in Phase 1, that flag must be `true` instead:
+#   gh api -X PUT /repos/{owner}/{repo}/actions/permissions/workflow \
+#     -f default_workflow_permissions=read -F can_approve_pull_request_reviews=true
+# See the note below — with `false`, release-please cannot open its release PR at all.
+```
+
+**`can_approve_pull_request_reviews` and release automation conflict — resolve it here,
+not by debugging a red run later.** That single flag governs whether Actions may *create
+or approve* pull requests, not just approve them. Setting it `false` while also installing
+release-please guarantees a failure the first time a releasable commit lands:
+
+```
+release-please failed: GitHub Actions is not permitted to create or approve pull requests.
+```
+
+The branch gets created and the run fails at the very last step, so it reads like a token
+scope problem rather than a repo setting. Rules:
+
+- **release-please (or any bot that opens PRs) chosen → set it `true`.**
+- **No PR-opening automation → keep it `false`.**
+- `default_workflow_permissions=read` stays `read` in both cases; that part is unrelated.
+
+The approve half of the flag is the security-relevant one. On a solo/light repo nothing
+requires review, so it costs nothing. On a strict repo with required reviews, note in the
+summary that Actions can now approve as well as create — if that is unacceptable,
+release-please needs a PAT or a GitHub App instead, and that trade belongs to the user.
+
+**Expect bot-authored PRs to need run approval.** Checks on a release-please PR land as
+`action_required` rather than running, because the PR author is the `github-actions` app.
+Approve them so the release is actually verified before merge — a green merge button on a
+PR whose checks never ran is worse than a red one:
+
+```bash
+gh run list -L 10 --json databaseId,conclusion \
+  -q '.[] | select(.conclusion=="action_required") | .databaseId' \
+  | xargs -I{} gh api -X POST /repos/{owner}/{repo}/actions/runs/{}/approve
 ```
 
 ## Phase 6 — Branch ruleset (last, after CI has reported at least once)
@@ -1096,10 +1303,29 @@ exists, update it by ID rather than creating a duplicate.
   finding to fix or report, not a pass:
 
   ```bash
-  for wf in ci.yml dependency-review.yml scorecard.yml container-scan.yml; do
+  for wf in ci.yml dependency-review.yml scorecard.yml container-scan.yml release-please.yml; do
     echo "$wf: $(gh run list --workflow="$wf" -L1 --json conclusion -q '.[0].conclusion // "no run yet"')"
   done
   ```
+
+  Two readings that are *not* failures, and must be labelled as such rather than chased:
+  `dependency-review.yml` shows "no run yet" until the first pull request, since it has no
+  push trigger; and a transient `scorecard` network error against `codeload.github.com`
+  is worth one re-run before treating it as real.
+
+- **If release binaries were generated, prove the whole chain, not just a green run.** The
+  failure mode here is silent: workflows pass, a release exists, and it has no assets.
+
+  ```bash
+  tag=$(gh release list -L1 --json tagName -q '.[0].tagName')
+  gh release view "$tag" --json assets -q '.assets[] | "\(.name) \(.size)"'   # must be non-empty
+  ```
+
+  If the release predates the workflow, backfill it with
+  `gh workflow run release.yml -f tag=<tag>` rather than leaving an assetless release as
+  the project's newest. Then actually download one artifact, verify its checksum, and run
+  the binary — a packaged artifact that unpacks to something that will not execute (wrong
+  arch, broken signature, missing bundle) passes every check above.
 - Strict profile: `gh api /repos/{owner}/{repo}/codeowners/errors` returns no errors — a
   broken CODEOWNERS file fails silently otherwise.
 - Strict profile: open a one-line smoke-test PR (e.g. a docs touch) to prove the
