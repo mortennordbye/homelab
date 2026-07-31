@@ -42,29 +42,19 @@
       letter-spacing: -2px;
     }
     small { display: block; margin-top: 40px; font-size: .8rem; color: #8fa3c4; }
-    .founder {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-      object-position: top;
-      border: 3px solid rgba(255,255,255,.3);
-      margin-top: 36px;
-    }
-    .founder-name { margin-top: 10px; font-size: .85rem; color: #8fa3c4; }
+    .founder-name { margin-top: 36px; font-size: .85rem; color: #8fa3c4; }
   </style>
 </head>
 <body>
 <main>
   <h1>big<span>d</span>.no</h1>
-  <img class="founder" src="https://i.imgur.com/DdFZF5mh.jpg" alt="The founder, as rendered by his own AI budget">
   <p class="founder-name">The Founder</p>
   <p>The founder is proud to announce: something BIG&nbsp;D is happening in</p>
-  <div id="timer">60</div>
+  <div id="timer">15</div>
   <small>Do not close this page. You have come too far to leave now.</small>
 </main>
 <script>
-  var left = 60;
+  var left = 15;
   var timer = document.getElementById("timer");
   var iv = setInterval(function () {
     left--;
