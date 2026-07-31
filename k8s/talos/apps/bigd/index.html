@@ -5,62 +5,219 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>bigd.no</title>
   <meta name="description" content="Something BIG D is happening.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230b1f3a'/><text x='50' y='74' font-size='68' font-weight='700' font-family='Helvetica,Arial,sans-serif' fill='%2360a5fa' text-anchor='middle'>D</text></svg>">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(160deg, #0b1f3a 0%, #16345e 60%, #1d4ed8 140%);
+      background:
+        radial-gradient(60vw 60vw at 50% 0%, rgba(96,165,250,.18), transparent 70%),
+        linear-gradient(160deg, #050b18 0%, #0b1f3a 55%, #12294d 100%);
       color: #fff;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
+      padding: 40px 20px;
     }
-    main { padding: 24px; }
+    main { width: 100%; max-width: 620px; }
+
+    .badge {
+      display: inline-block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .7rem;
+      letter-spacing: 2px;
+      color: #fbbf24;
+      border: 1px solid rgba(251,191,36,.4);
+      border-radius: 999px;
+      padding: 6px 14px;
+      animation: breathe 2.4s ease-in-out infinite;
+    }
+    @keyframes breathe { 50% { opacity: .45; } }
+
     h1 {
-      font-size: clamp(4rem, 16vw, 11rem);
+      margin-top: 26px;
+      font-size: clamp(3.4rem, 14vw, 8rem);
       font-weight: 800;
       letter-spacing: -4px;
       line-height: 1;
     }
     h1 span { color: #60a5fa; }
-    p {
-      margin-top: 28px;
-      font-size: clamp(1rem, 2.5vw, 1.3rem);
+
+    .kicker {
+      margin-top: 14px;
+      font-size: clamp(.95rem, 2.4vw, 1.1rem);
       color: #c7d4ec;
-      max-width: 560px;
+    }
+
+    .dossier {
+      margin-top: 34px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      padding: 22px 18px;
+      display: grid;
+      gap: 12px;
+    }
+    .line {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: clamp(.85rem, 3vw, 1.05rem);
+      letter-spacing: 2px;
+      color: #7f93b4;
+      filter: blur(5px);
+      opacity: .55;
+      transition: filter .7s ease, opacity .7s ease, color .7s ease;
+    }
+    .line.shown {
+      filter: blur(0);
+      opacity: 1;
+      color: #eaf1ff;
+      text-shadow: 0 0 18px rgba(96,165,250,.55);
+    }
+
+    .clock {
+      margin-top: 36px;
+      position: relative;
+      width: 148px;
+      height: 148px;
       margin-left: auto;
       margin-right: auto;
     }
+    .clock svg { transform: rotate(-90deg); }
+    .clock circle { fill: none; stroke-width: 5; stroke-linecap: round; }
+    .track { stroke: rgba(255,255,255,.1); }
+    .progress {
+      stroke: #60a5fa;
+      stroke-dasharray: 439.8;
+      transition: stroke-dashoffset 1s linear;
+      filter: drop-shadow(0 0 8px rgba(96,165,250,.7));
+    }
     #timer {
-      margin-top: 48px;
-      font-size: clamp(3rem, 10vw, 6rem);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.6rem;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
       letter-spacing: -2px;
     }
-    small { display: block; margin-top: 40px; font-size: .8rem; color: #8fa3c4; }
-    .founder-name { margin-top: 36px; font-size: .85rem; color: #8fa3c4; }
+
+    .status {
+      margin-top: 22px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .8rem;
+      letter-spacing: 1px;
+      color: #8fa3c4;
+      min-height: 1.2em;
+    }
+    .status::after {
+      content: "_";
+      animation: blink 1s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    small {
+      display: block;
+      margin-top: 30px;
+      font-size: .78rem;
+      color: #6f83a4;
+      line-height: 1.7;
+    }
+    .watchers { color: #fbbf24; font-variant-numeric: tabular-nums; }
+
+    body.final { animation: flash .5s ease-out; }
+    @keyframes flash { 0% { background-color: #fff; } 100% { background-color: transparent; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
 <main>
+  <div class="badge">CONFIDENTIAL — EMBARGO LIFTS SHORTLY</div>
+
   <h1>big<span>d</span>.no</h1>
-  <p class="founder-name">The Founder</p>
-  <p>The founder is proud to announce: something BIG&nbsp;D is happening in</p>
-  <div id="timer">15</div>
-  <small>Do not close this page. You have come too far to leave now.</small>
+  <p class="kicker">The Founder is about to announce something BIG&nbsp;D.</p>
+
+  <div class="dossier">
+    <div class="line" data-at="12">PHASE ONE COMPLETE</div>
+    <div class="line" data-at="9">STAKEHOLDERS ALIGNED</div>
+    <div class="line" data-at="6">THE PIVOT IS REAL</div>
+    <div class="line" data-at="3">YOU ARE NOT READY</div>
+  </div>
+
+  <div class="clock">
+    <svg width="148" height="148" viewBox="0 0 148 148" aria-hidden="true">
+      <circle class="track" cx="74" cy="74" r="70"></circle>
+      <circle class="progress" cx="74" cy="74" r="70" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timer">15</div>
+  </div>
+
+  <p class="status" id="status">Establishing secure channel</p>
+
+  <small>
+    Do not close this page. You have come too far to leave now.<br>
+    <span class="watchers" id="watchers">1 284</span> others are also waiting.
+  </small>
 </main>
 <script>
-  var left = 15;
+  var TOTAL = 15, C = 439.8;
+  var left = TOTAL;
   var timer = document.getElementById("timer");
+  var ring = document.querySelector(".progress");
+  var statusEl = document.getElementById("status");
+  var watchersEl = document.getElementById("watchers");
+  var lines = document.querySelectorAll(".line");
+  var pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@$%&*";
+  var messages = [
+    "Establishing secure channel",
+    "Decrypting embargo package",
+    "Notifying the board",
+    "Aligning synergies",
+    "Do not blink"
+  ];
+  var watchers = 1284;
+
+  lines.forEach(function (el) {
+    el.dataset.text = el.textContent;
+  });
+
+  function scramble() {
+    lines.forEach(function (el) {
+      if (el.classList.contains("shown")) return;
+      var out = "";
+      for (var i = 0; i < el.dataset.text.length; i++) {
+        out += el.dataset.text[i] === " " ? " " : pool[Math.floor(Math.random() * pool.length)];
+      }
+      el.textContent = out;
+    });
+  }
+  setInterval(scramble, 70);
+
   var iv = setInterval(function () {
     left--;
     timer.textContent = left;
+    ring.setAttribute("stroke-dashoffset", C * (1 - left / TOTAL));
+
+    lines.forEach(function (el) {
+      if (Number(el.dataset.at) === left) {
+        el.textContent = el.dataset.text;
+        el.classList.add("shown");
+      }
+    });
+
+    statusEl.textContent = messages[(TOTAL - left) % messages.length];
+    watchers += Math.floor(Math.random() * 9) + 2;
+    watchersEl.textContent = String(watchers).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
     if (left <= 0) {
       clearInterval(iv);
+      document.body.classList.add("final");
       window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ&autoplay=1";
     }
   }, 1000);
