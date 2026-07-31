@@ -14,4 +14,4 @@ resources:
 # 0.0.N as the reelsmith repo's build-gateway workflow publishes them.
 images:
 - name: ghcr.io/mortennordbye/reelsmith-gateway
-  newTag: 0.0.1
+  newTag: 0.0.2
