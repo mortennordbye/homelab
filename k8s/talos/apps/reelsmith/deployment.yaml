@@ -1,0 +1,126 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reelsmith-gateway
+  namespace: reelsmith
+  annotations:
+    # The Meta app secret starts as a placeholder and is replaced once the app
+    # exists in the dashboard. Reloader restarts the pod when the secret changes,
+    # so that swap needs no manual rollout.
+    reloader.stakater.com/auto: "true"
+spec:
+  # One replica, deliberately. The state is a single SQLite file on a
+  # ReadWriteOnce volume, and the comment poller is a singleton: two replicas
+  # would poll the same posts and race for the one private reply each comment
+  # gets. Scaling this means moving to Postgres and electing a poller first.
+  replicas: 1
+  strategy:
+    # RollingUpdate would briefly run two pods, which is the exact thing the
+    # single-writer database and the singleton poller cannot tolerate.
+    type: Recreate
+  selector:
+    matchLabels:
+      app: reelsmith-gateway
+  template:
+    metadata:
+      labels:
+        app: reelsmith-gateway
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: gateway
+          # Pinned tag, rewritten by Kargo's kustomize-set-image promotion via
+          # the images: block in kustomization.yaml. Never :latest.
+          image: ghcr.io/mortennordbye/reelsmith-gateway:0.0.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            # Without all three of these the process refuses to start, rather
+            # than serving an unsigned webhook route and a bearer route with an
+            # empty token.
+            - name: GATEWAY_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: reelsmith-secret
+                  key: GATEWAY_APP_SECRET
+            - name: GATEWAY_VERIFY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: reelsmith-secret
+                  key: GATEWAY_VERIFY_TOKEN
+            - name: GATEWAY_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: reelsmith-secret
+                  key: GATEWAY_API_TOKEN
+            - name: GATEWAY_DB_PATH
+              value: /state/gateway.sqlite3
+            - name: GATEWAY_COVERS_DIR
+              value: /state/covers
+            # Meta fetches cover images from this host, so it has to be the
+            # external name rather than the service address.
+            - name: GATEWAY_PUBLIC_BASE_URL
+              value: "https://gate.nordbye.it"
+          volumeMounts:
+            - name: state
+              mountPath: /state
+            # readOnlyRootFilesystem is on, and Python still wants somewhere to
+            # write. Everything real lives on the state volume.
+            - name: tmp
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "25m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: reelsmith-state
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reelsmith-gateway
+  namespace: reelsmith
+spec:
+  selector:
+    app: reelsmith-gateway
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+  type: ClusterIP

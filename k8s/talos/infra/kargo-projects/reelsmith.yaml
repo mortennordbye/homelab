@@ -1,0 +1,185 @@
+# Kargo project for the reelsmith DM gateway. Single-environment, same shape as
+# logeverylift: one Warehouse feeds one `prod` Stage directly, auto-promoted
+# through promote-via-pr. Flow: reelsmith CI pushes a new gateway image ->
+# Warehouse creates Freight -> Kargo auto-opens a homelab PR -> merging it
+# deploys -> the smoke test verifies.
+#
+# The image source and CI live in the separate mortennordbye/reelsmith repo,
+# which also holds the render pipeline. Only the gateway ships as a container,
+# and its build workflow there is path-filtered to gateway/ so a pipeline-only
+# commit never produces Freight for a byte-identical image.
+
+# --- Project namespace ------------------------------------------------------
+# Named `reelsmith-cd` (not `reelsmith`) to avoid colliding with the app
+# namespace. The label lets the Project adopt this pre-created namespace instead
+# of racing to create it, keeping Argo CD sync ordering clean.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: reelsmith-cd
+  labels:
+    kargo.akuity.io/project: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  name: reelsmith-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ProjectConfig
+metadata:
+  name: reelsmith-cd
+  namespace: reelsmith-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  promotionPolicies:
+    - stage: prod
+      autoPromotionEnabled: true
+---
+# Git write credential for Kargo's git-push/PR, using the existing GitHub App
+# `mortennordbye-homelab-deployer`. Same App and Bitwarden keys as the other
+# -cd projects; only the namespace differs, because Kargo cred lookup is
+# per-Project.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: kargo-git-homelab
+  namespace: reelsmith-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: kargo-git-homelab
+    creationPolicy: Owner
+    template:
+      metadata:
+        labels:
+          kargo.akuity.io/cred-type: git
+      data:
+        repoURL: https://github.com/mortennordbye/homelab.git
+        githubAppClientID: "{{ .githubAppClientID }}"
+        githubAppInstallationID: "{{ .githubAppInstallationID }}"
+        githubAppPrivateKey: "{{ .githubAppPrivateKey }}"
+  data:
+    - secretKey: githubAppClientID
+      remoteRef:
+        key: "a6b2b4ea-fa97-4d5c-bd74-b489010c5fab"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+    - secretKey: githubAppInstallationID
+      remoteRef:
+        key: "aabab894-a09a-415c-ba17-b489010c8df5"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+    - secretKey: githubAppPrivateKey
+      remoteRef:
+        key: "fc775dd0-1b67-4dfa-b2e9-b489010d0359"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: reelsmith
+  namespace: reelsmith-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  # interval as Kargo normalizes it (1m -> 1m0s), to avoid ArgoCD drift.
+  interval: 1m0s
+  freightCreationPolicy: Automatic
+  subscriptions:
+    - image:
+        repoURL: ghcr.io/mortennordbye/reelsmith-gateway
+        # reelsmith CI tags every gateway build 0.0.<run_number>; SemVer picks
+        # the greatest. strictSemvers keeps the sha-/latest tags out of
+        # selection.
+        imageSelectionStrategy: SemVer
+        strictSemvers: true
+        discoveryLimit: 20
+---
+# prod verification: a one-shot Job that curls the gateway and fails on any
+# non-2xx. Unlike logeverylift this host is on the public gateway with a real
+# certificate, so no -k. /healthz is the right target: it needs no secrets and
+# no Instagram account, so it is green from the first deploy, before any of the
+# Meta setup exists.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: reelsmith-prod-smoke
+  namespace: reelsmith-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  metrics:
+    - name: reelsmith-prod-http-200
+      count: 1
+      provider:
+        job:
+          spec:
+            backoffLimit: 2
+            activeDeadlineSeconds: 180
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: smoke
+                    image: curlimages/curl:8.21.0
+                    command:
+                      - /bin/sh
+                      - -c
+                      - >
+                        curl -fsS --retry 10 --retry-delay 6 --retry-all-errors
+                        -o /dev/null -w '%{http_code}\n'
+                        https://gate.nordbye.it/healthz
+---
+# prod: the only Stage. Receives Freight straight from the Warehouse
+# (sources.direct), auto-promoted per ProjectConfig through promote-via-pr,
+# then verified by the smoke test. Merging the PR in GitHub is the deploy gate.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: reelsmith-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    # Cosmetic UI colour, kept identical across apps: prod = red.
+    kargo.akuity.io/color: "#e11d48"
+    kargo.akuity.io/description: "Auto-promoted from the Warehouse via a homelab PR; smoke-tested on gate.nordbye.it after merge."
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: reelsmith
+      sources:
+        direct: true
+  verification:
+    analysisTemplates:
+      - name: reelsmith-prod-smoke
+  promotionTemplate:
+    spec:
+      vars:
+        - name: appName
+          value: reelsmith
+        - name: appPath
+          value: k8s/talos/apps/reelsmith
+        - name: imageRepo
+          value: ghcr.io/mortennordbye/reelsmith-gateway
+        - name: argocdApp
+          value: reelsmith
+      steps:
+        - task:
+            name: promote-via-pr
+            kind: ClusterPromotionTask
