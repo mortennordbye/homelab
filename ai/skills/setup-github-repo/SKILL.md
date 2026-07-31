@@ -630,8 +630,45 @@ jobs:
   strict mode guarantees this (validated PR titles become the squash commits), but the
   light profile has no title check and allows direct pushes — so when light + releases
   are combined, tell the user their versioning depends on them keeping the convention
-  by hand, and make sure it is documented in the README. Set `release-type`
-  per stack (`simple`, `node`, `go`, `python`, ...):
+  by hand, and make sure it is documented in the README.
+
+  **Use the manifest form, not inline `with:` config.** A `release-type:` passed as a
+  workflow input cannot express per-package settings, and moving to it later means
+  rewriting the workflow. Committing `release-please-config.json` plus
+  `.release-please-manifest.json` costs two small files and is what every non-trivial
+  repo ends up needing. Set `release-type` per stack — `rust` bumps `Cargo.toml` *and*
+  `Cargo.lock`, `node` bumps `package.json`, `simple` bumps only the manifest; `go`,
+  `python`, `terraform-module` likewise. Seed the manifest with the version already in
+  the manifest file of the project (`Cargo.toml`, `package.json`, ...), not `0.0.0`, or
+  the first release PR proposes a version that moves backwards.
+
+  `release-please-config.json`:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "rust",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false
+    }
+  }
+}
+```
+
+  `.release-please-manifest.json` (match the project's current version):
+
+```json
+{
+  ".": "0.1.0"
+}
+```
+
+  `bump-minor-pre-major` matters pre-1.0: without it a `feat:` on a `0.x` project bumps
+  to `1.0.0` on the first feature, which is almost never what the author wants.
 
 ```yaml
 name: Release Please
@@ -640,18 +677,36 @@ on:
   push:
     branches: [main]
 
+# Read-only at the top level, write scoped to the one job that needs it. A
+# workflow-wide write token is handed to every job and every step in it, including any
+# action added later; Scorecard's Token-Permissions check scores exactly this.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   release:
+    name: Release PR
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
-      - uses: googleapis/release-please-action@v4
-        with:
-          release-type: simple
+      # SHA-pinned: this action takes a write token, so a moved tag would be a supply
+      # chain problem rather than an inconvenience. Dependabot keeps the pin current.
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
 ```
+
+  **Strict profile only — the release PR and the PR-title check.** A pull request opened
+  with `GITHUB_TOKEN` does not trigger `pull_request_target` workflows. If `pr-title.yml`
+  runs on `pull_request_target` *and* the Conventional Commits check is a required status
+  check, every release-please PR sits with that check permanently pending and can only be
+  merged by bypassing the ruleset. Run `pr-title.yml` on `pull_request` instead, where it
+  reports normally. No PAT, no GitHub App and no bypass actor are needed.
+
+  **Verify after the first run.** `feat:` and `fix:` produce a release PR; `docs:`,
+  `chore:` and `ci:` on their own produce nothing, and neither do commits that are not
+  Conventional at all. A green Release Please run with no PR is the correct outcome in
+  that case, not a failure — but say so in the summary, or it reads as broken.
 
 - **`.github/dependabot.yml`** — always include `github-actions` (keeps the pinned
   actions in these very workflows current), plus each detected ecosystem. Scan
@@ -704,7 +759,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/dependency-review-action@v4
+      # NOT `@v4`: this action publishes no moving major tag, so the usual short form
+      # fails at action resolution before doing any work. Pin the full release and let
+      # the pin-resolution check below confirm it still exists.
+      - uses: actions/dependency-review-action@v5.0.0
 ```
 
 - **`.github/workflows/dependabot-automerge.yml`** (strict profile, opt-in from Phase 1)
@@ -893,18 +951,30 @@ Before committing, validate the generated workflows:
 
 - **`actionlint`** if available — but note it validates *syntax*, not whether a pinned tag
   exists. It will pass a workflow that references a non-existent action version.
-- **Confirm every pinned third-party action tag actually resolves**, because hard-coded
-  versions in this skill go stale (the Trivy pin above is a known offender — its tags are
-  `v`-prefixed and move often). For each non-`actions/*` pin, check the ref and bump to the
-  latest release if it 404s:
+- **Confirm every pinned action tag resolves *and* is current.** Hard-coded versions in
+  this skill go stale in two distinct ways, and checking only the first is not enough:
+
+  1. **The tag does not exist.** `actions/dependency-review-action@v4` is the standing
+     example — that action publishes no moving major tag, so the short form was never
+     valid. A workflow pinned to a missing tag fails at action resolution on its first
+     run, before doing any work.
+  2. **The tag exists but is majors behind.** `actions/checkout@v5` resolves fine while
+     v7 is current. Nothing fails, so the existence check above passes it — and
+     Dependabot opens a bump PR minutes after the first push, which makes the freshly
+     generated scaffold look stale on arrival.
+
+  Check both for every pin, `actions/*` included — the first-party ones move too:
 
   ```bash
-  gh api /repos/aquasecurity/trivy-action/git/ref/tags/v0.36.0 >/dev/null 2>&1 \
-    || gh api /repos/aquasecurity/trivy-action/releases/latest -q .tag_name   # use this instead
+  repo=actions/checkout; tag=v5
+  gh api "/repos/$repo/git/matching-refs/tags/$tag" -q '.[].ref' | grep -qx "refs/tags/$tag" \
+    || echo "$repo@$tag does not exist"
+  gh api "/repos/$repo/releases/latest" -q .tag_name   # compare majors; bump if behind
   ```
 
-  A workflow pinned to a missing tag fails at action resolution on its first run, before
-  doing any work — Phase 7 catches it only if it checks that workflow's run (it does).
+  Use `matching-refs`, not `git/ref/tags/<tag>`: the latter returns prefix matches, so it
+  reports success for `v4` purely because `v4.8.0` exists. Prefer a floating major tag
+  when the action publishes one, and the full `vX.Y.Z` when it does not.
 
 ## Phase 4 — Commit
 
