@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.25
+# syntax=docker/dockerfile:1.26
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
 # Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
