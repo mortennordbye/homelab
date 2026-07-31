@@ -168,6 +168,13 @@ Ask only what cannot be decided automatically:
    tag-protection ruleset, Phase 6) if yes. Continuously deployed apps (GitOps,
    sha-tagged images, `"private": true` packages) get perpetual meaningless version-bump
    PRs from release automation; skip it for those.
+   **If yes, follow up: should releases carry prebuilt binaries?** Default yes for
+   anything a user installs and runs directly (a CLI, a desktop app); no for libraries
+   that install from a registry, and no for services whose artifact is the container
+   image. Answering yes adds `release.yml` (Phase 3) and changes
+   `can_approve_pull_request_reviews` in Phase 5. Answering no is fine, but then say
+   plainly in the summary that releases are source-only — a release page with no assets
+   otherwise looks like a bug.
 8. **Description / homepage / topics** — propose inferred values, confirm.
 9. **Add an `AGENTS.md` agent guide?** (both profiles) — a short root file that hands
    coding agents (Claude Code and others) the repo's real build/test/lint commands,
@@ -708,6 +715,99 @@ jobs:
   Conventional at all. A green Release Please run with no PR is the correct outcome in
   that case, not a failure — but say so in the summary, or it reads as broken.
 
+- **`.github/workflows/release.yml`** — only when releases were chosen *and* the project
+  produces a runnable artifact users install (a CLI, a desktop binary, a static site
+  bundle). Skip it for libraries, which install from the registry, and for services, which
+  ship the container image the Docker job already publishes.
+
+  Without this, release-please cuts a tag and publishes a release page with **no
+  artifacts**, and "install" means "build from source" — which is easy to miss, because
+  every workflow is green. If you generate release-please, say explicitly in the summary
+  whether binaries are attached or not.
+
+  **The trigger is the part that goes wrong.** `on: release: types: [published]` and
+  `on: push: tags: ['v*']` both look right and both silently never fire, because
+  release-please creates the tag and the release with `GITHUB_TOKEN`, and **GitHub does
+  not start new workflow runs from events raised by that token.** There is no error; the
+  workflow simply never appears. Make the build a *reusable workflow that release-please
+  calls*, so it runs inside the same run where the restriction does not apply:
+
+```yaml
+# in release-please.yml
+jobs:
+  release:
+    # ...
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@<sha> # v5
+        id: release            # `id:` is required for the outputs above to resolve
+
+  binaries:
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.release.outputs.tag_name }}
+```
+
+```yaml
+# release.yml — callable, plus a manual entry point for backfilling an existing tag
+name: Release Binaries
+on:
+  workflow_call:
+    inputs:
+      tag: { required: true, type: string }
+  workflow_dispatch:
+    inputs:
+      tag: { required: true, type: string }
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix: # native runners avoid cross-toolchain setup; ubuntu-24.04-arm is GA
+        include:
+          - { runner: ubuntu-latest,   target: x86_64-unknown-linux-gnu,  arch: x86_64 }
+          - { runner: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu, arch: aarch64 }
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+      # Packaging helpers come from the workflow's ref, not the tag: backfilling assets
+      # onto a tag cut before a helper script existed fails on a missing file otherwise.
+      - uses: actions/checkout@v7
+        with:
+          path: .workflow-ref
+      # ... build, then package into <name>.tar.gz + .sha256 ...
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.tag }}" <assets> --clobber
+```
+
+  **Use `gh release upload`, not `softprops/action-gh-release`.** That action resolves the
+  release from `github.ref`, which is a *branch* when the workflow is called or dispatched
+  rather than triggered by a tag. It finds the release by `tag_name`, then 403s updating
+  it under `refs/heads/main`, with `contents: write` correctly set — an error that reads
+  like a permissions problem and is not one. `gh` takes the tag explicitly and drops a
+  third-party action from the release path.
+
+  **Prefer one fat/universal artifact per OS over per-architecture downloads** where the
+  toolchain supports it (macOS `lipo -create` of two Rust targets, .NET single-file, Go
+  with per-arch builds combined by the packager). Users should not have to know their own
+  CPU. Verify the combined artifact still runs, and that any embedded metadata section
+  survived the merge.
+
 - **`.github/dependabot.yml`** — always include `github-actions` (keeps the pinned
   actions in these very workflows current), plus each detected ecosystem. Scan
   subdirectories too, not just the repo root: a nested lockfile or manifest (e.g.
@@ -1067,6 +1167,43 @@ gh api -X PATCH /repos/{owner}/{repo}/code-scanning/default-setup -f state=confi
 # Actions token read-only by default; workflows request write per-job via permissions:
 gh api -X PUT /repos/{owner}/{repo}/actions/permissions/workflow \
   -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false
+
+# ...BUT if release-please was chosen in Phase 1, that flag must be `true` instead:
+#   gh api -X PUT /repos/{owner}/{repo}/actions/permissions/workflow \
+#     -f default_workflow_permissions=read -F can_approve_pull_request_reviews=true
+# See the note below — with `false`, release-please cannot open its release PR at all.
+```
+
+**`can_approve_pull_request_reviews` and release automation conflict — resolve it here,
+not by debugging a red run later.** That single flag governs whether Actions may *create
+or approve* pull requests, not just approve them. Setting it `false` while also installing
+release-please guarantees a failure the first time a releasable commit lands:
+
+```
+release-please failed: GitHub Actions is not permitted to create or approve pull requests.
+```
+
+The branch gets created and the run fails at the very last step, so it reads like a token
+scope problem rather than a repo setting. Rules:
+
+- **release-please (or any bot that opens PRs) chosen → set it `true`.**
+- **No PR-opening automation → keep it `false`.**
+- `default_workflow_permissions=read` stays `read` in both cases; that part is unrelated.
+
+The approve half of the flag is the security-relevant one. On a solo/light repo nothing
+requires review, so it costs nothing. On a strict repo with required reviews, note in the
+summary that Actions can now approve as well as create — if that is unacceptable,
+release-please needs a PAT or a GitHub App instead, and that trade belongs to the user.
+
+**Expect bot-authored PRs to need run approval.** Checks on a release-please PR land as
+`action_required` rather than running, because the PR author is the `github-actions` app.
+Approve them so the release is actually verified before merge — a green merge button on a
+PR whose checks never ran is worse than a red one:
+
+```bash
+gh run list -L 10 --json databaseId,conclusion \
+  -q '.[] | select(.conclusion=="action_required") | .databaseId' \
+  | xargs -I{} gh api -X POST /repos/{owner}/{repo}/actions/runs/{}/approve
 ```
 
 ## Phase 6 — Branch ruleset (last, after CI has reported at least once)
@@ -1166,10 +1303,29 @@ exists, update it by ID rather than creating a duplicate.
   finding to fix or report, not a pass:
 
   ```bash
-  for wf in ci.yml dependency-review.yml scorecard.yml container-scan.yml; do
+  for wf in ci.yml dependency-review.yml scorecard.yml container-scan.yml release-please.yml; do
     echo "$wf: $(gh run list --workflow="$wf" -L1 --json conclusion -q '.[0].conclusion // "no run yet"')"
   done
   ```
+
+  Two readings that are *not* failures, and must be labelled as such rather than chased:
+  `dependency-review.yml` shows "no run yet" until the first pull request, since it has no
+  push trigger; and a transient `scorecard` network error against `codeload.github.com`
+  is worth one re-run before treating it as real.
+
+- **If release binaries were generated, prove the whole chain, not just a green run.** The
+  failure mode here is silent: workflows pass, a release exists, and it has no assets.
+
+  ```bash
+  tag=$(gh release list -L1 --json tagName -q '.[0].tagName')
+  gh release view "$tag" --json assets -q '.assets[] | "\(.name) \(.size)"'   # must be non-empty
+  ```
+
+  If the release predates the workflow, backfill it with
+  `gh workflow run release.yml -f tag=<tag>` rather than leaving an assetless release as
+  the project's newest. Then actually download one artifact, verify its checksum, and run
+  the binary — a packaged artifact that unpacks to something that will not execute (wrong
+  arch, broken signature, missing bundle) passes every check above.
 - Strict profile: `gh api /repos/{owner}/{repo}/codeowners/errors` returns no errors — a
   broken CODEOWNERS file fails silently otherwise.
 - Strict profile: open a one-line smoke-test PR (e.g. a docs touch) to prove the
