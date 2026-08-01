@@ -1,0 +1,43 @@
+# The control panel, on the private gateway only.
+#
+# The panel publishes to a live Instagram account, rewrites captions and holds
+# the outbound-DM kill switch. It authenticates itself with GATEWAY_ADMIN_TOKEN
+# and will not start without a password, but there is no reason for it to be
+# reachable from the internet at all: nobody outside the LAN needs to open it.
+#
+# So it moves here, and `httproute.yaml` stops serving /admin publicly. Two
+# independent things now have to fail before the panel is exposed, rather than
+# one.
+#
+# The `*.local.bigd.no` listener already carries a wildcard certificate and
+# external-dns manages the zone, so this needs no cert and no DNS record of its
+# own.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: reelsmith-admin
+  namespace: reelsmith
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: traefik-gateway-private
+      namespace: traefik
+  hostnames:
+    - "reelsmith.local.bigd.no"
+  rules:
+    # The whole app, not just /admin. Reaching /api or /media over the private
+    # name is harmless and occasionally useful for debugging, and restricting
+    # it here would only mean two lists to keep in step.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: reelsmith-gateway
+          port: 8000
+          weight: 1

@@ -9,6 +9,7 @@ resources:
 - state-pvc.yaml
 - deployment.yaml
 - httproute.yaml
+- httproute-admin.yaml
 - ciliumnetworkpolicy.yaml
 # newTag via the kustomize-set-image promotion step (Kargo). Overrides the inline
 # tag in deployment.yaml; the reelsmith-cd Warehouse/promotion rewrites it to
