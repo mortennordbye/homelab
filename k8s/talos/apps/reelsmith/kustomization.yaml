@@ -5,6 +5,7 @@ commonAnnotations:
 resources:
 - namespace.yaml
 - externalsecret.yaml
+- configmap.yaml
 - state-pvc.yaml
 - deployment.yaml
 - httproute.yaml

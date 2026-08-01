@@ -1,0 +1,47 @@
+# The posting schedule, kept out of the deployment so changing when the account
+# posts is a one-line edit that Reloader turns into a restart.
+#
+# The gateway holds a queue of rendered Reels pushed from the Mac and publishes
+# them on these slots, so the laptop is only needed while rendering.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reelsmith-config
+  namespace: reelsmith
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  # Publishing to the feed is off unless this is on. The gateway answered
+  # comments for weeks without it, and gaining the ability to post by being
+  # upgraded would have been a surprise rather than a decision.
+  GATEWAY_SCHEDULER_ENABLED: "true"
+
+  # Three posts a day. One slot per line; only the time is required.
+  #
+  # Each firing moves by up to 15 minutes either way, to the second, and never
+  # onto :00, :15, :30 or :45. The offset is derived from the slot and the date
+  # rather than rolled at runtime, so it survives a restart: a random offset
+  # would be re-rolled on every pod start, and a slot judged not-yet-due at
+  # 19:15 could come due at 19:10 after a restart and publish twice.
+  #
+  # A line that does not parse fails the pod's startup on purpose, rather than
+  # quietly dropping that slot from the schedule.
+  #
+  # These attach to the one registered account. Add GATEWAY_SLOTS_ACCOUNT with
+  # an IG user id if a second account is ever registered; until then the
+  # gateway resolves it, and logs rather than guessing if it becomes ambiguous.
+  GATEWAY_SLOTS: |
+    08:10 Europe/Oslo jitter=15
+    12:40 Europe/Oslo jitter=15
+    19:20 Europe/Oslo jitter=15
+
+  # Named zone, not an offset, so the slots stay at the same local hour across
+  # a daylight saving change.
+  GATEWAY_DEFAULT_TIMEZONE: "Europe/Oslo"
+  GATEWAY_DEFAULT_JITTER_MINUTES: "15"
+
+  # The control panel at /admin. It authenticates itself with
+  # GATEWAY_ADMIN_TOKEN and refuses to start with no authentication at all,
+  # which matters here because this host is public: Meta fetches media from it,
+  # so there is no network boundary in front of the panel.
+  GATEWAY_ADMIN_ENABLED: "true"

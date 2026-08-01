@@ -2,9 +2,15 @@
 # cover images from /covers, and they need a publicly valid certificate to do
 # it. cert-manager and external-dns both pick the hostname up from here.
 #
-# Only Meta and the Mac agent ever call this host, so the name is not a
-# doxxing surface. The admin UI (PLAN.md section F) will sit behind Authentik
-# forward-auth on this same route when it lands.
+# Meta, the Mac, and now a browser reaching /admin all use this one host, so
+# the name is not a doxxing surface.
+#
+# No auth filter here on purpose. The admin UI authenticates itself with
+# GATEWAY_ADMIN_TOKEN and will not start without a password, which is the right
+# place for it: /webhook, /media/* and /api/* all have to stay reachable
+# without a login, so gating this route by path would put the account's safety
+# in a prefix match. Putting Authentik forward-auth on a /admin rule as a
+# second layer is still worth doing, and is tracked in BACKLOG.md.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
