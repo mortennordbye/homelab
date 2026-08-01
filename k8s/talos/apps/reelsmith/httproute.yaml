@@ -1,16 +1,20 @@
 # Public gateway, not private: Meta's servers have to reach /webhook and fetch
-# cover images from /covers, and they need a publicly valid certificate to do
-# it. cert-manager and external-dns both pick the hostname up from here.
+# media from /media and /covers, and they need a publicly valid certificate to
+# do it. cert-manager and external-dns both pick the hostname up from here.
 #
-# Meta, the Mac, and now a browser reaching /admin all use this one host, so
-# the name is not a doxxing surface.
+# These rules are an allowlist rather than a catch-all, and that is the point.
+# Everything Meta and the Mac need is named; anything else 404s at Traefik
+# before it reaches the pod. Two things come off the internet as a result:
 #
-# No auth filter here on purpose. The admin UI authenticates itself with
-# GATEWAY_ADMIN_TOKEN and will not start without a password, which is the right
-# place for it: /webhook, /media/* and /api/* all have to stay reachable
-# without a login, so gating this route by path would put the account's safety
-# in a prefix match. Putting Authentik forward-auth on a /admin rule as a
-# second layer is still worth doing, and is tracked in BACKLOG.md.
+#   /admin    the control panel, which can publish to a live account. It moves
+#             to reelsmith.local.bigd.no (httproute-admin.yaml). It still
+#             checks its own password, so this is a second lock rather than the
+#             only one.
+#   /metrics  the funnel counters and the token expiry gauge. Prometheus
+#             scrapes in-cluster and never needed this to be public.
+#
+# Adding a route to the service means adding it here too. That is the cost of
+# an allowlist, and it is worth paying on a host this exposed.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -28,9 +32,27 @@ spec:
     - "gate.nordbye.it"
   rules:
     - matches:
+        # Meta: the subscription handshake and every message delivery.
         - path:
             type: PathPrefix
-            value: /
+            value: /webhook
+        # Meta: fetches the MP4 and the cover while creating a container. There
+        # is no publish without these.
+        - path:
+            type: PathPrefix
+            value: /media
+        - path:
+            type: PathPrefix
+            value: /covers
+        # The Mac: uploads, post registration and the queue. Bearer token.
+        - path:
+            type: PathPrefix
+            value: /api
+        # Kept public in case anything external is watching it. It answers
+        # "ok" and says nothing else.
+        - path:
+            type: PathPrefix
+            value: /healthz
       backendRefs:
         - group: ""
           kind: Service
