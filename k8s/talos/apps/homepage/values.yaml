@@ -151,6 +151,14 @@ config:
             icon: mdi-wrench
             href: https://verksted.local.bigd.no
             description: Workshop app
+        - Reelsmith:
+            icon: mdi-movie-open-play
+            href: https://reelsmith.local.bigd.no/admin/
+            description: Reel queue, posting slots and DM funnel
+        - Reelsmith Gateway:
+            icon: si-instagram
+            href: https://gate.nordbye.it/healthz
+            description: Public endpoint Meta fetches Reels from
         - BigD:
             icon: mdi-web
             href: https://bigd.no
