@@ -132,6 +132,12 @@ kind: Service
 metadata:
   name: reelsmith-gateway
   namespace: reelsmith
+  # A ServiceMonitor selects Services by the labels on the Service, not by the
+  # pod selector below. Without this label `monitoring.yaml` matches nothing
+  # and Prometheus never creates a target at all, which is quieter than a
+  # target that is down: there is nothing in the UI to notice.
+  labels:
+    app: reelsmith-gateway
 spec:
   selector:
     app: reelsmith-gateway
