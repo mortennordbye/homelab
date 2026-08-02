@@ -1,0 +1,109 @@
+# Forward-auth in front of the reelsmith control panel.
+#
+# Unlike argocd, grafana and kargo, the reelsmith panel speaks no OIDC. It has
+# its own password and nothing else, so the provider here is a proxy provider
+# rather than an oauth2 one: authentik authenticates the request at Traefik,
+# before it ever reaches the pod.
+#
+# `forward_single` rather than `forward_domain` because this protects one host.
+# Domain mode needs a cookie domain shared by every protected app and an
+# authentik host inside it, which is a bigger commitment than one panel is
+# worth. Single mode keeps the callback on the app's own hostname, which is why
+# the HTTPRoute grows an unauthenticated `/outpost.goauthentik.io/` rule.
+#
+# **The panel keeps its own password.** GATEWAY_ADMIN_TRUST_PROXY_AUTH stays
+# off, so this is a second independent lock rather than a replacement. The
+# gateway's `_authenticated()` returns True unconditionally when that flag is
+# set and never inspects a header, so trusting the proxy would leave the panel
+# with no auth of its own and make every path that reaches the Service without
+# traversing this one HTTPRoute an open control panel for a live Instagram
+# account. What authentik adds here is per-user identity and an audit trail.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-reelsmith
+  namespace: identity
+  annotations:
+    # Ahead of the chart-inflated worker Deployment (wave 0), which mounts this.
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  reelsmith.yaml: |
+    version: 1
+    metadata:
+      name: reelsmith-forward-auth
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      - model: authentik_core.group
+        id: group-reelsmith-admins
+        state: present
+        identifiers:
+          name: reelsmith-admins
+        attrs:
+          is_superuser: false
+          # Declared here for the same reason as argocd-admins: a rebuilt
+          # cluster grants access without anyone touching the UI. Reconciliation
+          # resets this list, so add members here rather than in authentik.
+          users:
+            - !Find [authentik_core.user, [username, akadmin]]
+
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-reelsmith
+        state: present
+        identifiers:
+          name: reelsmith
+        attrs:
+          name: reelsmith
+          # The browser-facing origin. authentik builds the redirect back to
+          # the callback from this, so it has to be the external URL and not
+          # the in-cluster Service.
+          external_host: https://reelsmith.local.bigd.no
+          mode: forward_single
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          # The panel is used from a browser by one operator. No token access
+          # path is wanted, so the defaults for basic auth stay off.
+          intercept_header_auth: true
+
+      - model: authentik_core.application
+        id: app-reelsmith
+        state: present
+        identifiers:
+          slug: reelsmith
+        attrs:
+          name: reelsmith
+          slug: reelsmith
+          provider: !KeyOf provider-reelsmith
+          meta_description: The reelsmith control panel, publishing and queue
+          # Shown on the authentik dashboard so the panel is reachable without
+          # remembering the hostname.
+          meta_launch_url: https://reelsmith.local.bigd.no/admin/
+          policy_engine_mode: any
+
+      # Without a binding, an application is reachable by every authenticated
+      # user. This restricts it to the group above.
+      - model: authentik_policies.policybinding
+        id: binding-reelsmith
+        state: present
+        identifiers:
+          target: !KeyOf app-reelsmith
+          group: !KeyOf group-reelsmith-admins
+          order: 0
+
+      # The embedded outpost is what Traefik actually calls. A provider that is
+      # not attached to an outpost exists but answers nothing, and the symptom
+      # is a 404 from /outpost.goauthentik.io/auth/traefik rather than an error
+      # anywhere that mentions the provider.
+      #
+      # `providers` is replaced wholesale on reconcile, so every provider the
+      # embedded outpost serves has to be listed here. Adding a second app
+      # later means adding it to this list, not writing a second binding.
+      - model: authentik_outposts.outpost
+        id: embedded-outpost
+        state: present
+        identifiers:
+          managed: goauthentik.io/outposts/embedded
+        attrs:
+          name: authentik Embedded Outpost
+          providers:
+            - !KeyOf provider-reelsmith

@@ -1,0 +1,41 @@
+# Forward-auth for the control panel, calling authentik's embedded outpost.
+#
+# Lives in this namespace rather than next to authentik because Traefik
+# resolves an HTTPRoute `ExtensionRef` filter in the route's own namespace.
+# The address it calls is cross-namespace, which is fine: that is an ordinary
+# in-cluster HTTP request and not a Gateway API reference.
+#
+# The panel keeps GATEWAY_ADMIN_TOKEN as well. This is a second lock rather
+# than a replacement, so a mistake here costs a password prompt and not an open
+# control panel for a live Instagram account.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: reelsmith-authentik
+  namespace: reelsmith
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  forwardAuth:
+    # The embedded outpost, served by authentik-server itself. A separate
+    # outpost Deployment would work the same way and is not worth running for
+    # one application.
+    address: http://authentik-server.identity.svc.cluster.local/outpost.goauthentik.io/auth/traefik
+    # authentik builds the redirect back to the app from X-Forwarded-*. Without
+    # this it sees the in-cluster request instead and sends the browser
+    # somewhere it cannot reach.
+    #
+    # Safe because the only route to this middleware is through the private
+    # Gateway, which sets those headers itself and overwrites whatever the
+    # client sent.
+    trustForwardHeader: true
+    # Copied onto the request that reaches the pod. The gateway does not read
+    # them today, since trusting a header for auth is exactly what its config
+    # refuses to do, but they are what an audit trail would be built from and
+    # they cost nothing to pass through.
+    authResponseHeaders:
+      - X-authentik-username
+      - X-authentik-groups
+      - X-authentik-email
+      - X-authentik-name
+      - X-authentik-uid

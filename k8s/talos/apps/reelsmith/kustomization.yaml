@@ -10,6 +10,7 @@ resources:
 - deployment.yaml
 - httproute.yaml
 - httproute-admin.yaml
+- middleware-authentik.yaml
 - ciliumnetworkpolicy.yaml
 - monitoring.yaml
 # newTag via the kustomize-set-image promotion step (Kargo). Overrides the inline

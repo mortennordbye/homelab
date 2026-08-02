@@ -9,6 +9,8 @@ resources:
   - argocd-blueprint.yaml
   - kargo-blueprint.yaml
   - grafana-blueprint.yaml
+  - reelsmith-blueprint.yaml
+  - referencegrant-reelsmith.yaml
 
 helmCharts:
   - name: authentik
