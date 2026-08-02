@@ -149,3 +149,28 @@ spec:
             description: |
               Meta rejected a publish or the upload did not complete. The queue entry stays for a retry.
               Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i publish
+
+        # The counter above catches the moment and then resolves an hour later
+        # whether or not anything was fixed, because `increase` over a window
+        # falls back to zero on its own. This is the state rather than the
+        # event: a row in `failed` has stopped retrying and will not move again
+        # without a person, so the alert should stay up until one arrives.
+        #
+        # Three paths land here and only one of them is ordinary bad luck. A
+        # publish that failed *after* the container existed may already be live
+        # on the account, which is why the gateway refuses to retry it on its
+        # own and why re-arming it in the admin UI can post the same Reel twice.
+        - alert: ReelsmithPostStuck
+          expr: reelsmith_queue_depth{state="failed"} > 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'reelsmith has {{ $value | printf "%.0f" }} queued post(s) stuck in failed'
+            description: |
+              These have stopped retrying and stay put until someone decides what to do with them.
+              Check the account for a duplicate before re-arming: a container may have become a Reel.
+              Queue: https://reelsmith.local.bigd.no/admin/
+              A "no video file" failure specifically means the retention sweep ate a queued
+              file: _prune_media sweeps by mtime and db.live_media_names is the exemption
+              that should have covered it.
