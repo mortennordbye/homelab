@@ -120,6 +120,25 @@ spec:
             description: |
               Render and enqueue a batch, or approve what is already queued, at reelsmith.local.bigd.no.
 
+        # Backups run every six hours, so a day of silence is four missed
+        # rounds. Warning rather than critical: nothing is broken for viewers
+        # while this is stale. What it protects is the record of which comments
+        # have already been answered, which cannot be rebuilt from anywhere,
+        # and whose loss means re-replying to every comment still inside Meta's
+        # seven day window. Same `> 0` guard as the loops above.
+        - alert: ReelsmithBackupStale
+          expr: |
+            (time() - reelsmith_backup_last_success_timestamp > 86400)
+              and (reelsmith_backup_last_success_timestamp > 0)
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'reelsmith has not backed up its state in {{ $value | printf "%.0f" }}s'
+            description: |
+              Usually a full state volume. The copies live beside the database and the newest 14 are kept.
+              Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i backup
+
         - alert: ReelsmithPublishFailing
           expr: increase(reelsmith_publish_failures_total[1h]) > 0
           for: 5m
