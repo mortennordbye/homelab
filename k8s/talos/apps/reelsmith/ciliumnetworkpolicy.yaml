@@ -27,6 +27,18 @@ spec:
     - fromEntities:
         - host
         - health
+    # Prometheus, for /metrics on the same port. Without this the ServiceMonitor
+    # in monitoring.yaml is dropped by this policy and the only symptom is a
+    # target sitting at "down" on a service that is otherwise perfectly healthy,
+    # which is exactly the failure the alerts are there to catch.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": prometheus
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
   egress:
     # DNS to CoreDNS. Required for toFQDNs below to resolve.
     - toEndpoints:

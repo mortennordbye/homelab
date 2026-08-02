@@ -1,0 +1,151 @@
+# Scrape the gateway, and alert on the four ways it goes quiet without
+# crashing.
+#
+# The gateway has exported these metrics since it was deployed and nothing has
+# ever read them. There was no ServiceMonitor, so `/metrics` was a page that
+# only a human could look at, on a service whose whole job is to run unattended
+# while nobody is looking at anything.
+#
+# Every alert here is about silence rather than errors. This service fails by
+# continuing to run: the token quietly expires, the poller loop dies while the
+# web server keeps answering health checks, a slot comes due with an empty
+# queue. None of that shows up as a restart or a 500, so none of it would be
+# caught by the workload alerts in kube-prometheus-stack.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: reelsmith-gateway
+  namespace: reelsmith
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    matchLabels:
+      app: reelsmith-gateway
+  endpoints:
+    # `http` is the only port the Service publishes; /metrics is served off the
+    # same app. It is kept off the public HTTPRoute allowlist, so this
+    # in-cluster scrape is the only way anything reads it.
+    - port: http
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: reelsmith-alerts
+  namespace: reelsmith
+  labels:
+    # Matches the live Prometheus ruleSelector. Its ruleNamespaceSelector is
+    # empty, so a rule next to its app is picked up the same as one in
+    # monitoring/.
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  groups:
+    - name: reelsmith.gateway
+      rules:
+        # The refresher tries daily from 15 days out (TOKEN_REFRESH_MARGIN_DAYS),
+        # so at 10 days it has failed roughly five times. Under 24 hours no
+        # refresh can help at all: an expired long-lived token cannot be
+        # renewed, only replaced by hand in a browser, and until that happens
+        # nothing publishes, no DM is sent and no insight is read.
+        - alert: ReelsmithTokenExpiring
+          expr: reelsmith_token_days_left < 10
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: 'reelsmith token for {{ $labels.ig_user_id }} expires in {{ $value | printf "%.1f" }} days'
+            description: |
+              The automatic refresh has had several days to renew this and has not.
+              Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i token
+
+        - alert: ReelsmithTokenAboutToDie
+          expr: reelsmith_token_days_left < 2
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'reelsmith token for {{ $labels.ig_user_id }} expires in under two days'
+            description: |
+              Past expiry it cannot be refreshed at all and needs re-authorising in a browser.
+              Everything the account does stops: publishing, DMs and insights.
+
+        # The web server answering health checks says nothing about the
+        # background loops. Both are heartbeats written at the end of a
+        # successful pass, at 20s and 60s intervals, so ten minutes of silence
+        # is dozens of missed passes rather than a slow one. The `> 0` guard
+        # keeps a freshly started pod, where the gauge is still zero, from
+        # reading as 56 years of staleness.
+        - alert: ReelsmithPollerStalled
+          expr: |
+            (time() - reelsmith_poller_last_success_timestamp > 600)
+              and (reelsmith_poller_last_success_timestamp > 0)
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'reelsmith comment poller has not completed a sweep in {{ $value | printf "%.0f" }}s'
+            description: |
+              Comments are polled every 20s because real-time comment webhooks need App Review.
+              While this is stalled the comment-to-DM mechanic is off and nobody is told.
+
+        - alert: ReelsmithSchedulerStalled
+          expr: |
+            (time() - reelsmith_scheduler_last_success_timestamp > 600)
+              and (reelsmith_scheduler_last_success_timestamp > 0)
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'reelsmith scheduler has not ticked in {{ $value | printf "%.0f" }}s'
+            description: |
+              The queue publishes on slots at 08:10, 12:40 and 19:20 Europe/Oslo.
+              A stalled scheduler misses them silently, and a missed slot is not retried later.
+
+        # A slot firing into an empty queue is the shape of "the account went
+        # quiet three days ago and nobody noticed". It is not an error anywhere
+        # else: every component is healthy and there is simply nothing to post.
+        - alert: ReelsmithQueueStarved
+          expr: increase(reelsmith_slots_starved_total[6h]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'reelsmith had {{ $value | printf "%.0f" }} slot(s) come due with nothing approved'
+            description: |
+              Render and enqueue a batch, or approve what is already queued, at reelsmith.local.bigd.no.
+
+        # Backups run every six hours, so a day of silence is four missed
+        # rounds. Warning rather than critical: nothing is broken for viewers
+        # while this is stale. What it protects is the record of which comments
+        # have already been answered, which cannot be rebuilt from anywhere,
+        # and whose loss means re-replying to every comment still inside Meta's
+        # seven day window. Same `> 0` guard as the loops above.
+        - alert: ReelsmithBackupStale
+          expr: |
+            (time() - reelsmith_backup_last_success_timestamp > 86400)
+              and (reelsmith_backup_last_success_timestamp > 0)
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'reelsmith has not backed up its state in {{ $value | printf "%.0f" }}s'
+            description: |
+              Usually a full state volume. The copies live beside the database and the newest 14 are kept.
+              Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i backup
+
+        - alert: ReelsmithPublishFailing
+          expr: increase(reelsmith_publish_failures_total[1h]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'reelsmith failed {{ $value | printf "%.0f" }} publish attempt(s) in the last hour'
+            description: |
+              Meta rejected a publish or the upload did not complete. The queue entry stays for a retry.
+              Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i publish
