@@ -28,6 +28,33 @@ spec:
   hostnames:
     - "reelsmith.local.bigd.no"
   rules:
+    # authentik's callback, and the only rule here without the auth filter.
+    #
+    # `forward_single` keeps the whole sign-in on the app's own hostname, so
+    # after authenticating the browser is sent back to
+    # reelsmith.local.bigd.no/outpost.goauthentik.io/callback. That has to
+    # reach authentik rather than the gateway, and it has to be reachable
+    # while the user is still unauthenticated. Putting the filter on this rule
+    # deadlocks the sign-in against the sign-in it is trying to complete, and
+    # pointing it at the gateway returns a 404 from the panel instead.
+    #
+    # A longer prefix wins over `/` by Gateway API's matching precedence, so
+    # this takes effect regardless of rule order.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /outpost.goauthentik.io/
+      backendRefs:
+        # Cross-namespace, so a ReferenceGrant in `identity` permits it. Named
+        # rather than the embedded outpost's own Service because the embedded
+        # outpost is served by authentik-server itself.
+        - group: ""
+          kind: Service
+          name: authentik-server
+          namespace: identity
+          port: 80
+          weight: 1
+
     # The whole app, not just /admin. Reaching /api or /media over the private
     # name is harmless and occasionally useful for debugging, and restricting
     # it here would only mean two lists to keep in step.
@@ -35,6 +62,15 @@ spec:
         - path:
             type: PathPrefix
             value: /
+      filters:
+        # authentik in front. The panel still checks GATEWAY_ADMIN_TOKEN behind
+        # this, so both have to be satisfied: forward-auth adds per-user
+        # identity, it does not replace the password.
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: reelsmith-authentik
       backendRefs:
         - group: ""
           kind: Service

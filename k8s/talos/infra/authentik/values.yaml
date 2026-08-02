@@ -18,6 +18,7 @@ blueprints:
     - authentik-blueprint-argocd
     - authentik-blueprint-kargo
     - authentik-blueprint-grafana
+    - authentik-blueprint-reelsmith
 
 server:
   env:

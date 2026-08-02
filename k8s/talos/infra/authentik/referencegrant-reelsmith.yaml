@@ -1,0 +1,28 @@
+# Lets the reelsmith admin route send authentik's callback back to authentik.
+#
+# Gateway API refuses a cross-namespace backendRef unless the *target*
+# namespace says yes, which is the whole point of the rule: otherwise anyone
+# who can write an HTTPRoute in any namespace could route traffic at a Service
+# in this one.
+#
+# Narrow on purpose. Only HTTPRoutes in `reelsmith`, and only to the
+# authentik-server Service, which is what serves the embedded outpost that
+# Traefik's forward-auth middleware calls. Without this the route is accepted
+# with a ResolvedRefs=False condition and the sign-in callback 500s, which
+# reads like an authentik fault rather than a permissions one.
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: reelsmith-to-authentik
+  namespace: identity
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: reelsmith
+  to:
+    - group: ""
+      kind: Service
+      name: authentik-server
