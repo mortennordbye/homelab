@@ -22,12 +22,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Either upstream ships automatic refresh (watch #7835), or add `TOKEN_TIME` to the Deployment env with a longer window and accept the longer-lived tokens.
 - **Where:** `k8s/talos/apps/mealie/deployment.yaml` (env block).
 
-### Authentik forward-auth in front of the reelsmith admin panel
-- **What:** The reelsmith control panel publishes Reels to a live Instagram account, edits captions, and holds the outbound-DM kill switch. It now has two locks: served only on `reelsmith.local.bigd.no` through the private gateway, and checking `GATEWAY_ADMIN_TOKEN` itself (a Bitwarden value, minimum 24 characters, Strict SameSite cookie plus an Origin check), refusing to start with no password. What it lacks is a real identity in front of it, so the shared token cannot tell one person from another.
-- **Why deferred:** Taking `/admin` off the public route removed the exposure that made this urgent, and a shared token behind a LAN-only hostname is adequate for a single operator. Authentik adds per-user identity and an audit trail, which only start to matter with more than one.
-- **Unblock:** Add an Authentik proxy provider and outpost, then an `ExtensionRef` filter to a forward-auth Middleware on the admin route (the shape `k8s/talos/apps/homepage/httproute.yaml` uses for basicauth). Set `GATEWAY_ADMIN_TRUST_PROXY_AUTH=true` in the ConfigMap at the same time, or accept two sign-ins.
-- **Where:** `k8s/talos/apps/reelsmith/{httproute-admin,configmap}.yaml`, `k8s/talos/infra/authentik/`.
-
 ## AI / RAG POC
 
 ### Eval harness
