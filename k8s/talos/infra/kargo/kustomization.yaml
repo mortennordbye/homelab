@@ -11,7 +11,7 @@ helmCharts:
     # OCI chart. If `kustomize build --enable-helm` cannot pull from the OCI
     # registry, fall back to a child Argo CD Application with a Helm source.
     repo: oci://ghcr.io/akuity/kargo-charts
-    version: 1.10.9
+    version: 1.11.0
     releaseName: kargo
     namespace: kargo
     includeCRDs: true
