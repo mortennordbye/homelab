@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: bigd
-          image: nginxinc/nginx-unprivileged:1.29-alpine
+          image: nginxinc/nginx-unprivileged:1.30-alpine
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
