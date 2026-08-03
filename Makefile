@@ -16,6 +16,13 @@ social-preview: ## Render the GitHub social preview card (→ docs/social-previe
 		rsvg-convert -w 1280 -h 640 /work/source.svg -o /work/social-preview.png'
 	@echo ">> upload it at Settings > General > Social preview"
 
+.PHONY: logo
+logo: ## Render the repo logo (→ docs/logo/logo.png)
+	@echo ">> rendering logo"
+	@docker run --rm -v "$(CURDIR)/docs/logo:/work" ubuntu:24.04 bash -c '\
+		apt-get update >/dev/null 2>&1 && apt-get install -y librsvg2-bin >/dev/null 2>&1; \
+		rsvg-convert -w 512 -h 512 /work/source.svg -o /work/logo.png'
+
 .PHONY: help
 help: ## List available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'

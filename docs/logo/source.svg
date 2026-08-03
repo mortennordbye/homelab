@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Eden repo logo. The tree of the garden, one red fruit on it.
+       Palette is the leaf green family, not the blue/violet used by blog covers
+       and the social preview card, because the mark carries the repo name.
+       Rendered to logo.png by .github/workflows/render-logo.yaml (or make logo).
+       Never hand-edit the PNG. -->
+  <defs>
+    <linearGradient id="canopy" x1="80" y1="70" x2="440" y2="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a7f3a0"/>
+      <stop offset="0.5" stop-color="#4ade80"/>
+      <stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="fruit" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f87171"/>
+      <stop offset="1" stop-color="#dc2626"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="256" cy="250" r="250" gradientUnits="userSpaceOnUse">
+      <stop offset="0.45" stop-color="#4ade80" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#4ade80" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="256" cy="250" r="250" fill="url(#halo)"/>
+
+  <!-- trunk, drawn first so the canopy overlaps its top -->
+  <path d="M228 318 C228 380 222 420 200 452 H312 C290 420 284 380 284 318 Z" fill="#166534"/>
+
+  <!-- canopy: four circles unioned by a shared fill -->
+  <g fill="url(#canopy)">
+    <circle cx="256" cy="192" r="126"/>
+    <circle cx="166" cy="246" r="92"/>
+    <circle cx="346" cy="246" r="92"/>
+    <circle cx="256" cy="264" r="106"/>
+  </g>
+
+  <!-- the fruit -->
+  <g transform="translate(320,238)">
+    <path d="M0 -36 C6 -49 15 -55 26 -57 C24 -44 15 -36 2 -34 Z" fill="#14532d"/>
+    <path d="M0 -34 V-47" stroke="#14532d" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="34" fill="url(#fruit)"/>
+    <path d="M-15 -15 C-21 -9 -23 0 -21 9" stroke="#fca5a5" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.7"/>
+  </g>
+</svg>
