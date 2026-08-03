@@ -1,0 +1,47 @@
+name: Render Logo
+
+# Re-renders docs/logo/source.svg to PNG whenever the source changes, and commits
+# the result back — so the logo in the README never drifts from its source.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/logo/source.svg"
+      - ".github/workflows/render-logo.yaml"
+  workflow_dispatch:
+
+# Commits the rendered logo back to main; queue rather than cancel so a run is
+# never killed between rendering and pushing.
+concurrency:
+  group: render-logo
+  cancel-in-progress: false
+
+jobs:
+  render:
+    if: github.repository_owner == 'mortennordbye'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to commit the re-rendered logo
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Rasterize the logo to PNG
+        # The README points at the PNG rather than the SVG: GitHub serves raw SVGs
+        # with a default-src 'none' CSP, same reason the diagrams ship as PNG.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin
+          rsvg-convert -w 512 -h 512 docs/logo/source.svg -o docs/logo/logo.png
+
+      - name: Commit re-rendered logo if changed
+        run: |
+          if [ -n "$(git status --porcelain docs/logo)" ]; then
+            git config --global user.name "GitHub Actions"
+            git config --global user.email "actions@github.com"
+            git add docs/logo/logo.png
+            git commit -m "chore(logo): re-render logo from source"
+            git push origin HEAD:main
+          else
+            echo "Logo already up to date — nothing to commit."
+          fi

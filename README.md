@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🌿 Eden
+<img src="docs/logo/logo.png" alt="Eden" width="128" height="128">
+
+# Eden
 
 ### Homelab Infrastructure
 
