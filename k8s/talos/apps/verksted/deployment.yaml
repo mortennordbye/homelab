@@ -86,7 +86,7 @@ spec:
         # Docker daemon for the agent sessions. Privileged is inherent to dind;
         # shares the pod netns so the app reaches it at localhost:2375.
         - name: dind
-          image: docker:28-dind
+          image: docker:29-dind
           # No explicit --host: with TLS off the dind entrypoint already binds a
           # single tcp://0.0.0.0:2375 listener. Adding our own -H on 2375 made two
           # listeners on the same port and dind crash-looped ("port is already
