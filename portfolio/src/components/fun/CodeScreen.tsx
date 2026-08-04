@@ -22,12 +22,12 @@ import { Housing, PANEL_PX_H, PANEL_PX_W, distanceFactor } from "./Screen";
  */
 
 const COLOUR = {
-  comment: "#5b6b7a",
+  comment: "#627365",
   string: "#a8d99a",
   key: "#8db4f0",
   number: "#e0b072",
-  plain: "#c2d0de",
-  punct: "#54636f",
+  plain: "#c8d8cb",
+  punct: "#5a695d",
 } as const;
 
 /**
@@ -105,15 +105,15 @@ function ArgoView({ data }: { data: PanelProps }) {
       <div
         className="flex items-center justify-between"
         style={{
-          background: "#1b2733",
+          background: "#202e23",
           padding: "6px 10px",
           borderBottom: `1px solid ${ACCENT.blue}33`,
         }}
       >
-        <span style={{ color: "#e6eef7", letterSpacing: "0.1em" }}>
+        <span style={{ color: "#eaf3eb", letterSpacing: "0.1em" }}>
           APPLICATIONS
         </span>
-        <span style={{ color: "#65788c", fontSize: "9px" }}>
+        <span style={{ color: "#6e8371", fontSize: "9px" }}>
           argocd · genesis
         </span>
       </div>
@@ -121,18 +121,18 @@ function ArgoView({ data }: { data: PanelProps }) {
       {/* rollup strip */}
       <div
         className="flex items-center"
-        style={{ gap: "16px", padding: "7px 10px", borderBottom: "1px solid #16202b" }}
+        style={{ gap: "16px", padding: "7px 10px", borderBottom: "1px solid #1b261d" }}
       >
         <span style={{ color: tone(rootSynced) }}>&#8635; {data.argocd.sync}</span>
         <span style={{ color: tone(rootHealthy) }}>&#9829; {data.argocd.health}</span>
-        <span style={{ color: "#65788c" }}>
+        <span style={{ color: "#6e8371" }}>
           synced {relative(data.argocd.syncedAt) ?? "unknown"}
         </span>
       </div>
 
       <div style={{ flex: 1, overflow: "hidden" }}>
         {apps.length === 0 ? (
-          <p style={{ padding: "14px 10px", color: "#4c5c6d", lineHeight: 1.5 }}>
+          <p style={{ padding: "14px 10px", color: "#536656", lineHeight: 1.5 }}>
             The publisher reports the root application only.
             <br />
             Per-application rows appear when it emits them.
@@ -149,10 +149,10 @@ function ArgoView({ data }: { data: PanelProps }) {
                   gap: "10px",
                   padding: "3.5px 10px",
                   borderLeft: `3px solid ${s && hh ? ACCENT.green : ACCENT.amber}`,
-                  borderBottom: "1px solid #101922",
+                  borderBottom: "1px solid #141e16",
                 }}
               >
-                <span style={{ flex: 1, color: "#c8d8e8" }}>{a.name}</span>
+                <span style={{ flex: 1, color: "#cfe1d2" }}>{a.name}</span>
                 <span style={{ width: "78px", color: tone(s) }}>
                   &#8635; {a.sync}
                 </span>
@@ -224,7 +224,7 @@ export function CodeScreen({
           className="relative flex h-full w-full flex-col overflow-hidden font-mono"
           style={{
             background:
-              "linear-gradient(160deg, #0b1119 0%, #080d14 55%, #060a10 100%)",
+              "linear-gradient(160deg, #0e160f 0%, #0b110c 55%, #080e09 100%)",
             border: "1px solid #51a45e3d",
             color: COLOUR.plain,
             fontSize: "10px",
@@ -235,7 +235,7 @@ export function CodeScreen({
               without having to press E to find out it exists. */}
           <div
             className="flex items-stretch"
-            style={{ borderBottom: "1px solid #16202b", fontSize: "9px" }}
+            style={{ borderBottom: "1px solid #1b261d", fontSize: "9px" }}
           >
             {(
               [
@@ -247,9 +247,9 @@ export function CodeScreen({
                 key={id}
                 style={{
                   padding: "6px 12px",
-                  color: tab === id ? "#8fb6d8" : "#4b5967",
-                  background: tab === id ? "#0e161f" : "transparent",
-                  borderRight: "1px solid #16202b",
+                  color: tab === id ? "#8fb6d8" : "#516154",
+                  background: tab === id ? "#121b13" : "transparent",
+                  borderRight: "1px solid #1b261d",
                   borderTop: `2px solid ${tab === id ? "#51a45e" : "transparent"}`,
                 }}
               >
@@ -261,7 +261,7 @@ export function CodeScreen({
                 flex: 1,
                 textAlign: "right",
                 padding: "6px 10px",
-                color: "#4b5967",
+                color: "#516154",
               }}
             >
               {tab === "code"
@@ -282,7 +282,7 @@ export function CodeScreen({
                   style={{
                     width: "20px",
                     flex: "0 0 20px",
-                    color: "#33404d",
+                    color: "#39473b",
                     textAlign: "right",
                     marginRight: "9px",
                   }}

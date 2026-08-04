@@ -49,7 +49,7 @@ const cellPx = (i: number) => ({
  * mechanism: the tilt belongs to the slot, not the post.
  */
 const TILT = [-0.9, 0.7, -0.4, 0.8, -0.6, 0.5];
-const MAGNET = ["#e0564a", "#3f8fd0", "#e0a23a", "#4fae7a", "#9b7fd4", "#d0644f"];
+const MAGNET = ["#51a45e", "#c09955", "#8ec798", "#478f53", "#a1ada3", "#61b86f"];
 
 const MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -193,7 +193,7 @@ export function BlogBoard({
           className="relative h-full w-full"
           style={{
             padding: `${PAD}px`,
-            color: "#1d2733",
+            color: "#1a201b",
             background:
               "linear-gradient(155deg, #efeae0 0%, #e7e1d5 55%, #ded8cb 100%)",
             boxShadow: "inset 0 0 90px rgba(90,74,52,0.16)",
@@ -205,13 +205,13 @@ export function BlogBoard({
           >
             <span
               className="font-mono"
-              style={{ fontSize: "30px", letterSpacing: "0.16em", color: "#26313f" }}
+              style={{ fontSize: "30px", letterSpacing: "0.16em", color: "#1a201b" }}
             >
               FROM THE BLOG
             </span>
             <span
               className="font-mono"
-              style={{ fontSize: "19px", color: "#8b97a4" }}
+              style={{ fontSize: "19px", color: "#5f7963" }}
             >
               blog.nordbye.it
             </span>
@@ -277,7 +277,7 @@ export function BlogBoard({
                     style={{
                       width: "100%",
                       height: `${Math.round((CELL_W * 9) / 16)}px`,
-                      background: "linear-gradient(140deg,#dfe5ea,#c8d2da)",
+                      background: "linear-gradient(140deg,#e7eee8,#d1ddd3)",
                     }}
                   />
                 )}
@@ -297,7 +297,7 @@ export function BlogBoard({
                   </div>
                   <div
                     className="font-mono"
-                    style={{ marginTop: "5px", fontSize: "15px", color: "#7b8794" }}
+                    style={{ marginTop: "5px", fontSize: "15px", color: "#5f7963" }}
                   >
                     {shortDate(p.publishedAt)}
                   </div>
@@ -309,7 +309,7 @@ export function BlogBoard({
           {posts.length === 0 && (
             <p
               className="font-mono"
-              style={{ fontSize: "20px", color: "#98a3ae", paddingTop: "40px" }}
+              style={{ fontSize: "20px", color: "#5f7963", paddingTop: "40px" }}
             >
               the feed is not answering just now
             </p>

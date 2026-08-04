@@ -61,10 +61,10 @@ export function PanelCard({
       className="relative h-full w-full overflow-hidden font-mono"
       style={{
         background:
-          "linear-gradient(160deg, #0a1119 0%, #070d14 55%, #060a10 100%)",
+          "linear-gradient(160deg, #0d160f 0%, #0a110b 55%, #080e09 100%)",
         border: `1px solid ${panel.accent}3d`,
         boxShadow: `inset 0 0 60px ${panel.accent}14`,
-        color: "#c8d8e8",
+        color: "#cfe1d2",
         padding: compact ? "16px 18px 18px" : "20px 24px 22px",
         fontSize: "15px",
       }}
@@ -79,7 +79,7 @@ export function PanelCard({
         >
           {panel.title}
         </span>
-        <span className="text-[11px] tracking-[0.14em] text-[#3f4d5c]">
+        <span className="text-[11px] tracking-[0.14em] text-[#465548]">
           GENESIS
         </span>
       </div>
@@ -110,13 +110,13 @@ export function Housing({ w, h, powered }: { w: number; h: number; powered: bool
         smoothness={4}
         castShadow
       >
-        <meshStandardMaterial color="#121417" roughness={0.62} metalness={0.25} />
+        <meshStandardMaterial color="#131614" roughness={0.62} metalness={0.25} />
       </RoundedBox>
       {/* Dark when unpowered, faintly lit when on, so the power-on sequence
           reads even before the DOM fades in. */}
       <mesh>
         <planeGeometry args={[w, h]} />
-        <meshBasicMaterial color={powered ? "#080d13" : "#05080b"} />
+        <meshBasicMaterial color={powered ? "#0a110b" : "#060a07"} />
       </mesh>
     </>
   );
@@ -230,20 +230,20 @@ export function Dashboard({
           className="relative flex h-full w-full flex-col overflow-hidden font-mono"
           style={{
             background:
-              "linear-gradient(160deg, #08101a 0%, #060c13 55%, #05090f 100%)",
-            border: "1px solid #1b2733",
-            color: "#c8d8e8",
+              "linear-gradient(160deg, #0c160e 0%, #09100a 55%, #070d08 100%)",
+            border: "1px solid #202e23",
+            color: "#cfe1d2",
             padding: `${PAD}px`,
           }}
         >
           <div
             className="flex items-center justify-between border-b pb-4"
-            style={{ borderColor: "#1b2733", height: `${HEADER}px` }}
+            style={{ borderColor: "#202e23", height: `${HEADER}px` }}
           >
             <span className="text-[19px] tracking-[0.3em] text-[#51a45e]">
               GENESIS · OBSERVABILITY
             </span>
-            <span className="text-[15px] tracking-[0.18em] text-[#3f4d5c]">
+            <span className="text-[15px] tracking-[0.18em] text-[#465548]">
               OSLO · TALOS
             </span>
           </div>

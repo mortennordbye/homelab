@@ -11,12 +11,12 @@ import {
 // Accents come from the site tokens so the room reads as the same product.
 export const ACCENT = {
   blue: "#51a45e",
-  violet: "#9b8cff",
-  teal: "#4fd1c5",
-  copper: "#d98b4a",
-  green: "#3ddc97",
-  amber: "#f5b544",
-  red: "#ff6b6b",
+  violet: "#9077d4",
+  teal: "#5ca9c3",
+  copper: "#c9713f",
+  green: "#51a45e",
+  amber: "#c09955",
+  red: "#d18c82",
 } as const;
 
 export type PanelId =
@@ -43,7 +43,7 @@ function Row({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-4 py-[3px]">
-      <span className="text-[#65788c]">{k}</span>
+      <span className="text-[#6e8371]">{k}</span>
       <span className="tabular-nums" style={tone ? { color: tone } : undefined}>
         {v}
       </span>
@@ -64,18 +64,18 @@ function Big({
     <div className="flex items-baseline gap-2 leading-none">
       <span
         className="text-[46px] font-semibold tabular-nums tracking-tight"
-        style={{ color: tone ?? "#e6eef7" }}
+        style={{ color: tone ?? "#eaf3eb" }}
       >
         {value}
       </span>
-      {unit && <span className="text-[15px] text-[#65788c]">{unit}</span>}
+      {unit && <span className="text-[15px] text-[#6e8371]">{unit}</span>}
     </div>
   );
 }
 
 function Bar({ pct, tone }: { pct: number; tone: string }) {
   return (
-    <div className="h-[7px] w-full overflow-hidden rounded-full bg-[#16202b]">
+    <div className="h-[7px] w-full overflow-hidden rounded-full bg-[#1b261d]">
       <div
         className="h-full rounded-full"
         style={{
@@ -90,10 +90,10 @@ function Bar({ pct, tone }: { pct: number; tone: string }) {
 
 function Empty({ what }: { what: string }) {
   return (
-    <p className="pt-6 text-center text-[13px] leading-relaxed text-[#4c5c6d]">
+    <p className="pt-6 text-center text-[13px] leading-relaxed text-[#536656]">
       {what}
       <br />
-      <span className="text-[#3d4b59]">publisher does not report this yet</span>
+      <span className="text-[#435346]">publisher does not report this yet</span>
     </p>
   );
 }
@@ -145,13 +145,13 @@ export const PANELS: PanelDef[] = [
             value={
               <>
                 {nodes.ready}
-                <span className="text-[26px] text-[#65788c]">/{nodes.total}</span>
+                <span className="text-[26px] text-[#6e8371]">/{nodes.total}</span>
               </>
             }
             unit="nodes ready"
             tone={allReady ? ACCENT.green : ACCENT.amber}
           />
-          <div className="mt-5 space-y-[2px] border-t border-[#1b2733] pt-4">
+          <div className="mt-5 space-y-[2px] border-t border-[#202e23] pt-4">
             <Row k="talos" v={status?.versions?.talos ?? "unknown"} />
             <Row k="kubernetes" v={status?.versions?.kubernetes ?? "unknown"} />
             <Row
@@ -166,8 +166,8 @@ export const PANELS: PanelDef[] = [
                 key={i}
                 className="h-[26px] flex-1 rounded-[2px]"
                 style={{
-                  background: i < nodes.ready ? `${ACCENT.green}2e` : "#1b2733",
-                  borderTop: `2px solid ${i < nodes.ready ? ACCENT.green : "#31404f"}`,
+                  background: i < nodes.ready ? `${ACCENT.green}2e` : "#202e23",
+                  borderTop: `2px solid ${i < nodes.ready ? ACCENT.green : "#38483b"}`,
                 }}
               />
             ))}
@@ -186,12 +186,12 @@ export const PANELS: PanelDef[] = [
       return (
         <>
           <Big value={status?.build ?? "dev"} tone={ACCENT.violet} />
-          <p className="mt-2 text-[13px] text-[#65788c]">
+          <p className="mt-2 text-[13px] text-[#6e8371]">
             {relative(status?.deployedAt)
               ? `deployed ${relative(status?.deployedAt)}`
               : "pinned to commit SHA"}
           </p>
-          <div className="mt-5 space-y-[2px] border-t border-[#1b2733] pt-4">
+          <div className="mt-5 space-y-[2px] border-t border-[#202e23] pt-4">
             <Row
               k="argocd sync"
               v={
@@ -237,7 +237,7 @@ export const PANELS: PanelDef[] = [
               </span>
             )}
           </div>
-          <div className="mt-4 space-y-[2px] border-t border-[#1b2733] pt-3">
+          <div className="mt-4 space-y-[2px] border-t border-[#202e23] pt-3">
             {apps.slice(0, 9).map((a) => (
               <Row
                 key={a.name}
@@ -245,7 +245,7 @@ export const PANELS: PanelDef[] = [
                 v={
                   <span className="inline-flex items-center gap-2">
                     {dot(healthTone(a.health, a.sync))}
-                    <span className="text-[#8fa3b7]">
+                    <span className="text-[#98ae9c]">
                       {a.sync} / {a.health}
                     </span>
                   </span>
@@ -267,7 +267,7 @@ export const PANELS: PanelDef[] = [
       return (
         <>
           <Big value={uptime.overall ?? "n/a"} tone={ACCENT.green} />
-          <p className="mt-2 text-[13px] text-[#65788c]">
+          <p className="mt-2 text-[13px] text-[#6e8371]">
             healthy samples · observed in-cluster
           </p>
           <div className="mt-6 flex h-[74px] items-stretch gap-[3px]">
@@ -278,7 +278,7 @@ export const PANELS: PanelDef[] = [
                 style={{
                   background:
                     day.pct === null
-                      ? "#1b2733"
+                      ? "#202e23"
                       : day.pct >= 0.995
                         ? ACCENT.green
                         : ACCENT.red,
@@ -291,7 +291,7 @@ export const PANELS: PanelDef[] = [
               />
             ))}
           </div>
-          <div className="mt-3 flex justify-between text-[12px] text-[#4c5c6d]">
+          <div className="mt-3 flex justify-between text-[12px] text-[#536656]">
             <span>30d ago</span>
             <span>gaps = no samples</span>
             <span>today</span>
@@ -316,7 +316,7 @@ export const PANELS: PanelDef[] = [
         <div className="space-y-5 pt-1">
           <div>
             <div className="mb-2 flex justify-between text-[14px]">
-              <span className="text-[#65788c]">cpu requested</span>
+              <span className="text-[#6e8371]">cpu requested</span>
               <span className="tabular-nums">
                 {c.cpuRequested} / {c.cpuAllocatable} cores
               </span>
@@ -325,7 +325,7 @@ export const PANELS: PanelDef[] = [
           </div>
           <div>
             <div className="mb-2 flex justify-between text-[14px]">
-              <span className="text-[#65788c]">memory requested</span>
+              <span className="text-[#6e8371]">memory requested</span>
               <span className="tabular-nums">
                 {c.memRequestedGi} / {c.memAllocatableGi} Gi
               </span>
@@ -334,14 +334,14 @@ export const PANELS: PanelDef[] = [
           </div>
           <div>
             <div className="mb-2 flex justify-between text-[14px]">
-              <span className="text-[#65788c]">pods scheduled</span>
+              <span className="text-[#6e8371]">pods scheduled</span>
               <span className="tabular-nums">
                 {c.pods} / {c.podCapacity}
               </span>
             </div>
             <Bar pct={pods} tone={tone(pods)} />
           </div>
-          <p className="border-t border-[#1b2733] pt-3 text-[12px] text-[#4c5c6d]">
+          <p className="border-t border-[#202e23] pt-3 text-[12px] text-[#536656]">
             requests, not live usage — what the scheduler has committed
           </p>
         </div>
@@ -360,7 +360,7 @@ export const PANELS: PanelDef[] = [
         return (
           <>
             <Big value={fallback} unit="days left" tone={ACCENT.amber} />
-            <p className="mt-4 text-[13px] text-[#65788c]">
+            <p className="mt-4 text-[13px] text-[#6e8371]">
               auto-renews · Let&apos;s Encrypt via cert-manager
             </p>
           </>
@@ -374,7 +374,7 @@ export const PANELS: PanelDef[] = [
             unit="days to first expiry"
             tone={soonest < 21 ? ACCENT.red : ACCENT.amber}
           />
-          <div className="mt-5 space-y-[2px] border-t border-[#1b2733] pt-4">
+          <div className="mt-5 space-y-[2px] border-t border-[#202e23] pt-4">
             {list.slice(0, 6).map((c) => (
               <Row
                 key={c.name}
@@ -384,7 +384,7 @@ export const PANELS: PanelDef[] = [
               />
             ))}
           </div>
-          <p className="mt-4 text-[12px] text-[#4c5c6d]">
+          <p className="mt-4 text-[12px] text-[#536656]">
             issued and rotated without human hands
           </p>
         </>
@@ -412,13 +412,13 @@ export const PANELS: PanelDef[] = [
             {dot(tone)}
             <Big value={label} tone={tone} />
           </div>
-          <div className="mt-5 space-y-[2px] border-t border-[#1b2733] pt-4">
+          <div className="mt-5 space-y-[2px] border-t border-[#202e23] pt-4">
             <Row k="generated" v={relative(status?.generatedAt) ?? "unknown"} />
             <Row k="publisher" v="CronJob · every 5 min" />
             <Row k="stale after" v="15 min" />
             <Row k="web pod k8s access" v="none" tone={ACCENT.green} />
           </div>
-          <p className="mt-4 text-[12px] leading-relaxed text-[#4c5c6d]">
+          <p className="mt-4 text-[12px] leading-relaxed text-[#536656]">
             {feed === "snapshot"
               ? "Live feed unreachable. These are build-time snapshot values, not current cluster state."
               : stale
