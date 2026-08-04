@@ -1,100 +1,106 @@
 /* ======================================================================
-   Design tokens — Nordic palette
-   Default = dark (fjord at midnight). `.light` class on <html> swaps to
-   bright (snow + ink). The theme bootstrap script in layout.tsx applies
-   the right class before first paint.
+   Design tokens — Eucalyptus palette
+   Hue is locked to 130. Every value was solved against its own ground for
+   a target WCAG ratio rather than picked by hand, so the ratios in the
+   comments are measured. Full spec and reasoning live at /brand.
+
+   Default = dark. The `.light` class is currently never applied (the theme
+   toggle was removed and layout.tsx forces dark), but the light ramp is
+   kept correct because business documents and any future company surface
+   start white.
    ====================================================================== */
 
 :root,
 :root.dark {
   /* Surfaces */
-  --bg: #0a1015;          /* deep navy-black */
-  --bg-2: #060a0e;        /* darker shoulders */
-  --surface: #111923;     /* cold steel */
-  --line: #2a3849;        /* fjord wall (lifted from #1d2733 — was 1.3:1, near-invisible) */
-  --line-2: #3a4a5e;      /* lifted to keep separation from --line */
+  --bg: #0f1410;          /* anchor */
+  --bg-2: #090c09;        /* darker shoulders */
+  --surface: #191f1a;     /* raised surface */
+  --line: #2a382c;        /* hairline — 1.50:1 */
+  --line-2: #3e5542;      /* divider, input border — 2.28:1 */
 
-  /* Foreground — readability targets: fg-2 ≥ 7:1, fg-3 ≥ 4.5:1 (WCAG AA) on --bg */
-  --fg: #e8eef5;          /* snow */
-  --fg-2: #b0bccb;        /* fog (lifted from #97a4b4 for body prose) */
-  --fg-3: #8898aa;        /* slate (lifted from #5a6878 — old value failed AA) */
+  /* Foreground — fg-2 >= 7:1, fg-3 >= 4.5:1 on --bg */
+  --fg: #e9ebe9;          /* 15.49:1 */
+  --fg-2: #a1ada3;        /* 7.98:1 */
+  --fg-3: #708373;        /* 4.58:1 */
 
-  /* Accents — arctic / aurora blue */
-  --accent: #5db7ff;      /* arctic blue — primary */
-  --accent-2: #8b7dff;    /* aurora violet — secondary, gradients only */
-  --accent-3: #58d2c9;    /* fjord teal — third stop */
-  --accent-ink: #03121f;  /* readable text on the accent fill */
-  --copper: #d49a6a;      /* sparing warm */
-  --warn: #f0b86e;
+  /* Accents — one hue, three steps. Not three hues: a mono ramp is what
+     keeps the gradients below from reading as the generated-UI rainbow. */
+  --accent: #51a45e;      /* 6.05:1 — primary */
+  --accent-2: #8ec798;    /* 9.59:1 — lightest step, gradients only */
+  --accent-3: #61b86f;    /* 7.61:1 — middle step */
+  --accent-ink: #0f1410;  /* 6.05:1 on the accent fill */
+  --copper: #bf9752;      /* sparing warm — 6.90:1 */
+  --warn: #bf9752;
 
-  /* Atmospheric gradient stack */
+  /* Atmospheric gradient. Reduced from three hues to one, at low opacity.
+     The old blue/violet/teal stack was the single clearest generic tell on
+     the page; dropping it entirely is the recommended next step. */
   --grad-hero:
-    radial-gradient(60% 80% at 22% -10%, rgba(139, 125, 255, 0.26), transparent 60%),
-    radial-gradient(55% 70% at 88% 10%, rgba(93, 183, 255, 0.22), transparent 65%),
-    radial-gradient(40% 50% at 50% 100%, rgba(88, 210, 201, 0.10), transparent 70%),
-    linear-gradient(180deg, #0a1015 0%, #050a0f 100%);
+    radial-gradient(60% 80% at 22% -10%, rgba(81, 164, 94, 0.14), transparent 62%),
+    radial-gradient(50% 65% at 88% 8%, rgba(81, 164, 94, 0.09), transparent 66%),
+    linear-gradient(180deg, #0f1410 0%, #080b08 100%);
 
-  /* Glow tint matches accent (used in shadows / text-shadows) */
-  --accent-rgb: 93, 183, 255;
-  --selection-fg: #03121f;
+  --accent-rgb: 81, 164, 94;
+  --selection-fg: #0f1410;
 
-  --grain-opacity: 0.18;
+  --grain-opacity: 0.16;
   --grain-mix: overlay;
 }
 
 :root.light {
-  /* Surfaces — Nordic snow */
-  --bg: #f6f8fb;          /* warm off-white */
-  --bg-2: #f1f4f9;        /* lifted surface (tinted off-white; was pure #ffffff — alpha tints were invisible) */
-  --surface: #ecf1f7;     /* visibly cooler than --bg so bg-surface/60 etc. actually tints */
-  --line: #d6dde7;        /* hairline (darkened from #e3e8ef — was nearly invisible) */
-  --line-2: #c9d2dd;
+  /* Surfaces */
+  --bg: #f9fbf9;          /* paper */
+  --bg-2: #f0f5f1;
+  --surface: #f0f5f1;
+  --line: #d1ddd3;        /* 1.35:1 */
+  --line-2: #a6bfaa;      /* 1.90:1 */
 
-  /* Foreground — slate ink. Readability targets: fg-2 ≥ 7:1, fg-3 ≥ 4.5:1 (WCAG AA) on --bg */
-  --fg: #0d141d;
-  --fg-2: #364456;        /* darkened from #475569 for stronger body prose */
-  --fg-3: #5e6b7c;        /* darkened from #8a96a6 — old value failed AA */
+  /* Foreground */
+  --fg: #1a201b;          /* 15.95:1 */
+  --fg-2: #415344;        /* 7.94:1 */
+  --fg-3: #5f7963;        /* 4.59:1 */
 
-  /* Accents — same blue, deeper for contrast on white */
-  --accent: #1f6fda;      /* arctic blue, deeper */
-  --accent-2: #6552d8;    /* deeper violet */
-  --accent-3: #1aa39a;    /* deeper teal */
+  /* Accents — same hue, darkened to clear contrast on paper */
+  --accent: #378144;      /* 4.60:1 on paper, 4.79:1 white-on-fill */
+  --accent-2: #40a551;    /* 3.00:1 — large/decorative only */
+  --accent-3: #3d954c;    /* 3.60:1 — large/decorative only */
   --accent-ink: #ffffff;
-  --copper: #b07241;
-  --warn: #c1822f;
+  --copper: #956b23;      /* 4.59:1 */
+  --warn: #956b23;
 
   --grad-hero:
-    radial-gradient(60% 80% at 22% -10%, rgba(101, 82, 216, 0.10), transparent 60%),
-    radial-gradient(55% 70% at 88% 10%, rgba(31, 111, 218, 0.10), transparent 65%),
-    radial-gradient(40% 50% at 50% 100%, rgba(26, 163, 154, 0.06), transparent 70%),
-    linear-gradient(180deg, #f6f8fb 0%, #eef2f7 100%);
+    radial-gradient(60% 80% at 22% -10%, rgba(55, 129, 68, 0.08), transparent 62%),
+    radial-gradient(50% 65% at 88% 8%, rgba(55, 129, 68, 0.05), transparent 66%),
+    linear-gradient(180deg, #f9fbf9 0%, #eef3ef 100%);
 
-  --accent-rgb: 31, 111, 218;
+  --accent-rgb: 55, 129, 68;
   --selection-fg: #ffffff;
 
-  --grain-opacity: 0.10;
+  --grain-opacity: 0.09;
   --grain-mix: multiply;
 }
 
 :root,
 :root.dark {
-  /* Semantic colours (dark) */
+  /* Semantic colours (dark). Success is the brand green: a green brand plus
+     a separate success green would be two greens meaning different things. */
   --interactive: var(--accent);
-  --interactive-hover: #7fc6ff;
+  --interactive-hover: #5bb96b;   /* 7.61:1 */
   --interactive-ink: var(--accent-ink);
-  --success: #6ad6a8;
-  --danger: #ef6f7a;
-  --info: var(--accent-3);
+  --success: #51a45e;             /* 6.05:1 */
+  --danger: #d18c82;              /* 6.89:1 */
+  --info: #59a8c2;                /* 6.90:1 */
   --ring: rgba(var(--accent-rgb), 0.55);
 }
 
 :root.light {
   --interactive: var(--accent);
-  --interactive-hover: #1858b8;
+  --interactive-hover: #286c33;   /* 6.18:1 */
   --interactive-ink: var(--accent-ink);
-  --success: #1b8f5e;
-  --danger: #b03544;
-  --info: var(--accent-3);
+  --success: #378144;             /* 4.60:1 */
+  --danger: #ca442f;              /* 4.59:1 */
+  --info: #247c99;                /* 4.59:1 */
   --ring: rgba(var(--accent-rgb), 0.45);
 }
 

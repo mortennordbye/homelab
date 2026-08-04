@@ -30,7 +30,7 @@ import type { ShelfData } from "./shelf";
  * fetch against the real endpoints, so the output is not a mock.
  */
 
-const ACCENT = "#7fd6ff";
+const ACCENT = "#61b86f";
 
 type Line = { kind: "in" | "out" | "err" | "note"; text: string };
 
@@ -63,6 +63,7 @@ function useCommands(
             "cat work/<slug>     read one case study",
             "social [name]       list social links, or open one",
             "contact             email and phone",
+            "brand               colour, type and imagery system",
             // Kept to 57 characters. The portrait monitor fits 60 before the
             // second column wraps — see PORTRAIT_PX_W in Screen.tsx.
             "curl <path>         GET an endpoint, e.g. /api/v1/profile",
@@ -134,6 +135,21 @@ function useCommands(
             `phone  ${site.phoneDisplay}`,
             `site   ${site.url}`,
           );
+
+        /**
+         * Unlisted on purpose. The brand spec is a working document, not a
+         * page anyone browsing the site is meant to land on, so the shell is
+         * the only entrance and the route itself is noindex.
+         */
+        case "brand": {
+          onOpen(`${site.url}/brand`);
+          return out(
+            "brand system — eucalyptus deepened",
+            "colour, type, spacing, components, imagery",
+            "",
+            "opening /brand",
+          );
+        }
 
         /**
          * Reads the same feed object the screens read, rather than fetching

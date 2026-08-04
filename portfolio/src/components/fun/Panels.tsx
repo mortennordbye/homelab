@@ -10,7 +10,7 @@ import {
 
 // Accents come from the site tokens so the room reads as the same product.
 export const ACCENT = {
-  blue: "#5db7ff",
+  blue: "#51a45e",
   violet: "#9b8cff",
   teal: "#4fd1c5",
   copper: "#d98b4a",

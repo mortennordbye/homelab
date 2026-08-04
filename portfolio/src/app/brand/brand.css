@@ -1,0 +1,252 @@
+/* ======================================================================
+   Brand system spec — scoped tokens.
+
+   Everything lives under .bsys so this page can specify the eucalyptus
+   system while the rest of the site still ships the arctic-blue tokens in
+   styles/tokens.css. Nothing here leaks out; nothing outside leaks in.
+   ====================================================================== */
+
+.bsys {
+  --b-anchor:   #0f1410;
+  --b-anchor-2: #191f1a;
+  --b-anchor-3: #222a23;
+  --b-field:    #142e18;
+
+  --b-paper:    #f9fbf9;
+  --b-paper-2:  #f0f5f1;
+  --b-paper-3:  #e7eee8;
+
+  --b-ink:      #1a201b;
+  --b-ink-2:    #415344;
+  --b-ink-3:    #5f7963;
+  --b-line:     #d1ddd3;
+  --b-line-2:   #a6bfaa;
+
+  --b-snow:     #e9ebe9;
+  --b-snow-2:   #a1ada3;
+  --b-snow-3:   #708373;
+  --b-dline:    #2a382c;
+  --b-dline-2:  #3e5542;
+
+  --b-brand:        #51a45e;
+  --b-brand-hover:  #65b372;
+  --b-brand-active: #478f53;
+  --b-brand-ink:    #378144;
+  --b-brand-solid:  #358142;
+  --b-subtle:       #ebf4ed;
+  --b-subtle-d:     #1e3322;
+
+  --b-success:  #51a45e;
+  --b-warning:  #c09955;
+  --b-danger:   #d18e83;
+  --b-info:     #5ca9c3;
+
+  /* Real faces, not names. Fraunces is already loaded by the root layout;
+     the two Plex variables are loaded by this route's page component. All
+     three are self-hosted at build time and all three are OFL-1.1. */
+  --b-display: var(--font-display-face), ui-serif, Iowan Old Style, Georgia, serif;
+  --b-body: var(--b-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --b-mono: var(--b-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --b-r-sm: 2px;
+  --b-r-md: 4px;
+
+  --b-hover: 150ms cubic-bezier(0.22, 1, 0.36, 1);
+  --b-press: 80ms cubic-bezier(0.4, 0, 1, 1);
+
+  background: var(--b-anchor);
+  color: var(--b-snow);
+  font-family: var(--b-body);
+  line-height: 1.6;
+  min-height: 100dvh;
+  padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1rem, 4vw, 3rem) 7rem;
+}
+
+.bsys *,
+.bsys *::before,
+.bsys *::after { box-sizing: border-box; }
+
+/* The root layout wraps every route in the site header and footer, which are
+   still on the arctic-blue tokens and clash badly with a green spec sheet.
+   Suppressing them only when this page is mounted keeps the change contained
+   here rather than restructuring the app router for one unlisted route. The
+   command palette is deliberately left alone — it is still useful. */
+body:has(.bsys) > header,
+body:has(.bsys) > footer { display: none; }
+body:has(.bsys) > main { flex: 1; }
+
+.bsys__wrap {
+  max-width: 78rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3rem, 6vw, 5rem);
+}
+
+/* ------------------------------------------------------------ structure */
+.bsys h1, .bsys h2, .bsys h3, .bsys h4 {
+  margin: 0;
+  line-height: 1.12;
+  text-wrap: balance;
+  font-family: var(--b-display);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+.bsys h1 { font-size: clamp(2.2rem, 5vw, 3.3rem); }
+.bsys h2 { font-size: clamp(1.5rem, 3vw, 2rem); }
+.bsys h3 { font-family: var(--b-body); font-weight: 640; font-size: 1.02rem; letter-spacing: -0.006em; }
+.bsys p { margin: 0; max-width: 68ch; color: var(--b-snow-2); }
+
+.bsys__eyebrow {
+  font-family: var(--b-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--b-snow-3);
+  margin: 0;
+}
+.bsys__rule { height: 1px; background: var(--b-dline); border: 0; margin: 0; }
+.bsys__sec { display: flex; flex-direction: column; gap: 1.5rem; }
+.bsys__head { display: flex; flex-direction: column; gap: 0.6rem; }
+
+/* --------------------------------------------------------------- swatch */
+.bsys__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+  gap: 1px;
+  background: var(--b-dline);
+  border: 1px solid var(--b-dline);
+}
+.bsys__sw { background: var(--b-anchor); display: flex; flex-direction: column; }
+.bsys__sw i { display: block; height: 68px; }
+.bsys__sw div { padding: 0.7rem 0.85rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.bsys__sw b {
+  font-family: var(--b-mono); font-size: 0.66rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--b-snow-3); font-weight: 500;
+}
+.bsys__sw code {
+  font-family: var(--b-mono); font-size: 0.78rem; color: var(--b-snow);
+  font-variant-numeric: tabular-nums;
+}
+.bsys__sw span { font-size: 0.75rem; line-height: 1.45; color: var(--b-snow-3); }
+.bsys__sw em {
+  font-style: normal; font-family: var(--b-mono); font-size: 0.66rem;
+  color: var(--b-snow-3); font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- panel */
+.bsys__panel { border: 1px solid var(--b-dline); overflow: hidden; }
+.bsys__cap {
+  padding: 0.6rem 0.95rem; border-bottom: 1px solid var(--b-dline);
+  background: var(--b-anchor-2); font-family: var(--b-mono); font-size: 0.65rem;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--b-snow-3);
+}
+.bsys__body { padding: clamp(1.1rem, 3vw, 1.9rem); }
+.bsys__two { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 860px) { .bsys__two { grid-template-columns: 1fr; } }
+
+/* light specimen island inside a dark page */
+.bsys__light { background: var(--b-paper); color: var(--b-ink); }
+.bsys__light p, .bsys__light .bsys__sw span { color: var(--b-ink-2); }
+
+/* ----------------------------------------------------------- typography */
+.bsys__type { display: flex; flex-direction: column; }
+.bsys__type > div {
+  display: grid; grid-template-columns: 7.5rem 1fr; gap: 1.25rem;
+  padding: 1rem 0; border-bottom: 1px solid var(--b-dline); align-items: baseline;
+}
+.bsys__type > div:last-child { border-bottom: 0; }
+@media (max-width: 700px) { .bsys__type > div { grid-template-columns: 1fr; gap: 0.4rem; } }
+.bsys__typemeta { font-family: var(--b-mono); font-size: 0.66rem; color: var(--b-snow-3); line-height: 1.7; }
+.bsys__typemeta b { display: block; color: var(--b-snow-2); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+.bsys__sample { color: var(--b-snow); min-width: 0; overflow-wrap: anywhere; }
+
+/* -------------------------------------------------------------- scales */
+.bsys__scale { display: flex; flex-direction: column; gap: 0.45rem; }
+.bsys__scale > div { display: grid; grid-template-columns: 3.5rem 4rem 1fr; gap: 0.9rem; align-items: center; }
+.bsys__scale code { font-family: var(--b-mono); font-size: 0.72rem; color: var(--b-snow-2); font-variant-numeric: tabular-nums; }
+.bsys__bar { height: 14px; background: var(--b-brand); }
+.bsys__scale span { font-size: 0.78rem; color: var(--b-snow-3); }
+
+/* ---------------------------------------------------------- components */
+.bsys__row { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; }
+.bsys__btn {
+  font-family: var(--b-body); font-weight: 600; font-size: 0.875rem; line-height: 1;
+  padding: 0.78rem 1.15rem; min-height: 44px; border: 1px solid transparent;
+  border-radius: 0; cursor: pointer; display: inline-flex; align-items: center;
+  gap: 0.5rem; transition: background var(--b-hover), border-color var(--b-hover), color var(--b-hover);
+}
+.bsys__btn:focus-visible { outline: 2px solid var(--b-brand); outline-offset: 2px; }
+.bsys__btn--primary { background: var(--b-brand); color: var(--b-anchor); }
+.bsys__btn--primary:hover { background: var(--b-brand-hover); }
+.bsys__btn--primary:active { background: var(--b-brand-active); }
+.bsys__btn--secondary { border-color: var(--b-dline-2); color: var(--b-snow); background: transparent; }
+.bsys__btn--secondary:hover { border-color: var(--b-brand); color: var(--b-brand); }
+.bsys__btn--ghost { color: var(--b-snow-2); background: transparent; }
+.bsys__btn--ghost:hover { color: var(--b-snow); background: var(--b-anchor-2); }
+.bsys__btn--danger { background: var(--b-danger); color: var(--b-anchor); }
+.bsys__btn[disabled] { opacity: 0.42; cursor: not-allowed; }
+
+.bsys__field { display: flex; flex-direction: column; gap: 0.35rem; max-width: 22rem; }
+.bsys__field label { font-size: 0.8rem; font-weight: 600; color: var(--b-snow); }
+.bsys__field input {
+  font-family: var(--b-body); font-size: 1rem; min-height: 44px; padding: 0.6rem 0.75rem;
+  background: var(--b-anchor-2); border: 1px solid var(--b-dline-2); border-radius: var(--b-r-sm);
+  color: var(--b-snow); transition: border-color var(--b-hover);
+}
+.bsys__field input::placeholder { color: var(--b-snow-3); }
+.bsys__field input:focus { outline: 2px solid var(--b-brand); outline-offset: 2px; border-color: var(--b-brand); }
+.bsys__field input[aria-invalid="true"] { border-color: var(--b-danger); }
+.bsys__field input:disabled { opacity: 0.42; cursor: not-allowed; }
+.bsys__help { font-size: 0.76rem; color: var(--b-snow-3); }
+.bsys__err { font-size: 0.76rem; color: var(--b-danger); display: flex; align-items: center; gap: 0.35rem; }
+
+.bsys__badge {
+  display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--b-mono);
+  font-size: 0.68rem; letter-spacing: 0.06em; padding: 0.32rem 0.6rem;
+  border: 1px solid; border-radius: var(--b-r-sm);
+}
+.bsys__dot { width: 7px; height: 7px; border-radius: 999px; flex: none; }
+
+.bsys__card {
+  background: var(--b-anchor-2); border: 1px solid var(--b-dline); padding: 1.15rem;
+  display: flex; flex-direction: column; gap: 0.55rem;
+}
+.bsys__card h4 { font-family: var(--b-display); font-size: 1.2rem; }
+
+.bsys__table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.bsys__table th {
+  text-align: left; font-family: var(--b-mono); font-size: 0.62rem; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--b-snow-3); font-weight: 500;
+  padding: 0 0.6rem 0.55rem 0; border-bottom: 1px solid var(--b-dline-2);
+}
+.bsys__table td { padding: 0.6rem 0.6rem 0.6rem 0; border-bottom: 1px solid var(--b-dline); color: var(--b-snow-2); }
+.bsys__table td.n, .bsys__table th.n { text-align: right; font-family: var(--b-mono); font-variant-numeric: tabular-nums; }
+.bsys__tablewrap { overflow-x: auto; }
+
+/* -------------------------------------------------------------- imagery */
+.bsys__imggrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; }
+.bsys__mock { aspect-ratio: 16/9; position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 1rem; }
+.bsys__mock figcaption {
+  position: relative; background: var(--b-anchor); color: var(--b-snow);
+  font-family: var(--b-mono); font-size: 0.66rem; letter-spacing: 0.08em;
+  padding: 0.4rem 0.6rem;
+}
+.bsys__pre {
+  font-family: var(--b-mono); font-size: 0.74rem; line-height: 1.65; color: var(--b-snow-2);
+  background: var(--b-anchor-2); border: 1px solid var(--b-dline); padding: 0.9rem 1rem;
+  white-space: pre-wrap; overflow-wrap: anywhere; margin: 0;
+}
+
+/* --------------------------------------------------------------- rules */
+.bsys__rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1px; background: var(--b-dline); border: 1px solid var(--b-dline); }
+.bsys__rules > div { background: var(--b-anchor); padding: 1.05rem 1.15rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.bsys__rules h3 { font-family: var(--b-mono); font-size: 0.7rem; letter-spacing: 0.11em; text-transform: uppercase; color: var(--b-brand); font-weight: 500; }
+.bsys__rules p { font-size: 0.86rem; }
+
+.bsys__list { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.bsys__list li { color: var(--b-snow-2); font-size: 0.9rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bsys *, .bsys *::before, .bsys *::after { transition: none !important; animation: none !important; }
+}

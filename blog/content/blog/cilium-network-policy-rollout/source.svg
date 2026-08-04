@@ -1,72 +1,68 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0a1015"/>
-      <stop offset="1" stop-color="#050a0f"/>
+      <stop offset="0" stop-color="#142e18"/>
+      <stop offset="1" stop-color="#0b1a0e"/>
     </linearGradient>
     <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#5db7ff"/>
-      <stop offset="1" stop-color="#8b7dff"/>
+      <stop offset="0" stop-color="#61b86f"/>
+      <stop offset="1" stop-color="#8ec798"/>
     </linearGradient>
   </defs>
 
   <rect width="1200" height="630" fill="url(#bg)"/>
 
-  <!-- faint grid -->
-  <g stroke="#ffffff" stroke-opacity="0.03" stroke-width="1">
-    <line x1="100" y1="0" x2="100" y2="630"/><line x1="200" y1="0" x2="200" y2="630"/>
-    <line x1="300" y1="0" x2="300" y2="630"/><line x1="400" y1="0" x2="400" y2="630"/>
-    <line x1="500" y1="0" x2="500" y2="630"/><line x1="600" y1="0" x2="600" y2="630"/>
-    <line x1="700" y1="0" x2="700" y2="630"/><line x1="800" y1="0" x2="800" y2="630"/>
-    <line x1="900" y1="0" x2="900" y2="630"/><line x1="1000" y1="0" x2="1000" y2="630"/>
-    <line x1="1100" y1="0" x2="1100" y2="630"/>
-    <line x1="0" y1="90" x2="1200" y2="90"/><line x1="0" y1="180" x2="1200" y2="180"/>
-    <line x1="0" y1="270" x2="1200" y2="270"/><line x1="0" y1="360" x2="1200" y2="360"/>
-    <line x1="0" y1="450" x2="1200" y2="450"/><line x1="0" y1="540" x2="1200" y2="540"/>
+  <!-- aperture motif: concentric arcs sweeping in from off-canvas, top right.
+       Replaces the old faint grid, which was the same graph-paper device the
+       portfolio hero used and reads as generated. Kept clear of the header
+       block (left) and the diagram area (lower two thirds). -->
+  <g fill="none" stroke="#61b86f" stroke-opacity="0.11" stroke-width="2">
+    <circle cx="1268" cy="96" r="150"/>
+    <circle cx="1268" cy="96" r="232"/>
+    <circle cx="1268" cy="96" r="314"/>
   </g>
-
   <!-- url, top right -->
-  <text x="1130" y="58" text-anchor="end" font-size="22" fill="#8898aa" letter-spacing="0.5">blog.nordbye.it</text>
+  <text x="1130" y="58" text-anchor="end" font-size="22" fill="#708373" letter-spacing="0.5">blog.nordbye.it</text>
 
   <!-- compact header -->
   <rect x="80" y="74" width="6" height="116" rx="3" fill="url(#bar)"/>
-  <text x="104" y="104" font-size="20" font-weight="700" fill="#5db7ff" letter-spacing="3">KUBERNETES &#183; CILIUM &#183; NETWORK POLICY</text>
-  <text x="98" y="152" font-size="46" font-weight="700" fill="#e8eef5">Locking Down</text>
-  <text x="98" y="200" font-size="46" font-weight="700" fill="#e8eef5">Your Cluster</text>
+  <text x="104" y="104" font-size="20" font-weight="700" fill="#61b86f" letter-spacing="3">KUBERNETES &#183; CILIUM &#183; NETWORK POLICY</text>
+  <text x="98" y="152" font-size="46" font-weight="700" fill="#e9ebe9">Locking Down</text>
+  <text x="98" y="200" font-size="46" font-weight="700" fill="#e9ebe9">Your Cluster</text>
 
   <!-- motif: policy mesh, allowed (green) vs denied (red), large -->
   <g transform="translate(0,280)">
     <g fill="none" stroke-width="4" stroke-linecap="round">
-      <path d="M150,150 L420,90" stroke="#6ad6a8"/>
-      <path d="M420,90 L690,170" stroke="#6ad6a8"/>
-      <path d="M150,150 L450,280" stroke="#6ad6a8"/>
-      <path d="M690,170 L980,100" stroke="#ef6f7a" stroke-dasharray="5 15"/>
-      <path d="M450,280 L980,100" stroke="#ef6f7a" stroke-dasharray="5 15"/>
+      <path d="M150,150 L420,90" stroke="#7cc088"/>
+      <path d="M420,90 L690,170" stroke="#7cc088"/>
+      <path d="M150,150 L450,280" stroke="#7cc088"/>
+      <path d="M690,170 L980,100" stroke="#d18e83" stroke-dasharray="5 15"/>
+      <path d="M450,280 L980,100" stroke="#d18e83" stroke-dasharray="5 15"/>
     </g>
 
     <!-- blocked marker -->
     <g transform="translate(835,135)">
-      <circle r="19" fill="#1a1015" stroke="#ef6f7a" stroke-width="3"/>
-      <line x1="-8" y1="-8" x2="8" y2="8" stroke="#ef6f7a" stroke-width="3"/>
-      <line x1="-8" y1="8" x2="8" y2="-8" stroke="#ef6f7a" stroke-width="3"/>
+      <circle r="19" fill="#142e18" stroke="#d18e83" stroke-width="3"/>
+      <line x1="-8" y1="-8" x2="8" y2="8" stroke="#d18e83" stroke-width="3"/>
+      <line x1="-8" y1="8" x2="8" y2="-8" stroke="#d18e83" stroke-width="3"/>
     </g>
 
     <!-- source pod: cilium logo tile -->
-    <rect x="112" y="112" width="80" height="80" rx="16" fill="#eef2f7"/>
+    <rect x="112" y="112" width="80" height="80" rx="16" fill="#eef3ee"/>
     <image x="124" y="124" width="56" height="56" xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjEuNzcgLTAuMDIgNjUuNDYgNjkuMDQiPjxnIHN0cm9rZT0iIzE0MWExZiIgc3Ryb2tlLXdpZHRoPSIyLjc3MSI+PHBhdGggZmlsbD0iI2U4MzAzMCIgZD0ibTI5LjAyNSA0NC4xOS01LjUwNi05LjY5IDUuNTA2LTkuNjg5aDEwLjk3NGw1LjUwNiA5LjY5LTUuNTA2IDkuNjg5eiIvPjxwYXRoIGZpbGw9IiM2YjkxYzciIGQ9Im0yOS4wMjUgNjcuNjM0LTUuNTA2LTkuNjkgNS41MDYtOS42ODloMTAuOTc0bDUuNTA2IDkuNjktNS41MDYgOS42OXoiLz48cGF0aCBmaWxsPSIjZjljMzFmIiBkPSJtMjkuMDI1IDIwLjc0NS01LjUwNi05LjY5IDUuNTA2LTkuNjloMTAuOTc0bDUuNTA2IDkuNjktNS41MDYgOS42OXoiLz48cGF0aCBmaWxsPSIjNzk1YWE1IiBkPSJtNDkuMzY1IDU1LjkxMS01LjUwNi05LjY5IDUuNTA2LTkuNjg5aDEwLjk3M2w1LjUwNiA5LjY5LTUuNTA2IDkuNjl6Ii8+PHBhdGggZmlsbD0iI2YxNzQyMyIgZD0ibTQ5LjM2NSAzMi40NjYtNS41MDYtOS42OSA1LjUwNi05LjY4OWgxMC45NzNsNS41MDYgOS42OS01LjUwNiA5LjY5eiIvPjxwYXRoIGZpbGw9IiM5N2M2MzkiIGQ9Im04LjY2MiA1NS45MS01LjUwNi05LjY4OSA1LjUwNi05LjY5aDEwLjk3M2w1LjUwNiA5LjY5LTUuNTA2IDkuNjl6Ii8+PHBhdGggZmlsbD0iI2M5ZGI3MCIgZD0ibTguNjYyIDMyLjQ2Ni01LjUwNi05LjY5IDUuNTA2LTkuNjg5aDEwLjk3M2w1LjUwNiA5LjY5LTUuNTA2IDkuNjl6Ii8+PC9nPjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/>
 
     <!-- peer pods -->
-    <circle cx="420" cy="90" r="30" fill="#111923" stroke="#58d2c9" stroke-width="4"/>
-    <circle cx="450" cy="280" r="30" fill="#111923" stroke="#58d2c9" stroke-width="4"/>
-    <circle cx="690" cy="170" r="30" fill="#111923" stroke="#58d2c9" stroke-width="4"/>
-    <circle cx="980" cy="100" r="33" fill="#1a1015" stroke="#ef6f7a" stroke-width="4"/>
+    <circle cx="420" cy="90" r="30" fill="#1b3823" stroke="#5f8f6a" stroke-width="4"/>
+    <circle cx="450" cy="280" r="30" fill="#1b3823" stroke="#5f8f6a" stroke-width="4"/>
+    <circle cx="690" cy="170" r="30" fill="#1b3823" stroke="#5f8f6a" stroke-width="4"/>
+    <circle cx="980" cy="100" r="33" fill="#142e18" stroke="#d18e83" stroke-width="4"/>
 
     <!-- legend -->
     <g font-size="26" font-weight="600">
-      <line x1="1010" y1="210" x2="1054" y2="210" stroke="#6ad6a8" stroke-width="4"/>
-      <text x="1066" y="219" fill="#b0bccb">allowed</text>
-      <line x1="1010" y1="262" x2="1054" y2="262" stroke="#ef6f7a" stroke-width="4" stroke-dasharray="5 10"/>
-      <text x="1066" y="271" fill="#b0bccb">denied</text>
+      <line x1="1010" y1="210" x2="1054" y2="210" stroke="#7cc088" stroke-width="4"/>
+      <text x="1066" y="219" fill="#a1ada3">allowed</text>
+      <line x1="1010" y1="262" x2="1054" y2="262" stroke="#d18e83" stroke-width="4" stroke-dasharray="5 10"/>
+      <text x="1066" y="271" fill="#a1ada3">denied</text>
     </g>
   </g>
 </svg>

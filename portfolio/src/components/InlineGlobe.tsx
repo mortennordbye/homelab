@@ -312,19 +312,19 @@ function StaticGlobe() {
       >
         <defs>
           <radialGradient id="inline-rim" cx="50%" cy="50%" r="50%">
-            <stop offset="80%" stopColor="#5db7ff" stopOpacity="0" />
-            <stop offset="100%" stopColor="#5db7ff" stopOpacity="0.45" />
+            <stop offset="80%" stopColor="#51a45e" stopOpacity="0" />
+            <stop offset="100%" stopColor="#51a45e" stopOpacity="0.45" />
           </radialGradient>
         </defs>
         <circle cx="0" cy="0" r="195" fill="#0a1018" />
-        <circle cx="0" cy="0" r="195" fill="none" stroke="#5db7ff" strokeOpacity="0.35" strokeWidth="0.8" />
-        <ellipse cx="0" cy="0" rx="195" ry="65" fill="none" stroke="#5db7ff" strokeOpacity="0.25" strokeWidth="0.6" />
-        <ellipse cx="0" cy="0" rx="65" ry="195" fill="none" stroke="#5db7ff" strokeOpacity="0.2" strokeWidth="0.6" />
+        <circle cx="0" cy="0" r="195" fill="none" stroke="#51a45e" strokeOpacity="0.35" strokeWidth="0.8" />
+        <ellipse cx="0" cy="0" rx="195" ry="65" fill="none" stroke="#51a45e" strokeOpacity="0.25" strokeWidth="0.6" />
+        <ellipse cx="0" cy="0" rx="65" ry="195" fill="none" stroke="#51a45e" strokeOpacity="0.2" strokeWidth="0.6" />
         <circle cx="0" cy="0" r="200" fill="url(#inline-rim)" />
         <g transform="translate(70,-140)">
-          <circle r="6" fill="#5db7ff" />
-          <circle r="18" fill="#5db7ff" fillOpacity="0.12" />
-          <circle r="28" fill="none" stroke="#5db7ff" strokeOpacity="0.4" strokeWidth="0.6" />
+          <circle r="6" fill="#51a45e" />
+          <circle r="18" fill="#51a45e" fillOpacity="0.12" />
+          <circle r="28" fill="none" stroke="#51a45e" strokeOpacity="0.4" strokeWidth="0.6" />
         </g>
       </svg>
     </div>

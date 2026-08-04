@@ -18,8 +18,8 @@ export default async function Image() {
           justifyContent: "space-between",
           padding: "72px 80px",
           background:
-            "radial-gradient(60% 80% at 22% -10%, rgba(139,125,255,0.32), transparent 60%), radial-gradient(55% 70% at 88% 10%, rgba(93,183,255,0.28), transparent 65%), linear-gradient(180deg, #0a1015 0%, #050a0f 100%)",
-          color: "#ECEEF5",
+            "radial-gradient(60% 80% at 22% -10%, rgba(81,164,94,0.20), transparent 62%), radial-gradient(50% 65% at 88% 8%, rgba(81,164,94,0.12), transparent 66%), linear-gradient(180deg, #0f1410 0%, #080b08 100%)",
+          color: "#e9ebe9",
           fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif",
         }}
       >
@@ -31,7 +31,7 @@ export default async function Image() {
             gap: 14,
             fontSize: 22,
             letterSpacing: "0.3em",
-            color: "#97a4b4",
+            color: "#a1ada3",
             textTransform: "uppercase",
             fontFamily: "ui-monospace, monospace",
           }}
@@ -41,8 +41,8 @@ export default async function Image() {
               width: 12,
               height: 12,
               borderRadius: "50%",
-              background: "#5DB7FF",
-              boxShadow: "0 0 24px #5DB7FF",
+              background: "#51a45e",
+              boxShadow: "0 0 24px #51a45e",
             }}
           />
           available · oslo &amp; remote
@@ -60,12 +60,12 @@ export default async function Image() {
               display: "flex",
             }}
           >
-            <span style={{ color: "#ECEEF5" }}>Morten </span>
+            <span style={{ color: "#e9ebe9" }}>Morten </span>
             <span
               style={{
                 marginLeft: 24,
                 background:
-                  "linear-gradient(110deg, #ECEEF5 30%, #5DB7FF 60%, #8B7DFF 95%)",
+                  "linear-gradient(110deg, #e9ebe9 30%, #61b86f 65%, #8ec798 95%)",
                 backgroundClip: "text",
                 color: "transparent",
               }}
@@ -76,7 +76,7 @@ export default async function Image() {
           <div
             style={{
               fontSize: 40,
-              color: "#97a4b4",
+              color: "#a1ada3",
               letterSpacing: "-0.01em",
               fontWeight: 400,
             }}
@@ -92,7 +92,7 @@ export default async function Image() {
             justifyContent: "space-between",
             alignItems: "flex-end",
             fontSize: 24,
-            color: "#97a4b4",
+            color: "#a1ada3",
             fontFamily: "ui-monospace, monospace",
           }}
         >
@@ -101,13 +101,13 @@ export default async function Image() {
               display: "flex",
               alignItems: "center",
               gap: 12,
-              color: "#ECEEF5",
+              color: "#e9ebe9",
             }}
           >
-            <span style={{ color: "#5DB7FF" }}>●</span>
+            <span style={{ color: "#51a45e" }}>●</span>
             nordbye.it
           </div>
-          <div style={{ color: "#5a6878" }}>
+          <div style={{ color: "#708373" }}>
             azure · k8s · gitops · terraform
           </div>
         </div>
