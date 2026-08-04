@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#142e18"/>
-      <stop offset="1" stop-color="#0b1a0e"/>
+      <stop offset="0" stop-color="#0f1410"/>
+      <stop offset="1" stop-color="#070a08"/>
     </linearGradient>
     <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#61b86f"/>
@@ -52,7 +52,7 @@
 
     <!-- collector bus: drop from each tile, run right, feed Grafana -->
     <g fill="none">
-      <g stroke="#436a4c" stroke-width="3">
+      <g stroke="#3e5542" stroke-width="3">
         <path d="M180,176 L180,232"/><path d="M320,176 L320,232"/>
         <path d="M460,176 L460,232"/><path d="M600,176 L600,232"/>
       </g>

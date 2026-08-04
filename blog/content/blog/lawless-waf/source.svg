@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#142e18"/>
-      <stop offset="1" stop-color="#0b1a0e"/>
+      <stop offset="0" stop-color="#0f1410"/>
+      <stop offset="1" stop-color="#070a08"/>
     </linearGradient>
     <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#61b86f"/>
@@ -45,7 +45,7 @@
   <!-- WAF origin, drawn shield -->
   <g transform="translate(150,366)">
     <path d="M0,-46 L34,-32 L34,6 C34,30 18,44 0,52 C-18,44 -34,30 -34,6 L-34,-32 Z"
-          fill="#1b3823" stroke="#d18e83" stroke-width="4"/>
+          fill="#1a221c" stroke="#d18e83" stroke-width="4"/>
     <path d="M-14,2 L-4,14 L16,-12" fill="none" stroke="#d18e83" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
   <text x="150" y="470" text-anchor="middle" font-size="26" font-weight="600" fill="#a1ada3">WAF</text>

@@ -2,18 +2,24 @@
    so it is minified and fingerprinted with everything else and costs no extra request.
    Being last in the cascade, a rule at the same specificity wins.
 
-   One job: retune the `slate` palette to the arctic blue the portfolio at nordbye.it
-   uses, so the two sites read as one brand. The source of truth for these values is
-   portfolio/src/styles/tokens.css in this repository — `--accent` there.
+   One job: retune the `slate` palette to the eucalyptus green the portfolio at
+   nordbye.it uses, so the two sites read as one brand. The source of truth for these
+   values is portfolio/src/styles/tokens.css in this repository — `--accent` there — and
+   the full spec at nordbye.it/brand. Northlight's own surfaces are neutral (white and
+   #0b0b0e), so the accent is the only thing carrying the palette on this site.
 
-   The light tone is #1e6ad1 rather than the portfolio's exact #1f6fda. Same hue, same
+   The light tone is #347940 rather than the portfolio's exact #378144. Same hue, same
    saturation, two percent darker. Northlight measures every shipped accent against its
    own --accent-tint, which is where a featured card's eyebrow lands, and requires 4.5:1
-   there; #1f6fda measures 4.33 and #1e6ad1 measures 4.66, against slate's own 4.97. The
+   there; #378144 measures 4.35 and #347940 measures 4.76, against slate's own 4.97. The
    theme dropped a candidate palette for missing that floor by less, so matching the
    portfolio exactly here would mean shipping something it rejected. The difference is
-   not visible side by side. Dark mode takes the portfolio value unchanged — #5db7ff
-   measures 7.76 on its tint.
+   not visible side by side. This is the same adjustment, for the same reason, that the
+   outgoing arctic-blue override made.
+
+   Dark mode uses #7cc088, a lighter step of the same hue. It measures 7.81 on its tint,
+   within a whisker of the 7.77 the outgoing blue measured, so nothing about the dark
+   reading experience changes except the hue.
 
    The three tokens below are the whole palette contract: --accent is the readable tone
    (links, active TOC item, progress bar), --accent-pastel is the soft one (fills, hover
@@ -22,10 +28,10 @@
    tuned per palette in both modes and are not part of this. */
 
 html[data-palette="slate"] {
-  --accent: #1e6ad1;
-  --accent: light-dark(#1e6ad1, #5db7ff);
-  --accent-pastel: #5db7ff;
-  --accent-pastel: light-dark(#5db7ff, #3789e3);
-  --accent-tint: rgba(30, 106, 209, 0.08);
-  --accent-tint: light-dark(rgba(30, 106, 209, 0.08), rgba(93, 183, 255, 0.11));
+  --accent: #347940;
+  --accent: light-dark(#347940, #7cc088);
+  --accent-pastel: #7cc088;
+  --accent-pastel: light-dark(#7cc088, #4e8a5a);
+  --accent-tint: rgba(52, 121, 64, 0.08);
+  --accent-tint: light-dark(rgba(52, 121, 64, 0.08), rgba(124, 192, 136, 0.11));
 }

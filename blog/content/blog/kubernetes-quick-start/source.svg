@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#142e18"/>
-      <stop offset="1" stop-color="#0b1a0e"/>
+      <stop offset="0" stop-color="#0f1410"/>
+      <stop offset="1" stop-color="#070a08"/>
     </linearGradient>
     <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#61b86f"/>
@@ -44,17 +44,17 @@
     </g>
 
     <!-- worker node 1 -->
-    <rect x="470" y="74" width="290" height="150" rx="18" fill="#1b3823" stroke="#2f4f37" stroke-width="2.5"/>
+    <rect x="470" y="74" width="290" height="150" rx="18" fill="#1a221c" stroke="#2a382c" stroke-width="2.5"/>
     <text x="496" y="116" font-size="22" font-weight="600" fill="#708373">node 1</text>
     <rect x="496" y="136" width="64" height="64" rx="10" fill="#61b86f"/>
-    <rect x="572" y="136" width="64" height="64" rx="10" fill="#436a4c"/>
-    <rect x="648" y="136" width="64" height="64" rx="10" fill="#436a4c"/>
+    <rect x="572" y="136" width="64" height="64" rx="10" fill="#3e5542"/>
+    <rect x="648" y="136" width="64" height="64" rx="10" fill="#3e5542"/>
 
     <!-- worker node 2 -->
-    <rect x="830" y="74" width="290" height="150" rx="18" fill="#1b3823" stroke="#2f4f37" stroke-width="2.5"/>
+    <rect x="830" y="74" width="290" height="150" rx="18" fill="#1a221c" stroke="#2a382c" stroke-width="2.5"/>
     <text x="856" y="116" font-size="22" font-weight="600" fill="#708373">node 2</text>
-    <rect x="856" y="136" width="64" height="64" rx="10" fill="#436a4c"/>
+    <rect x="856" y="136" width="64" height="64" rx="10" fill="#3e5542"/>
     <rect x="932" y="136" width="64" height="64" rx="10" fill="#61b86f"/>
-    <rect x="1008" y="136" width="64" height="64" rx="10" fill="#436a4c"/>
+    <rect x="1008" y="136" width="64" height="64" rx="10" fill="#3e5542"/>
   </g>
 </svg>

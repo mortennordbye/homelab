@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#142e18"/>
-      <stop offset="1" stop-color="#0b1a0e"/>
+      <stop offset="0" stop-color="#0f1410"/>
+      <stop offset="1" stop-color="#070a08"/>
     </linearGradient>
     <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#61b86f"/>
@@ -32,14 +32,14 @@
 
   <!-- motif: GitOps pipeline (large, centered) -->
   <g transform="translate(0,300)">
-    <line x1="180" y1="120" x2="1020" y2="120" stroke="#2f4f37" stroke-width="4"/>
+    <line x1="180" y1="120" x2="1020" y2="120" stroke="#2a382c" stroke-width="4"/>
     <line x1="180" y1="120" x2="1020" y2="120" stroke="#61b86f" stroke-width="4" stroke-opacity="0.35" stroke-dasharray="2 18" stroke-linecap="round"/>
 
     <rect x="130" y="70" width="100" height="100" rx="20" fill="#eef3ee"/>
     <image x="148" y="88" width="64" height="64" xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNMjU2IDYuM0MxMTQuNiA2LjMgMCAxMjAuOSAwIDI2Mi4zYzAgMTEzLjMgNzMuMyAyMDkgMTc1IDI0Mi45IDEyLjggMi4yIDE3LjYtNS40IDE3LjYtMTIuMiAwLTYuMS0uMy0yNi4yLS4zLTQ3LjctNjQuMyAxMS44LTgxLTE1LjctODYuMS0zMC4xLTIuOS03LjQtMTUuNC0zMC4xLTI2LjItMzYuMi05LTQuOC0yMS44LTE2LjYtLjMtMTcgMjAuMi0uMyAzNC42IDE4LjYgMzkuNCAyNi4yIDIzIDM4LjcgNTkuOCAyNy44IDc0LjYgMjEuMSAyLjItMTYuNiA5LTI3LjggMTYuMy0zNC4yLTU3LTYuNC0xMTYuNS0yOC41LTExNi41LTEyNi40IDAtMjcuOCA5LjktNTAuOSAyNi4yLTY4LjgtMi42LTYuNC0xMS41LTMyLjYgMi42LTY3LjggMCAwIDIxLjQtNi43IDcwLjQgMjYuMiAyMC41LTUuOCA0Mi4yLTguNiA2NC04LjZzNDMuNSAyLjkgNjQgOC42YzQ5LTMzLjMgNzAuNC0yNi4yIDcwLjQtMjYuMiAxNC4xIDM1LjIgNS4xIDYxLjQgMi42IDY3LjggMTYuMyAxNy45IDI2LjIgNDAuNiAyNi4yIDY4LjggMCA5OC4yLTU5LjggMTIwLTExNi44IDEyNi40IDkuMyA4IDE3LjMgMjMuNCAxNy4zIDQ3LjQgMCAzNC4yLS4zIDYxLjgtLjMgNzAuNCAwIDYuNyA0LjggMTQuNyAxNy42IDEyLjJDNDM4LjcgNDcxLjMgNTEyIDM3NS4zIDUxMiAyNjIuM2MwLTE0MS40LTExNC42LTI1Ni0yNTYtMjU2IiBzdHlsZT0iZmlsbC1ydWxlOmV2ZW5vZGQ7Y2xpcC1ydWxlOmV2ZW5vZGQ7ZmlsbDojMWIxZjIzIi8+PC9zdmc+" preserveAspectRatio="xMidYMid meet"/>
     <text x="180" y="212" text-anchor="middle" font-size="26" font-weight="600" fill="#a1ada3">git push</text>
 
-    <rect x="410" y="70" width="100" height="100" rx="20" fill="#1b3823" stroke="#61b86f" stroke-width="3"/>
+    <rect x="410" y="70" width="100" height="100" rx="20" fill="#1a221c" stroke="#61b86f" stroke-width="3"/>
     <text x="460" y="136" text-anchor="middle" font-size="36" font-weight="700" fill="#61b86f">CI</text>
     <text x="460" y="212" text-anchor="middle" font-size="26" font-weight="600" fill="#a1ada3">build</text>
 
