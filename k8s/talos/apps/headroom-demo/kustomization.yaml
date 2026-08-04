@@ -17,4 +17,4 @@ resources:
 # only to a build that actually contains DEMO_MODE support.
 images:
 - name: ghcr.io/mortennordbye/headroom
-  newTag: 0.0.297
+  newTag: 0.0.305
