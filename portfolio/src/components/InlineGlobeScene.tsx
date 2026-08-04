@@ -272,8 +272,8 @@ function Scene({
     <>
       <ambientLight intensity={0.7} />
       <directionalLight position={[4, 1.5, 2]} intensity={1.1} color="#fff5e0" />
-      <directionalLight position={[-3, -1, -2]} intensity={0.35} color="#5db7ff" />
-      <directionalLight position={[0, 4, 0]} intensity={0.4} color="#5db7ff" />
+      <directionalLight position={[-3, -1, -2]} intensity={0.35} color="#51a45e" />
+      <directionalLight position={[0, 4, 0]} intensity={0.4} color="#51a45e" />
       <Stars />
       <EarthAssembly rotationRef={rotationRef} />
       <OsloProjector

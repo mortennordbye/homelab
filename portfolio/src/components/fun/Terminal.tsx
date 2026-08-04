@@ -30,7 +30,7 @@ import type { ShelfData } from "./shelf";
  * fetch against the real endpoints, so the output is not a mock.
  */
 
-const ACCENT = "#7fd6ff";
+const ACCENT = "#61b86f";
 
 type Line = { kind: "in" | "out" | "err" | "note"; text: string };
 

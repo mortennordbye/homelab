@@ -342,20 +342,20 @@ body.fun-immersive > main {
     --bg: #ffffff;
     --bg-2: #ffffff;
     --surface: #ffffff;
-    --line: #d6dde5;
-    --line-2: #c0c8d2;
-    --fg: #0a1015;
-    --fg-2: #2c3845;
-    --fg-3: #5a6878;
-    --accent: #1f6fda;
-    --accent-2: #6552d8;
-    --accent-3: #1aa39a;
+    --line: #d1ddd3;
+    --line-2: #a6bfaa;
+    --fg: #1a201b;
+    --fg-2: #415344;
+    --fg-3: #5f7963;
+    --accent: #378144;
+    --accent-2: #40a551;
+    --accent-3: #3d954c;
     --accent-ink: #ffffff;
     --grain-opacity: 0;
     --grad-hero: none;
   }
 
-  html, body { background: #fff !important; color: #0a1015 !important; }
+  html, body { background: #fff !important; color: #1a201b !important; }
 
   /* Hide chrome that has no meaning on paper */
   header, footer, nav,
@@ -389,10 +389,10 @@ body.fun-immersive > main {
   a[href^="http"]:not([href*="nordbye.it"])::after {
     content: " (" attr(href) ")";
     font-size: 0.85em;
-    color: #5a6878;
+    color: #5f7963;
     word-break: break-all;
   }
 
   /* Make tags / borders quieter on paper */
-  [class*="border-line"] { border-color: #d6dde5 !important; }
+  [class*="border-line"] { border-color: #d1ddd3 !important; }
 }

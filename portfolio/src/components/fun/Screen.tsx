@@ -240,7 +240,7 @@ export function Dashboard({
             className="flex items-center justify-between border-b pb-4"
             style={{ borderColor: "#1b2733", height: `${HEADER}px` }}
           >
-            <span className="text-[19px] tracking-[0.3em] text-[#5db7ff]">
+            <span className="text-[19px] tracking-[0.3em] text-[#51a45e]">
               GENESIS · OBSERVABILITY
             </span>
             <span className="text-[15px] tracking-[0.18em] text-[#3f4d5c]">

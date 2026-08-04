@@ -225,7 +225,7 @@ export function CodeScreen({
           style={{
             background:
               "linear-gradient(160deg, #0b1119 0%, #080d14 55%, #060a10 100%)",
-            border: "1px solid #5db7ff3d",
+            border: "1px solid #51a45e3d",
             color: COLOUR.plain,
             fontSize: "10px",
             lineHeight: "11.6px",
@@ -250,7 +250,7 @@ export function CodeScreen({
                   color: tab === id ? "#8fb6d8" : "#4b5967",
                   background: tab === id ? "#0e161f" : "transparent",
                   borderRight: "1px solid #16202b",
-                  borderTop: `2px solid ${tab === id ? "#5db7ff" : "transparent"}`,
+                  borderTop: `2px solid ${tab === id ? "#51a45e" : "transparent"}`,
                 }}
               >
                 {label}

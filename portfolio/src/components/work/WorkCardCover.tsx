@@ -2,10 +2,21 @@ import type { WorkMeta } from "@/lib/work";
 import { pickBrand } from "@/components/work/brand-icons";
 
 /**
- * Cover for portfolio cards. The dominant tech in the project's stack
- * drives the icon and colour, so each card carries the brand identity
- * of its primary technology (Azure-blue for AKS projects, Red Hat red
- * for RHEL projects, and so on).
+ * Cover for portfolio cards. The dominant tech in the project's stack drives
+ * the icon, so each card still identifies its primary technology in that
+ * vendor's own colour (Kubernetes blue, Red Hat red, and so on).
+ *
+ * Nothing on the cover is tinted with the vendor colour any more. It used to
+ * drive the ground, a radial glow, the icon and the label, and on a green
+ * site that turned the listing into a row of blue and red boxes — Ansible red
+ * against the eucalyptus ground being the worst of it, since red and green
+ * are complementary and the hardest pair for anyone with a colour-vision
+ * deficiency.
+ *
+ * The technology is still named, in text, on every card. Colour was redundant
+ * encoding on top of a label that already says KUBERNETES, so removing it
+ * costs no information. Vendor colours are kept where they read as marks
+ * rather than decoration — see StackTiles on the case-study pages.
  */
 export function WorkCardCover({ work }: { work: WorkMeta }) {
   const { brand } = pickBrand(work.stack);
@@ -16,7 +27,8 @@ export function WorkCardCover({ work }: { work: WorkMeta }) {
     <div
       className="relative h-full w-full overflow-hidden"
       style={{
-        background: `linear-gradient(135deg, ${brand.color}22 0%, rgba(14, 18, 26, 0.95) 70%)`,
+        background:
+          "linear-gradient(135deg, rgba(var(--accent-rgb), 0.10) 0%, rgba(15, 20, 16, 0.96) 70%)",
       }}
     >
       <div
@@ -33,7 +45,8 @@ export function WorkCardCover({ work }: { work: WorkMeta }) {
         aria-hidden
         className="absolute inset-0"
         style={{
-          background: `radial-gradient(120% 80% at 50% 45%, ${brand.color}33, transparent 65%)`,
+          background:
+            "radial-gradient(120% 80% at 50% 45%, rgba(var(--accent-rgb), 0.12), transparent 65%)",
         }}
       />
 
@@ -41,12 +54,12 @@ export function WorkCardCover({ work }: { work: WorkMeta }) {
         <Icon
           size={56}
           strokeWidth={1.4}
-          style={{ color: brand.color }}
+          style={{ color: "var(--accent)" }}
           aria-hidden
         />
         <span
           className="font-display text-[10px] uppercase tracking-[0.22em]"
-          style={{ color: brand.color }}
+          style={{ color: "var(--fg-3)" }}
         >
           {brand.label}
         </span>

@@ -152,7 +152,7 @@ export function CloudGateway({
         <ringGeometry args={[0.008, 0.011, 24]} />
         <meshBasicMaterial color="#9aa3ad" transparent opacity={0.75} />
       </mesh>
-      <Led position={[0, -0.004, 0.0556]} color="#7fd6ff" seed={1.1} size={0.004} />
+      <Led position={[0, -0.004, 0.0556]} color="#61b86f" seed={1.1} size={0.004} />
     </group>
   );
 }
@@ -178,7 +178,7 @@ export function UnifiFlexMini({
         <Led
           key={i}
           position={[-0.031 + i * 0.0155, 0.008, 0.0356]}
-          color="#7fd6ff"
+          color="#61b86f"
           seed={1.2 + i * 0.7}
           size={0.003}
         />
@@ -208,7 +208,7 @@ export function UnifiSwitch8({
         <Led
           key={i}
           position={[-0.075 + i * 0.0215, 0.0095, 0.0526]}
-          color={i % 3 === 0 ? "#57d98b" : "#7fd6ff"}
+          color={i % 3 === 0 ? "#57d98b" : "#61b86f"}
           seed={0.8 + i * 0.55}
           size={0.003}
         />
@@ -288,7 +288,7 @@ export function HubPuck({ position }: { position: [number, number, number] }) {
       <Led
         position={[0, 0.0125, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
-        color="#7fd6ff"
+        color="#61b86f"
         seed={1.5}
         size={0.006}
       />
@@ -310,7 +310,7 @@ export function UnifiAccessPoint({ position }: { position: [number, number, numb
       </mesh>
       <mesh position={[0, 0.0108, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.0335, 0.0365, 32]} />
-        <meshBasicMaterial color="#7fd6ff" transparent opacity={0.35} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#61b86f" transparent opacity={0.35} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );
