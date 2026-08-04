@@ -33,11 +33,11 @@ spec:
           type: RuntimeDefault
       containers:
         - name: headroom
-          # Pinned tag, owned by kustomization.yaml (`images.newTag`). This app is
-          # deliberately NOT in the Kargo pipeline — that promotes only
-          # k8s/talos/apps/headroom — so refreshing the demo is a manual tag bump.
-          # The tag MUST be a build that contains DEMO_MODE support; an older
-          # image would ignore DEMO_MODE and serve a writable, empty app publicly.
+          # Pinned tag, owned by kustomization.yaml (`images.newTag`), which the
+          # Kargo `demo` Stage rewrites. This inline value is only the fallback
+          # for a raw `kubectl apply` without kustomize. An image built without
+          # DEMO_MODE support would ignore the env var below and serve a writable
+          # app publicly — the demo smoke test asserts against exactly that.
           image: ghcr.io/mortennordbye/headroom:sha-32a1389
           imagePullPolicy: IfNotPresent
           env:

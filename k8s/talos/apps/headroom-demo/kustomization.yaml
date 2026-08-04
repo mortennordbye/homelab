@@ -12,9 +12,9 @@ resources:
 # Public read-only demo of the headroom app, on the same image as the private
 # instance but with DEMO_MODE=1 (see deployment.yaml).
 #
-# Not managed by Kargo: the headroom-cd Warehouse/promotion only rewrites
-# k8s/talos/apps/headroom. Bump the tag here by hand to refresh the demo, and
-# only to a build that actually contains DEMO_MODE support.
+# newTag is owned by Kargo: the headroom-cd `demo` Stage rewrites it via the
+# kustomize-set-image promotion step and pushes straight to main, ahead of prod.
+# Don't hand-edit it.
 images:
 - name: ghcr.io/mortennordbye/headroom
   newTag: 0.0.305
