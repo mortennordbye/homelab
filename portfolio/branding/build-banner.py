@@ -15,11 +15,12 @@ import re, sys
 SRC = 'linkedin-banner.svg'
 W, H = 1584, 396
 
-# palette — portfolio tokens.css, eucalyptus
-BG_TOP, BG_BOT = '#0f1410', '#070a08'
+# palette — portfolio tokens.css. Ground is neutral black: green is the
+# accent and the marks, never the canvas.
+BG_TOP, BG_BOT = '#0a0a0a', '#040404'
 ACCENT, ACCENT_2, ACCENT_3 = '#51a45e', '#8ec798', '#61b86f'
-SNOW, FOG, SLATE, LINE2 = '#e9ebe9', '#a1ada3', '#708373', '#3e5542'
-TILE = '#eef3ee'
+SNOW, FOG, SLATE, LINE2 = '#e7e7e7', '#a5a5a5', '#7a7a7a', '#3a3a3a'
+TILE = '#eef1ee'
 
 MONO = "'JetBrains Mono','DejaVu Sans Mono',monospace"
 SANS = "'DejaVu Sans','Helvetica',sans-serif"
