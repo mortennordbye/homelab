@@ -12,37 +12,37 @@
 
 :root,
 :root.dark {
-  /* Surfaces */
-  --bg: #0f1410;          /* anchor */
-  --bg-2: #090c09;        /* darker shoulders */
-  --surface: #191f1a;     /* raised surface */
-  --line: #2a382c;        /* hairline — 1.50:1 */
-  --line-2: #3e5542;      /* divider, input border — 2.28:1 */
+  /* Surfaces — neutral black. The ground carries no hue: green is for the
+     accent and the marks, never the canvas. Ratios below are against --bg. */
+  --bg: #0a0a0a;
+  --bg-2: #050505;
+  --surface: #141414;     /* raised surface */
+  --line: #262626;        /* hairline */
+  --line-2: #3a3a3a;      /* divider, input border */
 
-  /* Foreground — fg-2 >= 7:1, fg-3 >= 4.5:1 on --bg */
-  --fg: #e9ebe9;          /* 15.49:1 */
-  --fg-2: #a1ada3;        /* 7.98:1 */
-  --fg-3: #708373;        /* 4.58:1 */
+  /* Foreground — neutral, so nothing on the page has a green cast except the
+     accent. fg-2 >= 7:1, fg-3 >= 4.5:1 on --bg. */
+  --fg: #e7e7e7;          /* 16.00:1 */
+  --fg-2: #a5a5a5;        /* 8.00:1 */
+  --fg-3: #7a7a7a;        /* 4.60:1 */
 
-  /* Accents — one hue, three steps. Not three hues: a mono ramp is what
-     keeps the gradients below from reading as the generated-UI rainbow. */
-  --accent: #51a45e;      /* 6.05:1 — primary */
-  --accent-2: #8ec798;    /* 9.59:1 — lightest step, gradients only */
-  --accent-3: #61b86f;    /* 7.61:1 — middle step */
-  --accent-ink: #0f1410;  /* 6.05:1 on the accent fill */
-  --copper: #bf9752;      /* sparing warm — 6.90:1 */
+  /* Accents — one hue, three steps. The only colour on the page. */
+  --accent: #51a45e;      /* 6.42:1 — primary */
+  --accent-2: #8ec798;    /* 10.14:1 — lightest step, gradients only */
+  --accent-3: #61b86f;    /* 8.09:1 — middle step */
+  --accent-ink: #0a0a0a;  /* 6.42:1 on the accent fill */
+  --copper: #bf9752;      /* sparing warm — 7.31:1 */
   --warn: #bf9752;
 
   /* Atmospheric gradient. Reduced from three hues to one, at low opacity.
      The old blue/violet/teal stack was the single clearest generic tell on
      the page; dropping it entirely is the recommended next step. */
   --grad-hero:
-    radial-gradient(60% 80% at 22% -10%, rgba(81, 164, 94, 0.14), transparent 62%),
-    radial-gradient(50% 65% at 88% 8%, rgba(81, 164, 94, 0.09), transparent 66%),
-    linear-gradient(180deg, #0f1410 0%, #080b08 100%);
+    radial-gradient(58% 76% at 24% -8%, rgba(81, 164, 94, 0.09), transparent 62%),
+    linear-gradient(180deg, #0a0a0a 0%, #040404 100%);
 
   --accent-rgb: 81, 164, 94;
-  --selection-fg: #0f1410;
+  --selection-fg: #0a0a0a;
 
   --grain-opacity: 0.16;
   --grain-mix: overlay;
@@ -86,11 +86,11 @@
   /* Semantic colours (dark). Success is the brand green: a green brand plus
      a separate success green would be two greens meaning different things. */
   --interactive: var(--accent);
-  --interactive-hover: #5bb96b;   /* 7.61:1 */
+  --interactive-hover: #5bb96b;   /* 8.10:1 */
   --interactive-ink: var(--accent-ink);
-  --success: #51a45e;             /* 6.05:1 */
-  --danger: #d18c82;              /* 6.89:1 */
-  --info: #59a8c2;                /* 6.90:1 */
+  --success: #51a45e;             /* 6.42:1 */
+  --danger: #d18c82;              /* 7.33:1 */
+  --info: #59a8c2;                /* 7.35:1 */
   --ring: rgba(var(--accent-rgb), 0.55);
 }
 

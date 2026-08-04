@@ -35,15 +35,21 @@ export function WorkCardCover({ work }: { work: WorkMeta }) {
           "linear-gradient(135deg, var(--surface) 0%, var(--bg) 72%)",
       }}
     >
-      <div
+      {/* One ring behind the mark instead of the 24px grid these covers used
+          to carry. Same reasoning as the hero: a faint grid is the most
+          common generated-UI background there is. */}
+      <svg
         aria-hidden
-        className="absolute inset-0 opacity-[0.10]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, var(--line-2) 1px, transparent 1px), linear-gradient(to bottom, var(--line-2) 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }}
-      />
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 400 225"
+        fill="none"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <g stroke="var(--line-2)" strokeOpacity="0.55" strokeWidth="1">
+          <circle cx="200" cy="100" r="66" />
+          <circle cx="200" cy="100" r="104" />
+        </g>
+      </svg>
 
       <div
         aria-hidden

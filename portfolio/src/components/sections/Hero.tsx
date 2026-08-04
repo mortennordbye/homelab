@@ -28,15 +28,25 @@ export function Hero() {
         aria-hidden
         className="absolute -z-10 left-0 right-0 top-0 h-px aurora-line opacity-60"
       />
-      <div
+      {/* Concentric arcs sweeping in from off-canvas right, echoing the
+          aperture mark. This replaces the 80px graph-paper grid that used to
+          sit here: a faint grid is the single most common background in
+          generated interfaces, and it was doing nothing a quiet ground could
+          not do better. */}
+      <svg
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.08]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, var(--line-2) 1px, transparent 1px), linear-gradient(to bottom, var(--line-2) 1px, transparent 1px)",
-          backgroundSize: "80px 80px",
-        }}
-      />
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
+        preserveAspectRatio="xMaxYMid slice"
+        viewBox="0 0 1440 720"
+        fill="none"
+      >
+        <g stroke="var(--accent)" strokeOpacity="0.09" strokeWidth="1.5">
+          <circle cx="1500" cy="300" r="260" />
+          <circle cx="1500" cy="300" r="420" />
+          <circle cx="1500" cy="300" r="580" />
+          <circle cx="1500" cy="300" r="740" />
+        </g>
+      </svg>
       <InlineGlobe />
 
       <div className="mx-auto grid max-w-[var(--container-wide)] grid-cols-12 gap-8 px-6 pb-20 md:px-8 md:pb-28">
