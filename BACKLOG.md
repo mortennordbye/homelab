@@ -4,6 +4,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
+### `headroom-demo` image tag is bumped by hand
+- **What:** The public demo at `headroom.nordbye.it` runs the same `ghcr.io/mortennordbye/headroom` image as the private instance, but its tag is pinned in its own `kustomization.yaml` and is not promoted by anything. The demo therefore drifts behind the private instance until someone edits the tag.
+- **Why deferred:** The `headroom-cd` Kargo project is single-stage and hardcodes `appPath: k8s/talos/apps/headroom`. Giving the demo automatic promotion means adding a second Stage (plus its own smoke-test AnalysisTemplate against the public URL) and authorizing it in the ApplicationSet `templatePatch`, whose current convention only covers `<app>` and `<app>-stage`. That is a real change to the CD topology and was out of scope for standing the demo up.
+- **Unblock:** Either add a `demo` Stage to `headroom-cd` that promotes the same Freight into `k8s/talos/apps/headroom-demo` (and extend the `templatePatch` naming convention to cover `<app>-demo`), or accept manual bumps and just remember them when releasing.
+- **Where:** `k8s/talos/apps/headroom-demo/kustomization.yaml` (`images.newTag`), `k8s/talos/infra/kargo-projects/headroom.yaml`, `k8s/talos/infra/argocd/apps.yaml` (`templatePatch`).
+
 ### Remove the old `workout` app after logeverylift cutover
 - **What:** `logeverylift.com` was cut over from the old `workout` app to the renamed `logeverylift` app (PR #369, 2026-07-18). The `workout` namespace, Deployment, Postgres, and PVC are still present — both `workout-app` and `postgres` are scaled to 0 (ArgoCD ignores `/spec/replicas`; also declared in the manifests). The data is preserved on `postgres-pvc`; scale `postgres` back to 1 to re-access it. Nothing routes to it.
 - **Why deferred:** Kept as rollback until the owner has used `logeverylift.com` for a while and confirmed all data/history is intact. Deleting is one-way (prunes the namespace + PVC).
