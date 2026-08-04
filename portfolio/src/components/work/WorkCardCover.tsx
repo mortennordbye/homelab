@@ -17,6 +17,10 @@ import { pickBrand } from "@/components/work/brand-icons";
  * encoding on top of a label that already says KUBERNETES, so removing it
  * costs no information. Vendor colours are kept where they read as marks
  * rather than decoration — see StackTiles on the case-study pages.
+ *
+ * The ground is neutral, not an accent tint. Tinting it green put a green
+ * icon on a green field, which flattens the mark against its own background.
+ * Same rule as the blog covers: near-black ground, green only on the mark.
  */
 export function WorkCardCover({ work }: { work: WorkMeta }) {
   const { brand } = pickBrand(work.stack);
@@ -28,7 +32,7 @@ export function WorkCardCover({ work }: { work: WorkMeta }) {
       className="relative h-full w-full overflow-hidden"
       style={{
         background:
-          "linear-gradient(135deg, rgba(var(--accent-rgb), 0.10) 0%, rgba(15, 20, 16, 0.96) 70%)",
+          "linear-gradient(135deg, var(--surface) 0%, var(--bg) 72%)",
       }}
     >
       <div
@@ -46,7 +50,7 @@ export function WorkCardCover({ work }: { work: WorkMeta }) {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(120% 80% at 50% 45%, rgba(var(--accent-rgb), 0.12), transparent 65%)",
+            "radial-gradient(120% 80% at 50% 45%, rgba(255, 255, 255, 0.035), transparent 65%)",
         }}
       />
 
