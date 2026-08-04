@@ -1,0 +1,25 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: headroom-demo-policy
+  namespace: headroom-demo
+spec:
+  endpointSelector:
+    matchLabels:
+      app: headroom-demo
+  ingress:
+    # Only Traefik may reach the pod. No KEDA interceptor rule here (unlike the
+    # private headroom): this app never scales to zero, so traffic goes straight
+    # from the gateway to the service.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "3001"
+              protocol: TCP
+    # kubelet probes.
+    - fromEntities:
+        - host
+        - health

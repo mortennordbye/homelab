@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headroom-demo
+  namespace: headroom-demo
+  labels:
+    app: headroom-demo
+spec:
+  # Always on. This is linked from the blog and LinkedIn, so a cold start would
+  # be the first thing a visitor sees — hence no KEDA scale-to-zero here, unlike
+  # the private headroom instance.
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: headroom-demo
+  template:
+    metadata:
+      labels:
+        app: headroom-demo
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      # The headroom image starts as root, fixes /data ownership, then drops to
+      # uid 1000 (node). Unlike the private instance (Synology NFS, where the
+      # chown doesn't stick and it falls back to root) /data here is a local
+      # emptyDir, so the chown succeeds and it genuinely runs non-root. Do NOT
+      # add runAsUser — starting the pod non-root removes the entrypoint's
+      # ability to chown at all.
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: headroom
+          # Pinned tag, owned by kustomization.yaml (`images.newTag`). This app is
+          # deliberately NOT in the Kargo pipeline — that promotes only
+          # k8s/talos/apps/headroom — so refreshing the demo is a manual tag bump.
+          # The tag MUST be a build that contains DEMO_MODE support; an older
+          # image would ignore DEMO_MODE and serve a writable, empty app publicly.
+          image: ghcr.io/mortennordbye/headroom:sha-32a1389
+          imagePullPolicy: IfNotPresent
+          env:
+            # Read-only public demo: the API refuses every write and the whole
+            # bank namespace, and the client fills itself with the fictional
+            # dataset it generates in the browser. See the headroom repo's
+            # README, "Public demo mode".
+            - name: DEMO_MODE
+              value: "1"
+            # Host-header allowlist (DNS-rebinding guard). The app 403s any host
+            # not listed, which is also why the probes below send an explicit
+            # Host header instead of hitting the pod IP.
+            - name: ALLOWED_HOSTS
+              value: "headroom.nordbye.it,localhost,127.0.0.1"
+          ports:
+            - name: http
+              containerPort: 3001
+          volumeMounts:
+            # SQLite still needs a writable dir to open its database, even though
+            # a demo never stores anything worth keeping. Ephemeral on purpose:
+            # every restart starts clean and there is no volume to leak.
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              httpHeaders: [{ name: Host, value: headroom.nordbye.it }]
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              httpHeaders: [{ name: Host, value: headroom.nordbye.it }]
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            failureThreshold: 3
+      volumes:
+        - name: data
+          emptyDir:
+            sizeLimit: 256Mi
