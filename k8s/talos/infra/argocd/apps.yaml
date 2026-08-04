@@ -53,9 +53,10 @@ spec:
   # Authorize Kargo to sync the apps it promotes. templatePatch is a Go-templated
   # merge patch (a string), so structural conditionals are valid here in a way
   # they are not inside the parsed `template` above. Onboarding a new Kargo app is
-  # a one-word addition to the list below: its prod app "<app>" and stage app
-  # "<app>-stage" get authorized-stage <app>-cd:prod / <app>-cd:stage. Every
-  # non-Kargo app matches nothing and renders no patch.
+  # a one-word addition to the list below: its prod app "<app>", stage app
+  # "<app>-stage" and demo app "<app>-demo" get authorized-stage <app>-cd:prod /
+  # <app>-cd:stage / <app>-cd:demo. A suffix an app doesn't use matches no
+  # directory, so it renders nothing; every non-Kargo app matches nothing at all.
   templatePatch: |
     {{- $base := .path.basename }}
     {{- range $app := list "portfolio" "blog" "logeverylift" "headroom" "verksted" "reelsmith" }}
@@ -67,5 +68,9 @@ spec:
     metadata:
       annotations:
         kargo.akuity.io/authorized-stage: {{ $app }}-cd:stage
+    {{- else if eq $base (printf "%s-demo" $app) }}
+    metadata:
+      annotations:
+        kargo.akuity.io/authorized-stage: {{ $app }}-cd:demo
     {{- end }}
     {{- end }}
