@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Headroom mark: a ceiling/clearance line with an up-arrow beneath it. -->
+  <rect x="6" y="6" width="20" height="3" rx="1.5" fill="#C9A24A"/>
+  <path d="M16 10.5 L23 18.5 H18.5 V26 H13.5 V18.5 H9 Z" fill="#C9A24A"/>
+</svg>
