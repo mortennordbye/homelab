@@ -53,7 +53,10 @@ export function renderEntryPoint(variant: Variant, site: SiteForLatex): string {
 
 \\fontdir[fonts/]
 
-\\colorlet{awesome}{awesome-skyblue}
+% Brand accent. The CV prints on white, so this is the light-ground value
+% from the palette (4.60:1 on paper), not the darker on-screen green.
+\\definecolor{eucalyptus}{HTML}{378144}
+\\colorlet{awesome}{eucalyptus}
 \\setbool{acvSectionColorHighlight}{true}
 \\renewcommand{\\acvHeaderSocialSep}{\\quad\\textbar\\quad}
 
