@@ -156,10 +156,15 @@ source is crisp; any softness on the live profile is LinkedIn's compression.
 - [ ] **Watch the right edge / avatar** — URLs and tiles end by ~x1500; nothing
       critical in the bottom-left (avatar) zone.
 
-> **Mobile caveat:** LinkedIn crops the banner to a shorter strip on phones
-> (trims top and bottom), so the bottom-right URLs may not show on mobile. The
-> design is desktop-primary. To guarantee the URLs on mobile, move them to the
-> vertical middle-right instead.
+> **Mobile crop — the rule that supersedes the safe zones above.** LinkedIn
+> crops on phones in *both* directions: it trims top and bottom, and it also
+> cuts the sides. A right-aligned layout lost the leading `b` of
+> `blog.nordbye.it` on the live profile. Anything that must survive belongs in
+> a **central safe box, roughly the middle 800×190**, centred on the canvas
+> centre (792, 198). Corner-anchored content is desktop-only by definition.
+>
+> The avatar (lower-left) and edit pencil (top-right) constraints still hold on
+> desktop, but a centred layout clears both for free.
 
 ---
 
@@ -181,3 +186,24 @@ Lessons that became the checklist:
   → ship native 1584×396.
 - librsvg collapses nbsp; `xml:space="preserve"` is the only reliable way to
   widen the divider gap.
+
+### 2026-08-04 — rebuilt on the eucalyptus palette, links-only, centred
+Three changes at once.
+
+**Palette.** Moved off arctic blue onto eucalyptus (hue 130) with the rest of
+the brand. Ground is the near-black anchor `#0f1410 → #070a08`, the same one the
+blog covers use; green carries the accent rule and the labels only.
+
+**Content.** The identity block (kicker, name, role) is gone. LinkedIn already
+shows the name, headline and location directly under the banner, so repeating it
+was redundant. The banner now carries the two destinations and the stack strip.
+
+**Layout.** The faint grid is replaced by the concentric-arc motif the blog
+covers moved to; a low-opacity grid is a generated-image tell. More importantly,
+everything moved to a centred safe box after the first version lost the `b` of
+`blog.nordbye.it` to the mobile crop. Verified by rendering at 2x and cropping to
+a simulated mobile band before shipping — do that check on every future change.
+
+Source is now generated rather than hand-authored: the build script rebuilds the
+SVG from the palette constants and re-inlines the five icon data-URIs out of the
+previous SVG, so a palette change is an edit in one place, not thirty.
