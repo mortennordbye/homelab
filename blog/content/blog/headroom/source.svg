@@ -25,7 +25,7 @@
   <!-- compact header -->
   <rect x="80" y="74" width="6" height="116" rx="3" fill="url(#bar)"/>
   <text x="104" y="104" font-size="20" font-weight="700" fill="#61b86f" letter-spacing="3">SELF HOSTED &#183; PERSONAL FINANCE &#183; NORWEGIAN TAX</text>
-  <text x="98" y="152" font-size="46" font-weight="700" fill="#e7e7e7">Pr&#248;ysen, not</text>
+  <text x="98" y="152" font-size="46" font-weight="700" fill="#e7e7e7">Pythagoras, not</text>
   <text x="98" y="200" font-size="46" font-weight="700" fill="#e7e7e7">trinnskatt.</text>
 
   <!-- motif: three inputs converge on Headroom, which sits on your own machine -->

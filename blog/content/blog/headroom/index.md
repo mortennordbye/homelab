@@ -1,71 +1,98 @@
 ---
-title: "School Taught You Prøysen, Not Trinnskatt: Headroom Does That Maths"
-description: "A self-hosted finance tracker built for Norwegian rules: trinnskatt, feriepenger, BSU, folketrygd, wealth tax and mortgage deduction. One container, live demo."
+title: "School Taught You Pythagoras, Not Trinnskatt: Headroom Does That Maths"
+description: "A self-hosted Norwegian finance tracker: equity after tax, a decade of salary against CPI, what you cost your employer, the month, and a forecast built on both."
 date: 2026-08-04
 draft: false
 tags: ["self-hosted", "docker", "personal-finance", "privacy", "cilium", "kubernetes", "intermediate"]
 ---
 
-# School Taught You Prøysen, Not Trinnskatt: Headroom Does That Maths
+# School Taught You Pythagoras, Not Trinnskatt: Headroom Does That Maths
 
 <img src="/images/headroom-logo.svg" alt="Headroom" title="Headroom" style="width:15%;" />
 
-Norwegian school gave you Alf Prøysen. Musevisa every December, Teskjekjerringa in the reading book, and enough of the melody left to still sing it thirty years later.
+School taught you Pythagoras. You have not used it since.
 
-It did not give you a tax return, a fund, or the sentence you need in a salary review.
+It never taught you how to set up a monthly budget, how to make savings grow, or how to tell debt that is working for you from debt that is not. Nothing about what a raise is worth after inflation, or what you cost the company that pays you.
 
-The apps that offer to fix that want your bank login, a monthly fee, and a copy of your whole financial picture on someone else's server. So I built one that runs on your machine instead.
+The apps that offer to fix that want your bank login, a monthly fee, and a copy of your whole financial picture on someone else's server. So I built one that runs on your own machine.
+
+Headroom answers four questions and not much else. What is actually mine, after tax and after debt. What can I spend today. Is my salary keeping up. And where does all of this end up in fifteen years.
 
 _Drop a ⭐ on [headroom](https://github.com/mortennordbye/headroom) if it is useful. The manifests that run it live in my [Homelab repo](https://github.com/mortennordbye/Homelab)._
 
 {{< github repo="mortennordbye/headroom" >}}
 
-**Click through everything at [headroom.nordbye.it](https://headroom.nordbye.it).** Fictional numbers, no signup, and your edits stay in your own tab.
-
-## Built for Norwegian Money
-
-One container, a SQLite file you own, no account. That part is ordinary. The maths is not.
-
-| The rule | What Headroom does with it |
-| --- | --- |
-| Trinnskatt, personfradrag, trygdeavgift | Your real marginal rate on the next krone |
-| Feriepenger at 12% | Earned this year, paid out next year |
-| Arbeidsgiveravgift at 14.1% | What you actually cost to employ |
-| BSU, 27 500 a year and 300 000 total | Both allowances tracked, and when you stop qualifying |
-| Formuesskatt | Primary home at 25%, funds at 80%, then bunnfradrag |
-| Mortgage interest | 22% back, so the effective rate beats the nominal one |
-| Folketrygd at 18.1% up to 7.1 G | Divided by your cohort's delingstall, garantipensjon as floor |
-
-Each of those is a tested function in [`src/lib/`](https://github.com/mortennordbye/headroom/tree/main/src/lib), not a number typed into a page.
-
-There is an English toggle, a currency setting and a generic region. Here is what generic actually means:
-
-```ts
-if (region === 'no') return calcNorwegianTax(/* brackets, personfradrag, trygdeavgift */);
-const rate = Math.min(100, Math.max(0, customRatePct)) / 100;  // <--- one flat rate you type in
-```
-
-One flat rate. Usable outside Norway, but the pension, holiday pay and property models stay Norwegian whatever you set. This was built for Norwegian money.
+**[headroom.nordbye.it](https://headroom.nordbye.it) is a showroom, not a service.** Click every page and change every number you like. It runs on invented data, nothing you type is saved, and the server refuses every write. Do not put your real finances into it. To actually use Headroom, [run your own copy](#run-it).
 
 ## Why It Is a Container and Not a Subscription
 
 The obvious version of this is a SaaS. Sign up, connect your bank, 79 kroner a month.
 
-I do not want to hold your banking data. A PSD2 transaction feed comes with obligations, and a database of a few thousand people's spending is a target that has to be defended correctly every day for years. I cannot lose data I never had.
+I do not want to hold your banking data. A database of a few thousand people's spending is a target that has to be defended correctly every day for years, and I cannot lose data I never had. So it is one container, a database file you own, and no account.
 
-And the useful parts are arithmetic. Your marginal rate, the inflation floor, what your mortgage payment is made of. Putting a subscription in front of that mostly means the people who need it never see it.
+The other reason is that the useful parts are arithmetic. Your marginal rate, the inflation floor, what your mortgage payment is made of. Putting a subscription in front of that mostly means the people who need it never see it.
+
+## Built for Norwegian Money
+
+Most budgeting apps track spending and stop there. Headroom knows the rules underneath. What trinnskatt does to the next krone you earn, that feriepenger is earned one year and paid the next, that arbeidsgiveravgift is most of why you cost more than your salary, that part of your mortgage interest comes back. Real brackets and real rates, updated when they move.
+
+Set the region to generic and switch the interface to English, and the tax rules collapse to one flat rate you type in yourself. That gets you a working budget, not your own country's rules. If you want those, the seam is there: one fork in the tax calculation, a table of brackets, tests next to the Norwegian ones. Open a PR and start filling in numbers.
 
 ## The Dashboard
 
-Total equity after tax and after all debt, which is the pessimistic number rather than the friendly one.
+What you want from a finance app is money in, money out, what is left standing after both, and whether that is enough for the things you said you wanted. The front page is all four.
 
-<img src="/images/headroom-oversikt.webp" alt="Headroom dashboard showing 1 362 739 kr total equity after tax and debt, remaining monthly budget, daily spending pace and asset allocation" title="Total equity, after tax and after debt" style="width:100%;" />
+<img src="/images/headroom-oversikt.webp" alt="Headroom dashboard showing 1 362 739 kr total equity after tax and debt, a twelve month equity line, remaining monthly budget and daily spending pace" title="Total equity, after tax and after debt" style="width:100%;" />
 
-Student loan is split out from other debt, because it is a different animal. Below that, what you can spend today against the ideal pace, where the month's money went, and a fifteen year projection.
+The big number is equity after tax and after all debt. Student loan is split out from the rest, because it behaves nothing like a credit card, and both versions are on the card. 1 362 739 with it, 1 646 739 without. Pick the one you believe.
+
+Under it, twelve months as a line and the twelve month change as a number. 223 125 kr, which is everything that came in, minus everything that went out, plus whatever the market did.
+
+The right column is the near end of the same question. 14 190 left this month after fixed costs, and 11 352 you can actually spend, which is 366 kr a day. Your line is solid, the ideal pace is dotted, and being above it on the 12th is the only budgeting feedback that arrives early enough to do something about.
+
+Then the goals. A goal is a name, a target amount and a source. Point it at your BSU account, a savings account, the investment portfolio, the buffer or total equity, and it reads the balance itself instead of asking you to keep it updated.
+
+<img src="/images/headroom-mal.webp" alt="Headroom goals card showing three savings goals at 60, 27 and 70 percent, each with its source, the amount remaining and the month it reaches the target at the current pace" title="Three goals, and when each one lands" style="width:100%;" />
+
+What makes it more than a progress bar is the line underneath. The buffer goal is at 60% and reaches 100 000 in March 2032 at the rate it is actually growing. Give a goal a deadline and that line turns into how many months ahead or behind you are, and what the monthly amount would have to be to land on the date. Stop paying into it and it says there has been no progress in recent months, which is the sentence you were avoiding.
+
+The same idea runs across the top of the page for the plans you never named as goals. One month ahead on the mortgage. 12 251 kr ahead on the rest of the debt.
 
 <img src="/images/headroom-fordeling.webp" alt="Headroom dashboard lower half showing budget distribution, wealth allocation across six assets, monthly investment, top categories and a twelve month cash flow chart" title="Budget split, asset allocation and cash flow" style="width:100%;" />
 
-## The Raise That Is Actually a Pay Cut
+Below that the month is split three ways. 67.6% fixed, 3.1% spent so far, 29.2% still yours. The income line reads 43 840 against a 47 721 average, so this month is 8.1% light before you have done anything wrong.
+
+Next to it, where the equity actually sits. 72% of it is house. That one percentage is the argument for reading this page instead of a bank balance, because a net worth made almost entirely of one illiquid asset behaves nothing like the same number held in funds.
+
+Two more tiles do work that budgeting apps usually skip. Emergency fund coverage counts your buffer in months of fixed expenses and says what to set aside monthly to reach the target within a year. Debt-to-income puts total debt against gross salary and shows the headroom to the 5x cap, which is the number that decides how short the next conversation at the bank is.
+
+The cash flow chart is twelve months of in against out. Two bars a month, and a line for what survived.
+
+## Your Career, Written Down
+
+Nobody remembers what they earned in 2019. Ask three people what their raise was two jobs ago and you get three shrugs. That is exactly the information you are missing in February when someone across a table asks what you had in mind.
+
+<img src="/images/headroom-lonn.webp" alt="Headroom salary page showing 768 000 kr total annual gross at 10 percent above the national median, 68.8 percent cumulative growth since 2015, 3.9 percent year over year against 2.7 percent CPI, and a 416 kr effective hourly rate" title="Pay over time" style="width:100%;" />
+
+The salary page is a log you keep for a decade. Jobs with employer, role, start and end date and contracted hours. Salary changes with an effective date and a type, so an initial, a raise, a promotion, a job change and an adjustment are not the same event. Bonuses, overtime and the hours you actually worked go in as separate entries, because a year where you got 3% and worked 15% more is not a good year.
+
+Four numbers sit at the top. Total annual gross, which is base plus on-call rather than the figure on the contract. Cumulative growth since your first entry. This year against CPI. And effective hourly, which is gross divided by the hours you actually worked.
+
+In the demo that reads 768 000, up 68.8% since February 2015, 3.9% this year against 2.7% inflation, and 416 kr an hour on 39.5 hours a week. The badge next to it says ten percent above the national median for the occupation, from SSB's wage statistics.
+
+Then the charts, which is where ten years of entries turn into an argument.
+
+Salary over time puts a marker on every change, so a flat three-year stretch is something you can see instead of something you half remember. One bar per year for growth against CPI, green when you beat it. Total comp stacked by year, so the year the bonus vanished but the base moved is not filed as the same year both moved. And hours against hourly rate, which is the chart that catches a promotion that was really a workload increase.
+
+Effective hourly is the one that stings. A 5% raise that arrives with four extra hours a week is a pay cut per hour, and nothing on your payslip will tell you.
+
+There is also a calculator that divides your salary down to the year, month, week, day, hour, minute and second. 0,106 kr per second. Useless, and I look at it anyway.
+
+<img src="/images/headroom-pengestrom.webp" alt="Headroom salary page showing a cash flow diagram from gross to tax, fixed expenses, free spending and savings, with a 43 percent marginal rate" title="Where the month's salary goes" style="width:100%;" />
+
+The same page traces one month from gross to what is genuinely free, with the marginal rate on the next krone in the corner. 43% is what an extra shift is really worth.
+
+### The Raise That Is Actually a Pay Cut
 
 If you open one page in the demo, open this one.
 
@@ -73,39 +100,83 @@ A raise below inflation is not a raise. It is a pay cut delivered as good news, 
 
 <img src="/images/headroom-forhandling.webp" alt="Headroom salary negotiation view with a 744 000 kr base, a 748 368 kr inflation floor and a gradient bar from lose purchasing power to real raise" title="The inflation floor" style="width:100%;" />
 
-Your salary was set in February at 744 000. SSB says prices moved 0.6% since. The offer has to clear **748 368** before you have gained anything.
+Your salary was set in February at 744 000. SSB says prices moved 0.6% since. The offer has to clear **748 368** before you have gained anything. Type the offer in, as kroner or as a percentage, and the bar tells you which of three things you just accepted.
 
-Type the offer in and the bar tells you which of three things you just accepted. That is the whole feature, and it is the one I would keep if I deleted every other page.
+That is the floor, not the ask. What you take into the meeting is the rest of the page: growth against CPI for every year you have logged, where you sit against the national median, and what your effective hourly rate did while your title changed twice.
 
-## Where the Salary Goes
+The alternative is arguing from memory against someone who has the numbers in front of them.
 
-<img src="/images/headroom-pengestrom.webp" alt="Headroom salary page showing a cash flow diagram from gross to tax, fixed expenses, free spending and savings, a 43 percent marginal rate, and withheld versus expected tax" title="Gross to net, and an early restskatt warning" style="width:100%;" />
+## What You Cost
 
-Gross, tax, fixed costs, what is actually free. Marginal rate on the next krone in the corner, which is what an extra shift is really worth.
+This is the page nobody asks for and everybody reads twice.
 
-Underneath, tax withheld so far this year against what this year should be taxed. Rough on purpose, but it is the difference between hearing about restskatt now and hearing about it from Skatteetaten.
+<img src="/images/headroom-lonnskostnad.webp" alt="Headroom employer cost page building 768 000 kr salary up to 1 115 257 kr total, then deriving 1 560 billable hours, a 714,91 kr cover rate and a 1 021,30 kr target rate" title="Salary 768 000. Cost 1 115 257." style="width:100%;" />
+
+Your contract says 768 000. Feriepenger goes on top, then employer OTP, then arbeidsgiveravgift at 14.1% on that whole base, then a desk, a laptop, licences and insurance. Total 1 115 257. A 45.2% uplift on the number you negotiated, which is worth knowing before you ask for 30 000 more, because you are asking for 43 000.
+
+The lower half is the part I keep coming back to. 1 950 working hours in a year, 80% of them billable, so 1 560 hours are actually sellable. Divide the cost by those and you get **714,91 kr/t**, the rate where your employer breaks exactly even on you. Add a 30% target margin and it becomes **1 021,30 kr/t**, or 7 659 kr a day.
+
+So now you have both ends of your own payslip. What it costs to produce, and what someone has to charge for your time before the arrangement makes money. Spread the cost over every worked hour and it is 572 kr. Spread it over the billable ones and it is 715, and those 143 kroner of difference are nothing but the 390 hours a year nobody is invoiced for.
+
+That calculation is also the one freelancers get wrong exactly once.
 
 ## The Month
 
 <img src="/images/headroom-budsjett.webp" alt="Headroom budget page for August 2026 with monthly income, budget per month and per day, fixed expenses, an imported payslip and the spend and invest split" title="One month at a time" style="width:100%;" />
 
-Income is typed or imported from a payslip PDF. The parser runs in your browser and never uploads the file.
+Income at the top, either typed, derived automatically from your salary entries, or lifted out of a payslip PDF. The PDF is read in your browser and never uploaded. In the demo it picked up 43 840 net, 64 000 gross, 20 160 withheld and 7 680 of holiday pay accrued, straight off the document.
 
-Then it works out what you can spend _today_, not this month. Fixed costs off, savings target off, remainder divided by days left.
+From there, three numbers. Fixed costs of 29 650. What is spendable this month, 11 352. And what that is per day, 366 kr. Per day is the one you use, because "you have 11 000 left" on the 3rd and on the 27th are different sentences.
+
+The split is a target, not a leftover. Set 20% and the recommendation reserves 2 838 for investment first, then tells you what is spendable. Saving whatever happens to survive the month is how people save nothing.
 
 <img src="/images/headroom-utgifter.webp" alt="Headroom fixed expenses panel warning about double counting, offering to promote four detected recurring payments, and a chart of where the fixed money goes" title="It notices the subscription you forgot" style="width:100%;" />
 
-Two things here earn their place. It spots a fixed expense and a matching transaction and offers to link them, so a bill is not counted twice. And it finds repeated payments and offers to promote them, which is how the forgotten subscription surfaces.
+Two things earn their place. It spots a fixed expense and a matching transaction and offers to link them, so a bill is not counted twice. And it finds repeated payments and offers to promote them, which is how the forgotten subscription surfaces.
+
+Transactions get a rules engine behind them. Rename one or fix its category, tick "remember", and every matching transaction in every month gets the same treatment, retroactively. Twenty minutes once, then categories stop being a chore.
+
+The one I did not expect to need is transfer detection. Moving 10 000 to your own savings account is not spending, but a bank feed cannot tell, and counting it ruins both the budget and the savings rate. Headroom flags the transactions that look like internal moves, on round amounts, account numbers in the text and monthly repetition, and offers to turn each into a rule.
+
+It also warns about the way that goes wrong. Net out a credit card bill without importing the card's own transactions and everything you spent on that card disappears from the budget entirely.
+
+Under all that: spend per account per month, search across every transaction you have, bulk recategorisation, and a nudge when the savings rate has been under target for a few months running.
 
 ## What You Are Worth After Tax
 
-A portfolio of 285 000 with 62 000 of gain is not worth 285 000. Sell it and 37.84% of the gain goes to tax.
+A portfolio of 285 000 with 62 000 of unrealised gain is not worth 285 000. Sell it and 37.84% of the gain goes to tax, so the honest figure is 261 539.
 
 <img src="/images/headroom-formue.webp" alt="Headroom wealth page showing latent tax deducted from an investment portfolio, home equity, pension balances, BSU allowances and crypto" title="Latent tax, deducted" style="width:100%;" />
 
-So the app deducts the latent tax and shows the net position. Unpopular way to display a portfolio. Correct one.
+So the page deducts it and shows the net position. Crypto gets the same treatment at 22%. Unpopular way to display a portfolio. Correct one.
 
-The rest is the balance sheet: property against mortgage, OTP and IPS held separately because they are locked, savings and buffer accounts, and credit frames counted at their full limit the way a bank counts them.
+The rest is a balance sheet with the parts held apart on purpose.
+
+Property is value against mortgage. 4 200 000 less 2 950 000 leaves 1 250 000 of equity. That is 72% of the total, and none of it is spendable.
+
+Liquidity is what you can reach this week. Savings, holiday account, buffer, and BSU with both allowances tracked, 27 500 of room this year and 267 000 of lifetime room left.
+
+Pension sits in its own box and stays out of liquid equity. OTP and IPS are real money, and they are not your money yet.
+
+Credit frames count at their full limit rather than their balance, the way a bank counts them. An unused 100 000 card is 100 000 of debt in that conversation, whatever your statement says.
+
+Under the balance sheet, the same assets projected to now, to five years out and to fifteen. Each class grows at its own rate rather than one blended number smeared over everything, and the monthly savings from your budget flow into stocks. Which is where the wealth page and the budget page stop being separate pages.
+
+## The Forecast
+
+Everything above feeds this one. Wealth is the opening balance, the budget supplies the monthly contribution, and the salary page supplies the raise assumption. Five sliders decide the rest: annual raise, share of net income saved, expected real return, expected inflation, and how far out to look.
+
+<img src="/images/headroom-prognose.webp" alt="Headroom forecast comparing 5 000 kr a month prepaid against invested over fifteen years, and a net worth projection to 2041 with nominal, today's kroner and an uncertainty band" title="Two assumptions, fifteen years apart" style="width:100%;" />
+
+The chart draws two lines and a band. Nominal, which is the impressive one. The same figure in today's kroner, which is the one that means something. And the band sits at plus or minus three points of return, because a single confident line fifteen years out is a lie told with a chart library.
+
+Two panels do the arguing.
+
+Prepay against invest takes an extra amount per month and runs it both ways. 5 000 a month against a 4.3% effective mortgage rate after the deduction, versus 7% expected return. Investing ends 324 745 ahead after fifteen years. Drag the expected return under the effective mortgage rate and the answer flips, which is the useful part. You get to see how much of the advice you have been given rests on an assumption nobody said out loud.
+
+Financial independence puts the projection against 25 times your essential annual spending and gives the year it crosses. Essential spending comes from your own fixed expenses, so it is your number rather than a blog's.
+
+And scenario compare runs two sets of assumptions side by side and prints the difference at the end. Model 4% raises instead of 2% and read what fifteen years of the difference is worth. That is a better reason to prepare for February than any of the ones you rehearsed.
 
 ## One Home, One Loan
 
@@ -147,36 +218,51 @@ Thinking about a second home? It tells you what the bank will say.
 
 Income times five against all debt, with credit frames at their full limit and the cash you need at completion. In the demo that comes back **over capacity** and **629 046 kr short**. Better to learn that here than in a meeting.
 
-## What You Cost
-
-<img src="/images/headroom-lonnskostnad.webp" alt="Headroom employer cost page building 768 000 kr salary up to 1 115 257 kr total, and calculating a consultant hourly rate" title="Salary 768 000. Cost 1 115 257." style="width:100%;" />
-
-Salary, plus feriepenger, plus employer OTP, then arbeidsgiveravgift on that base, plus a desk and a laptop. A 45.2% uplift on the contract figure.
-
-Then it turns that into a consultant rate: 714,91 kr/t merely covers you, 1 021,30 kr/t hits the margin. That gap is the calculation freelancers get wrong exactly once.
-
-## Pension, Forecast, and the Year
+## Pension and the Year
 
 {{< carousel >}}
 {{< figure src="pensjon.webp" alt="Headroom pension page combining folketrygd, AFP, OTP and IPS into 57 100 kr net per month" >}}
-{{< figure src="prognose.webp" alt="Headroom forecast comparing paying down the mortgage against investing, with a net worth projection and uncertainty band" >}}
 {{< figure src="ar.webp" alt="Headroom year summary with income, tax paid, savings rate and a month by month table" >}}
-{{< figure src="lonn.webp" alt="Headroom salary page with total annual salary, growth against CPI and effective hourly wage" >}}
 {{< /carousel >}}
 
-Pension combines folketrygd, AFP, OTP and IPS into one number: what lands per month after tax, and what share of today's take-home that is.
-
-Forecast is where you argue with your assumptions, with an uncertainty band at plus or minus three points of return, because a single confident line fifteen years out is a lie told with a chart library. It also settles prepay against invest at the effective post-deduction rate.
-
-The year page prints to PDF, which is what people actually want once a year.
+Pension folds folketrygd, AFP, OTP and IPS into one figure, what lands per month after tax and what share of today's take-home that is. The year page prints to PDF, which is what people want from it once a year.
 
 ## It Works on a Phone
 
 <img src="/images/headroom-mobil.webp" alt="Headroom on a phone showing a two by two grid of monthly figures, an imported payslip card and a bottom tab bar" title="Installable as a PWA" style="width:35%;" />
 
-Full mobile layout, installable as a PWA with its own icon. Behind Tailscale that is a budgeting app on your phone that never leaves your network.
+Full mobile layout, installable with its own icon. Behind Tailscale that is a budgeting app on your phone that never leaves your network.
 
-## Where the Transactions Come From
+## Under the Hood
+
+If you came for what it does, you can stop here. The rest is how it runs, for the people who want that part.
+
+### Run It
+
+One command. No clone, no build, no config file.
+
+```bash
+docker run -d \
+  --name headroom \
+  -p 127.0.0.1:8080:3001 \
+  -v headroom_data:/data \
+  --restart unless-stopped \
+  ghcr.io/mortennordbye/headroom:latest
+```
+
+Open <http://localhost:8080>. The `127.0.0.1` binds it to loopback so nothing else on your network can reach it, and the volume survives restarts and upgrades.
+
+### There Is No Login
+
+{{< alert type="warning" >}}
+Anyone who can reach the port can read and overwrite your entire financial picture. Do not put this on the open internet.
+{{< /alert >}}
+
+Two safe shapes. Loopback on a laptop, which is the default. Or a home server reached over WireGuard or Tailscale, which is also what makes the phone work.
+
+Want it in a browser without a tunnel? Put a reverse proxy with authentication in front. There is an optional scrypt-hashed password and an `ALLOWED_HOSTS` guard against DNS rebinding, but treat both as depth, not as the front door.
+
+### Where the Transactions Come From
 
 Type them, or connect a bank through [Enable Banking](https://enablebanking.com/). A fetch reaches back about 90 days, but nothing is ever dropped, so your history keeps growing on your own disk.
 
@@ -198,7 +284,9 @@ Money between your own accounts is not spending, and counting it is the fastest 
 {{< /timelineItem >}}
 {{< /timeline >}}
 
-## Your Data Stays Yours
+Every rule in the table further up is a tested function in [`src/lib/`](https://github.com/mortennordbye/headroom/tree/main/src/lib) with its own test file next to it, which is the only reason I trust the numbers on the wealth page.
+
+### Your Data Stays Yours
 
 <img src="/images/headroom-eksport.webp" alt="Headroom settings listing all 342 entries included in an export, and one click configuration for Claude, Cursor, Codex and Gemini" title="Export lists exactly what it takes" style="width:100%;" />
 
@@ -212,34 +300,9 @@ Same screen wires up an AI assistant. The [MCP server](https://github.com/morten
 make mcp-install
 ```
 
-## Run It
+### How the Public Demo Is Locked Down
 
-One command. No clone, no build, no config file.
-
-```bash
-docker run -d \
-  --name headroom \
-  -p 127.0.0.1:8080:3001 \
-  -v headroom_data:/data \
-  --restart unless-stopped \
-  ghcr.io/mortennordbye/headroom:latest
-```
-
-Open <http://localhost:8080>. The `127.0.0.1` binds it to loopback so nothing else on your network can reach it, and the volume survives restarts and upgrades.
-
-## There Is No Login
-
-{{< alert type="warning" >}}
-Anyone who can reach the port can read and overwrite your entire financial picture. Do not put this on the open internet.
-{{< /alert >}}
-
-Two safe shapes. Loopback on a laptop, which is the default. Or a home server reached over WireGuard or Tailscale, which is also what makes the phone work.
-
-Want it in a browser without a tunnel? Put a reverse proxy with authentication in front. There is an optional scrypt-hashed password and an `ALLOWED_HOSTS` guard against DNS rebinding, but treat both as depth, not as the front door.
-
-## How the Public Demo Is Locked Down
-
-Which is an obvious contradiction, since there is an instance of it on the public internet.
+There is no login, and yet there is an instance of it on the public internet. That only works because the public one is not really the app.
 
 `DEMO_MODE=1` refuses every non-GET under `/api/`, refuses the whole `/api/bank/*` namespace (its GETs are not safe reads, one proxies to Enable Banking on the instance's own credentials), fills the client from a browser-generated dataset, and skips the background jobs. Enforced in [`server/demo.js`](https://github.com/mortennordbye/headroom/blob/main/server/demo.js), server-side.
 
@@ -266,15 +329,23 @@ The important part is what is missing. Writing any egress rule makes egress deny
 
 A regression in the demo gate alone cannot reach a bank, because the packet has nowhere to go. Two mechanisms in two systems both have to fail.
 
-## Common Mistakes to Avoid
+### Common Mistakes to Avoid
 
-**Pointing a demo instance at your real volume.** `DEMO_MODE` protects writes. `GET /api/data` still serves your finances to the internet. Separate instance, empty storage.
+**Pointing a demo instance at your real volume**
 
-**Assuming an update failed because nothing changed.** It is a PWA and caches itself. Accept the prompt or hard-reload. The data is fine; it just looks like a broken deploy.
+`DEMO_MODE` protects writes. `GET /api/data` still serves your finances to the internet. Separate instance, empty storage.
 
-**Setting `runAsUser` on the pod.** The entrypoint starts as root, fixes `/data` ownership, then drops to uid 1000. Starting non-root removes its ability to chown at all. Use `fsGroup`.
+**Assuming an update failed because nothing changed**
 
-**Treating a lagging public series as missing data.** SSB publishes CPI with a lag. Reading that as "no data" hid a working feature for a month. Decide what a normal lag looks like, and keep it off the same code path as a real failure.
+It is a PWA and caches itself. Accept the prompt or hard-reload. The data is fine; it just looks like a broken deploy.
+
+**Setting `runAsUser` on the pod**
+
+The entrypoint starts as root, fixes `/data` ownership, then drops to uid 1000. Starting non-root removes its ability to chown at all. Use `fsGroup`.
+
+**Treating a lagging public series as missing data**
+
+SSB publishes CPI with a lag. Reading that as "no data" hid a working feature for a month. Decide what a normal lag looks like, and keep it off the same code path as a real failure.
 
 ## What's Next?
 
@@ -282,8 +353,8 @@ Payslip parsing beyond Visma, which needs one function per provider and a sample
 
 ## Final Thoughts
 
-Plenty of budgeting apps exist. What keeps me on this one is that the understanding is worth more than the features. Knowing your marginal rate changes what an extra shift is worth. Knowing the inflation floor changes what you say in February. Knowing that 13 521 of 18 166 is interest changes how you feel about paying extra.
+Plenty of budgeting apps exist. What keeps me on this one is that the understanding is worth more than the features. Knowing what a decade of your own raises did against CPI changes what you say in February. Knowing that 1 560 of your 1 950 hours are the billable ones changes how you read a rate. Knowing that 13 521 of an 18 166 payment is interest changes how you feel about paying extra.
 
 None of that needs my app. It needs the numbers in front of you often enough that you stop guessing, and it should not cost a subscription to get there.
 
-Headroom does the tax maths. You are still on your own for Musevisa.
+Headroom does the maths school skipped. The hypotenuse is still your problem.
