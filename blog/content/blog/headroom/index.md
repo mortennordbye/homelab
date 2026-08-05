@@ -325,8 +325,10 @@ Payslip parsing beyond Visma, which needs one function per provider and a sample
 
 ## Final Thoughts
 
-Plenty of budgeting apps exist. What keeps me on this one is that the understanding is worth more than the features. Knowing what a decade of your own raises did against CPI changes what you say in February. Knowing that 1 560 of your 1 950 hours are the billable ones changes how you read a rate. Knowing that 13 521 of an 18 166 payment is interest changes how you feel about paying extra.
+I built this for myself, and the surprise was how much of the value sits in the arithmetic rather than in the app around it.
 
-None of that needs my app. It needs the numbers in front of you often enough that you stop guessing, and it should not cost a subscription to get there.
+Knowing what a decade of my own raises did against CPI changed what I say in February. Knowing that 1 560 of my 1 950 hours are the billable ones changed how I read a rate. Knowing that 13 521 of an 18 166 payment is interest changed how I feel about paying extra.
+
+You do not need [Headroom](https://github.com/mortennordbye/headroom) for any of that. You need the numbers in front of you often enough that you stop guessing, and getting there should not cost a subscription. This is only how I got there, and the [manifests that run it](https://github.com/mortennordbye/Homelab/tree/main/k8s/talos/apps/headroom) are in the Homelab repo if you want the rest of the setup.
 
 Headroom does the maths school skipped. The hypotenuse is still your problem.
