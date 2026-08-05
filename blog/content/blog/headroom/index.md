@@ -44,49 +44,37 @@ What you want from a finance app is money in, money out, what is left standing a
 
 <img src="/images/headroom-oversikt.webp" alt="Headroom dashboard showing 1 362 739 kr total equity after tax and debt, a twelve month equity line, remaining monthly budget and daily spending pace" title="Total equity, after tax and after debt" style="width:100%;" />
 
-The big number is equity after tax and after all debt. Student loan is split out from the rest, because it behaves nothing like a credit card, and both versions are on the card. 1 362 739 with it, 1 646 739 without. Pick the one you believe.
+The big number is equity after tax and after all debt. Student loan is split from the rest, because it behaves nothing like a credit card, and both versions are on the card. 1 362 739 with it, 1 646 739 without. Under that, twelve months as a line and 223 125 kr of change.
 
-Under it, twelve months as a line and the twelve month change as a number. 223 125 kr, which is everything that came in, minus everything that went out, plus whatever the market did.
+The right column is the near end of the same question. 14 190 left this month after fixed costs, and 11 352 you can actually spend, which is 366 kr a day. Your line is solid, the ideal pace is dotted, and being above it on the 12th is the only budgeting feedback that arrives early enough to act on.
 
-The right column is the near end of the same question. 14 190 left this month after fixed costs, and 11 352 you can actually spend, which is 366 kr a day. Your line is solid, the ideal pace is dotted, and being above it on the 12th is the only budgeting feedback that arrives early enough to do something about.
-
-Then the goals. A goal is a name, a target amount and a source. Point it at your BSU account, a savings account, the investment portfolio, the buffer or total equity, and it reads the balance itself instead of asking you to keep it updated.
+Then the goals. A goal is a name, a target and a source. Point it at your BSU account, a savings account, the portfolio, the buffer or total equity, and it reads the balance itself.
 
 <img src="/images/headroom-mal.webp" alt="Headroom goals card showing three savings goals at 60, 27 and 70 percent, each with its source, the amount remaining and the month it reaches the target at the current pace" title="Three goals, and when each one lands" style="width:100%;" />
 
-What makes it more than a progress bar is the line underneath. The buffer goal is at 60% and reaches 100 000 in March 2032 at the rate it is actually growing. Give a goal a deadline and that line turns into how many months ahead or behind you are, and what the monthly amount would have to be to land on the date. Stop paying into it and it says there has been no progress in recent months, which is the sentence you were avoiding.
-
-The same idea runs across the top of the page for the plans you never named as goals. One month ahead on the mortgage. 12 251 kr ahead on the rest of the debt.
+What makes it more than a progress bar is the line underneath. The buffer goal reaches 100 000 in March 2032 at the rate it is actually growing. Add a deadline and that line becomes how many months ahead or behind you are, and what the monthly amount would have to be. Stop paying in and it says so.
 
 <img src="/images/headroom-fordeling.webp" alt="Headroom dashboard lower half showing budget distribution, wealth allocation across six assets, monthly investment, top categories and a twelve month cash flow chart" title="Budget split, asset allocation and cash flow" style="width:100%;" />
 
-Below that the month is split three ways. 67.6% fixed, 3.1% spent so far, 29.2% still yours. The income line reads 43 840 against a 47 721 average, so this month is 8.1% light before you have done anything wrong.
+Below that, the month split three ways and where the equity actually sits. 72% of it is house, which is the argument for reading this page instead of a bank balance, because a net worth made almost entirely of one illiquid asset behaves nothing like the same number held in funds.
 
-Next to it, where the equity actually sits. 72% of it is house. That one percentage is the argument for reading this page instead of a bank balance, because a net worth made almost entirely of one illiquid asset behaves nothing like the same number held in funds.
-
-Two more tiles do work that budgeting apps usually skip. Emergency fund coverage counts your buffer in months of fixed expenses and says what to set aside monthly to reach the target within a year. Debt-to-income puts total debt against gross salary and shows the headroom to the 5x cap, which is the number that decides how short the next conversation at the bank is.
-
-The cash flow chart is twelve months of in against out. Two bars a month, and a line for what survived.
+Two tiles do work most budgeting apps skip. Emergency fund coverage counts your buffer in months of fixed expenses and says what to set aside monthly to reach the target. Debt-to-income shows the headroom to the 5x cap, which is the number that decides how short the next conversation at the bank is.
 
 ## Your Career, Written Down
 
-Nobody remembers what they earned in 2019. Ask three people what their raise was two jobs ago and you get three shrugs. That is exactly the information you are missing in February when someone across a table asks what you had in mind.
+Nobody remembers what they earned in 2019. Ask three people what their raise was two jobs ago and you get three shrugs. That is exactly what you are missing in February when someone across a table asks what you had in mind.
 
 <img src="/images/headroom-lonn.webp" alt="Headroom salary page showing 768 000 kr total annual gross at 10 percent above the national median, 68.8 percent cumulative growth since 2015, 3.9 percent year over year against 2.7 percent CPI, and a 416 kr effective hourly rate" title="Pay over time" style="width:100%;" />
 
-The salary page is a log you keep for a decade. Jobs with employer, role, start and end date and contracted hours. Salary changes with an effective date and a type, so an initial, a raise, a promotion, a job change and an adjustment are not the same event. Bonuses, overtime and the hours you actually worked go in as separate entries, because a year where you got 3% and worked 15% more is not a good year.
+The salary page is a log you keep for a decade. Jobs with employer, role, dates and contracted hours. Salary changes with an effective date and a type, so an initial, a raise, a promotion and a job change are not the same event. Bonuses, overtime and the hours you actually worked go in separately, because a year where you got 3% and worked 15% more is not a good year.
 
-Four numbers sit at the top. Total annual gross, which is base plus on-call rather than the figure on the contract. Cumulative growth since your first entry. This year against CPI. And effective hourly, which is gross divided by the hours you actually worked.
+Four numbers sit at the top, and in the demo they read 768 000 gross including on-call, up 68.8% since February 2015, 3.9% this year against 2.7% inflation, and 416 kr an hour on the hours actually worked. The badge says ten percent above the national median for the occupation, from SSB's wage statistics.
 
-In the demo that reads 768 000, up 68.8% since February 2015, 3.9% this year against 2.7% inflation, and 416 kr an hour on 39.5 hours a week. The badge next to it says ten percent above the national median for the occupation, from SSB's wage statistics.
-
-Then the charts, which is where ten years of entries turn into an argument.
-
-Salary over time puts a marker on every change, so a flat three-year stretch is something you can see instead of something you half remember. One bar per year for growth against CPI, green when you beat it. Total comp stacked by year, so the year the bonus vanished but the base moved is not filed as the same year both moved. And hours against hourly rate, which is the chart that catches a promotion that was really a workload increase.
+Then the charts, which is where ten years of entries turn into an argument. A marker on every change, so a flat three-year stretch is something you can see rather than half remember. One bar per year against CPI, green when you beat it. Total comp stacked, so the year the bonus vanished is not filed as the year the base moved. And hours against hourly rate, which catches a promotion that was really a workload increase.
 
 Effective hourly is the one that stings. A 5% raise that arrives with four extra hours a week is a pay cut per hour, and nothing on your payslip will tell you.
 
-There is also a calculator that divides your salary down to the year, month, week, day, hour, minute and second. 0,106 kr per second. Useless, and I look at it anyway.
+There is also a calculator that divides your salary down to the second. 0,106 kr. Useless, and I look at it anyway.
 
 <img src="/images/headroom-pengestrom.webp" alt="Headroom salary page showing a cash flow diagram from gross to tax, fixed expenses, free spending and savings, with a 43 percent marginal rate" title="Where the month's salary goes" style="width:100%;" />
 
@@ -100,47 +88,31 @@ A raise below inflation is not a raise. It is a pay cut delivered as good news, 
 
 <img src="/images/headroom-forhandling.webp" alt="Headroom salary negotiation view with a 744 000 kr base, a 748 368 kr inflation floor and a gradient bar from lose purchasing power to real raise" title="The inflation floor" style="width:100%;" />
 
-Your salary was set in February at 744 000. SSB says prices moved 0.6% since. The offer has to clear **748 368** before you have gained anything. Type the offer in, as kroner or as a percentage, and the bar tells you which of three things you just accepted.
+Your salary was set in February at 744 000. SSB says prices moved 0.6% since. The offer has to clear **748 368** before you have gained anything. Type it in, as kroner or as a percentage, and the bar tells you which of three things you just accepted.
 
-That is the floor, not the ask. What you take into the meeting is the rest of the page: growth against CPI for every year you have logged, where you sit against the national median, and what your effective hourly rate did while your title changed twice.
+That is the floor, not the ask. What you take into the meeting is the rest of the page: growth against CPI for every year you have logged, where you sit against the median, and what your effective hourly did while your title changed twice.
 
 The alternative is arguing from memory against someone who has the numbers in front of them.
-
-## What You Cost
-
-This is the page nobody asks for and everybody reads twice.
-
-<img src="/images/headroom-lonnskostnad.webp" alt="Headroom employer cost page building 768 000 kr salary up to 1 115 257 kr total, then deriving 1 560 billable hours, a 714,91 kr cover rate and a 1 021,30 kr target rate" title="Salary 768 000. Cost 1 115 257." style="width:100%;" />
-
-Your contract says 768 000. Feriepenger goes on top, then employer OTP, then arbeidsgiveravgift at 14.1% on that whole base, then a desk, a laptop, licences and insurance. Total 1 115 257. A 45.2% uplift on the number you negotiated, which is worth knowing before you ask for 30 000 more, because you are asking for 43 000.
-
-The lower half is the part I keep coming back to. 1 950 working hours in a year, 80% of them billable, so 1 560 hours are actually sellable. Divide the cost by those and you get **714,91 kr/t**, the rate where your employer breaks exactly even on you. Add a 30% target margin and it becomes **1 021,30 kr/t**, or 7 659 kr a day.
-
-So now you have both ends of your own payslip. What it costs to produce, and what someone has to charge for your time before the arrangement makes money. Spread the cost over every worked hour and it is 572 kr. Spread it over the billable ones and it is 715, and those 143 kroner of difference are nothing but the 390 hours a year nobody is invoiced for.
-
-That calculation is also the one freelancers get wrong exactly once.
 
 ## The Month
 
 <img src="/images/headroom-budsjett.webp" alt="Headroom budget page for August 2026 with monthly income, budget per month and per day, fixed expenses, an imported payslip and the spend and invest split" title="One month at a time" style="width:100%;" />
 
-Income at the top, either typed, derived automatically from your salary entries, or lifted out of a payslip PDF. The PDF is read in your browser and never uploaded. In the demo it picked up 43 840 net, 64 000 gross, 20 160 withheld and 7 680 of holiday pay accrued, straight off the document.
+Income at the top, typed, derived from your salary entries, or lifted out of a payslip PDF that is read in your browser and never uploaded. In the demo it picked up 43 840 net, 64 000 gross, 20 160 withheld and 7 680 of holiday pay accrued, straight off the document.
 
-From there, three numbers. Fixed costs of 29 650. What is spendable this month, 11 352. And what that is per day, 366 kr. Per day is the one you use, because "you have 11 000 left" on the 3rd and on the 27th are different sentences.
+From there, three numbers. Fixed costs of 29 650, then 11 352 spendable this month, then 366 kr a day. Per day is the one you use, because "you have 11 000 left" on the 3rd and on the 27th are different sentences.
 
-The split is a target, not a leftover. Set 20% and the recommendation reserves 2 838 for investment first, then tells you what is spendable. Saving whatever happens to survive the month is how people save nothing.
+The split is a target, not a leftover. Set 20% and it reserves 2 838 for investment first, then tells you what is spendable. Saving whatever survives the month is how people save nothing.
 
 <img src="/images/headroom-utgifter.webp" alt="Headroom fixed expenses panel warning about double counting, offering to promote four detected recurring payments, and a chart of where the fixed money goes" title="It notices the subscription you forgot" style="width:100%;" />
 
 Two things earn their place. It spots a fixed expense and a matching transaction and offers to link them, so a bill is not counted twice. And it finds repeated payments and offers to promote them, which is how the forgotten subscription surfaces.
 
-Transactions get a rules engine behind them. Rename one or fix its category, tick "remember", and every matching transaction in every month gets the same treatment, retroactively. Twenty minutes once, then categories stop being a chore.
+Transactions get a rules engine. Rename one or fix its category, tick "remember", and every match in every month gets the same treatment, retroactively.
 
-The one I did not expect to need is transfer detection. Moving 10 000 to your own savings account is not spending, but a bank feed cannot tell, and counting it ruins both the budget and the savings rate. Headroom flags the transactions that look like internal moves, on round amounts, account numbers in the text and monthly repetition, and offers to turn each into a rule.
+The one I did not expect to need is transfer detection. Moving 10 000 to your own savings account is not spending, but a bank feed cannot tell, and counting it ruins both the budget and the savings rate. Headroom flags what looks like an internal move, on round amounts, account numbers and monthly repetition, and offers to make each one a rule. It also warns about the way that goes wrong. Net out a credit card bill without importing the card's own transactions and everything you spent on that card disappears.
 
-It also warns about the way that goes wrong. Net out a credit card bill without importing the card's own transactions and everything you spent on that card disappears from the budget entirely.
-
-Under all that: spend per account per month, search across every transaction you have, bulk recategorisation, and a nudge when the savings rate has been under target for a few months running.
+Under all that, spend per account per month, a search across every transaction you have, bulk recategorisation, and a nudge when the savings rate has been under target for months.
 
 ## What You Are Worth After Tax
 
@@ -150,41 +122,41 @@ A portfolio of 285 000 with 62 000 of unrealised gain is not worth 285 000. Sell
 
 So the page deducts it and shows the net position. Crypto gets the same treatment at 22%. Unpopular way to display a portfolio. Correct one.
 
-The rest is a balance sheet with the parts held apart on purpose.
+The rest is a balance sheet with the parts held apart on purpose. Property is 4 200 000 against a 2 950 000 mortgage, so 1 250 000 of equity, and none of it is spendable. Liquidity is what you can reach this week, BSU included, with both its allowances tracked. Pension stays out of liquid equity, because OTP and IPS are real money that is not yours yet.
 
-Property is value against mortgage. 4 200 000 less 2 950 000 leaves 1 250 000 of equity. That is 72% of the total, and none of it is spendable.
-
-Liquidity is what you can reach this week. Savings, holiday account, buffer, and BSU with both allowances tracked, 27 500 of room this year and 267 000 of lifetime room left.
-
-Pension sits in its own box and stays out of liquid equity. OTP and IPS are real money, and they are not your money yet.
-
-Credit frames count at their full limit rather than their balance, the way a bank counts them. An unused 100 000 card is 100 000 of debt in that conversation, whatever your statement says.
+Credit frames count at their full limit rather than their balance, the way a bank counts them. An unused 100 000 card is 100 000 of debt in that conversation.
 
 Under the balance sheet, the same assets projected to now, to five years out and to fifteen. Each class grows at its own rate rather than one blended number smeared over everything, and the monthly savings from your budget flow into stocks. Which is where the wealth page and the budget page stop being separate pages.
 
 ## The Forecast
 
-Everything above feeds this one. Wealth is the opening balance, the budget supplies the monthly contribution, and the salary page supplies the raise assumption. Five sliders decide the rest: annual raise, share of net income saved, expected real return, expected inflation, and how far out to look.
+Everything above feeds this one. Wealth is the opening balance, the budget supplies the monthly contribution, and the salary page supplies the raise assumption. Five sliders decide the rest: annual raise, share of net saved, expected real return, expected inflation, and how far out to look.
 
 <img src="/images/headroom-prognose.webp" alt="Headroom forecast comparing 5 000 kr a month prepaid against invested over fifteen years, and a net worth projection to 2041 with nominal, today's kroner and an uncertainty band" title="Two assumptions, fifteen years apart" style="width:100%;" />
 
 The chart draws two lines and a band. Nominal, which is the impressive one. The same figure in today's kroner, which is the one that means something. And the band sits at plus or minus three points of return, because a single confident line fifteen years out is a lie told with a chart library.
 
-Two panels do the arguing.
+Prepay against invest takes an extra amount per month and runs it both ways. 5 000 a month against a 4.3% effective mortgage rate after the deduction, versus 7% expected return. Investing ends 324 745 ahead after fifteen years. Drag the return under the mortgage rate and the answer flips, which is the useful part. You get to see how much of the advice you have been given rests on an assumption nobody said out loud.
 
-Prepay against invest takes an extra amount per month and runs it both ways. 5 000 a month against a 4.3% effective mortgage rate after the deduction, versus 7% expected return. Investing ends 324 745 ahead after fifteen years. Drag the expected return under the effective mortgage rate and the answer flips, which is the useful part. You get to see how much of the advice you have been given rests on an assumption nobody said out loud.
+Financial independence puts the projection against 25 times your essential annual spending and gives the year it crosses, with essential spending taken from your own fixed expenses rather than a rule of thumb. And scenario compare runs two sets of assumptions side by side. Model 4% raises instead of 2% and read what fifteen years of the difference is worth, which is a better reason to prepare for February than any of the ones you rehearsed.
 
-Financial independence puts the projection against 25 times your essential annual spending and gives the year it crosses. Essential spending comes from your own fixed expenses, so it is your number rather than a blog's.
+## What You Cost
 
-And scenario compare runs two sets of assumptions side by side and prints the difference at the end. Model 4% raises instead of 2% and read what fifteen years of the difference is worth. That is a better reason to prepare for February than any of the ones you rehearsed.
+This is the page nobody asks for and everybody reads twice.
+
+<img src="/images/headroom-lonnskostnad.webp" alt="Headroom employer cost page building 768 000 kr salary up to 1 115 257 kr total, then deriving 1 560 billable hours, a 714,91 kr cover rate and a 1 021,30 kr target rate" title="Salary 768 000. Cost 1 115 257." style="width:100%;" />
+
+Your contract says 768 000. Feriepenger goes on top, then employer OTP, then arbeidsgiveravgift on that whole base, then a desk, a laptop, licences and insurance. Total 1 115 257, a 45.2% uplift on the number you negotiated. Worth knowing before you ask for 30 000 more, because you are asking for 43 000.
+
+The lower half is the part I keep coming back to. 1 950 working hours in a year, 80% of them billable, so 1 560 are actually sellable. Divide the cost by those and you get **714,91 kr/t**, the rate where your employer breaks exactly even on you. Add a 30% margin and it becomes **1 021,30 kr/t**, or 7 659 kr a day.
+
+Spread the cost over every worked hour and it is 572 kr. Spread it over the billable ones and it is 715, and those 143 kroner of difference are nothing but the 390 hours a year nobody is invoiced for. That calculation is the one freelancers get wrong exactly once.
 
 ## One Home, One Loan
 
 <img src="/images/headroom-bolig.webp" alt="Headroom mortgage page showing 1 250 000 kr equity, 4 200 000 kr value, 2 950 000 kr debt and 70.24 percent loan to value" title="The mortgage page" style="width:100%;" />
 
-The monthly payment is 18 166 kr. Of that, **13 521 is interest and 4 595 is repayment**. Seeing that written down is educational in a way your bank's app avoids being.
-
-Belåningsgrad falls from both ends at once, as you pay down and the property drifts up:
+The monthly payment is 18 166 kr. Of that, **13 521 is interest and 4 595 is repayment**. Seeing that written down is educational in a way your bank's app avoids being. Belåningsgrad then falls from both ends at once, as you pay down and the property drifts up:
 
 {{< chart alt="Loan to value falling from 70 percent in 2026 to zero in 2051" ratio="16/6" caption="Read straight out of the app's own projection." >}}
 {
