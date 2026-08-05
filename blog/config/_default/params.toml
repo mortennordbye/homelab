@@ -18,6 +18,11 @@ accentEmphasis = true
 enableSearch = true
 enableCodeCopy = true
 
+# Click a screenshot to open it, then zoom and pan. Most posts here lean on dashboard
+# captures whose point is in small text that is unreadable at the width of the prose
+# column. Off by default in the theme; on here for exactly that reason.
+enableLightbox = true
+
 mainSections = ["blog"]
 
 disableImageOptimization = false
