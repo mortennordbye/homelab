@@ -54,9 +54,24 @@ customRules:
       override:
         condition: replace
 
-    # cilium-agent opens AF_PACKET sockets as part of normal datapath setup;
-    # scoped to the cilium image so any other container still alerts.
-    - macro: user_known_packet_socket_binaries
-      condition: (proc.name=cilium-agent and container.image.repository=quay.io/cilium/cilium)
+    # cilium-agent opens AF_PACKET sockets as part of normal datapath setup, and
+    # so does the dockerd in verksted's dind sidecar every time it wires up the
+    # network for a container an agent session starts — about once a minute,
+    # which is noise loud enough to bury a real notice.
+    #
+    # Appended to the rule rather than filled into its template hook, unlike the
+    # tunings above: upstream declares user_known_packet_socket_binaries as a
+    # *list* consumed by `proc.name in (...)`, so filling it can only ever say
+    # "this binary name, anywhere". Exempting dockerd cluster-wide is a wider
+    # hole than either daemon needs. This keeps each exemption pinned to the
+    # image it belongs to, so the same binary in any other container still
+    # alerts. (The entry here was previously written as a macro override, which
+    # silently did nothing at all: it declared a second thing under the list's
+    # name, and no rule ever referred to it.)
+    - rule: Packet socket created in container
+      condition: >
+        and not (proc.name=cilium-agent and container.image.repository=quay.io/cilium/cilium)
+        and not (proc.name=dockerd and container.image.repository=docker.io/library/docker
+                 and k8s.ns.name=verksted)
       override:
-        condition: replace
+        condition: append
