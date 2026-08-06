@@ -110,6 +110,13 @@ spec:
             # prunes it daily. Kept off the NFS PVC (overlayfs needs local disk).
             - name: dind-storage
               mountPath: /var/lib/docker
+            # The same PVC the app has, at the same path. A bind mount is
+            # resolved by the daemon in its own filesystem, so without this a
+            # session running `docker compose up` in /data/repos/<project> gets
+            # an empty directory mounted over its source — and docker creates
+            # the missing path rather than failing, so nothing says why.
+            - name: data
+              mountPath: /data
       volumes:
         - name: data
           persistentVolumeClaim:
