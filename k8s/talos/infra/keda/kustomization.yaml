@@ -22,6 +22,6 @@ helmCharts:
     repo: https://kedacore.github.io/charts
     includeCRDs: true
     namespace: keda
-    version: 2.20.1
+    version: 2.20.2
     releaseName: keda
     valuesFile: ./values.yaml
