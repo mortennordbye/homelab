@@ -83,6 +83,16 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
+            # The half of reelsmith that is not in git: the editorial profile,
+            # the voice reference recording, and the cooldown and star history
+            # stores. Kept off the PVC so the workbench can be rebuilt without
+            # taking the account's identity with it, and so the NAS backs it up
+            # — the voice recording exists nowhere else and is not
+            # reconstructible. subPath, like audiobookshelf, so the container
+            # sees only this folder rather than the whole media share.
+            - name: shared-data
+              mountPath: /mnt/reelsmith
+              subPath: media/reelsmith
         # Docker daemon for the agent sessions. Privileged is inherent to dind;
         # shares the pod netns so the app reaches it at localhost:2375.
         - name: dind
@@ -121,5 +131,10 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: verksted-data
+        - name: shared-data
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/shared-data
+            readOnly: false
         - name: dind-storage
           emptyDir: {}
