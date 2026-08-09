@@ -235,6 +235,13 @@ resource "talos_cluster_kubeconfig" "cluster" {
   node                 = local.first_control_plane_ip
   client_configuration = talos_machine_secrets.cluster.client_configuration
 
+  # The provider reissues the client certificate when it expires within this window, but only on an
+  # apply. The 720h default means a 30 day window in which an apply has to happen or the credential
+  # lapses, which is easy to miss on a cluster that can sit untouched for months. 90 days makes it
+  # far more likely that a routine apply catches it. Certificates are issued for a year either way,
+  # so a wider window costs nothing but slightly more frequent reissues.
+  certificate_renewal_duration = "2160h"
+
   timeouts = {
     create = "5m"
     read   = "1m"
