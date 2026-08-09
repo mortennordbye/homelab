@@ -1,0 +1,72 @@
+# Merges Kargo's promotion PRs for the apps named in the KARGO_AUTOMERGE_APPS
+# repository variable. Those apps have no stage environment, so the PR is a
+# record rather than a review: the build was already vetted in the app's own
+# repo and the promotion still has to pass its smoke test afterwards.
+#
+# Kill switch, no deploy and no commit needed: Settings > Secrets and variables
+# > Actions > Variables > KARGO_AUTOMERGE_APPS. Drop an app from the list, or
+# empty the variable entirely, and the next promotion PR waits for a human.
+# Kargo opens the PR either way and blocks on the merge, so nothing is lost.
+name: Kargo auto-merge
+
+on:
+  pull_request:
+    # Kargo attaches the labels just after opening the PR, so `opened` can
+    # arrive before `app/<name>` exists. The `labeled` events cover that.
+    types: [opened, labeled, reopened]
+
+permissions: {}
+
+# Serialised per PR so the three `labeled` events do not race each other into
+# the same merge.
+concurrency:
+  group: kargo-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    # Only branches Kargo generated, and only from this repo.
+    if: >-
+      startsWith(github.event.pull_request.head.ref, 'kargo/promotion/') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check the app is opted in
+        id: gate
+        env:
+          APPS: ${{ vars.KARGO_AUTOMERGE_APPS }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          app=$(jq -r '.[] | select(startswith("app/")) | ltrimstr("app/")' <<<"$LABELS" | head -1)
+          if [ -z "$app" ]; then
+            echo "No app/* label yet; the labeled event will retry."
+            exit 0
+          fi
+          if ! tr ',' '\n' <<<"$APPS" | tr -d ' \t' | grep -qx "$app"; then
+            echo "$app is not in KARGO_AUTOMERGE_APPS ('$APPS'); leaving for manual merge."
+            exit 0
+          fi
+          echo "merge=true" >> "$GITHUB_OUTPUT"
+
+      - name: Squash merge
+        if: steps.gate.outputs.merge == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ "$(gh pr view "$PR" --json state --jq .state)" != OPEN ]; then
+            echo "PR $PR is no longer open; nothing to do."
+            exit 0
+          fi
+          # GitHub computes mergeability asynchronously and reports UNKNOWN
+          # until it finishes, which `gh pr merge` treats as a hard failure.
+          for _ in 1 2 3 4 5 6; do
+            state=$(gh pr view "$PR" --json mergeable --jq .mergeable)
+            [ "$state" = UNKNOWN ] || break
+            sleep 5
+          done
+          gh pr merge "$PR" --squash
