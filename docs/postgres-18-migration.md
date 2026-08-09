@@ -25,6 +25,40 @@ data — the 18 image detects the 16 cluster at the old path and refuses to
 start, exiting 1 with an explanation. It is a loud failure, not a quiet one,
 but it is still an outage, so the mount path moves as part of this change.
 
+## The NFS ownership trap
+
+Hit for real during the 2026-08-09 run. Moving the mount to the parent
+directory means Postgres has to *create* `18/docker` inside the volume, and on
+a freshly provisioned `syno-nfs-csi` volume it cannot:
+
+```
+mkdir: can't create directory '/var/lib/postgresql/18/': Permission denied
+```
+
+The mount root is readable as `drwxrwxrwx` by root but `d---------` by uid 70 —
+the Synology export grants root everything and postgres nothing. The entrypoint
+`gosu`s to postgres before creating any directory, so it is uid 70 that fails.
+`mkdir -p` on an already existing path does not error, so if you see this
+message the directory genuinely is not there yet.
+
+This never happened on 16 because the volume was mounted directly at `$PGDATA`,
+and that PVC's root had ended up owned by 70.
+
+`postgres.yaml` now carries a `fix-nfs-ownership` initContainer that chowns the
+mount root to `70:70` before Postgres starts, so a recreated PVC recovers on its
+own. If you are debugging this by hand, one root pod with the claim mounted is
+enough:
+
+```bash
+chown 70:70 /var/lib/postgresql && chmod 700 /var/lib/postgresql
+```
+
+`fsGroup: 70` looks like the tidier fix — `fsGroupPolicy` on the driver is
+`File`, so kubelet would apply it — but it recursively adds group write, and
+Postgres refuses to start unless `$PGDATA` is exactly `0700` or `0750`. The
+entrypoint chmods it back on every start, so it would probably work; the
+initContainer does not depend on "probably".
+
 ## What the database looks like
 
 Checked against the live cluster on 2026-08-09:

@@ -46,6 +46,30 @@ spec:
       labels:
         app: postgres
     spec:
+      # The Synology NFS export hands a freshly provisioned volume to root only:
+      # uid 70 reads the mount root as d--------- even though root sees 0777, so
+      # the entrypoint (which gosu's to postgres before creating anything) cannot
+      # mkdir $PGDATA and the container crash-loops on
+      #   mkdir: can't create directory '/var/lib/postgresql/18/': Permission denied
+      #
+      # This never bit on 16 because the volume was mounted directly at $PGDATA,
+      # and that PVC's root had ended up owned by 70. Mounting the parent, which
+      # 18 requires, exposes it.
+      #
+      # One non-recursive chown of the mount root is enough: on a fresh PVC it is
+      # the only entry, and everything below it is created by postgres itself.
+      # Uses the same image as the main container so there is no second tag to
+      # pull or track.
+      initContainers:
+        - name: fix-nfs-ownership
+          image: postgres:18-alpine
+          command:
+            - sh
+            - -c
+            - chown 70:70 /var/lib/postgresql && chmod 700 /var/lib/postgresql
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql
       containers:
         - name: postgres
           image: postgres:18-alpine
