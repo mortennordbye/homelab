@@ -22,9 +22,16 @@ resource "null_resource" "upgrade_kubernetes" {
         sleep 120
       fi
 
+      # Address a fixed control plane, never the VIP. upgrade-k8s patches each node's machine
+      # config in turn, and patching the node that currently holds the VIP makes Talos tear the
+      # VIP off eth0 and re-elect it onto another control plane. talosctl keeps its now-dead
+      # socket in ESTABLISHED and blocks forever: observed here hanging for 17 minutes at 0.43s
+      # of CPU. Nothing reboots during this step, so a direct node address stays reachable
+      # throughout. The health gates in upgrade-talos.tf are the opposite case and do want the
+      # VIP, because there the nodes really are rebooting.
       talosctl upgrade-k8s \
-        --endpoints ${local.kubernetes_endpoint} \
-        --nodes ${local.kubernetes_endpoint} \
+        --endpoints ${values(local.control_plane_nodes)[0].ip} \
+        --nodes ${values(local.control_plane_nodes)[0].ip} \
         --to ${var.kubernetes_version}
 
       echo "Kubernetes upgraded to ${var.kubernetes_version}, waiting for cluster health..."

@@ -1,6 +1,6 @@
 # Sequential upgrade: ctrl-1 → ctrl-2 → ctrl-3 → worker-1 → worker-2 → worker-3
 #
-# Each node is its own resource so a failure part way through is resumable — Terraform records
+# Each node is its own resource so a failure part way through is resumable. Terraform records
 # which nodes completed and a re-apply picks up from the failed one rather than re-upgrading
 # nodes that already succeeded.
 

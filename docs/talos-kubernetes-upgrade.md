@@ -140,6 +140,70 @@ feeds `cluster_kubeconfig`, which the upgrade steps depend on, so making the con
 upgrades is a dependency cycle. The contracts lag instead, and are raised in a second apply once
 the nodes are already on the new version.
 
+### Never point `upgrade-k8s` at the VIP
+
+This one cost 21 minutes of hang during round 1.
+
+`talosctl upgrade-k8s` patches each node's machine configuration in turn. Patching the node that
+currently holds the VIP makes Talos tear the VIP off `eth0` and re-elect it onto another control
+plane, visible in `dmesg` as:
+
+```
+[talos] removing shared IP {"controller": "network.OperatorSpecController", "operator": "vip",
+        "link": "eth0", "ip": "10.3.10.30"}
+```
+
+If `--endpoints` is the VIP, the command has just killed its own connection. talosctl keeps the now
+dead socket in `ESTABLISHED` and blocks indefinitely: observed at 17 minutes elapsed with 0.43
+seconds of CPU consumed, having patched exactly one node.
+
+Nothing reboots during `upgrade-k8s`, so a direct control plane address stays reachable the whole
+way through. Use one:
+
+```hcl
+--endpoints ${values(local.control_plane_nodes)[0].ip}
+```
+
+The health gates in `upgrade-talos.tf` are the opposite case and do want the VIP, because there the
+nodes genuinely reboot and a fixed address would go unreachable. Same cluster, opposite answer,
+because one step reboots nodes and the other does not.
+
+To confirm a hang rather than slow progress, compare elapsed time against CPU time and check what
+the nodes actually report, since Terraform's log lags:
+
+```bash
+ps -o pid,etime,time,command -p <talosctl pid>
+lsof -nP -p <talosctl pid> | grep TCP
+talosctl -e 10.3.10.30 -n <ip> get machineconfig v1alpha1 -o yaml | grep -o 'kubelet:v[0-9.]*'
+```
+
+Recovery is to kill the hung `talosctl`, **not** Terraform. Its non-zero exit propagates through
+`set -euo pipefail`, Terraform fails the provisioner, shuts down gracefully, writes state and
+releases the lock. The completed node upgrades stay in state, `null_resource.upgrade_kubernetes` is
+marked tainted, and the next apply re-runs only that step:
+
+```
+# null_resource.upgrade_kubernetes[0] is tainted, so must be replaced
+Plan: 1 to add, 0 to change, 1 to destroy.
+```
+
+Killing Terraform directly instead risks leaving a stale lock on the state blob.
+
+### Still open: the 1.12 contract conflicts with a static hostname
+
+`talos_config_contract` is deliberately still `v1.11.6` after round 1. The 1.12 contract emits a
+`HostnameConfig` document with `auto: stable`, while `config_patches` set a static
+`machine.network.hostname`, and Talos rejects having both:
+
+```
+rpc error: code = InvalidArgument desc = static hostname is already set in v1alpha1 config
+```
+
+`HostnameConfig` takes either `auto` or `hostname` and they explicitly conflict, so the per-node
+hostname has to move into that document in a way that replaces the generated one rather than
+merging beside it. Tracked in `BACKLOG.md`. Talos accepts an older-contract config, so this is drift
+to tidy, not a fault.
+
 ### Still open: `grubUseUKICmdline` on GRUB nodes
 
 These nodes boot via GRUB, not systemd-boot. Confirmed by their partition layout:
