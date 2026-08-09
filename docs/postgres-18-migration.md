@@ -66,16 +66,13 @@ kubectl scale deploy/logeverylift-app -n logeverylift --replicas=0
 kubectl rollout status deploy/logeverylift-app -n logeverylift --timeout=60s
 ```
 
-ArgoCD has `selfHeal: true` on this app. It will try to scale the app back up,
-so do not leave a long gap between this step and step 5. If it fights you,
-suspend auto-sync for the duration:
+ArgoCD has `selfHeal: true`, but the Application also carries
+`ignoreDifferences` on `/spec/replicas` for Deployments, with
+`RespectIgnoreDifferences=true` in `syncOptions`. Scaling therefore sticks and
+does not need auto-sync suspended.
 
-```bash
-kubectl patch application logeverylift -n argocd --type=merge \
-  -p '{"spec":{"syncPolicy":{"automated":null}}}'
-```
-
-Remember to put it back at step 7.
+The same rule cuts the other way at step 5: a synced Deployment will *not* be
+scaled back up for you. Both scale-ups below are manual on purpose.
 
 ### 2. Take the dump
 
@@ -121,6 +118,15 @@ Merge the PR that switches `k8s/talos/apps/logeverylift/postgres.yaml` to
 ```bash
 kubectl -n argocd annotate application logeverylift \
   argocd.argoproj.io/refresh=hard --overwrite
+```
+
+Wait for the Application to report `Synced`, then scale Postgres back up —
+ArgoCD ignores `/spec/replicas`, so the sync alone leaves it at 0:
+
+```bash
+kubectl get application logeverylift -n argocd \
+  -o jsonpath='{.status.sync.status}{"\n"}'
+kubectl scale deploy/postgres -n logeverylift --replicas=1
 kubectl rollout status deploy/postgres -n logeverylift --timeout=180s
 ```
 
@@ -172,12 +178,11 @@ kubectl exec -n logeverylift "$POD18" -- psql -U postgres -d logeverylift_db \
   -tAc "select count(*) from workout_sets;"   # expect 1685
 ```
 
-Then bring the app back and re-enable auto-sync if you suspended it:
+Then bring the app back:
 
 ```bash
 kubectl scale deploy/logeverylift-app -n logeverylift --replicas=1
-kubectl patch application logeverylift -n argocd --type=merge \
-  -p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}'
+kubectl rollout status deploy/logeverylift-app -n logeverylift --timeout=120s
 ```
 
 Log in to logeverylift.com and confirm real workout history renders.
