@@ -315,6 +315,24 @@ Plex Pass, which this server has.
 
 ---
 
+## Open issue: one unexplained VM failure
+
+On 2026-08-09, about 50 minutes after the GPU was attached, VM 134 went to
+`running (internal-error)` in Proxmox. `genesis-worker-01` went NotReady and unreachable, and Plex
+could not reschedule because it is pinned to that node. `qm stop 134 && qm start 134` recovered it,
+and it then ran over an hour without recurring.
+
+No cause established. `journalctl -u qemu-server@134` was empty, `dmesg` showed no OOM kill, and
+`internal-error` is QEMU giving up without saying why. The `Invalid PCI ROM header signature` line
+in `dmesg` is a red herring: `rombar=0` is set, so the option ROM is not used.
+
+The most likely explanation is memory pressure. hyper1 has 31 GiB total. PCI passthrough pins the
+guest's entire RAM permanently, so worker-01's 16 GiB can never be reclaimed, plus ctrl-01's 8 GiB,
+leaving roughly 1 GiB for the host.
+
+If it recurs, in order: drop `genesis-worker-01` to `memory_mb = 12288`, then if that fails remove
+the passthrough entirely. Tracked in `BACKLOG.md`.
+
 ## Open issue: the boot kernel pin failed
 
 hyper1 runs `7.0.6-2-pve`. The intent was to pin `6.14.11-9-pve`. `GRUB_DEFAULT` was set,
