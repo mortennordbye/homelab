@@ -19,7 +19,7 @@ Working. The GPU is bound to `vfio-pci` on the host, attached to VM 134, and
 - [x] Node label `hardware.nordbye.it/gpu=intel-quicksync` on worker-01
 - [x] `plex.yaml` selects that label and mounts `/dev/dri`
 - [ ] **Merge to main** so ArgoCD syncs the Plex change
-- [ ] Enable hardware acceleration in Plex settings (**needs Plex Pass**)
+- [ ] Enable hardware acceleration in Plex settings (Plex Pass confirmed active)
 - [ ] Boot kernel pin **failed**, host runs `7.0.6-2-pve`. See the open issue at the end
 
 ## Established facts
@@ -282,8 +282,8 @@ After it syncs, confirm Plex can see the device:
 kubectl exec -n plex-media-stack deploy/plex -- ls -l /dev/dri
 ```
 
-Then in Plex: Settings, Transcoder, "Use hardware acceleration when available". **That option
-requires an active Plex Pass.** Without one the device is mounted and unused.
+Then in Plex: Settings, Transcoder, "Use hardware acceleration when available". That option requires an active
+Plex Pass, which this server has.
 
 ---
 
