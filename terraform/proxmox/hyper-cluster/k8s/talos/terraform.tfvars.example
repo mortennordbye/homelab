@@ -11,8 +11,11 @@ cluster_vip          = "10.0.10.30"     # Virtual IP for cluster endpoint
 network_gateway      = "10.0.10.1"      # Network gateway IP
 
 # Version Configuration
-talos_version      = "v1.11.6" # Latest: v1.11.6 | Previous: v1.10.8
-kubernetes_version = "v1.34.2" # Latest: v1.34.2 | Previous: v1.33.6
+# Renovate tracks these two so a lagging fleet shows up on the dependency
+# dashboard instead of going unnoticed. It opens a PR; it never automerges one.
+# A fleet upgrade is a maintenance window with an etcd snapshot taken first.
+talos_version      = "v1.11.6" # renovate: github-releases=siderolabs/talos
+kubernetes_version = "v1.34.0" # renovate: github-releases=kubernetes/kubernetes
 
 # Upgrade Flags
 enable_talos_upgrade      = false

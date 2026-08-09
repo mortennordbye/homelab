@@ -13,10 +13,15 @@
   ],
   "labels": ["dependencies"],
   "automergeStrategy": "squash",
+  "osvVulnerabilityAlerts": true,
+  "dependencyDashboardOSVVulnerabilitySummary": "unresolved",
   "vulnerabilityAlerts": {
-    "description": "Security fixes bypass group stability windows and the nightly schedule",
+    "description": "Security fixes bypass group stability windows and the nightly schedule. groupName null keeps each CVE on its own branch, so one stuck fix can't hold up the rest.",
+    "enabled": true,
     "automerge": true,
+    "schedule": ["at any time"],
     "minimumReleaseAge": "3 days",
+    "groupName": null,
     "addLabels": ["security", "automerge"]
   },
   "kubernetes": {
@@ -34,7 +39,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/\\.ya?ml$/"],
+      "managerFilePatterns": ["/\\.ya?ml$/", "/\\.tfvars\\.example$/"],
       "matchStrings": [
         "(?<currentValue>[\\w+\\.\\-]*)['\",;]*\\s*#\\s?renovate: (?<datasource>\\S+)=(?<depName>\\S+)\\s?(registry=(?<registryUrl>\\S+))?\\s?(versioning=(?<versioning>\\S+))?"
       ]
@@ -97,13 +102,14 @@
       "addLabels": ["helm", "monitoring"]
     },
     {
-      "description": "Helm Security: authentik, falco — manual review",
+      "description": "Helm Security: authentik, falco — longer soak than the other groups, since a bad authentik locks us out of everything behind it",
       "matchManagers": ["kustomize"],
       "matchPackageNames": ["authentik", "falco", "falco-falcosidekick"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "Helm Security",
       "groupSlug": "helm-security",
-      "automerge": false,
+      "automerge": true,
+      "minimumReleaseAge": "14 days",
       "addLabels": ["helm", "security"]
     },
     {
@@ -167,7 +173,8 @@
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "npm Portfolio",
       "groupSlug": "npm-portfolio",
-      "automerge": false,
+      "automerge": true,
+      "minimumReleaseAge": "3 days",
       "addLabels": ["npm", "portfolio"]
     },
     {
@@ -177,7 +184,8 @@
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "npm Blog",
       "groupSlug": "npm-blog",
-      "automerge": false,
+      "automerge": true,
+      "minimumReleaseAge": "3 days",
       "addLabels": ["npm", "blog"]
     },
     {
@@ -186,7 +194,8 @@
       "matchFileNames": ["ai/**"],
       "groupName": "Jarvis AI",
       "groupSlug": "jarvis-ai",
-      "automerge": false,
+      "automerge": true,
+      "minimumReleaseAge": "3 days",
       "addLabels": ["python", "ai"]
     },
     {
@@ -228,12 +237,30 @@
       "addLabels": ["npm", "blog", "major-update"]
     },
     {
-      "description": "Terraform: group all, manual review",
+      "description": "Terraform providers: group and automerge non-major. Nothing applies Terraform automatically, so a merged bump is a code change only — the plan still runs by hand.",
       "matchManagers": ["terraform"],
       "groupName": "Terraform",
       "groupSlug": "terraform",
-      "automerge": false,
+      "automerge": true,
+      "minimumReleaseAge": "7 days",
       "addLabels": ["terraform"]
+    },
+    {
+      "description": "Terraform helm_release charts duplicate the kustomize-managed infra charts. If these drift apart, a later terraform apply upgrades Cilium or ArgoCD out from under ArgoCD — bump both sides together, by hand.",
+      "matchManagers": ["terraform"],
+      "matchPackageNames": ["argo-cd", "cilium"],
+      "automerge": false,
+      "addLabels": ["terraform", "bootstrap"]
+    },
+    {
+      "description": "Talos and Kubernetes node versions. Tracked so they stop being invisible, never automerged — a fleet upgrade is a maintenance window with an etcd snapshot, not a merge.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["siderolabs/talos", "kubernetes/kubernetes"],
+      "groupName": "Cluster (Talos / Kubernetes)",
+      "groupSlug": "cluster-talos-k8s",
+      "automerge": false,
+      "minimumReleaseAge": "30 days",
+      "addLabels": ["cluster", "major-update"]
     },
     {
       "description": "Major updates always require manual review",
@@ -242,9 +269,22 @@
       "addLabels": ["major-update"]
     },
     {
-      "description": "Disable: portfolio image is managed by CI",
+      "description": "Disable: Kargo owns these tags. The Warehouse writes newTag in kustomization.yaml via kustomize-set-image, and the inline tag in deployment.yaml is dead weight the overlay overrides. Renovate bumping either one just fights the promotion pipeline.",
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/mortennordbye/portfolio"],
+      "matchPackageNames": [
+        "ghcr.io/mortennordbye/homelab/portfolio",
+        "ghcr.io/mortennordbye/homelab/blog",
+        "ghcr.io/mortennordbye/headroom",
+        "ghcr.io/mortennordbye/verksted",
+        "ghcr.io/mortennordbye/reelsmith-gateway",
+        "ghcr.io/mortennordbye/logeverylift"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Disable: huntarr.yaml is commented out of the arr-stack kustomization and ghcr.io/plexguide/huntarr no longer resolves. Left in place rather than deleted; see BACKLOG.md.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/plexguide/huntarr"],
       "enabled": false
     },
     {
