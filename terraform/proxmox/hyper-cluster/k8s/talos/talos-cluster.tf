@@ -6,15 +6,29 @@ locals {
 }
 
 resource "talos_machine_secrets" "cluster" {
-  talos_version = var.talos_version
+  talos_version = var.talos_secrets_contract
+
+  # These secrets are the cluster CA, etcd certs and service account keys. Replacing them is
+  # unrecoverable without the recovery flow in the README. prevent_destroy turns any plan that
+  # would replace them into a loud error instead of a silent rebuild.
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
-# Custom image with Intel microcode and QEMU guest agent
+# Custom image with Intel microcode, QEMU guest agent and Intel GPU drivers.
+#
+# i915 is only actually used by genesis-worker-01, which has the hyper1 iGPU passed through for
+# Plex QuickSync, but the schematic is fleet-wide. It is harmless on nodes without a GPU, and
+# keeping one schematic avoids a second image to track. Note that changing this list changes the
+# schematic ID, which machine.install.image references, so every node's config picks up the new
+# image and installs it at its next upgrade.
 resource "talos_image_factory_schematic" "this" {
   schematic = yamlencode({
     customization = {
       systemExtensions = {
         officialExtensions = [
+          "siderolabs/i915",
           "siderolabs/intel-ucode",
           "siderolabs/qemu-guest-agent",
         ]
@@ -43,16 +57,24 @@ resource "proxmox_download_file" "talos_image" {
 data "talos_machine_configuration" "controlplane" {
   for_each = local.control_plane_nodes
 
-  cluster_name     = var.cluster_name
-  cluster_endpoint = "https://${local.kubernetes_endpoint}:6443"
-  machine_type     = "controlplane"
-  machine_secrets  = talos_machine_secrets.cluster.machine_secrets
-  talos_version    = var.talos_version
-  kubernetes_version = var.kubernetes_version
+  cluster_name       = var.cluster_name
+  cluster_endpoint   = "https://${local.kubernetes_endpoint}:6443"
+  machine_type       = "controlplane"
+  machine_secrets    = talos_machine_secrets.cluster.machine_secrets
+  talos_version      = var.talos_config_contract
+  kubernetes_version = var.kubernetes_config_contract
 
   config_patches = [
     yamlencode({
       machine = {
+        # Pin the installer explicitly. Left unset, the provider fills this in from the Talos
+        # version it was itself built against rather than from var.talos_version, so the field
+        # drifts on every provider bump. It read installer:v1.12.0 on nodes running v1.11.6.
+        # The default also points at the plain installer, so a reinstall from config would drop
+        # the intel-ucode and qemu-guest-agent extensions in the schematic below.
+        install = {
+          image = "factory.talos.dev/installer/${talos_image_factory_schematic.this.id}:${var.talos_version}"
+        }
         network = {
           hostname = each.key
           interfaces = [{
@@ -68,10 +90,16 @@ data "talos_machine_configuration" "controlplane" {
             } : null
           }]
         }
-        nodeLabels = {
-          "topology.kubernetes.io/region" = var.proxmox_cluster_name
-          "topology.kubernetes.io/zone"   = each.value.proxmox_node
-        }
+        # The GPU label is derived from pci_mapping so the capability is declared in the same
+        # place as the hardware. Workloads that need QuickSync select on the label rather than
+        # pinning to a hostname.
+        nodeLabels = merge(
+          {
+            "topology.kubernetes.io/region" = var.proxmox_cluster_name
+            "topology.kubernetes.io/zone"   = each.value.proxmox_node
+          },
+          each.value.pci_mapping != null ? { "hardware.nordbye.it/gpu" = "intel-quicksync" } : {}
+        )
       }
       cluster = {
         allowSchedulingOnControlPlanes = true
@@ -91,16 +119,24 @@ data "talos_machine_configuration" "controlplane" {
 data "talos_machine_configuration" "worker" {
   for_each = local.worker_nodes
 
-  cluster_name     = var.cluster_name
-  cluster_endpoint = "https://${local.kubernetes_endpoint}:6443"
-  machine_type     = "worker"
-  machine_secrets  = talos_machine_secrets.cluster.machine_secrets
-  talos_version    = var.talos_version
-  kubernetes_version = var.kubernetes_version
+  cluster_name       = var.cluster_name
+  cluster_endpoint   = "https://${local.kubernetes_endpoint}:6443"
+  machine_type       = "worker"
+  machine_secrets    = talos_machine_secrets.cluster.machine_secrets
+  talos_version      = var.talos_config_contract
+  kubernetes_version = var.kubernetes_config_contract
 
   config_patches = [
     yamlencode({
       machine = {
+        # Pin the installer explicitly. Left unset, the provider fills this in from the Talos
+        # version it was itself built against rather than from var.talos_version, so the field
+        # drifts on every provider bump. It read installer:v1.12.0 on nodes running v1.11.6.
+        # The default also points at the plain installer, so a reinstall from config would drop
+        # the intel-ucode and qemu-guest-agent extensions in the schematic below.
+        install = {
+          image = "factory.talos.dev/installer/${talos_image_factory_schematic.this.id}:${var.talos_version}"
+        }
         network = {
           hostname = each.key
           interfaces = [{
@@ -113,10 +149,16 @@ data "talos_machine_configuration" "worker" {
             dhcp = false
           }]
         }
-        nodeLabels = {
-          "topology.kubernetes.io/region" = var.proxmox_cluster_name
-          "topology.kubernetes.io/zone"   = each.value.proxmox_node
-        }
+        # The GPU label is derived from pci_mapping so the capability is declared in the same
+        # place as the hardware. Workloads that need QuickSync select on the label rather than
+        # pinning to a hostname.
+        nodeLabels = merge(
+          {
+            "topology.kubernetes.io/region" = var.proxmox_cluster_name
+            "topology.kubernetes.io/zone"   = each.value.proxmox_node
+          },
+          each.value.pci_mapping != null ? { "hardware.nordbye.it/gpu" = "intel-quicksync" } : {}
+        )
       }
       cluster = {
         network = {
