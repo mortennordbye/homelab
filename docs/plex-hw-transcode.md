@@ -11,7 +11,7 @@ time.
 
 - [x] Host vfio config written (`/etc/modprobe.d/vfio.conf`, `blacklist-i915.conf`, `/etc/modules`)
 - [x] `update-initramfs -u -k all`
-- [x] PCI mapping created, but **without `iommugroup`, so it is invalid**. Repair in step 1c
+- [x] PCI mapping `igpu-hyper1` created and repaired with `iommugroup=0`, verified valid
 - [ ] Boot kernel pinned to `6.14.11-9-pve`
 - [ ] hyper1 rebooted, GPU bound to `vfio-pci`
 - [ ] `terraform apply` attaches `hostpci0` to VM 134
