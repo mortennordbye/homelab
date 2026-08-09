@@ -3,7 +3,20 @@
 Passing the hyper1 integrated GPU through to `genesis-worker-01` so Plex can use Intel QuickSync
 instead of software transcoding.
 
-Status: host preparation not yet run. Terraform change written and plan-verified, not applied.
+Every command here is written as a **single line**. Heredocs and backslash continuations get
+mangled pasting into a tmux session, so nothing in this document uses them. Paste one line at a
+time.
+
+## Progress
+
+- [x] Host vfio config written (`/etc/modprobe.d/vfio.conf`, `blacklist-i915.conf`, `/etc/modules`)
+- [x] `update-initramfs -u -k all`
+- [x] PCI mapping created, but **without `iommugroup`, so it is invalid**. Repair in step 1c
+- [ ] Boot kernel pinned to `6.14.11-9-pve`
+- [ ] hyper1 rebooted, GPU bound to `vfio-pci`
+- [ ] `terraform apply` attaches `hostpci0` to VM 134
+- [ ] Talos `i915` extension
+- [ ] Plex wired to `/dev/dri`
 
 ## Established facts
 
@@ -58,51 +71,61 @@ starts it again, and that start fails unless the device is genuinely free at tha
 
 ## 1. Host preparation, on hyper1
 
-Do not reboot after these.
+Do not reboot after these. One line at a time.
+
+### 1a. vfio modprobe config
 
 ```bash
-cat > /etc/modprobe.d/vfio.conf <<'EOF'
-options vfio-pci ids=8086:4c8b disable_vga=1
-EOF
-
-cat > /etc/modprobe.d/blacklist-i915.conf <<'EOF'
-blacklist i915
-EOF
-
-cat >> /etc/modules <<'EOF'
-vfio
-vfio_iommu_type1
-vfio_pci
-EOF
-
-update-initramfs -u -k all
-
-pvesh create /cluster/mapping/pci --id igpu-hyper1 \
-  --map "node=hyper1,path=0000:00:02.0,id=8086:4c8b,iommugroup=0"
+echo 'options vfio-pci ids=8086:4c8b disable_vga=1' > /etc/modprobe.d/vfio.conf
 ```
 
-`iommugroup=0` is required. Proxmox validates a mapping against live hardware and a mapping created
-without it fails at VM start with:
+```bash
+echo 'blacklist i915' > /etc/modprobe.d/blacklist-i915.conf
+```
+
+```bash
+printf 'vfio\nvfio_iommu_type1\nvfio_pci\n' >> /etc/modules
+```
+
+### 1b. Rebuild initramfs
+
+```bash
+update-initramfs -u -k all
+```
+
+Read its output. It lists every installed kernel, which is how the extra `7.0.6-2-pve` on this host
+was spotted. See step 2.
+
+### 1c. PCI resource mapping
+
+Create it:
+
+```bash
+pvesh create /cluster/mapping/pci --id igpu-hyper1 --map "node=hyper1,path=0000:00:02.0,id=8086:4c8b,iommugroup=0"
+```
+
+Or repair one that was created without `iommugroup`:
+
+```bash
+pvesh set /cluster/mapping/pci/igpu-hyper1 --map "node=hyper1,path=0000:00:02.0,id=8086:4c8b,iommugroup=0"
+```
+
+`iommugroup=0` is required. `pvesh create` happily accepts a mapping without it and reports success,
+then Proxmox rejects it at VM start:
 
 ```
 PCI device mapping invalid (hardware probably changed):
 missing expected property 'iommugroup' for device '0000:00:02.0'
 ```
 
-Group 0 is correct for this device, confirmed with `ls /sys/kernel/iommu_groups/0/devices/`. To
-repair a mapping that was created without it:
-
-```bash
-pvesh set /cluster/mapping/pci/igpu-hyper1 \
-  --map "node=hyper1,path=0000:00:02.0,id=8086:4c8b,iommugroup=0"
-```
+Group 0 is correct for this device, confirmed with `ls /sys/kernel/iommu_groups/0/devices/`.
 
 The mapping name `igpu-hyper1` is referenced by `pci_mapping` in `terraform.tfvars` and must match.
 
 A resource mapping is used rather than a raw PCI id because the provider's `hostpci.id` field is
 documented as incompatible with API token authentication, which is how this module authenticates.
 
-Verify the mapping before moving on:
+Verify before moving on:
 
 ```bash
 pvesh get /cluster/mapping/pci --output-format json
@@ -115,20 +138,36 @@ hyper1 has more than one kernel installed and `proxmox-boot-tool` is not managin
 by default. At the time of writing that is `7.0.6-2-pve`, which is known to misbehave on this host,
 while the running and working kernel is `6.14.11-9-pve`.
 
-Check what is installed and what GRUB would pick:
+See what is installed:
 
 ```bash
 ls -1 /boot/vmlinuz-*
+```
+
+See what GRUB is currently set to:
+
+```bash
 grep -E '^GRUB_DEFAULT|^GRUB_TIMEOUT' /etc/default/grub
 ```
 
-Pin the known-good kernel, then regenerate the GRUB config:
+List the exact menu entry names, which is what `GRUB_DEFAULT` has to reference:
 
 ```bash
-# submenu entry names come from the generated config
-grep -E "^menuentry|^submenu" /boot/grub/grub.cfg | cut -d"'" -f2
+grep -E "^menuentry|^\s+menuentry|^submenu" /boot/grub/grub.cfg | cut -d"'" -f2
+```
 
-# set GRUB_DEFAULT to "<submenu>>0<entry>", then:
+Pin the known-good kernel. Proxmox nests non-default kernels under an "Advanced options" submenu, so
+the value is `submenu-name>entry-name`. Adjust the strings to match the previous command's output:
+
+```bash
+sed -i 's|^GRUB_DEFAULT=.*|GRUB_DEFAULT="Advanced options for Proxmox VE GNU/Linux>Proxmox VE GNU/Linux, with Linux 6.14.11-9-pve"|' /etc/default/grub
+```
+
+```bash
+grep '^GRUB_DEFAULT' /etc/default/grub
+```
+
+```bash
 update-grub
 ```
 
@@ -137,16 +176,26 @@ wrong you will not know which one caused it, and these ThinkCentres have no IPMI
 
 ## 3. Drain, then reboot
 
+On your workstation:
+
 ```bash
 kubectl drain genesis-worker-01 --ignore-daemonsets --delete-emptydir-data
-# on hyper1:
+```
+
+On hyper1:
+
+```bash
 reboot
 ```
 
-After it returns:
+After it returns, on your workstation:
 
 ```bash
 kubectl uncordon genesis-worker-01
+```
+
+```bash
+kubectl get nodes
 ```
 
 Confirm the GPU actually moved to vfio before going any further, per section 4. Only then apply the
@@ -154,11 +203,22 @@ Terraform change.
 
 ## 4. Verify the passthrough
 
-On hyper1, the device should now be on `vfio-pci` and the host should have no `/dev/dri`:
+On hyper1, the device should now be on `vfio-pci`. Expect `Kernel driver in use: vfio-pci`:
 
 ```bash
-lspci -nnk -s 00:02.0        # expect: Kernel driver in use: vfio-pci
-ls /dev/dri                  # expect: no such file or directory
+lspci -nnk -s 00:02.0
+```
+
+And the host should no longer have a render device. Expect "No such file or directory":
+
+```bash
+ls /dev/dri
+```
+
+Confirm the running kernel is the pinned one:
+
+```bash
+uname -r
 ```
 
 Inside the VM, the GPU should now appear as a real device rather than the emulated QEMU VGA:
@@ -230,9 +290,7 @@ state, and it means the fleet gets it for free during the next Talos upgrade.
 To have it on worker-01 immediately, a one-off upgrade against the new schematic is needed:
 
 ```bash
-talosctl -e 10.3.10.30 -n 10.3.10.34 upgrade \
-  --image factory.talos.dev/installer/<new-schematic-id>:v1.12.11 \
-  --preserve --wait
+talosctl -e 10.3.10.30 -n 10.3.10.34 upgrade --image factory.talos.dev/installer/NEW_SCHEMATIC_ID:v1.12.11 --preserve --wait
 ```
 
 Do not do this out of band without also changing the Terraform schematic. Because `install.image`
