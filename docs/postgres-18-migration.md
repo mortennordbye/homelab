@@ -1,10 +1,31 @@
 # Postgres 16 to 18: logeverylift
 
-Runbook for moving `logeverylift`'s Postgres from `16-alpine` to `18-alpine`.
-Written 2026-08-09. Expect roughly 10 minutes of downtime for the app.
+> **Status: done.** Executed 2026-08-09. `logeverylift` runs
+> `postgres:18-alpine` (server 18.4) on `postgres-pvc-18`. All 27 tables
+> restored; row counts verified identical to the pre-migration baseline and to
+> the dump file itself, table by table. No data lost.
+>
+> Kept as the record of how it was done, what the trade-offs were, and as the
+> procedure to reuse for the next major or for the dormant `workout` database.
+
+Expect roughly 10 minutes of app downtime if you run this again.
 
 The manifest change lives in its own PR so it can be merged at step 5, not
 before. Merging it early takes the app down until the restore finishes.
+
+## Rollback still available
+
+Both are deliberately still in place and should stay until the app has been
+used for a while:
+
+- `postgres-pvc` — the untouched Postgres 16 volume, declared in
+  `postgres.yaml` but mounted by nothing. Rolling back is reverting the
+  manifest, not restoring a backup.
+- `~/logeverylift-pg16-20260809.sql` — the 341K `pg_dumpall` output, on the
+  operator's machine only. Copy it somewhere durable; `BACKLOG.md` records an
+  earlier dump that survives only in a session scratchpad.
+
+Step 8 below covers retiring the old PVC when you are ready.
 
 ## Why this is not just an image bump
 
