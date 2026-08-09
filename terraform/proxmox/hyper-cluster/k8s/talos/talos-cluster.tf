@@ -54,8 +54,8 @@ data "talos_machine_configuration" "controlplane" {
   cluster_endpoint   = "https://${local.kubernetes_endpoint}:6443"
   machine_type       = "controlplane"
   machine_secrets    = talos_machine_secrets.cluster.machine_secrets
-  talos_version      = var.talos_version
-  kubernetes_version = var.kubernetes_version
+  talos_version      = var.talos_config_contract
+  kubernetes_version = var.kubernetes_config_contract
 
   config_patches = [
     yamlencode({
@@ -110,8 +110,8 @@ data "talos_machine_configuration" "worker" {
   cluster_endpoint   = "https://${local.kubernetes_endpoint}:6443"
   machine_type       = "worker"
   machine_secrets    = talos_machine_secrets.cluster.machine_secrets
-  talos_version      = var.talos_version
-  kubernetes_version = var.kubernetes_version
+  talos_version      = var.talos_config_contract
+  kubernetes_version = var.kubernetes_config_contract
 
   config_patches = [
     yamlencode({
