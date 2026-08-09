@@ -50,16 +50,24 @@ resource "proxmox_download_file" "talos_image" {
 data "talos_machine_configuration" "controlplane" {
   for_each = local.control_plane_nodes
 
-  cluster_name     = var.cluster_name
-  cluster_endpoint = "https://${local.kubernetes_endpoint}:6443"
-  machine_type     = "controlplane"
-  machine_secrets  = talos_machine_secrets.cluster.machine_secrets
-  talos_version    = var.talos_version
+  cluster_name       = var.cluster_name
+  cluster_endpoint   = "https://${local.kubernetes_endpoint}:6443"
+  machine_type       = "controlplane"
+  machine_secrets    = talos_machine_secrets.cluster.machine_secrets
+  talos_version      = var.talos_version
   kubernetes_version = var.kubernetes_version
 
   config_patches = [
     yamlencode({
       machine = {
+        # Pin the installer explicitly. Left unset, the provider fills this in from the Talos
+        # version it was itself built against rather than from var.talos_version, so the field
+        # drifts on every provider bump. It read installer:v1.12.0 on nodes running v1.11.6.
+        # The default also points at the plain installer, so a reinstall from config would drop
+        # the intel-ucode and qemu-guest-agent extensions in the schematic below.
+        install = {
+          image = "factory.talos.dev/installer/${talos_image_factory_schematic.this.id}:${var.talos_version}"
+        }
         network = {
           hostname = each.key
           interfaces = [{
@@ -98,16 +106,24 @@ data "talos_machine_configuration" "controlplane" {
 data "talos_machine_configuration" "worker" {
   for_each = local.worker_nodes
 
-  cluster_name     = var.cluster_name
-  cluster_endpoint = "https://${local.kubernetes_endpoint}:6443"
-  machine_type     = "worker"
-  machine_secrets  = talos_machine_secrets.cluster.machine_secrets
-  talos_version    = var.talos_version
+  cluster_name       = var.cluster_name
+  cluster_endpoint   = "https://${local.kubernetes_endpoint}:6443"
+  machine_type       = "worker"
+  machine_secrets    = talos_machine_secrets.cluster.machine_secrets
+  talos_version      = var.talos_version
   kubernetes_version = var.kubernetes_version
 
   config_patches = [
     yamlencode({
       machine = {
+        # Pin the installer explicitly. Left unset, the provider fills this in from the Talos
+        # version it was itself built against rather than from var.talos_version, so the field
+        # drifts on every provider bump. It read installer:v1.12.0 on nodes running v1.11.6.
+        # The default also points at the plain installer, so a reinstall from config would drop
+        # the intel-ucode and qemu-guest-agent extensions in the schematic below.
+        install = {
+          image = "factory.talos.dev/installer/${talos_image_factory_schematic.this.id}:${var.talos_version}"
+        }
         network = {
           hostname = each.key
           interfaces = [{
