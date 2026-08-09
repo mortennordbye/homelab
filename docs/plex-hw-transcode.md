@@ -156,11 +156,25 @@ List the exact menu entry names, which is what `GRUB_DEFAULT` has to reference:
 grep -E "^menuentry|^\s+menuentry|^submenu" /boot/grub/grub.cfg | cut -d"'" -f2
 ```
 
-Pin the known-good kernel. Proxmox nests non-default kernels under an "Advanced options" submenu, so
-the value is `submenu-name>entry-name`. Adjust the strings to match the previous command's output:
+On this host that prints:
+
+```
+Proxmox VE GNU/Linux
+Advanced options for Proxmox VE GNU/Linux
+Proxmox VE GNU/Linux, with Linux 7.0.6-2-pve
+Proxmox VE GNU/Linux, with Linux 6.14.11-9-pve
+Proxmox VE GNU/Linux, with Linux 6.14.8-2-pve
+```
+
+The top-level `Proxmox VE GNU/Linux` entry boots whatever GRUB considers newest, which is the
+7.0.6-2-pve you are trying to avoid. Non-default kernels live under the "Advanced options" submenu,
+so the value is `submenu-name>entry-name`.
+
+Delete and append rather than substitute. A plain `sed 's|^GRUB_DEFAULT=.*|...|'` silently does
+nothing when the line is absent, leaving the host unpinned with no error:
 
 ```bash
-sed -i 's|^GRUB_DEFAULT=.*|GRUB_DEFAULT="Advanced options for Proxmox VE GNU/Linux>Proxmox VE GNU/Linux, with Linux 6.14.11-9-pve"|' /etc/default/grub
+sed -i '/^GRUB_DEFAULT=/d' /etc/default/grub && echo 'GRUB_DEFAULT="Advanced options for Proxmox VE GNU/Linux>Proxmox VE GNU/Linux, with Linux 6.14.11-9-pve"' >> /etc/default/grub
 ```
 
 ```bash
