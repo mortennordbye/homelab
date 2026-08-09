@@ -16,12 +16,19 @@ resource "talos_machine_secrets" "cluster" {
   }
 }
 
-# Custom image with Intel microcode and QEMU guest agent
+# Custom image with Intel microcode, QEMU guest agent and Intel GPU drivers.
+#
+# i915 is only actually used by genesis-worker-01, which has the hyper1 iGPU passed through for
+# Plex QuickSync, but the schematic is fleet-wide. It is harmless on nodes without a GPU, and
+# keeping one schematic avoids a second image to track. Note that changing this list changes the
+# schematic ID, which machine.install.image references, so every node's config picks up the new
+# image and installs it at its next upgrade.
 resource "talos_image_factory_schematic" "this" {
   schematic = yamlencode({
     customization = {
       systemExtensions = {
         officialExtensions = [
+          "siderolabs/i915",
           "siderolabs/intel-ucode",
           "siderolabs/qemu-guest-agent",
         ]
@@ -83,10 +90,16 @@ data "talos_machine_configuration" "controlplane" {
             } : null
           }]
         }
-        nodeLabels = {
-          "topology.kubernetes.io/region" = var.proxmox_cluster_name
-          "topology.kubernetes.io/zone"   = each.value.proxmox_node
-        }
+        # The GPU label is derived from pci_mapping so the capability is declared in the same
+        # place as the hardware. Workloads that need QuickSync select on the label rather than
+        # pinning to a hostname.
+        nodeLabels = merge(
+          {
+            "topology.kubernetes.io/region" = var.proxmox_cluster_name
+            "topology.kubernetes.io/zone"   = each.value.proxmox_node
+          },
+          each.value.pci_mapping != null ? { "hardware.nordbye.it/gpu" = "intel-quicksync" } : {}
+        )
       }
       cluster = {
         allowSchedulingOnControlPlanes = true
@@ -136,10 +149,16 @@ data "talos_machine_configuration" "worker" {
             dhcp = false
           }]
         }
-        nodeLabels = {
-          "topology.kubernetes.io/region" = var.proxmox_cluster_name
-          "topology.kubernetes.io/zone"   = each.value.proxmox_node
-        }
+        # The GPU label is derived from pci_mapping so the capability is declared in the same
+        # place as the hardware. Workloads that need QuickSync select on the label rather than
+        # pinning to a hostname.
+        nodeLabels = merge(
+          {
+            "topology.kubernetes.io/region" = var.proxmox_cluster_name
+            "topology.kubernetes.io/zone"   = each.value.proxmox_node
+          },
+          each.value.pci_mapping != null ? { "hardware.nordbye.it/gpu" = "intel-quicksync" } : {}
+        )
       }
       cluster = {
         network = {

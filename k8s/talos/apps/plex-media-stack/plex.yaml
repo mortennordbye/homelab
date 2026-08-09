@@ -73,15 +73,18 @@ spec:
       labels:
         app: plex
     spec:
+      # Pinned to the node with the Intel iGPU passed through, for QuickSync transcoding.
+      # The plex-config PV carries its own nodeAffinity for zone hyper1, which the scheduler
+      # enforces separately, so that constraint does not need repeating here.
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
-                  - key: topology.kubernetes.io/zone
+                  - key: hardware.nordbye.it/gpu
                     operator: In
                     values:
-                      - hyper1
+                      - intel-quicksync
       containers:
         - name: plex
           image: ghcr.io/linuxserver/plex:1.43.2
@@ -134,6 +137,8 @@ spec:
               mountPath: /youtube
             - name: transcode
               mountPath: /transcode
+            - name: dri
+              mountPath: /dev/dri
           livenessProbe:
             httpGet:
               path: /identity
@@ -151,6 +156,12 @@ spec:
             timeoutSeconds: 30
             failureThreshold: 10
       volumes:
+        # Intel render node from the passed-through iGPU. renderD128 is mode 0666 on the host, so
+        # Plex reaches it as PUID 1000 without extra groups or a privileged container.
+        - name: dri
+          hostPath:
+            path: /dev/dri
+            type: Directory
         - name: config
           persistentVolumeClaim:
             claimName: plex-config
