@@ -6,7 +6,14 @@ locals {
 }
 
 resource "talos_machine_secrets" "cluster" {
-  talos_version = var.talos_version
+  talos_version = var.talos_secrets_contract
+
+  # These secrets are the cluster CA, etcd certs and service account keys. Replacing them is
+  # unrecoverable without the recovery flow in the README. prevent_destroy turns any plan that
+  # would replace them into a loud error instead of a silent rebuild.
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Custom image with Intel microcode and QEMU guest agent

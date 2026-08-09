@@ -138,9 +138,33 @@ kubectl uncordon talos-worker-01
 
 ## Upgrades
 
-### Talos Upgrade
-
 **Important:** Upgrade Talos first, then Kubernetes. Two applies required: enable flags → apply → disable flags → apply.
+
+Talos only tests migration between adjacent minor versions, and each Talos minor supports only the
+six Kubernetes minors below its own default. So a Kubernetes minor is unreachable until Talos has
+been raised first, and neither can skip a minor:
+
+| Talos | default Kubernetes |
+| ----- | ------------------ |
+| 1.11  | 1.34               |
+| 1.12  | 1.35               |
+| 1.13  | 1.36               |
+
+Going from Talos 1.11 / Kubernetes 1.34 to Talos 1.13 / Kubernetes 1.36 is therefore four steps in
+two rounds: Talos 1.12, Kubernetes 1.35, Talos 1.13, Kubernetes 1.36. `talosctl` must be at least
+as new as the Talos version being installed, so upgrade it between rounds.
+
+### Never lower `talos_secrets_contract`
+
+`talos_machine_secrets` is pinned to `var.talos_secrets_contract`, not `var.talos_version`. The
+provider replaces that resource when the value *decreases*, and replacing it regenerates the
+cluster CA, etcd certificates and service account keys — the cluster does not survive it. Keeping
+it decoupled means reverting `talos_version` after a failed upgrade is safe. The resource also
+carries `prevent_destroy`, so a plan that would replace it fails loudly instead of proceeding.
+
+Raise `talos_secrets_contract` only deliberately, and never below the value already in state.
+
+### Talos Upgrade
 
 **Step 1: Talos Upgrade**
 

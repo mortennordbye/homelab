@@ -65,6 +65,16 @@ variable "talos_version" {
   type        = string
 }
 
+# Version contract for talos_machine_secrets, deliberately decoupled from talos_version.
+# Lowering this value makes the provider replace the secrets resource, which regenerates the
+# cluster CA, etcd certs and service account keys — i.e. destroys the cluster. Pinning it here
+# means rolling talos_version back after a failed upgrade is survivable. Only ever raise it.
+variable "talos_secrets_contract" {
+  description = "Talos version contract used to generate machine secrets. Raise only, never lower."
+  type        = string
+  default     = "v1.11.6"
+}
+
 variable "kubernetes_version" {
   description = "Kubernetes version"
   type        = string

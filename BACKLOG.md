@@ -111,6 +111,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Cluster / infra
 
+### Round 2 of the cluster upgrade: Talos 1.13 + Kubernetes 1.36
+- **What:** Round 1 takes Genesis from Talos v1.11.6 / Kubernetes v1.34.0 to Talos v1.12.11 / Kubernetes v1.35.7. Round 2 takes it to Talos v1.13.8 / Kubernetes v1.36.3 by the same two-apply flow. Cilium v1.20.0 already supports Kubernetes up to 1.36, so the CNI is not a blocker.
+- **Why deferred:** Talos only tests migration between adjacent minors and each Talos minor caps the Kubernetes minors it supports, so the two rounds cannot be collapsed. Running both back to back in one sitting was judged too much moving surface for one maintenance window.
+- **Unblock:** Let the cluster run clean on Talos 1.12 / Kubernetes 1.35 for a few days, then `brew upgrade talosctl` to a v1.13.x — `talosctl` must be at least as new as the version it installs. Note that `--preserve` in `upgrade-talos.tf` becomes a deprecated flag in 1.13 (still functional, warns, slated for removal in Talos 1.18) and only applies to the legacy upgrade path; the 1.13 CLI also drops `--stage`/`--force`/`--insecure` from its visible flag set. Talos 1.13 additionally requires uninstalling the `nvidia-device-plugin` Helm chart beforehand, which this cluster does not run.
+- **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/{terraform.tfvars,upgrade-talos.tf,upgrade-k8s.tf}`, version matrix in that directory's `README.md`.
+
 ### Extend Loki PVC after kube-events validated
 - **What:** Bump the Loki single-binary PVC from 20Gi (`singleBinary.persistence.size`). Deferred until the new Kubernetes-events ingestion (Alloy `loki.source.kubernetes_events`, 7d per-stream retention) is confirmed working and we can measure real storage growth.
 - **Why deferred:** Events are low-volume, so 20Gi is expected to suffice; sizing should be driven by observed usage, not guessed. Also, the PVC is a StatefulSet `volumeClaimTemplate` — immutable after creation — so a resize is non-trivial.
