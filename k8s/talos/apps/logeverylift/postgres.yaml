@@ -1,8 +1,26 @@
 ---
+# The Postgres 16 volume. Kept declared, and deliberately not mounted by
+# anything, so reverting this file is a complete rollback to 16 with the
+# original data intact. Remove it once 18 has been running happily for a
+# while — see docs/postgres-18-migration.md, step 8.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
+  namespace: logeverylift
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: syno-nfs-csi
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc-18
   namespace: logeverylift
 spec:
   accessModes:
@@ -30,7 +48,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:16-alpine
+          image: postgres:18-alpine
           ports:
             - containerPort: 5432
           env:
@@ -44,8 +62,14 @@ spec:
                   name: logeverylift-secret
                   key: POSTGRES_PASSWORD
           volumeMounts:
+            # Mounted at the parent, not at /var/lib/postgresql/data. Postgres 18
+            # keeps its cluster in a version-named subdirectory
+            # (/var/lib/postgresql/18/docker), so mounting the parent means the
+            # next major version lands beside this one instead of colliding with
+            # it. Mounting the old path instead makes the 18 image refuse to
+            # start, because it finds a 16 cluster where its own data should be.
             - name: postgres-data
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "postgres", "-d", "logeverylift_db"]
@@ -61,7 +85,7 @@ spec:
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: postgres-pvc-18
 
 ---
 apiVersion: v1
