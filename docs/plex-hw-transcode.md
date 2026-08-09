@@ -245,7 +245,35 @@ install.
 ## 6. Kubernetes: /dev/dri into Plex
 
 `renderD128` is mode `crw-rw-rw-`, so Plex reaches it as PUID 1000 with no supplemental groups and
-no privileged container. A `hostPath` mount is enough; Intel's GPU device plugin is not needed.
+no privileged container. A `hostPath` mount is enough.
+
+### PodSecurity blocks hostPath by default
+
+Talos configures PodSecurity admission cluster-wide with `enforce: baseline`, exempting only
+`kube-system`. Baseline forbids `hostPath` volumes outright, so the Plex pod is rejected at
+admission:
+
+```
+Error creating: pods "plex-..." is forbidden: violates PodSecurity "baseline:latest": hostPath volumes (volume "dri")
+```
+
+The Deployment applies cleanly and `kubectl diff` shows nothing wrong, because admission runs on the
+**pod**, not the Deployment. With `strategy: Recreate` the old pod is already gone by then, so Plex
+goes down rather than failing over. Check the ReplicaSet events, not the Deployment.
+
+`namespace.yaml` therefore raises the level:
+
+```yaml
+pod-security.kubernetes.io/enforce: privileged
+pod-security.kubernetes.io/audit: baseline
+pod-security.kubernetes.io/warn: baseline
+```
+
+Audit and warn stay at baseline so the violation is still reported, just not enforced. This is
+broader than ideal since seerr and tautulli share the namespace and need none of it. The narrower
+fix is Intel's GPU device plugin, which advertises `gpu.intel.com/i915` as a schedulable resource
+and removes the need for `hostPath` entirely, letting the namespace return to baseline. Tracked in
+`BACKLOG.md`.
 
 Node selection is by capability label, not hostname. `talos-cluster.tf` derives the label from
 `pci_mapping`, so it is declared with the hardware and only lands on nodes that have a GPU:
