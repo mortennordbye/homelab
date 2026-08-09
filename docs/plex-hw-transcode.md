@@ -44,14 +44,17 @@ The reboot takes down `genesis-ctrl-01` and `genesis-worker-01` together. etcd k
 
 ## Order
 
-One reboot, not two. The VM config change is staged while the VM still runs, so the single host
-reboot brings everything back in its final state.
+The host reboot comes **before** the Terraform apply. This is not optional, see the mistake logged
+at the bottom of this document.
 
-1. Host preparation (below)
-2. `terraform apply` to attach `hostpci0` to VM 134
-3. Drain `genesis-worker-01`
-4. Reboot hyper1 once
+1. Host preparation, including the PCI mapping (below)
+2. Pin the boot kernel
+3. Drain `genesis-worker-01`, reboot hyper1, so the GPU actually binds to `vfio-pci`
+4. `terraform apply` to attach `hostpci0` to VM 134
 5. Verify, then Talos extension and Kubernetes wiring
+
+Attaching `hostpci0` is not a staged config edit. The provider stops the VM, writes the config and
+starts it again, and that start fails unless the device is genuinely free at that moment.
 
 ## 1. Host preparation, on hyper1
 
@@ -74,7 +77,24 @@ EOF
 
 update-initramfs -u -k all
 
-pvesh create /cluster/mapping/pci --id igpu-hyper1 --map "node=hyper1,path=0000:00:02.0,id=8086:4c8b"
+pvesh create /cluster/mapping/pci --id igpu-hyper1 \
+  --map "node=hyper1,path=0000:00:02.0,id=8086:4c8b,iommugroup=0"
+```
+
+`iommugroup=0` is required. Proxmox validates a mapping against live hardware and a mapping created
+without it fails at VM start with:
+
+```
+PCI device mapping invalid (hardware probably changed):
+missing expected property 'iommugroup' for device '0000:00:02.0'
+```
+
+Group 0 is correct for this device, confirmed with `ls /sys/kernel/iommu_groups/0/devices/`. To
+repair a mapping that was created without it:
+
+```bash
+pvesh set /cluster/mapping/pci/igpu-hyper1 \
+  --map "node=hyper1,path=0000:00:02.0,id=8086:4c8b,iommugroup=0"
 ```
 
 The mapping name `igpu-hyper1` is referenced by `pci_mapping` in `terraform.tfvars` and must match.
@@ -82,43 +102,38 @@ The mapping name `igpu-hyper1` is referenced by `pci_mapping` in `terraform.tfva
 A resource mapping is used rather than a raw PCI id because the provider's `hostpci.id` field is
 documented as incompatible with API token authentication, which is how this module authenticates.
 
-Verify the mapping exists before moving on:
+Verify the mapping before moving on:
 
 ```bash
-pvesh get /cluster/mapping/pci
+pvesh get /cluster/mapping/pci --output-format json
 ```
 
-## 2. Terraform
+## 2. Pin the boot kernel
 
-Already written. `variables.tf` gains an optional `pci_mapping` on the node object,
-`proxmox-vms.tf` gains a `dynamic "hostpci"` block that only materialises for nodes that set it,
-and `terraform.tfvars` sets `pci_mapping = "igpu-hyper1"` on `genesis-worker-01`.
+hyper1 has more than one kernel installed and `proxmox-boot-tool` is not managing it (`No
+/etc/kernel/proxmox-boot-uuids found` during `update-initramfs`), so GRUB boots the highest version
+by default. At the time of writing that is `7.0.6-2-pve`, which is known to misbehave on this host,
+while the running and working kernel is `6.14.11-9-pve`.
 
-```hcl
-dynamic "hostpci" {
-  for_each = each.value.pci_mapping != null ? [each.value.pci_mapping] : []
+Check what is installed and what GRUB would pick:
 
-  content {
-    device  = "hostpci0"
-    mapping = hostpci.value
-    pcie    = true
-  }
-}
+```bash
+ls -1 /boot/vmlinuz-*
+grep -E '^GRUB_DEFAULT|^GRUB_TIMEOUT' /etc/default/grub
 ```
 
-`pcie = true` requires a q35 machine type, which these VMs already use.
+Pin the known-good kernel, then regenerate the GRUB config:
 
-Plan verified before any host change:
+```bash
+# submenu entry names come from the generated config
+grep -E "^menuentry|^submenu" /boot/grub/grub.cfg | cut -d"'" -f2
 
+# set GRUB_DEFAULT to "<submenu>>0<entry>", then:
+update-grub
 ```
-# proxmox_virtual_environment_vm.talos_nodes["genesis-worker-01"] will be updated in-place
-      + hostpci {
-          + device  = "hostpci0"
-Plan: 1 to add, 1 to change, 0 to destroy.
-```
 
-`updated in-place` and `0 to destroy` is the thing to confirm on every future plan touching a VM. A
-replacement would wipe Talos and etcd on that node.
+Do not combine a kernel change with a passthrough change in the same reboot. If the host comes back
+wrong you will not know which one caused it, and these ThinkCentres have no IPMI.
 
 ## 3. Drain, then reboot
 
@@ -133,6 +148,9 @@ After it returns:
 ```bash
 kubectl uncordon genesis-worker-01
 ```
+
+Confirm the GPU actually moved to vfio before going any further, per section 4. Only then apply the
+Terraform change.
 
 ## 4. Verify the passthrough
 
@@ -152,7 +170,54 @@ talosctl -e 10.3.10.30 -n 10.3.10.34 get pcidevices | grep -i vga
 Before passthrough this reported `0000:00:01.0 VGA compatible controller` on every node, which is
 the emulated adapter. A passed-through UHD 730 should show the Intel device instead.
 
-## 5. Talos: the i915 extension
+## 5. Terraform: attach the device
+
+Only once section 4 confirms the GPU is on `vfio-pci`. The code is already written:
+`variables.tf` gains an optional `pci_mapping` on the node object, `proxmox-vms.tf` gains a
+`dynamic "hostpci"` block that only materialises for nodes that set it, and `terraform.tfvars` sets
+`pci_mapping = "igpu-hyper1"` on `genesis-worker-01`.
+
+```hcl
+dynamic "hostpci" {
+  for_each = each.value.pci_mapping != null ? [each.value.pci_mapping] : []
+
+  content {
+    device  = "hostpci0"
+    mapping = hostpci.value
+    pcie    = true
+  }
+}
+```
+
+`pcie = true` requires a q35 machine type, which these VMs already use.
+
+Confirm the plan says in-place before applying:
+
+```
+# proxmox_virtual_environment_vm.talos_nodes["genesis-worker-01"] will be updated in-place
+      + hostpci {
+          + device  = "hostpci0"
+Plan: 1 to add, 1 to change, 0 to destroy.
+```
+
+`updated in-place` and `0 to destroy` is the thing to confirm on every plan that touches a VM. A
+replacement would wipe Talos and etcd on that node.
+
+The apply stops and starts VM 134, so the node goes down for a minute. Drain it first.
+
+### If a VM will not start
+
+Detach the device and start it, then fix the underlying problem before retrying:
+
+```bash
+qm set 134 --delete hostpci0 && qm start 134 && qm status 134
+```
+
+The Proxmox GUI start button keeps failing while an unusable `hostpci0` is in the config, so
+removing it is the way out. Check the task viewer output for the real reason; the two seen here
+were a mapping without `iommugroup`, and the device still being held by `i915`.
+
+## 6. Talos: the i915 extension
 
 Not yet done. `/dev/dri` will not exist inside Talos until the `siderolabs/i915` extension is
 installed. Currently installed extensions are `intel-ucode` and `qemu-guest-agent`.
@@ -181,7 +246,7 @@ talosctl -e 10.3.10.30 -n 10.3.10.34 get extensions
 talosctl -e 10.3.10.30 -n 10.3.10.34 ls /dev/dri
 ```
 
-## 6. Kubernetes: getting /dev/dri into Plex
+## 7. Kubernetes: getting /dev/dri into Plex
 
 Not yet designed in detail. Two approaches, to be decided once the device is confirmed visible
 inside Talos:
@@ -208,3 +273,22 @@ via `i915`.
 
 The Talos schematic change is separate and does not need reverting: the i915 extension is harmless
 on nodes with no GPU.
+
+## Mistakes made, so they are not repeated
+
+**Applying Terraform before the host reboot.** The assumption was that adding `hostpci` to a running
+VM only stages a pending config change. It does not: the provider stops the VM, writes the config,
+and starts it again. That start failed because the GPU was still bound to `i915`, and
+`genesis-worker-01` sat stopped until `hostpci0` was removed by hand. Hence the ordering at the top
+of this document. The cluster was never at risk, etcd kept quorum at 2 of 3 and the five pods on
+that node rescheduled, but the node was down for no reason.
+
+**Creating the PCI mapping without `iommugroup`.** `pvesh create /cluster/mapping/pci` accepts a
+mapping with no `iommugroup` and reports success. Proxmox then rejects it at VM start with `missing
+expected property 'iommugroup'`. The mapping looks fine in `pvesh get` until you try to use it, so
+include `iommugroup` when creating it.
+
+**Nearly rebooting into an untested kernel.** `update-initramfs -u -k all` printed three kernels,
+including a newer one than the host was running. GRUB would have booted it, turning a passthrough
+change into a passthrough change plus a kernel upgrade, on a host with no IPMI. Always read what
+`update-initramfs` prints.
