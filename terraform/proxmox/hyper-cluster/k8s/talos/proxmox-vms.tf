@@ -40,7 +40,19 @@ resource "proxmox_virtual_environment_vm" "talos_nodes" {
     cache        = "writethrough"
     discard      = "on"
     ssd          = true
-    file_id = proxmox_download_file.talos_image[each.value.proxmox_node].id
+    file_id      = proxmox_download_file.talos_image[each.value.proxmox_node].id
+  }
+
+  # Optional PCI passthrough, currently the hyper1 iGPU for Plex QuickSync. Exclusive: Rocket Lake
+  # is Gen12 and has no GVT-g or SR-IOV, so the device belongs to exactly one VM.
+  dynamic "hostpci" {
+    for_each = each.value.pci_mapping != null ? [each.value.pci_mapping] : []
+
+    content {
+      device  = "hostpci0"
+      mapping = hostpci.value
+      pcie    = true
+    }
   }
 
   boot_order = ["scsi0"] # Boot from disk only

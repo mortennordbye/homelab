@@ -117,6 +117,11 @@ variable "nodes" {
     disk_size_gb = number
     datastore    = string
     node_type    = string
+
+    # Name of a Proxmox cluster resource mapping to pass through as hostpci0, or null for none.
+    # A mapping name is used rather than a raw PCI id because the provider's hostpci.id field is
+    # incompatible with API token auth, which is how this module authenticates.
+    pci_mapping = optional(string)
   }))
 }
 
