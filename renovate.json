@@ -12,6 +12,13 @@
     "every weekend"
   ],
   "labels": ["dependencies"],
+  "automergeStrategy": "squash",
+  "vulnerabilityAlerts": {
+    "description": "Security fixes bypass group stability windows and the nightly schedule",
+    "automerge": true,
+    "minimumReleaseAge": "3 days",
+    "addLabels": ["security", "automerge"]
+  },
   "kubernetes": {
     "managerFilePatterns": ["/k8s/.*\\.ya?ml$/"]
   },
@@ -56,10 +63,13 @@
       "addLabels": ["helm", "networking"]
     },
     {
-      "description": "Helm Platform: argo-cd, reloader, keda, metrics-server, external-secrets, csi drivers",
+      "description": "Helm Platform: argo-cd, argo-rollouts, kargo, reloader, keda, metrics-server, external-secrets, csi drivers",
       "matchManagers": ["kustomize"],
       "matchPackageNames": [
         "argo-cd",
+        "argo-rollouts",
+        "kargo",
+        "ghcr.io/akuity/kargo-charts/kargo",
         "reloader",
         "keda",
         "keda-add-ons-http",
@@ -224,14 +234,6 @@
       "groupSlug": "terraform",
       "automerge": false,
       "addLabels": ["terraform"]
-    },
-    {
-      "description": "Security vulnerabilities: fast-track automerge",
-      "matchDepTypes": ["vulnerabilities"],
-      "automerge": true,
-      "automergeType": "pr",
-      "minimumReleaseAge": "3 days",
-      "addLabels": ["security", "automerge"]
     },
     {
       "description": "Major updates always require manual review",
