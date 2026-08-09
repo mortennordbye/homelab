@@ -27,6 +27,13 @@ spec:
     - uses: git-clone
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
+        # Without this Kargo authors commits as `Kargo <no-reply@kargo.io>`,
+        # which GitHub then carries into the squash commit as a
+        # `Co-authored-by:` trailer. Promotions are this repo's own automation,
+        # so they carry the repo owner's authorship like every other commit.
+        author:
+          name: Morten Victor Nordbye
+          email: morten@nordbye.it
         checkout:
           - branch: main
             path: ./repo
@@ -71,6 +78,14 @@ spec:
         sourceBranch: ${{ task.outputs?.['push']?.branch ?? '' }}
         targetBranch: main
         title: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
+        # `kargo` marks the PR as machine-opened, and the other two say which
+        # app and which environment without having to parse the title. The
+        # kargo-automerge workflow reads `app/<name>` to decide whether this
+        # app is opted into unattended merging.
+        labels:
+          - kargo
+          - app/${{ vars.appName }}
+          - env/${{ ctx.stage }}
     # Blocks the promotion until the PR is merged in GitHub.
     - uses: git-wait-for-pr
       as: wait-pr

@@ -65,6 +65,8 @@ smoke-tested) in front, gating what Freight `prod` can receive.
 | Git write | GitHub App `mortennordbye-homelab-deployer` — needs **Contents AND Pull requests** read/write (PR flow); cred via ESO, per-Project |
 | Sync trigger | `argocd-update` + `argocd-wait` (needs `kargo.akuity.io/authorized-stage` on the Argo app) |
 | Smoke test | two-stage: `<app>-stage.local.bigd.no`; single-env: the app's URL (private gateway → `-k`) |
+| Discovery latency | ~1 min — Warehouses poll at `interval: 1m0s` and the controller floor is set to match |
+| PR labels | `kargo`, `app/<name>`, `env/<stage>`, attached by `git-open-pr` |
 | UI | `https://kargo.local.bigd.no` (admin account) |
 | Version | Kargo `1.10.9`, Argo Rollouts `2.41.0` (verification CRDs) |
 
@@ -78,11 +80,20 @@ smoke-tested) in front, gating what Freight `prod` can receive.
 | `k8s/talos/infra/kargo-projects/clusterpromotiontask-pr.yaml` | Shared PR-gated task `promote-via-pr` |
 | `k8s/talos/infra/kargo-projects/<app>.yaml` | One multi-doc file per app (Namespace, Project, ProjectConfig, ESO git cred, Warehouse, AnalysisTemplate, Stage(s)) |
 | `k8s/talos/infra/argocd/apps.yaml` | `authorized-stage` annotation via `goTemplate` + `templatePatch` (list-driven) |
+| `.github/workflows/kargo-automerge.yaml` | Squash-merges promotion PRs for apps listed in `KARGO_AUTOMERGE_APPS` |
 
 ## Operate
 
 - **Deploy to prod:** fully automatic up to the gate — merge the PR Kargo opens
   (`chore(<app>): promote 0.0.N to prod`). Nothing reaches prod without that merge.
+- **Auto-merge:** apps named in the `KARGO_AUTOMERGE_APPS` repository variable
+  skip that click. `.github/workflows/kargo-automerge.yaml` squash-merges their
+  promotion PR as soon as it opens, keyed on the `app/<name>` label. The list is
+  currently the three single-env apps: `logeverylift,verksted,reelsmith`.
+  Editing the variable under Settings > Secrets and variables > Actions is the
+  kill switch — per app or all of them, no commit and no deploy. Kargo still
+  opens the PR and blocks on it, so turning auto-merge off just puts a human
+  back in front of it.
 - **Trigger a build:** push under the app's path (monorepo) or to the app repo's
   `main` (external).
 - **Inspect:** `kubectl -n <app>-cd get warehouse,stage,freight,promotion`.
@@ -146,6 +157,19 @@ the `conversionStrategy`/`decodingStrategy`/`metadataPolicy` fields; only its
   `if: ${{ (task.outputs?.['commit']?.commit ?? '') != '' }}` so a no-op re-promote
   (Warehouse re-creating Freight for the already-live tag) skips cleanly and still
   ends green via `argocd-wait`.
+- **A Warehouse `interval` is a request, not a promise.** Kargo polls at the
+  greater of `spec.interval` and the controller's
+  `controller.reconcilers.warehouses.minReconciliationInterval`. The chart
+  defaults that floor to `5m0s`, so every Warehouse here sat at 5 minutes while
+  its manifest read `1m0s` and nothing anywhere reported the clamp. The floor is
+  now `1m0s` in `kargo/values.yaml`; lowering a Warehouse below it needs both
+  numbers changed. Making discovery instant instead needs a webhook receiver,
+  which needs the external webhooks server reachable from the internet — it is
+  currently only on the private gateway.
+- **Commit authorship is set on `git-clone`, not `git-commit`.** Unset, Kargo
+  authors as `Kargo <no-reply@kargo.io>` and GitHub turns that into a
+  `Co-authored-by:` trailer on the squash commit. `git-commit`'s own `author`
+  field does the same thing but is deprecated since v1.10 and goes away in v1.12.
 - **GitHub App scope:** the PR flow needs **Pull requests: read/write** in addition
   to Contents. Without it, `git-open-pr` fails.
 - **Stage namespace flips word order:** the `<app>-stage` overlay dir maps to
@@ -154,7 +178,7 @@ the `conversionStrategy`/`decodingStrategy`/`metadataPolicy` fields; only its
   git-push fails with GitHub `404` on the installation-access-token call.
 - ESO remoteRefs and the Warehouse must spell out defaulted fields
   (`conversionStrategy`/`decodingStrategy`/`metadataPolicy`; `strictSemvers`,
-  `interval: 5m0s`) or Argo CD reports perpetual `OutOfSync`.
+  `interval`, `discoveryLimit`) or Argo CD reports perpetual `OutOfSync`.
 - Per-app annotations in the `apps` ApplicationSet must use `templatePatch`; inline
   `{{if}}` in the parsed `template` is invalid YAML. Verify offline with
   `argocd appset generate --core -n argocd <file>` (swap the git generator for a
