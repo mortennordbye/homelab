@@ -42,8 +42,23 @@ serviceMonitor:
 customRules:
   tuning.yaml: |-
     # Cilium CNI plugin execs from /opt/cni/bin on every node — not a workload.
+    #
+    # Second clause: verksted keeps its agent CLIs current itself, npm-installing
+    # them into the global prefix at runtime rather than baking a version into the
+    # image, so /usr/local/lib/node_modules lives in the container's writable
+    # upper layer. Every exec of claude (or the ripgrep it re-execs itself as, via
+    # argv[0]) therefore carries EXE_WRITABLE|EXE_UPPER_LAYER and trips this rule
+    # — hundreds of Critical events an hour, which is the whole Discord feed.
+    # Pinned to the prefix the updater writes: a binary dropped anywhere else in
+    # this image still alerts, and so does one in any other image. Nothing is lost
+    # by exempting the path, because a dropped binary under /data (where the agent
+    # sessions actually work) sits on the NFS PVC, not the upper layer, and so
+    # never matched this rule to begin with.
     - macro: known_drop_and_execute_activities
-      condition: (proc.name=cilium-cni and proc.exepath startswith /opt/cni/bin/)
+      condition: >
+        (proc.name=cilium-cni and proc.exepath startswith /opt/cni/bin/)
+        or (container.image.repository=ghcr.io/mortennordbye/verksted
+            and proc.exepath startswith /usr/local/lib/node_modules/)
       override:
         condition: replace
 
