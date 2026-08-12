@@ -17,4 +17,4 @@ resources:
 # Don't hand-edit it.
 images:
 - name: ghcr.io/mortennordbye/headroom
-  newTag: 0.0.372
+  newTag: 0.0.374
