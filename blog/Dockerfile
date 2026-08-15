@@ -3,7 +3,7 @@
 # build is reproducible. This is the same image and version the Northlight theme
 # is developed and tested against (HUGO_IMAGE in its Makefile), and the theme
 # declares min_version = 0.164.0.
-FROM ghcr.io/gohugoio/hugo:v0.164.0 AS builder
+FROM ghcr.io/gohugoio/hugo:v0.165.0 AS builder
 
 # The image runs as uid 1000; the build writes to /src and /target, both owned by
 # root after COPY.
