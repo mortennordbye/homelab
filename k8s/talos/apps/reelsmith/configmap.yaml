@@ -27,13 +27,27 @@ data:
   # A line that does not parse fails the pod's startup on purpose, rather than
   # quietly dropping that slot from the schedule.
   #
-  # These attach to the one registered account. Add GATEWAY_SLOTS_ACCOUNT with
-  # an IG user id if a second account is ever registered; until then the
-  # gateway resolves it, and logs rather than guessing if it becomes ambiguous.
+  # A line without account= attaches to the one registered Instagram account,
+  # which the gateway resolves and logs rather than guesses if that becomes
+  # ambiguous. A line with account= names its own destination, which is how one
+  # schedule covers both surfaces.
+  #
+  # YouTube runs at one a day against Instagram's three, deliberately. The risk
+  # there is not the API, it is the inauthentic content policy, renamed from
+  # "repetitious content" in July 2025 to cover mass produced AI video.
+  # Reviewers assess channel themes and overall patterns rather than single
+  # videos, and three a day of an identical layout is the shape they look for
+  # even when every video is original. Raising it is a one line edit once the
+  # channel has a history that is not all from the same week.
+  #
+  # Removing a line removes that slot, and an account whose lines all disappear
+  # loses its slots rather than keeping them, so deleting a destination here
+  # actually stops it publishing.
   GATEWAY_SLOTS: |
     08:10 Europe/Oslo jitter=15
     12:40 Europe/Oslo jitter=15
     19:20 Europe/Oslo jitter=15
+    21:05 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
 
   # Named zone, not an offset, so the slots stay at the same local hour across
   # a daylight saving change.
