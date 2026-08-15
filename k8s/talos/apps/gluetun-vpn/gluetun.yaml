@@ -30,7 +30,7 @@ spec:
       initContainers:
         # Gluetun VPN - runs as sidecar with restartPolicy: Always (K8s 1.29+)
         - name: gluetun
-          image: qmcgaw/gluetun:v3.41.1
+          image: qmcgaw/gluetun:v3.41.3
           restartPolicy: Always
           securityContext:
             capabilities:
