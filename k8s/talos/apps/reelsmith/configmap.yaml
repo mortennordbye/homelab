@@ -44,16 +44,15 @@ data:
   # loses its slots rather than keeping them, so deleting a destination here
   # actually stops it publishing.
   #
-  # The YouTube line is held back until the running image understands
-  # account=. An older parser does not, and parse_slots fails the boot on a
-  # line it cannot read rather than dropping it, so shipping the two in the
-  # wrong order crashlooped the pod. Put it back once the image carrying
-  # schema v11 is promoted:
-  #   21:05 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
+  # account= needs an image that understands it. An older parser does not,
+  # and parse_slots fails the boot on a line it cannot read rather than
+  # dropping it, so this line and the image carrying it have to ship in that
+  # order. Adding it ahead of 0.0.29 crashlooped the pod once already.
   GATEWAY_SLOTS: |
     08:10 Europe/Oslo jitter=15
     12:40 Europe/Oslo jitter=15
     19:20 Europe/Oslo jitter=15
+    21:05 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
 
   # Named zone, not an offset, so the slots stay at the same local hour across
   # a daylight saving change.
