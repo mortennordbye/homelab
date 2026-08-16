@@ -27,6 +27,6 @@ tiktoken==0.13.0
 # Web UI — FastAPI + Jinja templates served by uvicorn. Started by `make web`,
 # not pulled in by the CLI path. python-multipart is required for form posts.
 fastapi==0.141.1
-uvicorn[standard]==0.52.1
+uvicorn[standard]==0.52.2
 jinja2==3.1.6
 python-multipart==0.0.32
