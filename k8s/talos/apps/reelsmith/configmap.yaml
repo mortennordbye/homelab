@@ -63,4 +63,14 @@ data:
   # GATEWAY_ADMIN_TOKEN and refuses to start with no authentication at all,
   # which matters here because this host is public: Meta fetches media from it,
   # so there is no network boundary in front of the panel.
+  # What a Short goes out as. The documented behaviour is that an unaudited
+  # API project has every upload locked to private whatever this says, and that
+  # is not true of this project: measured on 2026-08-16, three uploads asking
+  # for private, unlisted and public each kept what they asked for. The audit is
+  # still worth submitting for quota and standing; it gates neither.
+  #
+  # The gateway logs a warning if a returned status ever differs from this one,
+  # which is what the restriction would look like if it does start applying.
+  GATEWAY_YOUTUBE_PRIVACY_STATUS: "public"
+
   GATEWAY_ADMIN_ENABLED: "true"
