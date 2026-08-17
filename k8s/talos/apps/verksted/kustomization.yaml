@@ -4,6 +4,7 @@ commonAnnotations:
   argocd.argoproj.io/sync-wave: "0"
 resources:
 - namespace.yaml
+- rbac.yaml
 - data-pvc.yaml
 - deployment.yaml
 - service.yaml

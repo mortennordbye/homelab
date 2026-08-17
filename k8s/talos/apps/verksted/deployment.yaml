@@ -19,6 +19,10 @@ spec:
       labels:
         app: verksted-app
     spec:
+      # Not the namespace default: the token projected into this pod is what
+      # kubectl in an agent session authenticates with, so the account it names
+      # is the whole access boundary. See rbac.yaml.
+      serviceAccountName: verksted
       containers:
         - name: verksted
           image: ghcr.io/mortennordbye/verksted:0.0.7

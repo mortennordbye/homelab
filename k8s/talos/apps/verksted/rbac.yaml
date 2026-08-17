@@ -1,0 +1,90 @@
+# Cluster read for the agent sessions in this pod, so an agent can answer "what
+# is broken" and "why is this Application OutOfSync" from kubectl instead of
+# being told the answer. Argo CD and Kargo are CRD-driven, so their objects are
+# reachable through the same apiserver credential — no second auth system, no
+# API token to mint and rotate.
+#
+# Read the blast radius before widening this: the token is mounted into a pod
+# whose job is running LLM-driven shells, and every session in every project
+# inherits it. Reads are cluster-wide; the single write verb is `create` on
+# Kargo Promotions.
+#
+# No sync-wave annotation here, unlike the siblings: this kustomization sets one
+# in commonAnnotations, which overwrites whatever a file asks for, so every
+# object in this directory lands in wave 0 regardless. Ordering inside a wave is
+# ArgoCD's own by-kind sort, and that already puts a ServiceAccount and its
+# bindings ahead of the Deployment that uses them.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: verksted
+  namespace: verksted
+---
+# The builtin `view` role covers the namespaced reads that matter (pods, logs,
+# events, workloads, services) and deliberately excludes Secrets, which is the
+# property that makes it safe to bind cluster-wide. Everything in the ClusterRole
+# below is what `view` does not reach: cluster-scoped objects, and the CRD groups.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: verksted-agent-view
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: verksted
+    namespace: verksted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: verksted-agent
+rules:
+  # Cluster-scoped diagnosis: which node is unhappy, which PV did not bind,
+  # which CRD version an operator actually serves.
+  - apiGroups: [""]
+    resources: ["nodes", "persistentvolumes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apiregistration.k8s.io"]
+    resources: ["apiservices"]
+    verbs: ["get", "list", "watch"]
+  # kubectl top, for the throttling and eviction questions this pod itself raised.
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["nodes", "pods"]
+    verbs: ["get", "list"]
+  # Argo CD and Argo Rollouts: sync status, drift, and the AnalysisRuns that
+  # Kargo's verification step creates.
+  - apiGroups: ["argoproj.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  # Kargo: Warehouses, Freight, Stages, Promotions.
+  - apiGroups: ["kargo.akuity.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  # The one write. Every project here auto-promotes through a homelab PR, so the
+  # deploy gate is still merging that PR — this only covers re-promoting older
+  # Freight, which has no PR to merge.
+  - apiGroups: ["kargo.akuity.io"]
+    resources: ["promotions"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: verksted-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: verksted-agent
+subjects:
+  - kind: ServiceAccount
+    name: verksted
+    namespace: verksted
