@@ -55,6 +55,36 @@ spec:
           port: 80
           weight: 1
 
+    # The bare hostname goes to the panel. The app mounts nothing on `/`, so
+    # opening reelsmith.local.bigd.no answered a JSON 404 and the panel had to
+    # be reached by typing the path.
+    #
+    # Here rather than in the app, because this file is the only place that is
+    # private by construction: it is parented to the private gateway and bound
+    # to this hostname, so the redirect cannot appear on gate.nordbye.it no
+    # matter what the app does later. A `/` route in FastAPI would have to test
+    # the Host header to stay local, which is a second thing to keep right.
+    #
+    # Exact beats PathPrefix in Gateway API's matching precedence, so this wins
+    # over the catch-all below regardless of rule order, and only for the bare
+    # path. No auth filter, because a redirect reaches no backend and discloses
+    # nothing the hostname did not already give away; /admin/ behind it is
+    # still authentik plus GATEWAY_ADMIN_TOKEN.
+    #
+    # 302 rather than 301: browsers cache a permanent redirect hard enough that
+    # undoing it means clearing state on every machine that saw it.
+    - matches:
+        - path:
+            type: Exact
+            value: /
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /admin/
+            statusCode: 302
+
     # The whole app, not just /admin. Reaching /api or /media over the private
     # name is harmless and occasionally useful for debugging, and restricting
     # it here would only mean two lists to keep in step.
