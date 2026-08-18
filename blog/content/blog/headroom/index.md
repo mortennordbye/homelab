@@ -108,6 +108,16 @@ Because the target is a share and not an amount, a month with on-call pay and an
 
 <img src="/images/headroom-anbefalinger.webp" alt="Headroom smart recommendations showing 11 352 kr spendable and 2 838 kr to investment against a 20 percent savings target, with the month split 68 percent fixed costs, 26 percent spending and 6 percent investment" title="68% fixed, 26% spendable, 6% invested" style="width:100%;" />
 
+The 2 838 stays a target until something moves it. Each savings line takes a fixed amount, a share, or the rest of the target, and points it at one of your accounts.
+
+<img src="/images/headroom-sparing.webp" alt="Headroom savings card showing a 2 838 kr monthly savings target at 20 percent, fully automated with nothing left to allocate, split into 2 000 kr to a buffer account and 838 kr to stocks and funds as the remainder" title="2 000 to the buffer, the rest to funds" style="width:100%;" />
+
+Mine puts 2 000 in the buffer account and sends what is left to stocks and funds. The remainder line recalculates every month, so when the target moves with the income it is a share of, the extra lands in funds without me editing anything. The two lines still add up to the target exactly.
+
+Savings is not an expense here. It comes off the savings target rather than off what you can spend, and each month it moves the balance on the account you picked. The buffer grows, the fund account grows, and the goals on the dashboard read those balances, so the month each goal lands in moves on its own.
+
+Pausing a line keeps it in the budget and stops the balance moving. Restart it and it resumes from the current month rather than backfilling the months it sat out. Catching up would put money in the app that never arrived in the account.
+
 <img src="/images/headroom-utgifter.webp" alt="Headroom fixed expenses panel warning about double counting, offering to promote four detected recurring payments, and a chart of where the fixed money goes" title="It notices the subscription you forgot" style="width:100%;" />
 
 Transactions are typed in, or they come from your banks. That connection is opt-in and runs on open banking through [Enable Banking](https://enablebanking.com/), a free account you make yourself and authorise one bank at a time. Mine pulls Handelsbanken for salary and everyday spending, plus two credit cards, one from Bank Norwegian and one from Morrow Bank.
