@@ -4,12 +4,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### Flip blog prod to the unprivileged nginx port
-- **What:** `blog/Dockerfile` now serves from `nginxinc/nginx-unprivileged` on port 8080, and `blog-stage` was moved to match. Blog **prod** is deliberately still on port 80 everywhere: `deployment.yaml` (`containerPort`), `service.yaml` (`targetPort`), and both `toPorts` rules in `ciliumnetworkpolicy.yaml`.
-- **Why deferred:** Prod runs an older image (`newTag: 0.0.96`) that still listens on 80. Flipping the prod manifests before that image is promoted would point the Service and the network policy at a port nothing is listening on, taking the blog down until the promotion lands. Kargo's prod stage uses `promote-via-pr`, so prod does not move on its own — the two changes have to land together.
-- **Unblock:** When the Kargo prod promotion PR for the first image built after this change appears, add the port edits to that same PR before merging: `containerPort: 8080`, `targetPort: 8080`, and both CiliumNetworkPolicy `toPorts` entries to `"8080"`. Mirror the `securityContext`, `/tmp` emptyDir and `automountServiceAccountToken: false` from `blog-stage/deployment.yaml`. Verify with `kubectl diff -k k8s/talos/apps/blog --server-side --field-manager=argocd-controller` (the default field manager reports a spurious duplicate-port error).
-- **Where:** `k8s/talos/apps/blog/{deployment,service,ciliumnetworkpolicy}.yaml`, mirroring `k8s/talos/apps/blog-stage/`.
-
 ### Orphaned huntarr manifest
 - **What:** `k8s/talos/apps/arr-stack/huntarr.yaml` is commented out of the arr-stack `kustomization.yaml`, nothing is running in the cluster, and `ghcr.io/plexguide/huntarr` no longer resolves in any registry (the upstream repo is gone). Renovate is now explicitly disabled for that image, which was the source of a permanent "Package lookup failures" problem on the dependency dashboard.
 - **Why deferred:** Deleting someone's disabled app manifest is a judgement call, not a dependency fix. The Renovate disable removes the noise either way.
