@@ -1,0 +1,25 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: portfolio-ratelimit
+  namespace: portfolio
+spec:
+  # Nothing sat in front of this origin: no CDN (the apex A record points
+  # straight at the house), and neither Next.js nor the gateway capped request
+  # rate. A single client could pull /fun's ~6.5 MB of models and textures, or
+  # the 262 KB uncompressed homepage, as fast as the uplink allowed.
+  #
+  # Token bucket keyed on the client IP. sourceCriterion is deliberately left
+  # unset so Traefik keys on the connection's remote address — the router DNATs
+  # without SNAT, so that is the real client. Setting ipStrategy.depth instead
+  # would read X-Forwarded-For, which any caller can forge here.
+  #
+  # average/burst are ~4x the busiest real client seen in the access logs
+  # (33 req/s on a cold /fun load), so a browser fetching chunks, models and
+  # textures in parallel never trips it. Note the three Traefik replicas each
+  # hold their own bucket — OSS has no shared state — so the effective ceiling
+  # is up to 3x these numbers when a client is spread across them.
+  rateLimit:
+    average: 50
+    period: 1s
+    burst: 200
