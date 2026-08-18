@@ -1,12 +1,20 @@
+# Every step here that reaches GitHub or Argo CD carries a `retry.errorThreshold`
+# because Kargo's system-wide default is 1, which means "no retries": one 5xx
+# from an API this has no control over marks the whole Promotion failed, and a
+# failed Promotion is terminal, so the Stage sits at the old Freight until
+# somebody notices and promotes by hand. That is not theoretical; see the note
+# on wait-pr below.
+#
 # PR-based variant of promote-to-argocd. Same image-bump logic, but instead of
 # pushing the commit straight to main it pushes to a generated branch, opens a
 # homelab PR, and blocks until that PR is merged in GitHub before syncing Argo
 # CD. This keeps promotion "review-and-merge in GitHub" while Kargo still drives
 # image discovery, the pipeline view, and post-deploy verification.
 #
-# Currently used only by portfolio's prod Stage as a pilot. The direct-push
-# promote-to-argocd task (clusterpromotiontask.yaml) is unchanged and still used
-# by every stage Stage and by blog.
+# Every prod Stage promotes through this now; the pilot on portfolio ended. The
+# direct-push promote-to-argocd task (clusterpromotiontask.yaml) is what the
+# pre-prod Stages use, where a PR per image bump would be ceremony around a
+# deploy nobody reviews.
 #
 # PREREQUISITE: the git credential's GitHub App (mortennordbye-homelab-deployer)
 # needs Pull requests: read/write in addition to Contents: read/write. git-open-pr
@@ -25,6 +33,8 @@ spec:
     - name: argocdApp    # Argo CD Application to sync, e.g. portfolio
   steps:
     - uses: git-clone
+      retry:
+        errorThreshold: 3
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         # Without this Kargo authors commits as `Kargo <no-reply@kargo.io>`,
@@ -65,12 +75,16 @@ spec:
     # Output references are also kept null-safe as belt-and-suspenders.
     - uses: git-push
       as: push
+      retry:
+        errorThreshold: 3
       if: ${{ status('commit') != 'Skipped' }}
       config:
         path: ./repo
         generateTargetBranch: true
     - uses: git-open-pr
       as: open-pr
+      retry:
+        errorThreshold: 3
       if: ${{ status('commit') != 'Skipped' }}
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
@@ -89,16 +103,30 @@ spec:
     # Blocks the promotion until the PR is merged in GitHub.
     - uses: git-wait-for-pr
       as: wait-pr
+      # This one polls GitHub for as long as the PR is open, so over a review
+      # that takes a day it makes hundreds of API calls and only needs to be
+      # unlucky once. Left at the system-wide default of 1 it was: a 504 from
+      # api.github.com killed blog's promotion of 0.0.103 on 2026-08-15 and
+      # portfolio's of 0.0.103 on 2026-08-17, the second one *after* its PR had
+      # already merged, so the manifest was live and the Stage read Unknown for
+      # a day. Consecutive is the word that matters: five failures in a row is
+      # GitHub being down, which is worth failing on. One is weather.
+      retry:
+        errorThreshold: 5
       if: ${{ status('open-pr') != 'Skipped' }}
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         provider: github
         prNumber: ${{ task.outputs?.['open-pr']?.pr?.id ?? 0 }}
     - uses: argocd-update
+      retry:
+        errorThreshold: 3
       config:
         apps:
           - name: ${{ vars.argocdApp }}
     - uses: argocd-wait
+      retry:
+        errorThreshold: 3
       config:
         apps:
           - name: ${{ vars.argocdApp }}
