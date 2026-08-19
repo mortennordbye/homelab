@@ -1,37 +1,33 @@
 # Repo logo
 
-The mark at the top of the README: the tree of the garden with one red fruit on it.
+The mark at the top of the README: the tree of the garden, one ripe fruit hanging from it.
 
 | | |
 | --- | --- |
-| Source of truth | `source.svg` (hand authored, self contained) |
-| Shipped artifact | `logo.png`, rendered from that SVG |
-| Canvas | 512x512, transparent background |
+| Source of truth | `source.jpg` (1024x1024, the full orchard frame) |
+| Shipped artifact | `logo.png`, cropped and masked from that photo |
+| Canvas | 512x512, transparent outside the circle |
 | Render | `make logo` locally, or push the source and let [`render-logo.yaml`](../../.github/workflows/render-logo.yaml) do it |
 
-The workflow re-renders on any change to `source.svg` and commits the PNG back to `main`,
+The workflow re-renders on any change to `source.jpg` and commits the PNG back to `main`,
 the same pattern the D2 diagrams use. Never hand edit the PNG, it is generated.
+
+## The crop
+
+`crop 460x460+280+300`, then a circular mask. The full frame is a wall of leaves at the 128px
+the README renders it at, with no subject the eye can find; the crop leaves one fruit filling
+the mark. The circle is what makes it read as a mark rather than a photo someone pasted in, and
+it keeps the round silhouette the drawn logo had. Adjust those numbers to move the crop, then
+re-render, rather than editing the PNG.
 
 ## Why PNG in the README
 
-GitHub serves raw SVGs with a `default-src 'none'` CSP. The diagrams need PNG because their
-inlined data URI icons get blocked by it; this file has no external references, but it ships as
-PNG anyway so every image in the README is rendered the same way.
+Every image in the README ships as PNG, so they all render the same way. The transparency
+outside the circle is deliberate: the mark has to hold up on both the light and the dark GitHub
+theme.
 
-## Palette
+## Before this
 
-The blog covers and the social preview card use the portfolio's blue and violet
-(`blog/IMAGE-STYLE.md`). The logo does not. It carries the repo name, so it uses the leaf green
-family instead, with the fruit as the single accent:
-
-| Role | Hex |
-| --- | --- |
-| canopy light | `#a7f3a0` |
-| canopy mid | `#4ade80` |
-| canopy deep | `#15803d` |
-| trunk | `#166534` |
-| fruit | `#f87171` to `#dc2626` |
-| fruit stem and leaf | `#14532d` |
-
-The transparent background and the mid tone greens are deliberate: the mark has to hold up on
-both the light and the dark GitHub theme, and at the 24px it renders next to the wordmark.
+The mark was a drawn SVG, a flat green tree with a red fruit, in the leaf green family rather
+than the portfolio's blue and violet. It is in the history if it is ever wanted back:
+`git show HEAD~1:docs/logo/source.svg`.
