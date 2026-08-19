@@ -27,6 +27,11 @@ const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-s
 const MONO = "ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+// 16x16 star, centred near (8, 7.8).
+const STAR = "M8 .6l2.2 4.6 5.1.5-3.8 3.4 1.1 5L8 12.9 3.4 15l1.1-5L.7 5.7l5.1-.5z";
+const star = (x, y, size, fill, cls = "") =>
+  `<path${cls ? ` class="${cls}"` : ""} d="${STAR}" fill="${fill}" transform="translate(${(x - 8 * (size / 16)).toFixed(1)},${(y - 7.8 * (size / 16)).toFixed(1)}) scale(${(size / 16).toFixed(3)})"/>`;
+
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -72,13 +77,33 @@ function card(t, inner) {
 </svg>`;
 }
 
+// Round the y scale up to a step that reads as a round number, aiming for
+// three or four intervals: 289 stars gives 0/100/200/300 rather than a top
+// tick of 289.
+function niceStep(target) {
+  const mag = 10 ** Math.floor(Math.log10(Math.max(target, 1)));
+  return [1, 2, 2.5, 5, 10].map((m) => m * mag).find((v) => v >= target) ?? mag * 10;
+}
+
 function chart(t, days, total, now) {
   const day = 86400000;
-  const x0 = 40, chartW = W - 80, base = 246, chartH = 78;
+  // Left margin holds the y labels, so the plot starts inside the card gutter.
+  const x0 = 80, chartW = W - 120, base = 246, chartH = 78;
   const t0 = Date.parse(days[0][0]);
   const span = Math.max(now - t0, day);
+  const step = niceStep(total / 3);
+  const top = Math.ceil(total / step) * step;
   const px = (ts) => x0 + ((ts - t0) / span) * chartW;
-  const py = (n) => base - (n / total) * chartH;
+  const py = (n) => base - (n / top) * chartH;
+
+  const yAxis = Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step)
+    .map((v) => {
+      const y = py(v);
+      const grid = v === 0 ? "" : `<line x1="${x0}" y1="${y.toFixed(1)}" x2="${x0 + chartW}" y2="${y.toFixed(1)}" stroke="${t.line}" opacity="0.4"/>`;
+      return `${grid}
+        ${tspan(x0 - 12, y + 3.5, v, { size: 10, weight: 600, fill: t.faint, font: MONO, anchor: "end" })}`;
+    })
+    .join("");
 
   // One point per day with a star, sampled so the path stays small as the repo
   // ages. The first and last day and the flat run to now always survive.
@@ -120,11 +145,12 @@ function chart(t, days, total, now) {
   return `
     ${eyebrow(40, 152, "cumulative stars", t)}
     ${tspan(W - 40, 152, `${MONTHS[first.getUTCMonth()]} ${first.getUTCFullYear()} → today`, { size: 12, weight: 600, fill: t.muted, font: MONO, anchor: "end" })}
+    ${yAxis}
     ${axis}
     <line x1="${x0}" y1="${base}" x2="${x0 + chartW}" y2="${base}" stroke="${t.line}"/>
     <path class="fadein" d="${area}" fill="url(#area)"/>
     <polyline class="draw" points="${line}" fill="none" stroke="url(#accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle class="pulse" cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3.5" fill="${t.accent3}"/>`;
+    ${star(last[0], last[1], 13, t.accent3, "pulse")}`;
 }
 
 const src = JSON.parse(readFileSync("dist/stars.json", "utf8"));
@@ -160,7 +186,8 @@ for (const [name, t] of [["dist/stars.svg", LIGHT], ["dist/stars-dark.svg", DARK
     })
     .join("");
   const inner = `
-    ${eyebrow(40, 40, "star history", t)}
+    ${star(46, 36, 12, t.accent)}
+    ${eyebrow(60, 40, "star history", t)}
     ${tilesSvg}
     <line x1="40" y1="130" x2="${W - 40}" y2="130" stroke="${t.line}"/>
     ${chart(t, days, total, now)}`;
