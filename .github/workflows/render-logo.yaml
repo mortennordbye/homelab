@@ -1,13 +1,13 @@
 name: Render Logo
 
-# Re-renders docs/logo/source.svg to PNG whenever the source changes, and commits
-# the result back — so the logo in the README never drifts from its source.
+# Re-crops docs/logo/source.jpg to the shipped PNG whenever the source changes, and
+# commits the result back — so the logo in the README never drifts from its source.
 
 on:
   push:
     branches: [main]
     paths:
-      - "docs/logo/source.svg"
+      - "docs/logo/source.jpg"
       - ".github/workflows/render-logo.yaml"
   workflow_dispatch:
 
@@ -26,13 +26,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Rasterize the logo to PNG
-        # The README points at the PNG rather than the SVG: GitHub serves raw SVGs
-        # with a default-src 'none' CSP, same reason the diagrams ship as PNG.
+      - name: Crop the logo to a 512 round mark
+        # Square crop around the fruit, then a circular mask: the full frame is
+        # unreadable at the 128px the README renders it at, and the round
+        # silhouette is what makes it read as a mark rather than a photo.
         run: |
           sudo apt-get update
-          sudo apt-get install -y librsvg2-bin
-          rsvg-convert -w 512 -h 512 docs/logo/source.svg -o docs/logo/logo.png
+          sudo apt-get install -y imagemagick pngquant
+          convert docs/logo/source.jpg -crop 460x460+280+300 +repage -resize 512x512 \
+            \( +clone -alpha transparent -fill white -draw "circle 256,256 256,4" \) \
+            -compose copyopacity -composite png32:/tmp/logo-raw.png
+          pngquant --quality 70-95 --force --output docs/logo/logo.png /tmp/logo-raw.png
 
       - name: Commit re-rendered logo if changed
         run: |
