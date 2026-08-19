@@ -49,6 +49,39 @@ customRules:
       override:
         condition: replace
 
+    # Unpacking an image layer writes the log files the layer ships with, so
+    # containerd truncates /var/log/dpkg.log every time it pulls a Debian-based
+    # image. Upstream already knows this and exempts it — but only at the host
+    # containerd's snapshot root. verksted's dind sidecar runs its own containerd
+    # under /var/lib/docker/containerd/daemon, so the identical write lands on a
+    # path upstream's macro doesn't cover and every image pull an agent session
+    # does fires this rule. Pinned to that daemon root in the dind image: the
+    # same process writing a log anywhere outside the snapshot tree still alerts.
+    - macro: allowed_clear_log_files
+      condition: >
+        (proc.name=containerd
+         and container.image.repository=docker.io/library/docker
+         and k8s.ns.name=verksted
+         and fd.name startswith /var/lib/docker/containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/)
+      override:
+        condition: replace
+
+    # Agent sessions clone the repo under test into a mkdtemp directory,
+    # /tmp/vk-repos-<random>, and run its suite there. Test suites that harden
+    # against symlink escape create the fixture they defend against — a link to
+    # /etc or /root — and trip this rule from inside the dind daemon, where Falco
+    # has no container metadata to scope on (k8s.ns.name and the image come
+    # through as <NA>), so the linkpath is the only handle available.
+    #
+    # Exempting where the symlink is *created*, not what it points at: a link to
+    # a sensitive file anywhere outside a session's scratch checkout still
+    # alerts, and nothing privileged resolves paths under those directories.
+    - rule: Create Symlink Over Sensitive Files
+      condition: >
+        and not evt.arg.linkpath startswith /tmp/vk-repos-
+      override:
+        condition: append
+
     # kubelet (exec/port-forward streams) and Authentik wire stdio to sockets
     # legitimately; scoped to those binaries so a real shell still alerts.
     - macro: user_known_stand_streams_redirect_activities

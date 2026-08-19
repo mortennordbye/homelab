@@ -17,6 +17,18 @@ spec:
             type: PathPrefix
             value: /
       filters:
+        # Order matters: Traefik applies filters as listed, so a rejected
+        # request is turned away before anything is compressed.
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: blog-ratelimit
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: blog-inflight
         - type: ExtensionRef
           extensionRef:
             group: traefik.io

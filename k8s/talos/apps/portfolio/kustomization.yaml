@@ -8,6 +8,8 @@ resources:
 - poddisruptionbudget.yaml
 - httproute.yaml
 - compress-middleware.yaml
+- ratelimit-middleware.yaml
+- inflight-middleware.yaml
 - service.yaml
 - ciliumnetworkpolicy.yaml
 - scaledobject.yaml
