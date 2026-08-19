@@ -1,14 +1,14 @@
 name: Star history
 
-# Publishes this repo's stargazer timestamps, bucketed by day, for the star
-# history card in the profile README (mortennordbye/mortennordbye). That
-# generator cannot read them itself: its workflow token is an installation
-# token scoped to its own repo, and the stargazer listing answers
-# "Resource not accessible by integration" for any other repo. Read from here
-# it is just this repo's own data, which its own GITHUB_TOKEN may read.
+# Draws the star history chart in the README. star-history.com stopped serving
+# it ("GitHub restricted access to star data"), and no third party can read the
+# stargazer listing on our behalf any more, but this repo's own GITHUB_TOKEN
+# still reads this repo's own stargazers.
 #
-# Same shape as the Lighthouse card's data hand-off: JSON on a data branch,
-# fetched over raw.githubusercontent by the generator.
+# Collects the timestamps, buckets them by day, renders both themes, and
+# publishes the lot to the stars-data branch. The README embeds the SVGs from
+# there over raw.githubusercontent, the same hand-off the Lighthouse card uses
+# for its JSON.
 
 on:
   workflow_dispatch:
@@ -61,6 +61,13 @@ jobs:
               days: (sort | group_by(.) | map({key: .[0], value: length}) | from_entries)}' \
             > dist/stars.json
           jq '{repo, generatedAt, total, days: (.days | length)}' dist/stars.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: portfolio/.nvmrc
+
+      - name: Render the chart
+        run: node scripts/render-star-history.mjs
 
       - name: Publish to stars-data branch
         uses: crazy-max/ghaction-github-pages@v5
