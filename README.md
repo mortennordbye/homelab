@@ -194,11 +194,10 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 ### ⭐ Star this repo if you find it useful ⭐
 
-<a href="https://www.star-history.com/#mortennordbye/homelab&Date">
+<a href="https://github.com/mortennordbye/homelab/stargazers">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=mortennordbye/homelab&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=mortennordbye/homelab&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=mortennordbye/homelab&type=Date" width="600" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/mortennordbye/homelab/stars-data/stars-dark.svg" />
+    <img alt="Star history: cumulative stars over time, with the last 30 days, the last 7 days, and the busiest single day" src="https://raw.githubusercontent.com/mortennordbye/homelab/stars-data/stars.svg" width="840" />
   </picture>
 </a>
 
