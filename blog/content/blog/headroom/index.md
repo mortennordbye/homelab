@@ -1,7 +1,7 @@
 ---
 title: "Headroom: The Private Finance Overview School Never Gave You"
 description: "A self-hosted Norwegian finance tracker. Equity after tax, ten years of salary against CPI, what you cost your employer, the month, and a fifteen year forecast."
-date: 2026-08-04
+date: 2026-08-20
 draft: false
 tags: ["self-hosted", "docker", "personal-finance", "privacy", "cilium", "kubernetes", "intermediate"]
 ---
