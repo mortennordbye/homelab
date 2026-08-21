@@ -10,15 +10,25 @@
 
 # --- Origin ---------------------------------------------------------------
 
-# The address every web hostname points at. The DDNS client rewrites content, so
-# that attribute is ignored. The record stays managed so its proxy status is
-# pinned: proxying this would break the CNAME chain the other records rely on.
+# The address every web hostname points at, in this zone and in
+# logeverylift.com. The DDNS client rewrites content, so that attribute is
+# ignored.
+#
+# Proxied, so the record answers with Cloudflare addresses and the residential
+# IP never appears in public DNS. The CNAME chain survives it: Cloudflare
+# proxies a request when any hostname on the chain is proxied, and resolves the
+# chain internally rather than through the flattened answer. Cross-zone chains
+# are only banned across accounts (error 1014), and both zones are on this one.
+#
+# The UniFi gateway's Cloudflare DDNS is inadyn, which PATCHes {type,name,
+# content} and only sends proxied when its config sets it. The UniFi dialog has
+# no proxy field, so the flag survives every address change.
 resource "cloudflare_dns_record" "ddns" {
   zone_id = data.cloudflare_zone.this.zone_id
   name    = "ddns.${var.zone_name}"
   type    = "A"
   content = "84.212.143.165"
-  proxied = false
+  proxied = true
   ttl     = 1
 
   lifecycle {
