@@ -226,7 +226,7 @@ function render(t, s, now) {
     ${eyebrow(40, 432, `last 30 days${pct ? ` · ${pct}%` : ""}`, t)}
     ${tspan(W - 40, 432, `last deploy · ${last.name ?? "—"} · ${ago(last.at, now)}`, { size: 11, weight: 600, fill: t.faint, font: MONO, anchor: "end" })}
     ${eyebrow(40, 478, "source", t)}
-    ${tspan(94, 478, `kubernetes api and prometheus, read in cluster ${(s.generatedAt ?? "").replace("T", " ").replace("Z", "Z")} · nordbye.it/api/v1/infra`, { size: 11, weight: 500, fill: t.faint, font: MONO })}`;
+    ${tspan(94, 478, `kubernetes api and prometheus, read in cluster ${(s.generatedAt ?? "").replace("T", " ")} · nordbye.it/api/v1/infra`, { size: 11, weight: 500, fill: t.faint, font: MONO })}`;
 }
 
 // The cluster didn't answer. Say that, and say when it last did.
