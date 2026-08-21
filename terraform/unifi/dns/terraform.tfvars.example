@@ -1,0 +1,5 @@
+# Copy to terraform.tfvars and fill in. *.tfvars is gitignored.
+#
+# Create the key in the UniFi console at /network/default/integrations (left nav:
+# Integrations) via "Create New API Key". It is shown once.
+unifi_api_key = ""
