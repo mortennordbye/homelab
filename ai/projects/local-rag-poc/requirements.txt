@@ -22,7 +22,7 @@ docx2txt==0.9
 rank_bm25==0.2.2
 
 # Tokenizer used by langchain-openai's embedding context checks
-tiktoken==0.13.0
+tiktoken==0.14.0
 
 # Web UI — FastAPI + Jinja templates served by uvicorn. Started by `make web`,
 # not pulled in by the CLI path. python-multipart is required for form posts.
