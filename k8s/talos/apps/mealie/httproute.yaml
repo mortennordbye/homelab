@@ -3,6 +3,10 @@ kind: HTTPRoute
 metadata:
   name: mealie
   namespace: mealie
+  annotations:
+    # Proxied for edge TLS and DDoS cover. Accounts and sessions, so keep
+    # this hostname out of any cache rule.
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
