@@ -10,10 +10,10 @@ spec:
   #
   # sourceCriterion is explicit here because inFlightReq defaults to keying on
   # requestHost, unlike rateLimit — left implicit it would cap the whole site at
-  # 60 concurrent requests rather than 60 per client. An empty ipStrategy (no
-  # depth, no excludedIPs) makes Traefik use the connection's remote address,
-  # which is the true client IP and, unlike X-Forwarded-For, cannot be forged.
+  # 60 concurrent requests rather than 60 per client. depth: 1 as in the rate
+  # limit middleware.
   inFlightReq:
     amount: 60
     sourceCriterion:
-      ipStrategy: {}
+      ipStrategy:
+        depth: 1

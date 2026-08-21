@@ -4,15 +4,14 @@ metadata:
   name: portfolio-ratelimit
   namespace: portfolio
 spec:
-  # Nothing sat in front of this origin: no CDN (the apex A record points
-  # straight at the house), and neither Next.js nor the gateway capped request
+  # Cloudflare fronts the proxied path, but the origin stays directly reachable
+  # via ddns.nordbye.it, and neither Next.js nor the gateway capped request
   # rate. A single client could pull /fun's ~6.5 MB of models and textures, or
   # the 262 KB uncompressed homepage, as fast as the uplink allowed.
   #
-  # Token bucket keyed on the client IP. sourceCriterion is deliberately left
-  # unset so Traefik keys on the connection's remote address — the router DNATs
-  # without SNAT, so that is the real client. Setting ipStrategy.depth instead
-  # would read X-Forwarded-For, which any caller can forge here.
+  # Token bucket keyed on the client IP. depth: 1 reads the rightmost
+  # X-Forwarded-For entry, the address Cloudflare observed. Keying on the remote
+  # address would bucket a whole POP together.
   #
   # average/burst are ~4x the busiest real client seen in the access logs
   # (33 req/s on a cold /fun load), so a browser fetching chunks, models and
@@ -23,3 +22,6 @@ spec:
     average: 50
     period: 1s
     burst: 200
+    sourceCriterion:
+      ipStrategy:
+        depth: 1
