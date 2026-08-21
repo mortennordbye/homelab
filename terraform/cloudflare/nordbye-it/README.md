@@ -19,6 +19,12 @@ A record added by hand in the dashboard has to be imported before Terraform will
 manage it (`terraform import cloudflare_dns_record.<name> <zone_id>/<record_id>`),
 otherwise apply fails with "record already exists".
 
+## Publishing
+
+The edge caches HTML for 4 hours, so a new or edited post will not appear until
+it expires. Purge from the Cloudflare dashboard (Caching → Configuration →
+Purge Everything, or purge the single URL) when you want it live immediately.
+
 ## Notes
 
 - `_acme-challenge` is not managed. cert-manager creates and deletes it.

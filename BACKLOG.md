@@ -15,6 +15,13 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** Kept as rollback until the owner has used `logeverylift.com` for a while and confirmed all data/history is intact. Deleting is one-way (prunes the namespace + PVC).
 - **Unblock:** Once verified, delete `k8s/talos/apps/workout/` (ArgoCD prunes the namespace). Archive `workout_db_full.sql` somewhere durable first (it currently lives only in a session scratchpad). Then optionally give `logeverylift` its own Bitwarden items instead of sharing workout's (see the comment in `k8s/talos/apps/logeverylift/externalsecret.yaml`).
 - **Where:** `k8s/talos/apps/workout/`, `k8s/talos/apps/logeverylift/externalsecret.yaml`.
+- **Note (2026-08-21):** `workout.bigd.no` was deleted in the stale-DNS cleanup, so a rollback now also needs that CNAME recreated (`workout.bigd.no` → `ddns.bigd.no`, DNS only). Nothing routed to it, which is why it went.
+
+### Put the public bigd.no hostnames behind the Cloudflare proxy
+- **What:** `nordbye.it` and `logeverylift.com` are proxied through Cloudflare with edge caching (PR #703). `bigd.no` is still DNS-only, so its public hostnames are served straight off the residential uplink with no CDN, no DDoS cover and no edge TLS.
+- **Why deferred:** `bigd.no` is external-dns territory, so it cannot be managed the same way. Terraform setting `proxied = true` would be reverted on the next reconcile, because external-dns builds desired state from the HTTPRoutes and sees no proxy annotation. Doing it properly means annotating the routes instead, which is a different change from the Terraform work that was in flight.
+- **Unblock:** Add `external-dns.kubernetes.io/cloudflare-proxied: "true"` (the prefix is pinned in `k8s/talos/infra/external-dns/values.yaml`) to the HTTPRoutes worth proxying. `it-tools` and `omni-tools` are the best candidates: static, no auth, so their HTML is safe to edge-cache too. `mealie` (accounts), `hub` (basicauth) and `seerr` (login) can be proxied but must stay out of any cache rule. Do **not** proxy `audiobookshelf`: Cloudflare's terms restrict serving disproportionate audio/video on non-Enterprise plans, and that risks the whole account rather than one hostname.
+- **Where:** `k8s/talos/apps/{it-tools,omni-tools,mealie,homepage,plex-media-stack}/httproute.yaml`, `k8s/talos/infra/external-dns/values.yaml`.
 
 ### Retire Mealie's inert ScaledObject and interceptor hop
 - **What:** Mealie is pinned to `minReplicaCount: 1` / `maxReplicaCount: 1`, so its `ScaledObject` triggers (cron + external-push) never fire. Its `HTTPRoute` still sends traffic through `keda-add-ons-http-interceptor-proxy` rather than straight at `mealie-service`, which is now a pointless extra hop.
