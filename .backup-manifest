@@ -23,3 +23,4 @@ terraform/proxmox/hyper-cluster/k8s/talos/controlplane.yaml
 terraform/proxmox/hyper-cluster/k8s/talos/terraform.tfvars
 terraform/azure/state/terraform.tfvars
 terraform/cloudflare/nordbye-it/terraform.tfvars
+terraform/cloudflare/logeverylift-com/terraform.tfvars
