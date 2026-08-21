@@ -4,13 +4,12 @@ metadata:
   name: blog-ratelimit
   namespace: blog
 spec:
-  # Same reasoning as the portfolio middleware: no CDN in front, and nginx here
-  # serves static files with no limit_req zone, so request rate was uncapped all
-  # the way to the pod.
+  # Same reasoning as the portfolio middleware: the origin stays directly
+  # reachable past Cloudflare, and nginx here serves static files with no
+  # limit_req zone, so request rate was uncapped all the way to the pod.
   #
-  # sourceCriterion left unset on purpose — Traefik then keys on the connection's
-  # remote address, which is the true client IP (the router DNATs without SNAT).
-  # ipStrategy.depth would read a forgeable X-Forwarded-For instead.
+  # depth: 1 reads the rightmost X-Forwarded-For entry, the address Cloudflare
+  # observed. Keying on the remote address would bucket a whole POP together.
   #
   # Lower than portfolio's because a Hugo page pulls far less: the busiest real
   # client in the access logs peaked at 13 req/s. Each of the three Traefik
@@ -19,3 +18,6 @@ spec:
     average: 25
     period: 1s
     burst: 100
+    sourceCriterion:
+      ipStrategy:
+        depth: 1
