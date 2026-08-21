@@ -55,10 +55,20 @@ resource "cloudflare_dns_record" "www" {
   ttl     = 1
 }
 
-# --- Direct-to-origin apps ------------------------------------------------
+# --- Apps -----------------------------------------------------------------
 
-# gate serves reelsmith, headroom serves headroom-demo. Neither is proxied yet;
-# both would need the same ipStrategy treatment as blog and portfolio first.
+# gate serves reelsmith (behind Authentik), headroom serves headroom-demo. Both
+# are proxied for edge TLS, DDoS cover and asset caching, but deliberately left
+# out of var.proxied_hostnames so the cache rule never touches their HTML:
+# caching an authenticated or stateful response at a shared edge can serve one
+# visitor's page to another. Static assets are still edge-cached by extension,
+# with no rule involved.
+#
+# Neither app has an IP-keyed rate limit, unlike blog and portfolio, so proxying
+# them needs no ipStrategy change in the cluster.
+#
+# The resource name stays "direct" so this is an in-place update; renaming would
+# destroy and recreate live DNS records.
 resource "cloudflare_dns_record" "direct" {
   for_each = toset(["gate", "headroom"])
 
@@ -66,7 +76,7 @@ resource "cloudflare_dns_record" "direct" {
   name    = "${each.key}.${var.zone_name}"
   type    = "CNAME"
   content = var.origin_hostname
-  proxied = false
+  proxied = true
   ttl     = 1
 }
 

@@ -2,6 +2,11 @@
 # never cached without a rule regardless of origin headers. HTML is the request
 # that costs ~700ms from the residential origin, so it is the one worth caching.
 #
+# browser_ttl is deliberately absent. This rule matches every path on these
+# hosts except /api/, so overriding it would strip the immutable year off the
+# fingerprinted CSS and JS. The zone's browser TTL only fills the gap where an
+# origin sets no max-age, which is HTML alone, so assets are already correct.
+#
 # /api/ is excluded so nordbye.it/api/v1/infra, which feeds the README status
 # card, keeps hitting origin and stays fresh.
 resource "cloudflare_ruleset" "cache" {

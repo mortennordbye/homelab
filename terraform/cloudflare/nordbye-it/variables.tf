@@ -17,13 +17,13 @@ variable "origin_hostname" {
 }
 
 variable "proxied_hostnames" {
-  description = "Hostnames served through the Cloudflare proxy, used to scope the cache rule"
+  description = "Hostnames whose HTML the cache rule may cache. Not the same as what is proxied: gate and headroom are proxied too but excluded here, because caching authenticated or stateful HTML at a shared edge can serve one visitor's page to another."
   type        = list(string)
   default     = ["blog.nordbye.it", "nordbye.it", "www.nordbye.it"]
 }
 
 variable "edge_cache_ttl_seconds" {
-  description = "Edge TTL for HTML. Short so deploys appear without a purge step: blog sends no Cache-Control and the Next.js portfolio sends s-maxage=31536000, so neither origin header is worth respecting."
+  description = "Edge TTL for HTML. Cloudflare caches per POP, so at this traffic level a short TTL expires before the next visitor from that POP arrives and almost everything misses. Four hours matches the zone's browser TTL. Purge from the dashboard after publishing."
   type        = number
-  default     = 60
+  default     = 14400
 }
