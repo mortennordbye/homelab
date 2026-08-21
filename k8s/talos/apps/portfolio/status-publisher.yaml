@@ -1,6 +1,13 @@
 # Publishes live cluster facts to the portfolio-status ConfigMap every five
-# minutes. The portfolio deployment mounts that ConfigMap and nginx serves it
-# as /status.json, which the /infrastructure page fetches client-side.
+# minutes. The portfolio deployment mounts that ConfigMap and the /api/v1/infra
+# route serves it, which the /infrastructure page fetches client-side. A
+# scheduled workflow also reads that public endpoint to draw the README's live
+# status card, so the payload carries cluster-wide facts, not just portfolio's.
+#
+# Object counts come from the API server, which is authoritative. Rates,
+# utilisation and anything over a time window come from Prometheus; when that
+# call fails the field lands as null and consumers drop it rather than the whole
+# run failing.
 #
 # The ConfigMap itself is created by the CronJob, not by Git — ArgoCD ignores
 # it because it carries no tracking label, so automated prune never touches it.
@@ -10,25 +17,35 @@ metadata:
   name: status-publisher
   namespace: portfolio
 ---
-# Cluster-scoped reads: nodes for readiness + versions, plus single named
-# objects (the ArgoCD Application and the site certificate) in other
-# namespaces. resourceNames limits get to exactly those objects.
+# Cluster-scoped reads. Everything here is read-only and none of it is a Secret;
+# the payload it produces is served publicly, so the job collects counts and
+# status fields only.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: portfolio-status-publisher
 rules:
   - apiGroups: [""]
-    resources: ["nodes"]
+    resources: ["nodes", "pods", "persistentvolumeclaims"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
     verbs: ["get", "list"]
   - apiGroups: ["argoproj.io"]
     resources: ["applications"]
-    resourceNames: ["portfolio"]
-    verbs: ["get"]
+    verbs: ["get", "list"]
   - apiGroups: ["cert-manager.io"]
     resources: ["certificates"]
-    resourceNames: ["nordbye-it"]
-    verbs: ["get"]
+    verbs: ["get", "list"]
+  - apiGroups: ["keda.sh"]
+    resources: ["scaledobjects"]
+    verbs: ["get", "list"]
+  - apiGroups: ["external-secrets.io"]
+    resources: ["externalsecrets"]
+    verbs: ["get", "list"]
+  - apiGroups: ["cilium.io"]
+    resources: ["ciliumnetworkpolicies"]
+    verbs: ["get", "list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -58,10 +75,6 @@ rules:
     resources: ["configmaps"]
     resourceNames: ["portfolio-status"]
     verbs: ["get", "patch", "update"]
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    resourceNames: ["portfolio"]
-    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -91,7 +104,7 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 1
-      activeDeadlineSeconds: 120
+      activeDeadlineSeconds: 180
       template:
         metadata:
           labels:
@@ -114,25 +127,98 @@ spec:
                 # kubectl writes discovery cache under $HOME
                 - name: HOME
                   value: /tmp
+                - name: PROM
+                  value: http://kube-prometheus-stack-prometheus.monitoring:9090
               command: ["/bin/sh", "-ec"]
               args:
                 - |
+                  # One instant query. Empty on any failure, so a Prometheus
+                  # outage nulls a field instead of failing the run.
+                  prom() {
+                    curl -sf --max-time 10 --get --data-urlencode "query=$1" \
+                      "$PROM/api/v1/query" 2>/dev/null \
+                      | jq -r '.data.result[0].value[1] // empty' 2>/dev/null || true
+                  }
+                  num() { if [ -n "$1" ]; then printf '%s' "$1"; else printf 'null'; fi; }
+
                   kubectl get nodes -o json > /tmp/nodes.json
                   READY=$(jq '[.items[] | select(any(.status.conditions[]; .type=="Ready" and .status=="True"))] | length' /tmp/nodes.json)
                   TOTAL=$(jq '.items | length' /tmp/nodes.json)
                   K8S=$(jq -r '.items[0].status.nodeInfo.kubeletVersion' /tmp/nodes.json)
                   TALOS=$(jq -r '.items[0].status.nodeInfo.osImage | capture("\\((?<v>v[0-9][0-9.]*)\\)").v // empty' /tmp/nodes.json)
 
-                  kubectl get application portfolio -n argocd -o json > /tmp/app.json
-                  SYNC=$(jq -r '.status.sync.status // "Unknown"' /tmp/app.json)
-                  HEALTH=$(jq -r '.status.health.status // "Unknown"' /tmp/app.json)
-                  SYNCED_AT=$(jq -r '.status.operationState.finishedAt // empty' /tmp/app.json)
+                  # Every Application, not just portfolio's: the card shows the
+                  # cluster-wide tally and portfolio's own status comes out of
+                  # the same read.
+                  kubectl get applications -n argocd -o json > /tmp/apps.json
+                  APP_TOTAL=$(jq '.items | length' /tmp/apps.json)
+                  APP_SYNCED=$(jq '[.items[] | select(.status.sync.status=="Synced")] | length' /tmp/apps.json)
+                  APP_HEALTHY=$(jq '[.items[] | select(.status.health.status=="Healthy")] | length' /tmp/apps.json)
+                  jq '[.items[] | select(.status.operationState.finishedAt)] | sort_by(.status.operationState.finishedAt) | last // {}' /tmp/apps.json > /tmp/last.json
+                  LAST_NAME=$(jq -r '.metadata.name // empty' /tmp/last.json)
+                  LAST_AT=$(jq -r '.status.operationState.finishedAt // empty' /tmp/last.json)
+
+                  jq '.items[] | select(.metadata.name=="portfolio") | .status' /tmp/apps.json > /tmp/app.json
+                  SYNC=$(jq -r '.sync.status // "Unknown"' /tmp/app.json)
+                  HEALTH=$(jq -r '.health.status // "Unknown"' /tmp/app.json)
+                  SYNCED_AT=$(jq -r '.operationState.finishedAt // empty' /tmp/app.json)
 
                   kubectl get deployment portfolio -n portfolio -o json > /tmp/deploy.json
                   BUILD=$(jq -r '.spec.template.spec.containers[0].image | split(":") | last' /tmp/deploy.json)
                   DEPLOYED_AT=$(jq -r '[.status.conditions[] | select(.type=="Progressing")][0].lastUpdateTime // empty' /tmp/deploy.json)
 
-                  NOT_AFTER=$(kubectl get certificate nordbye-it -n cert-manager -o jsonpath='{.status.notAfter}')
+                  # Sleepers are the deployments KEDA is allowed to take to zero.
+                  # Deriving them from the ScaledObjects keeps retired apps that
+                  # are merely parked at zero (workout) out of the count.
+                  kubectl get scaledobjects -A -o json > /tmp/so.json
+                  kubectl get deployments -A -o json > /tmp/deploys.json
+                  jq -n --slurpfile so /tmp/so.json --slurpfile dep /tmp/deploys.json '
+                    [$so[0].items[]
+                      | select((.spec.minReplicaCount // 1) == 0)
+                      | {ns: .metadata.namespace, target: .spec.scaleTargetRef.name}] as $sleepers
+                    | [$dep[0].items[]
+                      | {ns: .metadata.namespace, name: .metadata.name, replicas: (.spec.replicas // 0)}] as $deps
+                    | [$sleepers[] as $s
+                        | ($deps[] | select(.ns == $s.ns and .name == $s.target))
+                        | {name: .name, state: (if .replicas == 0 then "asleep" else "awake" end)}]
+                    | sort_by(.name)' > /tmp/tiles.json
+                  SO_TOTAL=$(jq '.items | length' /tmp/so.json)
+                  ASLEEP=$(jq '[.[] | select(.state=="asleep")] | length' /tmp/tiles.json)
+                  SLEEPERS=$(jq 'length' /tmp/tiles.json)
+
+                  kubectl get certificates -A -o json > /tmp/certs.json
+                  CERT_TOTAL=$(jq '.items | length' /tmp/certs.json)
+                  CERT_NEXT=$(jq -r '[.items[].status.notAfter // empty] | sort | first // empty' /tmp/certs.json)
+                  NOT_AFTER=$(jq -r '.items[] | select(.metadata.name=="nordbye-it") | .status.notAfter // empty' /tmp/certs.json)
+
+                  kubectl get pvc -A -o json > /tmp/pvc.json
+                  VOLUMES=$(jq '.items | length' /tmp/pvc.json)
+                  CLAIMED_GIB=$(jq '[.items[].status.capacity.storage // "0"
+                    | if endswith("Ti") then (rtrimstr("Ti") | tonumber * 1024)
+                      elif endswith("Gi") then (rtrimstr("Gi") | tonumber)
+                      elif endswith("Mi") then (rtrimstr("Mi") | tonumber / 1024)
+                      else 0 end] | add | round' /tmp/pvc.json)
+
+                  PODS=$(kubectl get pods -A --field-selector=status.phase=Running -o name | wc -l | tr -d ' ')
+                  SECRETS=$(kubectl get externalsecrets -A -o name | wc -l | tr -d ' ')
+                  POLICIES=$(kubectl get ciliumnetworkpolicies -A -o name | wc -l | tr -d ' ')
+
+                  CPU_USED=$(prom 'sum(rate(container_cpu_usage_seconds_total{container!=""}[5m]))')
+                  CPU_ALLOC=$(prom 'sum(kube_node_status_allocatable{resource="cpu"})')
+                  MEM_USED=$(prom 'sum(container_memory_working_set_bytes{container!=""})')
+                  MEM_ALLOC=$(prom 'sum(kube_node_status_allocatable{resource="memory"})')
+                  RESTARTS=$(prom 'sum(increase(kube_pod_container_status_restarts_total[24h]))')
+                  IMAGES=$(prom 'count(count by (image)(kube_pod_container_info))')
+                  UPTIME_DAYS=$(prom 'min(time() - node_boot_time_seconds) / 86400')
+                  DISK_PCT=$(prom 'avg(100 - (node_filesystem_avail_bytes{mountpoint="/var"} / node_filesystem_size_bytes{mountpoint="/var"} * 100))')
+                  SYSCALLS=$(prom 'sum(increase(falcosecurity_scap_n_evts_total[24h]))')
+                  LOGS_24H=$(prom 'sum(increase(loki_distributor_bytes_received_total[24h]))')
+                  ALERTS_CRIT=$(prom 'count(ALERTS{alertstate="firing",severity="critical"}) or vector(0)')
+                  ALERTS_WARN=$(prom 'count(ALERTS{alertstate="firing",severity="warning"}) or vector(0)')
+                  REQUESTS=$(prom 'sum(increase(traefik_service_requests_total[24h]))')
+                  ERRORS=$(prom 'sum(increase(traefik_service_requests_total{code=~"5.."}[24h])) or vector(0)')
+                  SYNCS_24H=$(prom 'sum(increase(argocd_app_sync_total[24h]))')
+                  SYNCS_30D=$(prom 'sum(increase(argocd_app_sync_total[30d]))')
 
                   # Previous payload carries the per-day uptime history; keep it.
                   kubectl get configmap portfolio-status -n portfolio \
@@ -157,14 +243,85 @@ spec:
                     --arg k8s "$K8S" \
                     --arg talos "$TALOS" \
                     --arg notAfter "$NOT_AFTER" \
-                    '{
+                    --argjson appTotal "$APP_TOTAL" \
+                    --argjson appSynced "$APP_SYNCED" \
+                    --argjson appHealthy "$APP_HEALTHY" \
+                    --arg lastName "$LAST_NAME" \
+                    --arg lastAt "$LAST_AT" \
+                    --argjson syncs24h "$(num "$SYNCS_24H")" \
+                    --argjson syncs30d "$(num "$SYNCS_30D")" \
+                    --slurpfile tiles /tmp/tiles.json \
+                    --argjson scaledObjects "$SO_TOTAL" \
+                    --argjson sleepers "$SLEEPERS" \
+                    --argjson asleep "$ASLEEP" \
+                    --argjson secrets "$SECRETS" \
+                    --argjson policies "$POLICIES" \
+                    --argjson certTotal "$CERT_TOTAL" \
+                    --arg certNext "$CERT_NEXT" \
+                    --argjson syscalls "$(num "$SYSCALLS")" \
+                    --argjson cpuUsed "$(num "$CPU_USED")" \
+                    --argjson cpuAlloc "$(num "$CPU_ALLOC")" \
+                    --argjson memUsed "$(num "$MEM_USED")" \
+                    --argjson memAlloc "$(num "$MEM_ALLOC")" \
+                    --argjson pods "$PODS" \
+                    --argjson restarts "$(num "$RESTARTS")" \
+                    --argjson images "$(num "$IMAGES")" \
+                    --argjson uptimeDays "$(num "$UPTIME_DAYS")" \
+                    --argjson diskPct "$(num "$DISK_PCT")" \
+                    --argjson logs24h "$(num "$LOGS_24H")" \
+                    --argjson alertsCrit "$(num "$ALERTS_CRIT")" \
+                    --argjson alertsWarn "$(num "$ALERTS_WARN")" \
+                    --argjson requests "$(num "$REQUESTS")" \
+                    --argjson errors "$(num "$ERRORS")" \
+                    --argjson volumes "$VOLUMES" \
+                    --argjson claimedGiB "$CLAIMED_GIB" \
+                    '
+                    def r(n): if . == null then null else (. * n | round) / n end;
+                    def i: if . == null then null else round end;
+                    {
                       generatedAt: $generatedAt,
                       build: $build,
                       deployedAt: $deployedAt,
                       argocd: {sync: $sync, health: $health, syncedAt: $syncedAt},
                       nodes: {ready: $ready, total: $total},
                       versions: {kubernetes: $k8s, talos: $talos},
-                      cert: {notAfter: $notAfter}
+                      cert: {notAfter: $notAfter},
+                      gitops: {
+                        applications: {total: $appTotal, synced: $appSynced, healthy: $appHealthy},
+                        syncs24h: ($syncs24h | i),
+                        syncs30d: ($syncs30d | i),
+                        lastSync: {name: $lastName, at: $lastAt}
+                      },
+                      apps: {
+                        scaledObjects: $scaledObjects,
+                        sleepers: $sleepers,
+                        asleep: $asleep,
+                        tiles: $tiles[0]
+                      },
+                      security: {
+                        secretsAtRuntime: $secrets,
+                        secretsInGit: 0,
+                        networkPolicies: $policies,
+                        policyMode: "audit",
+                        syscalls24h: ($syscalls | i),
+                        certs: {total: $certTotal, nextExpiry: $certNext}
+                      },
+                      resources: {
+                        cpu: {used: ($cpuUsed | r(100)), allocatable: ($cpuAlloc | r(100))},
+                        memory: {usedBytes: ($memUsed | i), allocatableBytes: ($memAlloc | i)},
+                        podsRunning: $pods,
+                        restarts24h: ($restarts | i),
+                        images: ($images | i),
+                        uptimeDays: ($uptimeDays | r(10)),
+                        diskUsedPct: ($diskPct | r(10))
+                      },
+                      observability: {
+                        logBytes24h: ($logs24h | i),
+                        alerts: {critical: ($alertsCrit | i), warning: ($alertsWarn | i)},
+                        requests24h: ($requests | i),
+                        errors5xx24h: ($errors | i)
+                      },
+                      storage: {volumes: $volumes, claimedGiB: $claimedGiB}
                     }' > /tmp/new.json
 
                   # Fold this run into today's uptime bucket, keep 30 days.
