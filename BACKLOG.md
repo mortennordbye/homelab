@@ -10,6 +10,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Decide whether huntarr comes back. If yes, repoint the image at a maintained fork and drop the disable rule from `renovate.json`. If no, delete the manifest and the commented line, and drop the disable rule.
 - **Where:** `k8s/talos/apps/arr-stack/huntarr.yaml`, `k8s/talos/apps/arr-stack/kustomization.yaml` (line 15), `renovate.json` (huntarr disable rule).
 
+### Orphaned plex-media-stack TCPRoute
+- **What:** `k8s/talos/apps/plex-media-stack/tcproute.yaml` defines a `TCPRoute` for `plex-tcp` on the public gateway. It is not listed in that directory's `kustomization.yaml`, and no `TCPRoute` exists in the cluster. Plex on 32400 works through a different path, so the file has never been in effect.
+- **Why deferred:** Same judgement call as the huntarr manifest: deleting someone's disabled manifest is a decision, not a fix, and it costs nothing where it sits.
+- **Unblock:** Decide whether Plex should be routed through the gateway's `plex-tcp` entrypoint. If yes, add the file to `kustomization.yaml` and confirm the listener exists. If no, delete it.
+- **Where:** `k8s/talos/apps/plex-media-stack/tcproute.yaml`, `k8s/talos/apps/plex-media-stack/kustomization.yaml`.
+
 ### Remove the old `workout` app after logeverylift cutover
 - **What:** `logeverylift.com` was cut over from the old `workout` app to the renamed `logeverylift` app (PR #369, 2026-07-18). The `workout` namespace, Deployment, Postgres, and PVC are still present — both `workout-app` and `postgres` are scaled to 0 (ArgoCD ignores `/spec/replicas`; also declared in the manifests). The data is preserved on `postgres-pvc`; scale `postgres` back to 1 to re-access it. Nothing routes to it.
 - **Why deferred:** Kept as rollback until the owner has used `logeverylift.com` for a while and confirmed all data/history is intact. Deleting is one-way (prunes the namespace + PVC).
@@ -100,7 +106,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 ## Portfolio API
 
 ### Real stateful write endpoints
-- **What:** The write framework ships only a stateless example (`POST /api/v1/echo`). A useful write (e.g. a guestbook, or a "notify me" capture) needs a datastore.
+- **What:** `/api/v1` now serves several read routes (`blog`, `github`, `infra`, `profile`, `openapi.json`), but the only write is the stateless example `POST /api/v1/echo`. A useful write (e.g. a guestbook, or a "notify me" capture) needs a datastore.
 - **Why deferred:** Scope was the read API + a proven auth seam. Persistence is a separate design (schema, storage, retention, abuse handling).
 - **Unblock:** Pick a store (SQLite on a PVC for a single-writer app, or the existing CNPG Postgres), add a route under `src/app/api/v1/` guarded by `requireApiKey`, and wire storage + any needed CiliumNetworkPolicy egress.
 - **Where:** `portfolio/src/app/api/v1/`, `portfolio/src/lib/api.ts`.
@@ -118,13 +124,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `portfolio/src/app/api/v1/infra/route.ts`, `portfolio/next.config.ts`.
 
 ## Cluster / infra
-
-### genesis-worker-01 fell into QEMU `internal-error` once with the GPU attached
-- **What:** On 2026-08-09, roughly 50 minutes after the hyper1 iGPU was passed through, VM 134 went to `running (internal-error)` in Proxmox. The node went `NotReady`/unreachable, Talos API stopped answering, and Plex could not reschedule because it is pinned to that node. `qm stop 134 && qm start 134` recovered it and it then ran over an hour with no recurrence. Cause never established: nothing in `journalctl -u qemu-server@134`, no OOM kill in `dmesg`, and `internal-error` is QEMU giving up without a reason. The `Invalid PCI ROM header signature` line in `dmesg` is a red herring, `rombar=0` is already set so the option ROM is not used.
-- **Why deferred:** It happened once and did not reproduce. Chasing an unreproducible QEMU fault is open-ended, and the cluster tolerates that node being down: etcd keeps quorum and only Plex is pinned to it.
-- **Most likely cause:** hyper1 has 31 GiB total. PCI passthrough pins the guest's entire RAM permanently, so worker-01's 16 GiB can never be reclaimed, plus ctrl-01's 8 GiB, leaving roughly 1 GiB for the host. That is a very thin margin even though no OOM was recorded.
-- **Unblock:** If it recurs, first drop `genesis-worker-01` from `memory_mb = 16384` to `12288` in `terraform.tfvars`, giving hyper1 about 4 GiB of real headroom; actual usage on that node is far below 16 GiB. Watch with `kubectl get node genesis-worker-01`. If it still recurs, remove the passthrough: `qm set 134 --delete hostpci0 && qm start 134`, then drop `pci_mapping` from `terraform.tfvars`. Nothing except Plex hardware transcoding depends on the GPU, and software transcoding on an i5-11400T is adequate.
-- **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/terraform.tfvars` (`genesis-worker-01` `memory_mb`, `pci_mapping`), `docs/plex-hw-transcode.md`.
 
 ### Run a Terraform apply before 2026-12-29 or the cluster credentials lapse
 - **What:** The talosconfig and kubeconfig client certificates both expire **2026-12-29**. The provider reissues them automatically, but only during a `terraform apply`, and only once they are inside their renewal window. `talos_cluster_kubeconfig` uses `certificate_renewal_duration`, now widened from the 720h default to `2160h` (90 days), so any apply after roughly 2026-09-30 renews the kubeconfig. `talos_machine_secrets` has a **hardcoded 30 day** window for the talosconfig client certificate, so that one only renews on an apply between 2026-11-29 and 2026-12-29.
@@ -161,12 +160,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Confirm events flow (`{job="kubernetes-events"}` in Grafana) and watch Loki disk usage for a few days. To resize: ensure the `proxmox-local` StorageClass has `allowVolumeExpansion: true`, set the new `size:` in `values.yaml`, then `kubectl delete sts loki --cascade=orphan` and `kubectl patch pvc` on each Loki PVC (or recreate the StatefulSet) so the larger claim takes effect.
 - **Where:** `k8s/talos/infra/loki/values.yaml` (`singleBinary.persistence.size`).
 
-### Cilium BPF LB map corruption after agent rollout
-- **What:** The 2026-05-16 `policyAuditMode` + CNP rollout (commit `bd89b22`) left `genesis-ctrl-02`'s BPF LoadBalancer map with frontend entries for `10.3.10.101` and `10.3.10.102` but no backend slots. Because that node also held the L2 announce lease for both traefik VIPs, all incoming traffic was ARP-resolved to ctrl-02 and then blackholed in BPF. Cilium's userspace `service list` was correct; only the kernel BPF map drifted. Manifested as random connect-refused on all internal sites until `kubectl delete pod -n kube-system cilium-vvj48` forced reconciliation; the lease re-elected to worker-02/worker-01 (both with healthy BPF state) and stayed there. Same agents on other nodes logged the same startup error class (`delete <vip>@8: key does not exist` against `cilium_l2_responder_v4`) but recovered.
-- **Why deferred:** Live-fixed by kicking the pod. Root cause (why ctrl-02 didn't reconcile while peers did) not isolated — could be a Cilium upstream bug, a quirk of `policyAuditMode` enablement, or a race between `cilium-operator` leader election and L2 responder map reconcile during a fast-rolling DS update.
-- **Unblock:** (1) Repro check — next time `k8s/talos/infra/cilium/values.yaml` changes and the DS rolls, immediately run on each node: `cilium-dbg bpf lb list | grep <vip>` and confirm every frontend has a paired backend slot. (2) Search Cilium GitHub issues for "l2 responder map" + "key does not exist" in the chart version pinned in `k8s/talos/infra/cilium/kustomization.yaml`. (3) Consider adding a post-sync health check that fails if any node has an orphan frontend. (4) Cilium has a `clean-cilium-bpf-state` initContainer flag — evaluate enabling it on rollouts (trade-off: clean state vs. brief data-plane drop on every restart).
-- **Where:** `k8s/talos/infra/cilium/values.yaml`, `k8s/talos/infra/cilium/l2-announcement-policy.yaml`, Cilium agent logs (`module=agent.datapath.l2-responder`).
-
 ### Close the Cilium policy audit and move to enforcement
 - **What:** The cluster runs `policyAuditMode: true` (`k8s/talos/infra/cilium/values.yaml`) — CiliumNetworkPolicies log but never drop. To enforce, every legitimate flow must be whitelisted first. A 3-minute Hubble snapshot (2026-06-29) showed these `AUDIT` (would-be-denied) flows — all pre-existing infra, none from the KEDA HTTP wake-from-zero apps added the same day:
   - `monitoring/grafana → kube-apiserver:6443` (egress)
@@ -175,7 +168,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
   - `argocd/argocd-repo-server → world:443` (egress; git/helm fetch)
   - `plex-media-stack/seerr ↔ traefik:8444` (verify direction before writing the rule)
 - **Why deferred:** The Hubble ring buffer only retained ~3 minutes (flooded by `VLAN_FILTERED` noise), and there was no Prometheus history of policy verdicts (the `policy` Hubble metric wasn't enabled). 3 minutes can't capture periodic flows (cron, cert-manager renewals, backups, KEDA wake events, infrequently-used apps), so enforcing off that sample would break things. The `policy` Hubble metric was enabled on 2026-06-29 to record verdicts over Prometheus' 7d retention — but the audit window hasn't elapsed yet.
-- **Unblock:** After ≥7d, query `sum by (source, destination, source_namespace, destination_namespace, direction) (increase(hubble_policy_verdicts_total{action="audit"}[7d]))` (verified label keys: `action="audit"` is the would-be-denied verdict; `source`/`destination` = workload names, plus the `*_namespace` labels — matching the `workload-name` / `labelsContext` config in cilium values), add an allow rule for each gap (start with the 5 above), then flip `policyAuditMode: false` **namespace-by-namespace**, not cluster-wide. NOTE: enabling the `policy` metric rolls the Cilium DaemonSet — see "Cilium BPF LB map corruption after agent rollout" above; verify per-node BPF LB state right after the roll.
+- **Unblock:** After ≥7d, query `sum by (source, destination, source_namespace, destination_namespace, direction) (increase(hubble_policy_verdicts_total{action="audit"}[7d]))` (verified label keys: `action="audit"` is the would-be-denied verdict; `source`/`destination` = workload names, plus the `*_namespace` labels — matching the `workload-name` / `labelsContext` config in cilium values), add an allow rule for each gap (start with the 5 above), then flip `policyAuditMode: false` **namespace-by-namespace**, not cluster-wide. NOTE: enabling the `policy` metric rolls the Cilium DaemonSet — see the 2026-05-16 BPF LB map corruption record in `docs/incidents.md`; verify per-node BPF LB state right after the roll.
 - **Where:** `k8s/talos/infra/cilium/values.yaml` (audit mode + the metric), and the per-app CNPs: `k8s/talos/infra/kube-prometheus-stack/ciliumnetworkpolicy.yaml`, `k8s/talos/infra/loki/ciliumnetworkpolicy.yaml`, `k8s/talos/infra/argocd/ciliumnetworkpolicy.yaml`, `k8s/talos/apps/plex-media-stack/ciliumnetworkpolicies.yaml`.
 
 ### Cilium L2 announce VIP co-location risk
@@ -183,6 +176,20 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** Out of scope for the BPF fix above; needs a policy design decision.
 - **Unblock:** Split into two separate `CiliumL2AnnouncementPolicy` resources with disjoint `nodeSelector`s (e.g. private → ctrl-only, public → worker-only) so an election blip never blackholes both. Validate that L2 lease params (`leaseDuration` / `leaseRenewDeadline` / `leaseRetryPeriod`) are set conservatively — defaults can re-elect aggressively under control-plane load.
 - **Where:** `k8s/talos/infra/cilium/l2-announcement-policy.yaml`.
+
+## Repo hygiene
+
+### Terraform plan files are not gitignored
+- **What:** `terraform apply -out=tfplan` writes a plan file that is not matched by any `.gitignore` rule. Plan files embed variable values, and both Cloudflare configurations declare `cloudflare_api_token` as sensitive, so a committed plan could leak a token. One was found and deleted during the 2026-08-21 cleanup; it did not contain the token, but nothing prevents the next one from being committed.
+- **Why deferred:** `.gitignore` had an unrelated uncommitted edit in the working tree at the time, so adding a line would have mixed two changes.
+- **Unblock:** Add `tfplan` and `*.tfplan` to `.gitignore`.
+- **Where:** `.gitignore`.
+
+### Local-only AI work is not backed up
+- **What:** `scripts/backup-secrets.sh` covers CV drafts, blog style docs, Talos credentials and the tfvars files. It does not cover `ai/projects/`, `ai/prompts/`, `.inspiration/` or `.notes/`. That leaves the `jarvis` project, the ERLEND/MORTEN persona documents and the prompt-eval work with no backup at all.
+- **Why deferred:** The manifest was written for secrets, and it is not obvious which of these are worth keeping versus genuinely disposable.
+- **Unblock:** Decide which are worth keeping and add them to `.backup-manifest`. The persona markdown files are ~28K and clearly worth it; the 234M `slackdump_20260602_122707.zip` next to them probably is not, and may not belong on the laptop at all given it is a Slack export.
+- **Where:** `.backup-manifest`, `ai/projects/jarvis/`, `ai/prompts/erlendgpt/`.
 
 ## Media stack observability (arr-stack)
 
