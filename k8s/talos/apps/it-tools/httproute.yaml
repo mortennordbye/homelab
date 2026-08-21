@@ -3,6 +3,9 @@ kind: HTTPRoute
 metadata:
   name: it-tools
   namespace: it-tools
+  annotations:
+    # Static SPA, no auth, so the edge can front it and cache it.
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
