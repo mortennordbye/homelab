@@ -4,17 +4,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### Orphaned huntarr manifest
-- **What:** `k8s/talos/apps/arr-stack/huntarr.yaml` is commented out of the arr-stack `kustomization.yaml`, nothing is running in the cluster, and `ghcr.io/plexguide/huntarr` no longer resolves in any registry (the upstream repo is gone). Renovate is now explicitly disabled for that image, which was the source of a permanent "Package lookup failures" problem on the dependency dashboard.
-- **Why deferred:** Deleting someone's disabled app manifest is a judgement call, not a dependency fix. The Renovate disable removes the noise either way.
-- **Unblock:** Decide whether huntarr comes back. If yes, repoint the image at a maintained fork and drop the disable rule from `renovate.json`. If no, delete the manifest and the commented line, and drop the disable rule.
-- **Where:** `k8s/talos/apps/arr-stack/huntarr.yaml`, `k8s/talos/apps/arr-stack/kustomization.yaml` (line 15), `renovate.json` (huntarr disable rule).
-
-### Orphaned plex-media-stack TCPRoute
-- **What:** `k8s/talos/apps/plex-media-stack/tcproute.yaml` defines a `TCPRoute` for `plex-tcp` on the public gateway. It is not listed in that directory's `kustomization.yaml`, and no `TCPRoute` exists in the cluster. Plex on 32400 works through a different path, so the file has never been in effect.
-- **Why deferred:** Same judgement call as the huntarr manifest: deleting someone's disabled manifest is a decision, not a fix, and it costs nothing where it sits.
-- **Unblock:** Decide whether Plex should be routed through the gateway's `plex-tcp` entrypoint. If yes, add the file to `kustomization.yaml` and confirm the listener exists. If no, delete it.
-- **Where:** `k8s/talos/apps/plex-media-stack/tcproute.yaml`, `k8s/talos/apps/plex-media-stack/kustomization.yaml`.
+### Two orphaned app manifests
+- **What:** Both are committed but inert. `arr-stack/huntarr.yaml` is commented out of its `kustomization.yaml`, nothing runs in the cluster, and `ghcr.io/plexguide/huntarr` no longer resolves anywhere (upstream repo gone); Renovate is explicitly disabled for it, which was the source of a permanent "Package lookup failures" entry on the dependency dashboard. `plex-media-stack/tcproute.yaml` defines a `TCPRoute` for `plex-tcp` on the public gateway, is absent from its `kustomization.yaml`, and no `TCPRoute` exists in the cluster — Plex on 32400 reaches the backend by another path, so it has never been in effect.
+- **Why deferred:** Deleting someone's disabled manifest is a judgement call, not a fix, and neither costs anything where it sits. The Renovate disable already removes the huntarr noise.
+- **Unblock:** huntarr — decide whether it comes back; if yes repoint at a maintained fork and drop the Renovate rule, if no delete the manifest, the commented line and the rule. TCPRoute — decide whether Plex should route through the gateway's `plex-tcp` entrypoint; if yes add it to `kustomization.yaml` and confirm the listener exists, if no delete it.
+- **Where:** `k8s/talos/apps/arr-stack/{huntarr.yaml,kustomization.yaml}`, `renovate.json` (huntarr disable rule), `k8s/talos/apps/plex-media-stack/{tcproute.yaml,kustomization.yaml}`.
 
 ### Remove the old `workout` app after logeverylift cutover
 - **What:** `logeverylift.com` was cut over from the old `workout` app to the renamed `logeverylift` app (PR #369, 2026-07-18). The `workout` namespace, Deployment, Postgres, and PVC are still present — both `workout-app` and `postgres` are scaled to 0 (ArgoCD ignores `/spec/replicas`; also declared in the manifests). The data is preserved on `postgres-pvc`; scale `postgres` back to 1 to re-access it. Nothing routes to it.
@@ -66,17 +60,21 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Portfolio
 
-### The fun room's printer switches may not respond to `E`
+### Fun room: real-device pass, printer switches and melody
 - **What:** The printer's rocker switches read their prompt correctly under the crosshair, but pressing `E` was reported to produce no visible change in the ON/OFF pill. Never reproduced in a browser with working pointer lock, so it may be a headless-harness artifact rather than a real fault.
-- **Why deferred:** Needs pointer lock, which headless Chromium does not have, so it cannot be checked from the test harness at all.
-- **Unblock:** Open `/fun` in a real browser, look at a printer switch, press `E`, and watch the pill. If it does not flip, instrument `onActivate` in `Interactive` — the registry hands activation the ref payload, so the suspect is either hover resolution or the keydown listener's `enabled` gate.
-- **Where:** `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`.
 
-### Fun room: melody, and a real-device pass
-- **What:** Two loose ends in `/fun`. The synthesised rickroll's third line ("never gonna run around and desert you") is the least confident transcription and has never been listened to by anyone. Separately, nothing here has been driven on real hardware: mouse-look and the cold-load loading bar have never run in a browser with working pointer lock, and the touch controls added 2026-07-20 (drag-to-look, tap-to-activate, walk stick, entry gate) were verified only by dispatching synthetic `TouchEvent`s in headless Chromium. That proves the wiring and says nothing about feel — look sensitivity, stick size and placement, and the tap slop threshold are all guesses at this point.
+  Two further loose ends in `/fun`. The synthesised rickroll's third line ("never gonna run around and desert you") is the least confident transcription and has never been listened to by anyone. And nothing here has been driven on real hardware: mouse-look and the cold-load loading bar have never run in a browser with working pointer lock, and the touch controls added 2026-07-20 (drag-to-look, tap-to-activate, walk stick, entry gate) were verified only by dispatching synthetic `TouchEvent`s in headless Chromium. That proves the wiring and says nothing about feel — look sensitivity, stick size and placement, and the tap slop threshold are all guesses at this point.
 - **Why deferred:** Both need a human: one at a real browser with sound, one on an actual phone. Neither is checkable from headless Chromium.
-- **Unblock:** Open `/fun` on a desktop, listen to the melody, hard-reload with cache disabled to see the loading bar. Then open it on a phone and tune `LOOK_SENS`, `TAP_SLOP_PX` and `STICK_R` in `Touch.tsx` against how it actually feels.
-- **Where:** `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Touch.tsx`, `docs/fun-room-guide.md` (known gaps).
+- **Unblock:** Open `/fun` in a real browser, look at a printer switch, press `E`, and watch the pill. If it does not flip, instrument `onActivate` in `Interactive` — the registry hands activation the ref payload, so the suspect is either hover resolution or the keydown listener's `enabled` gate. Open `/fun` on a desktop, listen to the melody, hard-reload with cache disabled to see the loading bar. Then open it on a phone and tune `LOOK_SENS`, `TAP_SLOP_PX` and `STICK_R` in `Touch.tsx` against how it actually feels.
+- **Where:** `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`; `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Touch.tsx`, `docs/fun-room-guide.md` (known gaps).
+
+### Lint debt: react-hooks v6 findings and the ESLint 9 → 10 bump
+- **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI.
+
+  Separately, `eslint` still needs bumping to `^10` in `portfolio/package.json`. Originally paired with a TypeScript 5 → 6 bump; the TS half has since shipped (`typescript` is now `^6.0.0`), leaving only ESLint.
+- **Why deferred:** Fixing them means refactoring 5 working components (effect restructuring, moving three.js texture setup into the loader callback) with visual/behavioral risk that needs browser re-verification — out of scope for the CI-wiring change that surfaced them. The R3F texture mutations may be acceptable as-is (idiomatic three.js); decide per-case rather than blanket-refactor.
+- **Unblock:** Refactor each component (or add per-line disables where the pattern is intentional), verify in the browser via `make up`, then remove the two `warn` overrides from `eslint.config.mjs`. Wait for an `eslint-config-next` release built on `typescript-eslint@9` (supports ESLint 10). Then bump, and run a containerised `make lint` to confirm the config still loads.
+- **Where:** `portfolio/eslint.config.mjs`, `portfolio/src/components/{CommandPalette,FooterStamp,InlineGlobe,InlineGlobeScene}.tsx`, `portfolio/src/components/work/ArchitectureDiagram.tsx`, `portfolio/src/components/fun/{Touch,FirstPerson,interaction}.tsx`; `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
 
 ### Image optimization pass
 - **What:** Re-encode the migrated case-study images via `sharp` to a normalised max-width and AVIF + WebP. Drop any unused PNGs that weren't migrated.
@@ -84,38 +82,21 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Add a `scripts/optimize-images.ts` step that runs `sharp` over `public/images/`.
 - **Where:** `portfolio/public/images/`.
 
-### Fix react-hooks v6 lint findings (currently downgraded to warnings)
-- **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI.
-- **Why deferred:** Fixing them means refactoring 5 working components (effect restructuring, moving three.js texture setup into the loader callback) with visual/behavioral risk that needs browser re-verification — out of scope for the CI-wiring change that surfaced them. The R3F texture mutations may be acceptable as-is (idiomatic three.js); decide per-case rather than blanket-refactor.
-- **Unblock:** Refactor each component (or add per-line disables where the pattern is intentional), verify in the browser via `make up`, then remove the two `warn` overrides from `eslint.config.mjs`.
-- **Also:** the fun room's touch support (2026-07-20) took the count from 17 to 24 warnings, all `react-hooks/immutability` and all the same two intentional patterns: mutating the three.js camera inside `useFrame`, and writing to a ref that arrives as a prop (`move.current` in `TouchStick`). Both are correct React/R3F; they need per-line disables rather than a refactor.
-- **Where:** `portfolio/eslint.config.mjs`, `portfolio/src/components/{CommandPalette,FooterStamp,InlineGlobe,InlineGlobeScene}.tsx`, `portfolio/src/components/work/ArchitectureDiagram.tsx`, `portfolio/src/components/fun/{Touch,FirstPerson,interaction}.tsx`.
-
 ### Playwright smoke test suite for portfolio
 - **What:** A small containerized Playwright suite that builds the prod image, runs the container, and asserts key routes return 200 with expected content plus `/healthz`. Wire into `.github/workflows/ci-portfolio.yaml` as a job after lint/typecheck/build.
 - **Why deferred:** Tier 2 of the linting/testing rollout (2026-07-08); user approved shipping lint + typecheck + build gates first. Adds ~2–3 min to CI and needs a committed Playwright config decision (image, route list).
 - **Unblock:** Decide the route/assertion list, add `portfolio/tests/` with a Playwright config running via `mcr.microsoft.com/playwright` Docker image, add the CI job.
 - **Where:** `.github/workflows/ci-portfolio.yaml`, new `portfolio/tests/`.
 
-### ESLint 9 → 10 bump
-- **What:** Bump `eslint` to `^10` in `portfolio/package.json`. Originally paired with a TypeScript 5 → 6 bump; the TS half has since shipped (`typescript` is now `^6.0.0`), leaving only ESLint.
-- **Why deferred:** `eslint-config-next@16.2.10` transitively bundles `typescript-eslint@8`, whose ESLint peer range tops out at 9. Forcing the major risks a peer/plugin mismatch with zero runtime benefit (lint only).
-- **Unblock:** Wait for an `eslint-config-next` release built on `typescript-eslint@9` (supports ESLint 10). Then bump, and run a containerised `make lint` to confirm the config still loads.
-- **Where:** `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
-
 ## Portfolio API
 
-### Real stateful write endpoints
+### Portfolio API writes: a real endpoint, and the auth to match
 - **What:** `/api/v1` now serves several read routes (`blog`, `github`, `infra`, `profile`, `openapi.json`), but the only write is the stateless example `POST /api/v1/echo`. A useful write (e.g. a guestbook, or a "notify me" capture) needs a datastore.
-- **Why deferred:** Scope was the read API + a proven auth seam. Persistence is a separate design (schema, storage, retention, abuse handling).
-- **Unblock:** Pick a store (SQLite on a PVC for a single-writer app, or the existing CNPG Postgres), add a route under `src/app/api/v1/` guarded by `requireApiKey`, and wire storage + any needed CiliumNetworkPolicy egress.
-- **Where:** `portfolio/src/app/api/v1/`, `portfolio/src/lib/api.ts`.
 
-### Authentik forward-auth option for writes
-- **What:** Writes currently authenticate with a static API key. For SSO-consistent, per-user writes, route the write paths through Authentik (Traefik forward-auth / OIDC) instead.
-- **Why deferred:** The static key is simpler and sufficient to ship the framework; Authentik wiring only pays off once a real user-facing write exists.
-- **Unblock:** Add an Authentik provider + Traefik forward-auth middleware on the `/api/v1` POST paths, and relax `requireApiKey` to accept the forwarded identity.
-- **Where:** `portfolio/src/lib/api.ts`, `k8s/talos/apps/portfolio/httproute.yaml`, Authentik config.
+  Writes currently authenticate with a static API key. For SSO-consistent, per-user writes, route the write paths through Authentik (Traefik forward-auth / OIDC) instead.
+- **Why deferred:** Scope was the read API + a proven auth seam. Persistence is a separate design (schema, storage, retention, abuse handling).
+- **Unblock:** Pick a store (SQLite on a PVC for a single-writer app, or the existing CNPG Postgres), add a route under `src/app/api/v1/` guarded by `requireApiKey`, and wire storage + any needed CiliumNetworkPolicy egress. Add an Authentik provider + Traefik forward-auth middleware on the `/api/v1` POST paths, and relax `requireApiKey` to accept the forwarded identity.
+- **Where:** `portfolio/src/app/api/v1/`, `portfolio/src/lib/api.ts`; `portfolio/src/lib/api.ts`, `k8s/talos/apps/portfolio/httproute.yaml`, Authentik config.
 
 ### Silence the Turbopack NFT over-trace on /api/v1/infra
 - **What:** `next build` warns that the `fs.readFile` in the infra route causes Node File Tracing to sweep the whole project into `.next/standalone` (locally this pulled in `latex/`, `out/`, CV markdown). The shipped Docker image is unaffected because the build stage only `COPY`s `src`/`public`/config, but the warning is noise and the local standalone is bloated.
@@ -178,12 +159,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `k8s/talos/infra/cilium/l2-announcement-policy.yaml`.
 
 ## Repo hygiene
-
-### Terraform plan files are not gitignored
-- **What:** `terraform apply -out=tfplan` writes a plan file that is not matched by any `.gitignore` rule. Plan files embed variable values, and both Cloudflare configurations declare `cloudflare_api_token` as sensitive, so a committed plan could leak a token. One was found and deleted during the 2026-08-21 cleanup; it did not contain the token, but nothing prevents the next one from being committed.
-- **Why deferred:** `.gitignore` had an unrelated uncommitted edit in the working tree at the time, so adding a line would have mixed two changes.
-- **Unblock:** Add `tfplan` and `*.tfplan` to `.gitignore`.
-- **Where:** `.gitignore`.
 
 ### Local-only AI work is not backed up
 - **What:** `scripts/backup-secrets.sh` covers CV drafts, blog style docs, Talos credentials and the tfvars files. It does not cover `ai/projects/`, `ai/prompts/`, `.inspiration/` or `.notes/`. That leaves the `jarvis` project, the ERLEND/MORTEN persona documents and the prompt-eval work with no backup at all.

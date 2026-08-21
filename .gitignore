@@ -26,6 +26,8 @@ vault_password.txt
 *.tfvars.json
 *.auto.tfvars
 *.tfplan
+# `-out=tfplan` writes a file with no extension, which *.tfplan does not match.
+tfplan
 .terraform/
 .terraform.lock.hcl
 .terraform.tfstate.lock.info
@@ -123,3 +125,8 @@ Thumbs.db
 
 # Local reference photos (interior/hardware). Not part of the repo.
 .inspiration/
+
+# Prompt evaluation harness. Local work in progress — kept out of the repo
+# until it has been run against real cases and is worth publishing.
+ai/projects/prompt-eval/
+ai/skills/prompt-eval-loop/
