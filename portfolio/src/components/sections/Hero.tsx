@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -77,11 +77,11 @@ export function Hero() {
       <div className="mx-auto grid max-w-[var(--container-wide)] grid-cols-12 gap-8 px-6 pb-20 md:px-8 md:pb-28">
         <div className="col-span-12 md:col-span-8">
           <p className="eyebrow flex items-center gap-2">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)]" />
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
             Available · Oslo &amp; remote
           </p>
 
-          <p className="mt-8 font-mono text-sm text-fg-3">
+          <p className="mt-8 text-sm tracking-[0.01em] text-fg-3">
             {site.firstName} {site.lastName}
           </p>
 
@@ -89,7 +89,7 @@ export function Hero() {
             style={reduce ? undefined : { y: yWord, opacity }}
             className="mt-2 text-display-lg text-fg"
           >
-            I am a <Typewriter words={site.hero.rotating} reduce={!!reduce} />
+            I am a <RotatingRole words={site.hero.rotating} reduce={!!reduce} />
           </motion.h1>
 
           <p className="mt-8 max-w-2xl text-lg text-fg-2 md:text-xl">
@@ -142,7 +142,7 @@ export function Hero() {
                   aria-hidden
                   className="absolute top-2 left-2 flex items-center gap-1.5 rounded border border-accent/30 bg-bg-2/60 px-1.5 py-1 font-mono text-[9px] tracking-[0.18em] text-fg-2"
                 >
-                  <span className="room-feed__pip size-[5px] rounded-full bg-accent" />
+                  <span className="size-[5px] rounded-full bg-accent" />
                   3D
                 </span>
                 <span
@@ -156,8 +156,8 @@ export function Hero() {
               </span>
               <span className="block">
                 <span className="block text-sm font-semibold text-fg">Walk through the room</span>
-                <span className="mt-1 block font-mono text-[10.5px] tracking-[0.12em] text-fg-3 uppercase">
-                  genesis · oslo · walk around it
+                <span className="mt-1 block text-[13px] text-fg-3">
+                  Genesis, in Oslo. Walk around it.
                 </span>
               </span>
             </Link>
@@ -227,7 +227,20 @@ export function Hero() {
   );
 }
 
-function Typewriter({
+/**
+ * The role line rotates, but it does not type.
+ *
+ * A character-by-character typewriter with a blinking block cursor is a
+ * terminal impression, and the hero is trying to be a room with an object in
+ * it. This cross-fades instead: the word is replaced, not spelled out. The
+ * rotation still carries the content — several true job titles rather than
+ * one — without borrowing the mannerism.
+ *
+ * The invisible ghost stays. It is sized by the browser to the widest entry
+ * and holds the line width constant, which is what keeps the h1 from
+ * reflowing on every change (mobile CLS was 0.30 before it existed).
+ */
+function RotatingRole({
   words,
   reduce,
 }: {
@@ -235,64 +248,41 @@ function Typewriter({
   reduce: boolean;
 }) {
   const [idx, setIdx] = useState(0);
-  const [text, setText] = useState(words[0] ?? "");
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (reduce) return;
-    const word = words[idx] ?? "";
-    const done = text === word;
-    const empty = text === "";
-    const delay = deleting
-      ? empty
-        ? 220
-        : 45
-      : done
-        ? 1600
-        : 75;
+    if (reduce || words.length < 2) return;
+    const t = window.setInterval(() => {
+      setIdx((i) => (i + 1) % words.length);
+    }, 3800);
+    return () => window.clearInterval(t);
+  }, [reduce, words.length]);
 
-    const t = window.setTimeout(() => {
-      if (!deleting && done) {
-        setDeleting(true);
-      } else if (deleting && empty) {
-        setDeleting(false);
-        setIdx((i) => (i + 1) % words.length);
-      } else if (deleting) {
-        setText((s) => s.slice(0, -1));
-      } else {
-        setText(word.slice(0, text.length + 1));
-      }
-    }, delay);
-    return () => window.clearTimeout(t);
-  }, [text, deleting, idx, words, reduce]);
-
-  // Reserve space for the longest word so the h1 never reflows as letters
-  // type/delete — was a major CLS contributor (mobile CLS 0.30 → target <0.1).
-  // Inline-grid stacks the visible text on top of an invisible "ghost" sized
-  // by the browser to the widest entry; the line wraps consistently from the
-  // first paint instead of jumping each frame.
   const longest = words.reduce(
     (a, b) => (b.length > a.length ? b : a),
     words[0] ?? "",
   );
 
   return (
-    <span style={{ display: "inline-grid" }}>
+    <span style={{ display: "inline-grid", verticalAlign: "top" }}>
       <span
         aria-hidden
         style={{ gridArea: "1 / 1", visibility: "hidden", whiteSpace: "nowrap" }}
       >
         {longest}
       </span>
-      <span style={{ gridArea: "1 / 1" }} className="text-accent">
-        {text}
-        <span
-          aria-hidden
-          className="ml-0.5 inline-block w-[0.55ch] -translate-y-[0.05em] animate-pulse text-accent"
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={words[idx]}
+          style={{ gridArea: "1 / 1", whiteSpace: "nowrap" }}
+          className="text-accent"
+          initial={reduce ? false : { opacity: 0, y: "0.14em" }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduce ? undefined : { opacity: 0, y: "-0.1em" }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
-          |
-        </span>
-      </span>
+          {words[idx]}
+        </motion.span>
+      </AnimatePresence>
     </span>
   );
 }
