@@ -13,6 +13,7 @@ import { BlendFunction, ToneMappingMode } from "postprocessing";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { RoomLoading } from "@/components/fun/RoomLoading";
 import * as THREE from "three";
 import type { PointerLockControls as PointerLockControlsImpl } from "three-stdlib";
 import { EYE, FirstPerson, isTyping, type MoveInput } from "./FirstPerson";
@@ -284,26 +285,7 @@ function SceneReady({ onReady }: { onReady: () => void }) {
  * does not produce a single frame of flash before the room appears.
  */
 function LoadingScreen({ progress, done }: { progress: number; done: boolean }) {
-  return (
-    <div
-      aria-hidden={done}
-      className="pointer-events-none absolute inset-0 z-40 grid place-content-center bg-[#04070a] transition-opacity duration-700"
-      style={{ opacity: done ? 0 : 1 }}
-    >
-      <p className="eyebrow mb-6 text-center text-[0.65rem] text-white/35">
-        nordbye.it · the room
-      </p>
-      <div className="h-[3px] w-[260px] overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full bg-accent transition-[width] duration-300 ease-out"
-          style={{ width: `${Math.max(4, Math.round(progress))}%` }}
-        />
-      </div>
-      <p className="mt-4 text-center font-mono text-[11px] tabular-nums text-white/30">
-        {done ? "ready" : `loading the room · ${Math.round(progress)}%`}
-      </p>
-    </div>
-  );
+  return <RoomLoading progress={progress} done={done} />;
 }
 
 /**

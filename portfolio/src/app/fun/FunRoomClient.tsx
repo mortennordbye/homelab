@@ -9,14 +9,13 @@
 import dynamic from "next/dynamic";
 import type { CareerData, ShelfData } from "@/components/fun/shelf";
 import type { SourceExcerpt } from "@/lib/source-excerpt";
+import { RoomLoading } from "@/components/fun/RoomLoading";
 
 const FunRoom = dynamic(() => import("@/components/fun/FunRoom"), {
   ssr: false,
-  loading: () => (
-    <div className="fixed inset-0 z-[200] grid place-content-center bg-[#04070a] font-mono text-sm text-white/40">
-      warming up the room…
-    </div>
-  ),
+  // Same screen the room shows once it has mounted, so the handover from
+  // "chunk loading" to "assets loading" is not a visible cut.
+  loading: () => <RoomLoading />,
 });
 
 export default function FunRoomClient({

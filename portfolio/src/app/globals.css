@@ -171,39 +171,23 @@ body {
   mix-blend-mode: var(--grain-mix);
 }
 
-/* Oslo marker — HTML/CSS pulse rendered above the dimmed globe canvas so
-   it stays at full brightness. Position is set by JS each frame from the
-   3D scene's OsloProjector (transform: translate(...) translate(-50%,-50%)).
-   The halo intensity is driven by --oslo-key (0.25 .. 1) — InlineGlobe.tsx
-   walks a Morse schedule for "MORTEN VICTOR NORDBYE" and keys the dot
-   on/off via this variable. Reduced-motion users get a steady 0.55 glow. */
-.oslo-marker {
-  --oslo-key: 0.4;
-  width: 14px;
-  height: 14px;
-  border-radius: 9999px;
-  background: var(--accent);
-  box-shadow:
-    0 0 calc(8px * var(--oslo-key))  rgba(93, 183, 255, calc(0.4 + 0.6 * var(--oslo-key))),
-    0 0 calc(20px * var(--oslo-key)) rgba(93, 183, 255, calc(0.25 + 0.5 * var(--oslo-key))),
-    0 0 calc(42px * var(--oslo-key)) rgba(93, 183, 255, calc(0.15 + 0.35 * var(--oslo-key)));
-  transition: box-shadow 70ms linear;
-}
-
+/* OSLO label — HTML rather than 3D text so it stays crisp at any size. The
+   scene writes this element's transform and opacity each frame from the pin's
+   projected position; the mark itself is geometry pushed into the globe, so
+   it is occluded by the sphere without any culling maths here. */
 .oslo-marker-label {
   position: absolute;
   left: 50%;
-  /* Sits above the expanding pulse ring with a short stem. */
-  bottom: calc(100% + 60px);
+  bottom: 44px;
   transform: translateX(-50%);
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: 0.18em;
-  color: var(--accent);
+  letter-spacing: 0.22em;
+  color: #bcdcbe;
   text-shadow:
-    0 0 8px rgba(93, 183, 255, 0.6),
-    0 0 14px rgba(93, 183, 255, 0.35);
+    0 0 10px rgba(0, 0, 0, 0.9),
+    0 0 22px rgba(var(--accent-rgb), 0.45);
   white-space: nowrap;
   pointer-events: none;
 }
@@ -212,37 +196,31 @@ body {
   content: "";
   position: absolute;
   left: 50%;
-  top: calc(100% + 2px);
+  top: calc(100% + 3px);
   width: 1px;
-  height: 42px;
-  background: linear-gradient(to bottom, var(--accent), rgba(93, 183, 255, 0));
+  height: 32px;
+  background: linear-gradient(to bottom, rgba(188, 220, 190, 0.85), rgba(188, 220, 190, 0));
   transform: translateX(-50%);
 }
 
-.oslo-marker::before,
-.oslo-marker::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 9999px;
-  border: 2px solid var(--accent);
-  opacity: 0;
-  animation: oslo-pulse 2.6s ease-out infinite;
+/* Painterly finish over the hero render. The scene is lit like a photograph;
+   these three give it the surface of a painting — the light of the window,
+   chiaroscuro falloff into the copy column, and the tooth of the canvas. */
+.room-light {
+  background: radial-gradient(46% 44% at 18% 8%, rgba(255, 206, 138, 0.16), transparent 68%);
+  mix-blend-mode: screen;
 }
 
-.oslo-marker::after {
-  animation-delay: 1.3s;
+.room-vignette {
+  background: radial-gradient(115% 85% at 62% 42%, transparent 30%, rgba(8, 5, 3, 0.55) 72%, rgba(6, 4, 2, 0.94) 100%);
 }
 
-@keyframes oslo-pulse {
-  0%   { transform: scale(1);   opacity: 0.9; }
-  100% { transform: scale(4.5); opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .oslo-marker { --oslo-key: 0.55; }
-  .oslo-marker::before,
-  .oslo-marker::after { animation: none; opacity: 0; }
+.room-weave {
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px);
 }
 
 /* Operations centre — the room takes the whole viewport, so the site header,
@@ -258,6 +236,78 @@ body.fun-immersive > footer {
 }
 body.fun-immersive > main {
   flex: none;
+}
+
+/* Hero → operations room. The call to action is a monitor rather than a button:
+   a poster frame of the room at /fun drifting behind scanlines, so the hero
+   shows the place instead of describing it. The scene itself only loads when
+   someone commits. Motion here is transform-only (compositor) and the
+   reduced-motion block above flattens the drift and the sweep to a still. */
+.room-feed__img {
+  animation: room-drift 34s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+  transition:
+    transform 1.3s var(--ease-out),
+    filter 0.6s var(--ease-out);
+  transform-origin: 52% 58%;
+}
+
+@keyframes room-drift {
+  0%   { transform: scale(1.06) translate3d(-1.2%, 0.6%, 0); }
+  100% { transform: scale(1.14) translate3d(1.6%, -1%, 0); }
+}
+
+.room-feed:hover .room-feed__img,
+.room-feed:focus-visible .room-feed__img {
+  animation-play-state: paused;
+  transform: scale(1.2);
+  filter: saturate(1) brightness(0.94);
+}
+
+/* The bright bar crossing the tube. Purely decorative, purely transform. */
+.room-feed__sweep {
+  animation: room-sweep 5.5s linear infinite;
+}
+
+@keyframes room-sweep {
+  0%   { transform: translateY(-140%); }
+  100% { transform: translateY(380%); }
+}
+
+.room-feed__pip {
+  animation: room-blip 2.4s ease-in-out infinite;
+}
+
+@keyframes room-blip {
+  0%, 100% { opacity: 0.35; box-shadow: none; }
+  50%      { opacity: 1; box-shadow: 0 0 8px 1px rgba(var(--accent-rgb), 0.9); }
+}
+
+/* Entering the room. The hero's monitor scales up to fill the viewport, the
+   loading screen shows the same frame already at that scale and keeps drifting
+   in, and the real scene fades up behind it. Three surfaces, one continuous
+   move — so all three have to share this poster and this easing. */
+.room-enter__poster {
+  animation: room-enter-dolly 6s var(--ease-out) both;
+}
+
+/* Starts where the hero's zoom ends, then keeps pushing in. 1.11 is not a
+   taste call: the hero clone finishes at 2.5 rendered pixels per source pixel
+   (a 268x151 box scaled by 5.96 to cover 1440x900), the loader's own cover fit
+   is 2.25, and 2.5 / 2.25 is what makes the two frames the same size across
+   the route change. Anything else reads as a jolt on arrival. */
+@keyframes room-enter-dolly {
+  0%   { transform: scale(1.11); }
+  100% { transform: scale(1.21); }
+}
+
+/* Indeterminate bar for the moment before byte progress exists. */
+.room-enter__bar {
+  animation: room-enter-bar 1.4s var(--ease-in-out) infinite;
+}
+
+@keyframes room-enter-bar {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(310%); }
 }
 
 /* Infrastructure page — packet dot travelling along a pipeline connector */
@@ -333,12 +383,13 @@ body.fun-immersive > main {
 }
 
 /* ===========================================================================
-   Print stylesheet — force a clean light-on-paper layout no matter the theme
+   Print stylesheet — the site is dark-only on screen, so paper gets the light
+   ramp here. These are the paper/ink values from the brand spec at /brand
+   (content/brand.ts); this block is the only CSS that consumes them.
    =========================================================================== */
 @media print {
   :root,
-  :root.dark,
-  :root.light {
+  :root.dark {
     --bg: #ffffff;
     --bg-2: #ffffff;
     --surface: #ffffff;

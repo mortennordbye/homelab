@@ -6,9 +6,10 @@
  * are measured, not aspirational. The categorical data colours were validated
  * for colour-vision deficiency separately.
  *
- * These are NOT the tokens the live site currently ships (see styles/tokens.css,
- * which is still the arctic-blue system). The /brand route scopes them locally
- * so the spec can exist before the site is migrated onto it.
+ * styles/tokens.css ships the dark half of this system verbatim. The light half
+ * has no runtime consumer on the site (dark only) and lives on here: the print
+ * stylesheet in globals.css and the LaTeX CV in scripts/lib/templates.ts both
+ * take their paper and ink values from this file.
  */
 
 export type Swatch = {

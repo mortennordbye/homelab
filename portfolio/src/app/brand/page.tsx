@@ -56,9 +56,10 @@ export default function BrandPage() {
             categorical data colours were separately validated for colour-vision deficiency.
           </p>
           <p style={{ fontSize: "0.9rem", color: "var(--b-snow-3)" }}>
-            This page scopes its own tokens. The live site still ships the arctic-blue system in{" "}
-            <code style={{ fontFamily: "var(--b-mono)" }}>styles/tokens.css</code>; migrating it
-            across is a separate step.
+            The dark half of this system is what the site ships, token for token, in{" "}
+            <code style={{ fontFamily: "var(--b-mono)" }}>styles/tokens.css</code>. The light half
+            has no screen consumer — the site is dark only — and is kept for print and for
+            documents.
           </p>
         </header>
 

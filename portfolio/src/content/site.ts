@@ -43,6 +43,10 @@ export const site = {
     { label: "X", href: "https://x.com/mortennordbye" },
     { label: "Blog", href: "https://blog.nordbye.it" },
   ],
+  // The header promotes one entry to a button rather than a link. It stays in
+  // `nav` so the command palette still offers it, and the header filters it out
+  // of the inline list so it is not offered twice.
+  headerCta: { label: "Contact", href: "/#contact" },
   nav: [
     { label: "About", href: "/#about" },
     { label: "Resume", href: "/#resume" },
