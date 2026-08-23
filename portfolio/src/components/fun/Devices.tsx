@@ -30,7 +30,7 @@ const CHASSIS_GREY = { color: "#232629", roughness: 0.52, metalness: 0.42 };
 function Led({
   position,
   rotation = [0, 0, 0],
-  color = "#57d98b",
+  color = "#5ec96e",
   seed = 1,
   size = 0.005,
   steady = false,
@@ -88,9 +88,9 @@ export function ThinkCentre({
       </mesh>
       <mesh position={[0, 0.052, D / 2 + 0.003]}>
         <ringGeometry args={[0.0035, 0.0055, 20]} />
-        <meshBasicMaterial color="#8fd4ff" transparent opacity={0.85} />
+        <meshBasicMaterial color="#81bccf" transparent opacity={0.85} />
       </mesh>
-      <Led position={[0, 0.03, D / 2 + 0.003]} color="#57d98b" seed={2.1} size={0.0035} />
+      <Led position={[0, 0.03, D / 2 + 0.003]} color="#5ec96e" seed={2.1} size={0.0035} />
     </group>
   );
 }
@@ -126,7 +126,7 @@ export function SynologyNas({
         <Led
           key={y}
           position={[W / 2 - 0.016, y, D / 2 + 0.003]}
-          color={i === 0 ? "#8fd4ff" : "#57d98b"}
+          color={i === 0 ? "#81bccf" : "#5ec96e"}
           seed={0.9 + i * 0.8}
           size={0.0045}
         />
@@ -152,7 +152,7 @@ export function CloudGateway({
         <ringGeometry args={[0.008, 0.011, 24]} />
         <meshBasicMaterial color="#9aa3ad" transparent opacity={0.75} />
       </mesh>
-      <Led position={[0, -0.004, 0.0556]} color="#61b86f" seed={1.1} size={0.004} />
+      <Led position={[0, -0.004, 0.0556]} color="#81b288" seed={1.1} size={0.004} />
     </group>
   );
 }
@@ -178,7 +178,7 @@ export function UnifiFlexMini({
         <Led
           key={i}
           position={[-0.031 + i * 0.0155, 0.008, 0.0356]}
-          color="#61b86f"
+          color="#81b288"
           seed={1.2 + i * 0.7}
           size={0.003}
         />
@@ -208,7 +208,7 @@ export function UnifiSwitch8({
         <Led
           key={i}
           position={[-0.075 + i * 0.0215, 0.0095, 0.0526]}
-          color={i % 3 === 0 ? "#57d98b" : "#61b86f"}
+          color={i % 3 === 0 ? "#5ec96e" : "#81b288"}
           seed={0.8 + i * 0.55}
           size={0.003}
         />
@@ -239,7 +239,7 @@ export function IspRouter({
           key={y}
           position={[0.0272, y, 0.055]}
           rotation={[0, Math.PI / 2, 0]}
-          color={i === 0 ? "#57d98b" : "#9aa3ad"}
+          color={i === 0 ? "#5ec96e" : "#9aa3ad"}
           seed={0.7 + i * 0.9}
           size={0.0035}
         />
@@ -288,7 +288,7 @@ export function HubPuck({ position }: { position: [number, number, number] }) {
       <Led
         position={[0, 0.0125, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
-        color="#61b86f"
+        color="#81b288"
         seed={1.5}
         size={0.006}
       />
@@ -310,7 +310,7 @@ export function UnifiAccessPoint({ position }: { position: [number, number, numb
       </mesh>
       <mesh position={[0, 0.0108, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.0335, 0.0365, 32]} />
-        <meshBasicMaterial color="#61b86f" transparent opacity={0.35} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#81b288" transparent opacity={0.35} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );

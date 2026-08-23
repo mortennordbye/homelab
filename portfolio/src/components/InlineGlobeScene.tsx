@@ -206,8 +206,8 @@ function Globe({
   const pinHead = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: "#8ec798",
-        emissive: new THREE.Color("#51a45e"),
+        color: "#9ec3a3",
+        emissive: new THREE.Color("#65a16e"),
         emissiveIntensity: 1.5,
         roughness: 0.35,
         metalness: 0,

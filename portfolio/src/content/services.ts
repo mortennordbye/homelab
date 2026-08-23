@@ -4,7 +4,7 @@ const raw: Service[] = [
   {
     slug: "kubernetes-and-containerization",
     title: "Kubernetes & Containerization",
-    accent: "arctic",
+    accent: "brand",
     proof: {
       label: "Migrated ~30 microservices to AKS · 33M+ requests/day at peak",
       workSlug: "betting-platform-cloud-migration",
@@ -24,7 +24,7 @@ const raw: Service[] = [
   {
     slug: "gitops-and-ansible",
     title: "GitOps & Ansible",
-    accent: "copper",
+    accent: "material",
     proof: {
       label: "Built the GitOps platform on Talos · ArgoCD app-of-apps, 6-node cluster",
       workSlug: "k8s-homelab",
@@ -44,7 +44,7 @@ const raw: Service[] = [
   {
     slug: "technical-consulting",
     title: "Technical Consulting",
-    accent: "teal",
+    accent: "brand2",
     proof: {
       label: ".NET thread-pool starvation RCA · async refactor stabilised production",
       workSlug: "dotnet-thread-pool-rca",

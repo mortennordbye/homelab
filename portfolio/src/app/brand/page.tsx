@@ -429,8 +429,8 @@ export default function BrandPage() {
           <div className="bsys__imggrid">
             <figure className="bsys__mock" style={{ background: imagery.grounds[0], margin: 0 }}>
               <svg viewBox="0 0 200 112" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} aria-hidden>
-                <circle cx="150" cy="34" r="26" fill="none" stroke="#51a45e" strokeWidth="2" />
-                <circle cx="150" cy="34" r="15" fill="none" stroke="#51a45e" strokeWidth="2" opacity="0.5" />
+                <circle cx="150" cy="34" r="26" fill="none" stroke="#65a16e" strokeWidth="2" />
+                <circle cx="150" cy="34" r="15" fill="none" stroke="#65a16e" strokeWidth="2" opacity="0.5" />
                 <path d="M14 90h70M14 80h44" stroke="#a1ada3" strokeWidth="2" opacity="0.6" />
               </svg>
               <figcaption>cover &middot; field ground, one accent</figcaption>
@@ -441,7 +441,7 @@ export default function BrandPage() {
                   [0, 1, 2, 3, 4, 5].map((c) => (
                     <rect
                       key={`${r}-${c}`} x={112 + c * 13} y={16 + r * 13} width="8" height="8"
-                      fill={r === 1 && c === 3 ? "#51a45e" : "#2a382c"}
+                      fill={r === 1 && c === 3 ? "#65a16e" : "#2a382c"}
                     />
                   )),
                 )}
@@ -450,7 +450,7 @@ export default function BrandPage() {
             </figure>
             <figure className="bsys__mock" style={{ background: imagery.grounds[2], margin: 0 }}>
               <svg viewBox="0 0 200 112" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} aria-hidden>
-                <path d="M100 22 148 50v34l-48 28-48-28V50z" fill="none" stroke="#51a45e" strokeWidth="2" />
+                <path d="M100 22 148 50v34l-48 28-48-28V50z" fill="none" stroke="#65a16e" strokeWidth="2" />
                 <path d="M100 22v34m0 0 48 28m-48-28-48 28" stroke="#a1ada3" strokeWidth="1.5" opacity="0.55" />
               </svg>
               <figcaption>diagram &middot; subtle ground, geometry</figcaption>

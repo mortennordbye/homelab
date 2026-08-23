@@ -10,10 +10,14 @@
   --color-fg: var(--fg);
   --color-fg-2: var(--fg-2);
   --color-fg-3: var(--fg-3);
+  --color-snow: rgb(var(--fg-rgb));
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
   --color-accent-3: var(--accent-3);
   --color-accent-ink: var(--accent-ink);
+  --color-wood: var(--wood);
+  --color-brass: var(--brass);
+  --color-brass-hi: var(--brass-hi);
   --color-copper: var(--copper);
   --color-warn: var(--warn);
   --color-interactive: var(--interactive);
@@ -398,9 +402,9 @@ body.fun-immersive > main {
     --fg: #1a201b;
     --fg-2: #415344;
     --fg-3: #5f7963;
-    --accent: #378144;
-    --accent-2: #40a551;
-    --accent-3: #3d954c;
+    --accent: #4d7d54;
+    --accent-2: #63a06c;
+    --accent-3: #599161;
     --accent-ink: #ffffff;
     --grain-opacity: 0;
     --grad-hero: none;

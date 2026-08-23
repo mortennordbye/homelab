@@ -216,11 +216,11 @@ function Notice({
 }) {
   return (
     <div className="fixed inset-0 z-[210] grid place-content-center bg-[#04070a] px-8">
-      <p className="eyebrow mb-5 text-[0.65rem] text-white/35">
+      <p className="eyebrow mb-5 text-[0.65rem] text-snow/35">
         nordbye.it · the room
       </p>
-      <h1 className="font-mono text-xl leading-snug text-white">{title}</h1>
-      <p className="mt-4 max-w-[42ch] text-[13px] leading-relaxed text-white/60">
+      <h1 className="font-mono text-xl leading-snug text-fg">{title}</h1>
+      <p className="mt-4 max-w-[42ch] text-[13px] leading-relaxed text-snow/60">
         {body}
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">{children}</div>
@@ -229,7 +229,7 @@ function Notice({
 }
 
 const NOTICE_BUTTON =
-  "focus-ring border border-white/25 px-4 py-2.5 font-mono text-xs text-white transition-colors hover:border-white/60 hover:bg-white/5";
+  "focus-ring border border-snow/25 px-4 py-2.5 font-mono text-xs text-fg transition-colors hover:border-snow/60 hover:bg-snow/5";
 const NOTICE_LINK =
   "focus-ring font-mono text-xs text-accent underline-offset-4 hover:underline";
 
@@ -1218,27 +1218,27 @@ export default function FunRoom({
 
       {/* persistent status line */}
       <div className="pointer-events-none absolute left-6 top-6 z-20 font-mono text-xs">
-        <div className="flex items-center gap-2.5 border border-white/10 bg-black/45 px-3.5 py-2 backdrop-blur">
+        <div className="flex items-center gap-2.5 border border-snow/10 bg-black/45 px-3.5 py-2 backdrop-blur">
           <span
             className="h-2 w-2 rounded-full"
             style={{ background: feedTone, boxShadow: `0 0 10px ${feedTone}` }}
           />
           <span style={{ color: feedTone }}>{feedLabel}</span>
-          <span className="text-white/35">· genesis · oslo</span>
+          <span className="text-snow/35">· genesis · oslo</span>
         </div>
       </div>
 
       {/* CC0 asset attribution. Poly Haven does not require it, but shipping
           other people's work with no credit is not something to be casual
           about. */}
-      <p className="pointer-events-none absolute bottom-6 right-6 z-20 font-mono text-[10px] text-white/25">
+      <p className="pointer-events-none absolute bottom-6 right-6 z-20 font-mono text-[10px] text-snow/25">
         surfaces &amp; environment: Poly Haven (CC0)
       </p>
 
       {/* exit */}
       <Link
         href="/"
-        className="focus-ring absolute right-6 top-6 z-20 border border-white/10 bg-black/45 px-3.5 py-2 font-mono text-xs text-white/60 backdrop-blur transition-colors hover:text-white"
+        className="focus-ring absolute right-6 top-6 z-20 border border-snow/10 bg-black/45 px-3.5 py-2 font-mono text-xs text-snow/60 backdrop-blur transition-colors hover:text-fg"
       >
         exit
       </Link>
@@ -1283,7 +1283,7 @@ export default function FunRoom({
           purpose. */}
       {phase === "exploring" && !locked && !coarse && !paused && (
         <div className="pointer-events-none absolute bottom-6 left-1/2 z-30 -translate-x-1/2">
-          <p className="border border-white/10 bg-black/45 px-3.5 py-2 font-mono text-[11px] text-white/45 backdrop-blur">
+          <p className="border border-snow/10 bg-black/45 px-3.5 py-2 font-mono text-[11px] text-snow/45 backdrop-blur">
             click to look around · WASD to move
           </p>
         </div>
@@ -1300,7 +1300,7 @@ export default function FunRoom({
         <>
           <TouchStick move={touchMove} />
           <div className="pointer-events-none absolute bottom-8 right-8 z-30 max-w-[46vw]">
-            <p className="border border-white/10 bg-black/45 px-3 py-2 text-right font-mono text-[10px] leading-relaxed text-white/45 backdrop-blur">
+            <p className="border border-snow/10 bg-black/45 px-3 py-2 text-right font-mono text-[10px] leading-relaxed text-snow/45 backdrop-blur">
               drag to look
               <br />
               tap an object to open it

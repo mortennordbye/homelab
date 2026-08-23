@@ -107,7 +107,7 @@ function ArgoView({ data }: { data: PanelProps }) {
         style={{
           background: "#202e23",
           padding: "6px 10px",
-          borderBottom: `1px solid ${ACCENT.blue}33`,
+          borderBottom: `1px solid ${ACCENT.brand}33`,
         }}
       >
         <span style={{ color: "#eaf3eb", letterSpacing: "0.1em" }}>
@@ -225,7 +225,7 @@ export function CodeScreen({
           style={{
             background:
               "linear-gradient(160deg, #0e160f 0%, #0b110c 55%, #080e09 100%)",
-            border: "1px solid #51a45e3d",
+            border: "1px solid #65a16e3d",
             color: COLOUR.plain,
             fontSize: "10px",
             lineHeight: "11.6px",
@@ -250,7 +250,7 @@ export function CodeScreen({
                   color: tab === id ? "#8fb6d8" : "#516154",
                   background: tab === id ? "#121b13" : "transparent",
                   borderRight: "1px solid #1b261d",
-                  borderTop: `2px solid ${tab === id ? "#51a45e" : "transparent"}`,
+                  borderTop: `2px solid ${tab === id ? "#65a16e" : "transparent"}`,
                 }}
               >
                 {label}

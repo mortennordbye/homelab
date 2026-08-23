@@ -230,7 +230,7 @@ export function CommandPalette({ work, services }: Props) {
           }}
         >
           <div
-            className="relative w-full max-w-3xl overflow-hidden rounded-xl border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8),0_0_0_1px_rgba(0,0,0,0.5)]"
+            className="relative w-full max-w-3xl overflow-hidden rounded-xl border border-snow/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8),0_0_0_1px_rgba(0,0,0,0.5)]"
             style={{
               background:
                 "linear-gradient(180deg, rgba(8,12,18,0.97) 0%, rgba(5,9,15,0.97) 100%)",
@@ -247,7 +247,7 @@ export function CommandPalette({ work, services }: Props) {
             />
 
             {/* Title bar — macOS-style traffic lights */}
-            <div className="relative flex items-center justify-between border-b border-white/10 bg-black/40 px-4 py-2.5">
+            <div className="relative flex items-center justify-between border-b border-snow/10 bg-black/40 px-4 py-2.5">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -264,26 +264,26 @@ export function CommandPalette({ work, services }: Props) {
                   className="h-3 w-3 rounded-full bg-[#28c840] ring-1 ring-inset ring-black/20"
                 />
               </div>
-              <span className="font-mono text-[11px] text-white/50">
+              <span className="font-mono text-[11px] text-snow/50">
                 morten@talos-cp-01 — bash — 80×24
               </span>
               <button
                 type="button"
                 aria-label="Close"
                 onClick={close}
-                className="text-white/40 transition-colors hover:text-white"
+                className="text-snow/40 transition-colors hover:text-fg"
               >
                 <X size={14} />
               </button>
             </div>
 
             {/* Buffer (history + output) */}
-            <div className="max-h-64 overflow-y-auto bg-transparent px-5 pt-4 font-mono text-[13px] leading-relaxed text-white/80">
+            <div className="max-h-64 overflow-y-auto bg-transparent px-5 pt-4 font-mono text-[13px] leading-relaxed text-snow/80">
               {/* Welcome banner */}
-              <div className="text-white/40">
+              <div className="text-snow/40">
                 <div>
-                  <span className="text-emerald-400">●</span> connected to{" "}
-                  <span className="text-white/70">talos-cp-01.nordbye.local</span>
+                  <span className="text-accent">●</span> connected to{" "}
+                  <span className="text-snow/70">talos-cp-01.nordbye.local</span>
                 </div>
                 <div>
                   Last login: now on console — type{" "}
@@ -292,7 +292,7 @@ export function CommandPalette({ work, services }: Props) {
               </div>
 
               {output.length > 0 && (
-                <div className="mt-3 whitespace-pre text-white/75">
+                <div className="mt-3 whitespace-pre text-snow/75">
                   {output.map((line, i) => (
                     <div key={i}>{line}</div>
                   ))}
@@ -303,12 +303,12 @@ export function CommandPalette({ work, services }: Props) {
             {/* Prompt row */}
             <div className="relative flex items-center gap-2 px-5 py-3 font-mono text-[13px] leading-relaxed">
               <span className="select-none whitespace-nowrap">
-                <span className="text-emerald-400">morten</span>
-                <span className="text-white/40">@</span>
-                <span className="text-cyan-400">talos-cp-01</span>
-                <span className="text-white/40">:</span>
-                <span className="text-blue-400">{pathname}</span>
-                <span className="text-white/40">$</span>
+                <span className="text-accent">morten</span>
+                <span className="text-snow/40">@</span>
+                <span className="text-info">talos-cp-01</span>
+                <span className="text-snow/40">:</span>
+                <span className="text-copper">{pathname}</span>
+                <span className="text-snow/40">$</span>
               </span>
               <div className="relative flex-1">
                 <input
@@ -335,7 +335,7 @@ export function CommandPalette({ work, services }: Props) {
                     filtered[selected] ? `palette-opt-${filtered[selected].id}` : undefined
                   }
                   placeholder="try cd work, whoami, htop…"
-                  className="w-full caret-emerald-400 bg-transparent text-white placeholder:text-white/30 focus:outline-none"
+                  className="w-full caret-accent bg-transparent text-fg placeholder:text-fg-3 focus:outline-none"
                   autoComplete="off"
                   spellCheck={false}
                 />
@@ -346,10 +346,10 @@ export function CommandPalette({ work, services }: Props) {
             <ul
               id="palette-listbox"
               role="listbox"
-              className="max-h-72 overflow-y-auto border-t border-white/5 pb-2"
+              className="max-h-72 overflow-y-auto border-t border-snow/5 pb-2"
             >
               {filtered.length === 0 && (
-                <li className="px-5 py-3 font-mono text-[12px] text-rose-400/80">
+                <li className="px-5 py-3 font-mono text-[12px] text-danger">
                   zsh: command not found: {query}
                 </li>
               )}
@@ -366,8 +366,8 @@ export function CommandPalette({ work, services }: Props) {
                     className={cn(
                       "flex cursor-pointer items-center justify-between gap-4 px-5 py-1.5 font-mono text-[13px] transition-colors",
                       active
-                        ? "bg-white/[0.06] text-white"
-                        : "text-white/55 hover:text-white/80",
+                        ? "bg-snow/[0.06] text-fg"
+                        : "text-snow/55 hover:text-snow/80",
                     )}
                   >
                     <span className="flex items-center gap-2">
@@ -375,7 +375,7 @@ export function CommandPalette({ work, services }: Props) {
                         aria-hidden
                         className={cn(
                           "w-2 select-none",
-                          active ? "text-emerald-400" : "text-transparent",
+                          active ? "text-accent" : "text-transparent",
                         )}
                       >
                         ›
@@ -383,7 +383,7 @@ export function CommandPalette({ work, services }: Props) {
                       {cmd.label}
                     </span>
                     {cmd.hint && (
-                      <span className="truncate text-[11px] text-white/35">
+                      <span className="truncate text-[11px] text-snow/35">
                         {cmd.hint}
                       </span>
                     )}
@@ -393,11 +393,11 @@ export function CommandPalette({ work, services }: Props) {
             </ul>
 
             {/* Status bar */}
-            <div className="flex items-center justify-between border-t border-white/10 bg-black/30 px-5 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
+            <div className="flex items-center justify-between border-t border-snow/10 bg-black/30 px-5 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-snow/40">
               <span>
-                <span className="text-white/70">↑↓</span> navigate ·{" "}
-                <span className="text-white/70">↵</span> run ·{" "}
-                <span className="text-white/70">esc</span> close
+                <span className="text-snow/70">↑↓</span> navigate ·{" "}
+                <span className="text-snow/70">↵</span> run ·{" "}
+                <span className="text-snow/70">esc</span> close
               </span>
               <span>
                 {filtered.length} / {commands.length}

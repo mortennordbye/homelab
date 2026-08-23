@@ -106,17 +106,23 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Decide whether the stack gets its own block on `/`. If yes, build it from the same `public/icons/*.svg` and delete nothing. If no, delete those nineteen files (they are recoverable from git) and the hero loses no signal it still had.
 - **Where:** `portfolio/public/icons/*.svg`, `portfolio/src/components/sections/Hero.tsx`, deleted `portfolio/src/components/InlineGlobeDecor.ts`.
 
-### The hero is warm and the rest of the site is not
-- **What:** The hero renders a wooden room under a warm key light, while `tokens.css` stays hue-locked to 130 with a near-black ground, exactly as the `/brand` spec says. The seam is visible where the hero fades into the page: the room's table edge is brown and the section below it is green-black.
-- **Why deferred:** Warming the ground is a brand-spec change, not a hero change, and it would ripple into `/brand`, the print ramp and every solved contrast ratio on that page. The current fade covers the seam well enough that it is not a defect.
-- **Unblock:** Decide whether the ground follows the hero. If it does, re-solve the neutral ramp around a warm hue and update `content/brand.ts` and the `/brand` page with the new measured ratios. If it does not, leave it and treat the hero as the site's one photographic surface.
-- **Where:** `portfolio/src/styles/tokens.css`, `portfolio/src/content/brand.ts`, `portfolio/src/components/InlineGlobe.tsx`.
+### Warn and copper are the same hex
+- **What:** `--warn` and `--copper` are both `#c09955` in `tokens.css`, so a `Callout` with `tone="warn"` ("Watch") and any copper mark carry the same colour, separated only by their label. Now that copper is documented as the ink end of the wood/brass/copper material ramp, the overlap is spelled out in two places rather than hidden, but it is not fixed.
+- **Why deferred:** Moving warning off hue 38 does not actually separate them. At equal luminance a hue rotation is invisible to a colour-blind reader — measured, warn at hue 46 against copper is 1.00:1. A real fix means moving warning to a different lightness, which changes how every warning state reads and is a spec decision rather than a code change.
+- **Unblock:** Decide whether warning keeps amber. If it does, solve it at a distinctly different luminance from copper (roughly 4.5:1 or 9.5:1 rather than copper's 7.03:1) and re-check it against `--danger` `#d18e83`, which is also warm. If it does not, warning moves hue entirely and the material ramp keeps `#c09955` to itself.
+- **Where:** `portfolio/src/styles/tokens.css`, `portfolio/src/content/brand.ts` (the `warning` entry in `semantic`), `portfolio/src/components/primitives/Callout.tsx`.
 
-### Palette sweep: components still holding colour literals
-- **What:** After the dark ramp was locked to the `/brand` spec (2026-08-23), a few surfaces still paint from literals instead of tokens. `CommandPalette.tsx` uses `text-emerald-400`, `text-cyan-400`, `text-blue-400`, `text-rose-400/80` and `caret-emerald-400` (lines ~285-378), and roughly 120 `white/NN` and `black/NN` alpha utilities live across `components/fun/*`, `app/fun/FunRoomClient.tsx`, `components/work/ArchitectureDrawer.tsx`. Mapping them onto `--accent`, `--info`, `--danger` and an `rgba(var(--fg-rgb), …)` needs a new `--fg-rgb` token alongside the existing `--accent-rgb`.
-- **Why deferred:** The token layer was the blocker and is now correct; the sweep is mechanical but touches the fun room, which is hand-tuned 3D scenery where a blanket find-and-replace would flatten deliberate choices. Scene colours (wood, paper, screen glow) may legitimately stay literal.
-- **Unblock:** Decide which fun-room literals are UI chrome (must tokenise) versus illustration (may stay), add `--fg-rgb` to `tokens.css`, then convert file by file with a screenshot diff per surface.
-- **Where:** `portfolio/src/styles/tokens.css`, `portfolio/src/components/CommandPalette.tsx`, `portfolio/src/components/fun/`, `portfolio/src/components/work/ArchitectureDrawer.tsx`.
+### Data series 1 was left at the old saturation
+- **What:** The brand green moved from saturation 34 to 24 (2026-08-23). `dataSeries` series 1 is labelled "eucalyptus" and is meant to be the brand green, but it still ships `#4f9e6a` / `#2f7d4f` at the old saturation, so the chart green and the brand green no longer match.
+- **Why deferred:** The five categorical colours were validated for colour-vision deficiency as a set. Re-muting one of them without redoing that check would trade a visible mismatch for an invisible accessibility regression, which is the worse of the two.
+- **Unblock:** Re-run the CVD check across all five series with series 1 at `#5f9c68` / `#4a7952` (the held-luminance equivalents, already computed), and adjust whichever neighbours stop separating.
+- **Where:** `portfolio/src/content/brand.ts`.
+
+### Two material variants still have no callers
+- **What:** `Tag variant="warm"` and `Callout tone="result"` were repainted onto wood and brass, but nothing in the app renders either of them, so those two paths are unexercised. Every other consumer was converted in the full sweep (2026-08-23): `Button` secondary, `ServicesGrid`, the infrastructure packet dots, the command palette, the room HUD.
+- **Why deferred:** Inventing content to justify a variant is backwards. They are correct and waiting for a real use.
+- **Unblock:** First case study that needs a Result callout, or first tag that should read as material rather than brand. Check both against the ramp's two rules: brass takes `--fg` only, and `--fg-3` never sits on wood.
+- **Where:** `portfolio/src/components/primitives/{Tag,Callout}.tsx`.
 
 ### Captions on raised surfaces fall just under AA
 - **What:** `--fg-3` (`#708373`) is solved to 4.60:1 against the page ground `--bg` (`#0f1410`), but on `--surface` (`#191f1a`) it measures 4.14:1, under the 4.5:1 AA threshold for small text. Cards and panels use both.

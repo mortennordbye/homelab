@@ -1,10 +1,22 @@
 /**
  * Brand system tokens — "Eucalyptus Deepened".
  *
- * Hue is locked to 130. Every value was solved against its own ground for a
- * target WCAG ratio rather than picked by hand, so the contrast figures below
- * are measured, not aspirational. The categorical data colours were validated
- * for colour-vision deficiency separately.
+ * Two hues doing two jobs. 130 is the brand and it is ink: links, focus, live
+ * state, the one action that matters on a screen. 32 is the material and it is
+ * surface: buttons, chips, panels, edges. Nothing is ever both, which is what
+ * lets them share a page — solved against the same ground for the same target,
+ * a green and a copper land 1.01:1 apart and read as one colour to anyone with
+ * a colour-vision deficiency. Separating them by layer avoids that entirely.
+ *
+ * The brand's saturation is 24, down from 34. As a solid fill beside the wood
+ * the old value glared. Every green below holds its exact luminance and only
+ * loses saturation, so nothing that was solved has to be re-solved.
+ *
+ * Every value was solved against its own ground for a target WCAG ratio rather
+ * than picked by hand, so the contrast figures below are measured, not
+ * aspirational. The categorical data colours were validated for colour-vision
+ * deficiency separately, and are deliberately left at their original
+ * saturation — re-muting them would invalidate that check.
  *
  * styles/tokens.css ships the dark half of this system verbatim. The light half
  * has no runtime consumer on the site (dark only) and lives on here: the print
@@ -28,6 +40,7 @@ export type SwatchGroup = {
 };
 
 export const brandHue = 130;
+export const materialHue = 32;
 
 export const colorGroups: SwatchGroup[] = [
   {
@@ -78,22 +91,34 @@ export const colorGroups: SwatchGroup[] = [
   {
     title: "Brand",
     intro:
-      "One hue, saturation held at 34. Push it higher and eucalyptus becomes grass. No single value clears AA text contrast on both white and near-black — that is arithmetic, not a hue problem — so there are two steps rather than one.",
+      "One hue, saturation held at 24. Higher and eucalyptus becomes grass, which is what it was doing at 34 once it sat as a solid fill next to the wood. No single value clears AA text contrast on both white and near-black — that is arithmetic, not a hue problem — so there are two steps rather than one.",
     ground: "dark",
     swatches: [
-      { name: "brand", hex: "#51a45e", cr: "6.03:1 on anchor", use: "accent on dark" },
-      { name: "brand-hover", hex: "#65b372", cr: "7.29:1", use: "hover, dark" },
-      { name: "brand-active", hex: "#478f53", cr: "4.71:1", use: "pressed, dark" },
-      { name: "brand-subtle-d", hex: "#1e3322", use: "tinted block, dark" },
+      { name: "brand", hex: "#65a16e", cr: "6.10:1 on anchor", use: "accent on dark" },
+      { name: "brand-hover", hex: "#7cae83", cr: "7.31:1", use: "hover, dark" },
+      { name: "brand-active", hex: "#568d5e", cr: "4.76:1", use: "pressed, dark" },
+      { name: "brand-subtle-d", hex: "#1f3322", use: "tinted block, dark" },
+    ],
+  },
+  {
+    title: "Material",
+    intro:
+      "One material at three depths, not three colours. Brass is the only step that works as a standalone solid: 3.02:1 clears the non-text threshold, so a button's shape is perceivable without a border, and it still carries snow at 5.15:1. Two rules follow from the arithmetic. Brass takes snow only — snow-2 on it measures 2.65:1. And snow-3 never sits on wood, where it measures 2.85:1.",
+    ground: "dark",
+    swatches: [
+      { name: "wood", hex: "#4a3520", cr: "1.61:1 on anchor", use: "panels, wells, table headers" },
+      { name: "brass", hex: "#7f5a2f", cr: "3.02:1", use: "solid fills, card edges, rules" },
+      { name: "brass-hi", hex: "#8a6133", cr: "3.40:1", use: "hover — the lightest brass that still carries snow at AA" },
+      { name: "copper", hex: "#c09955", cr: "7.03:1", use: "the ink end of the ramp, used sparingly" },
     ],
   },
   {
     title: "Brand · on light",
     ground: "light",
     swatches: [
-      { name: "brand-ink", hex: "#378144", cr: "4.61:1 on paper", use: "links, text" },
-      { name: "brand-solid", hex: "#358142", cr: "4.81:1 vs white", use: "filled button" },
-      { name: "brand-subtle", hex: "#ebf4ed", use: "tinted block, light" },
+      { name: "brand-ink", hex: "#4d7d54", cr: "4.61:1 on paper", use: "links, text" },
+      { name: "brand-solid", hex: "#4c7d54", cr: "4.81:1 vs white", use: "filled button" },
+      { name: "brand-subtle", hex: "#ecf3ed", use: "tinted block, light" },
     ],
   },
 ];
@@ -101,12 +126,12 @@ export const colorGroups: SwatchGroup[] = [
 export const semantic = [
   {
     name: "success",
-    light: "#378144",
-    dark: "#51a45e",
-    bgLight: "#ebf4ed",
-    bgDark: "#1e3322",
+    light: "#4d7d54",
+    dark: "#65a16e",
+    bgLight: "#ecf3ed",
+    bgDark: "#1f3322",
     crLight: "4.61:1",
-    crDark: "6.03:1",
+    crDark: "6.10:1",
     note: "Success is the brand green. A green brand plus a separate emerald success would be two greens meaning different things, which is worse than reusing one.",
   },
   {
@@ -117,7 +142,7 @@ export const semantic = [
     bgDark: "#332a17",
     crLight: "4.59:1",
     crDark: "7.01:1",
-    note: "Amber at hue 38, far enough from the brand to never be mistaken for it.",
+    note: "Amber at hue 38, far enough from the brand to never be mistaken for it. It does share a hex with copper, the ink end of the material ramp, so a Result mark and a Watch mark are currently one colour told apart only by their label. Known, tracked, not yet fixed.",
   },
   {
     name: "danger",
@@ -143,7 +168,7 @@ export const semantic = [
 
 /** Fixed order, never cycled. A sixth series folds into Other or becomes small multiples. */
 export const dataSeries = [
-  { name: "series 1", label: "eucalyptus", light: "#2f7d4f", dark: "#4f9e6a" },
+  { name: "series 1", label: "eucalyptus", light: "#4a7952", dark: "#5f9c68" },
   { name: "series 2", label: "plum", light: "#af2c7f", dark: "#c26191" },
   { name: "series 3", label: "blue", light: "#266bba", dark: "#3f8fd0" },
   { name: "series 4", label: "rust", light: "#d15a1f", dark: "#c9713f" },
@@ -239,8 +264,8 @@ export const motion = [
 export const imagery = {
   intro:
     "Covers, OG cards and diagrams share the palette so a generated image never fights the page it sits on. The rule is that images use the field and ink colours only — the accent appears once, if at all.",
-  grounds: ["#142e18", "#0f1410", "#1e3322"],
-  marks: ["#51a45e", "#a1ada3", "#e9ebe9"],
+  grounds: ["#142e18", "#0f1410", "#1f3322"],
+  marks: ["#65a16e", "#a1ada3", "#e9ebe9"],
   rules: [
     "Ground the image on field or anchor. Never a white or light-grey canvas — those read as stock.",
     "One accent element maximum. If the composition needs a second colour, use snow-2 rather than a second hue.",
@@ -250,7 +275,7 @@ export const imagery = {
     "Export at 2400×1260 for OG and 1600×900 for in-post covers. Keep type above 40px at export size so it survives feed downscaling.",
   ],
   prompt:
-    "flat vector composition, deep eucalyptus green ground #142e18, single sage accent #51a45e, geometric forms only (concentric rings, thin rules, isometric blocks), generous negative space, no text, no people, no gradients, no photorealism, high contrast, editorial technical illustration",
+    "flat vector composition, deep eucalyptus green ground #142e18, single sage accent #65a16e, geometric forms only (concentric rings, thin rules, isometric blocks), generous negative space, no text, no people, no gradients, no photorealism, high contrast, editorial technical illustration",
 };
 
 export const a11y = [

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     "This site runs on a self-hosted Talos Kubernetes cluster, reconciled by ArgoCD. The request path, the deploy pipeline, and live cluster status.",
 };
 
-const dotTints = ["bg-accent", "bg-accent-3", "bg-accent-2", "bg-copper"];
+const dotTints = ["bg-accent", "bg-accent-3", "bg-accent-2", "bg-brass"];
 
 const statusJsonExample = `{
   "generatedAt": "2026-07-13T05:55:03Z",

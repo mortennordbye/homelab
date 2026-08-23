@@ -218,12 +218,12 @@ export function TouchStick({ move }: { move: React.RefObject<MoveInput> }) {
       onTouchCancel={release}
     >
       <div
-        className="absolute inset-0 rounded-full border border-white/15 bg-black/30 backdrop-blur"
+        className="absolute inset-0 rounded-full border border-snow/15 bg-black/30 backdrop-blur"
         aria-hidden
       />
       <div
         aria-hidden
-        className="absolute rounded-full border border-white/25 bg-white/15"
+        className="absolute rounded-full border border-snow/25 bg-snow/15"
         style={{
           width: KNOB_R * 2,
           height: KNOB_R * 2,

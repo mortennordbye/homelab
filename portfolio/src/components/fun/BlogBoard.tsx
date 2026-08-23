@@ -49,7 +49,7 @@ const cellPx = (i: number) => ({
  * mechanism: the tilt belongs to the slot, not the post.
  */
 const TILT = [-0.9, 0.7, -0.4, 0.8, -0.6, 0.5];
-const MAGNET = ["#51a45e", "#c09955", "#8ec798", "#478f53", "#a1ada3", "#61b86f"];
+const MAGNET = ["#65a16e", "#c09955", "#9ec3a3", "#568d5e", "#a1ada3", "#81b288"];
 
 const MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",

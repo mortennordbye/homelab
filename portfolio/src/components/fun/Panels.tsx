@@ -10,11 +10,11 @@ import {
 
 // Accents come from the site tokens so the room reads as the same product.
 export const ACCENT = {
-  blue: "#51a45e",
+  brand: "#65a16e",
+  green: "#65a16e",
   violet: "#9077d4",
-  teal: "#5ca9c3",
+  info: "#5ca9c3",
   copper: "#c9713f",
-  green: "#51a45e",
   amber: "#c09955",
   red: "#d18e83",
 } as const;
@@ -136,7 +136,7 @@ export const PANELS: PanelDef[] = [
   {
     id: "cluster",
     title: "CLUSTER",
-    accent: ACCENT.blue,
+    accent: ACCENT.brand,
     body: ({ status, nodes }) => {
       const allReady = nodes.ready === nodes.total;
       return (
@@ -220,7 +220,7 @@ export const PANELS: PanelDef[] = [
   {
     id: "apps",
     title: "APPLICATIONS",
-    accent: ACCENT.teal,
+    accent: ACCENT.info,
     body: ({ status }) => {
       const apps = status?.apps;
       if (!apps?.length) return <Empty what="No per-application data." />;
@@ -230,7 +230,7 @@ export const PANELS: PanelDef[] = [
       return (
         <>
           <div className="flex items-baseline justify-between">
-            <Big value={apps.length} unit="apps" tone={ACCENT.teal} />
+            <Big value={apps.length} unit="apps" tone={ACCENT.info} />
             {degraded > 0 && (
               <span className="text-[13px]" style={{ color: ACCENT.amber }}>
                 {degraded} need attention
@@ -394,7 +394,7 @@ export const PANELS: PanelDef[] = [
   {
     id: "feed",
     title: "FEED STATUS",
-    accent: ACCENT.blue,
+    accent: ACCENT.brand,
     body: ({ status, feed, stale }) => {
       const tone =
         feed === "snapshot" ? ACCENT.amber : stale ? ACCENT.amber : ACCENT.green;

@@ -107,7 +107,7 @@ function Switch({
           {/* state lamp beside the switch */}
           <mesh position={[0, 0.002, 0.032]}>
             <planeGeometry args={[0.006, 0.006]} />
-            <meshBasicMaterial color={on ? "#57d98b" : "#3a3f45"} />
+            <meshBasicMaterial color={on ? "#5ec96e" : "#3a3f45"} />
           </mesh>
         </group>
       )}
@@ -331,7 +331,7 @@ export function Printer({
                     padding: "2px 9px",
                     borderRadius: "9px",
                     color: flags[s.key] ? "#07331f" : "#4a5058",
-                    background: flags[s.key] ? "#3ddc97" : "#c3c7cc",
+                    background: flags[s.key] ? "#4dcb60" : "#c3c7cc",
                   }}
                 >
                   {flags[s.key] ? "ON" : "OFF"}
@@ -368,7 +368,7 @@ export function Printer({
             <mesh castShadow position={[0, printing ? -0.001 : 0.002, 0]}>
               <cylinderGeometry args={[0.015, 0.015, 0.008, 20]} />
               <meshStandardMaterial
-                color={printing ? "#2f7d52" : "#3ddc97"}
+                color={printing ? "#34793e" : "#4dcb60"}
                 roughness={0.35}
                 emissive={printing ? "#1d5e3c" : hovered ? "#2aa876" : "#155c3f"}
                 emissiveIntensity={hovered || printing ? 1.4 : 0.55}
@@ -381,7 +381,7 @@ export function Printer({
       {/* status lamp */}
       <mesh position={[-0.17, 0.124, 0.12]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[0.008, 0.008]} />
-        <meshBasicMaterial color={ready ? (printing ? "#f5b544" : "#57d98b") : "#8a3f3f"} />
+        <meshBasicMaterial color={ready ? (printing ? "#f5b544" : "#5ec96e") : "#8a3f3f"} />
       </mesh>
     </group>
   );

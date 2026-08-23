@@ -29,15 +29,19 @@
   --b-dline:    #2a382c;
   --b-dline-2:  #3e5542;
 
-  --b-brand:        #51a45e;
-  --b-brand-hover:  #65b372;
-  --b-brand-active: #478f53;
-  --b-brand-ink:    #378144;
-  --b-brand-solid:  #358142;
-  --b-subtle:       #ebf4ed;
-  --b-subtle-d:     #1e3322;
+  --b-brand:        #65a16e;
+  --b-brand-hover:  #7cae83;
+  --b-brand-active: #568d5e;
+  --b-brand-ink:    #4d7d54;
+  --b-brand-solid:  #4c7d54;
+  --b-subtle:       #ecf3ed;
+  --b-subtle-d:     #1f3322;
 
-  --b-success:  #51a45e;
+  --b-wood:     #4a3520;
+  --b-brass:    #7f5a2f;
+  --b-brass-hi: #8a6133;
+
+  --b-success:  #65a16e;
   --b-warning:  #c09955;
   --b-danger:   #d18e83;
   --b-info:     #5ca9c3;
@@ -67,11 +71,12 @@
 .bsys *::before,
 .bsys *::after { box-sizing: border-box; }
 
-/* The root layout wraps every route in the site header and footer, which are
-   still on the arctic-blue tokens and clash badly with a green spec sheet.
-   Suppressing them only when this page is mounted keeps the change contained
-   here rather than restructuring the app router for one unlisted route. The
-   command palette is deliberately left alone — it is still useful. */
+/* The root layout wraps every route in the site header and footer. This page
+   is a spec sheet with its own ramp and its own type, so the site chrome would
+   read as a second design on top of it. Suppressing them only when this page
+   is mounted keeps the change contained here rather than restructuring the app
+   router for one unlisted route. The command palette is deliberately left
+   alone — it is still useful. */
 body:has(.bsys) > header,
 body:has(.bsys) > footer { display: none; }
 body:has(.bsys) > main { flex: 1; }
