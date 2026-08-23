@@ -1,107 +1,65 @@
 /* ======================================================================
    Design tokens — Eucalyptus palette
+
    Hue is locked to 130. Every value was solved against its own ground for
    a target WCAG ratio rather than picked by hand, so the ratios in the
-   comments are measured. Full spec and reasoning live at /brand.
+   comments are measured against --bg. Full spec and reasoning live at
+   /brand, which renders content/brand.ts.
 
-   Default = dark. The `.light` class is currently never applied (the theme
-   toggle was removed and layout.tsx forces dark), but the light ramp is
-   kept correct because business documents and any future company surface
-   start white.
+   Dark only. The theme toggle was removed and layout.tsx forces .dark
+   before first paint, so a light ramp here would be unreachable CSS. The
+   paper ramp still exists in two places that need it: the print stylesheet
+   at the bottom of globals.css, and content/brand.ts for the LaTeX CV.
    ====================================================================== */
 
 :root,
 :root.dark {
-  /* Surfaces — neutral black. The ground carries no hue: green is for the
-     accent and the marks, never the canvas. Ratios below are against --bg. */
-  --bg: #0a0a0a;
-  --bg-2: #050505;
-  --surface: #141414;     /* raised surface */
-  --line: #262626;        /* hairline */
-  --line-2: #3a3a3a;      /* divider, input border */
+  /* Grounds — near-black, hue-locked at very low saturation so no neutral
+     on the page reads as default grey. Green still carries type, marks and
+     accents only; it never tints a whole surface. */
+  --bg: #0f1410;          /* anchor — page ground */
+  --bg-2: #090c0a;        /* deeper — gradient end, sunken wells */
+  --surface: #191f1a;     /* raised surface */
+  --line: #2a382c;        /* 1.51:1 — hairline */
+  --line-2: #3e5542;      /* 2.29:1 — divider, input border */
 
-  /* Foreground — neutral, so nothing on the page has a green cast except the
-     accent. fg-2 >= 7:1, fg-3 >= 4.5:1 on --bg. */
-  --fg: #e7e7e7;          /* 16.00:1 */
-  --fg-2: #a5a5a5;        /* 8.00:1 */
-  --fg-3: #7a7a7a;        /* 4.60:1 */
+  /* Foreground — the snow ramp. fg-2 >= 7:1, fg-3 >= 4.5:1 on --bg. */
+  --fg: #e9ebe9;          /* 15.54:1 — headings */
+  --fg-2: #a1ada3;        /*  8.00:1 — body prose */
+  --fg-3: #708373;        /*  4.60:1 — labels, captions */
 
-  /* Accents — one hue, three steps. The only colour on the page. */
-  --accent: #51a45e;      /* 6.42:1 — primary */
-  --accent-2: #8ec798;    /* 10.14:1 — lightest step, gradients only */
-  --accent-3: #61b86f;    /* 8.09:1 — middle step */
-  --accent-ink: #0a0a0a;  /* 6.42:1 on the accent fill */
-  --copper: #bf9752;      /* sparing warm — 7.31:1 */
-  --warn: #bf9752;
+  /* Accents — one hue, three steps. The only colour on the page.
+     Saturation is held at 34; push it higher and eucalyptus becomes grass. */
+  --accent: #51a45e;      /*  6.05:1 — primary */
+  --accent-2: #8ec798;    /*  9.55:1 — lightest step, gradients only */
+  --accent-3: #61b86f;    /*  7.62:1 — middle step */
+  --accent-ink: #0f1410;  /*  6.05:1 on the accent fill */
+  --copper: #c09955;      /*  7.03:1 — sparing warm */
+  --warn: #c09955;
 
-  /* Atmospheric gradient. Reduced from three hues to one, at low opacity.
-     The old blue/violet/teal stack was the single clearest generic tell on
-     the page; dropping it entirely is the recommended next step. */
+  /* Atmospheric gradient. One hue at low opacity: the old blue/violet/teal
+     stack was the clearest generic tell on the page. */
   --grad-hero:
     radial-gradient(58% 76% at 24% -8%, rgba(81, 164, 94, 0.09), transparent 62%),
-    linear-gradient(180deg, #0a0a0a 0%, #040404 100%);
+    linear-gradient(180deg, #0f1410 0%, #090c0a 100%);
 
   --accent-rgb: 81, 164, 94;
-  --selection-fg: #0a0a0a;
+  --selection-fg: #0f1410;
 
   --grain-opacity: 0.16;
   --grain-mix: overlay;
-}
 
-:root.light {
-  /* Surfaces */
-  --bg: #f9fbf9;          /* paper */
-  --bg-2: #f0f5f1;
-  --surface: #f0f5f1;
-  --line: #d1ddd3;        /* 1.35:1 */
-  --line-2: #a6bfaa;      /* 1.90:1 */
-
-  /* Foreground */
-  --fg: #1a201b;          /* 15.95:1 */
-  --fg-2: #415344;        /* 7.94:1 */
-  --fg-3: #5f7963;        /* 4.59:1 */
-
-  /* Accents — same hue, darkened to clear contrast on paper */
-  --accent: #378144;      /* 4.60:1 on paper, 4.79:1 white-on-fill */
-  --accent-2: #40a551;    /* 3.00:1 — large/decorative only */
-  --accent-3: #3d954c;    /* 3.60:1 — large/decorative only */
-  --accent-ink: #ffffff;
-  --copper: #956b23;      /* 4.59:1 */
-  --warn: #956b23;
-
-  --grad-hero:
-    radial-gradient(60% 80% at 22% -10%, rgba(55, 129, 68, 0.08), transparent 62%),
-    radial-gradient(50% 65% at 88% 8%, rgba(55, 129, 68, 0.05), transparent 66%),
-    linear-gradient(180deg, #f9fbf9 0%, #eef3ef 100%);
-
-  --accent-rgb: 55, 129, 68;
-  --selection-fg: #ffffff;
-
-  --grain-opacity: 0.09;
-  --grain-mix: multiply;
-}
-
-:root,
-:root.dark {
-  /* Semantic colours (dark). Success is the brand green: a green brand plus
-     a separate success green would be two greens meaning different things. */
+  /* Semantic colours. Success is the brand green: a green brand plus a
+     separate emerald success would be two greens meaning different things. */
   --interactive: var(--accent);
-  --interactive-hover: #5bb96b;   /* 8.10:1 */
+  --interactive-hover: #65b372;   /* 7.31:1 */
   --interactive-ink: var(--accent-ink);
-  --success: #51a45e;             /* 6.42:1 */
-  --danger: #d18c82;              /* 7.33:1 */
-  --info: #59a8c2;                /* 7.35:1 */
+  --success: #51a45e;             /* 6.05:1 */
+  --danger: #d18e83;              /* 7.01:1 */
+  --info: #5ca9c3;                /* 7.02:1 — teal-blue at 195, far enough
+                                     from the brand to never be mistaken
+                                     for it */
   --ring: rgba(var(--accent-rgb), 0.55);
-}
-
-:root.light {
-  --interactive: var(--accent);
-  --interactive-hover: #286c33;   /* 6.18:1 */
-  --interactive-ink: var(--accent-ink);
-  --success: #378144;             /* 4.60:1 */
-  --danger: #ca442f;              /* 4.59:1 */
-  --info: #247c99;                /* 4.59:1 */
-  --ring: rgba(var(--accent-rgb), 0.45);
 }
 
 :root {
@@ -138,11 +96,4 @@
   /* Focus ring */
   --ring-width: 2px;
   --ring-offset: 2px;
-}
-
-/* Honour OS preference for first visit when no saved choice (script overrides) */
-@media (prefers-color-scheme: light) {
-  :root:not(.dark):not(.light) {
-    color-scheme: light;
-  }
 }

@@ -2,22 +2,16 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import {
-  SPACE_LABELS,
-  SPACE_LOGOS,
-  ndcToPercent,
-  viewportFraction,
-} from "./InlineGlobeDecor";
 
 const InlineGlobeScene = dynamic(() => import("./InlineGlobeScene"), {
   ssr: false,
 });
 
 // ---------------------------------------------------------------------------
-// Morse easter egg: the Oslo dot's halo keys out "MORTEN VICTOR NORDBYE" on a
-// slow continuous loop (~9 WPM Farnsworth). Standard ITU timing — dit = 1
-// unit, dah = 3, intra-character gap = 1, inter-character = 3, inter-word = 7
-// — with a long end-of-message gap so the loop breathes between repetitions.
+// Morse easter egg: the Oslo pin keys out "MORTEN VICTOR NORDBYE" on a slow
+// continuous loop (~9 WPM Farnsworth). Standard ITU timing — dit = 1 unit,
+// dah = 3, intra-character gap = 1, inter-character = 3, inter-word = 7 —
+// with a long end-of-message gap so the loop breathes between repetitions.
 // ---------------------------------------------------------------------------
 const MORSE_UNIT_MS = 130;
 const MORSE_TEXT = "MORTEN VICTOR NORDBYE";
@@ -55,27 +49,27 @@ const MORSE_SCHEDULE = buildMorseSchedule(MORSE_TEXT);
 type Mode = "loading" | "skip" | "static" | "webgl";
 
 /**
- * Wrapper component for the Hero background globe.
+ * The hero backdrop: a globe standing on a table under a single warm light,
+ * rather than a planet in orbit.
  *
- * - Mobile (<= 768px): renders nothing. three.js is ~600 KB; not worth shipping
- *   for an ambient background that's barely visible on a phone.
- * - Reduced motion: renders the static SVG placeholder only. No WebGL.
- * - Desktop, full motion: starts on the static SVG and upgrades to the WebGL
- *   scene on the first real user input (pointermove / pointerdown / keydown /
- *   touchstart). Headless Lighthouse runs never trigger any of these, so
- *   three.js stays out of the TBT measurement window entirely — a "facade"
- *   pattern.
- *
- * The brand-logo + funny-label HTML decor renders in all desktop modes, so
- * the hero never looks empty before the upgrade.
+ * - Mobile (<= 768px): renders nothing. three.js is ~600 KB; not worth
+ *   shipping for an ambient background that's barely visible on a phone.
+ * - Reduced motion: renders the static painted fallback only. No WebGL.
+ * - Desktop, full motion: starts on the static fallback and upgrades to the
+ *   WebGL scene on the first real user input (pointermove / pointerdown /
+ *   keydown / touchstart). Headless Lighthouse runs never trigger any of
+ *   these, so three.js stays out of the TBT measurement window entirely — a
+ *   "facade" pattern.
  */
 export function InlineGlobe() {
   const [mode, setMode] = useState<Mode>("loading");
   const [activated, setActivated] = useState(false);
-  // The Oslo marker lives in this overlay — a sibling of the dimmed canvas
-  // wrapper, so the wrapper's opacity doesn't apply. The scene's
-  // OsloProjector mutates `transform` on this element each frame.
+  // The OSLO label lives in this overlay — HTML rather than 3D text, so it
+  // stays crisp at any size. The scene writes its transform and opacity each
+  // frame from the pin's projected position.
   const osloOverlayRef = useRef<HTMLDivElement>(null);
+  // Morse state, read by the scene each frame to key the pin's glow.
+  const keyRef = useRef(0.25);
 
   useEffect(() => {
     const isNarrow = window.matchMedia("(max-width: 768px)").matches;
@@ -92,9 +86,9 @@ export function InlineGlobe() {
 
     // Wait for genuine user input before paying the three.js cost. Lighthouse
     // doesn't synthesize pointer/keyboard input during its perf trace, so the
-    // ~1.5s of long-task work that drei + texture decoding cause never lands
-    // inside its TBT window. Real visitors hit the upgrade within a second
-    // or two of arriving on the page.
+    // ~1.5s of long-task work that texture decoding causes never lands inside
+    // its TBT window. Real visitors hit the upgrade within a second or two of
+    // arriving on the page.
     const trigger = () => setActivated(true);
     const opts: AddEventListenerOptions = { once: true, passive: true };
     const events: (keyof WindowEventMap)[] = [
@@ -110,26 +104,17 @@ export function InlineGlobe() {
     };
   }, [mode, activated]);
 
-  // Easter egg: once the WebGL marker is live, key its glow on a slow Morse
-  // loop spelling "MORTEN VICTOR NORDBYE". The OsloProjector still writes
-  // opacity/transform on the same element each frame — those control whether
-  // the marker is visible at all (back-of-globe cull). --oslo-key drives the
-  // box-shadow alpha so the keying rides on top of that.
   useEffect(() => {
     if (!activated) return;
-    const el = osloOverlayRef.current;
-    if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const schedule = MORSE_SCHEDULE; // precomputed module constant
     let i = 0;
     let timer: ReturnType<typeof setTimeout> | null = null;
-
     const tick = () => {
-      const event = schedule[i];
-      el.style.setProperty("--oslo-key", event.on ? "1" : "0.25");
+      const event = MORSE_SCHEDULE[i];
+      keyRef.current = event.on ? 1 : 0.25;
       timer = setTimeout(() => {
-        i = (i + 1) % schedule.length;
+        i = (i + 1) % MORSE_SCHEDULE.length;
         tick();
       }, event.units * MORSE_UNIT_MS);
     };
@@ -137,195 +122,87 @@ export function InlineGlobe() {
 
     return () => {
       if (timer) clearTimeout(timer);
-      el.style.removeProperty("--oslo-key");
+      keyRef.current = 0.55;
     };
   }, [activated]);
 
   if (mode === "loading" || mode === "skip") return null;
 
-  // Reduced-motion: SVG fallback only, no decor + no WebGL.
-  if (mode === "static") {
-    return (
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.35]"
-      >
-        <StaticGlobe />
-      </div>
-    );
-  }
-
   return (
-    <>
-      {/* Static SVG sits behind everything; the WebGL canvas fades in over
-          the top once the user interacts. Keeping the SVG mounted means
-          there's no jump in the visual hierarchy when the upgrade happens. */}
-      {!activated && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.35]"
-        >
-          <StaticGlobe />
-        </div>
-      )}
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      {/* The still frame holds the composition until the scene takes over, so
+          the upgrade is a change of fidelity rather than a change of layout. */}
+      {!activated && <StaticGlobe />}
+
       {activated && (
         <>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 -z-10 opacity-[0.45]"
-          >
-            <InlineGlobeScene overlayRef={osloOverlayRef} />
+          <div className="absolute inset-0">
+            <InlineGlobeScene overlayRef={osloOverlayRef} keyRef={keyRef} />
           </div>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 -z-[5] overflow-hidden"
-          >
-            <div
-              ref={osloOverlayRef}
-              className="oslo-marker absolute left-0 top-0"
-              style={{ opacity: 0, willChange: "transform" }}
-            >
-              <span className="oslo-marker-label">OSLO</span>
-            </div>
+          <div ref={osloOverlayRef} className="absolute top-0 left-0" style={{ opacity: 0 }}>
+            <span className="oslo-marker-label">OSLO</span>
           </div>
         </>
       )}
-      <SpaceDecor />
-    </>
-  );
-}
 
-// Logos + monospace easter-egg labels rendered as HTML rather than three.js
-// sprites/text meshes. This replaces 19 fetch+canvas+texture-upload trips
-// (each logo was an SVG → Image → Canvas → THREE.CanvasTexture pipeline) and
-// drops the troika-three-text dependency that drei's <Text> pulled in.
-// Sizes match the original 3D layout via viewportFraction(worldSize, z),
-// which mirrors three.js's perspective projection for the same fov/camera.
-function SpaceDecor() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const update = () => {
-      el.style.setProperty("--decor-h", `${el.clientHeight}px`);
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      aria-hidden
-      className="pointer-events-none absolute inset-0 -z-[6] overflow-hidden font-mono"
-    >
-      {SPACE_LOGOS.map((logo) => {
-        const pos = ndcToPercent(logo.ndc);
-        const factor = viewportFraction(logo.scale, logo.z);
-        return (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={logo.slug}
-            src={`/icons/${logo.slug}.svg`}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            style={{
-              position: "absolute",
-              left: pos.left,
-              top: pos.top,
-              height: `calc(var(--decor-h, 800px) * ${factor})`,
-              width: `calc(var(--decor-h, 800px) * ${factor})`,
-              transform: "translate(-50%, -50%)",
-              opacity: 0.9,
-            }}
-          />
-        );
-      })}
-      {SPACE_LABELS.map((label) => {
-        const pos = ndcToPercent(label.ndc);
-        const factor = viewportFraction(label.size, label.z);
-        return (
-          <span
-            key={label.text}
-            style={{
-              position: "absolute",
-              left: pos.left,
-              top: pos.top,
-              transform: "translate(-50%, -50%)",
-              fontSize: `calc(var(--decor-h, 800px) * ${factor})`,
-              color: label.color ?? "#9ec9ff",
-              opacity: 0.85,
-              textShadow: "0 0 4px rgba(0,0,0,0.7)",
-              whiteSpace: "nowrap",
-              letterSpacing: "0.02em",
-            }}
-          >
-            {label.text}
-          </span>
-        );
-      })}
+      {/* Painterly finish. The render is lit like a photograph; these give it
+          the surface of a painting — the light of the window, chiaroscuro
+          falloff into the copy column, and the tooth of the canvas. */}
+      <span className="absolute inset-0 room-light" />
+      <span className="absolute inset-0 room-vignette" />
+      <span className="absolute inset-0 room-weave" />
+      {/* Hands the hero back to the page background at its lower edge. */}
+      <span className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-bg" />
     </div>
   );
 }
 
 /**
- * Reduced-motion / no-WebGL fallback. Position and diameter match the WebGL
- * globe (`useResponsiveEarthOffset` puts the textured Earth at +15% of half
- * the canvas width, and the Earth's screen radius is 1.6/2.566 ≈ 62% of the
- * canvas height), so the swap to the WebGL scene on first user input lands
- * in the same place without a visible jump. The Oslo dot lives in the upper
- * region of the disk, matching where the WebGL Oslo marker projects given
- * the locked INITIAL_ROTATION / EARTH_TILT_X pose.
+ * Reduced-motion / pre-upgrade fallback. Not a wireframe: the same warm room
+ * painted flat, with the globe, its ring and the table edge in the same places
+ * the scene puts them, so the swap on first input lands without a jump.
  */
 function StaticGlobe() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const update = () => {
-      el.style.setProperty("--globe-h", `${el.clientHeight}px`);
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   return (
-    <div ref={ref} className="absolute inset-0">
+    <div className="absolute inset-0 bg-[#191108]">
+      <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-b from-[#33240f] to-[#1d1409]" />
+      {/* Sized by the hero's width, not its height, so the globe holds the
+          same quarter-of-the-frame the scene gives it and the upgrade is not
+          also a change of scale. */}
       <svg
-        viewBox="-200 -200 400 400"
-        aria-hidden
-        style={{
-          position: "absolute",
-          width: "calc(var(--globe-h, 800px) * 0.62)",
-          height: "calc(var(--globe-h, 800px) * 0.62)",
-          left: "65%",
-          top: "50%",
-          transform: "translate(-50%, -50%)",
-        }}
+        className="absolute right-[4%] bottom-[6%] w-[26%] opacity-90"
+        viewBox="0 0 400 500"
+        fill="none"
       >
         <defs>
-          <radialGradient id="inline-rim" cx="50%" cy="50%" r="50%">
-            <stop offset="80%" stopColor="#51a45e" stopOpacity="0" />
-            <stop offset="100%" stopColor="#51a45e" stopOpacity="0.45" />
+          <radialGradient id="globe-lit" cx="33%" cy="26%" r="80%">
+            <stop offset="0%" stopColor="#63652f" />
+            <stop offset="48%" stopColor="#2b3520" />
+            <stop offset="100%" stopColor="#0a0f06" />
           </radialGradient>
+          <linearGradient id="globe-brass" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#5c4826" />
+            <stop offset="42%" stopColor="#9a7c46" />
+            <stop offset="100%" stopColor="#63512c" />
+          </linearGradient>
+          <filter id="globe-shadow">
+            <feGaussianBlur stdDeviation="14" />
+          </filter>
         </defs>
-        <circle cx="0" cy="0" r="195" fill="#0a1018" />
-        <circle cx="0" cy="0" r="195" fill="none" stroke="#51a45e" strokeOpacity="0.35" strokeWidth="0.8" />
-        <ellipse cx="0" cy="0" rx="195" ry="65" fill="none" stroke="#51a45e" strokeOpacity="0.25" strokeWidth="0.6" />
-        <ellipse cx="0" cy="0" rx="65" ry="195" fill="none" stroke="#51a45e" strokeOpacity="0.2" strokeWidth="0.6" />
-        <circle cx="0" cy="0" r="200" fill="url(#inline-rim)" />
-        <g transform="translate(70,-140)">
-          <circle r="6" fill="#51a45e" />
-          <circle r="18" fill="#51a45e" fillOpacity="0.12" />
-          <circle r="28" fill="none" stroke="#51a45e" strokeOpacity="0.4" strokeWidth="0.6" />
-        </g>
+        <ellipse cx="255" cy="452" rx="140" ry="24" fill="#0b0703" opacity="0.75" filter="url(#globe-shadow)" />
+        <circle cx="200" cy="180" r="160" fill="url(#globe-lit)" />
+        <ellipse
+          cx="200"
+          cy="180"
+          rx="170"
+          ry="176"
+          stroke="url(#globe-brass)"
+          strokeWidth="7"
+          transform="rotate(-6 200 180)"
+        />
+        <path d="M191 356h18v58h-18z" fill="url(#globe-brass)" />
+        <ellipse cx="200" cy="420" rx="62" ry="13" fill="url(#globe-brass)" />
+        <circle cx="252" cy="72" r="7" fill="#8ec798" />
       </svg>
     </div>
   );

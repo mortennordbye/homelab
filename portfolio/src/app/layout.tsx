@@ -89,10 +89,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-    { media: "(prefers-color-scheme: light)", color: "#f9fbf9" },
-  ],
+  // Dark only — the boot script forces .dark, so a light entry would paint
+  // browser chrome that never matches the page.
+  themeColor: "#0f1410",
   width: "device-width",
   initialScale: 1,
 };

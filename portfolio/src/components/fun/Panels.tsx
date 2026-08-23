@@ -16,7 +16,7 @@ export const ACCENT = {
   copper: "#c9713f",
   green: "#51a45e",
   amber: "#c09955",
-  red: "#d18c82",
+  red: "#d18e83",
 } as const;
 
 export type PanelId =

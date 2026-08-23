@@ -94,6 +94,36 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Add a `scripts/optimize-images.ts` step that runs `sharp` over `public/images/`.
 - **Where:** `portfolio/public/images/`.
 
+### The hero room poster is captured by hand
+- **What:** `portfolio/public/images/room-poster.jpg` is a screenshot of the `/fun` scene taken from the running dev server on 2026-08-23 (640x450, ~37KB). Nothing regenerates it, so any change to the room's furniture, lighting or wall screens leaves the hero showing a room that no longer exists.
+- **Why deferred:** Automating it means driving a headless browser with WebGL in CI, hiding the HUD overlays, and committing a binary each run. That is a disproportionate amount of machinery for an image that changes maybe twice a year.
+- **Unblock:** Either accept it as manual and note it in the room's own source file, or add a `make room-poster` target that runs Playwright against a locally running dev server, hides the HUD, screenshots the canvas region and writes the file. The capture recipe is in the session that added it: hide positioned elements matching `/live feed|^exit$|CONTROLS|click to look around|Poly Haven|hide these/`, screenshot, then `sips --resampleWidth 640 -s format jpeg -s formatOptions 68`.
+- **Where:** `portfolio/public/images/room-poster.jpg`, `portfolio/src/components/sections/Hero.tsx`, `portfolio/src/components/fun/Room.tsx`.
+
+### The hero's stack logos have nowhere to live
+- **What:** The hero used to float nineteen product logos and three shell-command jokes around the globe (`InlineGlobeDecor.ts`, deleted 2026-08-23). The still-life hero cannot carry them: a photographed object on a table with SVG logos orbiting it stops being a photograph. So the only place the site names its stack is now prose. The nineteen SVGs are still committed under `portfolio/public/icons/` and nothing imports them; only `public/icons/social/` is still used, by the fun room.
+- **Why deferred:** Where the stack belongs is a content decision, not a layout one. It could be an honest strip further down the home page, a line in About, or nothing at all if the work case studies already carry it. Picking one silently would be inventing scope.
+- **Unblock:** Decide whether the stack gets its own block on `/`. If yes, build it from the same `public/icons/*.svg` and delete nothing. If no, delete those nineteen files (they are recoverable from git) and the hero loses no signal it still had.
+- **Where:** `portfolio/public/icons/*.svg`, `portfolio/src/components/sections/Hero.tsx`, deleted `portfolio/src/components/InlineGlobeDecor.ts`.
+
+### The hero is warm and the rest of the site is not
+- **What:** The hero renders a wooden room under a warm key light, while `tokens.css` stays hue-locked to 130 with a near-black ground, exactly as the `/brand` spec says. The seam is visible where the hero fades into the page: the room's table edge is brown and the section below it is green-black.
+- **Why deferred:** Warming the ground is a brand-spec change, not a hero change, and it would ripple into `/brand`, the print ramp and every solved contrast ratio on that page. The current fade covers the seam well enough that it is not a defect.
+- **Unblock:** Decide whether the ground follows the hero. If it does, re-solve the neutral ramp around a warm hue and update `content/brand.ts` and the `/brand` page with the new measured ratios. If it does not, leave it and treat the hero as the site's one photographic surface.
+- **Where:** `portfolio/src/styles/tokens.css`, `portfolio/src/content/brand.ts`, `portfolio/src/components/InlineGlobe.tsx`.
+
+### Palette sweep: components still holding colour literals
+- **What:** After the dark ramp was locked to the `/brand` spec (2026-08-23), a few surfaces still paint from literals instead of tokens. `CommandPalette.tsx` uses `text-emerald-400`, `text-cyan-400`, `text-blue-400`, `text-rose-400/80` and `caret-emerald-400` (lines ~285-378), and roughly 120 `white/NN` and `black/NN` alpha utilities live across `components/fun/*`, `app/fun/FunRoomClient.tsx`, `components/work/ArchitectureDrawer.tsx`. Mapping them onto `--accent`, `--info`, `--danger` and an `rgba(var(--fg-rgb), …)` needs a new `--fg-rgb` token alongside the existing `--accent-rgb`.
+- **Why deferred:** The token layer was the blocker and is now correct; the sweep is mechanical but touches the fun room, which is hand-tuned 3D scenery where a blanket find-and-replace would flatten deliberate choices. Scene colours (wood, paper, screen glow) may legitimately stay literal.
+- **Unblock:** Decide which fun-room literals are UI chrome (must tokenise) versus illustration (may stay), add `--fg-rgb` to `tokens.css`, then convert file by file with a screenshot diff per surface.
+- **Where:** `portfolio/src/styles/tokens.css`, `portfolio/src/components/CommandPalette.tsx`, `portfolio/src/components/fun/`, `portfolio/src/components/work/ArchitectureDrawer.tsx`.
+
+### Captions on raised surfaces fall just under AA
+- **What:** `--fg-3` (`#708373`) is solved to 4.60:1 against the page ground `--bg` (`#0f1410`), but on `--surface` (`#191f1a`) it measures 4.14:1, under the 4.5:1 AA threshold for small text. Cards and panels use both.
+- **Why deferred:** Fixing it means either lightening `--fg-3` for every ground (which loosens the ratio the spec was solved for) or adding a surface-specific caption token, and that is a brand-spec decision rather than a code change.
+- **Unblock:** Pick one: lift `--fg-3` to roughly `#778a7a` so it clears 4.5:1 on `--surface` too, or add `--fg-3-on-surface` and use it inside cards. Update `content/brand.ts` and the `/brand` page either way.
+- **Where:** `portfolio/src/styles/tokens.css`, `portfolio/src/content/brand.ts`, `portfolio/src/app/brand/`.
+
 ### Playwright smoke test suite for portfolio
 - **What:** A small containerized Playwright suite that builds the prod image, runs the container, and asserts key routes return 200 with expected content plus `/healthz`. Wire into `.github/workflows/ci-portfolio.yaml` as a job after lint/typecheck/build.
 - **Why deferred:** Tier 2 of the linting/testing rollout (2026-07-08); user approved shipping lint + typecheck + build gates first. Adds ~2–3 min to CI and needs a committed Playwright config decision (image, route list).

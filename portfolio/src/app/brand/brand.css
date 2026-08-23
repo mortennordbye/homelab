@@ -1,9 +1,10 @@
 /* ======================================================================
    Brand system spec — scoped tokens.
 
-   Everything lives under .bsys so this page can specify the eucalyptus
-   system while the rest of the site still ships the arctic-blue tokens in
-   styles/tokens.css. Nothing here leaks out; nothing outside leaks in.
+   Everything lives under .bsys so the page can render both grounds side by
+   side. The dark values match styles/tokens.css exactly; the light ones only
+   exist here and in the print stylesheet, since the site itself is dark only.
+   Nothing here leaks out; nothing outside leaks in.
    ====================================================================== */
 
 .bsys {
