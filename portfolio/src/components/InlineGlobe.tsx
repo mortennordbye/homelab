@@ -126,13 +126,40 @@ export function InlineGlobe() {
     };
   }, [activated]);
 
-  if (mode === "loading" || mode === "skip") return null;
-
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      {/* The still frame holds the composition until the scene takes over, so
-          the upgrade is a change of fidelity rather than a change of layout. */}
-      {!activated && <StaticGlobe />}
+      {/* A real frame of the scene, not a drawing of it. It renders for every
+          visitor with no JavaScript involved, which is what finally gives
+          phones the globe: under 768px the WebGL scene never mounts, because
+          it costs 211 KB of gzipped JS (883 KB parsed) plus 577 KB of texture
+          to decode and a canvas that then renders continuously. This is 37 KB
+          and holds still. Desktop sees it too, until the scene takes over —
+          so the upgrade is a change of fidelity rather than of layout, and
+          reduced-motion visitors simply keep it. */}
+      {/* Two crops rather than one, because a phone and a desktop need
+          different pictures, not the same picture squeezed. The wide frame
+          matches what the live scene renders, so the upgrade is seamless. The
+          portrait frame puts the globe low and right with dark room above it,
+          which is where the headline and the body copy go — a single wide crop
+          left the lit limb sitting directly behind the prose.
+          {/* On a phone the picture gets the lower band and the copy gets the
+          dark ground above it, because a globe behind a paragraph is a
+          contrast problem however it is positioned — with the image covering
+          the full height there is no vertical overflow left to steer it with.
+          Desktop keeps the full bleed, where the copy sits in its own column
+          and the object has the other one. */}
+      <div className="absolute inset-x-0 bottom-0 h-[50%] md:inset-0 md:h-full">
+        <picture>
+          <source media="(max-width: 767px)" srcSet="/images/globe-poster-mobile.jpg" />
+          <img
+            src="/images/globe-poster.jpg"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-[64%_50%] md:object-center"
+          />
+        </picture>
+        {/* Blends the band's top edge into the ground above it. */}
+        <span className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-bg via-bg/70 to-transparent md:hidden" />
+      </div>
 
       {activated && (
         <>
@@ -153,57 +180,6 @@ export function InlineGlobe() {
       <span className="absolute inset-0 room-weave" />
       {/* Hands the hero back to the page background at its lower edge. */}
       <span className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-bg" />
-    </div>
-  );
-}
-
-/**
- * Reduced-motion / pre-upgrade fallback. Not a wireframe: the same warm room
- * painted flat, with the globe, its ring and the table edge in the same places
- * the scene puts them, so the swap on first input lands without a jump.
- */
-function StaticGlobe() {
-  return (
-    <div className="absolute inset-0 bg-[#191108]">
-      <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-b from-[#33240f] to-[#1d1409]" />
-      {/* Sized by the hero's width, not its height, so the globe holds the
-          same quarter-of-the-frame the scene gives it and the upgrade is not
-          also a change of scale. */}
-      <svg
-        className="absolute right-[4%] bottom-[6%] w-[26%] opacity-90"
-        viewBox="0 0 400 500"
-        fill="none"
-      >
-        <defs>
-          <radialGradient id="globe-lit" cx="33%" cy="26%" r="80%">
-            <stop offset="0%" stopColor="#63652f" />
-            <stop offset="48%" stopColor="#2b3520" />
-            <stop offset="100%" stopColor="#0a0f06" />
-          </radialGradient>
-          <linearGradient id="globe-brass" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#5c4826" />
-            <stop offset="42%" stopColor="#9a7c46" />
-            <stop offset="100%" stopColor="#63512c" />
-          </linearGradient>
-          <filter id="globe-shadow">
-            <feGaussianBlur stdDeviation="14" />
-          </filter>
-        </defs>
-        <ellipse cx="255" cy="452" rx="140" ry="24" fill="#0b0703" opacity="0.75" filter="url(#globe-shadow)" />
-        <circle cx="200" cy="180" r="160" fill="url(#globe-lit)" />
-        <ellipse
-          cx="200"
-          cy="180"
-          rx="170"
-          ry="176"
-          stroke="url(#globe-brass)"
-          strokeWidth="7"
-          transform="rotate(-6 200 180)"
-        />
-        <path d="M191 356h18v58h-18z" fill="url(#globe-brass)" />
-        <ellipse cx="200" cy="420" rx="62" ry="13" fill="url(#globe-brass)" />
-        <circle cx="252" cy="72" r="7" fill="#9ec3a3" />
-      </svg>
     </div>
   );
 }
