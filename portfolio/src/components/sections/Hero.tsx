@@ -128,7 +128,7 @@ export function Hero() {
                 />
                 <span
                   aria-hidden
-                  className="room-feed__sweep pointer-events-none absolute inset-x-0 top-0 h-[38%] bg-gradient-to-b from-transparent via-white/[0.045] to-transparent"
+                  className="room-feed__sweep pointer-events-none absolute inset-x-0 top-0 h-[38%] bg-gradient-to-b from-transparent via-snow/[0.045] to-transparent"
                 />
                 <span
                   aria-hidden

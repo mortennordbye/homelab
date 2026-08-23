@@ -17,8 +17,11 @@ const sizes: Record<Size, string> = {
 const variants: Record<Variant, string> = {
   primary:
     "bg-accent text-accent-ink hover:bg-interactive-hover shadow-[0_0_0_1px_var(--accent)] hover:shadow-[0_0_24px_-6px_var(--accent)]",
-  secondary:
-    "border border-line-2 bg-surface/60 text-fg hover:border-accent/60 hover:text-accent",
+  // Solid brass rather than an outline: green is the primary and stays the
+  // only green control, so the second action needs its own material instead
+  // of a quieter version of the first. --fg, never --fg-2, which measures
+  // 2.65:1 on brass.
+  secondary: "bg-brass text-fg hover:bg-brass-hi",
   ghost: "text-fg-2 hover:text-fg hover:bg-surface/60",
   link: "text-accent hover:text-interactive-hover underline-offset-4 hover:underline px-0 py-0",
 };

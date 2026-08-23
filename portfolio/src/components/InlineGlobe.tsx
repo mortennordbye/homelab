@@ -202,7 +202,7 @@ function StaticGlobe() {
         />
         <path d="M191 356h18v58h-18z" fill="url(#globe-brass)" />
         <ellipse cx="200" cy="420" rx="62" ry="13" fill="url(#globe-brass)" />
-        <circle cx="252" cy="72" r="7" fill="#8ec798" />
+        <circle cx="252" cy="72" r="7" fill="#9ec3a3" />
       </svg>
     </div>
   );

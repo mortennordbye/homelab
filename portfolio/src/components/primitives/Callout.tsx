@@ -7,7 +7,9 @@ const tones: Record<Tone, { ring: string; ink: string; label: string }> = {
   info: { ring: "border-accent/40 bg-accent/[0.06]", ink: "text-accent", label: "Note" },
   success: { ring: "border-success/40 bg-success/[0.06]", ink: "text-success", label: "Outcome" },
   warn: { ring: "border-warn/40 bg-warn/[0.06]", ink: "text-warn", label: "Watch" },
-  result: { ring: "border-copper/40 bg-copper/[0.06]", ink: "text-copper", label: "Result" },
+  // A filled wood block rather than a tinted one, so Result reads as a
+  // different material from Watch rather than a different shade of it.
+  result: { ring: "border-brass bg-wood", ink: "text-fg", label: "Result" },
 };
 
 export function Callout({

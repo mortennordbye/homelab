@@ -655,7 +655,7 @@ export function Room({
                   className="flex h-full w-full items-center justify-center font-mono"
                   style={{
                     background: "#0b1a12",
-                    color: hovered ? "#7dffbe" : "#3ddc97",
+                    color: hovered ? "#95e4a1" : "#4dcb60",
                     fontSize: "52px",
                     letterSpacing: "0.3em",
                     textIndent: "0.3em",

@@ -461,7 +461,7 @@ export function SkillPlate({
               <div
                 style={{
                   height: "1px",
-                  background: `${ACCENT.blue}3d`,
+                  background: `${ACCENT.brand}3d`,
                   margin: "12px 0 14px",
                 }}
               />
@@ -516,8 +516,8 @@ export function SkillPlate({
                               position: "absolute",
                               inset: "0 auto 0 0",
                               width: `${s.level}%`,
-                              background: ACCENT.blue,
-                              boxShadow: `0 0 9px ${ACCENT.blue}b3`,
+                              background: ACCENT.brand,
+                              boxShadow: `0 0 9px ${ACCENT.brand}b3`,
                             }}
                           />
                         </span>
@@ -546,9 +546,9 @@ export function SkillPlate({
  * mistake the door and sideboard already taught: it reads as a flat board.
  */
 const SERVICE_TONE: Record<string, string> = {
-  arctic: ACCENT.blue,
-  copper: ACCENT.copper,
-  teal: ACCENT.teal,
+  brand: ACCENT.brand,
+  material: ACCENT.copper,
+  brand2: ACCENT.info,
 };
 
 export function ServiceRack({
@@ -687,7 +687,7 @@ export function ServiceRack({
       >
         <div className="flex h-full w-full" style={{ gap: `${gapPx}px` }}>
           {services.map((svc) => {
-            const tone = SERVICE_TONE[svc.accent] ?? ACCENT.blue;
+            const tone = SERVICE_TONE[svc.accent] ?? ACCENT.brand;
             return (
               <div
                 key={svc.slug}

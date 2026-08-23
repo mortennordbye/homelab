@@ -41,8 +41,8 @@ export default async function Image() {
               width: 12,
               height: 12,
               borderRadius: "50%",
-              background: "#51a45e",
-              boxShadow: "0 0 24px #51a45e",
+              background: "#65a16e",
+              boxShadow: "0 0 24px #65a16e",
             }}
           />
           available · oslo &amp; remote
@@ -65,7 +65,7 @@ export default async function Image() {
               style={{
                 marginLeft: 24,
                 background:
-                  "linear-gradient(110deg, #e9ebe9 30%, #61b86f 65%, #8ec798 95%)",
+                  "linear-gradient(110deg, #e9ebe9 30%, #81b288 65%, #9ec3a3 95%)",
                 backgroundClip: "text",
                 color: "transparent",
               }}
@@ -104,7 +104,7 @@ export default async function Image() {
               color: "#e9ebe9",
             }}
           >
-            <span style={{ color: "#51a45e" }}>●</span>
+            <span style={{ color: "#65a16e" }}>●</span>
             nordbye.it
           </div>
           <div style={{ color: "#708373" }}>

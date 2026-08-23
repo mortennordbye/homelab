@@ -1,10 +1,14 @@
 /* ======================================================================
    Design tokens — Eucalyptus palette
 
-   Hue is locked to 130. Every value was solved against its own ground for
-   a target WCAG ratio rather than picked by hand, so the ratios in the
-   comments are measured against --bg. Full spec and reasoning live at
-   /brand, which renders content/brand.ts.
+   Two hues, and they do different jobs. 130 is the brand and it is ink:
+   links, focus, live state, the one action that matters. 32 is the material
+   and it is surface: buttons, chips, panels, edges. Nothing is both.
+
+   Every value was solved against its own ground for a target WCAG ratio
+   rather than picked by hand, so the ratios in the comments are measured
+   against --bg. Full spec and reasoning live at /brand, which renders
+   content/brand.ts.
 
    Dark only. The theme toggle was removed and layout.tsx forces .dark
    before first paint, so a light ramp here would be unreachable CSS. The
@@ -28,22 +32,46 @@
   --fg-2: #a1ada3;        /*  8.00:1 — body prose */
   --fg-3: #708373;        /*  4.60:1 — labels, captions */
 
-  /* Accents — one hue, three steps. The only colour on the page.
-     Saturation is held at 34; push it higher and eucalyptus becomes grass. */
-  --accent: #51a45e;      /*  6.05:1 — primary */
-  --accent-2: #8ec798;    /*  9.55:1 — lightest step, gradients only */
-  --accent-3: #61b86f;    /*  7.62:1 — middle step */
-  --accent-ink: #0f1410;  /*  6.05:1 on the accent fill */
-  --copper: #c09955;      /*  7.03:1 — sparing warm */
+  /* Accents — one hue, three steps. Green is the primary: links, focus, live
+     state and the one action that matters on any given screen.
+     Saturation is held at 24. It was 34, which glared as a solid fill next to
+     the wood; the steps below hold their exact luminance and only lose
+     saturation, so every ratio the system was solved for survives. */
+  --accent: #65a16e;      /*  6.10:1 — primary */
+  --accent-2: #9ec3a3;    /*  9.57:1 — lightest step, gradients only */
+  --accent-3: #81b288;    /*  7.68:1 — middle step */
+  --accent-ink: #0f1410;  /*  6.10:1 on the accent fill */
+
+  /* Wood and brass — the material layer. Green is ink and never a surface;
+     these are surfaces and never ink. Because the two live in different
+     layers they can share the page without competing, which a second brand
+     colour in the ink layer could not do: solved against this ground for the
+     same target, copper and green land 1.01:1 apart and read as one colour.
+     Brass is the only brown that works as a standalone solid — 3.02:1 clears
+     the non-text threshold so a button's shape is perceivable without a
+     border, and it still carries --fg at 5.15:1. Two rules follow from the
+     arithmetic: brass takes --fg only (--fg-2 on it is 2.65:1), and --fg-3
+     never sits on wood (2.85:1). */
+  --wood: #4a3520;        /*  1.61:1 — panels, wells, table headers */
+  --brass: #7f5a2f;       /*  3.02:1 — solid fills, card edges, rules */
+  --brass-hi: #8a6133;    /*  3.40:1 — hover; the lightest brass that still
+                              carries --fg at AA (4.57:1) */
+  --copper: #c09955;      /*  7.03:1 — the ink end of the same ramp, used
+                              sparingly. wood -> brass -> copper is one
+                              material at three depths, not three colours. */
+
+  /* Shares copper's hex, so a Result mark and a Watch mark are currently one
+     colour told apart only by their label. Pre-existing; see BACKLOG.md. */
   --warn: #c09955;
 
   /* Atmospheric gradient. One hue at low opacity: the old blue/violet/teal
      stack was the clearest generic tell on the page. */
   --grad-hero:
-    radial-gradient(58% 76% at 24% -8%, rgba(81, 164, 94, 0.09), transparent 62%),
+    radial-gradient(58% 76% at 24% -8%, rgba(101, 161, 110, 0.09), transparent 62%),
     linear-gradient(180deg, #0f1410 0%, #090c0a 100%);
 
-  --accent-rgb: 81, 164, 94;
+  --accent-rgb: 101, 161, 110;
+  --fg-rgb: 233, 235, 233;   /* alpha tints of the snow ramp */
   --selection-fg: #0f1410;
 
   --grain-opacity: 0.16;
@@ -52,9 +80,9 @@
   /* Semantic colours. Success is the brand green: a green brand plus a
      separate emerald success would be two greens meaning different things. */
   --interactive: var(--accent);
-  --interactive-hover: #65b372;   /* 7.31:1 */
+  --interactive-hover: #7cae83;   /* 7.31:1 */
   --interactive-ink: var(--accent-ink);
-  --success: #51a45e;             /* 6.05:1 */
+  --success: #65a16e;             /* 6.10:1 */
   --danger: #d18e83;              /* 7.01:1 */
   --info: #5ca9c3;                /* 7.02:1 — teal-blue at 195, far enough
                                      from the brand to never be mistaken

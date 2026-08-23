@@ -13,9 +13,9 @@ const iconBySlug: Record<string, React.ReactNode> = {
 };
 
 const accentClasses: Record<NonNullable<Service["accent"]>, { icon: string; ring: string; line: string }> = {
-  arctic: { icon: "text-accent", ring: "hover:border-accent/60", line: "bg-accent" },
-  copper: { icon: "text-copper", ring: "hover:border-copper/60", line: "bg-copper" },
-  teal: { icon: "text-accent-3", ring: "hover:border-accent-3/60", line: "bg-accent-3" },
+  brand: { icon: "text-accent", ring: "hover:border-accent/60", line: "bg-accent" },
+  material: { icon: "text-copper", ring: "hover:border-brass", line: "bg-brass" },
+  brand2: { icon: "text-accent-3", ring: "hover:border-accent-3/60", line: "bg-accent-3" },
 };
 
 export function ServicesGrid() {
@@ -28,7 +28,7 @@ export function ServicesGrid() {
     >
       <div className="grid gap-6 md:grid-cols-3">
         {services.map((s, i) => {
-          const accent = accentClasses[s.accent ?? "arctic"];
+          const accent = accentClasses[s.accent ?? "brand"];
           return (
             <Reveal key={s.slug} delay={i * 0.08}>
               <article
