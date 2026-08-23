@@ -40,6 +40,14 @@ spec:
             # Persist settings on the PVC (agent env vars set via the UI).
             - name: SETTINGS_FILE
               value: /data/settings.json
+            # Deliberately not on the PVC. `vk backup` tars the whole volume —
+            # settings, agent OAuth state, sessions, memory and every repo — and
+            # an export kept on the volume it exists to replace only covers a
+            # bad restore, not losing the share. This is the NAS share, which
+            # gets backed up. The settings page flags it if it ever points back
+            # at /data.
+            - name: VK_BACKUP_DIR
+              value: /mnt/backups
           # The backend serves the built SPA at / — a plain 200 once it is up.
           # Agent auth (claude/codex/agy tokens) is configured interactively in
           # the pod terminal afterwards and persists under HOME=/data/home.
@@ -108,6 +116,12 @@ spec:
             - name: shared-data
               mountPath: /mnt/reelsmith
               subPath: media/reelsmith
+            # Where the nightly volume export lands, off the PVC on purpose.
+            # subPath again, so the container sees only this folder rather than
+            # the whole share.
+            - name: shared-data
+              mountPath: /mnt/backups
+              subPath: backups/verksted
         # Docker daemon for the agent sessions. Privileged is inherent to dind;
         # shares the pod netns so the app reaches it at localhost:2375.
         - name: dind
