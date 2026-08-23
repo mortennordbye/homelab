@@ -133,6 +133,21 @@ export function CommandPalette({ work, services }: Props) {
         hint: "/fun",
         run: () => jump("/fun"),
       },
+      // /brand is deliberately absent from the nav — it is a spec sheet, not a
+      // page anyone browsing needs. The palette is where it belongs: findable
+      // by anyone who goes looking, invisible to everyone else.
+      {
+        id: "cd brand",
+        label: "cd brand",
+        hint: "/brand",
+        run: () => jump("/brand"),
+      },
+      {
+        id: "cat brand.md",
+        label: "cat brand.md",
+        hint: "colour, type and the rules",
+        run: () => jump("/brand"),
+      },
       {
         id: "clear",
         label: "clear",

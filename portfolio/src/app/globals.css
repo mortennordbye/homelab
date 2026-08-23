@@ -277,14 +277,6 @@ body.fun-immersive > main {
   100% { transform: translateY(380%); }
 }
 
-.room-feed__pip {
-  animation: room-blip 2.4s ease-in-out infinite;
-}
-
-@keyframes room-blip {
-  0%, 100% { opacity: 0.35; box-shadow: none; }
-  50%      { opacity: 1; box-shadow: 0 0 8px 1px rgba(var(--accent-rgb), 0.9); }
-}
 
 /* Entering the room. The hero's monitor scales up to fill the viewport, the
    loading screen shows the same frame already at that scale and keeps drifting
