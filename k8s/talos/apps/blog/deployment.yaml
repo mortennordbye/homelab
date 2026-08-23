@@ -27,13 +27,33 @@ spec:
                   matchLabels:
                     app.kubernetes.io/name: blog
                 topologyKey: topology.kubernetes.io/zone
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+        # nginx-unprivileged runs as the built-in `nginx` user (uid 101).
+        runAsUser: 101
+        runAsGroup: 101
       containers:
         - name: blog
           image: ghcr.io/mortennordbye/homelab/blog:10930ac
           imagePullPolicy: Always
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
+            runAsUser: 101
+            runAsGroup: 101
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
           resources:
             requests:
               cpu: 10m
@@ -49,3 +69,11 @@ spec:
             httpGet:
               path: /
               port: http
+          volumeMounts:
+            # Only writable path nginx-unprivileged needs: it puts client_body,
+            # proxy and fastcgi temp dirs under /tmp rather than /var/cache/nginx.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

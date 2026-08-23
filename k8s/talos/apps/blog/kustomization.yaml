@@ -8,6 +8,8 @@ resources:
 - service.yaml
 - httproute.yaml
 - compress-middleware.yaml
+- ratelimit-middleware.yaml
+- inflight-middleware.yaml
 - namespace.yaml
 - ciliumnetworkpolicy.yaml
 - scaledobject.yaml
@@ -16,4 +18,4 @@ resources:
 # deployment.yaml.
 images:
 - name: ghcr.io/mortennordbye/homelab/blog
-  newTag: 0.0.96
+  newTag: 0.0.105

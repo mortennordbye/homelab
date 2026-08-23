@@ -24,10 +24,19 @@ excludeDomains:
 # Start conservative: create/update records, never delete. Switch to "sync" once trusted.
 policy: upsert-only
 
-# Ownership tracking. txtPrefix templates the record type so the TXT never collides with a CNAME.
+# Ownership tracking. txtPrefix templates the record type so the TXT never
+# collides with a CNAME.
+#
+# The trailing dot matters. AffixNameMapper.ToTXTName splits the name on the
+# first dot and inserts the prefix into the first label, so a bare
+# "%{record_type}-" maps the zone apex bigd.no to cname-bigd.no, a sibling of
+# the zone rather than a record in it. The Cloudflare provider's changesByZone
+# then finds no matching zone and drops it at debug level, invisible at INFO,
+# so the apex could never be owned and annotation changes silently skipped it.
+# With the dot the apex maps to extdns-cname.bigd.no, inside the zone.
 registry: txt
 txtOwnerId: genesis
-txtPrefix: "%{record_type}-"
+txtPrefix: "extdns-%{record_type}."
 
 # v0.21 default is external-dns.kubernetes.io/; pinned so the gateway target annotation always matches.
 annotationPrefix: external-dns.kubernetes.io/

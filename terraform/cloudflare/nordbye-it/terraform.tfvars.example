@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and fill in. *.tfvars is gitignored.
+#
+# Create the token at https://dash.cloudflare.com/profile/api-tokens with
+# permissions Zone:Read, DNS:Edit, Zone Settings:Edit and Cache Rules:Edit,
+# scoped to the nordbye.it zone.
+cloudflare_api_token = ""

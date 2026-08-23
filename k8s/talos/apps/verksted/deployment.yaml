@@ -19,6 +19,10 @@ spec:
       labels:
         app: verksted-app
     spec:
+      # Not the namespace default: the token projected into this pod is what
+      # kubectl in an agent session authenticates with, so the account it names
+      # is the whole access boundary. See rbac.yaml.
+      serviceAccountName: verksted
       containers:
         - name: verksted
           image: ghcr.io/mortennordbye/verksted:0.0.7
@@ -73,13 +77,24 @@ spec:
           # over its request and first in line for eviction; the old 2-core
           # limit had it CFS-throttled ~7% of all scheduling periods, which is
           # what stalled the health check.
+          #
+          # 8Gi was still not enough for the reelsmith nightly. Chatterbox holds
+          # about 4.4Gi while it speaks, on top of a session baseline that
+          # climbs from ~3Gi to ~4.4Gi across a batch, so video two peaked at
+          # 7.55Gi and video three went over: OOMKilled 2026-08-14 02:33, which
+          # took the batch, the session and its log with it. Because the
+          # baseline only grows through a run, the later a video sits in the
+          # batch the likelier it is to be the one that dies, and the 7d peak
+          # had touched 7.9Gi twice before it finally did. 12Gi leaves about
+          # 3Gi over the worst observed peak; the request goes to 6Gi so the
+          # scheduler is told something closer to the truth than 4Gi.
           resources:
             requests:
               cpu: "1"
-              memory: 4Gi
+              memory: 6Gi
             limits:
               cpu: "6"
-              memory: 8Gi
+              memory: 12Gi
           volumeMounts:
             - name: data
               mountPath: /data

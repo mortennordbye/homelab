@@ -1,0 +1,19 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: portfolio-inflight
+  namespace: portfolio
+spec:
+  # Concurrency cap alongside the rate limit: a slow reader dribbling in
+  # multi-megabyte /fun assets holds connections open without ever exceeding a
+  # per-second rate.
+  #
+  # sourceCriterion is explicit here because inFlightReq defaults to keying on
+  # requestHost, unlike rateLimit — left implicit it would cap the whole site at
+  # 60 concurrent requests rather than 60 per client. depth: 1 as in the rate
+  # limit middleware.
+  inFlightReq:
+    amount: 60
+    sourceCriterion:
+      ipStrategy:
+        depth: 1

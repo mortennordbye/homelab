@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and fill in. *.tfvars is gitignored.
+#
+# Create the token at https://dash.cloudflare.com/profile/api-tokens with
+# permissions Zone:Read, DNS:Edit and Zone Settings:Edit, scoped to the bigd.no
+# zone.
+cloudflare_api_token = ""

@@ -56,6 +56,34 @@ ports:
     port: 8000
     exposedPort: 80
     protocol: TCP
+    # blog.nordbye.it is proxied through Cloudflare, so requests arrive from an
+    # edge address. Without trustedIPs the entrypoint strips X-Forwarded-For and
+    # the per-client limits downstream key on the edge IP, not the visitor.
+    # Ranges from cloudflare.com/ips-v4 and /ips-v6, fetched 2026-08-21.
+    forwardedHeaders:
+      trustedIPs: &cloudflareIPs
+        - 173.245.48.0/20
+        - 103.21.244.0/22
+        - 103.22.200.0/22
+        - 103.31.4.0/22
+        - 141.101.64.0/18
+        - 108.162.192.0/18
+        - 190.93.240.0/20
+        - 188.114.96.0/20
+        - 197.234.240.0/22
+        - 198.41.128.0/17
+        - 162.158.0.0/15
+        - 104.16.0.0/13
+        - 104.24.0.0/14
+        - 172.64.0.0/13
+        - 131.0.72.0/22
+        - 2400:cb00::/32
+        - 2606:4700::/32
+        - 2803:f800::/32
+        - 2405:b500::/32
+        - 2405:8100::/32
+        - 2a06:98c0::/29
+        - 2c0f:f248::/32
     expose:
       default: true
     http:
@@ -68,6 +96,9 @@ ports:
     port: 8443
     exposedPort: 443
     protocol: TCP
+    # Same ranges as web; this is where proxied traffic lands.
+    forwardedHeaders:
+      trustedIPs: *cloudflareIPs
     # HTTP/3 (QUIC) on the public HTTPS entrypoint. Traefik also listens UDP on
     # this port and advertises Alt-Svc: h3=":443" so browsers upgrade. Serving
     # over UDP/443 additionally needs the port on the public Service and the
@@ -118,8 +149,14 @@ service:
 
 log:
   level: INFO
+# JSON so each line carries ClientAddr, the TCP peer, next to ClientHost, the
+# address resolved from X-Forwarded-For. The default common format logs only
+# the resolved one, which makes a Cloudflare-fronted request indistinguishable
+# from one that reached the origin directly. Temporary: this is here to size an
+# IPAllowList on the proxied hostnames, and reverts once the ranges are known.
 accessLog:
   enabled: true
+  format: json
 
 metrics:
   prometheus:

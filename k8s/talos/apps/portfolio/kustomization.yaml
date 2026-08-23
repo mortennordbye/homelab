@@ -8,6 +8,8 @@ resources:
 - poddisruptionbudget.yaml
 - httproute.yaml
 - compress-middleware.yaml
+- ratelimit-middleware.yaml
+- inflight-middleware.yaml
 - service.yaml
 - ciliumnetworkpolicy.yaml
 - scaledobject.yaml
@@ -18,4 +20,4 @@ resources:
 # deployment.yaml.
 images:
 - name: ghcr.io/mortennordbye/homelab/portfolio
-  newTag: 0.0.101
+  newTag: 0.0.104

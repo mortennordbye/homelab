@@ -4,23 +4,36 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### Flip blog prod to the unprivileged nginx port
-- **What:** `blog/Dockerfile` now serves from `nginxinc/nginx-unprivileged` on port 8080, and `blog-stage` was moved to match. Blog **prod** is deliberately still on port 80 everywhere: `deployment.yaml` (`containerPort`), `service.yaml` (`targetPort`), and both `toPorts` rules in `ciliumnetworkpolicy.yaml`.
-- **Why deferred:** Prod runs an older image (`newTag: 0.0.96`) that still listens on 80. Flipping the prod manifests before that image is promoted would point the Service and the network policy at a port nothing is listening on, taking the blog down until the promotion lands. Kargo's prod stage uses `promote-via-pr`, so prod does not move on its own — the two changes have to land together.
-- **Unblock:** When the Kargo prod promotion PR for the first image built after this change appears, add the port edits to that same PR before merging: `containerPort: 8080`, `targetPort: 8080`, and both CiliumNetworkPolicy `toPorts` entries to `"8080"`. Mirror the `securityContext`, `/tmp` emptyDir and `automountServiceAccountToken: false` from `blog-stage/deployment.yaml`. Verify with `kubectl diff -k k8s/talos/apps/blog --server-side --field-manager=argocd-controller` (the default field manager reports a spurious duplicate-port error).
-- **Where:** `k8s/talos/apps/blog/{deployment,service,ciliumnetworkpolicy}.yaml`, mirroring `k8s/talos/apps/blog-stage/`.
-
-### Orphaned huntarr manifest
-- **What:** `k8s/talos/apps/arr-stack/huntarr.yaml` is commented out of the arr-stack `kustomization.yaml`, nothing is running in the cluster, and `ghcr.io/plexguide/huntarr` no longer resolves in any registry (the upstream repo is gone). Renovate is now explicitly disabled for that image, which was the source of a permanent "Package lookup failures" problem on the dependency dashboard.
-- **Why deferred:** Deleting someone's disabled app manifest is a judgement call, not a dependency fix. The Renovate disable removes the noise either way.
-- **Unblock:** Decide whether huntarr comes back. If yes, repoint the image at a maintained fork and drop the disable rule from `renovate.json`. If no, delete the manifest and the commented line, and drop the disable rule.
-- **Where:** `k8s/talos/apps/arr-stack/huntarr.yaml`, `k8s/talos/apps/arr-stack/kustomization.yaml` (line 15), `renovate.json` (huntarr disable rule).
+### Two orphaned app manifests
+- **What:** Both are committed but inert. `arr-stack/huntarr.yaml` is commented out of its `kustomization.yaml`, nothing runs in the cluster, and `ghcr.io/plexguide/huntarr` no longer resolves anywhere (upstream repo gone); Renovate is explicitly disabled for it, which was the source of a permanent "Package lookup failures" entry on the dependency dashboard. `plex-media-stack/tcproute.yaml` defines a `TCPRoute` for `plex-tcp` on the public gateway, is absent from its `kustomization.yaml`, and no `TCPRoute` exists in the cluster — Plex on 32400 reaches the backend by another path, so it has never been in effect.
+- **Why deferred:** Deleting someone's disabled manifest is a judgement call, not a fix, and neither costs anything where it sits. The Renovate disable already removes the huntarr noise.
+- **Unblock:** huntarr — decide whether it comes back; if yes repoint at a maintained fork and drop the Renovate rule, if no delete the manifest, the commented line and the rule. TCPRoute — decide whether Plex should route through the gateway's `plex-tcp` entrypoint; if yes add it to `kustomization.yaml` and confirm the listener exists, if no delete it.
+- **Where:** `k8s/talos/apps/arr-stack/{huntarr.yaml,kustomization.yaml}`, `renovate.json` (huntarr disable rule), `k8s/talos/apps/plex-media-stack/{tcproute.yaml,kustomization.yaml}`.
 
 ### Remove the old `workout` app after logeverylift cutover
 - **What:** `logeverylift.com` was cut over from the old `workout` app to the renamed `logeverylift` app (PR #369, 2026-07-18). The `workout` namespace, Deployment, Postgres, and PVC are still present — both `workout-app` and `postgres` are scaled to 0 (ArgoCD ignores `/spec/replicas`; also declared in the manifests). The data is preserved on `postgres-pvc`; scale `postgres` back to 1 to re-access it. Nothing routes to it.
 - **Why deferred:** Kept as rollback until the owner has used `logeverylift.com` for a while and confirmed all data/history is intact. Deleting is one-way (prunes the namespace + PVC).
 - **Unblock:** Once verified, delete `k8s/talos/apps/workout/` (ArgoCD prunes the namespace). Archive `workout_db_full.sql` somewhere durable first (it currently lives only in a session scratchpad). Then optionally give `logeverylift` its own Bitwarden items instead of sharing workout's (see the comment in `k8s/talos/apps/logeverylift/externalsecret.yaml`).
 - **Where:** `k8s/talos/apps/workout/`, `k8s/talos/apps/logeverylift/externalsecret.yaml`.
+- **Note (2026-08-21):** `workout.bigd.no` was deleted in the stale-DNS cleanup, so a rollback now also needs that CNAME recreated (`workout.bigd.no` → `ddns.bigd.no`, DNS only). Nothing routed to it, which is why it went.
+
+### Lock the proxied hostnames to Cloudflare with an IPAllowList
+- **What:** `nordbye.it`, `blog.nordbye.it`, `gate.nordbye.it`, `headroom.nordbye.it` and `logeverylift.com` are proxied, but the origin still answers anyone who reaches it directly with the right Host header, so the WAF and the per-client rate limits in `k8s/talos/apps/{portfolio,blog}/ratelimit-middleware.yaml` can be skipped entirely.
+- **Why deferred:** the ranges to allow are not known yet. Traefik's access log resolves X-Forwarded-For before writing the client address, so a Cloudflare-fronted request and a direct one look identical in it. What is visible is that requests arrive on the portfolio and blog routes from `10.3.10.1`, a LAN browser on a path carrying no Cloudflare header, which a Cloudflare-only list would answer with 403. `accessLog.format: json` was turned on to record `ClientAddr`, the real peer, alongside `ClientHost`.
+- **Unblock:** after a few days of JSON logs, group `ClientAddr` per router for the five routes above and write the allowlist from what actually appears. Then revert `accessLog.format` (the comment above it in `values.yaml` says so). The middleware is `ipAllowList` on Traefik v3, attached per route through an `ExtensionRef` filter as the existing rate-limit middlewares are, and it must use the default `ipStrategy` rather than the `depth: 1` the rate limits use, otherwise a spoofed X-Forwarded-For walks through it. Traefik resolves `ExtensionRef` middlewares in the route's own namespace, so this needs one copy per app namespace or a shared kustomize base.
+- **Where:** `k8s/talos/infra/traefik/values.yaml`, `k8s/talos/apps/{portfolio,blog,reelsmith,headroom-demo,logeverylift}/httproute.yaml`. The six proxied `bigd.no` hostnames belong in the same allowlist, but `audiobookshelf` and `seerr` must stay out of it while they are reached directly.
+
+### Take audiobookshelf, seerr and plex off public DNS
+- **What:** `bigd.no`, `www.bigd.no`, `hub.bigd.no`, `it-tools.bigd.no`, `mealie.bigd.no` and `omni-tools.bigd.no` are proxied. `audiobookshelf.bigd.no`, `seerr.bigd.no` and `ddns.bigd.no` are not, so the residential address is still published in this zone and the address stays public despite `nordbye.it` and `logeverylift.com` being clean.
+- **Why deferred:** audiobookshelf serves audio, which Cloudflare's terms exclude outside Enterprise, and they enforce at the account level rather than per hostname. seerr is probably fine as HTML and JSON, but Jellyseerr can proxy TMDB posters through the origin, and if that setting is on it falls under the same clause. Neither can simply be annotated, so hiding the address means giving them a private path, and nothing like Tailscale exists in the cluster today.
+- **Unblock:** check seerr's image proxy setting; if it is off, annotate its HTTPRoute like the others. audiobookshelf needs a private path, as does Plex. Once no public hostname points at it unproxied, `ddns.bigd.no` can go proxied too, but not before: Cloudflare resolves a DNS-only CNAME through to its target's answer, so proxying that record routes every hostname pointing at it through the edge whatever its own proxy flag says. Verified in the zone with a throwaway CNAME.
+- **Where:** `k8s/talos/apps/{audiobookshelf,plex-media-stack}/httproute*.yaml`, `terraform/cloudflare/bigd-no/dns.tf`.
+
+### Plex hardcodes the public address and bypasses DNS entirely
+- **What:** `ADVERTISE_IP` is set to `http://84.212.143.165:32400/`, and Plex is a `TCPRoute` on port 32400 rather than an HTTP hostname. Plex hands that address to plex.tv and to every client, so no amount of DNS proxying hides it while remote access is on.
+- **Why deferred:** it is the same decision as the entry above, and turning remote access off is a household call rather than a technical one.
+- **Unblock:** decide whether Plex remote access is worth publishing the address. If it is, the hardcoded value should at least become a reference to something the DDNS client updates, because it silently breaks remote access the day Telia reassigns the address.
+- **Where:** `k8s/talos/apps/plex-media-stack/plex.yaml:101`, `k8s/talos/apps/plex-media-stack/tcproute.yaml`.
 
 ### Retire Mealie's inert ScaledObject and interceptor hop
 - **What:** Mealie is pinned to `minReplicaCount: 1` / `maxReplicaCount: 1`, so its `ScaledObject` triggers (cron + external-push) never fire. Its `HTTPRoute` still sends traffic through `keda-add-ons-http-interceptor-proxy` rather than straight at `mealie-service`, which is now a pointless extra hop.
@@ -44,6 +57,13 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Infrastructure page
 
+### Second consumer for the cluster status card
+
+- **What:** The status card added to the README is drawn from `/api/v1/infra`, which the `status-publisher` CronJob fills. Two things were deliberately left out. The publisher still lives in the `portfolio` namespace and is named for it even though it now collects cluster-wide facts, and the `/infrastructure` page still renders only the original four (nodes, versions, ArgoCD, cert) while the payload now also carries `gitops`, `apps`, `security`, `observability`, `resources` and `storage`.
+- **Why deferred:** Moving the publisher to its own namespace means standing up something to serve the JSON, since the portfolio pod is what serves it today, and that buys tidiness rather than capability while there is only one in-cluster consumer. Rewriting the `/infrastructure` page is its own design job, not part of shipping the card.
+- **Unblock:** When a second in-cluster consumer appears (the homepage widget is the likely one), extract the CronJob and its RBAC into `k8s/talos/infra/` with a small nginx and route of its own, then repoint the portfolio at the shared URL. The page adopting the new keys can happen independently and needs no move.
+- **Where:** `k8s/talos/apps/portfolio/status-publisher.yaml`, `portfolio/src/app/api/v1/infra/route.ts`, `portfolio/src/components/infrastructure/LiveStatus.tsx`, `scripts/render-status-card.mjs`, `.github/workflows/status-card.yaml`.
+
 ### Outside-in probing for the 30-day health strip
 - **What:** The `/infrastructure` page now renders a 30-day health strip from per-day sample counts the status publisher accumulates in `status.json` (`history` array). It is labelled "observed in-cluster" because that is all it is: days where the publisher never ran show as gaps, but the strip cannot see the site being unreachable from the internet while the cluster is fine, and self-reported health proves less than an external probe.
 - **Why deferred:** True availability needs an external prober (Uptime Kuma on another host, healthchecks.io, or a GitHub Actions schedule hitting the site) publishing daily results somewhere the static page can fetch.
@@ -52,17 +72,21 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Portfolio
 
-### The fun room's printer switches may not respond to `E`
+### Fun room: real-device pass, printer switches and melody
 - **What:** The printer's rocker switches read their prompt correctly under the crosshair, but pressing `E` was reported to produce no visible change in the ON/OFF pill. Never reproduced in a browser with working pointer lock, so it may be a headless-harness artifact rather than a real fault.
-- **Why deferred:** Needs pointer lock, which headless Chromium does not have, so it cannot be checked from the test harness at all.
-- **Unblock:** Open `/fun` in a real browser, look at a printer switch, press `E`, and watch the pill. If it does not flip, instrument `onActivate` in `Interactive` — the registry hands activation the ref payload, so the suspect is either hover resolution or the keydown listener's `enabled` gate.
-- **Where:** `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`.
 
-### Fun room: melody, and a real-device pass
-- **What:** Two loose ends in `/fun`. The synthesised rickroll's third line ("never gonna run around and desert you") is the least confident transcription and has never been listened to by anyone. Separately, nothing here has been driven on real hardware: mouse-look and the cold-load loading bar have never run in a browser with working pointer lock, and the touch controls added 2026-07-20 (drag-to-look, tap-to-activate, walk stick, entry gate) were verified only by dispatching synthetic `TouchEvent`s in headless Chromium. That proves the wiring and says nothing about feel — look sensitivity, stick size and placement, and the tap slop threshold are all guesses at this point.
+  Two further loose ends in `/fun`. The synthesised rickroll's third line ("never gonna run around and desert you") is the least confident transcription and has never been listened to by anyone. And nothing here has been driven on real hardware: mouse-look and the cold-load loading bar have never run in a browser with working pointer lock, and the touch controls added 2026-07-20 (drag-to-look, tap-to-activate, walk stick, entry gate) were verified only by dispatching synthetic `TouchEvent`s in headless Chromium. That proves the wiring and says nothing about feel — look sensitivity, stick size and placement, and the tap slop threshold are all guesses at this point.
 - **Why deferred:** Both need a human: one at a real browser with sound, one on an actual phone. Neither is checkable from headless Chromium.
-- **Unblock:** Open `/fun` on a desktop, listen to the melody, hard-reload with cache disabled to see the loading bar. Then open it on a phone and tune `LOOK_SENS`, `TAP_SLOP_PX` and `STICK_R` in `Touch.tsx` against how it actually feels.
-- **Where:** `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Touch.tsx`, `docs/fun-room-guide.md` (known gaps).
+- **Unblock:** Open `/fun` in a real browser, look at a printer switch, press `E`, and watch the pill. If it does not flip, instrument `onActivate` in `Interactive` — the registry hands activation the ref payload, so the suspect is either hover resolution or the keydown listener's `enabled` gate. Open `/fun` on a desktop, listen to the melody, hard-reload with cache disabled to see the loading bar. Then open it on a phone and tune `LOOK_SENS`, `TAP_SLOP_PX` and `STICK_R` in `Touch.tsx` against how it actually feels.
+- **Where:** `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`; `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Touch.tsx`, `docs/fun-room-guide.md` (known gaps).
+
+### Lint debt: react-hooks v6 findings and the ESLint 9 → 10 bump
+- **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI.
+
+  Separately, `eslint` still needs bumping to `^10` in `portfolio/package.json`. Originally paired with a TypeScript 5 → 6 bump; the TS half has since shipped (`typescript` is now `^6.0.0`), leaving only ESLint.
+- **Why deferred:** Fixing them means refactoring 5 working components (effect restructuring, moving three.js texture setup into the loader callback) with visual/behavioral risk that needs browser re-verification — out of scope for the CI-wiring change that surfaced them. The R3F texture mutations may be acceptable as-is (idiomatic three.js); decide per-case rather than blanket-refactor.
+- **Unblock:** Refactor each component (or add per-line disables where the pattern is intentional), verify in the browser via `make up`, then remove the two `warn` overrides from `eslint.config.mjs`. Wait for an `eslint-config-next` release built on `typescript-eslint@9` (supports ESLint 10). Then bump, and run a containerised `make lint` to confirm the config still loads.
+- **Where:** `portfolio/eslint.config.mjs`, `portfolio/src/components/{CommandPalette,FooterStamp,InlineGlobe,InlineGlobeScene}.tsx`, `portfolio/src/components/work/ArchitectureDiagram.tsx`, `portfolio/src/components/fun/{Touch,FirstPerson,interaction}.tsx`; `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
 
 ### Image optimization pass
 - **What:** Re-encode the migrated case-study images via `sharp` to a normalised max-width and AVIF + WebP. Drop any unused PNGs that weren't migrated.
@@ -70,38 +94,21 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Add a `scripts/optimize-images.ts` step that runs `sharp` over `public/images/`.
 - **Where:** `portfolio/public/images/`.
 
-### Fix react-hooks v6 lint findings (currently downgraded to warnings)
-- **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI.
-- **Why deferred:** Fixing them means refactoring 5 working components (effect restructuring, moving three.js texture setup into the loader callback) with visual/behavioral risk that needs browser re-verification — out of scope for the CI-wiring change that surfaced them. The R3F texture mutations may be acceptable as-is (idiomatic three.js); decide per-case rather than blanket-refactor.
-- **Unblock:** Refactor each component (or add per-line disables where the pattern is intentional), verify in the browser via `make up`, then remove the two `warn` overrides from `eslint.config.mjs`.
-- **Also:** the fun room's touch support (2026-07-20) took the count from 17 to 24 warnings, all `react-hooks/immutability` and all the same two intentional patterns: mutating the three.js camera inside `useFrame`, and writing to a ref that arrives as a prop (`move.current` in `TouchStick`). Both are correct React/R3F; they need per-line disables rather than a refactor.
-- **Where:** `portfolio/eslint.config.mjs`, `portfolio/src/components/{CommandPalette,FooterStamp,InlineGlobe,InlineGlobeScene}.tsx`, `portfolio/src/components/work/ArchitectureDiagram.tsx`, `portfolio/src/components/fun/{Touch,FirstPerson,interaction}.tsx`.
-
 ### Playwright smoke test suite for portfolio
 - **What:** A small containerized Playwright suite that builds the prod image, runs the container, and asserts key routes return 200 with expected content plus `/healthz`. Wire into `.github/workflows/ci-portfolio.yaml` as a job after lint/typecheck/build.
 - **Why deferred:** Tier 2 of the linting/testing rollout (2026-07-08); user approved shipping lint + typecheck + build gates first. Adds ~2–3 min to CI and needs a committed Playwright config decision (image, route list).
 - **Unblock:** Decide the route/assertion list, add `portfolio/tests/` with a Playwright config running via `mcr.microsoft.com/playwright` Docker image, add the CI job.
 - **Where:** `.github/workflows/ci-portfolio.yaml`, new `portfolio/tests/`.
 
-### ESLint 9 → 10 bump
-- **What:** Bump `eslint` to `^10` in `portfolio/package.json`. Originally paired with a TypeScript 5 → 6 bump; the TS half has since shipped (`typescript` is now `^6.0.0`), leaving only ESLint.
-- **Why deferred:** `eslint-config-next@16.2.10` transitively bundles `typescript-eslint@8`, whose ESLint peer range tops out at 9. Forcing the major risks a peer/plugin mismatch with zero runtime benefit (lint only).
-- **Unblock:** Wait for an `eslint-config-next` release built on `typescript-eslint@9` (supports ESLint 10). Then bump, and run a containerised `make lint` to confirm the config still loads.
-- **Where:** `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
-
 ## Portfolio API
 
-### Real stateful write endpoints
-- **What:** The write framework ships only a stateless example (`POST /api/v1/echo`). A useful write (e.g. a guestbook, or a "notify me" capture) needs a datastore.
-- **Why deferred:** Scope was the read API + a proven auth seam. Persistence is a separate design (schema, storage, retention, abuse handling).
-- **Unblock:** Pick a store (SQLite on a PVC for a single-writer app, or the existing CNPG Postgres), add a route under `src/app/api/v1/` guarded by `requireApiKey`, and wire storage + any needed CiliumNetworkPolicy egress.
-- **Where:** `portfolio/src/app/api/v1/`, `portfolio/src/lib/api.ts`.
+### Portfolio API writes: a real endpoint, and the auth to match
+- **What:** `/api/v1` now serves several read routes (`blog`, `github`, `infra`, `profile`, `openapi.json`), but the only write is the stateless example `POST /api/v1/echo`. A useful write (e.g. a guestbook, or a "notify me" capture) needs a datastore.
 
-### Authentik forward-auth option for writes
-- **What:** Writes currently authenticate with a static API key. For SSO-consistent, per-user writes, route the write paths through Authentik (Traefik forward-auth / OIDC) instead.
-- **Why deferred:** The static key is simpler and sufficient to ship the framework; Authentik wiring only pays off once a real user-facing write exists.
-- **Unblock:** Add an Authentik provider + Traefik forward-auth middleware on the `/api/v1` POST paths, and relax `requireApiKey` to accept the forwarded identity.
-- **Where:** `portfolio/src/lib/api.ts`, `k8s/talos/apps/portfolio/httproute.yaml`, Authentik config.
+  Writes currently authenticate with a static API key. For SSO-consistent, per-user writes, route the write paths through Authentik (Traefik forward-auth / OIDC) instead.
+- **Why deferred:** Scope was the read API + a proven auth seam. Persistence is a separate design (schema, storage, retention, abuse handling).
+- **Unblock:** Pick a store (SQLite on a PVC for a single-writer app, or the existing CNPG Postgres), add a route under `src/app/api/v1/` guarded by `requireApiKey`, and wire storage + any needed CiliumNetworkPolicy egress. Add an Authentik provider + Traefik forward-auth middleware on the `/api/v1` POST paths, and relax `requireApiKey` to accept the forwarded identity.
+- **Where:** `portfolio/src/app/api/v1/`, `portfolio/src/lib/api.ts`; `portfolio/src/lib/api.ts`, `k8s/talos/apps/portfolio/httproute.yaml`, Authentik config.
 
 ### Silence the Turbopack NFT over-trace on /api/v1/infra
 - **What:** `next build` warns that the `fs.readFile` in the infra route causes Node File Tracing to sweep the whole project into `.next/standalone` (locally this pulled in `latex/`, `out/`, CV markdown). The shipped Docker image is unaffected because the build stage only `COPY`s `src`/`public`/config, but the warning is noise and the local standalone is bloated.
@@ -110,13 +117,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `portfolio/src/app/api/v1/infra/route.ts`, `portfolio/next.config.ts`.
 
 ## Cluster / infra
-
-### genesis-worker-01 fell into QEMU `internal-error` once with the GPU attached
-- **What:** On 2026-08-09, roughly 50 minutes after the hyper1 iGPU was passed through, VM 134 went to `running (internal-error)` in Proxmox. The node went `NotReady`/unreachable, Talos API stopped answering, and Plex could not reschedule because it is pinned to that node. `qm stop 134 && qm start 134` recovered it and it then ran over an hour with no recurrence. Cause never established: nothing in `journalctl -u qemu-server@134`, no OOM kill in `dmesg`, and `internal-error` is QEMU giving up without a reason. The `Invalid PCI ROM header signature` line in `dmesg` is a red herring, `rombar=0` is already set so the option ROM is not used.
-- **Why deferred:** It happened once and did not reproduce. Chasing an unreproducible QEMU fault is open-ended, and the cluster tolerates that node being down: etcd keeps quorum and only Plex is pinned to it.
-- **Most likely cause:** hyper1 has 31 GiB total. PCI passthrough pins the guest's entire RAM permanently, so worker-01's 16 GiB can never be reclaimed, plus ctrl-01's 8 GiB, leaving roughly 1 GiB for the host. That is a very thin margin even though no OOM was recorded.
-- **Unblock:** If it recurs, first drop `genesis-worker-01` from `memory_mb = 16384` to `12288` in `terraform.tfvars`, giving hyper1 about 4 GiB of real headroom; actual usage on that node is far below 16 GiB. Watch with `kubectl get node genesis-worker-01`. If it still recurs, remove the passthrough: `qm set 134 --delete hostpci0 && qm start 134`, then drop `pci_mapping` from `terraform.tfvars`. Nothing except Plex hardware transcoding depends on the GPU, and software transcoding on an i5-11400T is adequate.
-- **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/terraform.tfvars` (`genesis-worker-01` `memory_mb`, `pci_mapping`), `docs/plex-hw-transcode.md`.
 
 ### Run a Terraform apply before 2026-12-29 or the cluster credentials lapse
 - **What:** The talosconfig and kubeconfig client certificates both expire **2026-12-29**. The provider reissues them automatically, but only during a `terraform apply`, and only once they are inside their renewal window. `talos_cluster_kubeconfig` uses `certificate_renewal_duration`, now widened from the 720h default to `2160h` (90 days), so any apply after roughly 2026-09-30 renews the kubeconfig. `talos_machine_secrets` has a **hardcoded 30 day** window for the talosconfig client certificate, so that one only renews on an apply between 2026-11-29 and 2026-12-29.
@@ -153,12 +153,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Confirm events flow (`{job="kubernetes-events"}` in Grafana) and watch Loki disk usage for a few days. To resize: ensure the `proxmox-local` StorageClass has `allowVolumeExpansion: true`, set the new `size:` in `values.yaml`, then `kubectl delete sts loki --cascade=orphan` and `kubectl patch pvc` on each Loki PVC (or recreate the StatefulSet) so the larger claim takes effect.
 - **Where:** `k8s/talos/infra/loki/values.yaml` (`singleBinary.persistence.size`).
 
-### Cilium BPF LB map corruption after agent rollout
-- **What:** The 2026-05-16 `policyAuditMode` + CNP rollout (commit `bd89b22`) left `genesis-ctrl-02`'s BPF LoadBalancer map with frontend entries for `10.3.10.101` and `10.3.10.102` but no backend slots. Because that node also held the L2 announce lease for both traefik VIPs, all incoming traffic was ARP-resolved to ctrl-02 and then blackholed in BPF. Cilium's userspace `service list` was correct; only the kernel BPF map drifted. Manifested as random connect-refused on all internal sites until `kubectl delete pod -n kube-system cilium-vvj48` forced reconciliation; the lease re-elected to worker-02/worker-01 (both with healthy BPF state) and stayed there. Same agents on other nodes logged the same startup error class (`delete <vip>@8: key does not exist` against `cilium_l2_responder_v4`) but recovered.
-- **Why deferred:** Live-fixed by kicking the pod. Root cause (why ctrl-02 didn't reconcile while peers did) not isolated — could be a Cilium upstream bug, a quirk of `policyAuditMode` enablement, or a race between `cilium-operator` leader election and L2 responder map reconcile during a fast-rolling DS update.
-- **Unblock:** (1) Repro check — next time `k8s/talos/infra/cilium/values.yaml` changes and the DS rolls, immediately run on each node: `cilium-dbg bpf lb list | grep <vip>` and confirm every frontend has a paired backend slot. (2) Search Cilium GitHub issues for "l2 responder map" + "key does not exist" in the chart version pinned in `k8s/talos/infra/cilium/kustomization.yaml`. (3) Consider adding a post-sync health check that fails if any node has an orphan frontend. (4) Cilium has a `clean-cilium-bpf-state` initContainer flag — evaluate enabling it on rollouts (trade-off: clean state vs. brief data-plane drop on every restart).
-- **Where:** `k8s/talos/infra/cilium/values.yaml`, `k8s/talos/infra/cilium/l2-announcement-policy.yaml`, Cilium agent logs (`module=agent.datapath.l2-responder`).
-
 ### Close the Cilium policy audit and move to enforcement
 - **What:** The cluster runs `policyAuditMode: true` (`k8s/talos/infra/cilium/values.yaml`) — CiliumNetworkPolicies log but never drop. To enforce, every legitimate flow must be whitelisted first. A 3-minute Hubble snapshot (2026-06-29) showed these `AUDIT` (would-be-denied) flows — all pre-existing infra, none from the KEDA HTTP wake-from-zero apps added the same day:
   - `monitoring/grafana → kube-apiserver:6443` (egress)
@@ -167,7 +161,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
   - `argocd/argocd-repo-server → world:443` (egress; git/helm fetch)
   - `plex-media-stack/seerr ↔ traefik:8444` (verify direction before writing the rule)
 - **Why deferred:** The Hubble ring buffer only retained ~3 minutes (flooded by `VLAN_FILTERED` noise), and there was no Prometheus history of policy verdicts (the `policy` Hubble metric wasn't enabled). 3 minutes can't capture periodic flows (cron, cert-manager renewals, backups, KEDA wake events, infrequently-used apps), so enforcing off that sample would break things. The `policy` Hubble metric was enabled on 2026-06-29 to record verdicts over Prometheus' 7d retention — but the audit window hasn't elapsed yet.
-- **Unblock:** After ≥7d, query `sum by (source, destination, source_namespace, destination_namespace, direction) (increase(hubble_policy_verdicts_total{action="audit"}[7d]))` (verified label keys: `action="audit"` is the would-be-denied verdict; `source`/`destination` = workload names, plus the `*_namespace` labels — matching the `workload-name` / `labelsContext` config in cilium values), add an allow rule for each gap (start with the 5 above), then flip `policyAuditMode: false` **namespace-by-namespace**, not cluster-wide. NOTE: enabling the `policy` metric rolls the Cilium DaemonSet — see "Cilium BPF LB map corruption after agent rollout" above; verify per-node BPF LB state right after the roll.
+- **Unblock:** After ≥7d, query `sum by (source, destination, source_namespace, destination_namespace, direction) (increase(hubble_policy_verdicts_total{action="audit"}[7d]))` (verified label keys: `action="audit"` is the would-be-denied verdict; `source`/`destination` = workload names, plus the `*_namespace` labels — matching the `workload-name` / `labelsContext` config in cilium values), add an allow rule for each gap (start with the 5 above), then flip `policyAuditMode: false` **namespace-by-namespace**, not cluster-wide. NOTE: enabling the `policy` metric rolls the Cilium DaemonSet — see the 2026-05-16 BPF LB map corruption record in `docs/incidents.md`; verify per-node BPF LB state right after the roll.
 - **Where:** `k8s/talos/infra/cilium/values.yaml` (audit mode + the metric), and the per-app CNPs: `k8s/talos/infra/kube-prometheus-stack/ciliumnetworkpolicy.yaml`, `k8s/talos/infra/loki/ciliumnetworkpolicy.yaml`, `k8s/talos/infra/argocd/ciliumnetworkpolicy.yaml`, `k8s/talos/apps/plex-media-stack/ciliumnetworkpolicies.yaml`.
 
 ### Cilium L2 announce VIP co-location risk
@@ -175,6 +169,14 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** Out of scope for the BPF fix above; needs a policy design decision.
 - **Unblock:** Split into two separate `CiliumL2AnnouncementPolicy` resources with disjoint `nodeSelector`s (e.g. private → ctrl-only, public → worker-only) so an election blip never blackholes both. Validate that L2 lease params (`leaseDuration` / `leaseRenewDeadline` / `leaseRetryPeriod`) are set conservatively — defaults can re-elect aggressively under control-plane load.
 - **Where:** `k8s/talos/infra/cilium/l2-announcement-policy.yaml`.
+
+## Repo hygiene
+
+### Local-only AI work is not backed up
+- **What:** `scripts/backup-secrets.sh` covers CV drafts, blog style docs, Talos credentials and the tfvars files. It does not cover `ai/projects/`, `ai/prompts/`, `.inspiration/` or `.notes/`. That leaves the `jarvis` project, the ERLEND/MORTEN persona documents and the prompt-eval work with no backup at all.
+- **Why deferred:** The manifest was written for secrets, and it is not obvious which of these are worth keeping versus genuinely disposable.
+- **Unblock:** Decide which are worth keeping and add them to `.backup-manifest`. The persona markdown files are ~28K and clearly worth it; the 234M `slackdump_20260602_122707.zip` next to them probably is not, and may not belong on the laptop at all given it is a Slack export.
+- **Where:** `.backup-manifest`, `ai/projects/jarvis/`, `ai/prompts/erlendgpt/`.
 
 ## Media stack observability (arr-stack)
 

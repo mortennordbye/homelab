@@ -27,13 +27,32 @@ data:
   # A line that does not parse fails the pod's startup on purpose, rather than
   # quietly dropping that slot from the schedule.
   #
-  # These attach to the one registered account. Add GATEWAY_SLOTS_ACCOUNT with
-  # an IG user id if a second account is ever registered; until then the
-  # gateway resolves it, and logs rather than guessing if it becomes ambiguous.
+  # A line without account= attaches to the one registered Instagram account,
+  # which the gateway resolves and logs rather than guesses if that becomes
+  # ambiguous. A line with account= names its own destination, which is how one
+  # schedule covers both surfaces.
+  #
+  # YouTube runs at one a day against Instagram's three, deliberately. The risk
+  # there is not the API, it is the inauthentic content policy, renamed from
+  # "repetitious content" in July 2025 to cover mass produced AI video.
+  # Reviewers assess channel themes and overall patterns rather than single
+  # videos, and three a day of an identical layout is the shape they look for
+  # even when every video is original. Raising it is a one line edit once the
+  # channel has a history that is not all from the same week.
+  #
+  # Removing a line removes that slot, and an account whose lines all disappear
+  # loses its slots rather than keeping them, so deleting a destination here
+  # actually stops it publishing.
+  #
+  # account= needs an image that understands it. An older parser does not,
+  # and parse_slots fails the boot on a line it cannot read rather than
+  # dropping it, so this line and the image carrying it have to ship in that
+  # order. Adding it ahead of 0.0.29 crashlooped the pod once already.
   GATEWAY_SLOTS: |
     08:10 Europe/Oslo jitter=15
     12:40 Europe/Oslo jitter=15
     19:20 Europe/Oslo jitter=15
+    21:05 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
 
   # Named zone, not an offset, so the slots stay at the same local hour across
   # a daylight saving change.
@@ -44,4 +63,14 @@ data:
   # GATEWAY_ADMIN_TOKEN and refuses to start with no authentication at all,
   # which matters here because this host is public: Meta fetches media from it,
   # so there is no network boundary in front of the panel.
+  # What a Short goes out as. The documented behaviour is that an unaudited
+  # API project has every upload locked to private whatever this says, and that
+  # is not true of this project: measured on 2026-08-16, three uploads asking
+  # for private, unlisted and public each kept what they asked for. The audit is
+  # still worth submitting for quota and standing; it gates neither.
+  #
+  # The gateway logs a warning if a returned status ever differs from this one,
+  # which is what the restriction would look like if it does start applying.
+  GATEWAY_YOUTUBE_PRIVACY_STATUS: "public"
+
   GATEWAY_ADMIN_ENABLED: "true"

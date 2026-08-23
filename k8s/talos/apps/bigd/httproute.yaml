@@ -6,6 +6,8 @@ metadata:
   annotations:
     # external-dns publishes bigd.no + www.bigd.no as CNAMEs to this DDNS A record.
     external-dns.kubernetes.io/target: ddns.bigd.no
+    # Static HTML, no auth, so the edge can front it and cache it.
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io

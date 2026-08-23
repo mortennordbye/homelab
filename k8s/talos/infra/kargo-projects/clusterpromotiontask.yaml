@@ -10,6 +10,13 @@
 # (both stage and prod apps track shared main HEAD; a fixed revision falls behind
 # on the next commit and reports the Stage perpetually Unhealthy). Real
 # verification is each Stage's own AnalysisTemplate smoke test.
+#
+# Every step that reaches GitHub or Argo CD carries a `retry.errorThreshold`,
+# because Kargo's system-wide default is 1 and 1 means no retries at all: one
+# 5xx from an API this has no control over marks the whole Promotion failed,
+# and a failed Promotion is terminal, so the Stage sits on the old Freight
+# until somebody notices. See the note on wait-pr in clusterpromotiontask-pr.yaml
+# for what that looked like when it happened.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ClusterPromotionTask
 metadata:
@@ -22,6 +29,8 @@ spec:
     - name: argocdApp    # Argo CD Application to sync, e.g. portfolio-stage
   steps:
     - uses: git-clone
+      retry:
+        errorThreshold: 3
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         # Without this Kargo authors commits as `Kargo <no-reply@kargo.io>`,
@@ -45,13 +54,19 @@ spec:
         path: ./repo
         message: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
     - uses: git-push
+      retry:
+        errorThreshold: 3
       config:
         path: ./repo
     - uses: argocd-update
+      retry:
+        errorThreshold: 3
       config:
         apps:
           - name: ${{ vars.argocdApp }}
     - uses: argocd-wait
+      retry:
+        errorThreshold: 3
       config:
         apps:
           - name: ${{ vars.argocdApp }}

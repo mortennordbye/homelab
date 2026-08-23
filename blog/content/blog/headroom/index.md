@@ -1,7 +1,7 @@
 ---
 title: "Headroom: The Private Finance Overview School Never Gave You"
 description: "A self-hosted Norwegian finance tracker. Equity after tax, ten years of salary against CPI, what you cost your employer, the month, and a fifteen year forecast."
-date: 2026-08-04
+date: 2026-08-20
 draft: false
 tags: ["self-hosted", "docker", "personal-finance", "privacy", "cilium", "kubernetes", "intermediate"]
 ---
@@ -107,6 +107,16 @@ So you get three numbers on the day the money lands. Fixed costs of 29 650, then
 Because the target is a share and not an amount, a month with on-call pay and an ordinary month both put the same percentage aside. The extra does not quietly turn into spending money, and a thin month does not break the target. That is the part that changed my own savings rate, because my months vary by a lot.
 
 <img src="/images/headroom-anbefalinger.webp" alt="Headroom smart recommendations showing 11 352 kr spendable and 2 838 kr to investment against a 20 percent savings target, with the month split 68 percent fixed costs, 26 percent spending and 6 percent investment" title="68% fixed, 26% spendable, 6% invested" style="width:100%;" />
+
+The 2 838 stays a target until something moves it. Each savings line takes a fixed amount, a share, or the rest of the target, and points it at one of your accounts.
+
+<img src="/images/headroom-sparing.webp" alt="Headroom savings card showing a 2 838 kr monthly savings target at 20 percent, fully automated with nothing left to allocate, split into 2 000 kr to a buffer account and 838 kr to stocks and funds as the remainder" title="2 000 to the buffer, the rest to funds" style="width:100%;" />
+
+Mine puts 2 000 in the buffer account and sends what is left to stocks and funds. The remainder line recalculates every month, so when the target moves with the income it is a share of, the extra lands in funds without me editing anything. The two lines still add up to the target exactly.
+
+Savings is not an expense here. It comes off the savings target rather than off what you can spend, and each month it moves the balance on the account you picked. The buffer grows, the fund account grows, and the goals on the dashboard read those balances, so the month each goal lands in moves on its own.
+
+Pausing a line keeps it in the budget and stops the balance moving. Restart it and it resumes from the current month rather than backfilling the months it sat out. Catching up would put money in the app that never arrived in the account.
 
 <img src="/images/headroom-utgifter.webp" alt="Headroom fixed expenses panel warning about double counting, offering to promote four detected recurring payments, and a chart of where the fixed money goes" title="It notices the subscription you forgot" style="width:100%;" />
 

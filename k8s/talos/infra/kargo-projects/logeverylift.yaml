@@ -112,9 +112,20 @@ spec:
         discoveryLimit: 20
 ---
 # prod verification: a one-shot Job that curls the app URL and fails on any
-# non-2xx. logeverylift is on the private gateway with an internal cert, so use
-# the internal hostname and -k. No KEDA (stays warm); the retries cover the
-# rolling pod from the deploy the promotion just triggered.
+# non-2xx. No KEDA (stays warm); the retries cover the rolling pod from the
+# deploy the promotion just triggered.
+#
+# The hostname is the public one, because #369 moved this app off the private
+# gateway onto traefik-gateway-public and the HTTPRoute now answers for
+# logeverylift.com alone. This check kept asking the old internal name, which
+# no route matches, so Traefik answered 404 and every verification since
+# 2026-07-18 has failed: three Freights promoted fine and each reported the
+# Stage unhealthy on a check that could not have passed. -k stays because it
+# costs nothing and this is a liveness check, not a TLS test.
+#
+# -L because / redirects to /login for anyone without a session, which is the
+# app working. Without it the check asserts nothing beyond "Traefik routed
+# somewhere", since -f treats a 307 as success.
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -141,9 +152,9 @@ spec:
                       - /bin/sh
                       - -c
                       - >
-                        curl -fsSk --retry 10 --retry-delay 6 --retry-all-errors
+                        curl -fsSkL --retry 10 --retry-delay 6 --retry-all-errors
                         -o /dev/null -w '%{http_code}\n'
-                        https://logeverylift.local.bigd.no/
+                        https://logeverylift.com/
 ---
 # prod: the only Stage. Receives Freight straight from the Warehouse
 # (sources.direct), auto-promoted per ProjectConfig through promote-via-pr, then
@@ -158,7 +169,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
     # Cosmetic UI colour, kept identical across apps: prod = red.
     kargo.akuity.io/color: "#e11d48"
-    kargo.akuity.io/description: "Auto-promoted from the Warehouse via a homelab PR; smoke-tested on logeverylift.local.bigd.no after merge."
+    kargo.akuity.io/description: "Auto-promoted from the Warehouse via a homelab PR; smoke-tested on logeverylift.com after merge."
 spec:
   requestedFreight:
     - origin:

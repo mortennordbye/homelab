@@ -1,0 +1,19 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: blog-inflight
+  namespace: blog
+spec:
+  # Concurrency cap for slow readers, which a per-second rate limit does not
+  # catch. Matters more here than the numbers suggest: the pod is capped at
+  # 100m CPU, so held connections crowd out the liveness probe.
+  #
+  # sourceCriterion is explicit because inFlightReq defaults to keying on
+  # requestHost, unlike rateLimit — left implicit it would cap the whole blog at
+  # 30 concurrent requests rather than 30 per client. depth: 1 as in the rate
+  # limit middleware.
+  inFlightReq:
+    amount: 30
+    sourceCriterion:
+      ipStrategy:
+        depth: 1

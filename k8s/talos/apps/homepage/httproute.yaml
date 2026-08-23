@@ -5,6 +5,9 @@ metadata:
   namespace: homepage
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    # Proxied for edge TLS and DDoS cover. Basic auth passes through
+    # unchanged; keep this hostname out of any cache rule.
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io

@@ -14,7 +14,9 @@ spec:
             "k8s:app.kubernetes.io/instance": traefik-traefik
       toPorts:
         - ports:
-            - port: "80"
+            # Enforced at the pod, so this is the container port, not the
+            # Service port. Unprivileged nginx listens on 8080.
+            - port: "8080"
               protocol: TCP
     - fromEntities:
         - host

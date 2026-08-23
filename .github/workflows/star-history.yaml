@@ -1,0 +1,79 @@
+name: Star history
+
+# Draws the star history chart in the README. star-history.com stopped serving
+# it ("GitHub restricted access to star data"), and no third party can read the
+# stargazer listing on our behalf any more, but this repo's own GITHUB_TOKEN
+# still reads this repo's own stargazers.
+#
+# Collects the timestamps, buckets them by day, renders both themes, and
+# publishes the lot to the stars-data branch. The README embeds the SVGs from
+# there over raw.githubusercontent, the same hand-off the Lighthouse card uses
+# for its JSON.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 6 hours at :40, ahead of the profile repo's refresh on the hour.
+    - cron: "40 */6 * * *"
+
+permissions:
+  # write so the job can push to the stars-data branch.
+  contents: write
+
+concurrency:
+  group: star-history
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Collect stargazer timestamps
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # shellcheck disable=SC2016  # $owner/$name/$endCursor are GraphQL variables, not shell
+          gh api graphql --paginate -F owner="${GITHUB_REPOSITORY%/*}" -F name="${GITHUB_REPOSITORY#*/}" -f query='
+            query($owner: String!, $name: String!, $endCursor: String) {
+              repository(owner: $owner, name: $name) {
+                stargazers(first: 100, after: $endCursor, orderBy: {field: STARRED_AT, direction: ASC}) {
+                  pageInfo { hasNextPage endCursor }
+                  edges { starredAt }
+                }
+              }
+            }' --jq '.data.repository.stargazers.edges[].starredAt' > starred.txt
+          wc -l < starred.txt
+
+      - name: Build stars JSON
+        run: |
+          # Empty means the query failed or paginated to nothing; publishing
+          # that would blank the card, so fail instead and keep the last file.
+          test -s starred.txt
+          mkdir -p dist
+          cut -c1-10 starred.txt | jq -R . | jq -s \
+            --arg repo "$GITHUB_REPOSITORY" \
+            '{repo: $repo,
+              generatedAt: (now | todate),
+              total: length,
+              days: (sort | group_by(.) | map({key: .[0], value: length}) | from_entries)}' \
+            > dist/stars.json
+          jq '{repo, generatedAt, total, days: (.days | length)}' dist/stars.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: portfolio/.nvmrc
+
+      - name: Render the chart
+        run: node scripts/render-star-history.mjs
+
+      - name: Publish to stars-data branch
+        uses: crazy-max/ghaction-github-pages@v5
+        with:
+          target_branch: stars-data
+          build_dir: dist
+          keep_history: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

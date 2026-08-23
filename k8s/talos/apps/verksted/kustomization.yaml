@@ -4,6 +4,7 @@ commonAnnotations:
   argocd.argoproj.io/sync-wave: "0"
 resources:
 - namespace.yaml
+- rbac.yaml
 - data-pvc.yaml
 - deployment.yaml
 - service.yaml
@@ -13,4 +14,4 @@ resources:
 # tag in deployment.yaml; the verksted-cd Warehouse/promotion rewrites it to 0.0.N.
 images:
 - name: ghcr.io/mortennordbye/verksted
-  newTag: 0.0.126
+  newTag: 0.0.164
