@@ -2,6 +2,7 @@ import { Hero } from "@/components/sections/Hero";
 import { AboutSection } from "@/components/sections/AboutSection";
 import { ResumeSection } from "@/components/sections/ResumeSection";
 import { FeaturedWork } from "@/components/sections/FeaturedWork";
+import { InfrastructureSection } from "@/components/sections/InfrastructureSection";
 import { ServicesGrid } from "@/components/sections/ServicesGrid";
 import { LatestWriting } from "@/components/sections/LatestWriting";
 import { CtaContact } from "@/components/sections/CtaContact";
@@ -15,6 +16,7 @@ export default function Home() {
       <AboutSection />
       <ResumeSection />
       <FeaturedWork items={work} />
+      <InfrastructureSection />
       <ServicesGrid />
       <LatestWriting />
       <CtaContact />

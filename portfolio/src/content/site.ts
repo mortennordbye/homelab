@@ -51,7 +51,7 @@ export const site = {
     { label: "About", href: "/#about" },
     { label: "Resume", href: "/#resume" },
     { label: "Work", href: "/#portfolio" },
-    { label: "Infrastructure", href: "/infrastructure" },
+    { label: "Infrastructure", href: "/#infrastructure" },
     { label: "Room", href: "/fun" },
     { label: "Blog", href: "/#blog" },
     { label: "Contact", href: "/#contact" },

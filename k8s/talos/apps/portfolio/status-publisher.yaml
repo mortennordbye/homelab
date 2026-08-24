@@ -147,6 +147,17 @@ spec:
                   K8S=$(jq -r '.items[0].status.nodeInfo.kubeletVersion' /tmp/nodes.json)
                   TALOS=$(jq -r '.items[0].status.nodeInfo.osImage | capture("\\((?<v>v[0-9][0-9.]*)\\)").v // empty' /tmp/nodes.json)
 
+                  # Per-node state, so a consumer can say which node is down
+                  # rather than only how many are. Additive: ready and total
+                  # above are untouched and stay the contract for the tiles.
+                  NODE_LIST=$(jq -c '[.items[] | {
+                    name: .metadata.name,
+                    ready: (any(.status.conditions[]; .type=="Ready" and .status=="True")),
+                    role: (if (.metadata.labels | has("node-role.kubernetes.io/control-plane"))
+                           then "control-plane" else "worker" end),
+                    schedulable: ((.spec.unschedulable // false) | not)
+                  }] | sort_by(.name)' /tmp/nodes.json)
+
                   # Every Application, not just portfolio's: the card shows the
                   # cluster-wide tally and portfolio's own status comes out of
                   # the same read.
@@ -240,6 +251,7 @@ spec:
                     --arg syncedAt "$SYNCED_AT" \
                     --argjson ready "$READY" \
                     --argjson total "$TOTAL" \
+                    --argjson nodeList "$NODE_LIST" \
                     --arg k8s "$K8S" \
                     --arg talos "$TALOS" \
                     --arg notAfter "$NOT_AFTER" \
@@ -283,7 +295,7 @@ spec:
                       build: $build,
                       deployedAt: $deployedAt,
                       argocd: {sync: $sync, health: $health, syncedAt: $syncedAt},
-                      nodes: {ready: $ready, total: $total},
+                      nodes: {ready: $ready, total: $total, list: $nodeList},
                       versions: {kubernetes: $k8s, talos: $talos},
                       cert: {notAfter: $notAfter},
                       gitops: {

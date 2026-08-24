@@ -10,7 +10,12 @@ type ClusterStatus = {
   build: string;
   deployedAt?: string;
   argocd: { sync: string; health: string; syncedAt?: string };
-  nodes: { ready: number; total: number };
+  /** `list` is per-node detail; the tiles here only need the counts. */
+  nodes: {
+    ready: number;
+    total: number;
+    list?: { name: string; ready: boolean; role?: string; schedulable?: boolean }[];
+  };
   versions: { kubernetes?: string; talos?: string };
   cert?: { notAfter: string };
   /** One entry per UTC day: healthy samples vs samples taken. */
