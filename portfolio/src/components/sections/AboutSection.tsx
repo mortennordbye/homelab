@@ -1,16 +1,10 @@
-import { Dumbbell, Wifi } from "lucide-react";
 import { PortraitCard } from "@/components/PortraitCard";
 import { Reveal } from "@/components/primitives/Reveal";
 import { Section } from "@/components/primitives/Section";
 import { CareerPath } from "@/components/sections/CareerPath";
 import { skills } from "@/content/skills";
-import { interests, type Interest } from "@/content/interests";
+import { interests } from "@/content/interests";
 import type { Skill } from "@/content/schemas";
-
-const interestIcon: Record<Interest["icon"], React.ReactNode> = {
-  fitness: <Dumbbell size={20} />,
-  homelab: <Wifi size={20} />,
-};
 
 const skillGroups: { id: Skill["group"]; label: string }[] = [
   { id: "platform", label: "Platform & infrastructure" },
@@ -47,23 +41,23 @@ export function AboutSection() {
       </div>
 
       <div className="mt-20">
-        <p className="eyebrow">the stack</p>
+        <p><span className="section-label">the stack</span></p>
         <div className="mt-8 grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-4">
           {skillGroups.map((g, gi) => {
             const items = skills.filter((s) => s.group === g.id);
             if (!items.length) return null;
             return (
               <Reveal key={g.id} delay={gi * 0.05}>
-                <h3 className="border-l-2 border-accent pl-3 eyebrow !text-fg-2">
+                <h3 className="border-l-2 border-brass pl-3 eyebrow !text-fg-2">
                   {g.label}
                 </h3>
                 <ul className="mt-5 flex flex-wrap gap-2">
                   {items.map((s) => (
                     <li
                       key={s.label}
-                      className="group inline-flex items-center gap-2 rounded-full border border-line-2 bg-surface/60 px-4 py-1.5 text-sm text-fg transition-all hover:border-accent/60 hover:bg-surface"
+                      className="group inline-flex items-center gap-2 rounded-[2px] border border-brass/55 px-4 py-1.5 text-sm text-fg transition-colors hover:border-copper"
                     >
-                      <span className="h-1 w-1 rounded-full bg-accent/70 transition-all group-hover:bg-accent group-hover:shadow-[0_0_8px_var(--accent)]" />
+                      <span className="h-1 w-1 rounded-full bg-brass transition-colors group-hover:bg-copper" />
                       {s.label}
                     </li>
                   ))}
@@ -75,7 +69,7 @@ export function AboutSection() {
       </div>
 
       <div className="mt-24">
-        <p className="eyebrow">career</p>
+        <p><span className="section-label">career</span></p>
         <h3 className="mt-3 text-h2 text-fg">The route here.</h3>
         <div className="mt-10">
           <CareerPath />
@@ -83,17 +77,15 @@ export function AboutSection() {
       </div>
 
       <div className="mt-24">
-        <p className="eyebrow">off the clock</p>
+        <p><span className="section-label">off the clock</span></p>
         <h3 className="mt-3 text-h2 text-fg">Outside work.</h3>
-        <div className="mt-10 grid gap-px overflow-hidden rounded-lg border border-line bg-line md:grid-cols-2">
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
           {interests.map((it, i) => (
             <Reveal key={it.title} delay={i * 0.08}>
-              <div className="flex h-full flex-col gap-4 bg-bg p-8">
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line-2 bg-surface/40 text-accent">
-                  {interestIcon[it.icon]}
-                </span>
+              <div className="lit flex h-full flex-col p-8">
+                <span aria-hidden className="lit-rule mb-6 block" />
                 <h4 className="text-h3 text-fg">{it.title}</h4>
-                <p className="text-sm text-fg-2 leading-relaxed">{it.body}</p>
+                <p className="mt-3 text-sm text-fg-2 leading-relaxed">{it.body}</p>
               </div>
             </Reveal>
           ))}

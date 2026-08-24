@@ -96,11 +96,19 @@ export function Hero() {
             {site.hero.sub}
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-2">
-            <Tag variant="accent">CKA</Tag>
-            <Tag variant="accent">AZ-305</Tag>
-            <Tag variant="muted">4+ yrs production cloud</Tag>
-            <Tag variant="muted">Public &amp; private · enterprise scale</Tag>
+          {/* The two certifications are card stock set down on the desk. The
+              other two lines are claims rather than objects, so they are set as
+              plain type beside them — four sheets of paper in a row is louder
+              than one lamp allows. */}
+          <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
+            <Tag variant="paper">CKA</Tag>
+            <Tag variant="paper">AZ-305</Tag>
+            <span className="font-mono text-xs tracking-wide text-fg-3">
+              4+ yrs production cloud
+            </span>
+            <span className="font-mono text-xs tracking-wide text-fg-3">
+              Public &amp; private · enterprise scale
+            </span>
           </div>
 
           {/* The way into /fun is a monitor showing the room, not a button
@@ -116,7 +124,7 @@ export function Hero() {
               onClick={enterRoom}
               className="room-feed focus-ring group inline-flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4"
             >
-              <span ref={screenRef} className="relative block aspect-video w-full max-w-[300px] shrink-0 overflow-hidden rounded-lg border border-line-2 bg-black shadow-[0_18px_40px_-24px_rgba(0,0,0,0.9)] transition-[border-color,box-shadow] duration-500 group-hover:border-accent/65 group-hover:shadow-[0_22px_60px_-26px_rgba(var(--accent-rgb),0.55)] sm:w-[268px]">
+              <span ref={screenRef} className="relative block aspect-video w-full max-w-[300px] shrink-0 overflow-hidden rounded-[2px] border-t border-l border-r border-b border-t-[color:var(--lit-edge)] border-l-[color:var(--lit-edge-soft)] border-r-[color:var(--dark-edge)] border-b-[color:var(--dark-edge)] bg-black shadow-[var(--cast)] transition-[border-color,box-shadow] duration-500 group-hover:border-accent/65 group-hover:shadow-[0_22px_60px_-26px_rgba(var(--accent-rgb),0.55)] sm:w-[268px]">
                 <Image
                   src="/images/room-poster.jpg"
                   alt=""

@@ -3,18 +3,20 @@ import { careerPath, type CareerStop } from "@/content/resume";
 export function CareerPath() {
   return (
     <div>
-      <p className="eyebrow">the route</p>
+      {/* No label of its own. The block above already carries the "career"
+          plate and the heading "The route here.", and two plates stacked read
+          as a mistake rather than as hierarchy. */}
 
       {/* Mobile: vertical stops */}
-      <ol className="mt-6 space-y-6 sm:hidden">
+      <ol className="space-y-6 sm:hidden">
         {careerPath.map((stop, i) => (
           <li key={`${stop.year}-${stop.role}-${i}`} className="relative flex items-start gap-4">
             <span
               className={
                 "mt-1.5 inline-block h-3 w-3 shrink-0 rounded-full border " +
                 (stop.current
-                  ? "border-accent bg-accent shadow-[0_0_14px_var(--accent)]"
-                  : "border-line-2 bg-bg")
+                  ? "border-copper bg-copper"
+                  : "border-brass bg-brass")
               }
             />
             <StopLabel stop={stop} />
@@ -23,10 +25,10 @@ export function CareerPath() {
       </ol>
 
       {/* Desktop: horizontal stops with connector line */}
-      <div className="relative mt-8 hidden sm:block">
+      <div className="relative hidden sm:block">
         <div
           aria-hidden
-          className="pointer-events-none absolute left-[6px] right-[6px] top-[5px] h-px bg-gradient-to-r from-accent via-accent/60 to-line-2"
+          className="pointer-events-none absolute left-[6px] right-[6px] top-[5px] h-px bg-gradient-to-r from-copper via-brass to-brass/25"
         />
         <ol
           className="grid gap-x-6"
@@ -40,8 +42,8 @@ export function CareerPath() {
                 className={
                   "relative z-10 inline-block h-3 w-3 rounded-full border " +
                   (stop.current
-                    ? "border-accent bg-accent shadow-[0_0_16px_var(--accent)]"
-                    : "border-line-2 bg-bg")
+                    ? "border-copper bg-copper"
+                    : "border-brass bg-brass")
                 }
               />
               <div className="mt-4">
@@ -60,12 +62,9 @@ function StopLabel({ stop }: { stop: CareerStop }) {
     <div>
       <p className="flex items-baseline gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-fg-3">
         {stop.year}
-        {stop.current && (
-          <span className="inline-flex items-center gap-1 text-accent">
-            <span className="h-1 w-1 rounded-full bg-accent shadow-[0_0_8px_var(--accent)]" />
-            now
-          </span>
-        )}
+        {/* Green survives here as ink, not as a second lit point: the copper
+            stop marker already says which one is current. */}
+        {stop.current && <span className="text-accent">now</span>}
       </p>
       <p className={"mt-1.5 text-sm " + (stop.current ? "text-fg font-medium" : "text-fg-2")}>
         {stop.role}

@@ -7,7 +7,7 @@ export function Tag({
 }: {
   children: React.ReactNode;
   className?: string;
-  variant?: "default" | "accent" | "warm" | "muted";
+  variant?: "default" | "accent" | "warm" | "muted" | "paper";
 }) {
   return (
     <span
@@ -17,6 +17,10 @@ export function Tag({
         variant === "warm" && "border-brass bg-wood text-fg",
         variant === "muted" && "border-line bg-bg-2/40 text-fg-3",
         variant === "default" && "border-line-2 bg-surface/40 text-fg-2",
+        // Card stock, so it is a thing lying on the desk rather than a chip
+        // floating over it. Square-cut and borderless: the shadow is what
+        // makes the edge, the way it does on real paper.
+        variant === "paper" && "card-stock rounded-[1px]! border-transparent",
         className,
       )}
     >

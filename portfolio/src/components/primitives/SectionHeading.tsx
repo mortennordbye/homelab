@@ -23,7 +23,9 @@ export function SectionHeading({
       )}
     >
       <div className="max-w-2xl">
-        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+        {/* The label carries a brass rule, so a flat section is drawn with the
+            same material as the hardware on the rendered shelf. */}
+        {eyebrow && <p><span className="section-label">{eyebrow}</span></p>}
         <h2 className={cn("text-h1 text-fg", eyebrow ? "mt-4" : "")}>{title}</h2>
         {description && (
           <p className="mt-4 max-w-xl text-fg-2">{description}</p>

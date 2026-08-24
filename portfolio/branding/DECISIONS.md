@@ -20,7 +20,8 @@ we meant.
 
 Status as of 2026-08-24: theme and typography locked and committed. The first
 section object, the portfolio shelf, is built and shipped in the real site. The
-rest of the room is still prototype only.
+rest of the room is still prototype only. §12 covers the flat sections, whose
+first pass is shipped for the hero and About.
 
 ---
 
@@ -293,7 +294,111 @@ the RGBE parser and the perf techniques.
 `room-look-study.html` is five interiors for the `/fun` room, deferred.
 `pbr/` holds the downloaded Poly Haven assets.
 
+## 12. The flat sections
+
+**Agreed and partly shipped.** Everything above concerns the objects. This
+concerns the eighty percent of the site that is not rendered, and it exists
+because the objects were never the problem: three photoreal objects were
+sitting on top of a dark portfolio template, and once the hero's desk began
+bleeding down behind the copy the mismatch became the first thing you see.
+
+The rule, stated so it can be applied without asking: **everything is either an
+object or a document, and a card is neither.** Objects are rendered and lit by
+the rig in §6. Documents are made of the same four materials from §2 and obey
+the same lamp. There is no third category.
+
+Four devices carry it, and three of them are enforcement or reuse rather than
+new invention.
+
+**One lamp, in CSS as well as in three.js.** A raised surface takes light on
+its top and left edges, goes dark on its right and bottom, and casts down and
+to the right. An evenly bordered card is the CSS version of the flat-shaded box
+that §5 identifies as the reason three prototypes failed, and the fix is the
+same: stop letting every edge take light identically. Expressed once as
+`--lit-edge`, `--lit-edge-soft`, `--dark-edge` and `--cast` in `tokens.css`, and
+applied through `.lit` in `globals.css`.
+
+**Paper is the fourth material and it was missing.** §2 has named it since the
+theme was locked, and until now it existed only in the print stylesheet and the
+LaTeX CV. Nothing on screen was made of it, which is why the hero's tags and the
+portrait defaulted to glass. It now has a screen ramp, and two rules travel with
+it: paper is warm off-white and never pure white, because a sheet in a room lit
+by one lamp is the colour of the lamp; and anything lying on the desk carries a
+short hard contact shadow, because that is the whole difference between resting
+on a surface and hovering over a photograph.
+
+**Green appears once per view as a lit point.** Not a new decision, §2 already
+says it. One scroll of the front page was passing at least four lit green
+points. Brass takes over as the marker, green survives as ink and as the single
+live state, and the availability lamp is the one thing still allowed to emit.
+
+**Everything states its own provenance.** `FooterStamp` is the best small piece
+on the site because it is a measurement the site takes of itself and cannot
+fake, and that device should recur rather than sit once at the bottom. It is
+the honest version of a stats row and the only decorative element here that
+gets better the more real the site becomes. Not built; see `BACKLOG.md`.
+
+### The section label, and the plate that failed
+
+The first attempt promoted the portfolio shelf's brass plate to the
+section-heading system, drawn in CSS as a gradient sweep with two screw heads.
+It read as a glossy gold button and was rejected on sight.
+
+The reason is §5 again, and it is worth writing down because the instinct will
+return: a surface painted as a colour gradient with nothing to reflect renders
+as a flat-shaded box, and brass at metalness 1 with no environment is dull
+brown plastic. That finding was about three.js, where an environment map is at
+least available. CSS has none at all, so a convincing brass plate is not
+something the DOM can draw. **Brass stays in the render, where it has light.**
+
+Six replacements were built and looked at. What shipped is a short brass rule
+above the label, `.section-label`. Brass as a rule is one of the three jobs
+`tokens.css` already assigns it, and the only one of the three that does not
+have to convince anyone it is metal: a drawn line is a drawn line whatever it
+is made of. It is also the weight that survives appearing in every section,
+which is the test the plate failed. It fades out to the right so it reads as
+drawn rather than as a border, and it is deliberately not folded into
+`.eyebrow`, which also labels post dates and proof blocks where a rule would
+claim a hierarchy that is not there.
+
+A restrained plate was built first and briefly shipped: matte, desaturated, no
+sweep, no screws, light ink on dark metal. It was better than the glossy version
+and still a small brown rectangle repeated down the page. It is the fallback if
+the rule ever reads as too slight, and the CSS is recoverable from git.
+
+Also rejected:
+
+*A margin mark*, the same idea turned vertical, quietest of the six. It survives
+one level down, where the skill group heads already use it, which is what gives
+the two levels different marks.
+*Card stock*, which works but spends the loudest material on the most repeated
+element on the site; paper is better saved for the hero and the portrait, where
+it does real work.
+*Cutting the label into the ground*, which confirmed the theory the hard way:
+on a near-black ground an engraving has no light to catch and reads as damage.
+
+### What shipped
+
+The hero and About only, because that is where the desk bleeds behind the copy
+and where the treatments could be judged against the globe. The certifications
+are card stock and the two remaining claims are plain type beside them, since
+four sheets of paper in a row is louder than one lamp allows. The portrait is a
+print with a paper border and a contact shadow rather than a card with a green
+radial wash, which also removed the one place green was tinting a whole surface.
+The monitor takes the same square cut and contact shadow as everything else on
+the desk. The skill pills and the career path are brass. `CareerPath` lost its
+own label, because the section's "career" and the block's "the
+route" stacked as two labels and read as a mistake.
+
+Everything else still uses the old card language. See `BACKLOG.md`.
+
 ## Logbook
+
+**2026-08-24, later still.** §12. The conclusion that took longest to reach
+is that the site did not need more rendered objects to feel like one thing; it
+needed the part that is not rendered to be made of the same materials as the
+part that is. The brass plate failing in CSS for exactly the reason §5 gives
+for three.js is the most reusable finding of the day.
 
 **2026-08-24, later.** Four interaction models built and rejected before landing
 on "more moments like the globe". The realism finding in section 5 is the reason
