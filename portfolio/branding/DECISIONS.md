@@ -80,149 +80,180 @@ inheritance), Faustina, Spectral, Literata.
 Noted for the day a paid face is on the table: Monokrom in Oslo draw Satyr, which
 would fit the brief better than anything free.
 
-## 4. The camera
+## 4. The interaction model
 
-**Agreed, prototyped, not built.** Scrolling is walking. One continuous camera
-move through one room, tied to scroll position and fully reversible. It never
-cuts.
+**This section replaced four earlier models. Read the rejections before proposing
+anything, because each one was built, looked at, and dropped for a reason.**
 
-Route, in order: the door (arrive), the desk (hero and about), the shelf (CV and
-certificates), the long wall (case studies), the drawing (infrastructure), back
-to the door (contact, and out).
+### What is agreed
 
-Scroll maps through alternating **hold** and **travel** bands. Holds are where
-the camera is still and text is read; travel is where it moves. Without the holds
-nothing is readable. Text is never animated during travel.
+The site stays the site. No walkable room, no scroll-driven film, no camera on
+rails. The existing page structure, section order and layouts are correct and
+stay as they are.
 
-The pose is a pure function of scroll position with no accumulated state, so
-reversing is exact by construction rather than by tuning.
+What changes is that **selected sections get a photoreal 3D object on a fixed
+camera, composed exactly the way the hero already composes the globe**: copy
+left, object right, one warm key, everything else falling into the dark. More
+moments like the globe.
 
-The lamp rakes a few degrees over the length of the page, so shadows lengthen and
-the afternoon draws on. Small enough to be a second-visit detail.
+Not every section needs one. About stays text and a photograph, because that is
+the right treatment for it. The portfolio list stays a list.
 
-Rejected: a fixed room with only the light moving (too little), and framed views
-that cross-dissolve (reads as a slideshow).
+### What was rejected, and why
 
-## 5. Content in the room
+**A floating DOM card over the render.** Reads as a UI panel pasted onto a
+photograph, which is the exact failure `ART-DIRECTION.md` warns about. Restyling
+the card does not fix it; the problem is that it is a card.
 
-**Agreed, prototyped, not built.** The governing rule: **text is never a
-texture.** It is real DOM at native resolution, selectable, linkable and
-indexable, rendered over the scene. The room supplies light, material and place;
-the words stay words. This is already the established pattern in `/fun`, where
-drei's `Html` appears in eight components.
+**Text mapped onto the object's surface in perspective (CSS3D).** Technically
+works and looks good in motion, and the technique is worth keeping for
+transitions. But a whole A4 page shown at once is always text too small to read,
+so it cannot be the reading state.
 
-Panels are **anchored** to the object they describe: the object's world position
-is projected to screen space each frame and used as the panel's transform origin,
-so a panel grows out of the thing it is about instead of floating over the render.
+**Click to open an object.** The visitor should not have to interact to see the
+content. Interaction may be offered as depth for those who want it, never as a
+toll gate.
 
-The CV is the hard case, because entries run to 120 words. Two layers: a spine
-that scans in fifteen seconds, and the full prose one interaction down.
+**A scroll-driven film through the room.** Built in full with nine stations. The
+motion worked; the content presentation did not, and more importantly the room
+could not be made to look real across its whole surface.
 
-**The nested-scroll mechanic, which resolves the usability trap:** the CV stop
-simply owns a longer band of the route, and progress through that band drives the
-document instead of the camera. There is no scroll capture, no mode switch and
-nothing to escape from. The page scrollbar always moves, and scrubbing backwards
-unwinds it exactly like everything else.
+**Nested scroll (camera holds while a document scrolls inside it).** Rejected as
+"a page in a page". The mechanic is sound and reversible, but it is not what the
+site should feel like.
 
-Patterns per content type: the CV as an opened document on paper; certificates as
-small brass frames on the shelf rail, never coloured badges; case studies as
-prints in brass frames carrying the real covers from `public/images/work/`, with
-a number rather than a summary as the caption; the blog as a stack of papers,
-newest on top, each showing its own date and headline.
+### The reasoning that settles it
 
-Every stop has a real URL and the plain view renders the same content from the
-same source. **The room is a way of presenting content, never a place content
-lives.** The moment a fact exists only inside the scene, the site stops being
-indexable and stops being maintainable in the same instant.
+The globe looks real because it is one object, closely framed, with dark falloff
+around it. All the quality is concentrated where the camera points. A room is the
+opposite: every surface has to hold up. Since the visitor only ever sees a small
+number of fixed framings anyway, building one room to satisfy them is paying for
+surface area nobody looks at.
 
-## 6. The plain view
+## 5. Realism: the critical finding
 
-**Locked.** A quiet control in the header, present from first paint, that swaps
-the room for a printed version of the same brand. Remembered per visitor. Served
-automatically to `prefers-reduced-motion`, print, crawlers and anything without
-WebGL.
+This is the most useful technical result of the whole exploration.
 
-It is not a degraded fallback and may not look like one. It has to be good enough
-to be judged on with the room never loading at all. That is the price of taking
-the metaphor as far as section 5 takes it.
+Surfaces painted procedurally onto a canvas at runtime — colour only, no normal
+map, no roughness map — read as flat-shaded boxes. Every point on a plane takes
+light identically and the eye stops believing it is a material. `textures.ts` in
+the real repository already says this and is correct.
 
-## 7. Performance
+Two things fix it, in this order of importance:
 
-**Locked.** Priority order: memorability first, performance alongside it, and the
-plain view as the release valve rather than a reason to water the room down.
+**An environment map.** Brass at metalness 1 with nothing to reflect renders as
+dull brown plastic. Image-based lighting is the single largest realism lever
+available and costs one file. This is why the current `/fun` room and every
+prototype before the last one looked like a game rather than a photograph.
 
-One WebGL canvas for the entire site. Nothing loads before interaction. On a
-mid-range phone the camera stops and the room stays: three or four fixed framings
-that cross-fade, keeping material, lamp and shadows and losing only the travel.
-Below that, the plain view.
+**Normal and roughness maps.** So a plank has grain that catches light and a
+panel has a bevel that does not.
 
-Techniques proven in the prototype and to be carried into the build: render only
-on frames that move (the scene is stationary for most of its life, and idle
-measured zero renders in two seconds); regenerate the shadow map only on moving
-frames; instance repeated geometry; share textures and materials across identical
-objects; adaptive pixel ratio with a floor; antialiasing off above 2x device
-pixels; stop the easing where the camera moves less than a pixel.
+Verified working. `.inspiration/pbr/` holds `wooden_floor_02`, `wooden_panels`
+and `black_oak_veneer` (diff, nor_gl, arm at 1K jpg) plus `reading_room_1k.hdr`,
+all CC0 from Poly Haven, about 6.3 MB unconverted.
 
-## 8. Two rooms
+Two implementation notes that cost time to find:
 
-**Locked.** One room, seen two ways. The portfolio is the guided version on
-rails. `/fun` is the same geometry with the rails off. The room is built for the
-portfolio first, because that is where it has to look expensive, and the current
-`/fun` room is replaced by it afterwards rather than kept.
+`RGBELoader` is **not** in the vendored three build, though `PMREMGenerator` and
+`DataTextureLoader` are. A compact RGBE parser is written in
+`.inspiration/section-objects.html` and `scroll-film-poc.html` — header, then
+`-Y h +X w`, then either flat or RLE scanlines, exponent bias 136 for the
+float conversion. Lift it rather than rewriting it.
+
+ARM maps pack occlusion, roughness and metalness into R/G/B. three reads
+roughness from green and metalness from blue, so one file serves both slots. AO
+is unusable on plane geometry because three samples `aoMap` from a second UV set.
+
+## 6. The rig
+
+Every object must be lit by the hero's rig, taken verbatim from
+`InlineGlobeScene.tsx` rather than re-invented: ambient `#31251a` at 0.42, a key
+directional `#ffd49a` at intensity 3 from `(-5.5, 5.5, 4.5)` casting shadows, a
+cool bounce `#6f9c72` at 0.5 from `(5, -0.5, 2)`, a spot `#ffca8a` at 26 raking
+the tabletop, ACES filmic at 1.05 exposure, camera at fov 32 and z 6.9.
+
+The shipped globe does **not** currently have an environment map. Adding one is
+an improvement to the hero as well as the precondition for everything else.
+
+## 7. Performance techniques, all proven in prototype
+
+Render only on frames that move. A scroll-driven scene is stationary for most of
+its life; measured zero renders in two seconds while held still, against roughly
+120 per second before.
+
+Regenerate the shadow map only on moving frames (`shadowMap.autoUpdate = false`).
+
+Instance repeated geometry. 104 book meshes with 104 materials became one
+`InstancedMesh` with per-instance colour.
+
+Share textures and materials across identical objects.
+
+Adaptive pixel ratio with a floor of 1.0, stepping down twice if the median
+render cost stays above 14ms. Antialiasing off above 2x device pixels. Shadow map
+1024 on high-DPR or narrow viewports.
+
+Stop the easing where the camera would move less than a pixel.
+
+## 8. Still open
+
+Which sections get an object, and what each object is. The current proposal is
+portfolio (bound volumes with brass-labelled spines, one lying open), resume (a
+sheet under a brass clip with a pen), infrastructure (six machines on a brass
+rail with live status lights, driven by the real cluster status endpoint), and
+writing (a stack of paper under a brass weight). Rendered but not reviewed.
+
+Live versus pre-rendered. Objects can be rendered in the browser or
+pre-rendered offline at much higher quality and shown as stills with small live
+overlays. Offline looks considerably better; live keeps everything data-driven.
+Not decided.
+
+Transitions between sections. This is the part that was meant to be unique and it
+is the part least explored under the new model.
+
+The blog's place, the interaction vocabulary, touch, and renaming "Eucalyptus"
+all remain open from before.
 
 ## 9. Assets
 
-**Researched, nothing fetched.** See `ASSETS.md`.
-
-The finding that matters: `/fun` already has a working CC0 pipeline, so nothing
-needs building. It looks modern because the assets currently loaded are
+See `ASSETS.md`. The finding that matters: `/fun` already has a working CC0
+pipeline, and it looks modern because the assets currently loaded are
 `laminate_floor_02`, `plastered_wall_04`, `dirty_carpet` and a photography-studio
-HDRI, four of which say "modern flat" on their own. Swapping slugs changes the
-register without touching loading code.
+HDRI. Swapping slugs changes the register without touching loading code.
 
-There is no writing desk in the Poly Haven catalogue worth using, so the most
-important object in the room gets built from primitives. At the camera distances
-the route uses, the tell is material and light rather than silhouette.
+## 10. What to do next
 
-## 10. Still open
-
-The blog's place in the route. Currently parked on a side table at the last stop,
-which is a guess rather than a decision. If it deserves more it takes its own stop
-between the wall and the drawing.
-
-Whether the CV belongs in the room at all. It is the one piece of content someone
-arrives with a specific job to do, and everything the room adds is friction for
-that person. The defensible alternative is that the shelf shows the shape of
-eleven years and one paragraph, and the real CV is a normal page and a PDF.
-
-Interaction vocabulary. Certificates lift, prints lift, papers fan. That is
-probably two gestures too many.
-
-Touch. There is no hover on a phone, and the camera is already reduced to fixed
-framings there, so the content patterns need a separate answer.
-
-Renaming the palette. "Eucalyptus Deepened" points at an Australian tree, and the
-hue is right but the name is now off-register for a Norwegian forest. Values would
-not change, only the label.
+1. Look at `.inspiration/section-objects.html`, which renders five objects in the
+   hero rig with PBR surfaces and the interior HDRI. Decide which objects are
+   right and which sections get one.
+2. Add an environment map to the shipped hero globe. Smallest change with the
+   largest visible return, and it is a precondition for everything else.
+3. Decide live versus pre-rendered.
+4. Build one section object end to end in the real site, mounted only when it
+   scrolls into view and rendering on demand, and measure it.
+5. Design the transitions.
 
 ## 11. Prototypes
 
 Gitignored, under `.inspiration/`, served with `python3 -m http.server 8899` from
 that directory because they load three.js as ES modules.
 
-`camera-poc.html` is the motion test: six stops, holds and travel, the light rake,
-the optimisation work.
-`camera-content-poc.html` adds the content panels, anchoring and the nested CV
-scroll.
-`content-in-the-room.html` is the four content patterns at full fidelity with real
-CV text.
+`section-objects.html` is the current direction: five objects in the hero rig.
+`scroll-film-poc.html` is the abandoned scroll film, kept for the camera code,
+the RGBE parser and the perf techniques.
+`object-content-poc.html` holds the CSS3D text-on-surface technique.
+`content-in-the-room.html` is the four content patterns with real CV text.
 `type-lock.html` and `type-study.html` are the typography comparisons.
-`room-card-globe-study.html` renders candidate hero objects inside the real globe
-rig.
-`room-look-study.html` is five interiors for the room itself, deferred until the
-portfolio look is settled.
+`room-look-study.html` is five interiors for the `/fun` room, deferred.
+`pbr/` holds the downloaded Poly Haven assets.
 
 ## Logbook
+
+**2026-08-24, later.** Four interaction models built and rejected before landing
+on "more moments like the globe". The realism finding in section 5 is the reason
+three of them failed and is the thing most worth carrying forward: without an
+environment map and normal maps, nothing rendered will look like anything but a
+game, however good the composition is.
 
 **2026-08-24.** Theme, register and typography locked. Fonts swapped in the real
 site, closing a long-standing gap where `brand.ts` claimed IBM Plex Sans was in
