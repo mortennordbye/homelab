@@ -130,17 +130,17 @@ export function InfraBench() {
     <div ref={hostRef}>
       {/* The canvas carries no text for a screen reader and no keyboard path
           into a device, so the way in lives out here as real controls. Below
-          lg this list is the whole section. */}
-      <div className={cn("relative w-full", mode === "skip" ? "hidden" : "hidden lg:block")}>
-        <div className="aspect-[16/7] w-full overflow-hidden rounded-xl border border-line bg-bg-2">
-          {mode === "webgl" && (
-            <BenchScene feed={feed} selected={selected} onSelect={setSelected} />
-          )}
-        </div>
-      </div>
+          lg this list is the whole section.
 
-      <div className="mt-8 grid gap-8 md:grid-cols-12">
-        <ul className="md:col-span-7 grid gap-2 sm:grid-cols-2">
+          Above the render, not below: the canvas is capped at 70vh and fills
+          the screen, so a panel underneath is off screen for exactly as long as
+          someone is picking things in the scene. */}
+      <div className="mx-auto max-w-[var(--container-wide)] px-6">
+        {/* Twelve chips on one line rather than a two-column list of full model
+            names. Sitting above the render, this block's height is taken
+            straight off the render's, so it buys back everything it can with
+            width: the model name lives in the detail below, not on the chip. */}
+        <ul className="flex flex-wrap gap-1.5">
           {ALL_DEVICES.map((d) => {
             const active = d.id === selected;
             return (
@@ -150,46 +150,44 @@ export function InfraBench() {
                   onClick={() => setSelected(active ? null : d.id)}
                   aria-pressed={active}
                   className={cn(
-                    "focus-ring flex w-full items-baseline justify-between gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
+                    "focus-ring rounded-full border px-3 py-1.5 font-mono text-xs transition-colors",
                     active
-                      ? "border-accent/60 bg-surface"
-                      : "border-line bg-bg hover:border-accent/40",
+                      ? "border-accent/60 bg-surface text-fg"
+                      : "border-line text-fg-2 hover:border-accent/40 hover:text-fg",
                   )}
                 >
-                  <span className="font-display text-sm text-fg">{d.label}</span>
-                  <span className="font-mono text-xs text-fg-3">{d.model}</span>
+                  {d.label}
                 </button>
               </li>
             );
           })}
         </ul>
 
-        <div className="md:col-span-5">
+        <div className="mt-5 border-t border-line pt-4">
           {device ? (
-            <div>
-              <p className="eyebrow">{device.label}</p>
-              <h3 className="mt-3 font-display text-h3 text-fg">{device.model}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-fg-2">{device.role}</p>
-              <dl className="mt-5 space-y-2 border-t border-line pt-4">
-                {device.facts.map(([k, v]) => (
-                  <div key={k} className="flex items-baseline justify-between gap-4">
-                    <dt className="font-mono text-xs text-fg-3">{k}</dt>
-                    <dd className="text-right font-mono text-xs text-fg-2">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              {!device.live && (
-                <p className="mt-4 font-mono text-xs leading-relaxed text-fg-3">
-                  Not covered by the status feed. The publisher reads the
-                  Kubernetes cluster only, so this box&apos;s lights are drawn lit
-                  and never change.
+            <div className="grid gap-x-8 gap-y-3 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.3fr)] md:items-start">
+              <div>
+                <h3 className="font-display text-h3 leading-tight text-fg">{device.model}</h3>
+                {/* The facts run inline as one wrapping line. Stacked as a
+                    definition list they were five rows tall on their own. */}
+                <p className="mt-1.5 font-mono text-xs leading-relaxed text-fg-3">
+                  {device.facts.map(([k, v]) => `${k} ${v}`).join("   ·   ")}
                 </p>
-              )}
+              </div>
+              <div>
+                <p className="text-sm leading-relaxed text-fg-2">{device.role}</p>
+                {!device.live && (
+                  <p className="mt-2 font-mono text-xs leading-relaxed text-fg-3">
+                    Not covered by the status feed — the publisher reads the
+                    Kubernetes cluster only, so this box&apos;s lights are drawn
+                    lit and never change.
+                  </p>
+                )}
+              </div>
             </div>
           ) : (
-            <div>
-              <p className="eyebrow">the cabinet</p>
-              <p className="mt-3 text-sm leading-relaxed text-fg-2">
+            <div className="grid gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1.6fr)_auto] md:items-center">
+              <p className="text-sm leading-relaxed text-fg-2">
                 Three bays. The line in and the house automation at the left,
                 storage and the switch in the middle, the three Proxmox hosts at
                 the right — each running one Talos control-plane VM and one
@@ -197,15 +195,24 @@ export function InfraBench() {
               </p>
               <Link
                 href="/infrastructure"
-                className="focus-ring mt-6 inline-flex items-center gap-2 font-display text-sm text-accent hover:underline"
+                className="focus-ring inline-flex items-center gap-2 whitespace-nowrap font-display text-sm text-accent hover:underline"
               >
-                The request path, the deploy pipeline and how the numbers get here
+                The request path and the deploy pipeline
                 <ArrowUpRight size={14} aria-hidden />
               </Link>
             </div>
           )}
         </div>
       </div>
+
+      <div className={cn("relative mt-10 w-full", mode === "skip" ? "hidden" : "hidden lg:block")}>
+        <div className="scene-bleed aspect-[16/9] max-h-[70vh] w-full">
+          {mode === "webgl" && (
+            <BenchScene feed={feed} selected={selected} onSelect={setSelected} />
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }

@@ -155,6 +155,17 @@ body {
   border-radius: var(--radius-sm);
 }
 
+/* A section object dissolving into the page rather than sitting in a card.
+   The hero globe bleeds because it has no container at all; a scene mounted
+   inside a section cannot do that, so it fades its own edges to transparent
+   and lets the page ground show through. Matching the colours instead would
+   still seam: the page ground is #0f1410 and these scenes bottom out nearer
+   #0b0907. */
+.scene-bleed {
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 6%, #000 93%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 6%, #000 93%, transparent 100%);
+}
+
 .hairline { border-color: var(--line); }
 .hairline-strong { border-color: var(--line-2); }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Lightformer, useTexture } from "@react-three/drei";
+import { Environment, Lightformer, RoundedBox, useTexture } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { NodeState } from "./hardware";
@@ -42,8 +42,9 @@ const BAY_W = (BENCH_W - 4 * PANEL) / 3;
 const BAY_X = [-(BAY_W + PANEL), 0, BAY_W + PANEL];
 const FLOOR = PANEL / 2;
 const Z_BACK = -BENCH_D / 2 + PANEL;
+const LEG_H = 0.95;
 
-const TV_W = 11.4;
+const TV_W = 8.4;
 const SCREEN_PX_W = 1280, SCREEN_PX_H = 720;
 const TV_H = TV_W * (SCREEN_PX_H / SCREEN_PX_W);
 
@@ -109,6 +110,117 @@ function perforation(cols: number, rows: number) {
   return t;
 }
 
+/**
+ * Fine surface noise as a normal map. Colour-only procedural surfaces read as
+ * flat-shaded boxes — every point on a face takes the light identically and the
+ * eye stops believing it is a material. This is the cheapest fix: no second
+ * asset, and enough microstructure that a moulded plastic lid varies across
+ * its own width.
+ */
+function buildMicroNormal() {
+  const N = 128;
+  const c = document.createElement("canvas");
+  c.width = N;
+  c.height = N;
+  const g = c.getContext("2d")!;
+  const img = g.createImageData(N, N);
+  // A deterministic hash rather than Math.random, so the map is identical on
+  // every mount and two devices never disagree about their own finish.
+  const h = (x: number, y: number) => {
+    const v = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+    return v - Math.floor(v);
+  };
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      const i = (y * N + x) * 4;
+      const dx = (h(x + 1, y) - h(x - 1, y)) * 0.5;
+      const dy = (h(x, y + 1) - h(x, y - 1)) * 0.5;
+      img.data[i] = 128 + dx * 46;
+      img.data[i + 1] = 128 - dy * 46;
+      img.data[i + 2] = 255;
+      img.data[i + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(3, 3);
+  t.colorSpace = THREE.NoColorSpace;
+  return t;
+}
+
+let microCache: THREE.Texture | null = null;
+function microNormal() {
+  if (!microCache) microCache = buildMicroNormal();
+  return microCache;
+}
+
+/**
+ * An engraved brass plate, ported from the portfolio shelf's own
+ * `shelfPlateMaterial` so the two objects letter identically. Not full metal,
+ * for the reason the shelf records: a mirror finish in a dim room reads as a
+ * dark smear, so this is a brighter scattered alloy, lightly self-lit through
+ * the same mask so the engraving reads where the key does not reach.
+ */
+function plateMaterial(text: string) {
+  const c = document.createElement("canvas");
+  c.width = 768;
+  c.height = 88;
+  const x = c.getContext("2d")!;
+  x.fillStyle = "#fff";
+  x.font = '38px "Fragment Mono", ui-monospace, monospace';
+  x.textAlign = "center";
+  x.textBaseline = "middle";
+  const chars = [...text.toUpperCase()];
+  const sp = 6;
+  const total = chars.reduce((a, ch) => a + x.measureText(ch).width + sp, -sp);
+  let cx = 384 - total / 2;
+  chars.forEach((ch) => {
+    const w = x.measureText(ch).width;
+    x.fillText(ch, cx + w / 2, 46);
+    cx += w + sp;
+  });
+  x.globalAlpha = 0.5;
+  x.lineWidth = 3;
+  x.strokeStyle = "#fff";
+  x.strokeRect(8, 8, 752, 72);
+
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return new THREE.MeshStandardMaterial({
+    map: t,
+    alphaMap: t,
+    emissive: new THREE.Color("#c9a05a"),
+    emissiveMap: t,
+    emissiveIntensity: 0.85,
+    transparent: true,
+    color: new THREE.Color("#e8c98c"),
+    metalness: 0.55,
+    roughness: 0.34,
+    envMapIntensity: 1,
+  });
+}
+
+/** Each bay carries its own name, which is the shelf's move: the split between
+    network, storage and compute becomes a property of the object rather than
+    something you operate a control to discover. */
+const BAY_LABELS = ["network", "storage", "compute"];
+
+function BayPlates() {
+  const mats = useMemo(() => BAY_LABELS.map(plateMaterial), []);
+  return (
+    <>
+      {mats.map((m, i) => (
+        <mesh key={BAY_LABELS[i]} position={[BAY_X[i], FLOOR + 0.30, BENCH_D / 2 + 0.04]}>
+          <planeGeometry args={[4.0, 0.5]} />
+          <primitive object={m} attach="material" />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
 /* -------------------------------------------------------------------------
    The set
 ------------------------------------------------------------------------- */
@@ -132,13 +244,21 @@ type Pick = {
  * which is how a render starts looking like a game.
  */
 function Pickable({
-  id, position, pick, children, lift = 0.3,
+  id, position, pick, children, lift = 0.3, hit, hitOffset,
 }: {
   id: string;
   position: [number, number, number];
   pick: Pick;
   children: React.ReactNode;
   lift?: number;
+  /**
+   * An invisible box that takes the click instead of the geometry. A dongle is
+   * a few pixels tall on screen and a switch is a thin slab; both were
+   * effectively unclickable without this. `colorWrite={false}` rather than
+   * `visible={false}`, because the raycaster skips invisible objects entirely.
+   */
+  hit?: [number, number, number];
+  hitOffset?: [number, number, number];
 }) {
   const { invalidate } = useThree();
   const active = pick.selected === id;
@@ -161,6 +281,12 @@ function Pickable({
       }}
     >
       {children}
+      {hit && (
+        <mesh position={hitOffset ?? [0, 0, 0]}>
+          <boxGeometry args={hit} />
+          <meshBasicMaterial colorWrite={false} depthWrite={false} transparent opacity={0} />
+        </mesh>
+      )}
     </group>
   );
 }
@@ -366,14 +492,21 @@ function Led({ position, colour, power = 0.8, radius = 0.022 }: {
 
 function ThinkCentre() {
   const vent = useMemo(() => perforation(4, 26), []);
+  const micro = useMemo(() => microNormal(), []);
   const face = T_D / 2;
 
   return (
     <group>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[T_W, T_H, T_D]} />
-        <meshStandardMaterial color="#2b2825" metalness={0.28} roughness={0.7} envMapIntensity={0.32} />
-      </mesh>
+      <RoundedBox args={[T_W, T_H, T_D]} radius={0.03} smoothness={3} castShadow receiveShadow>
+        <meshStandardMaterial
+          color="#2b2825"
+          metalness={0.32}
+          roughness={0.62}
+          envMapIntensity={0.5}
+          normalMap={micro}
+          normalScale={new THREE.Vector2(0.3, 0.3)}
+        />
+      </RoundedBox>
 
       <mesh position={[0, -T_H * 0.16, face + 0.004]}>
         <planeGeometry args={[T_W * 0.78, T_H * 0.52]} />
@@ -430,24 +563,37 @@ function PrintedStand({ position }: { position: [number, number, number] }) {
     one lie this object cannot afford. */
 function Nas() {
   const strip = useMemo(() => perforation(3, 18), []);
+  const micro = useMemo(() => microNormal(), []);
   const face = N_D / 2;
   const bayW = N_W * 0.155;
 
   return (
     <group>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[N_W, N_H, N_D]} />
-        <meshStandardMaterial color="#2a2724" metalness={0.25} roughness={0.74} envMapIntensity={0.3} />
-      </mesh>
+      <RoundedBox args={[N_W, N_H, N_D]} radius={0.05} smoothness={3} castShadow receiveShadow>
+        <meshStandardMaterial
+          color="#2a2724"
+          metalness={0.28}
+          roughness={0.68}
+          envMapIntensity={0.5}
+          normalMap={micro}
+          normalScale={new THREE.Vector2(0.3, 0.3)}
+        />
+      </RoundedBox>
 
       {Array.from({ length: 5 }, (_, i) => {
         const x = (i - 2) * (N_W * 0.168);
         return (
           <group key={i}>
-            <mesh position={[x, -N_H * 0.04, face]} castShadow>
-              <boxGeometry args={[bayW, N_H * 0.8, 0.05]} />
-              <meshStandardMaterial color="#201d1a" metalness={0.3} roughness={0.7} envMapIntensity={0.2} />
-            </mesh>
+            <RoundedBox args={[bayW, N_H * 0.8, 0.05]} radius={0.012} smoothness={2} position={[x, -N_H * 0.04, face]} castShadow>
+              <meshStandardMaterial
+                color="#201d1a"
+                metalness={0.34}
+                roughness={0.62}
+                envMapIntensity={0.55}
+                normalMap={micro}
+                normalScale={new THREE.Vector2(0.25, 0.25)}
+              />
+            </RoundedBox>
             <mesh position={[x, -N_H * 0.07, face + 0.028]}>
               <planeGeometry args={[bayW * 0.44, N_H * 0.56]} />
               <meshStandardMaterial map={strip} color="#2a2724" roughness={0.82} metalness={0.2} envMapIntensity={0.15} />
@@ -482,12 +628,19 @@ function DeviceBox({ size, tint, lights }: {
   tint: string;
   lights: { x: number; colour: string; power?: number; radius?: number }[];
 }) {
+  const micro = useMemo(() => microNormal(), []);
   return (
     <group>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={size} />
-        <meshStandardMaterial color={tint} roughness={0.66} metalness={0.18} envMapIntensity={0.35} />
-      </mesh>
+      <RoundedBox args={size} radius={0.035} smoothness={3} castShadow receiveShadow>
+        <meshStandardMaterial
+          color={tint}
+          roughness={0.6}
+          metalness={0.22}
+          envMapIntensity={0.5}
+          normalMap={micro}
+          normalScale={new THREE.Vector2(0.35, 0.35)}
+        />
+      </RoundedBox>
       {lights.map((l) => (
         <Led
           key={l.x}
@@ -505,12 +658,19 @@ function DeviceBox({ size, tint, lights }: {
     two of the eight are unused. */
 function Switch8() {
   const W = 1.6, H = 0.27, D = 1;
+  const micro = useMemo(() => microNormal(), []);
   return (
     <group>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[W, H, D]} />
-        <meshStandardMaterial color="#3a3733" roughness={0.66} metalness={0.18} envMapIntensity={0.35} />
-      </mesh>
+      <RoundedBox args={[W, H, D]} radius={0.03} smoothness={3} castShadow receiveShadow>
+        <meshStandardMaterial
+          color="#3a3733"
+          roughness={0.58}
+          metalness={0.26}
+          envMapIntensity={0.55}
+          normalMap={micro}
+          normalScale={new THREE.Vector2(0.3, 0.3)}
+        />
+      </RoundedBox>
       {Array.from({ length: 8 }, (_, i) => {
         const x = (i - 3.5) * 0.165;
         const lit = i !== 5 && i !== 7;
@@ -529,6 +689,162 @@ function Switch8() {
           </group>
         );
       })}
+    </group>
+  );
+}
+
+/**
+ * The Sonos Era 100: 182.5 x 120.3 x 130.5 mm. Not a box — the body is an
+ * upright with an oval plan and softly rounded top and bottom edges, wrapped in
+ * grille cloth almost to the top plate. A rounded box gets the dimensions right
+ * and the object wrong, so this is a lathed profile revolved and then scaled on
+ * one axis to make the oval, which is what the real silhouette is.
+ *
+ * The fun room already calls it "the Sonos Era 100 on the TV bench", so the
+ * model is named rather than guessed.
+ */
+function Sonos() {
+  const grille = useMemo(() => perforation(26, 22), []);
+
+  const { profile, squash } = useMemo(() => {
+    const W = 1.203, H = 1.825, D = 1.305;
+    const r = W / 2;
+    const c = 0.17; // corner radius, top and bottom
+    const pts: THREE.Vector2[] = [];
+    pts.push(new THREE.Vector2(0, 0));
+    pts.push(new THREE.Vector2(r - c, 0));
+    for (let i = 1; i <= 6; i++) {
+      const a = (i / 6) * (Math.PI / 2);
+      pts.push(new THREE.Vector2(r - c + Math.sin(a) * c, c - Math.cos(a) * c));
+    }
+    pts.push(new THREE.Vector2(r, H - c));
+    for (let i = 1; i <= 6; i++) {
+      const a = (i / 6) * (Math.PI / 2);
+      pts.push(new THREE.Vector2(r - c + Math.cos(a) * c, H - c + Math.sin(a) * c));
+    }
+    pts.push(new THREE.Vector2(0, H));
+    return { profile: pts, squash: D / W };
+  }, []);
+
+  return (
+    <group position={[0, -1.825 / 2, 0]} scale={[1, 1, 1]}>
+      <group scale={[1, 1, 1.085]}>
+        {/* The cloth. It wraps the whole body, which is why the speaker reads
+            as one soft form rather than a lid on a case. */}
+        <mesh castShadow receiveShadow scale={[1, 1, squash]}>
+          <latheGeometry args={[profile, 48]} />
+          <meshStandardMaterial
+            map={grille}
+            color="#211f1d"
+            roughness={0.88}
+            metalness={0.06}
+            envMapIntensity={0.18}
+          />
+        </mesh>
+      </group>
+
+      {/* The top plate: smooth, slightly inset, with the touch groove. */}
+      <mesh position={[0, 1.825 + 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[1, 1.085, 1]}>
+        <circleGeometry args={[0.52, 40]} />
+        <meshStandardMaterial color="#1a1816" roughness={0.55} metalness={0.22} envMapIntensity={0.4} />
+      </mesh>
+      <mesh position={[0, 1.825 + 0.006, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[1, 1.085, 1]}>
+        <ringGeometry args={[0.2, 0.235, 32]} />
+        <meshStandardMaterial color="#2c2926" roughness={0.45} metalness={0.3} envMapIntensity={0.5} />
+      </mesh>
+      <Led position={[0, 1.825 + 0.008, -0.33]} colour="#9fd8b0" power={0.4} radius={0.019} />
+    </group>
+  );
+}
+
+/**
+ * The UniFi U6+: a 160 mm disc, 33 mm deep, with a domed face, a chamfered rim
+ * and the LED ring inset from the edge rather than at it. A plain cylinder is
+ * what made this read as a roll of tape.
+ */
+function AccessPoint() {
+  const profile = useMemo(() => {
+    const R = 0.8, H = 0.24, c = 0.05;
+    const pts: THREE.Vector2[] = [];
+    pts.push(new THREE.Vector2(0, 0));
+    pts.push(new THREE.Vector2(R - c, 0));
+    for (let i = 1; i <= 5; i++) {
+      const a = (i / 5) * (Math.PI / 2);
+      pts.push(new THREE.Vector2(R - c + Math.sin(a) * c, c - Math.cos(a) * c));
+    }
+    pts.push(new THREE.Vector2(R, H - c));
+    for (let i = 1; i <= 5; i++) {
+      const a = (i / 5) * (Math.PI / 2);
+      pts.push(new THREE.Vector2(R - c + Math.cos(a) * c, H - c + Math.sin(a) * c));
+    }
+    // A shallow dome rather than a flat lid.
+    for (let i = 1; i <= 5; i++) {
+      const t = i / 5;
+      pts.push(new THREE.Vector2((R - c) * (1 - t), H + 0.035 * Math.sin((t * Math.PI) / 2)));
+    }
+    return pts;
+  }, []);
+
+  return (
+    <group position={[0, -0.12, 0]}>
+      <mesh castShadow receiveShadow>
+        <latheGeometry args={[profile, 44]} />
+        <meshStandardMaterial color="#3f3a34" roughness={0.6} metalness={0.1} envMapIntensity={0.35} />
+      </mesh>
+      <mesh position={[0, 0.262, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.6, 0.625, 44]} />
+        <meshStandardMaterial color="#0d0f0d" emissive="#8ec79f" emissiveIntensity={0.42} roughness={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * The Nabu Casa Connect ZBT-2: a slim USB stick, roughly 62 x 21 x 12 mm, in
+ * Nabu Casa's pale shell, with a hinged antenna longer than the body it comes
+ * out of. The antenna is the whole reason it is recognisable across a room,
+ * which is why it is the part worth getting right.
+ */
+function Zigbee() {
+  const micro = useMemo(() => microNormal(), []);
+  const L = 0.62, W = 0.21, H = 0.12;
+
+  return (
+    <group>
+      <RoundedBox args={[L, H, W]} radius={0.03} smoothness={3} castShadow receiveShadow>
+        <meshStandardMaterial
+          color="#6f6a62"
+          roughness={0.56}
+          metalness={0.08}
+          envMapIntensity={0.45}
+          normalMap={micro}
+          normalScale={new THREE.Vector2(0.25, 0.25)}
+        />
+      </RoundedBox>
+
+      {/* The USB-A shell at one end, which is most of what says "dongle". */}
+      <mesh position={[-L / 2 - 0.07, 0, 0]} castShadow>
+        <boxGeometry args={[0.15, 0.055, 0.14]} />
+        <meshStandardMaterial color="#8e8a84" roughness={0.34} metalness={0.85} envMapIntensity={0.9} />
+      </mesh>
+
+      {/* The antenna, hinged upright. */}
+      <group position={[L / 2 - 0.05, H / 2, 0]} rotation={[0, 0, -0.08]}>
+        <mesh position={[0, 0.05, 0]} castShadow>
+          <cylinderGeometry args={[0.032, 0.038, 0.1, 12]} />
+          <meshStandardMaterial color="#3a3733" roughness={0.45} metalness={0.5} envMapIntensity={0.7} />
+        </mesh>
+        <mesh position={[0, 0.53, 0]} castShadow>
+          <cylinderGeometry args={[0.026, 0.03, 0.86, 12]} />
+          <meshStandardMaterial color="#26231f" roughness={0.55} metalness={0.3} envMapIntensity={0.5} />
+        </mesh>
+        <mesh position={[0, 0.965, 0]}>
+          <sphereGeometry args={[0.028, 12, 10]} />
+          <meshStandardMaterial color="#26231f" roughness={0.55} metalness={0.3} />
+        </mesh>
+      </group>
+
+      <Led position={[-0.05, 0, W / 2 + 0.004]} colour="#3fbf6d" power={0.7} radius={0.016} />
     </group>
   );
 }
@@ -558,8 +874,8 @@ function Slab({ args, position, surface }: {
 }
 
 function Bench() {
-  const carcass = useSurface("black_oak_veneer", [2.6, 0.4]);
-  const inner = useSurface("black_oak_veneer", [2.2, 0.9]);
+  const carcass = useSurface("black_oak_veneer", [7, 0.9]);
+  const inner = useSurface("black_oak_veneer", [6, 1.6]);
 
   return (
     <group>
@@ -581,6 +897,26 @@ function Bench() {
       {[-(BENCH_W / 2 - PANEL / 2), -(BAY_W / 2 + PANEL / 2), BAY_W / 2 + PANEL / 2, BENCH_W / 2 - PANEL / 2].map((x) => (
         <Slab key={x} args={[PANEL, BENCH_H, BENCH_D]} position={[x, BENCH_H / 2, 0]} surface={carcass} />
       ))}
+
+      {/* Turned brass legs. The real cabinet is wall hung, but the palette is
+          four materials and brass was entirely absent from this object — which
+          is most of why it read flat next to the shelf, where the foil and the
+          plates do all the warm work. They also lift it clear of the floor so
+          it casts a contact shadow instead of merging with it. */}
+      {[-1, 1].map((sx) =>
+        [-1, 1].map((sz) => (
+          <group key={`${sx}${sz}`} position={[sx * (BENCH_W / 2 - 0.6), -LEG_H / 2, sz * (BENCH_D / 2 - 0.55)]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.09, 0.13, LEG_H, 14]} />
+              <meshStandardMaterial color="#d8b477" metalness={0.72} roughness={0.3} envMapIntensity={1} />
+            </mesh>
+            <mesh position={[0, LEG_H / 2 - 0.06, 0]} castShadow>
+              <cylinderGeometry args={[0.16, 0.16, 0.1, 14]} />
+              <meshStandardMaterial color="#d8b477" metalness={0.72} roughness={0.36} envMapIntensity={1} />
+            </mesh>
+          </group>
+        )),
+      )}
     </group>
   );
 }
@@ -598,10 +934,19 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
         <meshStandardMaterial color="#100d0b" roughness={0.97} metalness={0} envMapIntensity={0.03} />
       </mesh>
 
+      {/* A floor, so the cabinet stands somewhere. Without it the legs end in
+          nothing and the object floats in a void, which no amount of material
+          work on the cabinet itself can fix. */}
+      <mesh position={[0, -LEG_H, 2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[60, 40]} />
+        <meshStandardMaterial color="#161210" roughness={0.94} metalness={0} envMapIntensity={0.05} />
+      </mesh>
+
       <Bench />
+      <BayPlates />
 
       {/* Left bay: what the house needs before any of the rest of it matters. */}
-      <Pickable id="modem" position={[BAY_X[0] - 1.55, FLOOR + 0.2, zFront - 0.1]} pick={pick} lift={0.22}>
+      <Pickable id="modem" position={[BAY_X[0] - 1.55, FLOOR + 0.2, zFront - 0.1]} pick={pick} lift={0.22} hit={[2.1, 0.6, 1.5]}>
         <DeviceBox
           size={[2, 0.4, 1.4]}
           tint="#35322e"
@@ -613,10 +958,10 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
           ]}
         />
       </Pickable>
-      <Pickable id="gateway" position={[BAY_X[0] + 0.15, FLOOR + 0.15, zFront]} pick={pick} lift={0.22}>
+      <Pickable id="gateway" position={[BAY_X[0] + 0.15, FLOOR + 0.15, zFront]} pick={pick} lift={0.22} hit={[1.4, 0.55, 1.4]}>
         <DeviceBox size={[1.3, 0.3, 1.3]} tint="#3d3a35" lights={[{ x: 0, colour: "#9fd8b0", radius: 0.03 }]} />
       </Pickable>
-      <Pickable id="ha" position={[BAY_X[0] + 1.75, FLOOR + 0.25, zFront]} pick={pick} lift={0.22}>
+      <Pickable id="ha" position={[BAY_X[0] + 1.75, FLOOR + 0.25, zFront]} pick={pick} lift={0.22} hit={[1.4, 0.7, 1.35]}>
         <DeviceBox
           size={[1.3, 0.5, 1.26]}
           tint="#2c2926"
@@ -631,10 +976,10 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
       <Pickable id="nas" position={[BAY_X[1] - 1.55, FLOOR + N_H / 2, zFront + 0.05]} pick={pick}>
         <Nas />
       </Pickable>
-      <Pickable id="switch" position={[BAY_X[1] + 1.35, FLOOR + 0.135, zFront + 0.1]} pick={pick} lift={0.22}>
+      <Pickable id="switch" position={[BAY_X[1] + 1.35, FLOOR + 0.135, zFront + 0.1]} pick={pick} lift={0.22} hit={[1.75, 0.29, 1.15]}>
         <Switch8 />
       </Pickable>
-      <Pickable id="hue" position={[BAY_X[1] + 1.35, FLOOR + 0.4, zFront + 0.1]} pick={pick} lift={0.22}>
+      <Pickable id="hue" position={[BAY_X[1] + 1.35, FLOOR + 0.42, zFront + 0.1]} pick={pick} lift={0.22} hit={[1.05, 0.3, 1.05]}>
         <mesh castShadow receiveShadow>
           <boxGeometry args={[0.9, 0.26, 0.9]} />
           <meshStandardMaterial color="#565049" roughness={0.62} metalness={0.04} envMapIntensity={0.2} />
@@ -647,7 +992,15 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
         return (
           // The stand comes forward with its machine: they are one object to
           // anyone looking at them, and leaving it behind reads as a glitch.
-          <Pickable key={host.host} id={host.host} position={[x, 0, zFront + 0.15]} pick={pick} lift={0.34}>
+          <Pickable
+            key={host.host}
+            id={host.host}
+            position={[x, 0, zFront + 0.15]}
+            pick={pick}
+            lift={0.34}
+            hit={[0.85, 2.1, 1.9]}
+            hitOffset={[0, FLOOR + 0.11 + T_H / 2, 0]}
+          >
             <PrintedStand position={[0, FLOOR + 0.055, 0]} />
             <group position={[0, FLOOR + 0.11 + T_H / 2, 0]}>
               <ThinkCentre />
@@ -655,6 +1008,18 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
           </Pickable>
         );
       })}
+
+      {/* On the bench top, flanking the set: the speaker and the access point
+          to its left, the Zigbee antenna to its right. */}
+      <Pickable id="sonos" position={[-6.4, BENCH_H + 1.825 / 2, Z_BACK + 1.55]} pick={pick} lift={0.25} hit={[1.4, 2.0, 1.5]}>
+        <Sonos />
+      </Pickable>
+      <Pickable id="ap" position={[-4.9, BENCH_H + 0.12, Z_BACK + 2.05]} pick={pick} lift={0.25} hit={[1.75, 0.42, 1.75]}>
+        <AccessPoint />
+      </Pickable>
+      <Pickable id="zigbee" position={[5.8, BENCH_H + 0.06, Z_BACK + 1.9]} pick={pick} lift={0.25} hit={[1.1, 1.3, 0.95]} hitOffset={[0.1, 0.55, 0]}>
+        <Zigbee />
+      </Pickable>
 
       <Television feed={feed} />
     </group>
@@ -723,16 +1088,20 @@ function Framing() {
 
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
-    const height = BENCH_H + TV_H + 0.61 + TV_H / 2;
-    const centre = new THREE.Vector3(0, height / 2, 0);
+    // Frame the cabinet and the set together, from the legs to the top of the
+    // screen, and no more of the room than that.
+    const bottom = -LEG_H - 0.5;
+    const top = BENCH_H + 0.61 + TV_H;
+    const height = top - bottom;
+    const centre = new THREE.Vector3(0, (top + bottom) / 2, 0);
     cam.aspect = size.width / Math.max(size.height, 1);
 
     const vFov = (cam.fov * Math.PI) / 180;
     const fitH = height / 2 / Math.tan(vFov / 2);
     const fitW = BENCH_W / 2 / Math.tan(vFov / 2) / cam.aspect;
-    const dist = Math.max(fitH, fitW) * 1.14;
+    const dist = Math.max(fitH, fitW) * 1.015;
 
-    const dir = new THREE.Vector3(0.3, 0.12, 1).normalize();
+    const dir = new THREE.Vector3(0.26, 0.10, 1).normalize();
     cam.position.copy(centre).add(dir.multiplyScalar(dist));
     cam.near = dist / 60;
     cam.far = dist * 6;
@@ -770,7 +1139,7 @@ export default function BenchScene({ feed, selected, onSelect }: {
     <Canvas
       shadows
       frameloop="demand"
-      camera={{ fov: 30 }}
+      camera={{ fov: 19 }}
       dpr={[1, 2]}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
