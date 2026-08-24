@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Fragment_Mono, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
@@ -16,27 +16,37 @@ import { services } from "@/content/services";
 // from before still lands on dark.
 const themeBoot = `document.documentElement.classList.add('dark');document.documentElement.dataset.theme='dark';`;
 
-const body = Inter({
+/*
+ * Two faces, no sans. See `theme` and `fonts` in content/brand.ts.
+ *
+ * Source Serif carries headings and body alike, which is the whole point: serif
+ * headline over grotesque body over mono label is the signature of a generated
+ * portfolio whatever families are substituted into it. One family with a real
+ * optical-size axis breaks that pattern and is honest about it — the display
+ * classes in globals.css ask for a light cut at opsz 60, prose gets a sturdy
+ * one at 12, which is how metal type actually worked.
+ *
+ * This replaced Inter, JetBrains Mono and Fraunces, which sat at popularity
+ * ranks 5, 59 and 93 of the 1,942 families on Google Fonts. The brand document
+ * had claimed for some time that Inter was deliberately not here; it was.
+ */
+const body = Source_Serif_4({
   variable: "--font-body",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const mono = JetBrains_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["400", "500", "700"],
-});
-
-// Serif display face for headings only (text-display-* / text-h*); body and
-// UI labels stay on Inter. opsz keeps optical sizing across heading sizes.
-const displayFace = Fraunces({
-  variable: "--font-display-face",
   subsets: ["latin"],
   display: "swap",
   axes: ["opsz"],
 });
+
+const mono = Fragment_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400"],
+});
+
+// No separate display face any more. globals.css maps --font-display-face onto
+// --font-body, so headings and prose share the family and differ only by the
+// optical size the display classes request.
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -165,7 +175,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${body.variable} ${mono.variable} ${displayFace.variable} antialiased`}
+      className={`${body.variable} ${mono.variable} antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />

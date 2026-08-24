@@ -46,12 +46,13 @@
   --b-danger:   #d18e83;
   --b-info:     #5ca9c3;
 
-  /* Real faces, not names. Fraunces is already loaded by the root layout;
-     the two Plex variables are loaded by this route's page component. All
-     three are self-hosted at build time and all three are OFL-1.1. */
-  --b-display: var(--font-display-face), ui-serif, Iowan Old Style, Georgia, serif;
-  --b-body: var(--b-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --b-mono: var(--b-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Real faces, not names. Both are loaded by this route's page component,
+     self-hosted at build time, and both are OFL-1.1. */
+  /* One family for display and body, per the theme. They differ by optical
+     size, which is set on the elements below rather than in the stack. */
+  --b-display: var(--b-serif), ui-serif, Iowan Old Style, Georgia, serif;
+  --b-body: var(--b-serif), ui-serif, Georgia, serif;
+  --b-mono: var(--b-mono-face), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --b-r-sm: 2px;
   --b-r-md: 4px;
@@ -62,6 +63,7 @@
   background: var(--b-anchor);
   color: var(--b-snow);
   font-family: var(--b-body);
+  font-variation-settings: "opsz" 12;
   line-height: 1.6;
   min-height: 100dvh;
   padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1rem, 4vw, 3rem) 7rem;
@@ -95,12 +97,13 @@ body:has(.bsys) > main { flex: 1; }
   line-height: 1.12;
   text-wrap: balance;
   font-family: var(--b-display);
+  font-variation-settings: "opsz" 40;
   font-weight: 500;
   letter-spacing: -0.018em;
 }
 .bsys h1 { font-size: clamp(2.2rem, 5vw, 3.3rem); }
 .bsys h2 { font-size: clamp(1.5rem, 3vw, 2rem); }
-.bsys h3 { font-family: var(--b-body); font-weight: 640; font-size: 1.02rem; letter-spacing: -0.006em; }
+.bsys h3 { font-family: var(--b-body); font-variation-settings: "opsz" 20; font-weight: 600; font-size: 1.02rem; letter-spacing: -0.006em; }
 .bsys p { margin: 0; max-width: 68ch; color: var(--b-snow-2); }
 
 .bsys__eyebrow {
