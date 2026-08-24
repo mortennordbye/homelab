@@ -201,12 +201,30 @@ Stop the easing where the camera would move less than a pixel.
 and `WorkShelfScene.tsx` (the scene), mounted by `FeaturedWork` above the list.
 
 Thirteen case studies as thirteen bound volumes on two shelves, client
-engagements above and homelab below, split on the frontmatter `kind`. Every
-spine is stamped with its own title, so the whole list is legible without
-touching anything. One volume stands face-out showing its cover. Clicking a
-spine brings that volume out; clicking it again opens it, and the camera dives
-at the open leaf until the paper fills the frame while the route hands over to
-`/work/<slug>`.
+engagements above and homelab below, split on the frontmatter `kind`. Each shelf
+carries its own name on a brass plate, which is what replaced the old
+client/homelab filter control: the split is a property of the object now, not
+something you operate a control to discover. Every spine is stamped with its own
+title, so the whole list is legible without touching anything. One volume stands
+face-out showing its cover. Clicking a spine brings that volume out; clicking it
+again opens it, and the camera dives at the open leaf until the paper fills the
+frame while the route hands over to `/work/<slug>`.
+
+The section is the shelf full width, with the selected volume's title, summary,
+client, period and stack running horizontally underneath it. That panel is not
+decoration: a canvas carries no text for a screen reader and no keyboard path
+into a volume, so the way in lives out there as a real anchor.
+
+Four numbers that took several passes to settle, all worth not re-deriving. The
+lens is **20 degrees**, not the hero's 32: a bookcase is a wide subject and at
+anything shorter the volumes at the ends of the row splay and read as warped.
+`dpr` is **[1, 2]**, because the scene draws on demand and rendering at 1.5 on a
+retina panel is visibly soft for no saving. The environment is deliberately
+**dim, and the large matte surfaces take almost none of it** — turned up across
+the set it lifts every surface at once and the whole shelf goes foggy. And the
+shelf plates sit about a unit nearer the camera than the books, so the visible
+vertical extent at their depth is much smaller than at the books': frame for the
+plates, and the books follow.
 
 Three things worth keeping:
 

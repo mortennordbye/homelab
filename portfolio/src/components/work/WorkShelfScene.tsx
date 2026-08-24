@@ -28,12 +28,17 @@ import {
  */
 
 const SHELF_TOP = 0.1;
-const SHELF_BOT = -1.82;
+const SHELF_BOT = -1.9;
 const GAP = 0.013;
 const BOARD_T = 0.02;
-const DISP: [number, number] = [1.62, 0.42]; // display slot x, z
+const DISP: [number, number] = [1.55, 0.3]; // display slot x, z
 const OPEN_END = 0.72; // past here the camera dives at the page
-const FOV = 34;
+const FOV = 20;
+
+const SHELF_LABELS: Array<[number, string]> = [
+  [SHELF_TOP, "Client engagements"],
+  [SHELF_BOT, "Homelab"],
+];
 
 const TINTS = [
   "#39422f",
@@ -45,6 +50,54 @@ const TINTS = [
   "#4a3a2a",
   "#333a44",
 ];
+
+/**
+ * The shelf's name, on a small brass plate screwed to the board edge. This is
+ * the client/homelab split made visible: it used to be a filter control, and a
+ * label on the thing itself says the same in less.
+ */
+function shelfPlateMaterial(text: string) {
+  const c = document.createElement("canvas");
+  c.width = 768;
+  c.height = 88;
+  const x = c.getContext("2d")!;
+  x.fillStyle = "#fff";
+  x.font = '40px "Fragment Mono", ui-monospace, monospace';
+  x.textAlign = "center";
+  x.textBaseline = "middle";
+  // letterspaced by hand: canvas has no letter-spacing before Chrome 99
+  const chars = [...text.toUpperCase()];
+  const sp = 5;
+  const total = chars.reduce((a, ch) => a + x.measureText(ch).width + sp, -sp);
+  let cx = 384 - total / 2;
+  chars.forEach((ch) => {
+    const w = x.measureText(ch).width;
+    x.fillText(ch, cx + w / 2, 46);
+    cx += w + sp;
+  });
+  x.globalAlpha = 0.5;
+  x.lineWidth = 3;
+  x.strokeStyle = "#fff";
+  x.strokeRect(8, 8, 752, 72);
+  const t = texFrom(c, true);
+  // Not full metal. A mirror-finish plate in a dim room reads as a dark smear;
+  // this is a brighter, more scattered alloy so the shelf name can be read.
+  return new THREE.MeshStandardMaterial({
+    map: t,
+    alphaMap: t,
+    // Lightly self-lit through the same mask, so only the engraving glows. The
+    // lower shelf sits in the key's shadow, and a purely reflective plate is
+    // unreadable down there while the upper one reads fine.
+    emissive: new THREE.Color("#c9a05a"),
+    emissiveMap: t,
+    emissiveIntensity: 0.5,
+    transparent: true,
+    color: new THREE.Color("#e8c98c"),
+    metalness: 0.55,
+    roughness: 0.34,
+    envMapIntensity: 1,
+  });
+}
 
 const ease = (t: number) => t * t * (3 - 2 * t);
 const clamp = (t: number) => Math.max(0, Math.min(1, t));
@@ -64,7 +117,7 @@ type Placed = {
 function dims(i: number) {
   return {
     T: 0.175 + ((i * 2654435761) % 1000) / 1000 * 0.115,
-    H: 1.4 + ((i * 7919) % 100) / 100 * 0.3,
+    H: 1.3 + ((i * 7919) % 100) / 100 * 0.28,
     W: 0.94 + ((i * 104729) % 100) / 100 * 0.16,
   };
 }
@@ -124,7 +177,6 @@ function buildVolume(
   leaf: THREE.MeshStandardMaterial,
   paper: THREE.MeshStandardMaterial,
   spineMat: THREE.MeshStandardMaterial,
-  coverMat: THREE.MeshStandardMaterial,
 ) {
   const { W, H, T } = p;
   const bt = BOARD_T;
@@ -158,14 +210,6 @@ function buildVolume(
   const front = board();
   front.position.set(bW / 2, 0, 0);
   hinge.add(front);
-
-  // The cover is glued to the outside of the front board; the turn to face the
-  // camera lands the artwork 180 out, hence the in-plane flip.
-  const cov = new THREE.Mesh(new THREE.PlaneGeometry(bW - 0.03, H - 0.055), coverMat);
-  cov.rotation.x = -Math.PI / 2;
-  cov.rotation.z = Math.PI;
-  cov.position.set(0, bt / 2 + 0.0022, 0);
-  front.add(cov);
 
   const h0 = T - 2 * bt - 0.008;
   const rightBlock = new THREE.Mesh(new THREE.BoxGeometry(bW - sq, h0, H - 2 * sq), page);
@@ -237,7 +281,7 @@ function Shelf({
   volumes: Volume[];
   selected: string | null;
   onSelect: (slug: string) => void;
-  onOpen: () => void;
+  onOpen: (slug?: string) => void;
   opening: boolean;
 }) {
   const { camera, gl, invalidate } = useThree();
@@ -253,7 +297,7 @@ function Shelf({
       normalMap: clothTex.normalMap,
       normalScale: new THREE.Vector2(1.7, 1.7),
       roughness: 0.7,
-      envMapIntensity: 0.6,
+      envMapIntensity: 0.15,
     });
     const pageCanvas = pageEdgeCanvas();
     const pageTex = texFrom(pageCanvas, true);
@@ -287,6 +331,14 @@ function Shelf({
     };
   }, [clothTex]);
 
+  const plates = useMemo(
+    () =>
+      Object.fromEntries(
+        SHELF_LABELS.map(([, label]) => [label, shelfPlateMaterial(label)]),
+      ) as Record<string, THREE.MeshStandardMaterial>,
+    [],
+  );
+
   const placed = useMemo<Placed[]>(() => {
     const rows: Array<{ key: "professional" | "homelab"; y: number; list: Volume[] }> = [
       {
@@ -299,7 +351,7 @@ function Shelf({
     const out: Placed[] = [];
     let gi = 0;
     rows.forEach((row) => {
-      let cursor = -2.52;
+      let cursor = -2.42;
       row.list.forEach((v, i) => {
         const d = dims(i);
         out.push({
@@ -328,13 +380,6 @@ function Shelf({
         clothImgs.nor,
         150,
       );
-      const coverMat = foilMaterial(
-        coverStamp(p.v),
-        p.tint,
-        clothImgs.diff,
-        clothImgs.nor,
-        240,
-      );
       const { holder, parts } = buildVolume(
         p,
         shared.cloth,
@@ -342,12 +387,11 @@ function Shelf({
         shared.leaf,
         shared.paper,
         spineMat,
-        coverMat,
       );
       holder.traverse((o) => {
         if ((o as THREE.Mesh).isMesh) o.userData.slug = p.v.slug;
       });
-      return { p, holder, parts, turn: 0, open: 0, out: 0 };
+      return { p, holder, parts, turn: 0, open: 0, out: 0, dressed: false };
     });
   }, [placed, shared, clothImgs]);
 
@@ -356,15 +400,34 @@ function Shelf({
     gl.shadowMap.needsUpdate = true;
   }, [gl]);
 
+  /* A cover is a 768x1158 stamp turned into four maps, most of it a per-pixel
+     pass. Doing all thirteen at build time cost over a second before the shelf
+     could be touched, and twelve of them are never seen. */
+  useEffect(() => {
+    const b = built.find((x) => x.p.v.slug === selected);
+    if (!b || b.dressed || !clothImgs.diff?.width) return;
+    b.dressed = true;
+    const mat = foilMaterial(coverStamp(b.p.v), b.p.tint, clothImgs.diff, clothImgs.nor, 240);
+    const cov = new THREE.Mesh(
+      new THREE.PlaneGeometry(b.parts.bW - 0.03, b.p.H - 0.055),
+      mat,
+    );
+    cov.rotation.x = -Math.PI / 2;
+    cov.rotation.z = Math.PI;
+    cov.position.set(0, b.parts.bt / 2 + 0.0022, 0);
+    b.parts.front.add(cov);
+    invalidate();
+  }, [selected, built, clothImgs, invalidate]);
+
   const scratch = useMemo(
     () => ({
       p: new THREE.Vector3(),
       t: new THREE.Vector3(),
       n: new THREE.Vector3(),
       c: new THREE.Vector3(),
-      shelfP: new THREE.Vector3(-0.1, 0.14, 7.05),
-      shelfT: new THREE.Vector3(-0.1, 0.02, -0.15),
-      readP: new THREE.Vector3(-0.28, 0.1, 5.25),
+      shelfP: new THREE.Vector3(-0.185, -0.2, 11.6),
+      shelfT: new THREE.Vector3(-0.185, -0.2, -0.15),
+      readP: new THREE.Vector3(-0.28, -0.1, 8.28),
       readT: new THREE.Vector3(-0.28, -0.3, 1.55),
       hinge: new THREE.Vector3(-0.28, -0.3, 1.55),
     }),
@@ -457,40 +520,47 @@ function Shelf({
   return (
     <>
       <mesh position={[0, 0.2, -0.92]} receiveShadow>
-        <boxGeometry args={[7.9, 9.5, 0.24]} />
+        <boxGeometry args={[6.4, 9.5, 0.24]} />
         <meshStandardMaterial
           map={panels.map}
           normalMap={panels.normalMap}
           roughnessMap={panels.roughnessMap}
           color="#4a3c2e"
           normalScale={new THREE.Vector2(0.8, 0.8)}
-          envMapIntensity={0.3}
+          envMapIntensity={0}
         />
       </mesh>
 
-      {[SHELF_TOP, SHELF_BOT, SHELF_TOP + 2.02].map((y) => (
+      {[SHELF_TOP, SHELF_BOT, SHELF_TOP + 1.9].map((y) => (
         <mesh key={y} position={[0, y - 0.1, -0.16]} receiveShadow castShadow>
-          <boxGeometry args={[7.9, 0.2, 1.75]} />
+          <boxGeometry args={[6.4, 0.2, 1.2]} />
           <meshStandardMaterial
             map={oak.map}
             normalMap={oak.normalMap}
             roughnessMap={oak.roughnessMap}
             color="#6a5541"
             normalScale={new THREE.Vector2(0.75, 0.75)}
-            envMapIntensity={0.4}
+            envMapIntensity={0.08}
           />
         </mesh>
       ))}
-      {[-3.82, 3.82].map((x) => (
-        <mesh key={x} position={[x, SHELF_TOP + 0.02, -0.16]} receiveShadow castShadow>
-          <boxGeometry args={[0.26, 4.24, 1.75]} />
+      {[-2.94, 2.94].map((x) => (
+        <mesh key={x} position={[x, -0.1, -0.16]} receiveShadow castShadow>
+          <boxGeometry args={[0.26, 4.4, 1.2]} />
           <meshStandardMaterial
             map={oak.map}
             normalMap={oak.normalMap}
             roughnessMap={oak.roughnessMap}
             color="#6a5541"
-            envMapIntensity={0.4}
+            envMapIntensity={0.08}
           />
+        </mesh>
+      ))}
+
+      {SHELF_LABELS.map(([y, label]) => (
+        <mesh key={label} position={[-1.72, y - 0.1, 0.45]}>
+          <planeGeometry args={[1.55, 0.15]} />
+          <primitive object={plates[label]} attach="material" />
         </mesh>
       ))}
 
@@ -509,8 +579,17 @@ function Shelf({
         onClick={(e) => {
           const s = pick(e);
           if (!s) return;
-          if (s === selected) onOpen();
+          if (s === selected) onOpen(s);
           else onSelect(s);
+        }}
+        /* Picking a volume moves it to the display slot, so "click it again"
+           lands on empty shelf. A double-click opens whatever is under the
+           cursor, wherever it happens to be. */
+        onDoubleClick={(e) => {
+          const s = pick(e);
+          if (!s) return;
+          onSelect(s);
+          onOpen(s);
         }}
       >
         {built.map((b) => (
@@ -529,10 +608,10 @@ function Lights() {
   }, []);
   return (
     <>
-      <ambientLight color="#31251a" intensity={0.42} />
+      <ambientLight color="#3b2d20" intensity={0.62} />
       <directionalLight
         color="#ffd49a"
-        intensity={3}
+        intensity={3.5}
         position={[-5.5, 5.5, 4.5]}
         castShadow
         shadow-mapSize-width={1024}
@@ -547,6 +626,10 @@ function Lights() {
         shadow-radius={3}
       />
       <directionalLight color="#6f9c72" intensity={0.5} position={[5, -0.5, 2]} />
+      {/* A soft frontal fill, so the lower shelf is not a black hole. Not in
+          the hero rig: a bookcase has a whole second shelf in the key's
+          shadow, which a single object standing on a table does not. */}
+      <directionalLight color="#ffcf9e" intensity={0.75} position={[0.5, -1.6, 6]} />
       <spotLight
         ref={rake}
         color="#ffca8a"
@@ -566,19 +649,19 @@ export default function WorkShelfScene(props: {
   volumes: Volume[];
   selected: string | null;
   onSelect: (slug: string) => void;
-  onOpen: () => void;
+  onOpen: (slug?: string) => void;
   opening: boolean;
 }) {
   return (
     <Canvas
       shadows
       frameloop="demand"
-      camera={{ position: [-0.1, 0.14, 7.05], fov: FOV }}
-      dpr={[1, 1.5]}
+      camera={{ position: [-0.185, -0.2, 11.6], fov: FOV }}
+      dpr={[1, 2]}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.05;
+        gl.toneMappingExposure = 1.22;
       }}
       style={{ width: "100%", height: "100%" }}
     >
@@ -586,12 +669,14 @@ export default function WorkShelfScene(props: {
         {/* Brass at metalness 1 with nothing to reflect renders as dull brown
             plastic. Two warm lightformers stand in for an interior HDRI at no
             asset cost, which is the whole reason the foil reads as metal. */}
+        {/* Brass at metalness 1 with nothing to reflect is dull brown
+            plastic, so this exists purely to give the foil something. It is
+            kept dim, and the large matte surfaces take almost none of it via
+            their own envMapIntensity — turned up across the set it lifts
+            every surface at once and the whole shelf goes foggy. */}
         <Environment resolution={128} frames={1}>
-          {/* Kept dim on purpose. This exists so brass has something to
-              reflect, not to light the shelf — the rig's key does that. Turned
-              up it washes the cloth tints out to a uniform amber. */}
-          <Lightformer intensity={1.5} color="#ffd9a8" position={[-4, 3, 3]} scale={[8, 8, 1]} />
-          <Lightformer intensity={0.32} color="#6f9c72" position={[5, -1, 2]} scale={[6, 6, 1]} />
+          <Lightformer intensity={0.9} color="#ffd9a8" position={[-4, 3, 3]} scale={[8, 8, 1]} />
+          <Lightformer intensity={0.22} color="#6f9c72" position={[5, -1, 2]} scale={[6, 6, 1]} />
           <mesh scale={40}>
             <sphereGeometry args={[1, 12, 12]} />
             <meshBasicMaterial color="#1a140d" side={THREE.BackSide} />

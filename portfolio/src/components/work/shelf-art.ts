@@ -59,7 +59,7 @@ function wrap(x: CanvasRenderingContext2D, text: string, maxW: number) {
  */
 export function spineStamp(v: Volume, arcLen: number, height: number) {
   const w = Math.max(96, Math.round((280 * arcLen) / 0.26));
-  const h = Math.min(2048, Math.round(w * (height / arcLen)));
+  const h = Math.min(1280, Math.round(w * (height / arcLen)));
   const c = canvasOf(w, h);
   const x = c.getContext("2d")!;
   x.strokeStyle = "#fff";
