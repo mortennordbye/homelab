@@ -76,6 +76,40 @@ rules:
     resourceNames: ["portfolio-status"]
     verbs: ["get", "patch", "update"]
 ---
+# The same write, into the stage namespace. Without it the stage deployment has
+# no feed to mount and its copy of the site can only ever report "stale", so the
+# one thing the infrastructure section exists to show cannot be checked on stage
+# before it reaches prod.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: status-publisher
+  namespace: stage-portfolio
+rules:
+  # create cannot be restricted by resourceName (the name doesn't exist yet);
+  # the rest is pinned to the one ConfigMap this job owns.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["portfolio-status"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: status-publisher
+  namespace: stage-portfolio
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: status-publisher
+subjects:
+  - kind: ServiceAccount
+    name: status-publisher
+    namespace: portfolio
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -352,6 +386,15 @@ spec:
                   kubectl create configmap portfolio-status -n portfolio \
                     --from-file=status.json=/tmp/status.json \
                     --dry-run=client -o yaml | kubectl apply -f -
+
+                  # Stage gets the same payload so its copy of the site shows the
+                  # live feed instead of reporting "stale" for ever. A ConfigMap
+                  # cannot be mounted across namespaces, so this is a second
+                  # write rather than a reference. Tolerated on failure: stage
+                  # must never fail the run that prod depends on.
+                  kubectl create configmap portfolio-status -n stage-portfolio \
+                    --from-file=status.json=/tmp/status.json \
+                    --dry-run=client -o yaml | kubectl apply -f - || true
               securityContext:
                 readOnlyRootFilesystem: true
                 allowPrivilegeEscalation: false

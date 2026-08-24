@@ -71,13 +71,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Decide which of the six is worth wiring. The NAS is the one with a real story (it holds every PV in the cluster) and DSM exposes volume and drive health over its API; that needs a credential in Bitwarden, an `ExternalSecret`, and a second collector alongside the CronJob. Once a device reports, flip its `live` flag and drive its LEDs from the feed instead of the constant.
 - **Where:** `portfolio/src/components/infrastructure/hardware.ts` (the `live` flag and `DEVICES`), `portfolio/src/components/infrastructure/BenchScene.tsx` (`Nas`, `Switch8`, `DeviceBox` LED constants), `k8s/talos/apps/portfolio/status-publisher.yaml`.
 
-### No still frame for the cabinet on mobile or reduced motion
-
-- **What:** Below 1023px, and for anyone with `prefers-reduced-motion`, the infrastructure section renders no object at all — just the device list and the detail panel. The hero globe has a painted static fallback for the same case; this has none, so a phone gets the estate as a list of nine buttons and never sees the cabinet.
-- **Why deferred:** The scene is lit almost entirely by the set, and a flat still of it loses the one thing that makes it read. Doing it properly means a pre-rendered frame at a couple of widths, which is the "live versus pre-rendered" decision `branding/DECISIONS.md` section 8 explicitly leaves open for all the section objects, not just this one.
-- **Unblock:** Settle live-versus-pre-rendered for section objects generally. If pre-rendered wins, render the cabinet offline at higher quality and ship stills, which also removes the three.js cost on desktop.
-- **Where:** `portfolio/src/components/infrastructure/InfraBench.tsx` (the `skip` mode), `portfolio/branding/DECISIONS.md` section 8.
-
 ### Outside-in probing for the 30-day health strip
 - **What:** The `/infrastructure` page now renders a 30-day health strip from per-day sample counts the status publisher accumulates in `status.json` (`history` array). It is labelled "observed in-cluster" because that is all it is: days where the publisher never ran show as gaps, but the strip cannot see the site being unreachable from the internet while the cluster is fine, and self-reported health proves less than an external probe.
 - **Why deferred:** True availability needs an external prober (Uptime Kuma on another host, healthchecks.io, or a GitHub Actions schedule hitting the site) publishing daily results somewhere the static page can fetch.
