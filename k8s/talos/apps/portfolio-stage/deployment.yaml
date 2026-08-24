@@ -41,12 +41,25 @@ spec:
             runAsGroup: 65532
             capabilities: { drop: ["ALL"] }
             seccompProfile: { type: RuntimeDefault }
+          env:
+            # Path the /api/v1/infra route reads (the status ConfigMap mount).
+            # Without it stage falls back to the build-time snapshot, which has
+            # no timestamp, so the homepage set reports "stale" for ever and the
+            # live status cannot be checked here before it reaches prod.
+            - name: STATUS_FILE
+              value: /config/status.json
           volumeMounts:
             # Next's ISR/fetch cache — the only path the server writes at runtime.
             - name: next-cache
               mountPath: /app/.next/cache
             - name: tmp
               mountPath: /tmp
+            # Live cluster status written by the status-publisher CronJob in the
+            # portfolio namespace, which writes a copy here too. Optional so pods
+            # start without it.
+            - name: status
+              mountPath: /config
+              readOnly: true
           resources:
             requests: { cpu: 100m, memory: 192Mi }
             limits: { cpu: 500m, memory: 512Mi }
@@ -76,3 +89,7 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 32Mi
+        - name: status
+          configMap:
+            name: portfolio-status
+            optional: true

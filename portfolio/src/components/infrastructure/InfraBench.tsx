@@ -205,12 +205,30 @@ export function InfraBench() {
         </div>
       </div>
 
-      <div className={cn("relative mt-10 w-full", mode === "skip" ? "hidden" : "hidden lg:block")}>
-        <div className="scene-bleed aspect-[16/9] max-h-[70vh] w-full">
-          {mode === "webgl" && (
+      {/* The poster sits under the canvas rather than instead of it, which is
+          how the hero globe handles the same problem. It is what a phone and a
+          reduced-motion visitor get — neither ever mounts the scene, and
+          without this they got the chips and no object at all — and on desktop
+          it fills the frame while three.js is still arriving.
+
+          Two crops, because a phone and a desktop need different pictures
+          rather than the same one squeezed: 180 cm of cabinet at phone width is
+          nothing legible, so the portrait frame takes the storage and compute
+          bays, where the detail is. */}
+      <div className="scene-bleed relative mt-10 aspect-[5/6] max-h-[70vh] w-full overflow-hidden sm:aspect-[4/3] lg:aspect-[16/9]">
+        <picture>
+          <source media="(max-width: 767px)" srcSet="/images/cabinet-poster-mobile.jpg" />
+          <img
+            src="/images/cabinet-poster.jpg"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </picture>
+        {mode === "webgl" && (
+          <div className="absolute inset-0">
             <BenchScene feed={feed} selected={selected} onSelect={setSelected} />
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
     </div>
