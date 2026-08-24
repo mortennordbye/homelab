@@ -11,9 +11,12 @@
    content/brand.ts.
 
    Dark only. The theme toggle was removed and layout.tsx forces .dark
-   before first paint, so a light ramp here would be unreachable CSS. The
-   paper ramp still exists in two places that need it: the print stylesheet
-   at the bottom of globals.css, and content/brand.ts for the LaTeX CV.
+   before first paint, so a light ramp here would be unreachable CSS. Paper
+   is the exception and is not a theme: it is one of the four materials the
+   room is made of, so a sheet of it is light for the same reason a sheet of
+   paper on a dark desk is light. The other two paper ramps are unrelated to
+   it — the print stylesheet at the bottom of globals.css, and
+   content/brand.ts for the LaTeX CV.
    ====================================================================== */
 
 :root,
@@ -59,6 +62,31 @@
   --copper: #c09955;      /*  7.03:1 — the ink end of the same ramp, used
                               sparingly. wood -> brass -> copper is one
                               material at three depths, not three colours. */
+
+  /* Paper — the fourth material named in branding/DECISIONS.md §2, and the
+     only one that had no screen ramp until now. Without it the hero's tags and
+     the portrait have nothing to be made of and fall back to glass, which is
+     what made them read as UI floating over the render rather than as things
+     lying on the desk. Ink is solved against --paper-2 at 8.9:1.
+
+     Deliberately warm off-white and never pure white: #fff on this ground is a
+     light leak, and paper in a room lit by one lamp is the colour of the lamp. */
+  --paper: #e8ddc9;
+  --paper-2: #d9cbb2;      /* the body of a sheet, mid-gradient */
+  --paper-3: #cabb9f;      /* the shaded lower-right edge */
+  --paper-ink: #3a2e1d;    /*  8.90:1 on --paper-2 */
+
+  /* The lamp, expressed once so the DOM and the render agree about where it
+     is. The rig in InlineGlobeScene.tsx keys from the upper left, so a raised
+     surface takes light on its top and left edges, goes dark on its right and
+     bottom, and throws its shadow down and to the right. An evenly bordered
+     box is the CSS version of the flat-shaded box that DECISIONS §5 identifies
+     as the reason three prototypes failed. */
+  --lit-edge: rgba(255, 212, 154, 0.11);
+  --lit-edge-soft: rgba(255, 212, 154, 0.055);
+  --dark-edge: rgba(0, 0, 0, 0.55);
+  --cast: 6px 16px 28px -18px rgba(0, 0, 0, 0.95);
+  --cast-tight: 2px 3px 5px -2px rgba(0, 0, 0, 0.85);
 
   /* Shares copper's hex, so a Result mark and a Watch mark are currently one
      colour told apart only by their label. Pre-existing; see BACKLOG.md. */

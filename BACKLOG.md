@@ -143,6 +143,18 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Decide the route/assertion list, add `portfolio/tests/` with a Playwright config running via `mcr.microsoft.com/playwright` Docker image, add the CI job.
 - **Where:** `.github/workflows/ci-portfolio.yaml`, new `portfolio/tests/`.
 
+### The materials pass stops after About
+- **What:** `branding/DECISIONS.md` §12 agreed that everything not rendered is built from the same four materials as the objects: plate labels, one lamp on every raised surface, paper where something lies on the desk, and lit sheets in place of cards. Only the hero and About were converted. `ServicesGrid`, `LatestWriting`, `ResumeSection`, `CtaContact` and the `/work/<slug>` pages still use `rounded-xl border border-line` cards, lucide icons in rounded-square badges, `/01` counters and `ArrowUpRight` links. Nineteen files still import `lucide-react`.
+- **Why deferred:** The first pass was scoped to the region where the hero render bleeds behind the copy, because that is where the mismatch was visible and where the treatments could be judged against the globe. Converting six more sections in the same step would have shipped a lot of unreviewed surface.
+- **Unblock:** Apply `.lit` + `.lit-rule` to the remaining card grids and drop the icon badges and counters with them, then decide per section whether a label is warranted. The classes and tokens already exist; nothing new needs designing. Do it a section at a time so each can be looked at.
+- **Where:** `portfolio/src/app/globals.css` (`.section-label`, `.card-stock`, `.print`, `.lit`, `.lit-rule`), `portfolio/src/styles/tokens.css` (paper ramp, `--lit-edge`, `--cast`), `portfolio/src/components/sections/{ServicesGrid,LatestWriting,ResumeSection,CtaContact}.tsx`, `portfolio/src/components/work/`.
+
+### The provenance stamp exists only in the footer
+- **What:** `FooterStamp` reports the node that served the page, the build sha, the coordinates and the render time. §12 accepted extending that device: the shelf stating its volume count and newest entry, the resume its revision date and size, the repositories their live star counts. None of it is built. Related gap: `content/repos.ts` fetches live stars and forks for four pinned repositories, and the only thing that renders it is `GithubWall` inside `/fun`, so the open-source work is invisible on the main site.
+- **Why deferred:** Each stamp needs a real source, and three of the four do not have one yet — the shelf count is derivable, the resume figures are produced inside the cv-bundle container, and the repo numbers already come from `/api/v1/github` but have no home outside the room.
+- **Unblock:** Pick sources one at a time and render each stamp under its own object in the same mono treatment as `FooterStamp`. The repositories one is the largest return, since it is the only place the GitHub work appears at all and the endpoint already exists.
+- **Where:** `portfolio/src/components/FooterStamp.tsx` (the pattern), `portfolio/src/content/repos.ts`, `portfolio/src/app/api/v1/github/route.ts`, `portfolio/src/components/fun/GithubWall.tsx`.
+
 ## Portfolio API
 
 ### Portfolio API writes: a real endpoint, and the auth to match

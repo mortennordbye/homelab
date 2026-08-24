@@ -148,6 +148,101 @@ body {
   font-weight: var(--font-weight-medium);
 }
 
+/* ---------------------------------------------------------------------------
+   The four materials, as surfaces.
+
+   Everything below exists so a flat section is built out of the same stuff as
+   a rendered one. Three rules run through all of them and are the whole point:
+   light comes from the upper left and nothing is evenly bordered; square-cut
+   corners rather than the 12px radius of a UI card; and a contact shadow
+   wherever something sits on the desk, because the hero render now bleeds down
+   behind the copy and an element with no shadow floats over a photograph
+   instead of resting on it. See branding/DECISIONS.md.
+   --------------------------------------------------------------------------- */
+
+/* Brass — the section label. A short rule over the label rather than a plate
+   under it. tokens.css gives brass three jobs, solid fills, card edges and
+   rules, and the rule is the only one of the three that does not have to
+   convince anyone it is metal: CSS has no environment map, and DECISIONS §5 is
+   that brass with nothing to reflect renders as brown plastic. A drawn line is
+   the weight that survives appearing in every section.
+
+   Not folded into .eyebrow, which also labels post dates and proof blocks
+   where a rule would be claiming a hierarchy that is not there. */
+.section-label {
+  display: inline-block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  font-weight: var(--font-weight-medium);
+}
+.section-label::before {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 1px;
+  margin-bottom: 12px;
+  /* Fades out to the right so it reads as drawn rather than as a border. */
+  background: linear-gradient(90deg, var(--copper), rgba(127, 90, 47, 0.15));
+}
+
+/* Paper — card stock set down on the desk. Square-cut, warm, and carrying a
+   short hard shadow rather than a soft glow, which is the difference between
+   lying on a surface and hovering above one. */
+.card-stock {
+  display: inline-block;
+  border-radius: 1px;
+  background: linear-gradient(158deg, var(--paper) 0%, var(--paper-2) 62%, var(--paper-3) 100%);
+  color: var(--paper-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    var(--cast-tight);
+}
+
+/* A print rather than a card: the image is inset in its own paper border and
+   the whole sheet casts, so the photograph is an object on the desk. */
+.print {
+  padding: 8px 8px 22px;
+  border-radius: 1px;
+  background: linear-gradient(158deg, var(--paper) 0%, var(--paper-2) 62%, var(--paper-3) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    4px 10px 16px -8px rgba(0, 0, 0, 0.95),
+    0 2px 2px -1px rgba(0, 0, 0, 0.8);
+}
+/* The image sits in a well in the paper. As a pseudo-element rather than an
+   inset shadow on the wrapper, because an <img> filling its parent paints over
+   the parent's inset shadow and it would never be seen. */
+.print > *::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* Any raised surface that is not paper: lit on the top and left, dark on the
+   right and bottom, shadow cast down and to the right. Replaces
+   `rounded-xl border border-line` wherever that was standing in for a card. */
+.lit {
+  border-radius: 2px;
+  background: linear-gradient(163deg, #1b211c 0%, #141a15 58%, #10150f 100%);
+  border-top: 1px solid var(--lit-edge);
+  border-left: 1px solid var(--lit-edge-soft);
+  border-right: 1px solid var(--dark-edge);
+  border-bottom: 1px solid var(--dark-edge);
+  box-shadow: var(--cast);
+}
+
+/* The brass hairline that heads a lit sheet, in place of an icon in a rounded
+   square. Fades out to the right so it reads as drawn rather than as a border. */
+.lit-rule {
+  height: 1px;
+  background: linear-gradient(90deg, var(--brass), rgba(127, 90, 47, 0.06));
+}
+
 /* Centralised focus affordance */
 .focus-ring:focus-visible {
   outline: var(--ring-width) solid var(--ring);
