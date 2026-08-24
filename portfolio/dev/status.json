@@ -9,7 +9,45 @@
   },
   "nodes": {
     "ready": 6,
-    "total": 6
+    "total": 6,
+    "list": [
+      {
+        "name": "genesis-ctrl-01",
+        "ready": true,
+        "role": "control-plane",
+        "schedulable": true
+      },
+      {
+        "name": "genesis-ctrl-02",
+        "ready": true,
+        "role": "control-plane",
+        "schedulable": true
+      },
+      {
+        "name": "genesis-ctrl-03",
+        "ready": true,
+        "role": "control-plane",
+        "schedulable": true
+      },
+      {
+        "name": "genesis-worker-01",
+        "ready": true,
+        "role": "worker",
+        "schedulable": true
+      },
+      {
+        "name": "genesis-worker-02",
+        "ready": true,
+        "role": "worker",
+        "schedulable": true
+      },
+      {
+        "name": "genesis-worker-03",
+        "ready": true,
+        "role": "worker",
+        "schedulable": true
+      }
+    ]
   },
   "versions": {
     "talos": "v1.11.6",

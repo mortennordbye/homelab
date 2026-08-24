@@ -131,8 +131,65 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
   const current = selected ? items.find((w) => w.slug === selected) : undefined;
 
   return (
-    <div className="overflow-hidden rounded-md border border-line bg-[#0a0b09]">
-      <div ref={hostRef} className="relative aspect-[4/3] w-full overflow-hidden">
+    <div>
+      {/* The panel is what the shelf cannot say. A canvas has no text in it for
+          a screen reader and no keyboard path into a volume, so the title, the
+          summary and the way in all live out here in real markup.
+
+          Above the shelf rather than below it: the render is capped at 70vh and
+          fills the screen on arrival, so a panel underneath is off screen for
+          exactly as long as someone is using the shelf, and nothing on screen
+          says it is there. */}
+      <div className="mx-auto max-w-[var(--container-wide)] px-7 pb-7 md:px-9">
+        {current ? (
+          <div className="grid gap-x-10 gap-y-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_auto] md:items-center">
+            <div>
+              <p className="mb-1 font-mono text-[0.6rem] uppercase tracking-[0.19em] text-accent">
+                {current.kind === "homelab" ? "Homelab" : "Client engagement"}
+              </p>
+              <h3 className="text-h3 leading-tight text-fg">{current.title}</h3>
+              <p className="mt-1 font-mono text-[0.6rem] leading-relaxed tracking-[0.1em] text-fg-3">
+                {[current.client, current.period].filter(Boolean).join("   ·   ")}
+              </p>
+            </div>
+
+            <div>
+              {/* Two lines at most. The summary is the one thing here that can
+                  run to any length, and it was setting the panel's height. */}
+              <p className="line-clamp-2 text-sm leading-relaxed text-fg-2">{current.summary}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {current.stack.slice(0, 6).map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[0.58rem] text-fg-2"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <Link
+              href={`/work/${current.slug}`}
+              onClick={(e) => {
+                // Let the volume open first; the route is pushed when the
+                // camera reaches the page. Keyboard and middle-click still get
+                // a plain link, which is why this is an anchor and not a button.
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                e.preventDefault();
+                onOpen(current.slug);
+              }}
+              className="focus-ring shrink-0 self-center whitespace-nowrap rounded-sm border border-accent/40 px-4 py-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-accent transition-colors hover:bg-accent/10"
+            >
+              {opening ? "Opening…" : "Open the volume"}
+            </Link>
+          </div>
+        ) : (
+          <p className="text-sm text-fg-3">Pick a volume from the shelf.</p>
+        )}
+      </div>
+
+      <div ref={hostRef} className="scene-bleed relative aspect-[16/9] max-h-[70vh] w-full overflow-hidden">
         {mode === "webgl" ? (
           <WorkShelfScene
             volumes={volumes}
@@ -163,56 +220,6 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
         </p>
       </div>
 
-      {/* The panel is what the shelf cannot say. A canvas has no text in it for
-          a screen reader and no keyboard path into a volume, so the title, the
-          summary and the way in all live out here in real markup. Below the
-          shelf and running across it, so the shelf itself gets the full width. */}
-      <div className="border-t border-line bg-gradient-to-r from-[#14110c] to-[#100e0a] px-7 py-6 md:px-9 md:py-7">
-        {current ? (
-          <div className="grid gap-x-10 gap-y-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_auto] md:items-start">
-            <div>
-              <p className="mb-2 font-mono text-[0.62rem] uppercase tracking-[0.19em] text-accent">
-                {current.kind === "homelab" ? "Homelab" : "Client engagement"}
-              </p>
-              <h3 className="text-h2 leading-tight text-fg">{current.title}</h3>
-              <p className="mt-2 font-mono text-[0.62rem] leading-relaxed tracking-[0.1em] text-fg-3">
-                {[current.client, current.period].filter(Boolean).join("   ·   ")}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm leading-relaxed text-fg-2">{current.summary}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {current.stack.slice(0, 7).map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-full border border-line px-2.5 py-1 font-mono text-[0.6rem] text-fg-2"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <Link
-              href={`/work/${current.slug}`}
-              onClick={(e) => {
-                // Let the volume open first; the route is pushed when the
-                // camera reaches the page. Keyboard and middle-click still get
-                // a plain link, which is why this is an anchor and not a button.
-                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-                e.preventDefault();
-                onOpen(current.slug);
-              }}
-              className="focus-ring shrink-0 self-center whitespace-nowrap rounded-sm border border-accent/40 px-4 py-2.5 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-accent transition-colors hover:bg-accent/10"
-            >
-              {opening ? "Opening…" : "Open the volume"}
-            </Link>
-          </div>
-        ) : (
-          <p className="text-sm text-fg-3">Pick a volume from the shelf.</p>
-        )}
-      </div>
     </div>
   );
 }

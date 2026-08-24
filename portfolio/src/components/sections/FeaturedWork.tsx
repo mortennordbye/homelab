@@ -32,11 +32,12 @@ export function FeaturedWork({ items }: { items: WorkMeta[] }) {
       id="portfolio"
       heading="Portfolio."
       description="Selected case studies from client engagements and the homelab. Each one carries the design rationale, the trade-offs, and what shipped. Pull a volume off the shelf to open it."
+      bleed={
+        <div className="hidden lg:block motion-reduce:lg:hidden">
+          <WorkShelf items={items} />
+        </div>
+      }
     >
-      <div className="hidden lg:block motion-reduce:lg:hidden">
-        <WorkShelf items={items} />
-      </div>
-
       <div className="lg:hidden motion-reduce:lg:block">
         {SHELVES.map(({ kind, label }) => {
           const shelf = items.filter((w) =>

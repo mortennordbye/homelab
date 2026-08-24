@@ -20,6 +20,7 @@ export function Section({
   width = "wide",
   className,
   innerClassName,
+  bleed,
   children,
 }: {
   id?: string;
@@ -31,7 +32,14 @@ export function Section({
   width?: Width;
   className?: string;
   innerClassName?: string;
-  children: ReactNode;
+  /**
+   * Content that runs the full width of the page rather than the container —
+   * for a section object, which reads as a widget the moment it has a measured
+   * box round it. Rendered after the heading and outside the max-width, and it
+   * cancels the section's own horizontal padding to reach the viewport edge.
+   */
+  bleed?: ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <section
@@ -49,8 +57,9 @@ export function Section({
             cta={cta}
           />
         )}
-        <div className={cn(heading ? "mt-14 md:mt-16" : "")}>{children}</div>
+        {children && <div className={cn(heading ? "mt-14 md:mt-16" : "")}>{children}</div>}
       </div>
+      {bleed && <div className={cn("-mx-6", heading ? "mt-14 md:mt-16" : "")}>{bleed}</div>}
     </section>
   );
 }
