@@ -3,7 +3,8 @@
 What to fetch, from where, at what cost, and what not to bother with. Companion
 to `ART-DIRECTION.md`, which says what the room is; this says what it is made of.
 
-Status: researched, nothing fetched yet.
+Status: researched. The shelf's three surfaces are fetched, converted and
+shipped; the rest of the room is still a shopping list.
 
 ---
 
@@ -52,6 +53,34 @@ Four of the five say "modern interior" on their own, and together they say it
 loudly. The room is doing exactly what it was told to do. Swapping the names
 below changes the register without touching a line of loading code, which makes
 this the cheapest large improvement available anywhere in the project.
+
+## 3b. Shipped: the portfolio shelf
+
+Live under `public/textures/shelf/`, 456 KB for the whole object.
+
+| Slug | Role | Files | Size |
+|---|---|---|---|
+| `book_pattern` | Linen bookcloth, every volume | diff, nor | 97 KB |
+| `black_oak_veneer` | Shelf boards and uprights | diff, nor, arm | 111 KB |
+| `wooden_panels` | The back panel behind the books | diff, nor, arm | 180 KB |
+
+Two decisions that made the difference to the byte count:
+
+The cloth ARM map was dropped entirely. It was 499 KB on its own, the single
+largest file in the set, and bookcloth has no metalness and near-uniform
+roughness, so a scalar `roughness: 0.7` does the same job for nothing. Reach for
+the ARM map when a surface actually varies; a woven cloth does not.
+
+The cloth diffuse is **pre-baked to a tintable luminance map** at build time
+rather than desaturated per-pixel in JavaScript at load. The prototype ran that
+remap over a million pixels on the main thread; baking it moved the cost to zero
+and made the file compress as greyscale. 512px is enough: the weave is below the
+resolution the frame can resolve anyway and mips away.
+
+No HDRI ships. Brass still needs something to reflect, so the scene builds a
+tiny environment from two drei `<Lightformer>`s at `resolution={128}` and
+`frames={1}`. Keep them dim — they exist for the reflection, not to light the
+shelf, and turned up they wash every cloth tint out to a uniform amber.
 
 ## 4. Surfaces to fetch
 

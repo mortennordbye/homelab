@@ -18,9 +18,9 @@ The spec that ships is `src/content/brand.ts`, rendered at `/brand`. Where this
 file and that file disagree, the code is what the site does and this file is what
 we meant.
 
-Status as of 2026-08-24: theme and typography locked and committed. Camera and
-content patterns prototyped and agreed in principle. Nothing about the room is
-built in the real site yet.
+Status as of 2026-08-24: theme and typography locked and committed. The first
+section object, the portfolio shelf, is built and shipped in the real site. The
+rest of the room is still prototype only.
 
 ---
 
@@ -195,13 +195,41 @@ render cost stays above 14ms. Antialiasing off above 2x device pixels. Shadow ma
 
 Stop the easing where the camera would move less than a pixel.
 
-## 8. Still open
+## 8. Shipped: the portfolio shelf
 
-Which sections get an object, and what each object is. The current proposal is
-portfolio (bound volumes with brass-labelled spines, one lying open), resume (a
-sheet under a brass clip with a pen), infrastructure (six machines on a brass
-rail with live status lights, driven by the real cluster status endpoint), and
-writing (a stack of paper under a brass weight). Rendered but not reviewed.
+**Built and in the real site.** `src/components/work/WorkShelf.tsx` (the facade)
+and `WorkShelfScene.tsx` (the scene), mounted by `FeaturedWork` above the list.
+
+Thirteen case studies as thirteen bound volumes on two shelves, client
+engagements above and homelab below, split on the frontmatter `kind`. Every
+spine is stamped with its own title, so the whole list is legible without
+touching anything. One volume stands face-out showing its cover. Clicking a
+spine brings that volume out; clicking it again opens it, and the camera dives
+at the open leaf until the paper fills the frame while the route hands over to
+`/work/<slug>`.
+
+Three things worth keeping:
+
+The spread is a title page and nothing more. Opening a volume is navigation, not
+a reading state, so the writing lives in exactly one place. This is also what
+keeps the rule in section 4 intact: nothing is behind the click, because
+thirteen spines and one cover are readable before anyone touches it.
+
+Cover and spine art are generated from the `nodes` and `edges` in each
+`*.arch.ts`, the same source the case study's own diagram renders from, so they
+cannot drift. The `cover` frontmatter field is deliberately unused: only six of
+the thirteen declared images exist, and the ones that do are wide landscape
+diagrams that lose their title and most of their topology cropped to a portrait
+board. **That gap is still there and is worth fixing or removing.**
+
+The foil is metal in the render rather than a painted colour, and is debossed
+via a normal map built from the gradient of the stamp. That is what separates it
+from print.
+
+Still open for the other sections: resume (a sheet under a brass clip with a
+pen), infrastructure (six machines on a brass rail with live status lights,
+driven by the real cluster status endpoint), and writing (a stack of paper under
+a brass weight). Rendered in prototype but not reviewed.
 
 Live versus pre-rendered. Objects can be rendered in the browser or
 pre-rendered offline at much higher quality and shown as stills with small live

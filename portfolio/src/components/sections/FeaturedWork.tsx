@@ -8,6 +8,7 @@ import { Reveal } from "@/components/primitives/Reveal";
 import { Tag } from "@/components/primitives/Tag";
 import { Button } from "@/components/primitives/Button";
 import { WorkCardCover } from "@/components/work/WorkCardCover";
+import { WorkShelf } from "@/components/work/WorkShelf";
 import { cn } from "@/lib/cn";
 import type { WorkMeta } from "@/lib/work";
 
@@ -78,6 +79,11 @@ export function FeaturedWork({ items }: { items: WorkMeta[] }) {
         </div>
       }
     >
+      {/* The section's object: the same case studies as bound volumes, client
+          engagements on the upper shelf and homelab on the lower. The list
+          below stays the list — the shelf is a second way in, not a gate. */}
+      <WorkShelf items={items} />
+
       <ul className="divide-y divide-line border-y border-line">
         {displayed.map((w, i) => {
           const overflow = w.stack.length - TAG_LIMIT;
