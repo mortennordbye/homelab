@@ -22,64 +22,89 @@ next render starts further ahead. It's the portfolio cousin of the blog's
   oversized uploads harder and the result looks *worse*, not sharper.
 
 ### Source of truth
-- Hand-authored **`linkedin-banner.svg`**. Edit the SVG, never the PNG.
-- Service icons are inlined as **base64 data-URIs** so the SVG is self-contained
-  (renders in the VSCode SVG preview, no CDN dependency).
+`build-banner.py` generates the SVG, which in turn is rasterised to the PNG.
+Edit the constants in the script, re-run it, then re-render. Never hand-edit the
+SVG (the next run overwrites it) and never touch the PNG.
 
-### Palette — the portfolio "fjord at midnight" tokens
-Lifted from `portfolio/src/styles/tokens.css` (dark theme) so the banner, the
-site, and the blog read as one brand:
+The one catch: the script re-inlines the five icon data-URIs by reading them out
+of the existing `linkedin-banner.svg` and asserts it finds exactly five. So the
+SVG is both output and input, and deleting it breaks the build. Adding or
+swapping an icon means inlining it by hand once (see Icons), after which the
+script carries it forward.
+
+Icons are inlined as base64 data-URIs so the SVG stays self-contained: it renders
+in the VSCode preview with no CDN dependency.
+
+### Palette — eucalyptus, hue 130
+
+Moved off the old arctic-blue "fjord at midnight" tokens on 2026-08-04 (see the
+logbook) so the banner, the site and the blog read as one brand. These are the
+values, which live as constants at the top of `build-banner.py`:
 
 | Role | Hex |
 |------|-----|
-| bg top → bottom | `#0a1015` → `#050a0f` |
-| accent (arctic blue) | `#5db7ff` — kicker, labels, accent bar top |
-| accent-2 (aurora violet) | `#8b7dff` — accent bar + name gradient tail |
-| snow (title / domains) | `#e8eef5` |
-| fog (role) | `#b0bccb` |
-| slate (separators) | `#8898aa` |
-| line-2 (the `|` divider) | `#5a6878` |
-| icon tile | `#eef2f7` |
+| ground, top → bottom | `#0a0a0a` → `#040404` |
+| accent bar, left → right | `#51a45e` → `#8ec798` |
+| labels (`PORTFOLIO`, `TECH BLOG`) | `#51a45e` |
+| domains | `#e7e7e7` |
+| divider rule | `#3a3a3a` |
+| aperture arcs | `#61b86f` at `stroke-opacity 0.10` |
+| icon tile | `#eef1ee` |
 
-Faint white grid at `stroke-opacity 0.03` is the only background texture. **No
-coloured radial glows** — they read as AI-generated (same lesson as the blog).
+The ground is a plain neutral near-black, not the site's tinted `#0f1410`
+anchor, and that is on purpose: green is the accent and the marks, never the
+canvas. The 2026-08-04 logbook entry below still records the anchor values, which
+is the entry being wrong rather than the banner.
+
+Background texture is the aperture motif: three concentric arcs struck from a
+centre off-canvas right at `#61b86f`, 10% stroke opacity. It replaced a faint
+white grid, because a low-opacity grid reads as generated. No coloured radial
+glows, ever, for the same reason (the blog learned this first).
 
 ### Fonts (and why)
-librsvg renders with **container-installed fonts**, not the site's webfonts, so
-the SVG font stacks must name fonts present in the render image:
-- **Kicker + name:** `'JetBrains Mono','DejaVu Sans Mono',monospace` — the
-  portfolio wordmark identity (matches `opengraph-image.tsx`). Install
-  `fonts-jetbrains-mono`; falls back to DejaVu Sans Mono.
-- **Role + URLs:** `'DejaVu Sans',…,sans-serif`, **bold**. Deliberate: thin
-  monospace at small sizes is the first thing LinkedIn's JPEG pass smears. Bold
-  sans has chunkier strokes that survive compression. Keep small/important text
-  **bold sans**, not thin mono.
+librsvg renders with container-installed fonts, not the site's webfonts, so the
+SVG font stacks must name fonts present in the render image:
 
-### Layout — LinkedIn safe zones (learned from the live profile)
-The profile **avatar overlaps the lower-left**, an **edit pencil** sits
-top-right (owner view), and the **right edge** can clip. So:
+- Labels (`PORTFOLIO`, `TECH BLOG`) use `'JetBrains Mono','DejaVu Sans Mono',monospace`
+  at 17px, weight 500, `letter-spacing 4`. Install `fonts-jetbrains-mono`; it
+  falls back to DejaVu Sans Mono.
+- Domains use `'DejaVu Sans','Helvetica',sans-serif` at 46px, weight 700. This
+  is deliberate: thin monospace at small sizes is the first thing LinkedIn's
+  JPEG pass smears. Bold sans has chunkier strokes that survive compression.
+  Keep anything small and important in bold sans, not thin mono.
+
+### Layout — centred, because LinkedIn crops both ways
+
+The current banner carries two things: the tile strip and the two destinations.
+Everything is centred on the canvas centre (792, 198).
 
 ```
-┌────────────────────────────────────────────────────────┐
-│ ▌KICKER (kubernetes · azure · gitops · terraform)   [icons →] │  ← top band
-│  Morten Victor Nordbye                              [tiles]   │
-│  Cloud Engineer & Architect                                   │
-│                                                               │
-│ (avatar tucks here)        PORTFOLIO · … | TECH BLOG · …       │  ← bottom band
-└────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│▀▀▀▀▀▀▀▀▀▀▀ accent rule, full width, 4px ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀│
+│                                                              │
+│                   [▪][▪][▪][▪][▪]        ← tiles, y100        │
+│                                                              │
+│          blog.nordbye.it │ nordbye.it    ← domains, y230      │
+│               TECH BLOG  │ PORTFOLIO     ← labels,  y260      │
+│                                                              │
+│ (avatar tucks here)                        ⌒ aperture arcs ⌒ │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-- **Identity (kicker, name, role): top-left**, every baseline **above ~y155** —
-  the avatar reaches up to ~y160 and will cover anything lower.
-- **Tech tiles: top-right**, aligned with the name. End by ~x1500 (right margin).
-- **URLs: bottom-right, single line**, both sites **equal weight** (same size,
-  same accent-label + snow-domain), divided by a spaced `|`. Bottom-right keeps
-  them clear of the avatar (left) and the edit pencil (top-right).
-- **Bottom-left: intentionally empty** — that's where the avatar sits. An empty
-  band there is correct, not unfinished.
-- Name uses a `#e8eef5 → #5db7ff → #8b7dff` left-to-right gradient (the OG
-  wordmark treatment); the gradient's `userSpaceOnUse` `x2` must track the name's
-  pixel width if you change the font size.
+- Anything that must survive belongs in the central safe box, roughly the middle
+  800×190 around (792, 198). LinkedIn crops top, bottom *and* sides on phones,
+  so corner-anchored content is desktop-only by definition. This rule is why the
+  layout is centred rather than corner-anchored, and it supersedes every
+  safe-zone refinement that came before it.
+- The two destinations carry equal weight, mirrored either side of a 2px divider
+  at x≈854: the blog right-aligned to x≈821, the portfolio left-aligned from
+  x≈889. Same size, same accent-label over snow-domain treatment.
+- The tile strip is five 64px tiles on 86px centres, starting at x=588, y=100.
+- The identity block (kicker, name, role) was removed on 2026-08-04. LinkedIn
+  already prints the name, headline and location directly under the banner, so
+  repeating it was redundant. There is no name gradient any more.
+- The bottom-left band stays empty. The avatar sits there and reaches up to
+  about y160. An empty band is correct, not unfinished.
 
 ### Icons
 Inlined on light `#eef2f7` tiles (many marks are dark/white and vanish on the
@@ -139,11 +164,11 @@ source is crisp; any softness on the live profile is LinkedIn's compression.
 
 ## Checklist (learned the hard way)
 
-- [ ] **Identity baselines above ~y155** — the avatar covers the lower-left up to
-      ~y160. (Centred name/role got covered; raised to the top band.)
+- [ ] **Central safe box** — anything that must survive sits in the middle
+      800×190 around (792, 198). LinkedIn crops sides as well as top and bottom.
 - [ ] **URLs bottom-right, not top-right** — the top-right edit pencil overlaps
       and the far edge clips. Keep them ~x1500 end, single line, equal weight.
-- [ ] **Bold sans for small text** (URLs/role) — thin mono smears under LinkedIn
+- [ ] **Bold sans for small text** (domains) — thin mono smears under LinkedIn
       JPEG. Bigger + bolder + brighter survives.
 - [ ] **Export at native 1584×396** — not 3×/4×; LinkedIn over-compresses big PNGs.
 - [ ] **Dark/white logos need the light tile** — verify in the rendered PNG. The
@@ -156,7 +181,7 @@ source is crisp; any softness on the live profile is LinkedIn's compression.
 - [ ] **Watch the right edge / avatar** — URLs and tiles end by ~x1500; nothing
       critical in the bottom-left (avatar) zone.
 
-> **Mobile crop — the rule that supersedes the safe zones above.** LinkedIn
+> **Mobile crop — the finding behind the centred layout.** LinkedIn
 > crops on phones in *both* directions: it trims top and bottom, and it also
 > cuts the sides. A right-aligned layout lost the leading `b` of
 > `blog.nordbye.it` on the live profile. Anything that must survive belongs in
@@ -164,7 +189,8 @@ source is crisp; any softness on the live profile is LinkedIn's compression.
 > centre (792, 198). Corner-anchored content is desktop-only by definition.
 >
 > The avatar (lower-left) and edit pencil (top-right) constraints still hold on
-> desktop, but a centred layout clears both for free.
+> desktop, but a centred layout clears both for free, which is why the layout
+> section above is written around the safe box rather than around the corners.
 
 ---
 
@@ -207,3 +233,29 @@ a simulated mobile band before shipping — do that check on every future change
 Source is now generated rather than hand-authored: the build script rebuilds the
 SVG from the palette constants and re-inlines the five icon data-URIs out of the
 previous SVG, so a palette change is an edit in one place, not thirty.
+
+### 2026-08-24 — doc caught up with the artefact
+No change to the banner. The body of this README still described the version
+before the 2026-08-04 rebuild while the logbook underneath it described the
+rebuild, so the two halves of the same file disagreed for three weeks.
+
+Corrected: the palette table (arctic blue → eucalyptus, taken from the constants
+in `build-banner.py` rather than transcribed by hand), the source of truth (the
+script generates the SVG; the SVG is not hand-authored any more), the layout
+section and its diagram (identity block gone, everything centred), the fonts
+section (there is no kicker or name to set), and the checklist item about
+identity baselines.
+
+The 2026-08-04 entry below records the ground as `#0f1410 → #070a08`. The file
+has always had `#0a0a0a → #040404`. The entry is the thing that is wrong; it is
+left as written rather than edited, since a logbook that gets rewritten is not
+one.
+
+Lesson worth keeping: this file is a rule book above and a logbook below, and a
+rebuild that only appends to the logbook leaves the rule book lying. Change both
+in the same pass, or the next person reads the wrong half first.
+
+The on-site half of the brand now lives in `ART-DIRECTION.md` next to this file:
+hyperreal, material, one lamp. It deliberately contradicts the flat-and-geometric
+rule here, because that rule exists to survive feed re-compression and nothing on
+this page is subject to it. `src/content/brand.ts` carries the same split.

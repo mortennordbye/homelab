@@ -21,7 +21,7 @@ export const PANEL_PX_H = 376;
  * every line fits on one row — and a wrapped line does not degrade gracefully,
  * it just looks broken.
  *
- * 512 is measured, not guessed. At 13px JetBrains Mono a character is 7.8px,
+ * 512 is measured, not guessed. At 13px Fragment Mono a character is 7.8px,
  * the longest help line is 57 of them, and 40px goes to padding: 512 leaves
  * 472px of content against 445px of text. Shortening any help line below that
  * budget is fine; widening one past it needs this number to move with it.

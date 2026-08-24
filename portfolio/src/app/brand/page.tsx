@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Fragment_Mono, Source_Serif_4 } from "next/font/google";
 import {
   a11y,
   colorGroups,
@@ -11,6 +11,7 @@ import {
   radii,
   semantic,
   spacing,
+  theme,
   typeScale,
 } from "@/content/brand";
 import "./brand.css";
@@ -18,18 +19,18 @@ import "./brand.css";
 // Loaded on this route only, and self-hosted at build time by next/font, so
 // the specimens are the real faces rather than a fallback approximation and
 // no request reaches Google at runtime. Both are OFL-1.1.
-const plexSans = IBM_Plex_Sans({
-  variable: "--b-plex-sans",
+const specimenSerif = Source_Serif_4({
+  variable: "--b-serif",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600"],
+  axes: ["opsz"],
 });
 
-const plexMono = IBM_Plex_Mono({
-  variable: "--b-plex-mono",
+const specimenMono = Fragment_Mono({
+  variable: "--b-mono-face",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500"],
+  weight: ["400"],
 });
 
 /**
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
 export default function BrandPage() {
   return (
     // A div, not a main: the root layout already provides the page's <main>.
-    <div className={`bsys ${plexSans.variable} ${plexMono.variable}`}>
+    <div className={`bsys ${specimenSerif.variable} ${specimenMono.variable}`}>
       <div className="bsys__wrap">
         <header className="bsys__head">
           <p className="bsys__eyebrow">Brand system &middot; Eucalyptus Deepened</p>
@@ -62,6 +63,101 @@ export default function BrandPage() {
             documents.
           </p>
         </header>
+
+        <hr className="bsys__rule" />
+
+        {/* ------------------------------------------------------------- theme */}
+        <section className="bsys__sec">
+          <div className="bsys__head">
+            <p className="bsys__eyebrow">
+              00 &middot; Theme &middot; {theme.name} &middot; {theme.gloss} &middot; {theme.rule}
+            </p>
+            <h2>{theme.line}</h2>
+            <p style={{ fontSize: "1.05rem" }}>{theme.intro}</p>
+            {theme.register.intro.map((r) => (
+              <p key={r}>{r}</p>
+            ))}
+          </div>
+
+          <div className="bsys__two">
+            <div className="bsys__panel">
+              <div className="bsys__cap">What the register is</div>
+              <div className="bsys__body">
+                <ul className="bsys__list">
+                  {theme.register.is.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="bsys__panel">
+              <div className="bsys__cap">What it is constantly mistaken for</div>
+              <div className="bsys__body">
+                <ul className="bsys__list">
+                  {theme.register.isNot.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="bsys__head" style={{ gap: "0.35rem", marginTop: "0.6rem" }}>
+            <h3>Four materials, and one lamp</h3>
+            <p style={{ fontSize: "0.88rem" }}>
+              Every surface on the site is one of four materials and there are no others. The
+              values are read off the hero scene rather than chosen here, so the spec and the
+              render cannot drift apart.
+            </p>
+          </div>
+          <div className="bsys__grid">
+            {[...theme.materials, ...theme.light].map((m) => (
+              <div key={m.name} className="bsys__sw">
+                <i style={{ background: m.hex }} />
+                <div>
+                  <b>{m.name}</b>
+                  <code>{m.hex}</code>
+                  <span>{m.use}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bsys__head" style={{ gap: "0.35rem", marginTop: "0.6rem" }}>
+            <h3>How the page behaves</h3>
+            <p style={{ fontSize: "0.88rem" }}>
+              The half of a brand that no palette can express, and the half this page used to be
+              missing entirely.
+            </p>
+          </div>
+          <div className="bsys__rules">
+            {theme.page.map((p) => (
+              <div key={p.rule}>
+                <h3>{p.rule}</h3>
+                <p>{p.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bsys__two">
+            <div className="bsys__panel">
+              <div className="bsys__cap">Never</div>
+              <div className="bsys__body">
+                <ul className="bsys__list">
+                  {theme.never.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="bsys__panel">
+              <div className="bsys__cap">The tension to manage</div>
+              <div className="bsys__body">
+                <p style={{ margin: 0 }}>{theme.tension}</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <hr className="bsys__rule" />
 
@@ -173,11 +269,18 @@ export default function BrandPage() {
         <section className="bsys__sec">
           <div className="bsys__head">
             <p className="bsys__eyebrow">04 &middot; Typography</p>
-            <h2>A serif with an opinion, an engineered workhorse</h2>
+            <h2>Two faces, and no sans anywhere</h2>
             <p>
-              Inter is deliberately not here. It is the default choice and one of the clearest
-              tells in current interface design. IBM Plex Sans does the same job with a technical
-              heritage that suits the work, and shares skeletons with the mono.
+              Serif headline over grotesque body over mono label is the signature of a generated
+              portfolio, whatever families are substituted into it. Setting body copy in the display
+              serif breaks that pattern harder than any font swap does, and Source Serif&rsquo;s
+              optical-size axis is what makes it honest: a lighter cut at 60 for headlines, a
+              sturdier one at 12 for paragraphs, which is how metal type actually worked.
+            </p>
+            <p style={{ fontSize: "0.9rem", color: "var(--b-snow-3)" }}>
+              Rank is position in Google Fonts popularity out of 1,942 families, used as a proxy for
+              how worn a choice is. The faces these replace sat at 5, 59 and 93, all inside the top
+              five per cent and all staples of generated design.
             </p>
           </div>
 
@@ -188,7 +291,7 @@ export default function BrandPage() {
                   <b>{f.role}</b>
                   <code style={{ fontSize: "1.05rem" }}>{f.family}</code>
                   <em>
-                    {f.weights} &middot; {f.license}
+                    {f.weights} &middot; {f.license} &middot; rank {f.rank}
                   </em>
                   <span>{f.why}</span>
                 </div>
@@ -197,7 +300,7 @@ export default function BrandPage() {
           </div>
 
           <div className="bsys__panel">
-            <div className="bsys__cap">Scale &middot; rendered in fallbacks until the faces are licensed</div>
+            <div className="bsys__cap">Scale &middot; Source Serif, optical size by step</div>
             <div className="bsys__body">
               <div className="bsys__type">
                 {typeScale.map((t) => (
@@ -422,12 +525,37 @@ export default function BrandPage() {
         <section className="bsys__sec">
           <div className="bsys__head">
             <p className="bsys__eyebrow">07 &middot; Imagery</p>
-            <h2>Generated images use the same palette or they fight the page</h2>
+            <h2>Two surfaces, two opposite rules</h2>
             <p>{imagery.intro}</p>
           </div>
 
+          <div className="bsys__two" style={{ marginBottom: "1.5rem" }}>
+            <div className="bsys__panel">
+              <div className="bsys__cap">On the site &middot; rendered</div>
+              <div className="bsys__body">
+                <p style={{ marginTop: 0 }}>{imagery.onsite.intro}</p>
+                <ul className="bsys__list">
+                  {imagery.onsite.rules.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="bsys__panel">
+              <div className="bsys__cap">Off the site &middot; flat</div>
+              <div className="bsys__body">
+                <p style={{ marginTop: 0 }}>{imagery.offsite.intro}</p>
+                <ul className="bsys__list">
+                  {imagery.offsite.rules.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <div className="bsys__imggrid">
-            <figure className="bsys__mock" style={{ background: imagery.grounds[0], margin: 0 }}>
+            <figure className="bsys__mock" style={{ background: imagery.offsite.grounds[0], margin: 0 }}>
               <svg viewBox="0 0 200 112" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} aria-hidden>
                 <circle cx="150" cy="34" r="26" fill="none" stroke="#65a16e" strokeWidth="2" />
                 <circle cx="150" cy="34" r="15" fill="none" stroke="#65a16e" strokeWidth="2" opacity="0.5" />
@@ -435,7 +563,7 @@ export default function BrandPage() {
               </svg>
               <figcaption>cover &middot; field ground, one accent</figcaption>
             </figure>
-            <figure className="bsys__mock" style={{ background: imagery.grounds[1], margin: 0 }}>
+            <figure className="bsys__mock" style={{ background: imagery.offsite.grounds[1], margin: 0 }}>
               <svg viewBox="0 0 200 112" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} aria-hidden>
                 {[0, 1, 2, 3].map((r) =>
                   [0, 1, 2, 3, 4, 5].map((c) => (
@@ -448,7 +576,7 @@ export default function BrandPage() {
               </svg>
               <figcaption>og card &middot; anchor ground, grid</figcaption>
             </figure>
-            <figure className="bsys__mock" style={{ background: imagery.grounds[2], margin: 0 }}>
+            <figure className="bsys__mock" style={{ background: imagery.offsite.grounds[2], margin: 0 }}>
               <svg viewBox="0 0 200 112" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} aria-hidden>
                 <path d="M100 22 148 50v34l-48 28-48-28V50z" fill="none" stroke="#65a16e" strokeWidth="2" />
                 <path d="M100 22v34m0 0 48 28m-48-28-48 28" stroke="#a1ada3" strokeWidth="1.5" opacity="0.55" />
@@ -457,26 +585,16 @@ export default function BrandPage() {
             </figure>
           </div>
 
-          <div className="bsys__two">
-            <div className="bsys__panel">
-              <div className="bsys__cap">Rules</div>
-              <div className="bsys__body">
-                <ul className="bsys__list">
-                  {imagery.rules.map((r) => (
-                    <li key={r}>{r}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="bsys__panel">
-              <div className="bsys__cap">Generation prompt &middot; paste as-is</div>
-              <div className="bsys__body" style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
-                <pre className="bsys__pre">{imagery.prompt}</pre>
-                <p style={{ fontSize: "0.82rem" }}>
-                  Append the subject to the front. Keep the constraint tail unchanged, since the
-                  negatives are what stop a generator returning the glossy 3D blob it defaults to.
-                </p>
-              </div>
+          <div className="bsys__panel">
+            <div className="bsys__cap">Off-site generation prompt &middot; paste as-is</div>
+            <div className="bsys__body" style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
+              <pre className="bsys__pre">{imagery.offsite.prompt}</pre>
+              <p style={{ fontSize: "0.82rem" }}>
+                Append the subject to the front. Keep the constraint tail unchanged, since the
+                negatives are what stop a generator returning the glossy 3D blob it defaults to.
+                There is no equivalent prompt for on-site imagery: those are rendered in the
+                scene, not generated.
+              </p>
             </div>
           </div>
         </section>
@@ -581,8 +699,8 @@ export default function BrandPage() {
           <hr className="bsys__rule" style={{ marginBottom: "1.1rem" }} />
           <p style={{ color: "var(--b-snow-3)" }}>
             Ratios are WCAG 2.1 against each token&rsquo;s own ground. Type specimens render in
-            system fallbacks until Fraunces and IBM Plex are loaded, so treat the shapes as
-            indicative and the hierarchy as the specification.
+            system fallbacks until Source Serif and Fragment Mono are loaded, so treat the shapes
+            as indicative and the hierarchy as the specification.
           </p>
         </footer>
       </div>

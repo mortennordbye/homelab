@@ -112,7 +112,7 @@ export function Header() {
     >
       <div className="mx-auto grid max-w-[var(--container-wide)] grid-cols-[auto_1fr_auto] items-center gap-4 px-5 py-3 md:px-8">
         {/* The wordmark is the only UI-sized use of the display face — `.font-display`
-            is mapped to the body face, so Fraunces is set here and inherited. */}
+            is mapped to the body face, so the display face is set here and inherited. */}
         <Link
           href="/"
           aria-label="Home"

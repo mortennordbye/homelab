@@ -172,6 +172,14 @@ Homelab infrastructure for a 6-node Proxmox cluster running a Talos Kubernetes c
 - **Match the manifest style of the surrounding app.** App directories use kustomize or plain manifests inconsistently — copy the pattern of the directory you're editing rather than introducing a new one.
 - **Image tags are pinned.** Don't change a tag to `latest`; bump to a specific version. The CI pipelines rewrite tags for portfolio/blog only.
 - **Home Assistant is configured via the HA MCP server**, not via files in this repo. Only add HA-related Kubernetes manifests (the HA pod itself, networking) here — the automation/dashboard config lives in HA.
+- **The portfolio redesign has an agreed decision record.** Before proposing anything about how
+  `nordbye.it` looks, moves, or presents content, read `portfolio/branding/DECISIONS.md`. It records
+  what is locked (the theme, the materials and light, the typography, the plain view, the performance
+  budget), what was explicitly rejected and why, and what is still open. `portfolio/branding/ART-DIRECTION.md`
+  is the long-form rule book behind it and `portfolio/branding/ASSETS.md` is the asset shopping list with
+  verified licences. The shipped spec is `portfolio/src/content/brand.ts`, rendered at `/brand`; where the
+  documents and the code disagree, the code is what the site does. These are committed, not gitignored.
+
 - **Blog posts follow `blog/TEXT-STYLE.md`.** Before drafting a new post under `blog/content/blog/**` or proposing voice/structure edits to an existing one, read `blog/TEXT-STYLE.md` — it's the personality/rule book derived from posts already published. For cover/featured images, read `blog/IMAGE-STYLE.md` (palette, skeleton, icon sources, render workflow + logbook). Both are gitignored local working docs.
 
 ### Code quality
