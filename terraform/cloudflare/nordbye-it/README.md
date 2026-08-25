@@ -14,6 +14,8 @@ terraform apply
 
 The token needs Zone:Read, DNS:Edit, Zone Settings:Edit and Cache Rules:Edit,
 in a policy scoped to zones. An account-scoped policy alone does not grant DNS.
+It is the same token external-dns, cert-manager and the Kargo purge step read
+from Bitwarden, so it also carries Cache Purge, which nothing here needs.
 
 A record added by hand in the dashboard has to be imported before Terraform will
 manage it (`terraform import cloudflare_dns_record.<name> <zone_id>/<record_id>`),
@@ -21,9 +23,20 @@ otherwise apply fails with "record already exists".
 
 ## Publishing
 
-The edge caches HTML for 4 hours, so a new or edited post will not appear until
-it expires. Purge from the Cloudflare dashboard (Caching → Configuration →
-Purge Everything, or purge the single URL) when you want it live immediately.
+The edge caches HTML for 4 hours. Promotions handle this themselves: the prod
+Stages for portfolio and blog end with an `http` promotion step that POSTs
+`purge_everything` to this zone, so a deploy is live at the edge as soon as
+Kargo reports the promotion green. See `k8s/talos/infra/kargo-projects/`.
+
+That covers content shipped inside an image. Anything changed outside a
+promotion — a DNS or zone-setting apply here, a redirect — still needs a manual
+purge from the dashboard (Caching → Configuration → Purge Everything, or purge
+the single URL).
+
+The purge step reads a `cloudflare-api-token` Secret in each Kargo Project
+namespace — the shared broad token, not a purge-only one. It resolves the zone
+ID by name at promotion time rather than carrying it, so nothing has to be
+updated here if the zone is ever recreated.
 
 ## Notes
 

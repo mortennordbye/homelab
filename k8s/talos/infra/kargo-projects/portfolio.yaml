@@ -92,6 +92,44 @@ spec:
         decodingStrategy: None
         metadataPolicy: None
 ---
+# Cloudflare API token for the prod Stage's cache purge step. Kargo's secret()
+# expression function resolves Secrets by name in the Project's own namespace,
+# so this is repeated per project rather than shared; there is no cluster-scoped
+# lookup. Both copies read the same Bitwarden secret.
+#
+# This is the same broad token external-dns, cert-manager and the Terraform
+# configs use, reused deliberately rather than minting a purge-only one. Worth
+# knowing what that means: it carries DNS:Edit and Zone Settings:Edit on
+# nordbye.it, so anything able to read Secrets in this namespace, or to land a
+# promotion step that reads them, can repoint the zone's records. A purge-only
+# token would cap the blast radius at a cold cache. Swapping to one is a change
+# of Bitwarden UUID here and nothing else.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: cloudflare-api-token
+  namespace: portfolio-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: cloudflare-api-token
+    creationPolicy: Owner
+  data:
+    # Key is apiToken, not cloudflare-token as in cert-manager and external-dns:
+    # Kargo reads it as ${{ secret('cloudflare-api-token').apiToken }}, and a
+    # hyphenated key would need bracket indexing to reach.
+    - secretKey: apiToken
+      remoteRef:
+        key: "621a3a65-abe5-4c24-9a32-b29e010850f5"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Warehouse
 metadata:
@@ -267,3 +305,59 @@ spec:
         - task:
             name: promote-via-pr
             kind: ClusterPromotionTask
+        # The zone's cache rule edge-caches HTML for 4h (see
+        # terraform/cloudflare/nordbye-it/cache.tf). A build's CSS and JS are
+        # content-hashed, so the HTML the edge is holding names chunk files the
+        # freshly promoted image no longer contains: until that HTML expires the
+        # site loads with every stylesheet and script 404ing. Purging as the last
+        # promotion step closes that window instead of leaving it to whoever
+        # notices. Runs after argocd-wait inside the task, so the new pods are
+        # already serving and nothing can re-populate the edge from the old ones.
+        #
+        # The zone ID is looked up by name rather than committed. It is an
+        # identifier and not a credential, but this repo is public and the token
+        # already carries Zone:Read, so the lookup costs one request and keeps a
+        # Cloudflare identifier out of git. blog.nordbye.it lives in the same
+        # zone, so both projects look up the same name.
+        - uses: http
+          as: cf-zone
+          retry:
+            errorThreshold: 3
+          config:
+            method: GET
+            url: https://api.cloudflare.com/client/v4/zones?name=nordbye.it
+            headers:
+              - name: Authorization
+                value: Bearer ${{ secret('cloudflare-api-token').apiToken }}
+            # Asserting on the result count as well as the status, so a token
+            # that cannot see the zone fails here with an obvious cause rather
+            # than indexing into an empty list in fromExpression.
+            successExpression: response.status == 200 && len(response.body.result) == 1
+            outputs:
+              - name: zoneId
+                fromExpression: response.body.result[0].id
+        # purge_everything rather than a targeted purge because purge by hostname
+        # or prefix is Enterprise-only, and purge by URL would mean enumerating
+        # every hashed filename in the build. It costs the whole zone a cold
+        # cache, which is one origin round-trip per page.
+        - uses: http
+          as: purge-cache
+          retry:
+            errorThreshold: 3
+          config:
+            method: POST
+            url: https://api.cloudflare.com/client/v4/zones/${{ outputs['cf-zone'].zoneId }}/purge_cache
+            headers:
+              - name: Authorization
+                value: Bearer ${{ secret('cloudflare-api-token').apiToken }}
+              - name: Content-Type
+                value: application/json
+            body: '{"purge_everything":true}'
+            # Cloudflare answers a rejected purge with 4xx, so the status alone
+            # is the signal. Not asserting on response.body.success, which would
+            # turn a body Kargo failed to parse into a failed promotion.
+            successExpression: response.status == 200
+          # Deliberately no continueOnError. The deploy itself has already
+          # succeeded by this point, so failing here looks harsh, but a purge
+          # that did not happen means the live site serves broken HTML for the
+          # next four hours. That should read red in the pipeline, not green.
