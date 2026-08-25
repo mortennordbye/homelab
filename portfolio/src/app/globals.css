@@ -160,6 +160,28 @@ body {
    instead of resting on it. See branding/DECISIONS.md.
    --------------------------------------------------------------------------- */
 
+/* The resume fold's arrow, which nods until the record is opened.
+
+   The control had to be findable: as a line of caption-sized type it was taken
+   for a divider and the rest of the record went unread. Colour could not carry
+   it, because §2 spends green once per view and the resume section already
+   spends it on the take action, so the load falls on shape, contrast and this.
+
+   Two and a half pixels, once every three and a half seconds, and it stops the
+   moment the fold is open. The global reduced-motion rule above already cuts
+   it to a single frame. */
+@keyframes fold-nod {
+  0%, 68%, 100% { transform: translateY(0); }
+  80% { transform: translateY(2.5px); }
+}
+.fold-arrow {
+  display: inline-flex;
+  animation: fold-nod 3.6s var(--ease-in-out) infinite;
+}
+details[open] .fold-arrow {
+  animation: none;
+}
+
 /* Brass — the section label. A short rule over the label rather than a plate
    under it. tokens.css gives brass three jobs, solid fills, card edges and
    rules, and the rule is the only one of the three that does not have to
@@ -221,6 +243,48 @@ body {
   inset: 0;
   pointer-events: none;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* The reading surface. `.card-stock` and `.print` are small pieces of paper;
+   this is a full sheet, and it exists for the one long read on the site.
+
+   A resume set at 17px on a near-black ground is the thing every dark
+   portfolio gets wrong, and inverting the palette to fix it would put a white
+   panel in a room lit by one lamp. Paper is already the fourth material, so
+   the sheet is the honest answer: warm off-white, ink at 8.9:1, measure held
+   near seventy characters, and a contact shadow because it is lying on the
+   desk rather than floating over it.
+
+   The gradient deliberately stops at --paper-2. Running it on to --paper-3
+   drops the label ink to 3.98:1 at the foot of the sheet, and this surface is
+   tall enough that the foot is a place people actually read. */
+.sheet {
+  position: relative;
+  border-radius: 1px;
+  background: linear-gradient(158deg, var(--paper) 0%, var(--paper-2) 76%, var(--paper-2) 100%);
+  color: var(--paper-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    10px 26px 44px -26px rgba(0, 0, 0, 0.98),
+    0 3px 6px -2px rgba(0, 0, 0, 0.7);
+}
+
+/* Tooth. A flat fill of the paper colour is a UI panel at this size; the
+   grain is what makes it stock. Multiplied rather than overlaid so it darkens
+   into the sheet instead of lifting it towards white. */
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1px;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.5  0 0 0 0 0.42  0 0 0 0.12 0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>");
+}
+
+.sheet > * {
+  position: relative;
 }
 
 /* Any raised surface that is not paper: lit on the top and left, dark on the
@@ -552,4 +616,15 @@ body.fun-immersive > main {
 
   /* Make tags / borders quieter on paper */
   [class*="border-line"] { border-color: #d1ddd3 !important; }
+
+  /* The resume sheet is a sheet of paper pretending to be on a desk. On real
+     paper it is just the page, so it loses its stock, its tooth and its
+     margins and lets the print ramp above carry the ink. */
+  .sheet {
+    background: #fff !important;
+    color: #1a201b !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  .sheet::before { display: none !important; }
 }

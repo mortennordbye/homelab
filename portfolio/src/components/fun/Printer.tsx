@@ -10,7 +10,7 @@ import { Interactive } from "./interaction";
 /**
  * The CV printer.
  *
- * This is the physical form of CvCustomizerPopover: the same four flags over
+ * This is the physical form of the resume object's toggles: the same four flags over
  * the same sixteen pre-built PDFs, resolved through the same manifest. Flip the
  * switches on the lid, press the green button, a sheet feeds out and the
  * matching PDF downloads.

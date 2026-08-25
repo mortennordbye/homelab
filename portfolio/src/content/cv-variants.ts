@@ -2,7 +2,7 @@
  * Declarative variant matrix for the LaTeX CV export.
  *
  * The build pipeline (`scripts/build-cv.ts`) emits one LaTeX entry-point per
- * variant; the frontend customizer (`CvCustomizerPopover`) maps the user's
+ * variant; the resume object (`components/resume/ResumeObject`) maps the user's
  * toggle state to the matching PDF URL via the generated manifest.
  *
  * Always-on sections: summary, experience, education, certifications.

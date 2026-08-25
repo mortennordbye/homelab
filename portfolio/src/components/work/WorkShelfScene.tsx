@@ -4,6 +4,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer, useTexture } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { FirstFrame } from "@/components/scene/FirstFrame";
 import {
   coverStamp,
   foilMaterial,
@@ -415,6 +416,12 @@ function Shelf({
     cov.rotation.x = -Math.PI / 2;
     cov.rotation.z = Math.PI;
     cov.position.set(0, b.parts.bt / 2 + 0.0022, 0);
+    /* The traverse that tags every mesh with its slug ran when `built` was
+       memoised, and this one is added later. Without the tag the cover picks
+       as nothing, which meant the largest and most obviously clickable target
+       on the shelf — the face-out board with the title on it — was the one
+       part of a volume that did not open it. */
+    cov.userData.slug = b.p.v.slug;
     b.parts.front.add(cov);
     invalidate();
   }, [selected, built, clothImgs, invalidate]);
@@ -516,6 +523,15 @@ function Shelf({
     e.stopPropagation();
     return (e.object.userData.slug as string) ?? null;
   };
+
+  /* A canvas has no cursor of its own, so nothing on the shelf looked
+     pressable. Cheap to fix and it is the whole affordance the volumes had. */
+  useEffect(() => {
+    document.body.style.cursor = hovered ? "pointer" : "";
+    return () => {
+      document.body.style.cursor = "";
+    };
+  }, [hovered]);
 
   return (
     <>
@@ -645,12 +661,16 @@ function Lights() {
   );
 }
 
-export default function WorkShelfScene(props: {
+export default function WorkShelfScene({
+  onReady,
+  ...props
+}: {
   volumes: Volume[];
   selected: string | null;
   onSelect: (slug: string) => void;
   onOpen: (slug?: string) => void;
   opening: boolean;
+  onReady?: () => void;
 }) {
   return (
     <Canvas
@@ -684,6 +704,7 @@ export default function WorkShelfScene(props: {
         </Environment>
         <Lights />
         <Shelf {...props} />
+        <FirstFrame onReady={onReady} />
       </Suspense>
     </Canvas>
   );

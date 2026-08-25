@@ -34,8 +34,12 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: security },
       {
-        // Long-cache the immutable static assets shipped by the build.
-        source: "/:path*.:ext(png|jpg|jpeg|gif|webp|avif|svg|ico|woff|woff2|ttf|pdf)",
+        // Long-cache the immutable static assets shipped by the build. The
+        // glTF pair belongs here too: the fun room's models are 1.5 MB of
+        // geometry that never changes, and without a rule they fell back to
+        // the edge's four-hour default and revalidated on every later visit.
+        source:
+          "/:path*.:ext(png|jpg|jpeg|gif|webp|avif|svg|ico|woff|woff2|ttf|pdf|gltf|bin)",
         headers: [{ key: "Cache-Control", value: "public, max-age=2592000" }],
       },
       {

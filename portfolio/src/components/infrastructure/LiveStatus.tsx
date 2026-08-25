@@ -126,7 +126,11 @@ export function LiveStatus() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/v1/infra", { cache: "no-store" })
+    // Default caching rather than no-store. The endpoint answers with a short
+    // max-age and the publisher only writes every five minutes, so forcing a
+    // round trip bought nothing and cost the front page's copy of the same
+    // payload — arriving here from the cabinet now paints from cache.
+    fetch("/api/v1/infra")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))))
       .then((data: ClusterStatus & { source?: string }) => {
         if (cancelled) return;

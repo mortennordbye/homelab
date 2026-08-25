@@ -5,9 +5,26 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { WorkMeta } from "@/lib/work";
+import { warmImages, warmOnIdle } from "@/lib/warm";
 import type { Volume } from "./shelf-art";
 
 const WorkShelfScene = dynamic(() => import("./WorkShelfScene"), { ssr: false });
+
+const POSTER = "/images/shelf-poster.webp";
+
+/* The three surfaces useSurface() asks for in the scene. Listed here rather
+   than imported from it, because importing anything out of the scene module
+   would pull the chunk this facade exists to hold back. */
+const SURFACES = [
+  "/textures/shelf/black_oak_veneer_diff.webp",
+  "/textures/shelf/black_oak_veneer_nor.webp",
+  "/textures/shelf/black_oak_veneer_arm.webp",
+  "/textures/shelf/wooden_panels_diff.webp",
+  "/textures/shelf/wooden_panels_nor.webp",
+  "/textures/shelf/wooden_panels_arm.webp",
+  "/textures/shelf/book_pattern_diff.webp",
+  "/textures/shelf/book_pattern_nor.webp",
+];
 
 type Mode = "loading" | "skip" | "static" | "webgl";
 
@@ -45,6 +62,10 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
   const [touched, setTouched] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [opening, setOpening] = useState(false);
+  // Set by the scene once it has a frame on screen; until then the poster is
+  // what the section shows.
+  const [painted, setPainted] = useState(false);
+  const onPainted = useCallback(() => setPainted(true), []);
 
   useEffect(() => {
     if (window.matchMedia("(max-width: 1023px)").matches) return setMode("skip");
@@ -53,7 +74,10 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
   }, []);
 
   // Near the viewport is necessary but not sufficient: a real input has to
-  // happen too, so headless runs never pull the scene in.
+  // happen too, so headless runs never pull the scene in. A screenful and a
+  // half of lead, because the chunk and the surfaces are warm by this point
+  // and the remaining cost is building the scene and compiling its shaders —
+  // work that should happen before the section is on screen, not after.
   useEffect(() => {
     const el = hostRef.current;
     if (!el || mode !== "static") return;
@@ -61,7 +85,7 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
       ([e]) => {
         if (e.isIntersecting) setNear(true);
       },
-      { rootMargin: "300px" },
+      { rootMargin: "1200px" },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -77,6 +101,21 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
     evs.forEach((e) => window.addEventListener(e, up, { once: true, passive: true }));
     return () => evs.forEach((e) => window.removeEventListener(e, up));
   }, [mode, touched]);
+
+  // Fetch the chunk and the textures while the visitor is still reading the
+  // sections above this one, so the shelf is built from cache the moment it
+  // comes into range instead of downloading 400 KB of surface at that point.
+  useEffect(() => {
+    if (mode !== "static" || !touched || near) return;
+    return warmOnIdle(() => {
+      // The poster first: it is 70 KB against the scene's 600, and on a slow
+      // link it has to be in the cache before the section arrives or the
+      // visitor waits on the picture as well as on the render.
+      warmImages([POSTER]);
+      void import("./WorkShelfScene");
+      warmImages(SURFACES);
+    });
+  }, [mode, touched, near]);
 
   useEffect(() => {
     if (mode === "static" && near && touched) setMode("webgl");
@@ -190,19 +229,41 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
       </div>
 
       <div ref={hostRef} className="scene-bleed relative aspect-[16/9] max-h-[70vh] w-full overflow-hidden">
-        {mode === "webgl" ? (
-          <WorkShelfScene
-            volumes={volumes}
-            selected={selected}
-            onSelect={setSelected}
-            onOpen={onOpen}
-            opening={opening}
-          />
-        ) : (
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-[radial-gradient(120%_90%_at_18%_12%,#241a12_0%,#0d0b09_62%,#080907_100%)]"
-          />
+        {/* A real frame of the shelf, held while three.js and the surfaces are
+            still arriving. What was here before was a dark gradient the canvas
+            then replaced, so anyone scrolling down met a black rectangle for as
+            long as that took.
+
+            It comes off on the scene's first painted frame and not a moment
+            later: the canvas is transparent, so a still left underneath a live
+            render shows the same shelf twice. It is contained rather than
+            covered for the same reason — the render fits the shelf to whatever
+            aspect the window actually is, and a cropped still on a wide short
+            window sits at a visibly different scale from it.
+
+            Lazy: below lg the whole shelf is display:none and the list is the
+            section, so a hidden image never intersects and phones never fetch
+            a picture they are not shown. */}
+        <img
+          src={POSTER}
+          alt=""
+          aria-hidden
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-contain transition-opacity duration-300"
+          style={{ opacity: painted ? 0 : 1 }}
+        />
+        {mode === "webgl" && (
+          <div className="absolute inset-0">
+            <WorkShelfScene
+              volumes={volumes}
+              selected={selected}
+              onSelect={setSelected}
+              onOpen={onOpen}
+              opening={opening}
+              onReady={onPainted}
+            />
+          </div>
         )}
         {/* The veil the dive lands on. Without it the camera finishes inside a
             blank leaf and the visitor stares at a sheet of paper until the

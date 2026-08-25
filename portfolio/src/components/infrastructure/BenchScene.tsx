@@ -4,6 +4,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer, RoundedBox, useTexture } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { FirstFrame } from "@/components/scene/FirstFrame";
 import type { NodeState } from "./hardware";
 import { HOSTS } from "./hardware";
 
@@ -1128,10 +1129,11 @@ function Breath() {
   return null;
 }
 
-export default function BenchScene({ feed, selected, onSelect }: {
+export default function BenchScene({ feed, selected, onSelect, onReady }: {
   feed: Feed;
   selected: string | null;
   onSelect: (id: string) => void;
+  onReady?: () => void;
 }) {
   const pick = { selected, onSelect };
 
@@ -1165,6 +1167,7 @@ export default function BenchScene({ feed, selected, onSelect }: {
         <Framing />
         <Breath />
         <Estate feed={feed} pick={pick} />
+        <FirstFrame onReady={onReady} />
       </Suspense>
     </Canvas>
   );

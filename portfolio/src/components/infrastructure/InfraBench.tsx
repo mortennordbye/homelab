@@ -3,12 +3,22 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { warmImages, warmOnIdle } from "@/lib/warm";
 import { statusSnapshot } from "@/content/infrastructure";
 import { ALL_DEVICES, HOSTS, deviceById, type NodeState } from "./hardware";
 
 const BenchScene = dynamic(() => import("./BenchScene"), { ssr: false });
+
+/* The veneer useSurface() asks for in the scene. Listed here rather than
+   imported from it, because importing anything out of the scene module would
+   pull the chunk this facade exists to hold back. */
+const SURFACES = [
+  "/textures/shelf/black_oak_veneer_diff.webp",
+  "/textures/shelf/black_oak_veneer_nor.webp",
+  "/textures/shelf/black_oak_veneer_arm.webp",
+];
 
 type ClusterFeed = {
   generatedAt?: string;
@@ -44,6 +54,10 @@ export function InfraBench() {
   const [touched, setTouched] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<ClusterFeed | null>(null);
+  // Set by the scene once it has a frame on screen. Until then the poster is
+  // what the section shows, and on a phone it stays for good.
+  const [painted, setPainted] = useState(false);
+  const onPainted = useCallback(() => setPainted(true), []);
 
   useEffect(() => {
     if (window.matchMedia("(max-width: 1023px)").matches) return setMode("skip");
@@ -61,14 +75,16 @@ export function InfraBench() {
           io.disconnect();
         }
       },
-      { rootMargin: "300px" },
+      { rootMargin: "1200px" },
     );
     io.observe(el);
     return () => io.disconnect();
   }, [mode]);
 
   // Near the viewport is necessary but not sufficient: a real input has to
-  // happen too, so headless runs never pull the scene in.
+  // happen too, so headless runs never pull the scene in. The margin above is
+  // a screenful and a half: with the chunk and the veneer already warm, that
+  // lead is what the scene build and the shader compile get to hide in.
   useEffect(() => {
     if (mode !== "static" || touched) return;
     const wake = () => setTouched(true);
@@ -125,6 +141,18 @@ export function InfraBench() {
   useEffect(() => {
     if (showScene && mode === "static") setMode("webgl");
   }, [showScene, mode]);
+
+  // The cabinet sits near the bottom of the page, so there is usually plenty of
+  // idle time before anyone reaches it. Spend it on the chunk and the veneer
+  // rather than waiting for the section to come into range and downloading
+  // then.
+  useEffect(() => {
+    if (mode !== "static" || !touched || near) return;
+    return warmOnIdle(() => {
+      void import("./BenchScene");
+      warmImages(SURFACES);
+    });
+  }, [mode, touched, near]);
 
   return (
     <div ref={hostRef}>
@@ -214,19 +242,35 @@ export function InfraBench() {
           Two crops, because a phone and a desktop need different pictures
           rather than the same one squeezed: 180 cm of cabinet at phone width is
           nothing legible, so the portrait frame takes the storage and compute
-          bays, where the detail is. */}
+          bays, where the detail is.
+
+          On desktop it comes off on the scene's first painted frame. The still
+          is cropped to the box by object-cover while the render fits the
+          cabinet to the window's own aspect, so leaving it under a live scene
+          shows the same object twice at two different scales through the
+          canvas's transparent surround.
+
+          Both crops are frames of the scene at 2590 and 1300 px, which is what
+          it takes not to look upscaled: shown at a third of that on a retina
+          panel, the 1100 px JPEG they replaced was visibly soft. */}
       <div className="scene-bleed relative mt-10 aspect-[5/6] max-h-[70vh] w-full overflow-hidden sm:aspect-[4/3] lg:aspect-[16/9]">
         <picture>
-          <source media="(max-width: 767px)" srcSet="/images/cabinet-poster-mobile.jpg" />
+          <source media="(max-width: 767px)" srcSet="/images/cabinet-poster-mobile.webp" />
           <img
-            src="/images/cabinet-poster.jpg"
+            src="/images/cabinet-poster.webp"
             alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
+            style={{ opacity: painted ? 0 : 1 }}
           />
         </picture>
         {mode === "webgl" && (
           <div className="absolute inset-0">
-            <BenchScene feed={feed} selected={selected} onSelect={setSelected} />
+            <BenchScene
+              feed={feed}
+              selected={selected}
+              onSelect={setSelected}
+              onReady={onPainted}
+            />
           </div>
         )}
       </div>
