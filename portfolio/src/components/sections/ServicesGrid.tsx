@@ -1,73 +1,57 @@
 import Link from "next/link";
-import { ArrowUpRight, Boxes, GitBranch, Activity } from "lucide-react";
 import { Section } from "@/components/primitives/Section";
 import { Reveal } from "@/components/primitives/Reveal";
 import { services } from "@/content/services";
-import type { Service } from "@/content/schemas";
-import { cn } from "@/lib/cn";
 
-const iconBySlug: Record<string, React.ReactNode> = {
-  "kubernetes-and-containerization": <Boxes size={22} />,
-  "gitops-and-ansible": <GitBranch size={22} />,
-  "technical-consulting": <Activity size={22} />,
-};
-
-const accentClasses: Record<NonNullable<Service["accent"]>, { icon: string; ring: string; line: string }> = {
-  brand: { icon: "text-accent", ring: "hover:border-accent/60", line: "bg-accent" },
-  material: { icon: "text-copper", ring: "hover:border-brass", line: "bg-brass" },
-  brand2: { icon: "text-accent-3", ring: "hover:border-accent-3/60", line: "bg-accent-3" },
-};
-
+/**
+ * The three engagement shapes, as lit sheets.
+ *
+ * Converted from the card grid under branding/DECISIONS.md §12: everything is
+ * either an object or a document, and a card is neither. So the icon in its
+ * rounded square, the /01 counter, the per-service green accent and the nested
+ * proof box are all gone, and what is left is the same sheet About already uses
+ * for the interests — one lamp on the top and left edges, a brass hairline
+ * where the icon badge was, and the proof separated by a rule rather than
+ * boxed inside a second border.
+ *
+ * The proof link is copper rather than green: §2 allows green once per view as
+ * a lit point, and three of them in one grid was the loudest breach of it on
+ * the page.
+ */
 export function ServicesGrid() {
   return (
     <Section
       id="services"
       heading="Services I provide."
-      description="Three engagement shapes. Each one is grounded in something that has already shipped — case studies linked from each card."
+      description="Three engagement shapes. Each one is grounded in something that has already shipped, with the case study linked underneath it."
       className="section-rule bg-bg-2/40"
     >
       <div className="grid gap-6 md:grid-cols-3">
-        {services.map((s, i) => {
-          const accent = accentClasses[s.accent ?? "brand"];
-          return (
-            <Reveal key={s.slug} delay={i * 0.08}>
-              <article
-                className={cn(
-                  "group relative flex h-full flex-col rounded-xl border border-line bg-bg p-7 transition-colors",
-                  accent.ring,
-                )}
-              >
-                <span className={cn("absolute left-0 top-7 h-8 w-[3px] rounded-r-full", accent.line)} />
+        {services.map((s, i) => (
+          <Reveal key={s.slug} delay={i * 0.08}>
+            <article className="lit flex h-full flex-col p-8">
+              <span aria-hidden className="lit-rule mb-6 block" />
 
-                <div className="flex items-center justify-between">
-                  <span className={cn("inline-flex h-11 w-11 items-center justify-center rounded-md border border-line-2 bg-surface/60", accent.icon)}>
-                    {iconBySlug[s.slug]}
-                  </span>
-                  <span className="font-mono text-xs text-fg-3">/0{i + 1}</span>
+              <h3 className="text-h3 text-fg">{s.title}</h3>
+              <p className="mt-3 flex-1 text-sm text-fg-2 leading-relaxed">{s.blurb}</p>
+
+              {s.proof && (
+                <div className="mt-8 border-t border-line pt-5">
+                  <p className="eyebrow">Shipped</p>
+                  <p className="mt-2 text-sm text-fg-2 leading-snug">{s.proof.label}</p>
+                  {s.proof.workSlug && (
+                    <Link
+                      href={`/work/${s.proof.workSlug}`}
+                      className="focus-ring mt-3 inline-block text-xs text-copper underline-offset-4 hover:underline"
+                    >
+                      Read the case study
+                    </Link>
+                  )}
                 </div>
-
-                <h3 className="mt-6 text-h3 text-fg">{s.title}</h3>
-                <p className="mt-3 text-sm text-fg-2 flex-1">{s.blurb}</p>
-
-                {s.proof && (
-                  <div className="mt-6 rounded-md border border-line/70 bg-bg-2/60 p-4">
-                    <p className="eyebrow">Shipped</p>
-                    <p className="mt-2 text-sm text-fg-2 leading-snug">{s.proof.label}</p>
-                    {s.proof.workSlug && (
-                      <Link
-                        href={`/work/${s.proof.workSlug}`}
-                        className={cn("focus-ring mt-3 inline-flex items-center gap-1 text-xs", accent.icon)}
-                      >
-                        Read the case study
-                        <ArrowUpRight size={12} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </article>
-            </Reveal>
-          );
-        })}
+              )}
+            </article>
+          </Reveal>
+        ))}
       </div>
     </Section>
   );

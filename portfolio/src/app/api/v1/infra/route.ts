@@ -15,7 +15,13 @@ export async function GET() {
   try {
     const raw = await readFile(STATUS_FILE, "utf8");
     const parsed = JSON.parse(raw);
-    return json(parsed, { cache: "public, max-age=30" });
+    // Fresh for 30s, then served stale for five minutes while the browser
+    // refreshes it in the background: the publisher only writes every five
+    // minutes, so a revisit should paint the last answer rather than wait for
+    // a new one.
+    return json(parsed, {
+      cache: "public, max-age=30, stale-while-revalidate=300",
+    });
   } catch {
     return json(
       { ...statusSnapshot, source: "snapshot" },

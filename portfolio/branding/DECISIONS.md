@@ -18,10 +18,10 @@ The spec that ships is `src/content/brand.ts`, rendered at `/brand`. Where this
 file and that file disagree, the code is what the site does and this file is what
 we meant.
 
-Status as of 2026-08-24: theme and typography locked and committed. The first
-section object, the portfolio shelf, is built and shipped in the real site. The
-rest of the room is still prototype only. §12 covers the flat sections, whose
-first pass is shipped for the hero and About.
+Status as of 2026-08-25: theme and typography locked and committed. Two section
+objects are built and shipped in the real site, the portfolio shelf (§8) and the
+resume (§13). §12 covers the flat sections, whose pass is shipped for the hero,
+About, Services and the resume.
 
 ---
 
@@ -245,10 +245,26 @@ The foil is metal in the render rather than a painted colour, and is debossed
 via a normal map built from the gradient of the stamp. That is what separates it
 from print.
 
-Still open for the other sections: resume (a sheet under a brass clip with a
-pen), infrastructure (six machines on a brass rail with live status lights,
-driven by the real cluster status endpoint), and writing (a stack of paper under
-a brass weight). Rendered in prototype but not reviewed.
+One bug worth recording because the shape of it will recur. Every mesh in a
+volume is tagged with its slug by a `traverse` when the volumes are built, and
+picking reads that tag. The cover is not built then: it is dressed lazily in an
+effect when a volume is selected, because turning all thirteen 768x1158 stamps
+into four maps each cost over a second before the shelf could be touched and
+twelve of them are never seen. So the cover was added after the traverse and
+carried no tag, which made the largest and most obviously pressable thing on
+the shelf — the face-out board with the title on it — the one part of a volume
+that did nothing. Anything added to a picked object after the tagging pass has
+to tag itself.
+
+The shelf also had no cursor. A canvas has none of its own, so nothing on it
+looked pressable at all; the hover state was already tracked for the pull-out,
+and it now sets the pointer as well.
+
+Also shipped: the resume, a sheet under a brass clip with a pen. See §13.
+
+Still open: writing (a stack of paper under a brass weight), which is the
+weakest of the candidates because the shelf already owns bound paper and a
+second paper object on the same page reads as the same object twice.
 
 Live versus pre-rendered. Objects can be rendered in the browser or
 pre-rendered offline at much higher quality and shown as stills with small live
@@ -390,9 +406,176 @@ the desk. The skill pills and the career path are brass. `CareerPath` lost its
 own label, because the section's "career" and the block's "the
 route" stacked as two labels and read as a mistake.
 
+Services followed, as the first section converted after the pass was reviewed.
+Its three cards became the same lit sheets About uses for the interests, which
+took an icon in a rounded square, a `/01` counter, a nested proof box and three
+green accents out of one grid. The proof link is copper: green once per view is
+the rule, and three lit green points in a row was the loudest breach of it on
+the page.
+
+The resume followed, and took the biggest piece of card language on the site
+with it. See §13.
+
 Everything else still uses the old card language. See `BACKLOG.md`.
 
+## 13. The resume: the object and the page
+
+**Shipped.** This is the second section object in the real site and the first
+one that answered the question §4 spent four rejected prototypes on: where the
+text actually gets read.
+
+The answer is a split, and it is the reusable part. **The object is not the way
+in to the content, it is the way to the artifact.** Reading happens in the
+document, with no click. Taking happens on the desk.
+
+That resolves every rejection in §4 at once, because all four of them were
+attempts to make one thing do both jobs. Text on the sheet in perspective is
+unreadable at any camera distance that still shows the object. Click-to-open
+puts the one thing a visitor came for behind a toll gate, which is fine for
+thirteen legible spines and not fine for a single sheet. A PDF embed is the one
+element on the site that cannot be made of any of the four materials.
+
+### The page
+
+`ResumeBody` is a sheet of paper, and it is the first surface on the site made
+of the fourth material at full size. 48rem, ink at 8.9:1, dates and places in
+the margin, prose in the column, three runs on one sheet rather than three
+panels beside each other. It replaced a two-column card grid with lucide icons
+and timeline dots.
+
+The sheet is set as a broadsheet, and the length is paid for with width rather
+than with cuts. Every word of every role is on it. At full prose in one column
+the six roles ran to 8,600px, eight and a half screens and 53 percent of the
+whole front page; in two columns on a 60rem sheet the same words run to
+5,800px. Collapsing the older roles to one line each was tried first and
+rejected: it read as a shorter document rather than a better one, and the point
+of putting the resume on paper is that all of it is there.
+
+Three things follow from the columns, and each replaced something that looked
+wrong before it:
+
+*Everything is flush left off one edge.* The first pass kept dates in a margin
+and ran the prose across the full width, so each role's title began two hundred
+pixels to the right of its own first line. A margin and a full measure cannot
+both be right, and the columns are what the length needs, so the dates became an
+overline.
+
+*Paragraphs break across the column and a rule is drawn between.* Holding them
+whole left the left column ending half way down with a hole under it, because a
+seven-line paragraph does not fit in what is left. Letting them break and
+drawing the boundary is what a newspaper does and is the only version where
+both columns fill.
+
+*The masthead carries the contact block on the right.* With the name alone the
+top of the sheet was a headline over five hundred pixels of empty paper.
+Education and certifications run two-up for the same reason: a four-line entry
+given 848px of measure is mostly empty paper.
+
+*The hierarchy is carried by size, weight, case and position, because paper
+has one hue.* The dark layout could hand it to colour — the company was green,
+the period a grey eyebrow, the role a heading — and the first pass on paper
+spent none of that and nothing in its place: role, company and body were all
+regular serif within half a step of each other. Every entry now has four
+registers and no two of them are the same kind of type. The run label is mono,
+uppercase, at full ink over a 2px rule. The title is the only semibold thing in
+an entry. The date is mono, small, pushed to the right edge on the title's own
+baseline, which is where a reader scanning a CV looks for it and which also
+stops the entry opening with two quiet lines before anything with weight in it.
+The company or issuer sits under the title in the second ink at body size.
+
+*The two-up runs are ruled, and their metadata is one line.* A gutter alone was
+not separation: rows size to the tallest cell, so a short entry beside a long
+one left a field of white with no boundary in it and reading down a column you
+could not tell where one certificate ended and the next began. A rule over
+every row is how a printed directory has always solved that. The date, the
+credential and the link then collapsed onto a single mono line, because they
+are the same kind of thing — the paperwork behind the certificate — and stacked
+they made four near-identical lines an entry that had to be read before they
+could be told apart.
+
+### The fold
+
+Two roles stand above the fold, the current engagement and the one before it,
+and the rest is one press away. Closed the sheet is 2,300px and the whole front
+page is 11,800px; open it is 5,800px and 15,400px. Nothing is cut either way.
+
+It is a `<details>` rather than a state hook, and that is the reason
+`ResumeBody` is still a server component: no client JavaScript, keyboard and
+screen-reader behaviour for free, the folded text still in the DOM for
+crawlers, find-in-page opening it on a hit, and — the part a CSS clip gets
+wrong — nothing below the fold is focusable while it is closed.
+
+The control went through two versions and the first one failed in the way that
+matters. It was a line of caption-sized type between two hairlines, which is
+the exact shape of a divider, so it was read as one and the rest of the record
+went unopened. Discreet is not the same as invisible, and a control nobody
+presses is a control that is not there.
+
+The constraint on fixing it is that colour was unavailable: §2 spends green
+once per view and this section already spends it on the take action beside the
+object. So the affordance had to come from shape, contrast and motion. What it
+is now is a bordered box at full 8.9:1 ink, 273 by 47, with a circled arrow in
+it and a line under it naming what is behind — four more roles, education,
+certifications — because the count is known and a reader deciding whether to
+press deserves it. That is what a control printed on a form looks like, which
+is the only kind of button a sheet of paper can carry.
+
+The arrow nods, two and a half pixels once every three and a half seconds, and
+stops the moment the fold opens. It is there for discovery and nothing else.
+This does not breach §4's rule against interaction as a toll gate: that rule is
+about the objects, and it is about content a visitor cannot otherwise reach.
+Here the fold is inside the document, and the document is the thing that was
+already open.
+
+Two things worth not re-deriving. The paper gradient stops at `--paper-2` and
+never reaches `--paper-3`: the label ink falls to 3.98:1 against the darker
+stock, and a sheet this tall is read at its foot as well as its head. And the
+ink needed two more steps, `--paper-ink-2` and `--paper-ink-3`, both solved
+against `--paper-2` rather than `--paper` for the same reason.
+
+The honest framing of why this exists: a long read at 17px on a near-black
+ground is the thing every dark portfolio gets wrong, and inverting the palette
+to fix it would put a white panel in a room lit by one lamp.
+
+### The object
+
+An A4 sheet at true ratio on the desk, under a hinged brass clip, with a pen
+across the corner and two more sheets under it — one sheet alone reads as a
+decal, a small stack reads as paper. Desk, rig and environment are the hero's,
+which is why `makeOak` moved out of `InlineGlobeScene.tsx` into
+`components/materials/oak.ts`: the desk under the resume has to be the same
+desk the globe stands on, and that is only true if it comes from the same
+function. The desk is dimmed with a colour multiplier rather than by touching
+the rig, because at this camera distance it fills the frame and undimmed it
+takes the light the sheet is supposed to have.
+
+The face is set as ruled measure rather than as body copy, which is §4's
+finding applied rather than fought. What makes it honest is that the counts are
+real: one bar per experience entry, per certification, per case study. Turning
+a section off visibly shortens the page, because the leading is solved for the
+runs that are switched on. A fixed step either truncated the last two runs with
+everything enabled or left half the sheet blank on the résumé.
+
+This replaced the download row and the customizer popover outright. The same
+four toggles drive the same seventeen pre-built PDFs; they are no longer a
+dropdown over a page, they are what is printed on the sheet in the clip.
+Clicking the sheet lifts it out and downloads that variant, which is
+interaction as depth rather than as a toll gate.
+
+The controls are real markup and render on every viewport and under reduced
+motion. The object is pure enhancement above them, and where it is skipped it
+renders nothing at all rather than an empty strip of desk.
+
+Green appears once in the section, on the take action, which §2 reserves for
+the one action that matters on a screen. The toggles are brass.
+
 ## Logbook
+
+**2026-08-25.** §13, the resume. The finding worth carrying is the split
+between reading and taking: every interaction model §4 rejected was an attempt
+to make one surface do both, and separating them makes the object cheap and the
+page better at the same time. Also the first real use of paper at full size,
+which turned up the gradient/contrast constraint now recorded in §13.
 
 **2026-08-24, later still.** §12. The conclusion that took longest to reach
 is that the site did not need more rendered objects to feel like one thing; it

@@ -1,3 +1,4 @@
+import { preconnect } from "react-dom";
 import { ArrowUpRight, Rss } from "lucide-react";
 import { Section } from "@/components/primitives/Section";
 import { Reveal } from "@/components/primitives/Reveal";
@@ -7,6 +8,12 @@ import { getLatestBlogPosts } from "@/lib/blog";
 export async function LatestWriting() {
   const posts = await getLatestBlogPosts(3);
   if (posts.length === 0) return null;
+
+  // The covers are served by the blog rather than this origin and load lazily,
+  // so the first card to scroll into view pays for a DNS lookup and a TLS
+  // handshake before the image starts. Opening that connection while the
+  // visitor is still at the top takes it off the path.
+  preconnect("https://blog.nordbye.it");
 
   return (
     <Section
