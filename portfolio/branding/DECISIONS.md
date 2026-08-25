@@ -21,7 +21,7 @@ we meant.
 Status as of 2026-08-25: theme and typography locked and committed. Two section
 objects are built and shipped in the real site, the portfolio shelf (§8) and the
 resume (§13). §12 covers the flat sections, whose pass is shipped for the hero,
-About, Services and the resume.
+About, Services, the resume and the case study pages.
 
 ---
 
@@ -416,6 +416,45 @@ the page.
 The resume followed, and took the biggest piece of card language on the site
 with it. See §13.
 
+The case study pages followed, and settled what a subpage is. They read as a
+different document while using the same palette and the same two faces, and
+none of the four reasons was chromatic: the write-up was a 65ch column centred
+in the viewport, so the reading edge moved about 340px right of every edge
+above it halfway down the page; the bands were divided by full-bleed
+`border-t` rather than the inset, fading `.section-rule`; the write-up arrived
+with no head on it, so an MDX `##` landed cold against two headed bands; and
+the outcome grid faked its dividers with `gap-px` over `bg-line`, which filled
+the empty cells of a four-in-three grid with the gutter colour.
+
+The structural fixes are the floor and were not the decision. The decision is
+that **the write-up is paper**, which is §13's split applied one level out: the
+shelf is the object, the case study is the artifact, and reading happens in the
+document. That is also why the dive into a volume was the best-designed moment
+on the site and the arrival was the weakest — the animation promised a page and
+delivered more dark ground.
+
+Two objections were weighed and did not survive contact with the content. §8
+warns that a second paper object reads as the same object twice, but the shelf
+and the sheet are on different pages and reached in sequence, so bound paper
+then loose paper is the rhyme rather than the repetition. And a long sheet is a
+lot of light for one lamp — except the thirteen bodies run 136 to 510 words,
+median 255, so the longest sheet is about two viewport heights. The same
+arithmetic is what ruled out deleting the bands entirely: at 175 words a
+continuous column with nothing around it reads as thin, not as calm.
+
+Four alternatives were built and looked at in `.inspiration/subpage-study.html`
+before this was picked: the structural fix alone, a sticky specification rail,
+a marginal-label spread, and the fully continuous document. The spread is the
+one worth revisiting if the subpages ever need a stronger point of view; it was
+set aside because it spends the page's structure on a book metaphor the shelf
+has already made, and because the margin has no honest answer below 900px.
+
+`mdx-components.tsx` was not touched. It hard-codes the dark ramp, and
+`.paper-prose` re-inks it from outside `@layer`, so the overrides win on
+cascade order rather than specificity and no component has to carry a surface
+it does not otherwise care about. The bullet loses its green there: §2 spends
+green once per view as a lit point, and a dot printed on paper is neither.
+
 Everything else still uses the old card language. See `BACKLOG.md`.
 
 ## 13. The resume: the object and the page
@@ -570,6 +609,14 @@ Green appears once in the section, on the take action, which §2 reserves for
 the one action that matters on a screen. The toggles are brass.
 
 ## Logbook
+
+**2026-08-25, later.** §12, the case study pages. The finding worth carrying is
+that the subpage read as foreign for structural reasons and not chromatic ones,
+so no amount of restyling a piece would have fixed it — the reading edge moved,
+which is the one thing a page cannot survive. The second finding is that
+counting the words first is what settled the choice between five options: the
+bodies are short enough that a sheet is a page and long enough that deleting the
+bands would leave nothing.
 
 **2026-08-25.** §13, the resume. The finding worth carrying is the split
 between reading and taking: every interaction model §4 rejected was an attempt
