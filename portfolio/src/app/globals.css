@@ -287,6 +287,84 @@ details[open] .fold-arrow {
   position: relative;
 }
 
+/* The printed head of a sheet — what is on it, stated on it, over a rule that
+   fades the way the brass one does on the dark ground. */
+.paper-head {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--paper-ink-3);
+}
+.paper-head::after {
+  content: "";
+  display: block;
+  height: 1px;
+  margin-top: 14px;
+  background: linear-gradient(90deg, rgba(58, 46, 29, 0.55), rgba(58, 46, 29, 0.05));
+}
+
+/* An MDX body set on a sheet.
+
+   A case study is the document that DECISIONS §12 pairs with the shelf's
+   object, and §13 settled where reading happens: in the document, not on the
+   object. So the write-up is paper. `mdx-components.tsx` hard-codes the dark
+   ramp — `text-fg-2` prose, a `bg-accent` bullet, `text-accent` links — and
+   every one of those is the wrong ink for cream.
+
+   Overridden here rather than by threading a variant through MDXRemote, which
+   would make every component carry a surface it does not otherwise care about.
+   These rules sit outside `@layer`, so they beat Tailwind's layered utilities
+   on cascade order rather than on specificity, and none of them needs
+   `!important`.
+
+   The heading drops to h3 scale. The band around the sheet now carries an h1,
+   so an MDX `##` is a subhead here and was competing before.
+
+   The bullet loses its green: §2 spends green once per view as a lit point,
+   and a dot printed on paper is neither lit nor once. */
+.paper-prose {
+  color: var(--paper-ink-2);
+}
+.paper-prose > :first-child {
+  margin-top: 0;
+}
+.paper-prose h2 {
+  font-size: 1.34rem;
+  line-height: 1.28;
+  letter-spacing: -0.004em;
+  font-weight: var(--font-weight-semibold);
+  font-variation-settings: "opsz" 20;
+  color: var(--paper-ink);
+  margin: 2rem 0 0.6rem;
+}
+.paper-prose p,
+.paper-prose li {
+  color: var(--paper-ink-2);
+}
+/* The bullet is the empty span each list item opens with. */
+.paper-prose li > span:first-child {
+  background: var(--paper-ink-3);
+}
+.paper-prose strong {
+  color: var(--paper-ink);
+}
+.paper-prose a {
+  color: var(--paper-ink);
+  text-decoration-color: var(--brass);
+}
+.paper-prose a:hover {
+  color: var(--brass);
+}
+.paper-prose code {
+  color: var(--paper-ink);
+  background: rgba(58, 46, 29, 0.09);
+}
+.paper-prose blockquote {
+  border-color: var(--brass);
+  color: var(--paper-ink);
+}
+
 /* Any raised surface that is not paper: lit on the top and left, dark on the
    right and bottom, shadow cast down and to the right. Replaces
    `rounded-xl border border-line` wherever that was standing in for a card. */
