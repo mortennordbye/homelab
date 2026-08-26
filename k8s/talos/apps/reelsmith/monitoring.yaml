@@ -139,15 +139,23 @@ spec:
               Usually a full state volume. The copies live beside the database and the newest 14 are kept.
               Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i backup
 
+        # Labelled by platform since 2026-08-26. Unlabelled this fired without
+        # saying where, and a platform that had stopped publishing entirely was
+        # invisible behind the other two still succeeding, which is the failure
+        # actually worth waking up for. The expression is unchanged; what moved
+        # is that there is now one series per platform and the summary says
+        # which.
         - alert: ReelsmithPublishFailing
           expr: increase(reelsmith_publish_failures_total[1h]) > 0
           for: 5m
           labels:
             severity: warning
           annotations:
-            summary: 'reelsmith failed {{ $value | printf "%.0f" }} publish attempt(s) in the last hour'
+            summary: 'reelsmith failed {{ $value | printf "%.0f" }} {{ $labels.platform }} publish attempt(s) in the last hour'
             description: |
-              Meta rejected a publish or the upload did not complete. The queue entry stays for a retry.
+              The platform rejected a publish or the upload did not complete. The queue entry stays for a retry.
+              A platform with no publisher fails its own row rather than being handed to another
+              platform's API, and reports itself here under its own name.
               Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i publish
 
         # The counter above catches the moment and then resolves an hour later
@@ -160,13 +168,19 @@ spec:
         # publish that failed *after* the container existed may already be live
         # on the account, which is why the gateway refuses to retry it on its
         # own and why re-arming it in the admin UI can post the same Reel twice.
+        #
+        # Labelled by account since 2026-08-26, so this fires once per account
+        # rather than once in total. That is the wanted behaviour with three
+        # destinations: a queue that has stopped draining on one of them is
+        # otherwise hidden behind the others still moving. The matcher is
+        # unchanged, since a matcher on a subset of labels still matches.
         - alert: ReelsmithPostStuck
           expr: reelsmith_queue_depth{state="failed"} > 0
           for: 15m
           labels:
             severity: warning
           annotations:
-            summary: 'reelsmith has {{ $value | printf "%.0f" }} queued post(s) stuck in failed'
+            summary: 'reelsmith has {{ $value | printf "%.0f" }} queued post(s) stuck in failed on {{ $labels.account }}'
             description: |
               These have stopped retrying and stay put until someone decides what to do with them.
               Check the account for a duplicate before re-arming: a container may have become a Reel.

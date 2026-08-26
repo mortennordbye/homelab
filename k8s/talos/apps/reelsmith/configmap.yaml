@@ -27,10 +27,14 @@ data:
   # A line that does not parse fails the pod's startup on purpose, rather than
   # quietly dropping that slot from the schedule.
   #
-  # A line without account= attaches to the one registered Instagram account,
-  # which the gateway resolves and logs rather than guesses if that becomes
-  # ambiguous. A line with account= names its own destination, which is how one
-  # schedule covers both surfaces.
+  # Every line names its own destination. A line without account= attaches to
+  # the one registered Instagram account, and a second Instagram account makes
+  # that ambiguous: until 2026-08-26 that did not merely drop the line, it
+  # deleted the first account's slots at boot and the pod came up healthy with
+  # the feed stopped. The gateway freezes the whole config sweep now rather
+  # than deleting anything it could not attribute, and naming the account keeps
+  # a line out of all of that. See F0 in the reelsmith repo's
+  # docs/multi-destination-audit.md.
   #
   # YouTube runs at one a day against Instagram's three, deliberately. The risk
   # there is not the API, it is the inauthentic content policy, renamed from
@@ -49,9 +53,9 @@ data:
   # dropping it, so this line and the image carrying it have to ship in that
   # order. Adding it ahead of 0.0.29 crashlooped the pod once already.
   GATEWAY_SLOTS: |
-    08:10 Europe/Oslo jitter=15
-    12:40 Europe/Oslo jitter=15
-    19:20 Europe/Oslo jitter=15
+    08:10 Europe/Oslo jitter=15 account=17841441696714445
+    12:40 Europe/Oslo jitter=15 account=17841441696714445
+    19:20 Europe/Oslo jitter=15 account=17841441696714445
     21:05 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
 
   # Named zone, not an offset, so the slots stay at the same local hour across
@@ -74,3 +78,30 @@ data:
   GATEWAY_YOUTUBE_PRIVACY_STATUS: "public"
 
   GATEWAY_ADMIN_ENABLED: "true"
+
+  # The third destination, and off until there is an account to publish to.
+  #
+  # This one flag gates three things: the token refresher, the insights sweep
+  # and publishing. It exists where GATEWAY_YOUTUBE_ENABLED deliberately does
+  # not, because TikTok has a background loop of its own that would call the
+  # API daily on a deployment with no TikTok account, and nothing on the
+  # YouTube path runs unless a slot fires.
+  #
+  # Turning it on needs an OAuth round trip first
+  # (scripts/tiktok_authorise.py in the reelsmith repo), and a queued TikTok
+  # row reaching a slot with this off fails that row rather than retrying.
+  GATEWAY_TIKTOK_ENABLED: "false"
+
+  # Direct Post or the inbox. Direct Post needs an audit that reviews a posting
+  # screen this project does not have, and whose guidelines reject apps
+  # "designed for private/personal use only", so a no is the expected answer.
+  # The inbox path needs no audit and drops the video into the creator's drafts
+  # for one tap, which is the only thing that actually publishes before then.
+  GATEWAY_TIKTOK_DIRECT_POST: "false"
+
+  # What an unaudited client is allowed to ask for. It also has to be one of
+  # the options the creator_info call returns, or the post fails
+  # privacy_level_option_mismatch, which reads like a bad constant and is
+  # actually a stale read. Set explicitly so the pre-audit behaviour is chosen
+  # rather than discovered, the same way GATEWAY_YOUTUBE_PRIVACY_STATUS is.
+  GATEWAY_TIKTOK_PRIVACY_LEVEL: "SELF_ONLY"
