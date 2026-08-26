@@ -188,3 +188,32 @@ spec:
               A "no video file" failure specifically means the retention sweep ate a queued
               file: _prune_media sweeps by mtime and db.live_media_names is the exemption
               that should have covered it.
+
+        # The state neither alert above could see. A publish claims its row
+        # before the first Graph call, so a process dying between creating the
+        # container and media_publish leaves it in `claimed` rather than
+        # `failed`: no failure counter is incremented, so ReelsmithPublishFailing
+        # stays quiet, and the row never reaches `failed`, so ReelsmithPostStuck
+        # does not match it either. Queue row 55 sat there nine days with its
+        # container already in ERROR at Meta.
+        #
+        # reelsmith_stale_claims only counts rows held past CLAIM_STALE_AFTER,
+        # an hour, which is an order of magnitude longer than one upload and a
+        # transcode poll. So a non-zero value is already an abandoned claim and
+        # not a publish in progress.
+        #
+        # The gateway will not resolve these on its own, deliberately: Meta may
+        # have accepted the post, and only the account can say. That is exactly
+        # why it has to alert rather than self-heal.
+        - alert: ReelsmithClaimAbandoned
+          expr: reelsmith_stale_claims > 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'reelsmith has {{ $value | printf "%.0f" }} claim(s) nothing finished on {{ $labels.account }}'
+            description: |
+              A publish claimed this row and never came back. It will not retry and will not move
+              without a person, and its media stays exempt from the retention sweep meanwhile.
+              Check the account for the post before deciding: the container may already be a Reel.
+              Queue: https://reelsmith.local.bigd.no/admin/
