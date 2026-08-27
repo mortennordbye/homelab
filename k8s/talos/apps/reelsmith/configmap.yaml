@@ -74,10 +74,19 @@ data:
   # and parse_slots fails the boot on a line it cannot read rather than
   # dropping it, so this line and the image carrying it have to ship in that
   # order. Adding it ahead of 0.0.29 crashlooped the pod once already.
+  # Facebook is one a day for none of the three reasons above. There is no
+  # policy pressure and the documented ceiling is 30 API posts per 24 hours.
+  # It is one a day because it is the same identity showing the same video to
+  # the same audience, and the cadence decision of 2026-08-27 applies to every
+  # surface rather than being argued per platform.
+  #
+  # The Page id, not the number on the Page's own profile URL. A Page shows
+  # two, and /{page-id}/video_reels wants the one GET /me/accounts returns.
   GATEWAY_SLOTS: |
     08:10 Europe/Oslo jitter=15 account=17841441696714445
     08:10 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
     08:10 Europe/Oslo jitter=15 account=-000y6NKYZ3EEbUGgXiyJ9nG66a_xqrF68Me
+    08:10 Europe/Oslo jitter=15 account=1236596692875712
 
   # Named zone, not an offset, so the slots stay at the same local hour across
   # a daylight saving change.
