@@ -53,6 +53,28 @@ spec:
         - path:
             type: PathPrefix
             value: /healthz
+        # The privacy policy, the terms, and a page saying what the account is.
+        # Instagram, YouTube and TikTok all hold these URLs on their app
+        # records, and TikTok verified gate.nordbye.it by DNS record in order
+        # to accept them, so a 404 here is three broken app registrations
+        # rather than a missing page.
+        #
+        # **Exact, not PathPrefix, and "/" is why.** A PathPrefix of "/"
+        # matches every path there is, which turns this allowlist into a
+        # catch-all and puts /admin and /metrics back on the public internet.
+        # That is the one thing this file exists to prevent. The other two are
+        # Exact for the same reason rather than by habit: the pages are
+        # self-contained, with no assets served beneath them, so a prefix would
+        # buy nothing and widen the surface.
+        - path:
+            type: Exact
+            value: /
+        - path:
+            type: Exact
+            value: /privacy
+        - path:
+            type: Exact
+            value: /terms
       backendRefs:
         - group: ""
           kind: Service
