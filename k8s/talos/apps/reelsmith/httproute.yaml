@@ -54,9 +54,9 @@ spec:
             type: PathPrefix
             value: /healthz
         # The privacy policy, the terms, and a page saying what the account is.
-        # Instagram, YouTube and TikTok all hold these URLs on their app
-        # records, and TikTok verified gate.nordbye.it by DNS record in order
-        # to accept them, so a 404 here is three broken app registrations
+        # Instagram, YouTube, TikTok and Facebook all hold these URLs on their
+        # app records, and TikTok verified gate.nordbye.it by DNS record in
+        # order to accept them, so a 404 here is four broken app registrations
         # rather than a missing page.
         #
         # **Exact, not PathPrefix, and "/" is why.** A PathPrefix of "/"
@@ -83,6 +83,18 @@ spec:
         - path:
             type: Exact
             value: /tiktok/callback
+        # Facebook's OAuth redirect target, added 2026-08-27 with the Page
+        # publishing path. Facebook does allow a localhost redirect while an
+        # app is in development, and the app that publishes these Reels is
+        # live, so the Page consent trip lands here alongside TikTok's.
+        #
+        # This line is the whole reason the trip 404s without it, and the
+        # reelsmith CLAUDE.md already recorded that trap from the TikTok
+        # rollout. Adding a route to the service means adding it here too, as
+        # the header of this file says.
+        - path:
+            type: Exact
+            value: /facebook/callback
       backendRefs:
         - group: ""
           kind: Service
