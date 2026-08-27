@@ -145,6 +145,23 @@ resource "cloudflare_dns_record" "google_verification_2" {
   ttl     = 3600
 }
 
+# TikTok verifies the domain a Content Posting API app publishes from, and
+# gate.nordbye.it is that host: the reelsmith gateway hands TikTok a
+# PULL_FROM_URL pointing at its own /media/{name}, and TikTok refuses the fetch
+# with url_ownership_unverified until this record exists. The same verification
+# covers the app's privacy policy, terms and website URLs, which the gateway
+# also serves, because a verified domain carries every URL beneath it.
+#
+# Deleting this un-verifies the property, which stops TikTok publishing and
+# invalidates the three URLs on the app record at the same time.
+resource "cloudflare_dns_record" "tiktok_verification_gate" {
+  zone_id = data.cloudflare_zone.this.zone_id
+  name    = "gate.${var.zone_name}"
+  type    = "TXT"
+  content = "\"tiktok-developers-site-verification=eohRkSSPmh7bhifAuN7feJ5Wx6kzITAL\""
+  ttl     = 3600
+}
+
 # Azure App Service custom domain verification ID.
 resource "cloudflare_dns_record" "asuid" {
   zone_id = data.cloudflare_zone.this.zone_id
