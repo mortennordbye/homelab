@@ -75,6 +75,14 @@ spec:
         - path:
             type: Exact
             value: /terms
+        # TikTok's OAuth redirect target. The portal refuses to register a
+        # redirect URI that is not https, so the consent trip cannot land on a
+        # loopback listener and lands here instead; the page prints the
+        # authorisation code and the operator pastes it back into
+        # scripts/tiktok_authorise.py. Exact, like the three above.
+        - path:
+            type: Exact
+            value: /tiktok/callback
       backendRefs:
         - group: ""
           kind: Service
