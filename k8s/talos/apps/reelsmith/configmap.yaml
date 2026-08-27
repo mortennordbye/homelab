@@ -16,7 +16,24 @@ data:
   # upgraded would have been a surprise rather than a decision.
   GATEWAY_SCHEDULER_ENABLED: "true"
 
-  # Three posts a day. One slot per line; only the time is required.
+  # One post a day, at one time, on all three destinations. One slot per line;
+  # only the time is required.
+  #
+  # It was three a day on Instagram until 2026-08-27, kept deliberately after
+  # the same question was asked on 2026-08-17. What changed is the evidence.
+  # At n=77 settled posts, paired within the same day so day level variance is
+  # removed, 06:00 UTC beats 17:00 on 15 of 20 days and 10:00 beats it on 18 of
+  # 24, which is p=0.041 and p=0.023. The evening slot carried 25 posts, one
+  # breakout and no post over a thousand views. 06:00 and 10:00 are
+  # indistinguishable from each other, 13 of 19 on skip and 9 of 19 on views,
+  # so the surviving slot is chosen on the two comparisons it wins rather than
+  # on a gap between the two mornings that is not there.
+  #
+  # **All three destinations at the same time is a legibility choice, not an
+  # optimisation.** Only Instagram produces a skip rate; YouTube scores whole
+  # video retention and TikTok exposes no retention metric at all, so there is
+  # nothing to argue a different hour from for either. They fire minutes apart
+  # anyway, because the jitter is derived per slot.
   #
   # Each firing moves by up to 15 minutes either way, to the second, and never
   # onto :00, :15, :30 or :45. The offset is derived from the slot and the date
@@ -36,13 +53,18 @@ data:
   # a line out of all of that. See F0 in the reelsmith repo's
   # docs/multi-destination-audit.md.
   #
-  # YouTube runs at one a day against Instagram's three, deliberately. The risk
-  # there is not the API, it is the inauthentic content policy, renamed from
-  # "repetitious content" in July 2025 to cover mass produced AI video.
-  # Reviewers assess channel themes and overall patterns rather than single
-  # videos, and three a day of an identical layout is the shape they look for
-  # even when every video is original. Raising it is a one line edit once the
-  # channel has a history that is not all from the same week.
+  # YouTube was already one a day when Instagram ran three, and the reason it
+  # cannot go up still holds. The risk there is not the API, it is the
+  # inauthentic content policy, renamed from "repetitious content" in July 2025
+  # to cover mass produced AI video. Reviewers assess channel themes and
+  # overall patterns rather than single videos, and several a day of an
+  # identical layout is the shape they look for even when every video is
+  # original.
+  #
+  # TikTok runs at one a day for a third reason again, and it is neither policy
+  # nor quota. The inbox path drops the video into the creator's drafts and
+  # somebody has to open the app and tap post, so the ceiling is attention. The
+  # API would allow five pending shares per 24 hours.
   #
   # Removing a line removes that slot, and an account whose lines all disappear
   # loses its slots rather than keeping them, so deleting a destination here
@@ -54,9 +76,8 @@ data:
   # order. Adding it ahead of 0.0.29 crashlooped the pod once already.
   GATEWAY_SLOTS: |
     08:10 Europe/Oslo jitter=15 account=17841441696714445
-    12:40 Europe/Oslo jitter=15 account=17841441696714445
-    19:20 Europe/Oslo jitter=15 account=17841441696714445
-    21:05 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
+    08:10 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
+    08:10 Europe/Oslo jitter=15 account=-000y6NKYZ3EEbUGgXiyJ9nG66a_xqrF68Me
 
   # Named zone, not an offset, so the slots stay at the same local hour across
   # a daylight saving change.
@@ -87,10 +108,16 @@ data:
   # API daily on a deployment with no TikTok account, and nothing on the
   # YouTube path runs unless a slot fires.
   #
-  # Turning it on needs an OAuth round trip first
-  # (scripts/tiktok_authorise.py in the reelsmith repo), and a queued TikTok
-  # row reaching a slot with this off fails that row rather than retrying.
-  GATEWAY_TIKTOK_ENABLED: "false"
+  # A queued TikTok row reaching a slot with this off fails that row rather
+  # than retrying, because a flag that is off is not a transient condition.
+  #
+  # On since 2026-08-27. The OAuth round trip it was waiting for
+  # (scripts/tiktok_authorise.py in the reelsmith repo) ran that afternoon
+  # against the app's **sandbox** credentials, because the production
+  # configuration cannot be saved without a demo video of a posting interface
+  # this project does not have. A sandbox reaches only its target users, and
+  # @thenightlybuild is one of them.
+  GATEWAY_TIKTOK_ENABLED: "true"
 
   # Direct Post or the inbox. Direct Post needs an audit that reviews a posting
   # screen this project does not have, and whose guidelines reject apps
