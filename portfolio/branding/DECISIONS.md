@@ -18,10 +18,12 @@ The spec that ships is `src/content/brand.ts`, rendered at `/brand`. Where this
 file and that file disagree, the code is what the site does and this file is what
 we meant.
 
-Status as of 2026-08-25: theme and typography locked and committed. Two section
+Status as of 2026-08-28: theme and typography locked and committed. Two section
 objects are built and shipped in the real site, the portfolio shelf (§8) and the
-resume (§13). §12 covers the flat sections, whose pass is shipped for the hero,
-About, Services, the resume and the case study pages.
+resume (§13). §12 covers the flat sections, and the pass is now shipped for
+every section of the front page: the hero, About, Services, the resume, the case
+study pages, contact and the blog. The one card grid left anywhere is
+`FeaturedWork`'s no-WebGL fallback list, tracked in `BACKLOG.md`.
 
 ---
 
@@ -449,6 +451,31 @@ one worth revisiting if the subpages ever need a stronger point of view; it was
 set aside because it spends the page's structure on a book metaphor the shelf
 has already made, and because the margin has no honest answer below 900px.
 
+The blog section followed, and it is the one that did not fit the pattern. The
+backlog described it as a card problem; it was a picture problem. Each cover
+carries its own black, which is not `--bg`, so a card around it put two grounds
+a hairline apart and the image read as a rectangle pasted onto the desk.
+Swapping the border for `.lit` would have changed the frame and left that
+intact. So the box is gone entirely: the cover is mounted as a `.print` and the
+type sits on the ground beside it.
+
+The measurement is the part worth carrying. The covers are 1200x630, the Open
+Graph ratio, because they are authored to `blog/IMAGE-STYLE.md` for feeds, and
+the section was rendering them at 16/9, throwing away a sixth of every cover's
+width. The observability post lost the end of its own strapline. §8 records the
+same finding about the shelf, where it is the reason the `cover` frontmatter
+field went unused; the same art fails the same way in any cell narrower than it
+is. Anything on this site that shows a blog cover has to declare 1200/630.
+
+Three alternatives were built in `.inspiration/blog-study.html` before this was
+picked: a warm grade over the print returning to full colour on hover, a contact
+sheet carrying all three frames on one sheet of paper, and a lead print with the
+other two as thumbnails on index rows. The grade is the one worth revisiting.
+It is the only version that answers the palette rather than the seam, it is two
+declarations on top of what shipped, and deleting them lands back on what is
+there now. It was set aside because the covers are designed to be legible at
+feed size and desaturating them spends some of that.
+
 `mdx-components.tsx` was not touched. It hard-codes the dark ramp, and
 `.paper-prose` re-inks it from outside `@layer`, so the overrides win on
 cascade order rather than specificity and no component has to carry a surface
@@ -609,6 +636,14 @@ Green appears once in the section, on the take action, which §2 reserves for
 the one action that matters on a screen. The toggles are brass.
 
 ## Logbook
+
+**2026-08-28.** §12, the contact block and the blog section, which between them
+close the front page. Two findings. The contact card re-derived §13's split
+without being asked to: `--accent` is solved against `--bg` and lands near
+2.4:1 on `--paper-2`, so green cannot go on paper, and the object ends up
+stating while the dark ground takes. And the blog section is the case where the
+materials rule was the wrong diagnosis. The border was not the problem, the
+picture was, and the fix was to delete the box rather than restyle it.
 
 **2026-08-25, later.** §12, the case study pages. The finding worth carrying is
 that the subpage read as foreign for structural reasons and not chromatic ones,
