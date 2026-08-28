@@ -1,5 +1,6 @@
-import { ArrowRight, MapPin, ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
+import { ContactCard } from "@/components/sections/ContactCard";
 import { site } from "@/content/site";
 
 export function CtaContact() {
@@ -9,73 +10,42 @@ export function CtaContact() {
       className="scroll-mt-24 section-rule"
       style={{ paddingTop: "var(--space-section-y)", paddingBottom: "var(--space-section-y)" }}
     >
-      <div className="mx-auto grid max-w-[var(--container-wide)] gap-12 px-6 md:grid-cols-12 md:gap-8 md:px-8">
-        <div className="md:col-span-7">
+      <div className="mx-auto grid max-w-[var(--container-wide)] items-center gap-12 px-6 md:grid-cols-12 md:gap-8 md:px-8">
+        <div className="md:col-span-6">
           <p className="eyebrow flex items-center gap-2">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)]" />
             Available · Oslo &amp; remote
           </p>
-          <h2 className="mt-6 text-display-lg text-fg leading-[1]">
-            Contact.
-          </h2>
+          <h2 className="mt-6 text-display-lg text-fg leading-[1]">Contact.</h2>
           <p className="mt-6 max-w-xl text-fg-2">
             Reach out about cloud engineering, platform work or consulting
             engagements. I read everything that lands in the inbox and reply
             within a couple of working days.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center gap-5">
             <Button
               href={`mailto:${site.email}`}
               variant="primary"
               size="lg"
               iconRight={<ArrowRight size={16} aria-hidden />}
             >
-              {site.email}
+              Write to me
             </Button>
-            <Button
-              href={`https://www.linkedin.com/in/${site.linkedin}`}
-              variant="secondary"
-              size="lg"
-              iconLeft={<ExternalLink size={16} aria-hidden />}
-            >
-              Reach out on LinkedIn
+            <Button href={`https://www.linkedin.com/in/${site.linkedin}`} variant="link">
+              LinkedIn
             </Button>
           </div>
         </div>
 
-        <aside className="md:col-span-5">
-          <dl className="divide-y divide-line border-y border-line">
-            <Row icon={<MapPin size={14} aria-hidden />} label="Based in" value={`${site.location} · CET / CEST`} />
-            <Row icon={<ExternalLink size={14} aria-hidden />} label="Engagement" value="Available via Orange Business or directly" />
-          </dl>
+        {/* The card is the second way to take the contact details, and the
+            only one that leaves you with a file. It is not the only one:
+            everything on it is also in the mailto above and in the page's
+            structured data, so a browser that refuses the download or a
+            reader who never discovers the gesture loses nothing. */}
+        <aside className="md:col-span-6 md:justify-self-end">
+          <ContactCard />
         </aside>
       </div>
     </section>
-  );
-}
-
-function Row({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  // A <dl> may only contain <dt>/<dd> groups, optionally wrapped in a single
-  // <div> — the icon <span> sitting alongside them failed axe's definition-list
-  // rule. `display: contents` on the <dt> keeps the icon and label as direct
-  // grid items, so the rendered layout is unchanged.
-  return (
-    <div className="grid grid-cols-[2rem_1fr] items-start gap-x-4 py-5">
-      <dt className="contents">
-        <span className="col-start-1 row-span-2 mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md border border-line-2 text-accent">
-          {icon}
-        </span>
-        <span className="eyebrow col-start-2">{label}</span>
-      </dt>
-      <dd className="col-start-2 mt-1 text-fg">{value}</dd>
-    </div>
   );
 }
