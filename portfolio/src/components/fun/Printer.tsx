@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { DEFAULT_FLAGS, type ToggleFlags } from "@/content/cv-variants";
+import { pdfFilename } from "@/lib/download-name";
 import { Interactive } from "./interaction";
 
 /**
@@ -166,7 +167,8 @@ export function Printer({
     window.setTimeout(() => {
       const a = document.createElement("a");
       a.href = url;
-      a.download = url.replace(/^\//, "");
+      // Always a CV: `resolveUrl` only ever matches a variant, never the resume.
+      a.download = pdfFilename(false);
       document.body.appendChild(a);
       a.click();
       a.remove();

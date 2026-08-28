@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { pdfFilename } from "./src/lib/download-name";
 
 const nextConfig: NextConfig = {
   // Server runtime (was "export"): the app now serves a public API under
@@ -41,6 +42,31 @@ const nextConfig: NextConfig = {
         source:
           "/:path*.:ext(png|jpg|jpeg|gif|webp|avif|svg|ico|woff|woff2|ttf|pdf|gltf|bin)",
         headers: [{ key: "Cache-Control", value: "public, max-age=2592000" }],
+      },
+      {
+        // The name a CV lands under, made authoritative.
+        //
+        // `a.download` on the resume object and the printer in /fun is only a
+        // hint, and it covers exactly one of the ways someone gets at these
+        // files. Anyone who opens the URL directly, or right-clicks a link and
+        // picks "Save link as", gets the build's own stem instead, and that
+        // stem is a bitmask, so a recruiter ends up filing `cv-1111.pdf`.
+        // The header wins over the attribute in every browser and applies on
+        // every path, so it is the only place the name has to be correct.
+        //
+        // Four bits: skills, client projects, home lab, photo. Spelled out as
+        // a pattern rather than a wildcard so `/cv-manifest.json` and anything
+        // else beginning cv- cannot fall in here.
+        source: "/cv-:flags(\\d{4}).pdf",
+        headers: [
+          { key: "Content-Disposition", value: `attachment; filename="${pdfFilename(false)}"` },
+        ],
+      },
+      {
+        source: "/resume.pdf",
+        headers: [
+          { key: "Content-Disposition", value: `attachment; filename="${pdfFilename(true)}"` },
+        ],
       },
       {
         // Non-hashed metadata files: a safe 1-day ceiling.

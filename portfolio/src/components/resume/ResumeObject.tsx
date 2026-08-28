@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_FLAGS, type ToggleFlags } from "@/content/cv-variants";
+import { pdfFilename } from "@/lib/download-name";
 import { warmImages, warmOnIdle } from "@/lib/warm";
 import { site } from "@/content/site";
 import type { SheetSpec } from "./sheet-art";
@@ -183,7 +184,7 @@ export function ResumeObject({ counts }: { counts: SheetCounts }) {
     if (!url) return;
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Morten-Nordbye-${asResume ? "Resume" : "CV"}.pdf`;
+    a.download = pdfFilename(asResume);
     document.body.appendChild(a);
     a.click();
     a.remove();
