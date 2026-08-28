@@ -128,12 +128,26 @@ data:
   # @thenightlybuild is one of them.
   GATEWAY_TIKTOK_ENABLED: "true"
 
-  # Direct Post or the inbox. Direct Post needs an audit that reviews a posting
-  # screen this project does not have, and whose guidelines reject apps
-  # "designed for private/personal use only", so a no is the expected answer.
-  # The inbox path needs no audit and drops the video into the creator's drafts
-  # for one tap, which is the only thing that actually publishes before then.
-  GATEWAY_TIKTOK_DIRECT_POST: "false"
+  # Direct Post or the inbox. On since 2026-08-28, and what changed is that the
+  # posting screen it always needed now exists: the admin panel's queue gained
+  # a Publish now button that morning, which is a user interface performing a
+  # Content Posting API call and therefore something a demo video can be
+  # recorded of. The audit is applied for on that basis.
+  #
+  # **Turning this on is what the demo video has to show.** Recording the inbox
+  # path to justify a video.publish scope would show the reviewer a different
+  # feature from the one being requested.
+  #
+  # Safe before the audit lands only because GATEWAY_TIKTOK_PRIVACY_LEVEL below
+  # is SELF_ONLY. An unaudited client asking for anything more public is
+  # refused with unaudited_client_can_only_post_to_private_accounts. So the
+  # posts this makes are real posts on the profile that only the account can
+  # see: worse than the inbox tap for reach, better for proving the wiring.
+  #
+  # **If the audit is refused, this goes back to "false"**, and video.publish
+  # comes back out of SCOPES in scripts/tiktok_authorise.py, which needs a
+  # fresh consent trip to take effect.
+  GATEWAY_TIKTOK_DIRECT_POST: "true"
 
   # What an unaudited client is allowed to ask for. It also has to be one of
   # the options the creator_info call returns, or the post fails
