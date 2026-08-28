@@ -144,10 +144,26 @@ data:
   # posts this makes are real posts on the profile that only the account can
   # see: worse than the inbox tap for reach, better for proving the wiring.
   #
-  # **If the audit is refused, this goes back to "false"**, and video.publish
-  # comes back out of SCOPES in scripts/tiktok_authorise.py, which needs a
-  # fresh consent trip to take effect.
-  GATEWAY_TIKTOK_DIRECT_POST: "true"
+  # **Back to "false" on 2026-08-28, hours after going on.** The audit is on
+  # hold rather than refused, and the flag follows the audit: with it pending,
+  # Direct Post can only post SELF_ONLY, which puts a video on the profile that
+  # nobody but the account holder can see. That is worse than the inbox tap in
+  # every respect, so the tap is what runs while this is parked.
+  #
+  # What stopped it was not the code. TikTok's review wants a demo video of the
+  # posting interface at the declared domain, the interface is the admin panel,
+  # and the panel is deliberately absent from the httproute allowlist. Finishing
+  # the audit means putting the queue, the accounts and the publish controls on
+  # the public internet, which is a real cost against a submission the
+  # guidelines are likely to refuse anyway for being "designed for
+  # private/personal use only". That is a category mismatch rather than a
+  # misconfiguration, and no amount of wiring fixes it.
+  #
+  # **Everything else is left ready.** The Direct Post switch is on for both
+  # configurations in the portal, video.publish is granted to the stored token,
+  # and the production form is one field short. So restarting this is a flag
+  # flip and a demo video, not a repeat of today.
+  GATEWAY_TIKTOK_DIRECT_POST: "false"
 
   # What an unaudited client is allowed to ask for. It also has to be one of
   # the options the creator_info call returns, or the post fails
