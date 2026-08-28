@@ -766,7 +766,12 @@ export function GymBag({
           kicker: "outside work",
           title: fitness?.title ?? "Fitness",
           rows: [],
-          body: fitness?.body ?? "",
+          // The activities moved out of the body and into chips on the About
+          // card, which this room has no equivalent of, so they are appended
+          // back onto the sentence here rather than lost.
+          body: [fitness?.body, fitness?.activities?.join(", ")]
+            .filter(Boolean)
+            .join(" "),
         })
       }
     >

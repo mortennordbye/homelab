@@ -86,6 +86,22 @@ export function AboutSection() {
                 <span aria-hidden className="lit-rule mb-6 block" />
                 <h4 className="text-h3 text-fg">{it.title}</h4>
                 <p className="mt-3 text-sm text-fg-2 leading-relaxed">{it.body}</p>
+                {it.activities && (
+                  // The same brass chip the stack uses further up, rather than a
+                  // new device: the four are a list of things, and the page has
+                  // already taught what a list of things looks like.
+                  <ul className="mt-6 flex flex-wrap gap-2">
+                    {it.activities.map((a) => (
+                      <li
+                        key={a}
+                        className="group inline-flex items-center gap-2 rounded-[2px] border border-brass/55 px-4 py-1.5 text-sm text-fg transition-colors hover:border-copper"
+                      >
+                        <span className="h-1 w-1 rounded-full bg-brass transition-colors group-hover:bg-copper" />
+                        {a}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </Reveal>
           ))}
