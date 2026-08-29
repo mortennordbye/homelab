@@ -43,6 +43,7 @@ const BAY_W = (BENCH_W - 4 * PANEL) / 3;
 const BAY_X = [-(BAY_W + PANEL), 0, BAY_W + PANEL];
 const FLOOR = PANEL / 2;
 const Z_BACK = -BENCH_D / 2 + PANEL;
+const Z_FRONT = Z_BACK + 1.2;
 const LEG_H = 0.95;
 
 const TV_W = 8.4;
@@ -240,12 +241,16 @@ type Pick = {
 
 /**
  * Wraps one device so it can be pointed at. Selecting nudges it towards the
- * camera rather than tinting or outlining it: the scene is lit by one warm key
- * and a highlight colour would be the only thing in frame not obeying that,
- * which is how a render starts looking like a game.
+ * camera and puts a light on it. Not a tint and not an outline: a highlight
+ * colour would be the only thing in frame not obeying the key, which is how a
+ * render starts looking like a game. The nudge on its own was the whole cue
+ * until it turned out to be invisible — three centimetres of travel at a
+ * cabinet's viewing distance is nothing — and `branding/ART-DIRECTION.md` §4
+ * says what to do instead: contrast comes from falloff, so the answer to which
+ * one did I press is that the room's light is on it and nothing else.
  */
 function Pickable({
-  id, position, pick, children, lift = 0.3, hit, hitOffset,
+  id, position, pick, children, lift = 0.5, hit, hitOffset,
 }: {
   id: string;
   position: [number, number, number];
@@ -922,8 +927,31 @@ function Bench() {
   );
 }
 
+/**
+ * Where everything in the cabinet stands. One table rather than a position on
+ * each `Pickable`, because the picking lamp below has to find the selected
+ * device without being told which one it is.
+ */
+const AT: Record<string, [number, number, number]> = {
+  modem: [BAY_X[0] - 1.55, FLOOR + 0.2, Z_FRONT - 0.1],
+  gateway: [BAY_X[0] + 0.15, FLOOR + 0.15, Z_FRONT],
+  ha: [BAY_X[0] + 1.75, FLOOR + 0.25, Z_FRONT],
+  nas: [BAY_X[1] - 1.55, FLOOR + N_H / 2, Z_FRONT + 0.05],
+  switch: [BAY_X[1] + 1.35, FLOOR + 0.135, Z_FRONT + 0.1],
+  hue: [BAY_X[1] + 1.35, FLOOR + 0.42, Z_FRONT + 0.1],
+  sonos: [-6.4, BENCH_H + 1.825 / 2, Z_BACK + 1.55],
+  ap: [-4.9, BENCH_H + 0.12, Z_BACK + 2.05],
+  zigbee: [5.8, BENCH_H + 0.06, Z_BACK + 1.9],
+  ...Object.fromEntries(
+    HOSTS.map((h, i): [string, [number, number, number]] => [
+      h.host,
+      [BAY_X[2] + (i - 1) * 1.42, 0, Z_FRONT + 0.15],
+    ]),
+  ),
+};
+
 function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
-  const zFront = Z_BACK + 1.2;
+  const lit = pick.selected ? AT[pick.selected] : undefined;
 
   return (
     <group>
@@ -946,8 +974,23 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
       <Bench />
       <BayPlates />
 
+      {/* The picking lamp. It stands above and just in front of whatever is
+          selected and goes out when nothing is, which with the rig at half
+          output is the whole cue: one object in the light and the rest of the
+          room in shadow. Mounted either way rather than only while something
+          is selected, because adding or removing a light rewrites the program
+          key of every material in the scene and that recompile would land as a
+          stall on the click that caused it. */}
+      <pointLight
+        position={lit ? [lit[0] - 0.15, lit[1] + 1.5, lit[2] + 1.8] : [0, 0, 0]}
+        color="#ffcf9c"
+        intensity={lit ? 22 : 0}
+        distance={3.6}
+        decay={2}
+      />
+
       {/* Left bay: what the house needs before any of the rest of it matters. */}
-      <Pickable id="modem" position={[BAY_X[0] - 1.55, FLOOR + 0.2, zFront - 0.1]} pick={pick} lift={0.22} hit={[2.1, 0.6, 1.5]}>
+      <Pickable id="modem" position={AT.modem} pick={pick} lift={0.4} hit={[2.1, 0.6, 1.5]}>
         <DeviceBox
           size={[2, 0.4, 1.4]}
           tint="#35322e"
@@ -959,10 +1002,10 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
           ]}
         />
       </Pickable>
-      <Pickable id="gateway" position={[BAY_X[0] + 0.15, FLOOR + 0.15, zFront]} pick={pick} lift={0.22} hit={[1.4, 0.55, 1.4]}>
+      <Pickable id="gateway" position={AT.gateway} pick={pick} lift={0.4} hit={[1.4, 0.55, 1.4]}>
         <DeviceBox size={[1.3, 0.3, 1.3]} tint="#3d3a35" lights={[{ x: 0, colour: "#9fd8b0", radius: 0.03 }]} />
       </Pickable>
-      <Pickable id="ha" position={[BAY_X[0] + 1.75, FLOOR + 0.25, zFront]} pick={pick} lift={0.22} hit={[1.4, 0.7, 1.35]}>
+      <Pickable id="ha" position={AT.ha} pick={pick} lift={0.4} hit={[1.4, 0.7, 1.35]}>
         <DeviceBox
           size={[1.3, 0.5, 1.26]}
           tint="#2c2926"
@@ -974,13 +1017,13 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
       </Pickable>
 
       {/* Middle bay: the NAS, the switch everything hangs off, the Hue bridge. */}
-      <Pickable id="nas" position={[BAY_X[1] - 1.55, FLOOR + N_H / 2, zFront + 0.05]} pick={pick}>
+      <Pickable id="nas" position={AT.nas} pick={pick}>
         <Nas />
       </Pickable>
-      <Pickable id="switch" position={[BAY_X[1] + 1.35, FLOOR + 0.135, zFront + 0.1]} pick={pick} lift={0.22} hit={[1.75, 0.29, 1.15]}>
+      <Pickable id="switch" position={AT.switch} pick={pick} lift={0.4} hit={[1.75, 0.29, 1.15]}>
         <Switch8 />
       </Pickable>
-      <Pickable id="hue" position={[BAY_X[1] + 1.35, FLOOR + 0.42, zFront + 0.1]} pick={pick} lift={0.22} hit={[1.05, 0.3, 1.05]}>
+      <Pickable id="hue" position={AT.hue} pick={pick} lift={0.4} hit={[1.05, 0.3, 1.05]}>
         <mesh castShadow receiveShadow>
           <boxGeometry args={[0.9, 0.26, 0.9]} />
           <meshStandardMaterial color="#565049" roughness={0.62} metalness={0.04} envMapIntensity={0.2} />
@@ -988,37 +1031,34 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
       </Pickable>
 
       {/* Right bay: the three Lenovos, upright in their printed stands. */}
-      {HOSTS.map((host, i) => {
-        const x = BAY_X[2] + (i - 1) * 1.42;
-        return (
-          // The stand comes forward with its machine: they are one object to
-          // anyone looking at them, and leaving it behind reads as a glitch.
-          <Pickable
-            key={host.host}
-            id={host.host}
-            position={[x, 0, zFront + 0.15]}
-            pick={pick}
-            lift={0.34}
-            hit={[0.85, 2.1, 1.9]}
-            hitOffset={[0, FLOOR + 0.11 + T_H / 2, 0]}
-          >
-            <PrintedStand position={[0, FLOOR + 0.055, 0]} />
-            <group position={[0, FLOOR + 0.11 + T_H / 2, 0]}>
-              <ThinkCentre />
-            </group>
-          </Pickable>
-        );
-      })}
+      {HOSTS.map((host) => (
+        // The stand comes forward with its machine: they are one object to
+        // anyone looking at them, and leaving it behind reads as a glitch.
+        <Pickable
+          key={host.host}
+          id={host.host}
+          position={AT[host.host]}
+          pick={pick}
+          lift={0.6}
+          hit={[0.85, 2.1, 1.9]}
+          hitOffset={[0, FLOOR + 0.11 + T_H / 2, 0]}
+        >
+          <PrintedStand position={[0, FLOOR + 0.055, 0]} />
+          <group position={[0, FLOOR + 0.11 + T_H / 2, 0]}>
+            <ThinkCentre />
+          </group>
+        </Pickable>
+      ))}
 
       {/* On the bench top, flanking the set: the speaker and the access point
           to its left, the Zigbee antenna to its right. */}
-      <Pickable id="sonos" position={[-6.4, BENCH_H + 1.825 / 2, Z_BACK + 1.55]} pick={pick} lift={0.25} hit={[1.4, 2.0, 1.5]}>
+      <Pickable id="sonos" position={AT.sonos} pick={pick} lift={0.45} hit={[1.4, 2.0, 1.5]}>
         <Sonos />
       </Pickable>
-      <Pickable id="ap" position={[-4.9, BENCH_H + 0.12, Z_BACK + 2.05]} pick={pick} lift={0.25} hit={[1.75, 0.42, 1.75]}>
+      <Pickable id="ap" position={AT.ap} pick={pick} lift={0.45} hit={[1.75, 0.42, 1.75]}>
         <AccessPoint />
       </Pickable>
-      <Pickable id="zigbee" position={[5.8, BENCH_H + 0.06, Z_BACK + 1.9]} pick={pick} lift={0.25} hit={[1.1, 1.3, 0.95]} hitOffset={[0.1, 0.55, 0]}>
+      <Pickable id="zigbee" position={AT.zigbee} pick={pick} lift={0.45} hit={[1.1, 1.3, 0.95]} hitOffset={[0.1, 0.55, 0]}>
         <Zigbee />
       </Pickable>
 
@@ -1031,10 +1071,18 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
    Rig and camera
 ------------------------------------------------------------------------- */
 
-function Lights() {
+/**
+ * `dim` is what selecting a device does to the room. The rig loses about half
+ * its output and the picking lamp in `Estate` makes up the difference over one
+ * object, which is `branding/ART-DIRECTION.md` §4 applied literally: contrast
+ * comes from falloff, so telling two things apart means moving one of them into
+ * shadow rather than drawing something on the other.
+ */
+function Lights({ dim }: { dim: boolean }) {
   const rake = useRef<THREE.SpotLight>(null);
   const target = useRef<THREE.Object3D>(null);
   const reach = BENCH_W;
+  const k = dim ? 0.5 : 1;
 
   useEffect(() => {
     if (rake.current && target.current) rake.current.target = target.current;
@@ -1042,10 +1090,10 @@ function Lights() {
 
   return (
     <>
-      <ambientLight color="#31251a" intensity={0.6} />
+      <ambientLight color="#31251a" intensity={0.6 * k} />
       <directionalLight
         color="#ffd49a"
-        intensity={2.7}
+        intensity={2.7 * k}
         position={[-5.5, 5.5, 4.5]}
         castShadow
         shadow-mapSize={[2048, 2048]}
@@ -1058,16 +1106,16 @@ function Lights() {
         shadow-bias={-0.0009}
         shadow-normalBias={0.03}
       />
-      <directionalLight color="#6f9c72" intensity={0.5} position={[5, -0.5, 2]} />
+      <directionalLight color="#6f9c72" intensity={0.5 * k} position={[5, -0.5, 2]} />
       {/* A soft frontal fill, for the same reason the portfolio shelf has one:
           the cabinet's own top panel puts all three bays in the key's shadow,
           which a single object standing on a table never does. The set's wash
           does most of this work; this stops the far bays going black. */}
-      <directionalLight color="#ffcf9e" intensity={0.55} position={[0.5, -0.8, 6]} />
+      <directionalLight color="#ffcf9e" intensity={0.55 * k} position={[0.5, -0.8, 6]} />
       <spotLight
         ref={rake}
         color="#ffca8a"
-        intensity={reach * reach * 0.62}
+        intensity={reach * reach * 0.62 * k}
         distance={reach * 3.6}
         angle={0.6}
         penumbra={0.8}
@@ -1163,7 +1211,7 @@ export default function BenchScene({ feed, selected, onSelect, onReady }: {
             <meshBasicMaterial color="#1a140d" side={THREE.BackSide} />
           </mesh>
         </Environment>
-        <Lights />
+        <Lights dim={selected !== null} />
         <Framing />
         <Breath />
         <Estate feed={feed} pick={pick} />

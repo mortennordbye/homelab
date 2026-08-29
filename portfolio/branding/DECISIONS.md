@@ -637,6 +637,17 @@ the one action that matters on a screen. The toggles are brass.
 
 ## Logbook
 
+**2026-08-29.** The cabinet's selection cue. A 3 cm nudge towards the camera was
+the whole answer to "which one did I press", and at the distance that object is
+framed from, it is invisible; the chips above the render carry the state, but
+they are off screen by the time anyone is looking at the render. §4 is what
+fixed it: the rig drops to half output while something is selected and one warm
+lamp stands over the picked device, so the answer to which one is which one is
+in the light. Worth carrying: the lamp has to be mounted whatever the state, at
+zero intensity when nothing is picked, because adding or removing a light
+rewrites the program key of every material in the scene and that recompile lands
+as a stall on the click that caused it.
+
 **2026-08-28.** §12, the contact block and the blog section, which between them
 close the front page. Two findings. The contact card re-derived §13's split
 without being asked to: `--accent` is solved against `--bg` and lands near
