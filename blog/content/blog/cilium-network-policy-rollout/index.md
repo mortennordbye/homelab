@@ -333,6 +333,8 @@ All pod-to-pod traffic that crosses a node boundary is now WireGuard-encrypted. 
 
 Network policy used to be a thing you put off forever because the failure mode was "the cluster mysteriously stops working." Audit mode plus Hubble flips that. You ship policies you're 80% sure about, watch Hubble for a day, fix the 20% you got wrong, and turn enforcement on with no drama.
 
+The [public Headroom demo](/blog/headroom/) is one of these in production. No login, exposed on the internet, and a policy written this way is most of what keeps it boring.
+
 Default-flat is a Kubernetes convention. It is not a Kubernetes requirement. Lock yours down.
 
 Now go open the Hubble tab.

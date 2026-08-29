@@ -19,10 +19,11 @@ home = ["HTML", "RSS", "JSON"]
 [taxonomies]
 tag = "tags"
 
+# `changefreq` and `priority` are deliberately unset. Google ignores both, and
+# every URL here claiming a daily change was a claim the crawler can check and
+# find false: none of these posts change after publication.
 [sitemap]
-changefreq = "daily"
 filename = "sitemap.xml"
-priority = 0.5
 
 # -- Related content --
 # Required for params.article.showRelated. Hugo's default indices cover

@@ -277,7 +277,7 @@ The OOM one is the kind of thing you only learn by getting it wrong. The metric 
 
 I have made every one of these.
 
-**Copying my retention numbers without thinking.** 24h of logs and traces suits me because I debug in near-real-time and nothing here is under audit. Under a compliance requirement, or chasing an incident days later, 24h is too short and the line you need is already gone.
+**Copying my retention numbers without thinking.** 24h of logs and traces suits me because I debug in near-real-time and nothing here is under audit. Under a compliance requirement, or chasing an incident days later, 24h is too short and the line you need is already gone. Where the window has to stay long, move the reading somewhere cheap instead, which is the argument behind [querying archived WAF logs straight off a storage account](/blog/lawless-waf/).
 
 **Putting high-write data on network storage.** Logs and traces are written constantly, so point them at NFS and you will feel it. High-write pillars on local block storage, the metrics you want to keep on durable network storage.
 

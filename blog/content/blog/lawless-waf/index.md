@@ -106,4 +106,6 @@ lawless-waf has no application-level login. Access control leans entirely on you
 
 Tuning a WAF is one of those jobs that is easy to postpone because the feedback loop is slow and the logs are expensive to poke at. Point a diagnostic setting at a storage account, move the analysis there, and the cost of looking drops to zero. You look more often, you tune sooner, and the customer who got blocked this morning is unblocked before lunch.
 
+The same trade-off shows up inside a cluster, where I keep [Loki on a 24 hour retention window](/blog/observability-stack/) rather than pay to store logs nobody reads.
+
 The whole thing is Apache-2.0 and [on GitHub](https://github.com/mortennordbye/lawless-waf). Clone it, run the demo, and point it at your own logs.
