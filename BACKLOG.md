@@ -245,6 +245,20 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Decide which are worth keeping and add them to `.backup-manifest`. The persona markdown files are ~28K and clearly worth it; the 234M `slackdump_20260602_122707.zip` next to them probably is not, and may not belong on the laptop at all given it is a Slack export.
 - **Where:** `.backup-manifest`, `ai/projects/jarvis/`, `ai/prompts/erlendgpt/`.
 
+## Blog
+
+### Every post renders its title twice as an H1
+- **What:** The Northlight theme emits `<h1 class="article-title">` from the front-matter title, and every post also opens its markdown body with `# Same Title`. All seven posts under `blog/content/blog/**` therefore serve two identical H1 elements. Confirmed on the live site: `curl https://blog.nordbye.it/blog/lawless-waf/ | grep -o "<h1[^>]*>"` returns 2. The new `blog/content/about.md` deliberately omits the markdown heading and serves one.
+- **Why deferred:** Fixing it means deleting the leading `# Title` line from seven published posts, which changes what every one of them looks like (the title stops appearing twice on screen). That is a visible design change across the whole blog rather than a config fix, and it was not part of the agreed scope.
+- **Unblock:** Decide whether the title should render once. If yes, drop the first `# ...` line from each post body and rebuild; nothing else references those headings, though check that no post's table of contents or anchor link points at the removed heading id first.
+- **Where:** `blog/content/blog/*/index.md` (first heading line of each), `blog/themes/northlight/layouts/_partials/article-head.html` for the theme-side H1.
+
+### `content/series/_index.md` is orphaned
+- **What:** The file exists and carries a `noindex` cascade, but `config/_default/config.toml` deliberately does not register a `series` taxonomy (there is a comment saying so), so Hugo generates no series pages for it to apply to. It was added alongside the tag noindex in `c3f5031c`.
+- **Why deferred:** Harmless where it sits, and deleting a file someone added on purpose is a judgement call. It also becomes correct again the day a series is registered.
+- **Unblock:** Either register the `series` taxonomy or delete the file.
+- **Where:** `blog/content/series/_index.md`, `blog/config/_default/config.toml`.
+
 ## Media stack observability (arr-stack)
 
 ### Discord alert rules for the media stack

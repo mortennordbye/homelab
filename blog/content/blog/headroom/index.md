@@ -290,7 +290,7 @@ There is no login, and yet an instance of it sits on the public internet. That w
 
 `DEMO_MODE=1` refuses every non-GET under `/api/`, refuses the whole `/api/bank/*` namespace (its GETs are not safe reads, one proxies to Enable Banking on the instance's own credentials), fills the client from a browser-generated dataset, and skips the background jobs. Enforced server-side in [`server/demo.js`](https://github.com/mortennordbye/headroom/blob/main/server/demo.js).
 
-I did not want that to be the only thing between a stranger and a bank API.
+I did not want that to be the only thing between a stranger and a bank API. A CiliumNetworkPolicy sits under it, rolled out the way I [put policies on the rest of the cluster](/blog/cilium-network-policy-rollout/). Audit mode with Hubble first, then default-deny.
 
 **Full file:** [`k8s/talos/apps/headroom-demo/ciliumnetworkpolicy.yaml`](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/apps/headroom-demo/ciliumnetworkpolicy.yaml)
 
@@ -339,6 +339,6 @@ I built this for myself, and the surprise was how much of the value sits in the 
 
 Knowing what a decade of my own raises did against CPI changed what I say in February. That 1 560 of my 1 950 hours are the billable ones changed how I read a rate, and that 13 521 of an 18 166 payment is interest changed how I feel about paying extra.
 
-You do not need [Headroom](https://github.com/mortennordbye/headroom) for any of that. You need the numbers in front of you often enough that you stop guessing, and getting there should not cost a monthly fee. The [manifests that run it](https://github.com/mortennordbye/Homelab/tree/main/k8s/talos/apps/headroom) are in the Homelab repo if you want the rest of the setup.
+You do not need [Headroom](https://github.com/mortennordbye/headroom) for any of that. You need the numbers in front of you often enough that you stop guessing, and getting there should not cost a monthly fee. The [manifests that run it](https://github.com/mortennordbye/Homelab/tree/main/k8s/talos/apps/headroom) are in the Homelab repo if you want the rest of the setup, and they reach the cluster the same way [this blog does](/blog/i-have-a-blog/), through GitHub Actions and ArgoCD.
 
 Headroom does the maths school skipped. The volume of a cone is still your problem.
