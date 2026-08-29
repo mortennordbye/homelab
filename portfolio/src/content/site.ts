@@ -14,7 +14,6 @@ export const site = {
   homepage: "nordbye.it",
   github: "mortennordbye",
   linkedin: "morten-victor-nordbye",
-  twitter: "@mortennordbye",
   description:
     "Morten Victor Nordbye, Cloud Engineer and Architect in Oslo. Kubernetes, Azure, GitOps, and the platform work that keeps production running.",
   keywords: [
@@ -40,7 +39,6 @@ export const site = {
   socials: [
     { label: "GitHub", href: "https://github.com/mortennordbye" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/morten-victor-nordbye" },
-    { label: "X", href: "https://x.com/mortennordbye" },
     { label: "Blog", href: "https://blog.nordbye.it" },
   ],
   // The header promotes one entry to a button rather than a link. It stays in

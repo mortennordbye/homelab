@@ -42,7 +42,6 @@ import type { CareerData } from "./shelf";
 const SOCIAL_ICON: Record<string, { file: string; colour: string }> = {
   GitHub: { file: "github", colour: "#e6edf3" },
   LinkedIn: { file: "linkedin", colour: "#4aa3f0" },
-  X: { file: "x", colour: "#e7e9ea" },
   Blog: { file: "rss", colour: "#f0913a" },
 };
 
