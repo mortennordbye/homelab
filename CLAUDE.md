@@ -44,6 +44,29 @@ When your changes create orphans:
 
 The test: every changed line should trace directly to the user's request.
 
+### Comments state constraints, not stories
+
+A comment earns its place only by stating something the code cannot: a constraint the next
+editor must not break, a trap whose violation fails silently or expensively, or a non-obvious
+decision in one or two lines. Everything else is noise.
+
+Keep (and write):
+- One-line constraints: `# Recreate: RWO PVC, two pods can't both mount /data`.
+- Traps: `# Exact, not PathPrefix — a "/" prefix would put /admin back on the internet`.
+- Machine-read annotations (`# renovate: ...`), upstream-required markers, license headers.
+
+Never write:
+- The story of how the current value was arrived at: dates, incident timelines, measurements,
+  A/B statistics, "until <date> this was...". That history lives in git commits and, when it's
+  worth a narrative, a file under `docs/`. The comment states the surviving rule only.
+- Restating the line below it (`# enable the scheduler` above `SCHEDULER_ENABLED: "true"`).
+- Justifications addressed to a reviewer of the change rather than a reader of the file.
+- Markdown emphasis (`**bold**`) inside comments.
+
+The tell for AI-session residue: a comment that references a date, a past value, or evidence.
+Compress it to the constraint that survives, or delete it. If the rationale is genuinely worth
+a narrative, it goes in `docs/` and the comment can point there.
+
 ### Goal-driven execution
 
 Define success criteria. Loop until verified.
