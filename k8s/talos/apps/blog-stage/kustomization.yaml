@@ -16,4 +16,4 @@ resources:
 # deployment.yaml.
 images:
 - name: ghcr.io/mortennordbye/homelab/blog
-  newTag: 0.0.106
+  newTag: 0.0.107
