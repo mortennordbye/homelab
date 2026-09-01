@@ -47,16 +47,11 @@ controller:
   reconcilers:
     warehouses:
       # Kargo polls at the GREATER of this floor and each Warehouse's own
-      # `spec.interval`. The chart default is 5m0s, so every Warehouse here was
-      # being clamped to 5m despite asking for 1m. Lowering the floor makes the
-      # 1m0s they already declare the real discovery latency. Six Warehouses
-      # against GHCR once a minute is well inside the registry's rate limit.
-      # A webhook receiver would make this instant, but the external webhooks
-      # server is only exposed on the private gateway.
+      # spec.interval; the 5m0s chart default would clamp the 1m the Warehouses
+      # declare.
       minReconciliationInterval: "1m0s"
   argocd:
-    # We reconcile via Argo CD selfHeal (no argocd-update step in the pilot),
-    # but leaving the integration on lets Kargo surface Argo app health/sync
-    # in its UI and keeps the door open for argocd-update later.
+    # Reconciliation is Argo CD selfHeal (no argocd-update step); the
+    # integration only surfaces app health/sync in the Kargo UI.
     integrationEnabled: true
     namespace: argocd

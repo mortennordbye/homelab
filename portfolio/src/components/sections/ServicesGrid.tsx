@@ -4,19 +4,9 @@ import { Reveal } from "@/components/primitives/Reveal";
 import { services } from "@/content/services";
 
 /**
- * The three engagement shapes, as lit sheets.
- *
- * Converted from the card grid under branding/DECISIONS.md §12: everything is
- * either an object or a document, and a card is neither. So the icon in its
- * rounded square, the /01 counter, the per-service green accent and the nested
- * proof box are all gone, and what is left is the same sheet About already uses
- * for the interests — one lamp on the top and left edges, a brass hairline
- * where the icon badge was, and the proof separated by a rule rather than
- * boxed inside a second border.
- *
- * The proof link is copper rather than green: §2 allows green once per view as
- * a lit point, and three of them in one grid was the loudest breach of it on
- * the page.
+ * The three engagement shapes, as lit sheets — the same sheet About uses
+ * (DECISIONS.md §12: everything is an object or a document, a card is
+ * neither). Proof links are copper, not green: §2 allows green once per view.
  */
 export function ServicesGrid() {
   return (

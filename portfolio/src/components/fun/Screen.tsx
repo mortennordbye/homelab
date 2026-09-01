@@ -39,12 +39,9 @@ export const distanceFactor = (width: number, pxW: number) =>
   (width / pxW) * 400;
 
 /**
- * The bordered, titled box a panel is drawn in.
- *
- * Shared between the desk monitor and the television rather than written twice.
- * The two used to be one component because there was only one kind of screen;
- * pulling the chrome out is what lets the television lay six of these into a
- * grid without the panel bodies knowing anything about it.
+ * The bordered, titled box a panel is drawn in. Shared between the desk
+ * monitor and the television, so the TV can lay six into a grid without the
+ * panel bodies knowing.
  */
 export function PanelCard({
   panel,

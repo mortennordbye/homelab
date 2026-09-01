@@ -18,14 +18,9 @@ import {
 
 /**
  * The portfolio as a bookcase: client engagements on the upper shelf, homelab
- * on the lower, split on the frontmatter `kind`. Every spine is stamped with
- * its own title, so the whole list is readable without touching anything.
- *
- * Interaction is depth, never a toll gate. A volume is already face-out with
- * its cover showing before anyone clicks, and clicking a spine only changes
- * which one that is. Opening a volume is navigation: the book turns its own
- * pages, the camera dives at the leaf until the paper fills the frame, and the
- * route hands over to /work/<slug>. The writing stays in one place.
+ * on the lower, split on the frontmatter `kind`. The whole list must stay
+ * readable without touching anything; opening a volume is navigation to
+ * /work/<slug>, never a toll gate.
  */
 
 const SHELF_TOP = 0.1;
@@ -53,9 +48,8 @@ const TINTS = [
 ];
 
 /**
- * The shelf's name, on a small brass plate screwed to the board edge. This is
- * the client/homelab split made visible: it used to be a filter control, and a
- * label on the thing itself says the same in less.
+ * The shelf's name, on a small brass plate screwed to the board edge — the
+ * client/homelab split made visible.
  */
 function shelfPlateMaterial(text: string) {
   const c = document.createElement("canvas");

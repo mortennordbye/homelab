@@ -14,19 +14,10 @@ const rowLinkClass =
   "focus-ring underline decoration-line underline-offset-4 hover:text-accent hover:decoration-accent";
 
 /**
- * The colophon, in the order a printer would give it: the type first, then the
- * press. The label above it says so in plain English instead, because a word
- * the reader has to look up is a word the section has to spend its first line
- * explaining.
- *
- * Every line here was read off the repository rather than remembered, which is
- * the only thing that makes a section like this worth having. What it replaced
- * was the opposite: a stamp claiming the page had been served by one of four
- * named Talos nodes, picked at random in the browser, none of which exists in
- * the cluster. Deliberately no version numbers either. Renovate moves those
- * every week and a colophon that has to be maintained by hand is a colophon
- * that quietly goes false; the live versions belong on /infrastructure, where
- * they are read from the cluster.
+ * The colophon, in a printer's order: type first, then press. Every line must
+ * be true of the repository, not remembered — and deliberately no version
+ * numbers: Renovate moves those weekly, and the live ones belong on
+ * /infrastructure where they are read from the cluster.
  */
 const COLOPHON: { label: string; value: React.ReactNode }[] = [
   { label: "set in", value: "Source Serif 4 · Fragment Mono" },

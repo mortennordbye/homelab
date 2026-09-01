@@ -67,11 +67,9 @@ data "talos_machine_configuration" "controlplane" {
   config_patches = [
     yamlencode({
       machine = {
-        # Pin the installer explicitly. Left unset, the provider fills this in from the Talos
-        # version it was itself built against rather than from var.talos_version, so the field
-        # drifts on every provider bump. It read installer:v1.12.0 on nodes running v1.11.6.
-        # The default also points at the plain installer, so a reinstall from config would drop
-        # the intel-ucode and qemu-guest-agent extensions in the schematic below.
+        # Pin the installer explicitly: left unset, the provider fills it from its own build
+        # version (drifting on every provider bump) and points at the plain installer, which
+        # would drop the schematic's extensions on a reinstall from config.
         install = {
           image = "factory.talos.dev/installer/${talos_image_factory_schematic.this.id}:${var.talos_version}"
         }
@@ -129,11 +127,9 @@ data "talos_machine_configuration" "worker" {
   config_patches = [
     yamlencode({
       machine = {
-        # Pin the installer explicitly. Left unset, the provider fills this in from the Talos
-        # version it was itself built against rather than from var.talos_version, so the field
-        # drifts on every provider bump. It read installer:v1.12.0 on nodes running v1.11.6.
-        # The default also points at the plain installer, so a reinstall from config would drop
-        # the intel-ucode and qemu-guest-agent extensions in the schematic below.
+        # Pin the installer explicitly: left unset, the provider fills it from its own build
+        # version (drifting on every provider bump) and points at the plain installer, which
+        # would drop the schematic's extensions on a reinstall from config.
         install = {
           image = "factory.talos.dev/installer/${talos_image_factory_schematic.this.id}:${var.talos_version}"
         }
@@ -235,11 +231,8 @@ resource "talos_cluster_kubeconfig" "cluster" {
   node                 = local.first_control_plane_ip
   client_configuration = talos_machine_secrets.cluster.client_configuration
 
-  # The provider reissues the client certificate when it expires within this window, but only on an
-  # apply. The 720h default means a 30 day window in which an apply has to happen or the credential
-  # lapses, which is easy to miss on a cluster that can sit untouched for months. 90 days makes it
-  # far more likely that a routine apply catches it. Certificates are issued for a year either way,
-  # so a wider window costs nothing but slightly more frequent reissues.
+  # The client certificate is only reissued on an apply; the 720h default window is easy to
+  # miss on a cluster that can sit untouched for months, so widen it to 90 days.
   certificate_renewal_duration = "2160h"
 
   timeouts = {

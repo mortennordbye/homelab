@@ -16,18 +16,10 @@ import {
 import type { ShelfData } from "./shelf";
 
 /**
- * A working shell on the middle desk monitor.
- *
- * This exists instead of a desktop environment, and the reason is worth
- * keeping. Pointer lock means there is no cursor in the room, so anything
- * window-and-icon shaped has to become a fullscreen overlay — a second website
- * inside the website, holding a second copy of content the real pages already
- * own. A shell adds something the site does not have anywhere else: it drives
- * the public API, which is the genuinely unusual thing about this portfolio,
- * and it reads as the tool a cloud engineer would actually have open.
- *
- * The commands are thin. Most read data already in the room; `curl` does a real
- * fetch against the real endpoints, so the output is not a mock.
+ * A working shell on the middle desk monitor, not a desktop environment —
+ * pointer lock means no cursor, and a shell drives the public API, which the
+ * site shows nowhere else. Commands are thin; `curl` does a real fetch
+ * against the real endpoints, so the output is not a mock.
  */
 
 const ACCENT = "#81b288";
@@ -152,14 +144,10 @@ function useCommands(
         }
 
         /**
-         * Reads the same feed object the screens read, rather than fetching
-         * separately. Two callers polling the same endpoint on their own
-         * schedules would eventually disagree, and a shell contradicting the
-         * television in the same room is worse than having no shell.
-         *
-         * Every branch that prints cluster state also prints how much to trust
-         * it. The room's standing rule is that a green light on old data is a
-         * lie, and a bare table is exactly that kind of green light.
+         * Reads the same feed object the screens read — separate polling would
+         * let the shell contradict the television. Every branch that prints
+         * cluster state also prints how much to trust it: a green light on old
+         * data is a lie.
          */
         case "k":
         case "kubectl": {

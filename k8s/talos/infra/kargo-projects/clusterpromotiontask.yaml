@@ -1,22 +1,12 @@
-# Reusable promotion pipeline shared by every Kargo app in this monorepo.
-# Each app's Stages reference this task instead of inlining the six steps, so
-# onboarding a new app (blog, ...) is a handful of vars rather than ~25 lines of
-# duplicated promotion logic per Stage. Cluster-scoped so it is defined once and
-# referenced from every <app>-cd Project.
+# Reusable direct-push promotion shared by every Kargo app: rewrite the image
+# tag in the app's kustomization, commit + push to main, sync Argo CD, block
+# until Synced + Healthy. Cluster-scoped; each Stage supplies vars.
 #
-# Behaviour matches the portfolio pipeline: rewrite the image tag in the app's
-# kustomization, commit + push to main, trigger the Argo CD sync, then block
-# until the app is Synced + Healthy. desiredRevision is deliberately NOT pinned
-# (both stage and prod apps track shared main HEAD; a fixed revision falls behind
-# on the next commit and reports the Stage perpetually Unhealthy). Real
-# verification is each Stage's own AnalysisTemplate smoke test.
-#
-# Every step that reaches GitHub or Argo CD carries a `retry.errorThreshold`,
-# because Kargo's system-wide default is 1 and 1 means no retries at all: one
-# 5xx from an API this has no control over marks the whole Promotion failed,
-# and a failed Promotion is terminal, so the Stage sits on the old Freight
-# until somebody notices. See the note on wait-pr in clusterpromotiontask-pr.yaml
-# for what that looked like when it happened.
+# desiredRevision is deliberately NOT pinned: the apps track shared main HEAD,
+# and a fixed revision reports the Stage perpetually Unhealthy on the next
+# commit. Every step that reaches GitHub or Argo CD carries a
+# retry.errorThreshold — Kargo's default of 1 means no retries, and a failed
+# Promotion is terminal (see clusterpromotiontask-pr.yaml).
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ClusterPromotionTask
 metadata:
@@ -34,9 +24,7 @@ spec:
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         # Without this Kargo authors commits as `Kargo <no-reply@kargo.io>`,
-        # which GitHub then carries into the squash commit as a
-        # `Co-authored-by:` trailer. Promotions are this repo's own automation,
-        # so they carry the repo owner's authorship like every other commit.
+        # which GitHub carries into the squash commit as a Co-authored-by trailer.
         author:
           name: Morten Victor Nordbye
           email: morten@nordbye.it

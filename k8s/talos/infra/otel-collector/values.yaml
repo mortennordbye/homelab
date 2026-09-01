@@ -1,19 +1,13 @@
-## OpenTelemetry Collector Configuration
-## Collecting host metrics and sending to Prometheus
-
 mode: daemonset
 
-# Image configuration (required in newer chart versions)
-# Use contrib image for prometheusremotewrite exporter
+# contrib image: the prometheusremotewrite exporter is not in the core image.
 image:
   repository: otel/opentelemetry-collector-contrib
 
 presets:
-  # Host metrics preset for CPU, memory, disk, network
   hostMetrics:
     enabled: true
 
-  # Kubernetes attributes processor
   kubernetesAttributes:
     enabled: true
     extractAllPodLabels: false
@@ -21,7 +15,6 @@ presets:
 
 config:
   receivers:
-    # Override prometheus receiver scrape interval
     prometheus:
       config:
         scrape_configs:
@@ -31,18 +24,15 @@ config:
               - targets: ["${env:MY_POD_IP}:8888"]
 
   processors:
-    # Batch processor
     batch:
       send_batch_size: 1000
       timeout: 10s
 
-    # Memory limiter (using defaults from chart)
     memory_limiter:
       check_interval: 5s
       limit_percentage: 80
       spike_limit_percentage: 25
 
-    # Resource processor to add cluster info
     resource:
       attributes:
         - key: cluster.name
@@ -50,7 +40,6 @@ config:
           action: upsert
 
   exporters:
-    # Prometheus exporter - exposes metrics for scraping
     prometheus:
       endpoint: "${env:MY_POD_IP}:9090"
       namespace: otel
@@ -59,12 +48,11 @@ config:
 
   service:
     pipelines:
-      # Metrics pipeline - hostmetrics receiver added by preset
+      # hostmetrics receiver is added by the preset.
       metrics:
         receivers: [hostmetrics, otlp, prometheus]
         processors: [memory_limiter, k8sattributes, resource, batch]
         exporters: [prometheus]
-      # Keep default trace/log pipelines but with debug exporter
       traces:
         receivers: [otlp]
         processors: [memory_limiter, k8sattributes, batch]
@@ -74,7 +62,6 @@ config:
         processors: [memory_limiter, k8sattributes, batch]
         exporters: [debug]
 
-# Enable GOMEMLIMIT for better memory management
 useGOMEMLIMIT: true
 
 resources:
@@ -85,17 +72,15 @@ resources:
     cpu: 100m
     memory: 128Mi
 
-# Enable metrics port for internal monitoring
 ports:
   metrics:
     enabled: true
-  # Prometheus exporter port for scraping
   prometheus:
     enabled: true
     containerPort: 9090
     servicePort: 9090
     protocol: TCP
-  # Disable hostPorts for all receiver ports (PodSecurity compliance)
+  # hostPort 0 on every receiver port: PodSecurity compliance.
   otlp:
     enabled: true
     hostPort: 0
@@ -115,26 +100,23 @@ ports:
     enabled: true
     hostPort: 0
 
-# Service account with necessary permissions
 serviceAccount:
   create: true
 
-# Enable ServiceMonitor for Prometheus Operator
 serviceMonitor:
   enabled: true
   metricsEndpoints:
     - port: prometheus
       interval: 30s
 
-# Pod security context for host metrics
+# Root is required for the host metrics scrapers.
 podSecurityContext:
   runAsUser: 0
   runAsGroup: 0
 
-# Host network not required for pushing metrics
 hostNetwork: false
 
-# Tolerations to run on all nodes including control plane
+# Run on every node, control plane included.
 tolerations:
   - effect: NoSchedule
     operator: Exists

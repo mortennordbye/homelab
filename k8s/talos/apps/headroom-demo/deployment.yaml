@@ -6,9 +6,8 @@ metadata:
   labels:
     app: headroom-demo
 spec:
-  # Always on. This is linked from the blog and LinkedIn, so a cold start would
-  # be the first thing a visitor sees — hence no KEDA scale-to-zero here, unlike
-  # the private headroom instance.
+  # Always on, unlike the private instance: linked from the blog, so no KEDA
+  # scale-to-zero cold start for visitors.
   replicas: 1
   revisionHistoryLimit: 3
   selector:
@@ -21,30 +20,21 @@ spec:
     spec:
       automountServiceAccountToken: false
       enableServiceLinks: false
-      # The headroom image starts as root, fixes /data ownership, then drops to
-      # uid 1000 (node). Unlike the private instance (Synology NFS, where the
-      # chown doesn't stick and it falls back to root) /data here is a local
-      # emptyDir, so the chown succeeds and it genuinely runs non-root. Do NOT
-      # add runAsUser — starting the pod non-root removes the entrypoint's
-      # ability to chown at all.
+      # The image starts as root to chown /data, then drops to uid 1000. Do NOT
+      # add runAsUser — a non-root start removes the entrypoint's ability to chown.
       securityContext:
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: headroom
-          # Pinned tag, owned by kustomization.yaml (`images.newTag`), which the
-          # Kargo `demo` Stage rewrites. This inline value is only the fallback
-          # for a raw `kubectl apply` without kustomize. An image built without
-          # DEMO_MODE support would ignore the env var below and serve a writable
-          # app publicly — the demo smoke test asserts against exactly that.
+          # Tag owned by kustomization.yaml (`images.newTag`), rewritten by the
+          # Kargo `demo` Stage; this inline value is only a kubectl-apply fallback.
           image: ghcr.io/mortennordbye/headroom:sha-32a1389
           imagePullPolicy: IfNotPresent
           env:
-            # Read-only public demo: the API refuses every write and the whole
-            # bank namespace, and the client fills itself with the fictional
-            # dataset it generates in the browser. See the headroom repo's
-            # README, "Public demo mode".
+            # Read-only public demo: the API refuses every write. See the
+            # headroom repo's README, "Public demo mode".
             - name: DEMO_MODE
               value: "1"
             # Host-header allowlist (DNS-rebinding guard). The app 403s any host
@@ -56,9 +46,8 @@ spec:
             - name: http
               containerPort: 3001
           volumeMounts:
-            # SQLite still needs a writable dir to open its database, even though
-            # a demo never stores anything worth keeping. Ephemeral on purpose:
-            # every restart starts clean and there is no volume to leak.
+            # SQLite needs a writable dir; ephemeral on purpose so every restart
+            # starts clean.
             - name: data
               mountPath: /data
           resources:

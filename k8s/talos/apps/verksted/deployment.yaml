@@ -7,8 +7,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   replicas: 1
-  # Single stateful pod on a ReadWriteOnce PVC: never run two at once (the second
-  # could not mount /data), so replace rather than roll.
+  # Recreate: RWO PVC, two pods can't both mount /data.
   strategy:
     type: Recreate
   selector:
@@ -19,9 +18,7 @@ spec:
       labels:
         app: verksted-app
     spec:
-      # Not the namespace default: the token projected into this pod is what
-      # kubectl in an agent session authenticates with, so the account it names
-      # is the whole access boundary. See rbac.yaml.
+      # The projected token is what agent sessions run kubectl with; see rbac.yaml.
       serviceAccountName: verksted
       containers:
         - name: verksted
@@ -30,8 +27,7 @@ spec:
             - name: http
               containerPort: 8080
           env:
-            # Agent sessions run docker against the dind sidecar over the shared
-            # pod network (plain tcp, no TLS — pod-local only).
+            # dind sidecar over the pod-local network; plain tcp, no TLS.
             - name: DOCKER_HOST
               value: tcp://localhost:2375
             # Deep-link base for ntfy pushes back into a waiting session.
@@ -40,21 +36,13 @@ spec:
             # Persist settings on the PVC (agent env vars set via the UI).
             - name: SETTINGS_FILE
               value: /data/settings.json
-            # Deliberately not on the PVC. `vk backup` tars the whole volume —
-            # settings, agent OAuth state, sessions, memory and every repo — and
-            # an export kept on the volume it exists to replace only covers a
-            # bad restore, not losing the share. This is the NAS share, which
-            # gets backed up. The settings page flags it if it ever points back
-            # at /data.
+            # Deliberately off the PVC it backs up; /mnt/backups is the NAS
+            # share, which has its own backups.
             - name: VK_BACKUP_DIR
               value: /mnt/backups
-          # The backend serves the built SPA at / — a plain 200 once it is up.
-          # Agent auth (claude/codex/agy tokens) is configured interactively in
-          # the pod terminal afterwards and persists under HOME=/data/home.
-          # Stays on / — serving the SPA is what "ready" means here. The timeout
-          # matters as much as the liveness one though: a failed readiness probe
-          # pulls the pod out of the Service, which drops every open terminal
-          # websocket. The default 1s was well inside normal NFS jitter.
+          # Ready means serving the SPA at /. timeoutSeconds above the 1s
+          # default: a failed readiness check pulls the pod from the Service,
+          # which drops every open terminal websocket.
           readinessProbe:
             httpGet:
               path: /
@@ -63,14 +51,9 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
-          # Deliberately hard to trip: a restart kills the tmux server and with
-          # it every running agent session, so this must fire only for a backend
-          # that is genuinely wedged — never for one that is merely slow. Hence
-          # /api/health (a constant, no disk behind it, unlike / which reads
-          # index.html through the same libuv threadpool as the NFS volume), a
-          # timeout above the default 1s, and 3 minutes of failures before the
-          # kill. CPU throttling and NFS stalls both used to fit inside the old
-          # ~40s window.
+          # Deliberately hard to trip: a restart kills the tmux server and every
+          # agent session. /api/health is a constant with no disk behind it, and
+          # the long window keeps NFS stalls and CPU throttling from firing it.
           livenessProbe:
             httpGet:
               path: /api/health
@@ -79,23 +62,8 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 6
-          # Sized to what a working pod actually holds: agent CLIs, headless
-          # chromium per session, and whatever dev servers the agents start add
-          # up to several GiB. The old 512Mi request left the pod many times
-          # over its request and first in line for eviction; the old 2-core
-          # limit had it CFS-throttled ~7% of all scheduling periods, which is
-          # what stalled the health check.
-          #
-          # 8Gi was still not enough for the reelsmith nightly. Chatterbox holds
-          # about 4.4Gi while it speaks, on top of a session baseline that
-          # climbs from ~3Gi to ~4.4Gi across a batch, so video two peaked at
-          # 7.55Gi and video three went over: OOMKilled 2026-08-14 02:33, which
-          # took the batch, the session and its log with it. Because the
-          # baseline only grows through a run, the later a video sits in the
-          # batch the likelier it is to be the one that dies, and the 7d peak
-          # had touched 7.9Gi twice before it finally did. 12Gi leaves about
-          # 3Gi over the worst observed peak; the request goes to 6Gi so the
-          # scheduler is told something closer to the truth than 4Gi.
+          # Sized for agent sessions (CLIs, headless chromium, dev servers);
+          # the 12Gi limit has to clear the reelsmith nightly render peak.
           resources:
             requests:
               cpu: "1"
@@ -106,19 +74,14 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
-            # The half of reelsmith that is not in git: the editorial profile,
-            # the voice reference recording, and the cooldown and star history
-            # stores. Kept off the PVC so the workbench can be rebuilt without
-            # taking the account's identity with it, and so the NAS backs it up
-            # — the voice recording exists nowhere else and is not
-            # reconstructible. subPath, like audiobookshelf, so the container
-            # sees only this folder rather than the whole media share.
+            # The half of reelsmith that is not in git (editorial profile, voice
+            # reference, history stores) — not reconstructible, so it lives on
+            # the NAS, not the PVC. subPath scopes to this folder only.
             - name: shared-data
               mountPath: /mnt/reelsmith
               subPath: media/reelsmith
-            # Where the nightly volume export lands, off the PVC on purpose.
-            # subPath again, so the container sees only this folder rather than
-            # the whole share.
+            # Nightly volume export target, off the PVC on purpose; subPath
+            # scopes to this folder only.
             - name: shared-data
               mountPath: /mnt/backups
               subPath: backups/verksted
@@ -126,11 +89,9 @@ spec:
         # shares the pod netns so the app reaches it at localhost:2375.
         - name: dind
           image: docker:29-dind
-          # No explicit --host: with TLS off the dind entrypoint already binds a
-          # single tcp://0.0.0.0:2375 listener. Adding our own -H on 2375 made two
-          # listeners on the same port and dind crash-looped ("port is already
-          # allocated"). 0.0.0.0 is safe here — the CiliumNetworkPolicy blocks
-          # 2375 from other pods, and the app reaches it over loopback.
+          # No explicit --host: with TLS off dind already binds tcp://0.0.0.0:2375,
+          # and adding -H on 2375 makes two listeners and a crash-loop. The
+          # CiliumNetworkPolicy blocks 2375 from other pods.
           env:
             # Plain tcp on 2375, pod-local only — no TLS cert dance.
             - name: DOCKER_TLS_CERTDIR
@@ -145,15 +106,12 @@ spec:
               cpu: "2"
               memory: 4Gi
           volumeMounts:
-            # Ephemeral image/layer store; rebuilt after a restart. maintenance.ts
-            # prunes it daily. Kept off the NFS PVC (overlayfs needs local disk).
+            # Kept off NFS: overlayfs needs local disk. maintenance.ts prunes it daily.
             - name: dind-storage
               mountPath: /var/lib/docker
-            # The same PVC the app has, at the same path. A bind mount is
-            # resolved by the daemon in its own filesystem, so without this a
-            # session running `docker compose up` in /data/repos/<project> gets
-            # an empty directory mounted over its source — and docker creates
-            # the missing path rather than failing, so nothing says why.
+            # Same PVC at the same path: bind mounts resolve in the daemon's own
+            # filesystem, so without this `docker compose up` under /data mounts
+            # an empty directory over its source.
             - name: data
               mountPath: /data
       volumes:

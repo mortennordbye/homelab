@@ -32,16 +32,10 @@ const SWITCHES: { key: keyof ToggleFlags; label: string }[] = [
 const switchX = (i: number) => -0.105 + i * 0.07;
 
 /**
- * The printed legend on the lid, and the canvas it is authored on.
- *
- * `LEGEND_Y` is above the lid's top face, not level with it. The lid box spans
- * y 0.107 to 0.123, and the first version of this panel sat at 0.1185 — inside
- * the lid, occluded by the very thing it was printed on, and therefore
- * completely invisible.
- *
- * It sits *behind* the switch row rather than in front, so each label reads as
- * belonging to the switch directly ahead of it, the way a control panel legend
- * does. In front, it would have collided with the print button.
+ * The printed legend on the lid. `LEGEND_Y` must sit above the lid's top face
+ * (the lid spans y 0.107–0.123) or the print is occluded by its own lid. It
+ * sits behind the switch row so each label reads as its switch's, and clear
+ * of the print button.
  */
 const LEGEND_W = 0.4;
 const LEGEND_PX_W = 660;

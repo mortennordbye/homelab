@@ -38,12 +38,8 @@ export default async function WorkDetailPage({
   if (!w) notFound();
 
   return (
-    // Case-study pages used to scroll forever — every Section had clamp(5rem,
-    // 9vw, 9rem) padding top AND bottom, with a 56-64px heading-to-content
-    // gap on top, and the hero left the entire right column empty. The
-    // override below halves vertical padding for this route only, and the
-    // hero is now a two-column grid so meta + stack share the fold with the
-    // title rather than pushing the body further down.
+    // Halved section padding for this route only; the two-column hero keeps
+    // meta + stack on the fold instead of pushing the body down.
     <main
       className="pt-20 [--space-section-y:clamp(2.5rem,5vw,4.5rem)]"
     >

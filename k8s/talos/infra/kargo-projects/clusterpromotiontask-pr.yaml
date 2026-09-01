@@ -1,26 +1,15 @@
-# Every step here that reaches GitHub or Argo CD carries a `retry.errorThreshold`
-# because Kargo's system-wide default is 1, which means "no retries": one 5xx
-# from an API this has no control over marks the whole Promotion failed, and a
-# failed Promotion is terminal, so the Stage sits at the old Freight until
-# somebody notices and promotes by hand. That is not theoretical; see the note
-# on wait-pr below.
+# PR-based variant of promote-to-argocd, used by every prod Stage: pushes the
+# bump to a generated branch, opens a homelab PR, and blocks until it merges
+# before syncing Argo CD.
 #
-# PR-based variant of promote-to-argocd. Same image-bump logic, but instead of
-# pushing the commit straight to main it pushes to a generated branch, opens a
-# homelab PR, and blocks until that PR is merged in GitHub before syncing Argo
-# CD. This keeps promotion "review-and-merge in GitHub" while Kargo still drives
-# image discovery, the pipeline view, and post-deploy verification.
+# Every step that reaches GitHub or Argo CD carries a retry.errorThreshold:
+# Kargo's default of 1 means no retries, and a failed Promotion is terminal —
+# the Stage sits on the old Freight until someone promotes by hand.
 #
-# Every prod Stage promotes through this now; the pilot on portfolio ended. The
-# direct-push promote-to-argocd task (clusterpromotiontask.yaml) is what the
-# pre-prod Stages use, where a PR per image bump would be ceremony around a
-# deploy nobody reviews.
-#
-# PREREQUISITE: the git credential's GitHub App (mortennordbye-homelab-deployer)
-# needs Pull requests: read/write in addition to Contents: read/write. git-open-pr
-# fails without it. desiredRevision is deliberately NOT pinned on argocd-update
-# for the same reason as promote-to-argocd: prod tracks shared main HEAD, so a
-# fixed revision would report the Stage perpetually Unhealthy on the next commit.
+# The GitHub App needs Pull requests: read/write in addition to Contents:
+# read/write, or git-open-pr fails. desiredRevision is deliberately NOT pinned
+# on argocd-update: prod tracks shared main HEAD, and a fixed revision reports
+# the Stage perpetually Unhealthy on the next commit.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ClusterPromotionTask
 metadata:
@@ -38,9 +27,7 @@ spec:
       config:
         repoURL: https://github.com/mortennordbye/homelab.git
         # Without this Kargo authors commits as `Kargo <no-reply@kargo.io>`,
-        # which GitHub then carries into the squash commit as a
-        # `Co-authored-by:` trailer. Promotions are this repo's own automation,
-        # so they carry the repo owner's authorship like every other commit.
+        # which GitHub carries into the squash commit as a Co-authored-by trailer.
         author:
           name: Morten Victor Nordbye
           email: morten@nordbye.it
@@ -58,21 +45,12 @@ spec:
       config:
         path: ./repo
         message: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
-    # No-op promotions (image tag unchanged, e.g. Kargo re-promoting a fresh
-    # Freight for the already-live version) are gated with the `status('<alias>')`
-    # function, the Kargo-canonical way to branch on a skipped step. git-commit
-    # auto-skips when there is nothing to commit, so status('commit') == 'Skipped'
-    # is the no-op signal. Guarding git-push on it makes push actually skip on a
-    # no-op (so no orphan kargo/promotion branch is created), and open-pr/wait-pr
-    # skip in turn. argocd-update/wait stay unguarded so the promotion still ends
-    # green by confirming prod Healthy.
-    #
-    # This replaced home-grown `task.outputs['commit'].commit` guards, which
-    # evaluated unreliably here: with identical guards git-push ran and wait-pr
-    # errored while open-pr skipped, leaking a branch per no-op retry. status() is
-    # purpose-built for skip detection and resolves with the plain step alias
-    # (outputs still need task.outputs[...] scoping inside a task; status() does not).
-    # Output references are also kept null-safe as belt-and-suspenders.
+    # No-op promotions: git-commit auto-skips when there is nothing to commit,
+    # so status('commit') == 'Skipped' gates push/open-pr/wait-pr (no orphan
+    # promotion branch). argocd-update/wait stay unguarded so the promotion
+    # still ends green by confirming prod Healthy. Use status(), not
+    # task.outputs guards — those evaluate unreliably and leaked a branch per
+    # no-op retry; status() also resolves with the plain step alias.
     - uses: git-push
       as: push
       retry:
@@ -92,10 +70,8 @@ spec:
         sourceBranch: ${{ task.outputs?.['push']?.branch ?? '' }}
         targetBranch: main
         title: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
-        # `kargo` marks the PR as machine-opened, and the other two say which
-        # app and which environment without having to parse the title. The
-        # kargo-automerge workflow reads `app/<name>` to decide whether this
-        # app is opted into unattended merging.
+        # The kargo-automerge workflow reads `app/<name>` to decide whether
+        # this app is opted into unattended merging.
         labels:
           - kargo
           - app/${{ vars.appName }}
@@ -103,14 +79,9 @@ spec:
     # Blocks the promotion until the PR is merged in GitHub.
     - uses: git-wait-for-pr
       as: wait-pr
-      # This one polls GitHub for as long as the PR is open, so over a review
-      # that takes a day it makes hundreds of API calls and only needs to be
-      # unlucky once. Left at the system-wide default of 1 it was: a 504 from
-      # api.github.com killed blog's promotion of 0.0.103 on 2026-08-15 and
-      # portfolio's of 0.0.103 on 2026-08-17, the second one *after* its PR had
-      # already merged, so the manifest was live and the Stage read Unknown for
-      # a day. Consecutive is the word that matters: five failures in a row is
-      # GitHub being down, which is worth failing on. One is weather.
+      # Polls GitHub for as long as the PR is open — hundreds of calls over a
+      # day-long review — so one stray 5xx must not kill the promotion. Five
+      # consecutive failures is GitHub being down; one is weather.
       retry:
         errorThreshold: 5
       if: ${{ status('open-pr') != 'Skipped' }}

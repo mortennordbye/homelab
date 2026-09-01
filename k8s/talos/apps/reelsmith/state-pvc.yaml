@@ -1,12 +1,7 @@
-# Holds the gateway's SQLite file and the cover images it serves to Meta.
-#
-# Small and it stays small: the database is conversations and post rows, and a
-# cover is a ~1 MB PNG that Meta fetches once at container creation.
-#
-# The database runs in WAL mode so the comment poller writing does not block the
-# webhook handler reading. WAL on NFS is the one combination worth remembering
-# if locking ever misbehaves; the fix would be a journal-mode change in
-# gateway/db.py, not a storage migration.
+# The gateway's SQLite file and the cover images it serves to Meta.
+# SQLite runs in WAL mode: WAL on NFS is the thing to suspect if locking ever
+# misbehaves, and the fix is a journal-mode change in gateway/db.py, not a
+# storage migration.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

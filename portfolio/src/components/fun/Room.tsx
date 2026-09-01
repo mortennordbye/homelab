@@ -50,18 +50,10 @@ export const DESK_D = 0.72;
 export const CHAIR_Z = -1.32;
 
 /**
- * Where the camera goes when the visitor takes the chair.
- *
- * Pulled in from CHAIR_Z rather than sat on it: the chair's origin is its
- * centre, and a camera there is behind the backrest looking through it. The
- * offset puts the eye where a head actually is once you are sitting in it,
- * which lands ~0.7m off the panels — the same distance the terminal zoom uses,
- * arrived at independently and a decent sign both are right.
- *
- * The height is a seated eye, not a standing one docked downward. At 1.25 the
- * landscape panel's centre at 1.09 sits just below the horizon and the portrait
- * one at 1.19 is level, which is the geometry of a desk that has been set up
- * properly rather than one being loomed over.
+ * Where the camera goes when the visitor takes the chair. Pulled in from
+ * CHAIR_Z — the chair's origin is its centre, and a camera there looks
+ * through the backrest. Height 1.25 is a seated eye: the landscape panel
+ * (1.09) sits just below the horizon, the portrait one (1.19) level.
  */
 export const SEAT = { z: CHAIR_Z - 0.18, eye: 1.25 };
 
@@ -76,16 +68,10 @@ export type Placement = {
 };
 
 /*
- * The two desk monitors, positioned as one setup rather than two screens that
- * happen to share a desk. Inner bezels almost touch and the pair is centred on
- * the chair; an earlier pass left 38cm of bare desk between them, which nobody
- * has ever worked at.
- *
- * Both are toed in toward the seat, so their outer edges come forward and the
- * inner edges sit back — the shallow arc two monitors actually get angled into.
- * The x positions account for it: a screen rotated by θ only occupies
- * width·cos(θ) of the desk, so spacing them on raw width would have reopened a
- * visible gap between the bezels.
+ * The two desk monitors as one setup: inner bezels nearly touching, pair
+ * centred on the chair, both toed in toward the seat. The x positions account
+ * for the toe-in — a screen rotated by θ occupies width·cos(θ) of desk, so
+ * spacing on raw width reopens a gap between the bezels.
  */
 const GAP = 0.025;
 const LANDSCAPE_W = 0.62;
@@ -109,12 +95,9 @@ export const DESK_SCREEN: Placement = {
 };
 
 /**
- * The portrait monitor, which is the shell.
- *
- * Sits lower than a bottom-aligned pairing would put it, and that is deliberate:
- * at 0.72m tall its top would otherwise climb into the social wall hanging at
- * 1.78 and occlude it. A screen that hides another interactive object is a
- * failure this room has already had three times.
+ * The portrait monitor (the shell). Sits low so its 0.72m top does not climb
+ * into the social wall at 1.78 — screens must never occlude another
+ * interactive object.
  */
 export const DESK_TERMINAL: Placement = {
   position: [PAIR_LEFT + L_SPAN + GAP + P_SPAN / 2, 1.19, DESK_Z + SCREEN_DZ],
@@ -153,16 +136,10 @@ function Stand({ position }: { position: [number, number, number] }) {
 }
 
 /**
- * The corner lantern: a paper-shaded column in a slim oak frame. With the
- * pendant gone this is the room's main light, and the only thing in here big
- * enough to throw warm light onto a wall and a ceiling from below.
- *
- * Built as a frame with panels set inside it rather than a glowing box, on the
- * same reasoning as the door: the corner posts and rails are what make it read
- * as a fitting. An emissive cuboid at this size reads as a bug.
- *
- * The shade sits high on the frame so the light source is near eye height. A
- * lantern glowing down by your ankles lights the floor and nothing else.
+ * The corner lantern — the room's main light. A frame with panels set inside
+ * it, not a glowing box: an emissive cuboid at this size reads as a bug. The
+ * shade sits high so the source is near eye height; a lantern at ankle height
+ * lights the floor and nothing else.
  */
 function Lantern({
   position,
@@ -331,18 +308,10 @@ function Plant({ position }: { position: [number, number, number] }) {
 }
 
 /**
- * A panelled interior door at joinery dimensions: 825 x 2040 x 40mm leaf in a
- * lining, with an architrave, four recessed panels, two hinges and a lever on
- * a rose.
- *
- * Hand-built rather than scanned because Poly Haven's only CC0 doors are a
- * castle door and a roller shutter. That is survivable here for the same
- * reason the network switches are: a door is genuinely an assembly of flat
- * rectangles, so the shapes are not an approximation of something organic.
- * What sells it is depth. The flat plane this replaced had none, so it read as
- * a white rectangle painted on the wall. Every part here is proud of or
- * recessed into its neighbour by a few millimetres, which gives ambient
- * occlusion the creases it needs to draw the outline of a real door.
+ * A panelled interior door at joinery dimensions (825 x 2040 x 40mm leaf).
+ * Hand-built — Poly Haven's only CC0 doors are a castle door and a roller
+ * shutter. Depth is what sells it: every part sits proud of or recessed into
+ * its neighbour by a few millimetres, giving AO the creases to draw.
  */
 function Door({
   position,

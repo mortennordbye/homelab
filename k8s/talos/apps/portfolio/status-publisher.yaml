@@ -1,25 +1,15 @@
-# Publishes live cluster facts to the portfolio-status ConfigMap every five
-# minutes. The portfolio deployment mounts that ConfigMap and the /api/v1/infra
-# route serves it, which the /infrastructure page fetches client-side. A
-# scheduled workflow also reads that public endpoint to draw the README's live
-# status card, so the payload carries cluster-wide facts, not just portfolio's.
-#
-# Object counts come from the API server, which is authoritative. Rates,
-# utilisation and anything over a time window come from Prometheus; when that
-# call fails the field lands as null and consumers drop it rather than the whole
-# run failing.
-#
-# The ConfigMap itself is created by the CronJob, not by Git — ArgoCD ignores
-# it because it carries no tracking label, so automated prune never touches it.
+# Publishes cluster facts to the portfolio-status ConfigMap every five minutes;
+# the site's /api/v1/infra route and the README status card read it, so the
+# payload is cluster-wide and public. Prometheus-sourced fields fall back to
+# null instead of failing the run. The ConfigMap is created by the CronJob, not
+# Git — no tracking label, so ArgoCD prune never touches it.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: status-publisher
   namespace: portfolio
 ---
-# Cluster-scoped reads. Everything here is read-only and none of it is a Secret;
-# the payload it produces is served publicly, so the job collects counts and
-# status fields only.
+# Read-only, no Secrets: the payload is served publicly.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -76,10 +66,7 @@ rules:
     resourceNames: ["portfolio-status"]
     verbs: ["get", "patch", "update"]
 ---
-# The same write, into the stage namespace. Without it the stage deployment has
-# no feed to mount and its copy of the site can only ever report "stale", so the
-# one thing the infrastructure section exists to show cannot be checked on stage
-# before it reaches prod.
+# The same write into the stage namespace, so stage mounts a live feed too.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -181,9 +168,7 @@ spec:
                   K8S=$(jq -r '.items[0].status.nodeInfo.kubeletVersion' /tmp/nodes.json)
                   TALOS=$(jq -r '.items[0].status.nodeInfo.osImage | capture("\\((?<v>v[0-9][0-9.]*)\\)").v // empty' /tmp/nodes.json)
 
-                  # Per-node state, so a consumer can say which node is down
-                  # rather than only how many are. Additive: ready and total
-                  # above are untouched and stay the contract for the tiles.
+                  # Per-node state, so a consumer can say which node is down.
                   NODE_LIST=$(jq -c '[.items[] | {
                     name: .metadata.name,
                     ready: (any(.status.conditions[]; .type=="Ready" and .status=="True")),
@@ -193,8 +178,7 @@ spec:
                   }] | sort_by(.name)' /tmp/nodes.json)
 
                   # Every Application, not just portfolio's: the card shows the
-                  # cluster-wide tally and portfolio's own status comes out of
-                  # the same read.
+                  # cluster-wide tally.
                   kubectl get applications -n argocd -o json > /tmp/apps.json
                   APP_TOTAL=$(jq '.items | length' /tmp/apps.json)
                   APP_SYNCED=$(jq '[.items[] | select(.status.sync.status=="Synced")] | length' /tmp/apps.json)
@@ -212,9 +196,8 @@ spec:
                   BUILD=$(jq -r '.spec.template.spec.containers[0].image | split(":") | last' /tmp/deploy.json)
                   DEPLOYED_AT=$(jq -r '[.status.conditions[] | select(.type=="Progressing")][0].lastUpdateTime // empty' /tmp/deploy.json)
 
-                  # Sleepers are the deployments KEDA is allowed to take to zero.
-                  # Deriving them from the ScaledObjects keeps retired apps that
-                  # are merely parked at zero (workout) out of the count.
+                  # Sleepers are the deployments KEDA may take to zero; deriving
+                  # them from ScaledObjects keeps parked apps out of the count.
                   kubectl get scaledobjects -A -o json > /tmp/so.json
                   kubectl get deployments -A -o json > /tmp/deploys.json
                   jq -n --slurpfile so /tmp/so.json --slurpfile dep /tmp/deploys.json '
@@ -387,11 +370,9 @@ spec:
                     --from-file=status.json=/tmp/status.json \
                     --dry-run=client -o yaml | kubectl apply -f -
 
-                  # Stage gets the same payload so its copy of the site shows the
-                  # live feed instead of reporting "stale" for ever. A ConfigMap
-                  # cannot be mounted across namespaces, so this is a second
-                  # write rather than a reference. Tolerated on failure: stage
-                  # must never fail the run that prod depends on.
+                  # ConfigMaps can't be mounted across namespaces, so stage gets
+                  # a second write. Tolerated on failure: stage must never fail
+                  # the run that prod depends on.
                   kubectl create configmap portfolio-status -n stage-portfolio \
                     --from-file=status.json=/tmp/status.json \
                     --dry-run=client -o yaml | kubectl apply -f - || true

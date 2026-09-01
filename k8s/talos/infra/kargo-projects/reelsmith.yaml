@@ -9,10 +9,9 @@
 # and its build workflow there is path-filtered to gateway/ so a pipeline-only
 # commit never produces Freight for a byte-identical image.
 
-# --- Project namespace ------------------------------------------------------
 # Named `reelsmith-cd` (not `reelsmith`) to avoid colliding with the app
-# namespace. The label lets the Project adopt this pre-created namespace instead
-# of racing to create it, keeping Argo CD sync ordering clean.
+# namespace. The label lets the Project adopt this pre-created namespace
+# instead of racing to create it.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -108,20 +107,10 @@ spec:
         # selection.
         imageSelectionStrategy: SemVer
         strictSemvers: true
-        # Ten rather than twenty, and the number is measured rather than picked.
-        #
-        # 0.0.1 through 0.0.12 point at manifests that no longer resolve. The
-        # build published a provenance attestation as an untagged child and the
-        # repo's own prune job deleted it. Discovery walks the newest N tags and
-        # fails the entire Warehouse on the first one it cannot read, so at
-        # twenty it reached 0.0.12 and stopped promoting anything at all. Six
-        # days and three merged PRs went nowhere while every build reported
-        # success.
-        #
-        # 0.0.13 upwards are intact, which is exactly ten tags. The window only
-        # ever slides further from the broken ones, so this does not need
-        # revisiting, and reelsmith now builds with provenance off so no new tag
-        # gains a child it can lose.
+        # Ten, not twenty: tags 0.0.1-0.0.12 point at pruned provenance
+        # manifests, and discovery fails the entire Warehouse on the first tag
+        # it cannot read. The window only slides away from the broken ones, so
+        # this needs no revisiting.
         discoveryLimit: 10
 ---
 # prod verification: a one-shot Job that curls the gateway and fails on any

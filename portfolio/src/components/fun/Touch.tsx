@@ -7,18 +7,10 @@ import type { MoveInput } from "./FirstPerson";
 import { useActivateAt } from "./interaction";
 
 /**
- * Touch controls, for the phones pointer lock does not exist on.
- *
- * The room was desktop-only until now, and not in a graceful way: without
- * pointer lock there is no mouse-look, and without a keyboard there is no WASD,
- * so a phone visitor got a photograph of a room they could not move in. That is
- * worse than not shipping the room to phones at all, because it looks broken
- * rather than absent.
- *
- * Two pieces, deliberately split. `TouchLook` lives inside the Canvas because it
- * needs the camera and the interaction registry; the stick is plain DOM outside
- * it, because a joystick is a DOM control and drawing one in WebGL to keep them
- * together would be silly. They meet at a ref holding two numbers.
+ * Touch controls, for the phones pointer lock does not exist on. Two pieces:
+ * `TouchLook` lives inside the Canvas (needs the camera and the interaction
+ * registry); the stick is plain DOM outside it. They meet at a ref holding
+ * two numbers.
  */
 
 /** Radians of rotation per pixel dragged. Tuned so a comfortable thumb sweep

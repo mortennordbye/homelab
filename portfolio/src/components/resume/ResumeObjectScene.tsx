@@ -9,19 +9,10 @@ import { makeOak } from "@/components/materials/oak";
 import { makeSheetTexture, type SheetSpec } from "./sheet-art";
 
 /**
- * The resume as an object: an A4 sheet on the desk under a brass clip, with a
- * pen lying across the corner.
- *
- * Composed the way the hero composes the globe, because that is what
- * branding/DECISIONS.md §4 settled on — one subject, closely framed, the rig
- * from §6 taken verbatim, everything else falling into the dark. The desk is
- * the hero's own oak, dimmed: at this camera distance it fills the frame, and
- * undimmed it takes the light the sheet is supposed to have.
- *
- * The object is not the way in to the content. §4 is explicit that a visitor
- * should never have to interact to see something, and the whole resume is
- * already open on the sheet below this. Clicking here is how you take the PDF
- * away, which is interaction as depth rather than as a toll gate.
+ * The resume as an object: an A4 sheet under a brass clip. Composed like the
+ * hero globe (DECISIONS.md §4, rig from §6); the desk is the hero's oak,
+ * dimmed so it does not take the sheet's light. Clicking only takes the PDF
+ * away — §4: a visitor never has to interact to see something.
  */
 
 const CAM_Z = 4.15;

@@ -14,15 +14,9 @@
 # logeverylift.com. The DDNS client rewrites content, so that attribute is
 # ignored.
 #
-# Proxied, so the record answers with Cloudflare addresses and the residential
-# IP never appears in public DNS. The CNAME chain survives it: Cloudflare
-# proxies a request when any hostname on the chain is proxied, and resolves the
-# chain internally rather than through the flattened answer. Cross-zone chains
-# are only banned across accounts (error 1014), and both zones are on this one.
-#
-# The UniFi gateway's Cloudflare DDNS is inadyn, which PATCHes {type,name,
-# content} and only sends proxied when its config sets it. The UniFi dialog has
-# no proxy field, so the flag survives every address change.
+# Proxied, so the residential IP never appears in public DNS. Cross-zone CNAME
+# chains onto it are fine — both zones are on the same account. The UniFi DDNS
+# client (inadyn) never sends the proxied flag, so it survives address updates.
 resource "cloudflare_dns_record" "ddns" {
   zone_id = data.cloudflare_zone.this.zone_id
   name    = "ddns.${var.zone_name}"
@@ -67,18 +61,13 @@ resource "cloudflare_dns_record" "www" {
 
 # --- Apps -----------------------------------------------------------------
 
-# gate serves reelsmith (behind Authentik), headroom serves headroom-demo. Both
-# are proxied for edge TLS, DDoS cover and asset caching, but deliberately left
-# out of var.proxied_hostnames so the cache rule never touches their HTML:
-# caching an authenticated or stateful response at a shared edge can serve one
-# visitor's page to another. Static assets are still edge-cached by extension,
-# with no rule involved.
+# gate serves reelsmith (behind Authentik), headroom serves headroom-demo.
+# Proxied, but deliberately left out of var.proxied_hostnames so the cache rule
+# never touches their HTML: caching an authenticated or stateful response at a
+# shared edge can serve one visitor's page to another.
 #
-# Neither app has an IP-keyed rate limit, unlike blog and portfolio, so proxying
-# them needs no ipStrategy change in the cluster.
-#
-# The resource name stays "direct" so this is an in-place update; renaming would
-# destroy and recreate live DNS records.
+# The resource name stays "direct"; renaming would destroy and recreate live
+# DNS records.
 resource "cloudflare_dns_record" "direct" {
   for_each = toset(["gate", "headroom"])
 
@@ -145,15 +134,9 @@ resource "cloudflare_dns_record" "google_verification_2" {
   ttl     = 3600
 }
 
-# TikTok verifies the domain a Content Posting API app publishes from, and
-# gate.nordbye.it is that host: the reelsmith gateway hands TikTok a
-# PULL_FROM_URL pointing at its own /media/{name}, and TikTok refuses the fetch
-# with url_ownership_unverified until this record exists. The same verification
-# covers the app's privacy policy, terms and website URLs, which the gateway
-# also serves, because a verified domain carries every URL beneath it.
-#
-# Deleting this un-verifies the property, which stops TikTok publishing and
-# invalidates the three URLs on the app record at the same time.
+# TikTok domain verification for the reelsmith gateway's Content Posting API
+# app: media pulls and the app's policy/terms/website URLs all depend on it.
+# Deleting this stops TikTok publishing.
 resource "cloudflare_dns_record" "tiktok_verification_gate" {
   zone_id = data.cloudflare_zone.this.zone_id
   name    = "gate.${var.zone_name}"

@@ -61,7 +61,6 @@ spec:
           volumeMounts:
             # Only writable path nginx-unprivileged needs: it puts client_body,
             # proxy and fastcgi temp dirs under /tmp rather than /var/cache/nginx.
-            # Verified by running the image read-only with just this one mount.
             - name: tmp
               mountPath: /tmp
       volumes:

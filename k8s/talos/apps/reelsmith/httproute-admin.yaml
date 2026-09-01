@@ -1,17 +1,7 @@
-# The control panel, on the private gateway only.
-#
-# The panel publishes to a live Instagram account, rewrites captions and holds
-# the outbound-DM kill switch. It authenticates itself with GATEWAY_ADMIN_TOKEN
-# and will not start without a password, but there is no reason for it to be
-# reachable from the internet at all: nobody outside the LAN needs to open it.
-#
-# So it moves here, and `httproute.yaml` stops serving /admin publicly. Two
-# independent things now have to fail before the panel is exposed, rather than
-# one.
-#
-# The `*.local.bigd.no` listener already carries a wildcard certificate and
-# external-dns manages the zone, so this needs no cert and no DNS record of its
-# own.
+# The control panel, on the private gateway only — httproute.yaml deliberately
+# does not serve /admin publicly. The panel also checks GATEWAY_ADMIN_TOKEN, so
+# authentik here is a second lock, not the only one. The *.local.bigd.no
+# listener already carries a wildcard cert and external-dns manages the zone.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -28,26 +18,16 @@ spec:
   hostnames:
     - "reelsmith.local.bigd.no"
   rules:
-    # authentik's callback, and the only rule here without the auth filter.
-    #
-    # `forward_single` keeps the whole sign-in on the app's own hostname, so
-    # after authenticating the browser is sent back to
-    # reelsmith.local.bigd.no/outpost.goauthentik.io/callback. That has to
-    # reach authentik rather than the gateway, and it has to be reachable
-    # while the user is still unauthenticated. Putting the filter on this rule
-    # deadlocks the sign-in against the sign-in it is trying to complete, and
-    # pointing it at the gateway returns a 404 from the panel instead.
-    #
-    # A longer prefix wins over `/` by Gateway API's matching precedence, so
-    # this takes effect regardless of rule order.
+    # authentik's callback. Must stay reachable unauthenticated and must reach
+    # authentik, not the app — the auth filter here would deadlock the sign-in
+    # against itself. Longer prefix beats "/" regardless of rule order.
     - matches:
         - path:
             type: PathPrefix
             value: /outpost.goauthentik.io/
       backendRefs:
-        # Cross-namespace, so a ReferenceGrant in `identity` permits it. Named
-        # rather than the embedded outpost's own Service because the embedded
-        # outpost is served by authentik-server itself.
+        # Cross-namespace: permitted by a ReferenceGrant in identity. The
+        # embedded outpost is served by authentik-server itself.
         - group: ""
           kind: Service
           name: authentik-server
@@ -55,24 +35,9 @@ spec:
           port: 80
           weight: 1
 
-    # The bare hostname goes to the panel. The app mounts nothing on `/`, so
-    # opening reelsmith.local.bigd.no answered a JSON 404 and the panel had to
-    # be reached by typing the path.
-    #
-    # Here rather than in the app, because this file is the only place that is
-    # private by construction: it is parented to the private gateway and bound
-    # to this hostname, so the redirect cannot appear on gate.nordbye.it no
-    # matter what the app does later. A `/` route in FastAPI would have to test
-    # the Host header to stay local, which is a second thing to keep right.
-    #
-    # Exact beats PathPrefix in Gateway API's matching precedence, so this wins
-    # over the catch-all below regardless of rule order, and only for the bare
-    # path. No auth filter, because a redirect reaches no backend and discloses
-    # nothing the hostname did not already give away; /admin/ behind it is
-    # still authentik plus GATEWAY_ADMIN_TOKEN.
-    #
-    # 302 rather than 301: browsers cache a permanent redirect hard enough that
-    # undoing it means clearing state on every machine that saw it.
+    # Bare hostname redirects to the panel (the app mounts nothing on /).
+    # Exact beats PathPrefix, so this wins over the catch-all below. 302, not
+    # 301: browsers cache permanent redirects too hard to undo.
     - matches:
         - path:
             type: Exact
@@ -85,17 +50,13 @@ spec:
               replaceFullPath: /admin/
             statusCode: 302
 
-    # The whole app, not just /admin. Reaching /api or /media over the private
-    # name is harmless and occasionally useful for debugging, and restricting
-    # it here would only mean two lists to keep in step.
+    # The whole app behind authentik; the panel still checks
+    # GATEWAY_ADMIN_TOKEN behind it.
     - matches:
         - path:
             type: PathPrefix
             value: /
       filters:
-        # authentik in front. The panel still checks GATEWAY_ADMIN_TOKEN behind
-        # this, so both have to be satisfied: forward-auth adds per-user
-        # identity, it does not replace the password.
         - type: ExtensionRef
           extensionRef:
             group: traefik.io

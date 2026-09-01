@@ -1,8 +1,5 @@
-# The posting schedule, kept out of the deployment so changing when the account
-# posts is a one-line edit that Reloader turns into a restart.
-#
-# The gateway holds a queue of rendered Reels pushed from the Mac and publishes
-# them on these slots, so the laptop is only needed while rendering.
+# Posting schedule and feature flags, kept out of the deployment so a change
+# here is a one-line edit that Reloader turns into a restart.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -11,163 +8,45 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 data:
-  # Publishing to the feed is off unless this is on. The gateway answered
-  # comments for weeks without it, and gaining the ability to post by being
-  # upgraded would have been a surprise rather than a decision.
+  # Master switch: with this off the gateway answers comments but never posts.
   GATEWAY_SCHEDULER_ENABLED: "true"
 
-  # One post a day, at one time, on all three destinations. One slot per line;
-  # only the time is required.
-  #
-  # It was three a day on Instagram until 2026-08-27, kept deliberately after
-  # the same question was asked on 2026-08-17. What changed is the evidence.
-  # At n=77 settled posts, paired within the same day so day level variance is
-  # removed, 06:00 UTC beats 17:00 on 15 of 20 days and 10:00 beats it on 18 of
-  # 24, which is p=0.041 and p=0.023. The evening slot carried 25 posts, one
-  # breakout and no post over a thousand views. 06:00 and 10:00 are
-  # indistinguishable from each other, 13 of 19 on skip and 9 of 19 on views,
-  # so the surviving slot is chosen on the two comparisons it wins rather than
-  # on a gap between the two mornings that is not there.
-  #
-  # **All three destinations at the same time is a legibility choice, not an
-  # optimisation.** Only Instagram produces a skip rate; YouTube scores whole
-  # video retention and TikTok exposes no retention metric at all, so there is
-  # nothing to argue a different hour from for either. They fire minutes apart
-  # anyway, because the jitter is derived per slot.
-  #
-  # Each firing moves by up to 15 minutes either way, to the second, and never
-  # onto :00, :15, :30 or :45. The offset is derived from the slot and the date
-  # rather than rolled at runtime, so it survives a restart: a random offset
-  # would be re-rolled on every pod start, and a slot judged not-yet-due at
-  # 19:15 could come due at 19:10 after a restart and publish twice.
-  #
-  # A line that does not parse fails the pod's startup on purpose, rather than
-  # quietly dropping that slot from the schedule.
-  #
-  # Every line names its own destination. A line without account= attaches to
-  # the one registered Instagram account, and a second Instagram account makes
-  # that ambiguous: until 2026-08-26 that did not merely drop the line, it
-  # deleted the first account's slots at boot and the pod came up healthy with
-  # the feed stopped. The gateway freezes the whole config sweep now rather
-  # than deleting anything it could not attribute, and naming the account keeps
-  # a line out of all of that. See F0 in the reelsmith repo's
-  # docs/multi-destination-audit.md.
-  #
-  # YouTube was already one a day when Instagram ran three, and the reason it
-  # cannot go up still holds. The risk there is not the API, it is the
-  # inauthentic content policy, renamed from "repetitious content" in July 2025
-  # to cover mass produced AI video. Reviewers assess channel themes and
-  # overall patterns rather than single videos, and several a day of an
-  # identical layout is the shape they look for even when every video is
-  # original.
-  #
-  # TikTok runs at one a day for a third reason again, and it is neither policy
-  # nor quota. The inbox path drops the video into the creator's drafts and
-  # somebody has to open the app and tap post, so the ceiling is attention. The
-  # API would allow five pending shares per 24 hours.
-  #
-  # Removing a line removes that slot, and an account whose lines all disappear
-  # loses its slots rather than keeping them, so deleting a destination here
-  # actually stops it publishing.
-  #
-  # account= needs an image that understands it. An older parser does not,
-  # and parse_slots fails the boot on a line it cannot read rather than
-  # dropping it, so this line and the image carrying it have to ship in that
-  # order. Adding it ahead of 0.0.29 crashlooped the pod once already.
-  # Facebook is one a day for none of the three reasons above. There is no
-  # policy pressure and the documented ceiling is 30 API posts per 24 hours.
-  # It is one a day because it is the same identity showing the same video to
-  # the same audience, and the cadence decision of 2026-08-27 applies to every
-  # surface rather than being argued per platform.
-  #
-  # The Page id, not the number on the Page's own profile URL. A Page shows
-  # two, and /{page-id}/video_reels wants the one GET /me/accounts returns.
+  # One slot per line: HH:MM [zone] [jitter=N] account=<id>. A line that does
+  # not parse fails startup on purpose; removing an account's last line removes
+  # its slots. account= must be named on every line — an unattributed line with
+  # multiple accounts registered freezes the whole config sweep (see F0 in the
+  # reelsmith repo's docs/multi-destination-audit.md). Jitter is derived from
+  # slot+date, not rolled at runtime, so a restart cannot double-publish.
+  # The Facebook id is the Page id from GET /me/accounts, not the number in the
+  # Page's profile URL.
   GATEWAY_SLOTS: |
     08:10 Europe/Oslo jitter=15 account=17841441696714445
     08:10 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
     08:10 Europe/Oslo jitter=15 account=-000y6NKYZ3EEbUGgXiyJ9nG66a_xqrF68Me
     08:10 Europe/Oslo jitter=15 account=1236596692875712
 
-  # Named zone, not an offset, so the slots stay at the same local hour across
-  # a daylight saving change.
+  # Named zone, not an offset, so slots keep their local hour across DST.
   GATEWAY_DEFAULT_TIMEZONE: "Europe/Oslo"
   GATEWAY_DEFAULT_JITTER_MINUTES: "15"
 
-  # The control panel at /admin. It authenticates itself with
-  # GATEWAY_ADMIN_TOKEN and refuses to start with no authentication at all,
-  # which matters here because this host is public: Meta fetches media from it,
-  # so there is no network boundary in front of the panel.
-  # What a Short goes out as. The documented behaviour is that an unaudited
-  # API project has every upload locked to private whatever this says, and that
-  # is not true of this project: measured on 2026-08-16, three uploads asking
-  # for private, unlisted and public each kept what they asked for. The audit is
-  # still worth submitting for quota and standing; it gates neither.
-  #
-  # The gateway logs a warning if a returned status ever differs from this one,
-  # which is what the restriction would look like if it does start applying.
+  # Set explicitly so the behaviour is chosen rather than discovered; the
+  # gateway warns if a returned status ever differs.
   GATEWAY_YOUTUBE_PRIVACY_STATUS: "public"
 
+  # The /admin control panel. Requires GATEWAY_ADMIN_TOKEN and is only routed
+  # on the private gateway (httproute-admin.yaml).
   GATEWAY_ADMIN_ENABLED: "true"
 
-  # The third destination, and off until there is an account to publish to.
-  #
-  # This one flag gates three things: the token refresher, the insights sweep
-  # and publishing. It exists where GATEWAY_YOUTUBE_ENABLED deliberately does
-  # not, because TikTok has a background loop of its own that would call the
-  # API daily on a deployment with no TikTok account, and nothing on the
-  # YouTube path runs unless a slot fires.
-  #
-  # A queued TikTok row reaching a slot with this off fails that row rather
-  # than retrying, because a flag that is off is not a transient condition.
-  #
-  # On since 2026-08-27. The OAuth round trip it was waiting for
-  # (scripts/tiktok_authorise.py in the reelsmith repo) ran that afternoon
-  # against the app's **sandbox** credentials, because the production
-  # configuration cannot be saved without a demo video of a posting interface
-  # this project does not have. A sandbox reaches only its target users, and
-  # @thenightlybuild is one of them.
+  # Gates the token refresher, the insights sweep and publishing — TikTok has
+  # daily background loops of its own, unlike YouTube where nothing runs
+  # unless a slot fires. A queued TikTok row hitting a slot with this off
+  # fails rather than retries.
   GATEWAY_TIKTOK_ENABLED: "true"
 
-  # Direct Post or the inbox. On since 2026-08-28, and what changed is that the
-  # posting screen it always needed now exists: the admin panel's queue gained
-  # a Publish now button that morning, which is a user interface performing a
-  # Content Posting API call and therefore something a demo video can be
-  # recorded of. The audit is applied for on that basis.
-  #
-  # **Turning this on is what the demo video has to show.** Recording the inbox
-  # path to justify a video.publish scope would show the reviewer a different
-  # feature from the one being requested.
-  #
-  # Safe before the audit lands only because GATEWAY_TIKTOK_PRIVACY_LEVEL below
-  # is SELF_ONLY. An unaudited client asking for anything more public is
-  # refused with unaudited_client_can_only_post_to_private_accounts. So the
-  # posts this makes are real posts on the profile that only the account can
-  # see: worse than the inbox tap for reach, better for proving the wiring.
-  #
-  # **Back to "false" on 2026-08-28, hours after going on.** The audit is on
-  # hold rather than refused, and the flag follows the audit: with it pending,
-  # Direct Post can only post SELF_ONLY, which puts a video on the profile that
-  # nobody but the account holder can see. That is worse than the inbox tap in
-  # every respect, so the tap is what runs while this is parked.
-  #
-  # What stopped it was not the code. TikTok's review wants a demo video of the
-  # posting interface at the declared domain, the interface is the admin panel,
-  # and the panel is deliberately absent from the httproute allowlist. Finishing
-  # the audit means putting the queue, the accounts and the publish controls on
-  # the public internet, which is a real cost against a submission the
-  # guidelines are likely to refuse anyway for being "designed for
-  # private/personal use only". That is a category mismatch rather than a
-  # misconfiguration, and no amount of wiring fixes it.
-  #
-  # **Everything else is left ready.** The Direct Post switch is on for both
-  # configurations in the portal, video.publish is granted to the stored token,
-  # and the production form is one field short. So restarting this is a flag
-  # flip and a demo video, not a repeat of today.
+  # Off until TikTok's audit passes: an unaudited client can only Direct Post
+  # SELF_ONLY, which is worse than the inbox/drafts path in every respect.
   GATEWAY_TIKTOK_DIRECT_POST: "false"
 
-  # What an unaudited client is allowed to ask for. It also has to be one of
-  # the options the creator_info call returns, or the post fails
-  # privacy_level_option_mismatch, which reads like a bad constant and is
-  # actually a stale read. Set explicitly so the pre-audit behaviour is chosen
-  # rather than discovered, the same way GATEWAY_YOUTUBE_PRIVACY_STATUS is.
+  # Must be one of the options creator_info returns, or posts fail with
+  # privacy_level_option_mismatch.
   GATEWAY_TIKTOK_PRIVACY_LEVEL: "SELF_ONLY"

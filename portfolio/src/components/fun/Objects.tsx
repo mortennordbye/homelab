@@ -13,31 +13,17 @@ import type { CareerData } from "./shelf";
 
 /**
  * The remaining portfolio sections as objects: socials, contact, the blog,
- * the two interests, and the career timeline.
- *
- * Everything here follows the rule the certificates taught — an object that is
- * meant to be looked at has to present a face to the room at roughly standing
- * eye level, and be big enough to put a crosshair on. That is why the social
- * links went on the wall rather than onto a laptop lid, and why the timeline is
- * framed rather than filed away.
+ * the two interests, and the career timeline. Rule for all of them: anything
+ * meant to be looked at presents a face to the room at standing eye level,
+ * big enough to put a crosshair on.
  */
 
 /**
- * The social links, as a row of framed tiles on the wall above the desk.
- *
- * Three earlier shapes were tried and discarded. Stickers on a laptop lid is
- * what a real desk looks like, but a 10cm sticker carrying a logo drawn out of
- * primitives is unreadable from anywhere you would stand, and the whole point
- * of a social link is recognising it at a glance.
- *
- * The fix is the same one the monitors already use: real DOM through drei's
- * Html, so the icons are vector SVG and stay sharp at any distance instead of
- * being a texture that blurs. The brand marks are Simple Icons (CC0), applied
- * as a CSS mask so each one can take its own colour.
- *
- * One Html layer holds all four tiles, with a separate invisible mesh per tile
- * for picking, rather than four Html layers — the DOM layer is the expensive
- * part and the picking geometry is nearly free.
+ * The social links, as framed tiles on the wall above the desk. Real DOM via
+ * drei's Html so the icons are sharp SVG at any distance; marks are Simple
+ * Icons (CC0) applied as a CSS mask so each takes its own colour. One Html
+ * layer holds all four tiles with an invisible mesh per tile for picking —
+ * the DOM layer is the expensive part, picking geometry is nearly free.
  */
 const SOCIAL_ICON: Record<string, { file: string; colour: string }> = {
   GitHub: { file: "github", colour: "#e6edf3" },
@@ -182,17 +168,9 @@ export function SocialWall({
 }
 
 /**
- * A contact card standing in a holder on the desk.
- *
- * This replaces a ruled notepad with a pen on it. The notepad was legible as an
- * object and useless as a signpost: a blank pad tells you nothing about what
- * pressing E will do, so the only way to discover it held contact details was
- * to walk up and read the hover prompt. Anything whose whole job is to say
- * "here is how to reach me" should say that at a glance, from across the desk.
- *
- * The text is real DOM through `Html`, for the reason the social icons are SVG:
- * lettering built from geometry is unreadable at any distance a visitor
- * actually stands at.
+ * A contact card standing in a holder on the desk — it must say "here is how
+ * to reach me" at a glance, from across the desk. Text is real DOM through
+ * `Html`: lettering built from geometry is unreadable at standing distance.
  */
 export function ContactCard({
   position,
@@ -322,19 +300,10 @@ export function ContactCard({
 }
 
 /**
- * The skills, as a rack faceplate on the wall right of the desk.
- *
- * Mirrors the career frame across the desk, and deliberately does not look like
- * it: a second framed print on the same wall would read as a pair of pictures
- * rather than as two different kinds of information. A brushed plate with lit
- * bars is the piece of equipment a room full of homelab hardware would actually
- * have on the wall, and a 0-100 level has an obvious physical form as bar fill.
- *
- * The bars are DOM rather than geometry for the reason the social icons are
- * SVG — twelve labels built from primitives are unreadable from anywhere you
- * would stand. Being DOM also makes them self-lit, which is what sells them as
- * LEDs: this wall faces away from both lamps, so anything relying on the room's
- * light to be bright would sit dim.
+ * The skills, as a rack faceplate on the wall right of the desk — deliberately
+ * not a second framed print, so the two walls read as different kinds of
+ * information. Bars are DOM: labels stay readable, and DOM is self-lit, which
+ * matters because this wall faces away from both lamps.
  */
 const SKILL_GROUPS: { id: Skill["group"]; label: string }[] = [
   { id: "platform", label: "PLATFORM" },
@@ -534,15 +503,9 @@ export function SkillPlate({
 }
 
 /**
- * The three services, as a leaflet rack on the wall by the door.
- *
- * Placed on the way out rather than near the desk, and that is the whole idea:
- * services are the one section that is an offer rather than a fact, and an
- * offer belongs where a visitor is already leaving. It also keeps it out of a
- * competition it would lose — next to the monitors nobody reads a leaflet.
- *
- * The pockets are real geometry. A printed pocket on a flat board is the recess
- * mistake the door and sideboard already taught: it reads as a flat board.
+ * The three services, as a leaflet rack by the door: an offer belongs where a
+ * visitor is already leaving. The pockets are real geometry — a printed
+ * pocket on a flat board reads as a flat board.
  */
 const SERVICE_TONE: Record<string, string> = {
   brand: ACCENT.brand,
@@ -811,18 +774,10 @@ export function GymBag({
 }
 
 /**
- * The career timeline, framed on the wall above the desk.
- *
- * Rebuilt from geometry to text. The first version drew the timeline as a rail
- * with dots and small coloured rectangles standing in for the labels — which is
- * the mistake the social icons already taught: shapes standing in for words are
- * not a timeline, they are a diagram of one. You could see that something was
- * being charted and never what.
- *
- * It also turned the long way round. A career is a list of lines of text, and
- * lines of text stack vertically; laid out horizontally, six roles gave each
- * entry 80px of width to hold a job title in. Portrait frame, vertical rail,
- * real type.
+ * The career timeline, framed on the wall above the desk. Portrait frame,
+ * vertical rail, real type — shapes standing in for words are a diagram of a
+ * timeline, not one, and six roles laid horizontally leave no width for a
+ * job title.
  */
 export function CareerFrame({
   position,

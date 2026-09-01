@@ -3,13 +3,9 @@ import { pinnedRepos } from "@/content/repos";
 import { site } from "@/content/site";
 
 /**
- * The pinned repositories, with live stars and forks.
- *
- * Cached for an hour (ISR) for the same reason the blog feed is, plus one that
- * matters more here: unauthenticated GitHub allows 60 requests an hour per IP.
- * Fetching from the browser would spend that budget per visitor and start
- * failing on any shared address. Server-side with revalidation it is four
- * requests an hour in total however many people are in the room.
+ * Pinned repos with live stars/forks. ISR hourly: unauthenticated GitHub
+ * allows 60 req/h per IP, so this must stay server-side — four requests an
+ * hour total rather than per visitor.
  */
 export const revalidate = 3600;
 

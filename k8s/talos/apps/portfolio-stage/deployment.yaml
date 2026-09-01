@@ -42,10 +42,9 @@ spec:
             capabilities: { drop: ["ALL"] }
             seccompProfile: { type: RuntimeDefault }
           env:
-            # Path the /api/v1/infra route reads (the status ConfigMap mount).
-            # Without it stage falls back to the build-time snapshot, which has
-            # no timestamp, so the homepage set reports "stale" for ever and the
-            # live status cannot be checked here before it reaches prod.
+            # Path the /api/v1/infra route reads (the status ConfigMap mount);
+            # without it stage falls back to the build-time snapshot and
+            # reports "stale" for ever.
             - name: STATUS_FILE
               value: /config/status.json
           volumeMounts:
@@ -54,9 +53,8 @@ spec:
               mountPath: /app/.next/cache
             - name: tmp
               mountPath: /tmp
-            # Live cluster status written by the status-publisher CronJob in the
-            # portfolio namespace, which writes a copy here too. Optional so pods
-            # start without it.
+            # Live cluster status, copied here by the status-publisher CronJob.
+            # Optional so pods start without it.
             - name: status
               mountPath: /config
               readOnly: true

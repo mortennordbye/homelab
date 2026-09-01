@@ -1,15 +1,11 @@
 # Merges Kargo's promotion PRs for the apps named in the KARGO_AUTOMERGE_APPS
 # repository variable. For those apps the PR is a record rather than a review:
-# the build was already vetted in the app's own repo and the promotion still has
-# to pass its smoke test afterwards. Most of them have no pre-prod environment at
-# all; headroom is the exception, where prod takes only Freight the demo canary
-# already verified (`sources.stages: [demo]`), so the canary is the gate the
-# merge click was standing in for.
+# the build was already vetted in the app's own repo and the promotion still
+# has to pass its smoke test afterwards.
 #
-# Kill switch, no deploy and no commit needed: Settings > Secrets and variables
-# > Actions > Variables > KARGO_AUTOMERGE_APPS. Drop an app from the list, or
-# empty the variable entirely, and the next promotion PR waits for a human.
-# Kargo opens the PR either way and blocks on the merge, so nothing is lost.
+# Kill switch: drop an app from the KARGO_AUTOMERGE_APPS Actions variable (or
+# empty it) and the next promotion PR waits for a human. Kargo opens the PR and
+# blocks on the merge either way, so nothing is lost.
 name: Kargo auto-merge
 
 on:

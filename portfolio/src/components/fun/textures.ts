@@ -5,19 +5,10 @@ import { useMemo } from "react";
 import * as THREE from "three";
 
 /**
- * CC0 PBR surfaces from Poly Haven (polyhaven.com), downscaled to 1K and
- * converted to WebP. Sources: dirty_carpet (rug), plastered_wall_04
- * (walls and ceiling), laminate_floor_02, oak_veneer_01.
- *
- * These replaced hand-generated canvas textures. Flat albedo with no normal
- * map is what made the room read as pixel art: without surface relief every
- * plane takes light identically and the eye stops believing it is a material.
- *
- * Each set ships three maps. The ARM map packs ambient occlusion, roughness
- * and metalness into R/G/B. three.js reads roughness from the green channel
- * and metalness from the blue channel, so the same file serves both slots.
- * AO is skipped deliberately: three.js samples aoMap from a second UV set,
- * which plane geometry does not carry.
+ * CC0 PBR surfaces from Poly Haven, downscaled to 1K WebP. The ARM map packs
+ * AO/roughness/metalness into R/G/B; three.js reads roughness from green and
+ * metalness from blue, so one file serves both slots. AO is skipped: aoMap
+ * needs a second UV set, which plane geometry does not carry.
  */
 
 export type SurfaceName =

@@ -1,23 +1,15 @@
-# Forward-auth in front of the reelsmith control panel.
+# Forward-auth in front of the reelsmith control panel. The panel speaks no
+# OIDC, so this is a proxy provider: authentik authenticates at Traefik before
+# the request reaches the pod.
 #
-# Unlike argocd, grafana and kargo, the reelsmith panel speaks no OIDC. It has
-# its own password and nothing else, so the provider here is a proxy provider
-# rather than an oauth2 one: authentik authenticates the request at Traefik,
-# before it ever reaches the pod.
+# forward_single, not forward_domain: this protects one host, and single mode
+# keeps the callback on the app's own hostname — which is why the HTTPRoute
+# grows an unauthenticated /outpost.goauthentik.io/ rule.
 #
-# `forward_single` rather than `forward_domain` because this protects one host.
-# Domain mode needs a cookie domain shared by every protected app and an
-# authentik host inside it, which is a bigger commitment than one panel is
-# worth. Single mode keeps the callback on the app's own hostname, which is why
-# the HTTPRoute grows an unauthenticated `/outpost.goauthentik.io/` rule.
-#
-# **The panel keeps its own password.** GATEWAY_ADMIN_TRUST_PROXY_AUTH stays
-# off, so this is a second independent lock rather than a replacement. The
-# gateway's `_authenticated()` returns True unconditionally when that flag is
-# set and never inspects a header, so trusting the proxy would leave the panel
-# with no auth of its own and make every path that reaches the Service without
-# traversing this one HTTPRoute an open control panel for a live Instagram
-# account. What authentik adds here is per-user identity and an audit trail.
+# The panel keeps its own password (GATEWAY_ADMIN_TRUST_PROXY_AUTH stays off):
+# trusting the proxy would leave any path that reaches the Service without
+# traversing this HTTPRoute with no auth at all. authentik adds per-user
+# identity and an audit trail, not the lock.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -90,14 +82,10 @@ data:
           group: !KeyOf group-reelsmith-admins
           order: 0
 
-      # The embedded outpost is what Traefik actually calls. A provider that is
-      # not attached to an outpost exists but answers nothing, and the symptom
-      # is a 404 from /outpost.goauthentik.io/auth/traefik rather than an error
-      # anywhere that mentions the provider.
-      #
-      # `providers` is replaced wholesale on reconcile, so every provider the
-      # embedded outpost serves has to be listed here. Adding a second app
-      # later means adding it to this list, not writing a second binding.
+      # The embedded outpost is what Traefik calls; a provider not attached to
+      # an outpost answers nothing (the symptom is a 404 from
+      # /outpost.goauthentik.io/auth/traefik). `providers` is replaced
+      # wholesale on reconcile, so every served provider must be listed here.
       - model: authentik_outposts.outpost
         id: embedded-outpost
         state: present

@@ -5,32 +5,11 @@ import { Button } from "@/components/primitives/Button";
 import { getLatestBlogPosts } from "@/lib/blog";
 
 /**
- * The three newest posts, as prints lying on the desk.
- *
- * Converted from the card grid under branding/DECISIONS.md §12. The entry in
- * BACKLOG.md described this as a border problem, and it was not one: the
- * covers are the loudest thing on the front page, and swapping `rounded-xl`
- * for `.lit` would have changed the frame and left the picture.
- *
- * Two things were wrong and both are fixed here.
- *
- * The card gave each cover its own bounding box, and each cover carries its
- * own black, which is not `--bg`. Two grounds a hairline apart is what made
- * them read as rectangles pasted onto the desk. There is no box now: the
- * cover is mounted in paper with a deeper margin at the foot than the head,
- * which is what makes it a print rather than a bordered image, and it casts
- * down and to the right like everything else the lamp reaches. The type sits
- * on the ground beside it.
- *
- * And the covers are 1200x630 — the Open Graph ratio, because they are
- * authored to blog/IMAGE-STYLE.md to survive a feed. The old figure was
- * 16/9, so a sixth of every cover's width was thrown away; the observability
- * post lost the end of its own strapline. The frame declares the native ratio
- * and nothing is cropped. §8 records the same finding about the shelf, where
- * it is why the `cover` frontmatter field went unused.
- *
- * Hover is copper rather than green. §2 spends green once per view as a lit
- * point, and it goes on "Read the blog", which is the one action here.
+ * The three newest posts, as prints lying on the desk (DECISIONS.md §12).
+ * No bounding box — the covers carry their own black, and a second ground a
+ * hairline from `--bg` reads as a pasted rectangle. The frame declares the
+ * covers' native 1200x630 OG ratio; cropping to 16/9 cuts their straplines
+ * (§8). Hover is copper: §2 spends green once per view, on "Read the blog".
  */
 export async function LatestWriting() {
   const posts = await getLatestBlogPosts(3);

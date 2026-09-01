@@ -46,13 +46,8 @@ function parseItem(itemXml: string): BlogPost | null {
   const pub = pick(itemXml, "pubDate");
   const desc = pick(itemXml, "description");
   if (!title || !link) return null;
-  // The cover image, however the feed chooses to carry it. The blog's previous
-  // theme emitted <media:content url="...">; the current one emits a standard RSS
-  // <enclosure> and declares no media namespace at all. Matching only the first
-  // meant a theme change silently emptied every card's cover — nothing threw,
-  // `cover` just became undefined, and since the feed is read at build time the
-  // breakage would not have surfaced until some unrelated redeploy. Both are
-  // matched so the feed's shape is not a thing this file has to be right about.
+  // Match both <media:content> and <enclosure>: themes differ in how they
+  // carry the cover, and matching only one fails silently at build time.
   const coverMatch =
     itemXml.match(/<media:content[^>]*\burl="([^"]+)"/) ??
     itemXml.match(/<enclosure[^>]*\burl="([^"]+)"/);

@@ -39,14 +39,10 @@ const TOGGLES: ReadonlyArray<{ key: keyof ToggleFlags; label: string }> = [
 const TAKE_MS = 460;
 
 /**
- * The resume section's object, and the controls that drive it.
- *
- * This replaces the download row and the customizer popover. The same four
- * toggles are still here and still map to the same seventeen pre-built PDFs;
- * what changed is that they are no longer a dropdown over a page, they are
- * what is printed on the sheet lying in the clip. Turn a section off and the
- * page in the render gets shorter, because the sheet is drawn from the same
- * counts the LaTeX build uses.
+ * The resume section's object, and the controls that drive it. The four
+ * toggles map to the seventeen pre-built PDFs, and the sheet in the clip is
+ * drawn from the same counts the LaTeX build uses, so toggling a section
+ * visibly shortens the page.
  *
  * The controls are real markup and always render, on every viewport and under
  * reduced motion. The object is pure enhancement above them: nothing is only

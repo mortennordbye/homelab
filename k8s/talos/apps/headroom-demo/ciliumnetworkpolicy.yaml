@@ -23,13 +23,9 @@ spec:
     - fromEntities:
         - host
         - health
-  # Egress is allowlisted rather than left open, because this pod is the one
-  # reachable from the internet. Adding rules here at all makes egress
-  # deny-by-default for this endpoint, which is the point: the app's only other
-  # outbound destination is api.enablebanking.com, and that is deliberately
-  # absent. The bank routes are already refused in demo mode, so this is the
-  # second, independent reason a demo can never reach a bank on the owner's
-  # credentials — a gate regression alone would not be enough.
+  # Egress allowlisted (deny-by-default) because this pod is internet-reachable.
+  # api.enablebanking.com is deliberately absent: the demo can never reach a
+  # bank even if the demo-mode gate regressed.
   egress:
     # DNS to CoreDNS. Required for the toFQDNs rules below to resolve.
     - toEndpoints:
@@ -38,9 +34,7 @@ spec:
             "k8s:k8s-app": kube-dns
       toPorts:
         - ports: [{ port: "53", protocol: ANY }]
-    # The public statistics the app proxies and caches: SSB (inflation, square
-    # metre prices, wage stats) and Norges Bank (policy rate). These are what
-    # make the demo's Forecast and Property pages show real figures.
+    # Public statistics the app proxies: SSB and Norges Bank.
     - toFQDNs:
         - matchName: "data.ssb.no"
         - matchName: "data.norges-bank.no"

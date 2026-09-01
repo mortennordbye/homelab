@@ -1,10 +1,6 @@
-# Ingress from Traefik only, egress to Meta only.
-#
-# The egress half is the interesting one. This service holds Instagram tokens
-# with publishing and messaging rights, and it is reachable from the internet
-# because Meta has to POST to it. Pinning egress to graph.instagram.com means a
-# compromise of the process cannot turn those tokens into calls to anywhere
-# else.
+# Ingress from Traefik only, egress pinned to graph.instagram.com: this pod is
+# internet-reachable and holds Instagram tokens with publish and DM rights, so
+# a compromised process must not be able to point them anywhere else.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
@@ -27,10 +23,8 @@ spec:
     - fromEntities:
         - host
         - health
-    # Prometheus, for /metrics on the same port. Without this the ServiceMonitor
-    # in monitoring.yaml is dropped by this policy and the only symptom is a
-    # target sitting at "down" on a service that is otherwise perfectly healthy,
-    # which is exactly the failure the alerts are there to catch.
+    # Prometheus, for /metrics. Without this the scrape is dropped and the
+    # only symptom is a target sitting at "down".
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
@@ -47,8 +41,7 @@ spec:
             "k8s:k8s-app": kube-dns
       toPorts:
         - ports: [{ port: "53", protocol: ANY }]
-    # The Meta Graph API, which is every outbound call this service makes:
-    # private replies, DMs, follower checks, comment polls, token refreshes.
+    # The Meta Graph API — every outbound call this service makes.
     - toFQDNs:
         - matchName: "graph.instagram.com"
       toPorts:

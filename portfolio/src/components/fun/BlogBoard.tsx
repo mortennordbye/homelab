@@ -12,11 +12,6 @@ import { Interactive } from "./interaction";
  * including the cover images, which Hugo publishes as `<media:content>`. There
  * is nothing to update here when a post goes out; write the post and it appears
  * on the board, same as the shelf lays itself out from the case studies.
- *
- * The wall it hangs on was empty. Two screens used to face the bookshelf from
- * here and a printer cabinet stood under them; both went, and what was left was
- * three metres of blank plaster in the one part of the room a visitor walks
- * through on the way to the shelf.
  */
 
 /** Authored pixel size of the DOM layer, and the physical width it maps onto. */

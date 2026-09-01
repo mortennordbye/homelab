@@ -13,9 +13,8 @@ name: Status card
 on:
   workflow_dispatch:
   schedule:
-    # Every 15 minutes. GitHub proxies README images through camo, so the card
-    # lands a few minutes behind whatever this run saw; it stamps itself with
-    # the reading's own timestamp rather than pretending to be instant.
+    # GitHub proxies README images through camo, so the card lands a few
+    # minutes behind this run; it stamps the reading's own timestamp.
     - cron: "*/15 * * * *"
 
 permissions:

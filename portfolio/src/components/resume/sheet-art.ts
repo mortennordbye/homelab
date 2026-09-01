@@ -1,18 +1,9 @@
 import * as THREE from "three";
 
 /**
- * The printed face of the sheet in the clip.
- *
- * Set as ruled measure rather than as real body copy, deliberately. At the
- * camera distance this object is composed for, a whole A4 page shown at once
- * is always type too small to read — that is the finding that killed the
- * text-on-surface model in branding/DECISIONS.md §4. So the header is real
- * and everything under it is a bar of the right length, which reads as type
- * where a bar of the wrong length reads as a wireframe.
- *
- * The counts are not decorative. Each run draws one bar per real entry, so
- * turning a section off visibly shortens the page and the sheet is telling
- * the truth about which PDF it is.
+ * The printed face of the sheet in the clip. Ruled measure, not body copy —
+ * A4 at this camera distance is unreadable type (branding/DECISIONS.md §4).
+ * One bar per real entry, so the sheet tells the truth about which PDF it is.
  */
 
 export type SheetRun = {
@@ -76,11 +67,8 @@ export function makeSheetTexture(spec: SheetSpec): THREE.CanvasTexture {
   x.fillStyle = "rgba(127,90,47,0.85)";
   x.fillRect(64, 178, 92, 2);
 
-  // Everything on has to fit on the sheet. Leading is solved for the runs that
-  // are actually switched on rather than fixed, because a fixed step either
-  // truncated the last two runs with everything enabled or left half the page
-  // blank with the résumé. Capped at the comfortable value, so dropping a
-  // section still visibly ends the page higher instead of only spreading it.
+  // Leading is solved for the enabled runs (a fixed step truncates or leaves
+  // half a page blank), capped so dropping a section still shortens the page.
   const TOP = 214;
   const BOTTOM = H - 96;
   const HEAD = 52; // label, its hairline, and the gap after the run

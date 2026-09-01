@@ -1,14 +1,9 @@
 name: Star history
 
-# Draws the star history chart in the README. star-history.com stopped serving
-# it ("GitHub restricted access to star data"), and no third party can read the
-# stargazer listing on our behalf any more, but this repo's own GITHUB_TOKEN
-# still reads this repo's own stargazers.
-#
-# Collects the timestamps, buckets them by day, renders both themes, and
-# publishes the lot to the stars-data branch. The README embeds the SVGs from
-# there over raw.githubusercontent, the same hand-off the Lighthouse card uses
-# for its JSON.
+# Draws the README's star history chart. Third parties can no longer read
+# GitHub star data on our behalf, but this repo's own GITHUB_TOKEN can:
+# collect the timestamps, bucket by day, render both themes, publish to the
+# stars-data branch that the README embeds over raw.githubusercontent.
 
 on:
   workflow_dispatch:

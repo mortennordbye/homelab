@@ -160,16 +160,9 @@ body {
    instead of resting on it. See branding/DECISIONS.md.
    --------------------------------------------------------------------------- */
 
-/* The resume fold's arrow, which nods until the record is opened.
-
-   The control had to be findable: as a line of caption-sized type it was taken
-   for a divider and the rest of the record went unread. Colour could not carry
-   it, because §2 spends green once per view and the resume section already
-   spends it on the take action, so the load falls on shape, contrast and this.
-
-   Two and a half pixels, once every three and a half seconds, and it stops the
-   moment the fold is open. The global reduced-motion rule above already cuts
-   it to a single frame. */
+/* The resume fold's arrow nods until the record is opened. Findability has to
+   come from motion here — §2 spends green once per view and this section
+   already spends it on the take action. Reduced-motion cuts it to one frame. */
 @keyframes fold-nod {
   0%, 68%, 100% { transform: translateY(0); }
   80% { transform: translateY(2.5px); }
