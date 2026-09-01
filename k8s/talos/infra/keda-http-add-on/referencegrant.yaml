@@ -35,6 +35,9 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: headroom
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: trek
   to:
     - group: ""
       kind: Service
