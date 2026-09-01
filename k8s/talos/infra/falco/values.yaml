@@ -49,33 +49,11 @@ customRules:
       override:
         condition: replace
 
-    # Unpacking an image layer writes the log files the layer ships with, so
-    # containerd truncates /var/log/dpkg.log every time it pulls a Debian-based
-    # image. Upstream already knows this and exempts it — but only at the host
-    # containerd's snapshot root. verksted's dind sidecar runs its own containerd
-    # under /var/lib/docker/containerd/daemon, so the identical write lands on a
-    # path upstream's macro doesn't cover and every image pull an agent session
-    # does fires this rule. Pinned to that daemon root in the dind image: the
-    # same process writing a log anywhere outside the snapshot tree still alerts.
-    - macro: allowed_clear_log_files
-      condition: >
-        (proc.name=containerd
-         and container.image.repository=docker.io/library/docker
-         and k8s.ns.name=verksted
-         and fd.name startswith /var/lib/docker/containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/)
-      override:
-        condition: replace
-
-    # Agent sessions clone the repo under test into a mkdtemp directory,
-    # /tmp/vk-repos-<random>, and run its suite there. Test suites that harden
-    # against symlink escape create the fixture they defend against — a link to
-    # /etc or /root — and trip this rule from inside the dind daemon, where Falco
-    # has no container metadata to scope on (k8s.ns.name and the image come
-    # through as <NA>), so the linkpath is the only handle available.
-    #
-    # Exempting where the symlink is *created*, not what it points at: a link to
-    # a sensitive file anywhere outside a session's scratch checkout still
-    # alerts, and nothing privileged resolves paths under those directories.
+    # Test suites hardening against symlink escape create links to /etc or
+    # /root inside /tmp/vk-repos-<random> clones, from inside dind where Falco
+    # has no container metadata (<NA>) — the linkpath is the only handle.
+    # Exempts where the link is created, not what it points at, so a link to a
+    # sensitive file anywhere else still alerts.
     - rule: Create Symlink Over Sensitive Files
       condition: >
         and not evt.arg.linkpath startswith /tmp/vk-repos-
@@ -91,27 +69,12 @@ customRules:
 
     # ---- verksted: trusted at the image level, not per path ----------------
     #
-    # verksted is an agent sandbox: sessions install their own tooling at
-    # runtime and run arbitrary code as root. Two rules assume the opposite —
-    # an immutable image and a fixed set of programs — so both fire
-    # continuously, and every attempt to tune them by path only lasts until a
-    # session picks a new path. The npm prefix was exempted first; Playwright
-    # then put WebKit in /opt/ms-playwright and produced ~200 Critical events an
-    # hour, which was the entire Discord feed.
-    #
-    # So the exemption is declared where upstream intends it: these two lists
-    # are the adopter hooks the rules document for images that legitimately
-    # behave this way. Scoped to the image, so the same behaviour anywhere else
-    # still alerts.
-    #
-    # What this gives up: for the verksted container, "ran a binary that was not
-    # in the image" and "read /etc/shadow" stop being signals. Neither had
-    # discriminating power there to begin with — the pod ships a privileged dind
-    # sidecar and hands agents a root shell as its purpose, so an attacker
-    # inside it is indistinguishable from a session doing its job. The rules
-    # that watch the boundary that does matter — container escape, kernel module
-    # injection, release_agent, debugfs — stay armed for this image like any
-    # other.
+    # verksted is an agent sandbox: sessions install tooling and run arbitrary
+    # code as root, so per-path tuning never lasts. Exempted via the adopter
+    # hooks upstream documents, scoped to the image. These two signals have no
+    # discriminating power in a pod whose purpose is a root shell; the rules
+    # that watch the real boundary (container escape, kernel module injection,
+    # release_agent, debugfs) stay armed for this image like any other.
     - list: known_drop_and_execute_containers
       items:
         - ghcr.io/mortennordbye/verksted
@@ -129,19 +92,13 @@ customRules:
     # ---- verksted: the dind sidecar ----------------------------------------
     #
     # Falco sees the sidecar as the upstream docker image, so every exemption
-    # below has to pin the namespace too or it would exempt that image
-    # cluster-wide.
+    # must pin the namespace too or it exempts that image cluster-wide.
     - macro: verksted_dind
       condition: (container.image.repository=docker.io/library/docker and k8s.ns.name=verksted)
 
-    # Unpacking an image layer writes the log files the layer ships with, so
-    # containerd truncates /var/log/dpkg.log every time it pulls a Debian-based
-    # image. Upstream already knows this and exempts it — but only at the host
-    # containerd's snapshot root. The dind sidecar runs its own containerd under
-    # /var/lib/docker/containerd/daemon, so the identical write lands on a path
-    # upstream's macro doesn't cover and every image pull an agent session does
-    # fires this rule. Pinned to that daemon root: the same process writing a
-    # log anywhere outside the snapshot tree still alerts.
+    # The dind containerd truncates /var/log/dpkg.log when unpacking Debian
+    # layers; upstream only exempts the host containerd's snapshot root.
+    # Pinned to the dind root so the same write anywhere else still alerts.
     - macro: allowed_clear_log_files
       condition: >
         (proc.name=containerd and verksted_dind
@@ -149,34 +106,13 @@ customRules:
       override:
         condition: replace
 
-    # cilium-agent opens AF_PACKET sockets as part of normal datapath setup, and
-    # so does the dind dockerd every time it wires up the network for a
-    # container an agent session starts — about once a minute.
-    #
-    # Appended to the rule rather than filled into its template hook, unlike the
-    # tunings above: upstream declares user_known_packet_socket_binaries as a
-    # *list* consumed by `proc.name in (...)`, so filling it can only ever say
-    # "this binary name, anywhere". Exempting dockerd cluster-wide is a wider
-    # hole than either daemon needs.
+    # cilium-agent and the dind dockerd open AF_PACKET sockets as normal
+    # datapath setup. Appended to the rule, not the template hook:
+    # user_known_packet_socket_binaries is a list consumed by proc.name in
+    # (...), which could only exempt the binary name cluster-wide.
     - rule: Packet socket created in container
       condition: >
         and not (proc.name=cilium-agent and container.image.repository=quay.io/cilium/cilium)
         and not (proc.name=dockerd and verksted_dind)
-      override:
-        condition: append
-
-    # Agent sessions clone the repo under test into a mkdtemp directory,
-    # /tmp/vk-repos-<random>, and run its suite there. Test suites that harden
-    # against symlink escape create the fixture they defend against — a link to
-    # /etc or /root — and trip this rule from inside the dind daemon, where
-    # Falco has no container metadata to scope on (k8s.ns.name and the image
-    # come through as <NA>), so the linkpath is the only handle available.
-    #
-    # Exempting where the symlink is *created*, not what it points at: a link to
-    # a sensitive file anywhere outside a session's scratch checkout still
-    # alerts, and nothing privileged resolves paths under those directories.
-    - rule: Create Symlink Over Sensitive Files
-      condition: >
-        and not evt.arg.linkpath startswith /tmp/vk-repos-
       override:
         condition: append

@@ -73,13 +73,8 @@ variable "kubernetes_version" {
 }
 
 # Config contracts: the versions machine configuration is generated against. These deliberately
-# lag the target versions during an upgrade.
-#
-# A machine config generated for a newer contract is rejected outright by older nodes. The 1.12
-# contract emits machine.install.grubUseUKICmdline, and a v1.11.6 node fails the apply with
-# "unknown keys found during decoding". Terraform's graph runs machine_configuration_apply before
-# the upgrade steps (config apply feeds bootstrap, which feeds kubeconfig, which feeds the
-# upgrades), and that order cannot be reversed without a dependency cycle. So the contracts stay
+# lag the target versions during an upgrade: older nodes reject config generated for a newer
+# contract, and Terraform's graph applies config before the upgrade steps. The contracts stay
 # put while the nodes are upgraded, then get raised to match in a second apply.
 #
 # See the two-phase flow in README.md under Upgrades.

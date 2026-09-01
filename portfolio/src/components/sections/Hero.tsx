@@ -236,17 +236,10 @@ export function Hero() {
 }
 
 /**
- * The role line rotates, but it does not type.
- *
- * A character-by-character typewriter with a blinking block cursor is a
- * terminal impression, and the hero is trying to be a room with an object in
- * it. This cross-fades instead: the word is replaced, not spelled out. The
- * rotation still carries the content — several true job titles rather than
- * one — without borrowing the mannerism.
- *
- * The invisible ghost stays. It is sized by the browser to the widest entry
- * and holds the line width constant, which is what keeps the h1 from
- * reflowing on every change (mobile CLS was 0.30 before it existed).
+ * The role line cross-fades rather than types — a typewriter is a terminal
+ * impression, and the hero is a room. The invisible ghost must stay: sized to
+ * the widest entry, it holds the line width constant and keeps the h1 from
+ * reflowing (CLS) on every change.
  */
 function RotatingRole({
   words,

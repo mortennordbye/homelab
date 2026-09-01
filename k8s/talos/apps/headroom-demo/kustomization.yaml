@@ -9,12 +9,9 @@ resources:
 - compress-middleware.yaml
 - service.yaml
 - ciliumnetworkpolicy.yaml
-# Public read-only demo of the headroom app, on the same image as the private
-# instance but with DEMO_MODE=1 (see deployment.yaml).
-#
-# newTag is owned by Kargo: the headroom-cd `demo` Stage rewrites it via the
-# kustomize-set-image promotion step and pushes straight to main, ahead of prod.
-# Don't hand-edit it.
+# Public read-only demo of headroom (DEMO_MODE=1, see deployment.yaml).
+# newTag is owned by Kargo: the headroom-cd `demo` Stage rewrites it and pushes
+# to main. Don't hand-edit it.
 images:
 - name: ghcr.io/mortennordbye/headroom
   newTag: 0.0.398

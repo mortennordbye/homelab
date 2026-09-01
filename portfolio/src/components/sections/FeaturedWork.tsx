@@ -15,16 +15,10 @@ const SHELVES = [
 ] as const;
 
 /**
- * The portfolio, as a bookcase.
- *
- * The client/homelab filter is gone: the split is now the two shelves
- * themselves, each with its name on a brass plate, so the shape of the work is
- * visible rather than something you have to operate a control to discover.
- *
- * The list underneath is not the presentation any more, but it is not deleted
- * either. It is what phones and reduced-motion visitors get, since the shelf
- * renders nothing at all for either, and it is the only crawlable set of links
- * to the case studies from this page — a canvas has no anchors in it.
+ * The portfolio, as a bookcase; the client/homelab split is the two shelves.
+ * The list underneath must stay: it is what phones and reduced-motion
+ * visitors get, and the only crawlable links to the case studies from this
+ * page — a canvas has no anchors in it.
  */
 export function FeaturedWork({ items }: { items: WorkMeta[] }) {
   return (

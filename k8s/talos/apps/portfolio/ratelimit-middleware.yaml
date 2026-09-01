@@ -4,20 +4,11 @@ metadata:
   name: portfolio-ratelimit
   namespace: portfolio
 spec:
-  # Cloudflare fronts the proxied path, but the origin stays directly reachable
-  # via ddns.nordbye.it, and neither Next.js nor the gateway capped request
-  # rate. A single client could pull /fun's ~6.5 MB of models and textures, or
-  # the 262 KB uncompressed homepage, as fast as the uplink allowed.
-  #
-  # Token bucket keyed on the client IP. depth: 1 reads the rightmost
-  # X-Forwarded-For entry, the address Cloudflare observed. Keying on the remote
-  # address would bucket a whole POP together.
-  #
-  # average/burst are ~4x the busiest real client seen in the access logs
-  # (33 req/s on a cold /fun load), so a browser fetching chunks, models and
-  # textures in parallel never trips it. Note the three Traefik replicas each
-  # hold their own bucket — OSS has no shared state — so the effective ceiling
-  # is up to 3x these numbers when a client is spread across them.
+  # Token bucket keyed on the client IP Cloudflare observed (depth: 1 = the
+  # rightmost X-Forwarded-For entry; keying the remote address would bucket a
+  # whole POP together). Sized well above a browser's parallel asset fetch, and
+  # each Traefik replica holds its own bucket, so the effective ceiling is up
+  # to 3x these numbers.
   rateLimit:
     average: 50
     period: 1s

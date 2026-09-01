@@ -2,25 +2,11 @@ import type { WorkMeta } from "@/lib/work";
 import { pickBrand } from "@/components/work/brand-icons";
 
 /**
- * Cover for portfolio cards. The dominant tech in the project's stack drives
- * the icon, so each card still identifies its primary technology in that
- * vendor's own colour (Kubernetes blue, Red Hat red, and so on).
- *
- * Nothing on the cover is tinted with the vendor colour any more. It used to
- * drive the ground, a radial glow, the icon and the label, and on a green
- * site that turned the listing into a row of blue and red boxes — Ansible red
- * against the eucalyptus ground being the worst of it, since red and green
- * are complementary and the hardest pair for anyone with a colour-vision
- * deficiency.
- *
- * The technology is still named, in text, on every card. Colour was redundant
- * encoding on top of a label that already says KUBERNETES, so removing it
- * costs no information. Vendor colours are kept where they read as marks
- * rather than decoration — see StackTiles on the case-study pages.
- *
- * The ground is neutral, not an accent tint. Tinting it green put a green
- * icon on a green field, which flattens the mark against its own background.
- * Same rule as the blog covers: near-black ground, green only on the mark.
+ * Cover for portfolio cards. The dominant stack tech drives the icon, in the
+ * vendor's own colour — but the vendor colour must stay on the mark only,
+ * never tint the ground or label (red-on-green is the hardest pair for
+ * colour-vision deficiency). Ground stays neutral, never green-on-green.
+ * Vendor colours as decoration live in StackTiles on the case-study pages.
  */
 export function WorkCardCover({ work }: { work: WorkMeta }) {
   const { brand } = pickBrand(work.stack);

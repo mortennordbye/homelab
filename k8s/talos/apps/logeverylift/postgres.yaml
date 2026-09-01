@@ -46,20 +46,10 @@ spec:
       labels:
         app: postgres
     spec:
-      # The Synology NFS export hands a freshly provisioned volume to root only:
-      # uid 70 reads the mount root as d--------- even though root sees 0777, so
-      # the entrypoint (which gosu's to postgres before creating anything) cannot
-      # mkdir $PGDATA and the container crash-loops on
-      #   mkdir: can't create directory '/var/lib/postgresql/18/': Permission denied
-      #
-      # This never bit on 16 because the volume was mounted directly at $PGDATA,
-      # and that PVC's root had ended up owned by 70. Mounting the parent, which
-      # 18 requires, exposes it.
-      #
-      # One non-recursive chown of the mount root is enough: on a fresh PVC it is
-      # the only entry, and everything below it is created by postgres itself.
-      # Uses the same image as the main container so there is no second tag to
-      # pull or track.
+      # A fresh Synology NFS volume is root-only for non-root uids, so the
+      # postgres entrypoint cannot mkdir $PGDATA. One non-recursive chown of the
+      # mount root fixes it; same image as the main container so there is no
+      # second tag to track. See docs/postgres-18-migration.md.
       initContainers:
         - name: fix-nfs-ownership
           image: postgres:18-alpine
@@ -86,12 +76,9 @@ spec:
                   name: logeverylift-secret
                   key: POSTGRES_PASSWORD
           volumeMounts:
-            # Mounted at the parent, not at /var/lib/postgresql/data. Postgres 18
-            # keeps its cluster in a version-named subdirectory
-            # (/var/lib/postgresql/18/docker), so mounting the parent means the
-            # next major version lands beside this one instead of colliding with
-            # it. Mounting the old path instead makes the 18 image refuse to
-            # start, because it finds a 16 cluster where its own data should be.
+            # Mounted at the parent, not /var/lib/postgresql/data: Postgres 18
+            # keeps the cluster in a version-named subdirectory, and mounting
+            # the old path makes the 18 image refuse to start.
             - name: postgres-data
               mountPath: /var/lib/postgresql
           readinessProbe:

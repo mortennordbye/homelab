@@ -7,17 +7,9 @@ import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
 
 /**
- * The pinned GitHub repositories, on the wall you meet when you turn away from
- * the desk.
- *
- * A cork board with cards pinned to it, rather than another screen. The room
- * went from six screens to three on purpose, and a fourth glowing rectangle on
- * the biggest wall would undo that — but "pinned" is also just literally what
- * these are, so the physical metaphor was free.
- *
- * Everything but the repository names comes from `/api/v1/github`, which reads
- * the real stars and forks. Nothing here needs touching when a project gains a
- * star; the names live in `content/repos.ts`.
+ * The pinned GitHub repositories as a cork board — "pinned" is literally what
+ * they are, and the room keeps screens scarce. Everything but the names comes
+ * live from `/api/v1/github`; the names live in `content/repos.ts`.
  */
 
 const PX_W = 1180;

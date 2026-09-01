@@ -3,44 +3,16 @@ import { certs, education, experience, summary } from "@/content/resume";
 import { site } from "@/content/site";
 
 /**
- * The resume, as a sheet of paper.
- *
- * Converted from the two-column card layout under branding/DECISIONS.md §12:
- * everything is either an object or a document, and this is the most
- * document-shaped thing on the site. It was the one place where a long read
- * sat at 17px on the near-black ground, which is what every dark portfolio
- * gets wrong, and the fix was already in the record — paper is the fourth
- * material and it had no screen surface until now.
- *
- * Reading happens here, with no click. The object on the desk above is how
- * you take the PDF away, which is the split §4 spent four rejected prototypes
- * arriving at.
- *
- * The page is set as a broadsheet, and every part of that is load-bearing
- * rather than styling:
- *
- * Every word of every role is on the sheet. The height that costs is paid for
- * with width instead of with cuts, which is the reason a newspaper has columns
- * at all. Six roles at full prose in one column ran to 8,600px.
- *
- * Everything is flush left off one edge. An earlier pass put the dates in a
- * margin and the prose across the full width, so each role's title started two
- * hundred pixels to the right of its own first line. A margin and a
- * full-measure column cannot both be right, and the columns are what the
- * length needs, so the dates became an overline.
- *
- * Education and certifications run two-up rather than as full rows. They are
- * short entries, and a short entry given the full width of the sheet is
- * mostly empty paper.
+ * The resume, set as a sheet of paper (branding/DECISIONS.md §12: everything
+ * is an object or a document). Reading happens here with no click; the object
+ * on the desk is how you take the PDF away (§4). The broadsheet layout is
+ * load-bearing: every word of every role stays on the sheet, height paid for
+ * with columns; everything flush left off one edge, dates as overlines; short
+ * entries (education, certs) run two-up.
  */
-/**
- * How many roles stand above the fold.
- *
- * Two, because that is the current engagement and the one before it, which is
- * what anyone reading a CV looks at first and often only. The rest is one
- * press away rather than cut: the whole record is still in the DOM, so a
- * crawler and a screen reader read all of it either way.
- */
+
+// Current engagement plus the one before it; the rest is one press away, and
+// the whole record stays in the DOM for crawlers and screen readers.
 const ABOVE_THE_FOLD = 2;
 
 /** One role, set the same way whichever side of the fold it falls on. */
@@ -179,12 +151,8 @@ export function ResumeBody() {
 }
 
 /**
- * The masthead. Name and role left, the ways to reach him right.
- *
- * The right column is not filler. With the name alone the top of the sheet was
- * a headline over five hundred pixels of empty paper, which is what a masthead
- * on a real document never is, and the contact block is the thing that
- * belongs there on every CV ever set.
+ * The masthead: name and role left, contact block right — the block that
+ * belongs there on every CV, and what keeps the top from being empty paper.
  */
 function Masthead() {
   return (
@@ -243,24 +211,15 @@ function Masthead() {
 }
 
 /**
- * The head of an entry: what it is, when it was, and who it was with.
- *
- * On a dark ground the old layout could hand the hierarchy to colour — the
- * company was green, the period was a grey eyebrow, the role was a heading.
- * Paper has one hue, so the whole job falls to size, weight, case and
- * position, and the first pass did not spend enough of any of them: role,
- * company and body were all regular serif within half a step of each other.
- *
- * Three registers now, and no two of them are the same kind of type:
+ * The head of an entry. Paper has one hue, so hierarchy is carried by three
+ * distinct registers:
  *
  *   the title   large serif at 600, the only heavy thing in the entry
  *   the date    mono, small, pushed to the right edge on its own baseline
- *   the meta    serif at body size in the second ink, directly under the title
+ *   the meta    serif at body size in the second ink, under the title
  *
- * The date moves to the right of the title rather than sitting above it. It is
- * the field a reader scans a CV by, it belongs on the same line as the thing
- * it dates, and putting it there also stops the entry opening with two quiet
- * lines before anything with weight in it.
+ * The date sits right of the title: it is the field a CV is scanned by and
+ * belongs on the line of the thing it dates.
  */
 function EntryHead({
   title,
@@ -301,23 +260,12 @@ function EntryHead({
 }
 
 /**
- * An entry's description, set in two columns once there is enough of it.
- *
- * The arithmetic behind the numbers: the sheet is 60rem with 3.5rem of padding
- * a side, so the measure runs 848px, and two columns with a 2.5rem gutter land
- * at about 404px each. At the body size that is roughly 51 characters, inside
- * the classic 45-to-75 range. Widening the single column instead would have
- * run to 107 characters, so the extra width had to become a second column
- * rather than a longer line.
- *
- * The rule between them is doing work rather than decorating. Holding whole
- * paragraphs across the break left the left column ending half way down with a
- * hole under it, because a seven-line paragraph will not fit in what is left.
- * Letting them break and drawing the boundary is what a newspaper does, and it
- * is the only version where both columns fill.
- *
- * Two columns from lg only, and only for three paragraphs or more: one
- * paragraph split down the middle reads as a mistake.
+ * An entry's description, in two columns once there is enough of it: two
+ * columns land at ~51 characters (inside 45–75), where one full-measure
+ * column runs to 107. Paragraphs break across the boundary with a rule drawn
+ * between them — holding them whole leaves a hole under the left column.
+ * lg+ only, and only for three paragraphs or more: one paragraph split down
+ * the middle reads as a mistake.
  */
 function Prose({ paras }: { paras: string[] }) {
   return (
@@ -339,13 +287,9 @@ function Prose({ paras }: { paras: string[] }) {
 }
 
 /**
- * A two-up ruled grid, for the runs whose entries are short.
- *
- * The gutter alone was not enough separation. With rows sizing to the tallest
- * cell, a short entry beside a long one left a field of white with no boundary
- * in it, and reading down a column you could not tell where one certificate
- * ended and the next began. A rule over every row is how a printed directory
- * has always solved this, and it costs one line.
+ * A two-up ruled grid for short entries. The rule over every row is what
+ * separates a short entry from a tall neighbour — the gutter alone leaves
+ * unbounded white.
  */
 function Rows({ children }: { children: React.ReactNode }) {
   return <div className="grid sm:grid-cols-2 sm:gap-x-14">{children}</div>;

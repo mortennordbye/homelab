@@ -4,19 +4,12 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 /**
- * The screen between the hero and the room.
- *
- * It shows the same poster the hero's monitor shows, picked up at the scale
- * the hero's zoom ended on and still drifting inward, so arriving here reads
- * as one continuous move rather than as a second screen. The real scene
- * resolves behind it and the poster fades off, which is the whole trick: the
- * still becomes the room. It only works while the poster's framing and the
- * room's opening camera pose agree — see BACKLOG.md on regenerating it.
- *
- * Two callers, two states. The dynamic import's fallback has no progress to
- * report yet (the chunk carrying `useProgress` is what it is waiting for), so
- * it gets an indeterminate bar; once the room mounts, the real byte progress
- * takes over on the identical screen, so the swap between them is invisible.
+ * The screen between the hero and the room: the hero's poster, drifting
+ * inward until the scene resolves behind it. Only works while the poster's
+ * framing and the room's opening camera pose agree — see BACKLOG.md on
+ * regenerating it. Two callers: the dynamic-import fallback has no progress
+ * yet and gets an indeterminate bar; the mounted room takes over with real
+ * byte progress on the identical screen.
  */
 export function RoomLoading({
   progress,

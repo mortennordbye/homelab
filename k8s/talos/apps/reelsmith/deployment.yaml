@@ -5,23 +5,14 @@ metadata:
   name: reelsmith-gateway
   namespace: reelsmith
   annotations:
-    # The Meta app secret starts as a placeholder and is replaced once the app
-    # exists in the dashboard. Reloader restarts the pod when the secret changes,
-    # so that swap needs no manual rollout.
     reloader.stakater.com/auto: "true"
 spec:
-  # One replica, deliberately. The state is a single SQLite file on a
-  # ReadWriteOnce volume, and the comment poller is a singleton: two replicas
-  # would poll the same posts and race for the one private reply each comment
-  # gets. The scheduler makes this sharper still, because two of those would
-  # race to publish the same queued Reel, and the claim that prevents it only
-  # works because both would be writing to the one SQLite file. Scaling this
-  # means moving to Postgres and electing a leader first.
+  # One replica: single SQLite writer, singleton poller and scheduler — two
+  # pods would race to reply and to publish. Scaling means Postgres plus
+  # leader election first.
   replicas: 1
   strategy:
-    # RollingUpdate would briefly run two pods, which is the exact thing the
-    # single-writer database, the singleton poller and the scheduler cannot
-    # tolerate.
+    # Recreate: RollingUpdate would briefly run two pods.
     type: Recreate
   selector:
     matchLabels:
@@ -40,8 +31,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: gateway
-          # Pinned tag, rewritten by Kargo's kustomize-set-image promotion via
-          # the images: block in kustomization.yaml. Never :latest.
+          # Kargo rewrites the effective tag via the images: block in
+          # kustomization.yaml.
           image: ghcr.io/mortennordbye/reelsmith-gateway:0.0.1
           imagePullPolicy: IfNotPresent
           ports:
@@ -53,9 +44,7 @@ spec:
             capabilities:
               drop: ["ALL"]
           env:
-            # Without all three of these the process refuses to start, rather
-            # than serving an unsigned webhook route and a bearer route with an
-            # empty token.
+            # The process refuses to start without these.
             - name: GATEWAY_APP_SECRET
               valueFrom:
                 secretKeyRef:
@@ -71,8 +60,6 @@ spec:
                 secretKeyRef:
                   name: reelsmith-secret
                   key: GATEWAY_API_TOKEN
-            # The /admin password. Without it the panel refuses to start rather
-            # than serving itself on a host Meta needs to be able to reach.
             - name: GATEWAY_ADMIN_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -82,20 +69,17 @@ spec:
               value: /state/gateway.sqlite3
             - name: GATEWAY_COVERS_DIR
               value: /state/covers
-            # Meta fetches cover images from this host, so it has to be the
-            # external name rather than the service address.
+            # Meta fetches covers from this host: external name, not the
+            # Service address.
             - name: GATEWAY_PUBLIC_BASE_URL
               value: "https://gate.nordbye.it"
-          # The posting schedule. Separate from the env block above so changing
-          # when the account posts does not mean editing the deployment.
           envFrom:
             - configMapRef:
                 name: reelsmith-config
           volumeMounts:
             - name: state
               mountPath: /state
-            # readOnlyRootFilesystem is on, and Python still wants somewhere to
-            # write. Everything real lives on the state volume.
+            # readOnlyRootFilesystem is on; Python still needs a writable /tmp.
             - name: tmp
               mountPath: /tmp
           readinessProbe:
@@ -132,10 +116,8 @@ kind: Service
 metadata:
   name: reelsmith-gateway
   namespace: reelsmith
-  # A ServiceMonitor selects Services by the labels on the Service, not by the
-  # pod selector below. Without this label `monitoring.yaml` matches nothing
-  # and Prometheus never creates a target at all, which is quieter than a
-  # target that is down: there is nothing in the UI to notice.
+  # The ServiceMonitor selects by Service labels; without this one Prometheus
+  # creates no target at all — quieter than a target that is down.
   labels:
     app: reelsmith-gateway
 spec:

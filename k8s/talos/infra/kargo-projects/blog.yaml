@@ -2,10 +2,9 @@
 # Warehouse. Mirrors portfolio.yaml; the promotion steps live in the shared
 # promote-to-argocd ClusterPromotionTask.
 
-# --- Project namespace ------------------------------------------------------
 # Named `blog-cd` (not `blog`) to avoid colliding with the blog app namespace.
 # The label lets the Project below adopt this pre-created namespace instead of
-# racing to create it, keeping Argo CD sync ordering clean.
+# racing to create it.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -22,12 +21,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 ---
-# Auto-promotion is a Project-level policy in Kargo (never on a Stage). Both
-# Stages auto-promote: `stage` pushes the bump straight to main, and `prod` runs
-# promote-via-pr, which auto-opens a homelab PR and then blocks on the merge. So
-# the only human gate in the whole pipeline is approving that prod PR in GitHub;
-# there is no manual "promote" click in the Kargo UI. prod still only receives
-# Freight that passed the stage smoke test (see the Stage's sources.stages).
+# Auto-promotion is a Project-level policy in Kargo, never on a Stage. Both
+# Stages auto-promote; prod goes through promote-via-pr, so the only human gate
+# is merging that PR in GitHub.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ProjectConfig
 metadata:
@@ -42,10 +38,9 @@ spec:
     - stage: prod
       autoPromotionEnabled: true
 ---
-# Git write credential for Kargo's git-push, using the existing GitHub App
-# `mortennordbye-homelab-deployer` (scoped to mortennordbye/homelab, Contents
-# read/write). Same App as portfolio-cd; only the namespace differs. The Secret
-# must live in this Project namespace (Kargo cred lookup is per-Project).
+# Git write credential for Kargo's git-push (GitHub App
+# mortennordbye-homelab-deployer). The Secret must live in this Project
+# namespace — Kargo cred lookup is per-Project.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -90,18 +85,10 @@ spec:
         decodingStrategy: None
         metadataPolicy: None
 ---
-# Cloudflare API token for the prod Stage's cache purge step. Kargo's secret()
-# expression function resolves Secrets by name in the Project's own namespace,
-# so this is repeated per project rather than shared; there is no cluster-scoped
-# lookup. Both copies read the same Bitwarden secret.
-#
-# This is the same broad token external-dns, cert-manager and the Terraform
-# configs use, reused deliberately rather than minting a purge-only one. Worth
-# knowing what that means: it carries DNS:Edit and Zone Settings:Edit on
-# nordbye.it, so anything able to read Secrets in this namespace, or to land a
-# promotion step that reads them, can repoint the zone's records. A purge-only
-# token would cap the blast radius at a cold cache. Swapping to one is a change
-# of Bitwarden UUID here and nothing else.
+# Cloudflare API token for the prod cache purge. Kargo's secret() resolves by
+# name in the Project's own namespace, so this is repeated per project.
+# It is the broad token (DNS:Edit on nordbye.it); a purge-only token would cap
+# the blast radius and is only a Bitwarden UUID swap here.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -144,22 +131,13 @@ spec:
         repoURL: ghcr.io/mortennordbye/homelab/blog
         # CI tags every build 0.0.<run_number>; SemVer picks the greatest.
         # strictSemvers keeps the git-SHA and moving env tags out of selection.
-        # No eligible Freight exists until the first build after the CI change
-        # lands a 0.0.<run> tag (the current blog images are git-SHA tagged).
         imageSelectionStrategy: SemVer
         strictSemvers: true
         discoveryLimit: 20
 ---
-# Stage verification: a one-shot Job that exercises the stage site and fails on
-# any non-2xx. Retries on the first request cover the KEDA scale-from-zero cold
-# start (that request also wakes the stage deployment). -k skips TLS verify for
-# the internal local cert.
-#
-# This used to be a single curl of `/` that passed on any 2xx, which meant a
-# site rendering a blank or half-broken page still promoted to prod. nginx
-# serves whatever Hugo produced, so "200 on the home page" says almost nothing.
-# The checks below assert the things that actually break: which theme rendered
-# the page, that each page *kind* builds, and that the search index has content.
+# Stage verification: a one-shot Job that asserts the theme rendered, each page
+# kind builds, and the search index has content — a bare 200 on / passes even
+# when the site is half-broken. -k skips TLS verify for the internal local cert.
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -194,15 +172,8 @@ spec:
                           --max-time 30 -H 'Accept-Encoding: identity' \
                           -o /tmp/home.html "$BASE/"
 
-                        # Which theme rendered this. baseof.html emits this block and
-                        # no other theme emits anything like it, so it is the one cheap
-                        # assertion that the theme swap actually took effect.
-                        #
-                        # Grep the bare string, NOT id="northlight-strings" -- the
-                        # build runs --minify, which strips attribute quotes, so the
-                        # served markup reads id=northlight-strings. The quoted form
-                        # passes against an unminified local build and fails against
-                        # production, which is the worst way for a gate to be wrong.
+                        # Theme marker from baseof.html. Grep the bare string, not
+                        # id="northlight-strings": --minify strips attribute quotes.
                         grep -q 'northlight-strings' /tmp/home.html
 
                         # One request per page kind. A template that fails to build
@@ -219,12 +190,9 @@ spec:
                           -o /tmp/index.json "$BASE/index.json"
                         grep -q '"title"' /tmp/index.json
 
-                        # An article page, the most complex template. The slug comes
-                        # out of the index rather than being hardcoded, so renaming a
-                        # post cannot silently stop this being checked.
-                        # Split on commas first: the index is one minified line, so a
-                        # greedy match against it would return the last url, not the
-                        # first, and which post got checked would drift with ordering.
+                        # An article page; slug taken from the index so a renamed post
+                        # stays covered. Split on commas first — the index is one
+                        # minified line and a greedy match would grab the last url.
                         POST=$(tr ',' '\n' < /tmp/index.json \
                           | sed -n 's|.*"url":"\([^"]*\)".*|\1|p' | head -1)
                         test -n "$POST"
@@ -233,8 +201,7 @@ spec:
 
                         echo "smoke OK (theme, 4 kinds, search index, $POST)"
 ---
-# prod verification: same one-shot HTTP check against the live public domain.
-# Confirmed the cluster can reach blog.nordbye.it (no NAT-hairpin issue).
+# prod verification: the same checks against the live public domain.
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -270,13 +237,8 @@ spec:
                           --max-time 20 -H 'Accept-Encoding: identity' \
                           -o /tmp/home.html "$BASE/"
 
-                        # Which theme rendered this. Measured against the live
-                        # site through Cloudflare before being made a gate: the
-                        # marker survives identity, default and --compressed
-                        # requests alike, so the edge is not rewriting the
-                        # markup and this is safe to assert here as well as on
-                        # stage. Bare string, not id="...": --minify strips the
-                        # attribute quotes.
+                        # Bare string, not id="...": --minify strips the
+                        # attribute quotes. The marker survives Cloudflare's edge.
                         grep -q 'northlight-strings' /tmp/home.html
 
                         for p in /blog/ /tags/ /404.html /index.xml; do
@@ -337,10 +299,8 @@ spec:
             kind: ClusterPromotionTask
 ---
 # prod: receives only Freight already verified in `stage` (sources.stages).
-# Auto-promoted (see ProjectConfig), but through promote-via-pr: as soon as a
-# Freight passes the stage smoke test, Kargo auto-opens a homelab PR and waits.
-# The prod deploy happens when that PR is approved and merged in GitHub, so the
-# PR review is the prod gate. stage still uses the direct-push promote-to-argocd.
+# promote-via-pr auto-opens a homelab PR and blocks on the merge — the PR
+# review is the prod gate.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
@@ -376,20 +336,11 @@ spec:
         - task:
             name: promote-via-pr
             kind: ClusterPromotionTask
-        # The zone's cache rule edge-caches HTML for 4h (see
-        # terraform/cloudflare/nordbye-it/cache.tf). A build's CSS and JS are
-        # content-hashed, so the HTML the edge is holding names chunk files the
-        # freshly promoted image no longer contains: until that HTML expires the
-        # site loads with every stylesheet and script 404ing. Purging as the last
-        # promotion step closes that window instead of leaving it to whoever
-        # notices. Runs after argocd-wait inside the task, so the new pods are
-        # already serving and nothing can re-populate the edge from the old ones.
-        #
-        # The zone ID is looked up by name rather than committed. It is an
-        # identifier and not a credential, but this repo is public and the token
-        # already carries Zone:Read, so the lookup costs one request and keeps a
-        # Cloudflare identifier out of git. blog.nordbye.it lives in the same
-        # zone, so both projects look up the same name.
+        # The edge caches HTML for 4h (terraform/cloudflare/nordbye-it/cache.tf)
+        # while CSS/JS are content-hashed, so stale HTML 404s every asset of a
+        # new build. Purge as the last step, after argocd-wait, so the new pods
+        # are already serving. Zone ID is looked up by name to keep the
+        # identifier out of this public repo.
         - uses: http
           as: cf-zone
           retry:
@@ -407,10 +358,8 @@ spec:
             outputs:
               - name: zoneId
                 fromExpression: response.body.result[0].id
-        # purge_everything rather than a targeted purge because purge by hostname
-        # or prefix is Enterprise-only, and purge by URL would mean enumerating
-        # every hashed filename in the build. It costs the whole zone a cold
-        # cache, which is one origin round-trip per page.
+        # purge_everything: purge by hostname/prefix is Enterprise-only, and
+        # purge by URL would mean enumerating every hashed filename.
         - uses: http
           as: purge-cache
           retry:
@@ -424,11 +373,8 @@ spec:
               - name: Content-Type
                 value: application/json
             body: '{"purge_everything":true}'
-            # Cloudflare answers a rejected purge with 4xx, so the status alone
-            # is the signal. Not asserting on response.body.success, which would
-            # turn a body Kargo failed to parse into a failed promotion.
+            # Status alone is the signal; asserting response.body.success would
+            # turn an unparseable body into a failed promotion.
             successExpression: response.status == 200
-          # Deliberately no continueOnError. The deploy itself has already
-          # succeeded by this point, so failing here looks harsh, but a purge
-          # that did not happen means the live site serves broken HTML for the
-          # next four hours. That should read red in the pipeline, not green.
+          # No continueOnError: a purge that did not happen means broken HTML at
+          # the edge for hours, and that should read red in the pipeline.

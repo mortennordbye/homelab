@@ -9,18 +9,10 @@
 # The address every app hostname in this zone points at. The DDNS client
 # rewrites content, so that attribute is ignored.
 #
-# Deliberately NOT proxied, unlike ddns.nordbye.it. Cloudflare resolves a
-# DNS-only CNAME through to its target's answer, so proxying this record would
-# route every hostname that points at it through the edge, whatever each
-# record's own proxy status says. Verified against this zone: a DNS-only CNAME
-# aimed at the proxied ddns.nordbye.it resolved to Cloudflare addresses and the
-# request reached Cloudflare. That would drag audiobookshelf's audio through
-# the CDN, which Cloudflare's terms prohibit outside Enterprise and which they
-# act on at the account level rather than per hostname.
-#
-# The cost of leaving it DNS-only is that this record publishes the residential
-# address. Closing that means moving audiobookshelf and seerr off public DNS,
-# tracked in BACKLOG.md.
+# Deliberately NOT proxied, unlike ddns.nordbye.it: proxying this record would
+# route every hostname that points at it through the edge, dragging
+# audiobookshelf's audio through the CDN, which Cloudflare's terms prohibit.
+# Cost: the record publishes the residential address (see BACKLOG.md).
 resource "cloudflare_dns_record" "ddns" {
   zone_id = data.cloudflare_zone.this.zone_id
   name    = "ddns.${var.zone_name}"

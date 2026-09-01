@@ -10,24 +10,12 @@ import { HOSTS } from "./hardware";
 
 /**
  * The homelab as it actually stands: a BESTÅ at its real 180 x 42 x 38 with
- * three bays, and the set on top carrying the node status.
- *
- * The one liberty taken with the truth is the wood. The real cabinet is
- * white-stained oak, and a pale laminate carcass is the exact register
- * `branding/DECISIONS.md` rules out, so this keeps the geometry and cuts it
- * from the site's dark oak instead.
- *
- * The division of labour between the lights and the screen is deliberate and
- * is the reason both exist. Each machine's power button says the *box* is
- * powered. The screen says which *node* is Ready, which is a different fact —
- * a host can be up with a node NotReady — plus the versions and the ArgoCD
- * verdict, none of which a lamp can carry.
- *
- * Clicking a device is depth, not a toll gate: everything the object has to
- * say about the cluster is on the screen before anyone touches it, and a click
- * only adds the spec of the box you pointed at. The keyboard path to the same
- * information lives in the panel outside the canvas, because a canvas has none
- * of its own.
+ * three bays, and the set on top carrying the node status. One liberty: the
+ * real cabinet is white-stained oak, a register DECISIONS.md rules out, so it
+ * is cut from the site's dark oak. Power buttons say the *box* is powered;
+ * the screen says which *node* is Ready — different facts. Clicking is depth,
+ * never a toll gate, and the keyboard path lives in the panel outside the
+ * canvas, which has none of its own.
  */
 
 /* One unit is 10 cm.
@@ -240,14 +228,10 @@ type Pick = {
 };
 
 /**
- * Wraps one device so it can be pointed at. Selecting nudges it towards the
- * camera and puts a light on it. Not a tint and not an outline: a highlight
- * colour would be the only thing in frame not obeying the key, which is how a
- * render starts looking like a game. The nudge on its own was the whole cue
- * until it turned out to be invisible — three centimetres of travel at a
- * cabinet's viewing distance is nothing — and `branding/ART-DIRECTION.md` §4
- * says what to do instead: contrast comes from falloff, so the answer to which
- * one did I press is that the room's light is on it and nothing else.
+ * Wraps one device so it can be pointed at. Selection is shown by putting the
+ * room's light on it (ART-DIRECTION.md §4: contrast comes from falloff) — a
+ * tint or outline would be the one thing in frame not obeying the key, and
+ * the nudge alone is invisible at cabinet distance.
  */
 function Pickable({
   id, position, pick, children, lift = 0.5, hit, hitOffset,
@@ -700,14 +684,9 @@ function Switch8() {
 }
 
 /**
- * The Sonos Era 100: 182.5 x 120.3 x 130.5 mm. Not a box — the body is an
- * upright with an oval plan and softly rounded top and bottom edges, wrapped in
- * grille cloth almost to the top plate. A rounded box gets the dimensions right
- * and the object wrong, so this is a lathed profile revolved and then scaled on
- * one axis to make the oval, which is what the real silhouette is.
- *
- * The fun room already calls it "the Sonos Era 100 on the TV bench", so the
- * model is named rather than guessed.
+ * The Sonos Era 100 at 182.5 x 120.3 x 130.5 mm: a lathed profile revolved
+ * and scaled on one axis for the oval plan — a rounded box gets the
+ * dimensions right and the object wrong.
  */
 function Sonos() {
   const grille = useMemo(() => perforation(26, 22), []);

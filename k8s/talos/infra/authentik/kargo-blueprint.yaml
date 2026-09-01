@@ -51,13 +51,10 @@ data:
             # The UI computes this in the browser from window.location.
             - matching_mode: strict
               url: https://kargo.local.bigd.no/login
-            # The CLI port is pinned rather than matched by regex, and the port
-            # must stay a literal integer. authentik's cors_allow() runs
-            # urlparse().port over every redirect_uri of the provider without
-            # stopping at the first match, so a regex port raises there and the
-            # discovery endpoint 500s for any request carrying an Origin header.
-            # Kargo's UI resolves discovery in the browser, so that breaks SSO
-            # outright. Use `kargo login --port 8087` from the CLI.
+            # The port must stay a literal integer: authentik's cors_allow()
+            # runs urlparse().port over every redirect_uri, so a regex port
+            # 500s the discovery endpoint and breaks SSO outright.
+            # Use `kargo login --port 8087` from the CLI.
             - matching_mode: strict
               url: http://localhost:8087/auth/callback
           # Kargo reads claims from the ID token only, never from userinfo, so

@@ -87,11 +87,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # The room's desk monitor displays this manifest as real code. The Docker
-      # build context is ./portfolio, so the manifest has to be copied inside it
-      # to reach the image. Refreshing it here rather than trusting the copy in
-      # git means what ships is always the manifest that is actually deployed,
-      # even if someone edits k8s/ without remembering the copy.
+      # The site renders this manifest (desk monitor). The build context is
+      # ./portfolio, so copy it in fresh here rather than trusting the copy in
+      # git — what ships is always the manifest actually deployed.
       - name: Sync deployment manifest into the build context
         run: cp k8s/talos/apps/portfolio/deployment.yaml portfolio/src/content/k8s/deployment.yaml
 
@@ -99,18 +97,14 @@ jobs:
         with:
           context: ./portfolio
           push: true
-          # GHA-backed layer cache. First run after this lands primes the cache
-          # (slow); subsequent runs reuse the ~1.5 GB texlive base + npm install
-          # + next build layers. mode=max stores every intermediate layer.
+          # GHA-backed layer cache; mode=max stores every intermediate layer.
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_SHA=${{ steps.context.outputs.TAG }}
-          # Two tags: the git short-SHA for human traceability, and a
-          # 0.0.<run_number> strict-semver build counter that the Kargo Warehouse
-          # (SemVer strategy) selects. No moving stage/prod tag -- the same image
-          # is promoted across environments by Kargo, so an env tag would be
-          # redundant (stage) or misleading (prod is promoted in git, not tagged).
+          # Git short-SHA for traceability, plus a 0.0.<run_number> semver tag
+          # the Kargo Warehouse selects. No moving stage/prod tag: Kargo
+          # promotes the same image across environments in git.
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:0.0.${{ github.run_number }}

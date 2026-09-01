@@ -1,26 +1,20 @@
 description = "Kubernetes, cloud infrastructure and homelab engineering from a Talos cluster I actually run. Practical guides on observability, networking and GitOps."
 
 # periwinkle | sage | clay | plum | slate | rose
-# slate is the theme's blue, retuned to the portfolio's arctic blue in
-# assets/css/custom.css so the two sites read as one brand. Dropping that file
-# leaves the site blue, just muted — which is why slate is the base rather than
-# the periwinkle default.
+# slate, retuned to the portfolio's arctic blue in assets/css/custom.css;
+# slate as base means losing that file degrades to muted blue, not off-brand.
 colorScheme = "slate"
 defaultAppearance = "dark"
 autoSwitchAppearance = true
 
-# Lets the accent reach section headings, the year rules on the post index, tag
-# chips, a card's hover border and the blockquote edge. New in theme 0.6.0 and off
-# by default there; on here because the arctic blue is the point of the retune
-# above and it was only showing up on links.
+# Theme default is off; on so the accent reaches headings, chips and rules,
+# not just links.
 accentEmphasis = true
 
 enableSearch = true
 enableCodeCopy = true
 
-# Click a screenshot to open it, then zoom and pan. Most posts here lean on dashboard
-# captures whose point is in small text that is unreadable at the width of the prose
-# column. Off by default in the theme; on here for exactly that reason.
+# Theme default is off; on because dashboard screenshots need zoom to be readable.
 enableLightbox = true
 
 mainSections = ["blog"]
@@ -45,11 +39,8 @@ links = [
 layout = "basic"
 
 [home]
-# The `background` layout pins its scrim and text to light-on-dark in both colour
-# modes, because the image behind them does not invert when the palette does. With
-# a near-black backdrop that reads as a solid black band on a light page, so this
-# site takes the ordinary intro instead. `backgroundImage` is gone with it — only
-# the background layout reads it.
+# Not `background`: that layout pins light-on-dark text over the image, which
+# reads as a black band on a light page. Only it reads `backgroundImage`.
 layout = "stack"
 recentCount = 5
 
@@ -80,9 +71,7 @@ showTermCount = true
 cardView = false
 
 [footer]
-# The theme cannot default this to its own repository — that URL carries its
-# author's name, and no file inside the theme is allowed to. Unset, the theme name
-# in the attribution line renders as plain text.
+# Unset, the theme name in the attribution line renders as plain text.
 themeURL = "https://github.com/mortennordbye/northlight"
 showMenu = true
 showCopyright = true
@@ -90,15 +79,12 @@ showThemeAttribution = true
 showAppearanceSwitcher = true
 showScrollToTop = true
 
-# Cloudflare Web Analytics. This token was hardcoded in a local
-# extend-head.html override; the theme reads it from config, so the override is
-# gone and the token lives with the rest of the configuration.
+# Cloudflare Web Analytics.
 [analytics.cloudflare]
 token = "47962423c7a84c78a8a932edaf8844cf"
 
-# The theme fixes data-strict, data-emit-metadata, data-input-position and
-# data-theme itself — the last so the widget follows this site's appearance
-# toggle rather than only the OS — so only these five keys are read.
+# Only these five keys are read; the theme fixes the other data-* attributes
+# itself (data-theme follows the site's appearance toggle).
 [comments.giscus]
 repo = "mortennordbye/homelab"
 repoId = "R_kgDOOEXL5g"

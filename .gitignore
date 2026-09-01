@@ -130,3 +130,6 @@ Thumbs.db
 # until it has been run against real cases and is worth publishing.
 ai/projects/prompt-eval/
 ai/skills/prompt-eval-loop/
+
+# Auto-written by `next dev` on startup; regenerated, not source.
+portfolio/AGENTS.md

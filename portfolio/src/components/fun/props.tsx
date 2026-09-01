@@ -5,20 +5,10 @@ import { useLayoutEffect, useMemo } from "react";
 import * as THREE from "three";
 
 /**
- * Real CC0 scanned props from Poly Haven, in place of hand-built primitives.
- *
- * The room was assembled entirely out of RoundedBox and cylinders, and that is
- * the thing that read as "pixel art". It is not a resolution problem and no
- * amount of lighting fixes it: a chair made of four boxes has no arris, no
- * taper, no joinery and no wear, so the eye correctly reports that it was
- * drawn rather than photographed. Objects that genuinely are boxes in real
- * life — switches, the NAS, monitor panels — still model fine by hand and are
- * deliberately left alone. What needed replacing is everything organic or
- * finely shaped.
- *
- * Models are 1K glTF. Each is a few hundred KB to ~2MB, which is why this is
- * limited to the few props that carry the most weight visually rather than
- * applied to the whole room.
+ * Real CC0 scanned props from Poly Haven for everything organic or finely
+ * shaped; things that genuinely are boxes (switches, NAS, monitor panels)
+ * stay hand-modelled. Models are 1K glTF at a few hundred KB to ~2MB each,
+ * so this is limited to the props carrying the most visual weight.
  */
 
 export type PropName =
@@ -40,13 +30,9 @@ type PropProps = {
 
 /**
  * Renders a prop scaled to a real-world height and sat on its own base.
- *
- * Scanned assets do not share a convention for origin or units: some sit on
- * the origin, some are centred, some are a few centimetres off. Rather than
- * hand-tuning an offset per model and having it drift whenever an asset is
- * re-exported, the bounding box is measured after load and the group is
- * shifted so the model's own base lands on y=0. Placement then means what it
- * says, and a swapped model does not sink into the floor.
+ * Scanned assets share no origin/unit convention, so the bounding box is
+ * measured after load and the base shifted to y=0 — placement means what it
+ * says and a swapped model does not sink into the floor.
  */
 export function Prop({
   name,

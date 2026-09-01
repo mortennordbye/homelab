@@ -13,9 +13,8 @@ resources:
 - middleware-authentik.yaml
 - ciliumnetworkpolicy.yaml
 - monitoring.yaml
-# newTag via the kustomize-set-image promotion step (Kargo). Overrides the inline
-# tag in deployment.yaml; the reelsmith-cd Warehouse/promotion rewrites it to
-# 0.0.N as the reelsmith repo's build-gateway workflow publishes them.
+# newTag is rewritten by Kargo's kustomize-set-image promotion; it overrides
+# the inline tag in deployment.yaml.
 images:
 - name: ghcr.io/mortennordbye/reelsmith-gateway
   newTag: 0.0.85

@@ -3,10 +3,9 @@
 # reusable promotion steps live in clusterpromotiontask.yaml (shared with every
 # other app's project). Onboarding another app = a sibling <app>.yaml here.
 
-# --- Project namespace ------------------------------------------------------
 # Named `portfolio-cd` (not `portfolio`) to avoid colliding with the portfolio
 # app namespace. The label lets the Project below adopt this pre-created
-# namespace instead of racing to create it, keeping Argo CD sync ordering clean.
+# namespace instead of racing to create it.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -23,12 +22,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 ---
-# Auto-promotion is a Project-level policy in Kargo (never on a Stage). Both
-# Stages auto-promote: `stage` pushes the bump straight to main, and `prod` runs
-# promote-via-pr, which auto-opens a homelab PR and then blocks on the merge. So
-# the only human gate in the whole pipeline is approving that prod PR in GitHub;
-# there is no manual "promote" click in the Kargo UI. prod still only receives
-# Freight that passed the stage smoke test (see the Stage's sources.stages).
+# Auto-promotion is a Project-level policy in Kargo, never on a Stage. Both
+# Stages auto-promote; prod goes through promote-via-pr, so the only human gate
+# is merging that PR in GitHub.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ProjectConfig
 metadata:
@@ -43,11 +39,9 @@ spec:
     - stage: prod
       autoPromotionEnabled: true
 ---
-# Git write credential for Kargo's git-push, using the existing GitHub App
-# `mortennordbye-homelab-deployer` (scoped to mortennordbye/homelab, Contents
-# read/write). ESO pulls the three App values from Bitwarden and templates them
-# plus the static repoURL and the required cred-type label into the Secret.
-# The Secret must live in this Project namespace (Kargo cred lookup is per-Project).
+# Git write credential for Kargo's git-push (GitHub App
+# mortennordbye-homelab-deployer). The Secret must live in this Project
+# namespace — Kargo cred lookup is per-Project.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -92,18 +86,10 @@ spec:
         decodingStrategy: None
         metadataPolicy: None
 ---
-# Cloudflare API token for the prod Stage's cache purge step. Kargo's secret()
-# expression function resolves Secrets by name in the Project's own namespace,
-# so this is repeated per project rather than shared; there is no cluster-scoped
-# lookup. Both copies read the same Bitwarden secret.
-#
-# This is the same broad token external-dns, cert-manager and the Terraform
-# configs use, reused deliberately rather than minting a purge-only one. Worth
-# knowing what that means: it carries DNS:Edit and Zone Settings:Edit on
-# nordbye.it, so anything able to read Secrets in this namespace, or to land a
-# promotion step that reads them, can repoint the zone's records. A purge-only
-# token would cap the blast radius at a cold cache. Swapping to one is a change
-# of Bitwarden UUID here and nothing else.
+# Cloudflare API token for the prod cache purge. Kargo's secret() resolves by
+# name in the Project's own namespace, so this is repeated per project.
+# It is the broad token (DNS:Edit on nordbye.it); a purge-only token would cap
+# the blast radius and is only a Bitwarden UUID swap here.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -144,13 +130,10 @@ spec:
   subscriptions:
     - image:
         repoURL: ghcr.io/mortennordbye/homelab/portfolio
-        # CI tags every build 0.0.<run_number> (GitHub's monotonic run counter).
-        # SemVer picks the greatest such tag, so new builds are always selected
-        # with no manual tagging and no dependence on image timestamps (the
-        # reason NewestBuild stalled: all builds share the base layer's `created`).
-        # strictSemvers (default true) makes the git-SHA and env tags non-eligible.
-        # discoveryLimit + strictSemvers spelled out to match Kargo's defaults and
-        # avoid ArgoCD drift.
+        # CI tags every build 0.0.<run_number>; SemVer picks the greatest.
+        # NewestBuild stalls here — all builds share the base layer's `created`.
+        # strictSemvers keeps git-SHA and env tags out of selection; defaults
+        # spelled out to avoid ArgoCD drift.
         imageSelectionStrategy: SemVer
         strictSemvers: true
         discoveryLimit: 20
@@ -188,10 +171,8 @@ spec:
                         -o /dev/null -w '%{http_code}\n'
                         https://portfolio-stage.local.bigd.no/
 ---
-# prod verification: same one-shot HTTP check against the live public domain
-# (through the public gateway + TLS), so a bad prod promotion is flagged instead
-# of showing green. Confirmed the cluster can reach nordbye.it (no NAT-hairpin
-# issue). Fewer cold-start retries needed than stage since prod stays warm.
+# prod verification: the same check against the live public domain. Fewer
+# retries than stage since prod stays warm.
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -222,11 +203,8 @@ spec:
                         -o /dev/null -w '%{http_code}\n'
                         https://nordbye.it/
 ---
-# stage: receives new Freight directly from the Warehouse (auto-promoted per
-# ProjectConfig), then verifies with the HTTP smoke test. Only Freight that
-# passes verification here becomes available to prod. The promotion steps live
-# in the shared promote-to-argocd ClusterPromotionTask; this Stage supplies the
-# per-app vars.
+# stage: receives new Freight directly from the Warehouse, then verifies with
+# the smoke test. Only Freight that passes here becomes available to prod.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
@@ -234,9 +212,7 @@ metadata:
   namespace: portfolio-cd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
-    # Cosmetic UI colour (Kargo pipeline view). Set per role and kept identical
-    # across every app: stage = blue, prod = red, so the pipeline reads the same
-    # everywhere instead of Kargo picking a random colour per Stage.
+    # Cosmetic UI colour, kept identical across apps: stage = blue, prod = red.
     kargo.akuity.io/color: "#0284c7"
     kargo.akuity.io/description: "Auto-promoted from the Warehouse, then smoke-tested on portfolio-stage.local.bigd.no."
 spec:
@@ -266,10 +242,8 @@ spec:
             kind: ClusterPromotionTask
 ---
 # prod: receives only Freight already verified in `stage` (sources.stages).
-# Auto-promoted (see ProjectConfig), but through promote-via-pr: as soon as a
-# Freight passes the stage smoke test, Kargo auto-opens a homelab PR and waits.
-# The prod deploy happens when that PR is approved and merged in GitHub, so the
-# PR review is the prod gate. stage still uses the direct-push promote-to-argocd.
+# promote-via-pr auto-opens a homelab PR and blocks on the merge — the PR
+# review is the prod gate.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
@@ -305,20 +279,11 @@ spec:
         - task:
             name: promote-via-pr
             kind: ClusterPromotionTask
-        # The zone's cache rule edge-caches HTML for 4h (see
-        # terraform/cloudflare/nordbye-it/cache.tf). A build's CSS and JS are
-        # content-hashed, so the HTML the edge is holding names chunk files the
-        # freshly promoted image no longer contains: until that HTML expires the
-        # site loads with every stylesheet and script 404ing. Purging as the last
-        # promotion step closes that window instead of leaving it to whoever
-        # notices. Runs after argocd-wait inside the task, so the new pods are
-        # already serving and nothing can re-populate the edge from the old ones.
-        #
-        # The zone ID is looked up by name rather than committed. It is an
-        # identifier and not a credential, but this repo is public and the token
-        # already carries Zone:Read, so the lookup costs one request and keeps a
-        # Cloudflare identifier out of git. blog.nordbye.it lives in the same
-        # zone, so both projects look up the same name.
+        # The edge caches HTML for 4h (terraform/cloudflare/nordbye-it/cache.tf)
+        # while CSS/JS are content-hashed, so stale HTML 404s every asset of a
+        # new build. Purge as the last step, after argocd-wait, so the new pods
+        # are already serving. Zone ID is looked up by name to keep the
+        # identifier out of this public repo.
         - uses: http
           as: cf-zone
           retry:
@@ -336,10 +301,8 @@ spec:
             outputs:
               - name: zoneId
                 fromExpression: response.body.result[0].id
-        # purge_everything rather than a targeted purge because purge by hostname
-        # or prefix is Enterprise-only, and purge by URL would mean enumerating
-        # every hashed filename in the build. It costs the whole zone a cold
-        # cache, which is one origin round-trip per page.
+        # purge_everything: purge by hostname/prefix is Enterprise-only, and
+        # purge by URL would mean enumerating every hashed filename.
         - uses: http
           as: purge-cache
           retry:
@@ -353,11 +316,8 @@ spec:
               - name: Content-Type
                 value: application/json
             body: '{"purge_everything":true}'
-            # Cloudflare answers a rejected purge with 4xx, so the status alone
-            # is the signal. Not asserting on response.body.success, which would
-            # turn a body Kargo failed to parse into a failed promotion.
+            # Status alone is the signal; asserting response.body.success would
+            # turn an unparseable body into a failed promotion.
             successExpression: response.status == 200
-          # Deliberately no continueOnError. The deploy itself has already
-          # succeeded by this point, so failing here looks harsh, but a purge
-          # that did not happen means the live site serves broken HTML for the
-          # next four hours. That should read red in the pipeline, not green.
+          # No continueOnError: a purge that did not happen means broken HTML at
+          # the edge for hours, and that should read red in the pipeline.

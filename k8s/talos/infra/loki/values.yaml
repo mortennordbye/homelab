@@ -9,19 +9,9 @@ loki:
     allow_structured_metadata: true
     reject_old_samples: true
     reject_old_samples_max_age: 24h
-    # Enforced from the day the compactor block below moved under `loki:`.
-    # Before that this was a number nobody applied, and the volume held every
-    # log line written since the install: 120 days on a 20Gi disk, and a live
-    # Instagram token that a pod had printed for ten minutes four weeks after
-    # it should have aged out.
-    #
-    # 7d rather than the 24h that was written here, deliberately. 24h was never
-    # lived with, so it was a guess either way, and a week of history is worth
-    # more than the disk it costs. Lower it once you have watched retention
-    # actually run.
+    # Only applied when the compactor block below is enabled under `loki:`.
     retention_period: 168h
     # Keep Kubernetes events longer than pod logs for incident troubleshooting.
-    # Raised with the default so it stays longer rather than equal.
     retention_stream:
       - selector: '{job="kubernetes-events"}'
         priority: 1
@@ -48,16 +38,10 @@ loki:
           prefix: index_
           period: 24h
 
-  # Retention is the compactor's job, and nothing else does it. This block used
-  # to sit at the top level of this file, where the chart has no such value and
-  # dropped it silently: `retention_period` was set, `retention_enabled` read
-  # back as false from Loki's own /config endpoint, and no log line had ever
-  # been deleted. A retention policy that is configured but not applied is
-  # worse than none, because it is believed.
-  #
-  # `shared_store` went with the move rather than under it. Loki 3 removed the
-  # field, so carrying it across would have turned a silently ignored block
-  # into a pod that will not start.
+  # Retention is the compactor's job, and nothing else does it. This block must
+  # live under `loki:` — at the top level the chart drops it silently and no
+  # log line is ever deleted. No `shared_store`: Loki 3 removed the field and
+  # the pod refuses to start with it.
   compactor:
     working_directory: /var/loki/compactor
     retention_enabled: true

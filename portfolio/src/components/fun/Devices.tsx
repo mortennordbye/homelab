@@ -10,16 +10,10 @@ import { Interactive } from "./interaction";
 import { Sonos } from "./Sonos";
 
 /**
- * The real homelab, modelled from reference photos of the actual flat.
- *
- * It lives in a pale oak sideboard in the living room rather than on a rack.
- * The unit is open-fronted: it had hinged doors you pressed E to swing, but
- * hiding the one thing the room exists to show, behind an interaction someone
- * has to discover first, was the wrong trade.
- *
- * Dimensions are the real products in metres. Getting relative scale right
- * does more for believability than detail does — a NAS the same size as a
- * network switch reads as toys however well it is shaded.
+ * The real homelab, modelled from reference photos of the actual flat, in an
+ * open-fronted oak sideboard — never hide the one thing the room exists to
+ * show. Dimensions are the real products in metres: relative scale does more
+ * for believability than detail.
  */
 
 const PLASTIC_WHITE = { color: "#dcdde0", roughness: 0.44, metalness: 0.04 };

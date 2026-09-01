@@ -1,8 +1,6 @@
 services:
-  # One-shot service: builds the cv-bundle image (which merges host's
-  # static public/ with freshly-baked CV artifacts), runs once to copy
-  # the result into the cv-bundle named volume, then exits. The dev
-  # service waits for this to complete before starting.
+  # One-shot: copies the cv-bundle stage's merged public/ + CV artifacts into
+  # the named volume, then exits; dev waits on it.
   cv-bundle:
     build:
       context: .
@@ -10,8 +8,7 @@ services:
     container_name: portfolio-cv-bundle
     volumes:
       - cv-bundle:/dest
-    # Wipe the volume and copy fresh staging into it so that removed
-    # variants or stale files never linger across rebuilds.
+    # Wipe first so stale variants never linger across rebuilds.
     command: sh -c "rm -rf /dest/* /dest/.[!.]* 2>/dev/null; cp -a /staging/. /dest/"
     labels:
       env: dev
@@ -26,10 +23,7 @@ services:
       - "3000:3000"
     volumes:
       - .:/app
-      # Overlay the cv-bundle volume on top of the bind-mounted public/.
-      # Inside the container, /app/public is the volume contents (host's
-      # static assets + CV artifacts merged). Host's public/ folder never
-      # gains the cv-*.pdf / resume.pdf / cv-manifest.json files.
+      # Overlays the bind mount: host public/ never gains the cv-*.pdf files.
       - cv-bundle:/app/public:ro
       - node_modules:/app/node_modules
       # Keep Turbopack's persistence cache (~1 GB after a while) off the
@@ -38,10 +32,8 @@ services:
       - next-cache:/app/.next
     environment:
       NEXT_TELEMETRY_DISABLED: "1"
-      # Point /api/v1/infra at a local fixture instead of the ConfigMap the
-      # cluster mounts at /config/status.json. Same code path, local data —
-      # without it the endpoint falls back to the two-field build-time
-      # snapshot and the fun room has almost nothing to display.
+      # Local fixture standing in for the ConfigMap at /config/status.json;
+      # without it /api/v1/infra has almost nothing to show the fun room.
       STATUS_FILE: "/app/dev/status.json"
     depends_on:
       cv-bundle:

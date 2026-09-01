@@ -3,14 +3,10 @@ kind: Namespace
 metadata:
   name: plex-media-stack
   labels:
-    # Talos enforces PodSecurity "baseline" cluster-wide, exempting only kube-system, and baseline
-    # forbids hostPath volumes outright. Plex mounts /dev/dri from the host for QuickSync
-    # transcoding on genesis-worker-01, so this namespace has to sit above baseline.
-    #
-    # This is broader than ideal: it lifts the restriction for seerr and tautulli too, neither of
-    # which needs it. The narrower fix is Intel's GPU device plugin, which advertises
-    # gpu.intel.com/i915 as a schedulable resource and removes the need for hostPath entirely,
-    # letting this go back to baseline. Tracked in BACKLOG.md.
+    # Baseline PodSecurity forbids hostPath, and Plex mounts /dev/dri for
+    # QuickSync transcoding, so this namespace sits above baseline. Broader than
+    # ideal (lifts it for seerr/tautulli too); the narrower fix is Intel's GPU
+    # device plugin — tracked in BACKLOG.md.
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: baseline
     pod-security.kubernetes.io/warn: baseline

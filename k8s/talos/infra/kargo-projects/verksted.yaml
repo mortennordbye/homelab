@@ -4,7 +4,6 @@
 # prod -> the smoke test verifies. Mirrors logeverylift.yaml/headroom.yaml. The
 # image source and CI live in the separate mortennordbye/verksted repo.
 
-# --- Project namespace ------------------------------------------------------
 # Named `verksted-cd` (not `verksted`) to avoid colliding with the app namespace.
 apiVersion: v1
 kind: Namespace

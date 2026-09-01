@@ -1,18 +1,9 @@
-# Kargo project for the headroom app. Two stages off one image: the headroom CI
-# pushes a new image -> Warehouse creates Freight -> `demo` deploys it straight
-# to the public read-only demo and smoke-tests it -> only then does that Freight
-# become available to `prod`, which auto-opens a homelab PR whose merge deploys
-# the private instance. The image source and CI live in the separate
-# mortennordbye/headroom repo.
-#
-# The demo is the canary: it runs the same image with DEMO_MODE=1, holds no real
-# data, and is behind a public URL that can be probed directly — so a build that
-# fails to serve, or that has lost the read-only gate, is caught there before it
-# can reach the instance holding actual finances. Coverage is partial by nature
-# (the demo never exercises the write path, since it has none), which is why prod
-# keeps its own smoke test and its PR gate.
+# Kargo project for the headroom app. The public read-only demo (DEMO_MODE=1,
+# no real data) is the canary: `demo` deploys and smoke-tests each build, and
+# only Freight that passes becomes available to `prod`, the private instance,
+# gated by a PR merge. The demo never exercises the write path, so prod keeps
+# its own smoke test. Image source and CI live in mortennordbye/headroom.
 
-# --- Project namespace ------------------------------------------------------
 # Named `headroom-cd` (not `headroom`) to avoid colliding with the app namespace.
 apiVersion: v1
 kind: Namespace
@@ -111,8 +102,6 @@ spec:
         repoURL: ghcr.io/mortennordbye/headroom
         # headroom CI tags every build 0.0.<run_number>; SemVer picks the
         # greatest. strictSemvers keeps the git-SHA/latest tags out of selection.
-        # No eligible Freight exists until the first build after the CI change
-        # lands a 0.0.<run> tag (the current images are only sha-/latest tagged).
         imageSelectionStrategy: SemVer
         strictSemvers: true
         discoveryLimit: 20
@@ -207,11 +196,9 @@ spec:
                         -o /dev/null -w '%{http_code}\n'
                         https://headroom.local.bigd.no/
 ---
-# demo: receives new Freight straight from the Warehouse (auto-promoted per
-# ProjectConfig) and pushes it to main directly via promote-to-argocd — no PR,
-# because a public demo with no data behind it has nothing a review would
-# protect, and a fast canary is the whole point. Only Freight that passes the
-# read-only smoke test above becomes available to prod.
+# demo: receives new Freight straight from the Warehouse via direct-push
+# promote-to-argocd. Only Freight that passes the read-only smoke test above
+# becomes available to prod.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
@@ -248,11 +235,9 @@ spec:
             name: promote-to-argocd
             kind: ClusterPromotionTask
 ---
-# prod: the private instance, holding real financial data. Receives only Freight
-# already verified in `demo` (sources.stages), auto-promoted per ProjectConfig
-# through promote-via-pr, then verified by its own smoke test. promote-via-pr
-# opens a homelab PR and waits for the merge, so the PR review stays the deploy
-# gate on top of the demo canary.
+# prod: the private instance, holding real financial data. Receives only
+# Freight already verified in `demo`; promote-via-pr keeps the PR merge as the
+# deploy gate on top of the demo canary.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:

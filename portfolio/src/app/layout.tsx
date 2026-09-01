@@ -17,18 +17,9 @@ import { services } from "@/content/services";
 const themeBoot = `document.documentElement.classList.add('dark');document.documentElement.dataset.theme='dark';`;
 
 /*
- * Two faces, no sans. See `theme` and `fonts` in content/brand.ts.
- *
- * Source Serif carries headings and body alike, which is the whole point: serif
- * headline over grotesque body over mono label is the signature of a generated
- * portfolio whatever families are substituted into it. One family with a real
- * optical-size axis breaks that pattern and is honest about it — the display
- * classes in globals.css ask for a light cut at opsz 60, prose gets a sturdy
- * one at 12, which is how metal type actually worked.
- *
- * This replaced Inter, JetBrains Mono and Fraunces, which sat at popularity
- * ranks 5, 59 and 93 of the 1,942 families on Google Fonts. The brand document
- * had claimed for some time that Inter was deliberately not here; it was.
+ * Two faces, no sans — see `theme` and `fonts` in content/brand.ts. Source
+ * Serif carries headings and body alike via its optical-size axis: display
+ * classes in globals.css ask for a light cut at opsz 60, prose a sturdy 12.
  */
 const body = Source_Serif_4({
   variable: "--font-body",

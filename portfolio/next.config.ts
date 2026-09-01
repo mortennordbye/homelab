@@ -2,15 +2,10 @@ import type { NextConfig } from "next";
 import { pdfFilename } from "./src/lib/download-name";
 
 const nextConfig: NextConfig = {
-  // Server runtime (was "export"): the app now serves a public API under
-  // /api/v1 alongside the site, which a static export cannot do. Emits a
-  // self-contained .next/standalone bundle for the Node runtime image.
+  // Server runtime: /api/v1 needs what a static export cannot do.
   output: "standalone",
-  // Compression is handled at the Traefik edge (compress Middleware, br/zstd/
-  // gzip by preference). Next's built-in gzip runs first at the origin and,
-  // because a proxy won't re-encode an already-compressed response, would pin
-  // every client that accepts gzip to gzip and starve brotli. Off here so the
-  // edge picks the smallest encoding.
+  // Off: Traefik compresses at the edge. Origin gzip would pin every
+  // gzip-accepting client to gzip and starve brotli/zstd.
   compress: false,
   // Pages keep trailing slashes for stable canonical URLs; the redirect is
   // skipped so API clients hitting /api/v1/profile aren't 308'd to a slash.
@@ -22,8 +17,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  // Security headers + asset caching used to live in nginx (nginx/*.conf).
-  // With the Node runtime they move here so the posture is unchanged.
+  // No nginx in front — security headers and asset caching live here.
   async headers() {
     const security = [
       { key: "X-Content-Type-Options", value: "nosniff" },
@@ -35,28 +29,17 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: security },
       {
-        // Long-cache the immutable static assets shipped by the build. The
-        // glTF pair belongs here too: the fun room's models are 1.5 MB of
-        // geometry that never changes, and without a rule they fell back to
-        // the edge's four-hour default and revalidated on every later visit.
+        // Long-cache immutable build assets. gltf/bin must stay in the list
+        // or the fun room's models fall back to the edge's short default.
         source:
           "/:path*.:ext(png|jpg|jpeg|gif|webp|avif|svg|ico|woff|woff2|ttf|pdf|gltf|bin)",
         headers: [{ key: "Cache-Control", value: "public, max-age=2592000" }],
       },
       {
-        // The name a CV lands under, made authoritative.
-        //
-        // `a.download` on the resume object and the printer in /fun is only a
-        // hint, and it covers exactly one of the ways someone gets at these
-        // files. Anyone who opens the URL directly, or right-clicks a link and
-        // picks "Save link as", gets the build's own stem instead, and that
-        // stem is a bitmask, so a recruiter ends up filing `cv-1111.pdf`.
-        // The header wins over the attribute in every browser and applies on
-        // every path, so it is the only place the name has to be correct.
-        //
-        // Four bits: skills, client projects, home lab, photo. Spelled out as
-        // a pattern rather than a wildcard so `/cv-manifest.json` and anything
-        // else beginning cv- cannot fall in here.
+        // Authoritative download name: the header beats `a.download` and also
+        // covers direct opens, so nobody files a `cv-1111.pdf`. The \d{4}
+        // pattern (skills/clientProjects/homeLab/photo bits) keeps
+        // /cv-manifest.json out of this rule.
         source: "/cv-:flags(\\d{4}).pdf",
         headers: [
           { key: "Content-Disposition", value: `attachment; filename="${pdfFilename(false)}"` },
@@ -75,7 +58,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // www -> apex, previously handled by an nginx server block.
+  // www -> apex.
   async redirects() {
     return [
       {

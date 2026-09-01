@@ -46,10 +46,8 @@ COPY tsconfig.json next.config.ts postcss.config.mjs eslint.config.mjs ./
 COPY public ./public
 COPY src ./src
 
-# Bake freshly-built PDFs + customizer manifest into public/ so the static
-# export includes them. The frontend fetches the manifest at runtime, so
-# everything CV-related is a runtime asset under /. xelatex writes
-# output/<input>.pdf — copy résumé + all 16 CV variants into public/.
+# Bake the freshly-built PDFs + customizer manifest into public/ so they ship
+# as runtime assets under /.
 COPY --from=pdfbuild /work/latex/output/resume.pdf ./public/resume.pdf
 COPY --from=pdfbuild /work/latex/output/cv-*.pdf ./public/
 COPY --from=texgen /app/public/cv-manifest.json ./public/cv-manifest.json
@@ -63,15 +61,9 @@ RUN --mount=type=cache,target=/app/.next/cache \
     npm run build
 
 # ---- Stage cv-bundle: dev-server volume populator ----
-# Merges the host's static public/ assets with the freshly-built CV
-# artifacts into /staging. A one-shot service in compose.yaml runs
-# this image and `cp`s /staging into a named volume, which the dev
-# container then mounts read-only at /app/public. The result: the
-# dev server serves the real CV without writing anything to the
-# host filesystem.
-#
-# Never built when targeting the production runtime image — CI's
-# `docker build .` skips this stage automatically.
+# Merges host public/ with the built CV artifacts for compose.yaml's one-shot
+# service, so the dev server serves the real CV without writing to the host.
+# Skipped automatically when CI targets the runtime image.
 FROM alpine AS cv-bundle
 WORKDIR /staging
 COPY public/ ./
@@ -80,12 +72,9 @@ COPY --from=pdfbuild /work/latex/output/cv-*.pdf ./
 COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 
 # ---- Stage 4: serve the Next.js server on distroless Node ----
-# Distroless nodejs has no shell/package manager — minimal attack surface and
-# runs as the built-in `nonroot` user (uid 65532). The standalone output ships
-# a trimmed node_modules and a self-contained server.js; only `.next/static`
-# and `public` are copied alongside it. At runtime the only writable path the
-# server needs is `.next/cache` (ISR/fetch cache), mounted as an emptyDir in
-# the Deployment so readOnlyRootFilesystem still holds.
+# No shell, runs as nonroot (uid 65532). The only writable path the server
+# needs is .next/cache, mounted as an emptyDir in the Deployment so
+# readOnlyRootFilesystem still holds.
 FROM gcr.io/distroless/nodejs24-debian12 AS runtime
 WORKDIR /app
 

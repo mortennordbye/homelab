@@ -7,18 +7,9 @@ import { relative } from "./feed";
 import { Housing, PANEL_PX_H, PANEL_PX_W, distanceFactor } from "./Screen";
 
 /**
- * The landscape monitor, showing real source from this repo.
- *
- * It used to carry FEED STATUS, which was the wrong thing twice over: the HUD
- * already reports live/stale/snapshot persistently from anywhere in the room,
- * and a panel about the plumbing is not what anyone sits down to read. An
- * editor next to a shell is also simply what a working desk looks like.
- *
- * Highlighting is a small hand-rolled tokeniser rather than a syntax library.
- * Shiki or Prism would be a large dependency to render thirty lines at a size
- * where nobody is reading the semantics — the job here is for it to *look* like
- * code at a glance and be readable when you lean in, which four token classes
- * cover.
+ * The landscape monitor, showing real source from this repo. Highlighting is a
+ * hand-rolled tokeniser: Shiki/Prism would be a large dependency for thirty
+ * lines that only have to look like code, and four token classes cover it.
  */
 
 const COLOUR = {
@@ -183,15 +174,9 @@ export function CodeScreen({
   source: SourceExcerpt;
   data: PanelProps;
   /**
-   * Which view is up, owned by Scene.
-   *
-   * It was local `useState` first and did not work: the interval fired, but the
-   * component rendered eighteen times with the value never leaving its initial
-   * state, so something upstream is discarding this component's state. Every
-   * other piece of state in the room already lives in Scene or FunRoom — the
-   * powered-on stagger, the cards, the terminal — and lifting it there fixed it
-   * immediately. Worth knowing before anyone adds `useState` to a component
-   * mounted under the screens.
+   * Which view is up, owned by Scene. Do not move this to local `useState` in
+   * a component mounted under the screens — something upstream discards that
+   * state; every other piece of room state lives in Scene or FunRoom too.
    */
   tab: Tab;
   position: [number, number, number];

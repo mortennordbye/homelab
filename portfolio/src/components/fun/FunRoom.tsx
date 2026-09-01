@@ -49,23 +49,11 @@ import { useInfraFeed } from "./feed";
 import { preloadProps } from "./props";
 import { preloadSurfaces } from "./textures";
 
-// Kick both caches at module scope. This route is dynamic-imported behind a
-// nav click, so the module only evaluates once someone is heading here, and
-// the fetches then overlap the entry sequence instead of popping in surface by
-// surface after the room appears.
-//
-// These were previously exported and never called, which is worth flagging:
-// a dead preload is invisible, because everything still loads correctly, just
-// later and one at a time.
-//
-// Not on touch, though. Module scope evaluates the moment the dynamic import
-// resolves — before the first render, and therefore before the gate that asks
-// a phone visitor whether they want 6.5MB off their mobile data. Preloading
-// here regardless would make that question theatre, since the answer would
-// arrive long after the bytes. Touch visitors preload on the way in instead.
-//
-// And not at all without WebGL: those bytes would only ever feed a canvas that
-// cannot draw them.
+// Kick both caches at module scope: the route is dynamic-imported behind a
+// nav click, so this runs only once someone is heading here and the fetches
+// overlap the entry sequence. Not on touch — module scope runs before the
+// data-usage gate, which would make that question theatre — and not without
+// WebGL, where the bytes could never be drawn.
 
 /**
  * Can this machine draw the room at all?
@@ -99,29 +87,14 @@ if (WEBGL_OK && !window.matchMedia("(pointer: coarse)").matches) {
   preloadProps();
 }
 
-// -----------------------------------------------------------------------------
-// Screen placement.
-//
-// The room ran six screens: three on the desk and two more on the side wall.
-// That is a trading floor, not a flat. It is now two monitors on the desk —
-// one landscape, one stood on its end for the shell — and the television,
-// which carries the whole observability wall on its own.
-//
-// The side-wall pair is gone entirely rather than relocated. Two panels facing
-// the bookshelf were screens nobody stood in front of, and every one of them
-// was a live DOM layer being composited whether or not it was in view.
-// -----------------------------------------------------------------------------
-/* The desk pair lives in Room.tsx, because the monitor stands have to stand
-   under the monitors and the desk owns those. Two sets of numbers that must
-   agree is one set too many. */
+// Screen placement. Each screen is a live DOM layer composited whether or not
+// it is in view, so screens exist only where someone stands. The desk pair
+// lives in Room.tsx — the desk owns the monitor stands, and two sets of
+// numbers that must agree is one set too many.
 
 /**
- * The television, on the sideboard where a television actually lives.
- *
- * Centred at z 0.15 rather than on the sideboard's own centre so it does not
- * stand in front of the access point on the top at z 0.97 — a 1.42m screen
- * there would occlude it, and an occluded device is one that can never be
- * looked at.
+ * The television. Centred at z 0.15, not the sideboard's centre, so the 1.42m
+ * screen does not occlude the access point at z 0.97.
  */
 const WALL_SCREEN: Placement = {
   position: [2.28, 1.09, 0.15],
@@ -129,14 +102,8 @@ const WALL_SCREEN: Placement = {
   width: 1.42,
 };
 
-/**
- * Everything cluster-shaped goes on the television.
- *
- * FEED STATUS is filtered out and has no screen at all, which is where it
- * started: the HUD status chip carries live/stale/snapshot from anywhere in the
- * room, so a panel repeating it was always redundant. The desk monitor it
- * briefly occupied now shows source instead.
- */
+// Everything cluster-shaped goes on the television. FEED STATUS gets no
+// screen: the HUD chip already carries live/stale/snapshot everywhere.
 const WALL_PANELS = PANELS.filter((p) => p.id !== "feed");
 
 /** How many things stagger on at boot: the desk monitor, then the television. */
@@ -234,26 +201,12 @@ const NOTICE_LINK =
   "focus-ring font-mono text-xs text-accent underline-offset-4 hover:underline";
 
 /**
- * Watches for the GPU dropping the canvas out from under us.
- *
- * A lost context is not something React hears about on its own: the canvas
- * stops updating and the room looks fine while having quietly stopped being a
- * room. Driver resets, laptops waking, and the browser reclaiming memory from
- * a backgrounded tab all cause it.
- *
- * Reporting it is all this does, and the caller must respond by unmounting the
- * Canvas rather than re-rendering it. That is not a stylistic preference. Any
- * re-render of the scene against a dead context reaches `EffectComposer`,
- * which throws `Cannot read properties of null` out of `addPass`, and the
- * throw lands in Next's error boundary — which owns the whole page, so the
- * result is the error overlay in dev and `app/error.tsx` in production,
- * neither of which is the notice we are trying to show. The first version of
- * this component caused exactly that: setting state was itself enough to
- * re-render `Post` and blow up the page it was meant to rescue.
- *
- * Unmounting also means there is no canvas left to receive
- * `webglcontextrestored`, so recovery is a reload. Hence no restore handler,
- * and a notice that does not promise one.
+ * Watches for the GPU dropping the canvas (driver reset, wake, memory reclaim)
+ * — React never hears about it on its own. The caller MUST unmount the Canvas,
+ * not re-render it: any render against a dead context throws out of
+ * EffectComposer.addPass and lands in Next's error boundary instead of the
+ * notice. Unmounting means no canvas receives `webglcontextrestored`, so
+ * recovery is a reload — hence no restore handler.
  */
 function ContextGuard({ onLost }: { onLost: () => void }) {
   const { gl } = useThree();
@@ -273,16 +226,9 @@ function SceneReady({ onReady }: { onReady: () => void }) {
 }
 
 /**
- * Black screen with a bar, and then you are in the room.
- *
- * This replaces a "press to enter" gate. The gate existed because pointer lock
- * needs a user gesture and a button is the obvious place to take one — but it
- * charged every visitor a click to see a thing they had already clicked a nav
- * link to see, and it sat in front of a room that was by then fully loaded.
- *
- * The bar tracks real asset bytes through `useProgress`, not a timer. It is
- * held to whichever is slower, the assets or a short floor, so a warm cache
- * does not produce a single frame of flash before the room appears.
+ * Black screen with a bar, then you are in the room. The bar tracks real
+ * asset bytes through `useProgress`, held to whichever is slower — assets or
+ * a short floor — so a warm cache does not flash.
  */
 function LoadingScreen({ progress, done }: { progress: number; done: boolean }) {
   return <RoomLoading progress={progress} done={done} />;
@@ -295,21 +241,12 @@ function LoadingScreen({ progress, done }: { progress: number; done: boolean }) 
 const TERMINAL_VIEW_DIST = 0.72;
 
 /**
- * Leans the camera in when you sit down at the terminal, and puts it back
- * exactly where it was when you step away.
- *
- * Reading a shell from standing height across a desk was the problem this
- * solves: the text is sized for a monitor, not for the far side of a room.
- *
- * Two things make this fiddlier than a lerp. FirstPerson writes the camera
- * position every frame it is enabled — including `y = EYE` — so it has to stay
- * switched off for the whole move, and that includes the way *back*, which is
- * after `terminalActive` has already gone false. Hence `onSettling`: the focus
- * owns a short window where nothing else may touch the camera.
- *
- * And the return pose is captured, not recomputed. Sending the visitor back to
- * a "sensible" spot in front of the desk would quietly relocate them; they
- * should end up standing exactly where they were when they leaned in.
+ * Leans the camera in at the terminal and puts it back exactly where it was.
+ * FirstPerson writes the camera every enabled frame (including y = EYE), so
+ * it must stay off for the whole move — including the way back, after
+ * `terminalActive` is already false; `onSettling` owns that window. The
+ * return pose is captured, never recomputed: the visitor must end up where
+ * they stood.
  */
 function TerminalFocus({
   active,
@@ -386,19 +323,10 @@ function TerminalFocus({
 const SEAT_ARRIVE = 0.02;
 
 /**
- * Sits the visitor down at the desk, and stands them back up exactly where they
- * were.
- *
- * Shares its shape with TerminalFocus above, and differs in the one way that
- * matters: once the move in has landed this lets go of the camera completely.
- * The terminal zoom holds its quaternion for as long as it is active, which is
- * right for a single panel you are reading and wrong for a chair — sitting is
- * somewhere you look around *from*, between the two monitors, up at the prints,
- * over at the shelf. Holding the view would make the chair a cutscene.
- *
- * Letting go is only safe because FirstPerson stays switched off for the whole
- * time seated, not just for the move. Position frozen, rotation free: that is
- * the difference between sitting in a chair and hovering in front of one.
+ * Sits the visitor down at the desk and stands them back up where they were.
+ * Unlike TerminalFocus, this lets go of the camera once the move lands —
+ * sitting is somewhere you look around from. Safe only because FirstPerson
+ * stays off for the whole time seated: position frozen, rotation free.
  */
 function SeatedFocus({
   active,

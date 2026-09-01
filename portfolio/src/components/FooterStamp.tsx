@@ -3,16 +3,10 @@
 import { useEffect, useState } from "react";
 
 /**
- * The two things the page can say about its own delivery without being told:
- * the commit it was built from, and how long the cluster took to answer for it.
- *
- * It used to open with "served from talos-cp-02", drawn at random from four
- * hard-coded names in the browser. The cluster has six nodes and none of them
- * is called that, so the one line on the site whose whole point was that it
- * could not be faked was the only line that was. `branding/DECISIONS.md` §12
- * calls this stamp a measurement the site takes of itself; a node name is one
- * the browser cannot take, so it is gone until the pod's own `spec.nodeName`
- * reaches the page. See `BACKLOG.md`.
+ * The two things the page can measure about its own delivery: the commit it
+ * was built from, and time to first byte. No node name until the pod's own
+ * `spec.nodeName` reaches the page — the stamp only shows measurements the
+ * site actually takes (branding/DECISIONS.md §12; see BACKLOG.md).
  */
 export function FooterStamp({ buildSha, repo }: { buildSha: string; repo: string }) {
   const [ttfb, setTtfb] = useState<number | null>(null);

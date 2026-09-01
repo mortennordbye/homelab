@@ -1,13 +1,5 @@
-# Triggers: ContainerRestartingFrequently
-#
-# Container exits every 20s; kubelet restarts in place; restart counter climbs.
-# Alert fires once increase(...[15m]) > 3 has held for `for: 2m`.
-#
-# Expected timeline:
-#   t≈0       pod starts
-#   t≈75s     restart #3
-#   t≈3min    restart >3 → alert state: pending
-#   t≈5min    `for: 2m` elapsed → firing → Discord (group_wait: 30s)
+# Triggers: ContainerRestartingFrequently — container exits every 20s so the
+# in-place restart counter climbs; fires after ~5min.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

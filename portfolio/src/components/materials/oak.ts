@@ -1,13 +1,8 @@
 import * as THREE from "three";
 
 /**
- * Oak, drawn rather than downloaded: banded grain with a little wander plus a
- * few darker rays. At the depth of field these scenes use it is
- * indistinguishable from a photo and it costs no request.
- *
- * Moved out of InlineGlobeScene when the resume object became the second
- * caller. The desk under the resume sheet has to be the same desk the hero
- * globe stands on, and that is only true if it comes from the same function.
+ * Procedural oak — costs no request. Shared so every desk in the site is
+ * visibly the same desk.
  */
 export function makeOak(repeat = 3) {
   const size = 1024;

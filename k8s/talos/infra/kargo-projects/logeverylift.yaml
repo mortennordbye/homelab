@@ -6,10 +6,9 @@
 # live in the separate mortennordbye/logeverylift repo; only the deploy manifests
 # and this pipeline live here.
 
-# --- Project namespace ------------------------------------------------------
 # Named `logeverylift-cd` (not `logeverylift`) to avoid colliding with the app
-# namespace. The label lets the Project adopt this pre-created namespace instead
-# of racing to create it, keeping Argo CD sync ordering clean.
+# namespace. The label lets the Project adopt this pre-created namespace
+# instead of racing to create it.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -105,27 +104,17 @@ spec:
         repoURL: ghcr.io/mortennordbye/logeverylift
         # logeverylift CI tags every build 0.0.<run_number>; SemVer picks the
         # greatest. strictSemvers keeps the git-SHA/latest tags out of selection.
-        # No eligible Freight exists until the first build after the CI change
-        # lands a 0.0.<run> tag (the current images are only sha-/latest tagged).
         imageSelectionStrategy: SemVer
         strictSemvers: true
         discoveryLimit: 20
 ---
 # prod verification: a one-shot Job that curls the app URL and fails on any
-# non-2xx. No KEDA (stays warm); the retries cover the rolling pod from the
-# deploy the promotion just triggered.
+# non-2xx. No KEDA (stays warm); the retries cover the rolling pod.
 #
-# The hostname is the public one, because #369 moved this app off the private
-# gateway onto traefik-gateway-public and the HTTPRoute now answers for
-# logeverylift.com alone. This check kept asking the old internal name, which
-# no route matches, so Traefik answered 404 and every verification since
-# 2026-07-18 has failed: three Freights promoted fine and each reported the
-# Stage unhealthy on a check that could not have passed. -k stays because it
-# costs nothing and this is a liveness check, not a TLS test.
-#
-# -L because / redirects to /login for anyone without a session, which is the
-# app working. Without it the check asserts nothing beyond "Traefik routed
-# somewhere", since -f treats a 307 as success.
+# Must be the public hostname: the HTTPRoute answers for logeverylift.com
+# alone, so the old internal name 404s at Traefik. -L because / redirects to
+# /login for anyone without a session and -f treats a 307 as success — without
+# it the check asserts nothing beyond "Traefik routed somewhere".
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:

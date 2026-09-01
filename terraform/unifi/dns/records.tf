@@ -5,14 +5,10 @@
 # excludeDomains so an internal hostname can never leak into the public zone.
 # Adding an app therefore means adding an alias below, not annotating a route.
 #
-# Scope is the 27 user-defined records only. The console's DNS Records view also
-# lists 14 entries under "View Default Policies", one per DHCP fixed-IP
-# reservation (nas, pbs, hyper1-3, home, hue-bridge-pro, adguard,
-# genesis-ctrl-01..03, genesis-worker-01..03). Those are generated from the
-# reservation, carry metadata.origin other than USER_DEFINED, and are absent
-# from both the static-dns and the dns/policies API. Declaring them here would
-# not import them - it would create a second, user-defined record shadowing each
-# one. Change those in the DHCP reservation instead.
+# Scope is user-defined records only. The console's "Default Policies" entries
+# are generated from DHCP fixed-IP reservations and absent from the API;
+# declaring them here would create a second record shadowing each one. Change
+# those in the DHCP reservation instead.
 
 locals {
   private_gateway = "traefik-gateway-private.${var.domain}"

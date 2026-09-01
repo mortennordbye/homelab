@@ -8,41 +8,18 @@ import { useSurface } from "./textures";
 
 /**
  * A shelf unit holding the case studies as books and the certifications as a
- * folder of prints.
+ * folder of prints. Layout is computed from array length, so new content
+ * needs no change here. Book dimensions and colour derive from the slug, not
+ * randomness, so a case study is always the same book in the same place.
  *
- * Everything here is laid out from array length. Shelves are filled in order
- * and a new one is added when the current row runs out of width, so adding a
- * thirteenth case study or a seventh certification needs no change in this
- * file. Hand-placing thirteen books would have been quicker to write and wrong
- * the first time the site gained a fourteenth.
- *
- * Book width, height and colour are derived from the slug rather than random,
- * so a given case study is always the same book in the same place. Random
- * dressing would reshuffle the shelf on every render and make the room feel
- * unreliable in a way that is hard to name but easy to notice.
- *
- * Books and certificates deliberately do not cast shadows. Adding the shelf
- * halved the frame rate, 120fps to 61, and the cause was not the extra picking
- * targets or the extra draw calls — it was that the room's main light is a
- * point light, so its shadow map is a cube and every caster is rendered six
- * more times. Sixty small meshes inside a shelf were paying that for shadows
- * that ambient occlusion already accounts for. Turning off `castShadow` on
- * them restored 120fps exactly. Anything added inside furniture should follow
- * the same rule.
+ * Nothing in here casts shadows: the room's main light is a point light, so
+ * every caster renders six extra times into a cube shadow map — sixty small
+ * meshes halved the frame rate for shadows AO already accounts for. Anything
+ * added inside furniture should follow the same rule.
  */
 
-/**
- * Bay height is fixed and the unit grows to fit, rather than the unit being a
- * fixed height carved into however many bays the content needs. Getting this
- * the wrong way round gave two 0.9m-tall bays with a row of paperbacks lost at
- * the bottom of each, because thirteen books happen to fit on one shelf.
- */
-/* Widened from 0.52m. At the old width a row held about six books, so the unit
-   answered every new case study by growing another shelf upward, and it was
-   heading for something taller than the door. A 0.92m bay is a normal piece of
-   furniture and roughly doubles what fits per row, which buys a lot of runway
-   before the layout has to grow again. Nothing else changes: rows still wrap
-   from INNER_W and the unit still sizes itself from the row count. */
+// Bay height is fixed and the unit grows to fit; the inverse strands short
+// rows at the bottom of tall bays.
 const UNIT = { w: 0.92, d: 0.28 };
 const PLINTH = 0.08;
 const BOARD = 0.022;
@@ -74,13 +51,8 @@ function hash01(s: string, salt = 0): number {
 type Placed<T> = { item: T; x: number; row: number; w: number; h: number };
 
 /**
- * How tall the unit comes out for a given set of content.
- *
- * Exported because the room stands a lamp on top of the shelf, and the shelf
- * grows a row whenever the content outgrows the current one. A hard-coded
- * height there would leave the lamp floating in mid-air or buried in a board
- * the first time a case study is added — which is the same failure the shelf
- * was written to avoid for its own contents.
+ * How tall the unit comes out for a given set of content. Exported so the
+ * lamp standing on top follows the shelf as it grows rows.
  */
 export function shelfHeight(shelf: ShelfData): number {
   const rows =
@@ -171,18 +143,10 @@ const CERT_W = 0.14;
 const CERT_H = 0.19;
 
 /**
- * One certificate, standing upright and facing out like a framed print.
- *
- * These were first modelled the way certificates actually sit in a drawer: a
- * flat stack of sheets. That failed a check worth repeating — from a standing
- * eye line, only the top two of six could ever be put under the crosshair,
- * because looking down at a horizontal stack always hits the top sheet. Four
- * certificates existed and were unreachable.
- *
- * Standing them up fixes it for the same reason books work at ankle height:
- * an upright face is targetable from anywhere in front of it, a horizontal one
- * only from directly above. Anything meant to be looked at should present a
- * face to the room.
+ * One certificate, standing upright and facing out. Upright, because a face
+ * is targetable from anywhere in front of it — a flat stack only ever offers
+ * its top sheet to the crosshair. Anything meant to be looked at should
+ * present a face to the room.
  */
 function Certificate({
   cert,

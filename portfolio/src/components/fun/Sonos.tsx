@@ -7,29 +7,16 @@ import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
 
 /**
- * The Sonos Era 100 on the TV bench, which plays the obvious thing when you
- * press E on it.
- *
- * The melody is synthesised from oscillators rather than played from a file.
- * Two reasons, and the second is the one that decided it: shipping the actual
- * recording means committing someone else's master to the repo, and the room
- * is already 6.5MB of assets served off a home uplink with no CDN in front of
- * it. A chiptune rendition costs zero bytes and is arguably the funnier joke.
- *
- * The underlying composition is of course still Stock/Aitken/Waterman's. This
- * is a fourteen-second monophonic beep rendition behind a link to the real
- * thing, which is the same footing every rickroll has ever operated on.
+ * The Sonos Era 100 on the TV bench, which plays the obvious thing on E.
+ * Synthesised from oscillators: a real recording would commit someone else's
+ * master to the repo and cost bytes the room doesn't have. A beep rendition
+ * behind a link to the real thing is the standard rickroll footing.
  */
 
 /**
- * MIDI note numbers, 0 = rest, paired with a length in sixteenth notes.
- *
- * Written on a sixteenth grid rather than an eighth one. The pitches were
- * always right; the rhythm was the problem. "Ne-ver gon-na" is a fast pickup
- * running into a held "give", and on an eighth grid the shortest note
- * available *is* the pickup note, so the four syllables came out evenly spaced
- * and the same length as the words they lead into. It dragged, and a dragged
- * hook is an unrecognisable hook.
+ * MIDI note numbers, 0 = rest, paired with a length in sixteenth notes. A
+ * sixteenth grid, not an eighth: the "ne-ver gon-na" pickup needs notes
+ * shorter than an eighth or the hook drags into unrecognisability.
  */
 const MELODY: [number, number][] = [
   // "Never gonna give you up"
@@ -172,11 +159,9 @@ function scheduleBar(
 }
 
 /**
- * Schedules the whole melody up front and hands back a stop function.
- *
- * Everything is scheduled in one go against the context clock rather than
- * driven by a timer per note. Timers drift, and a melody whose notes arrive
- * late by a few milliseconds each is exactly as recognisable as a wrong one.
+ * Schedules the whole melody up front against the context clock and hands
+ * back a stop function — per-note timers drift, and a late melody is as
+ * unrecognisable as a wrong one.
  */
 function useRickroll() {
   const ctxRef = useRef<AudioContext | null>(null);
@@ -298,14 +283,9 @@ export const RICKROLL_CARD: InfoCard = {
 };
 
 /**
- * Sonos Era 100 in white, at its real 182 x 120 x 130mm.
- *
- * The cross-section is an oval rather than a circle, which is most of what
- * makes it read as this speaker and not a paint tin — a scaled cylinder gets
- * it for free. What sells the rest is the two-material split: matte fabric
- * grille against a smooth plastic top. The touch controls are a real recess in
- * that top, not a drawn line, because a 1mm step drawn on a flat surface
- * disappears the moment it is lit from anywhere.
+ * Sonos Era 100 in white at its real 182 x 120 x 130mm. Oval cross-section
+ * (not a paint tin), matte grille against smooth top, and the touch controls
+ * are a real recess — a drawn 1mm step disappears under any lighting.
  */
 export function Sonos({
   position,

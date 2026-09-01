@@ -5,12 +5,10 @@ import type { Architecture, ArchNode } from "@/content/schemas";
  * Spine and cover artwork for the portfolio shelf.
  *
  * Every volume is stamped from its own case study: the title from the
- * frontmatter, the mark from the `nodes` and `edges` in its `*.arch.ts`. That
- * is the same source the case study's own SVG diagram renders from, so a
- * cover cannot drift from the architecture it describes. Nothing here reads
- * the `cover` frontmatter field: only six of the thirteen declared images
- * exist on disk, and the ones that do are wide landscape diagrams that lose
- * their title and most of their topology when cropped to a portrait board.
+ * frontmatter, the mark from the `nodes` and `edges` in its `*.arch.ts` — the
+ * same source the case study's own diagram renders from, so a cover cannot
+ * drift. The `cover` frontmatter field is deliberately unread (see
+ * DECISIONS.md §8: landscape images lose their topology cropped to a board).
  *
  * The artwork is drawn white on transparent and then turned into brass foil
  * pressed into linen by `foilMaterial`, which needs four maps rather than one:

@@ -1,20 +1,10 @@
-# Public gateway, not private: Meta's servers have to reach /webhook and fetch
-# media from /media and /covers, and they need a publicly valid certificate to
-# do it. cert-manager and external-dns both pick the hostname up from here.
+# Public gateway: Meta must reach /webhook and fetch /media and /covers with a
+# publicly valid certificate. cert-manager and external-dns pick the hostname
+# up from here.
 #
-# These rules are an allowlist rather than a catch-all, and that is the point.
-# Everything Meta and the Mac need is named; anything else 404s at Traefik
-# before it reaches the pod. Two things come off the internet as a result:
-#
-#   /admin    the control panel, which can publish to a live account. It moves
-#             to reelsmith.local.bigd.no (httproute-admin.yaml). It still
-#             checks its own password, so this is a second lock rather than the
-#             only one.
-#   /metrics  the funnel counters and the token expiry gauge. Prometheus
-#             scrapes in-cluster and never needed this to be public.
-#
-# Adding a route to the service means adding it here too. That is the cost of
-# an allowlist, and it is worth paying on a host this exposed.
+# Allowlist, not catch-all: anything unlisted 404s at Traefik. /admin lives on
+# the private gateway (httproute-admin.yaml) and /metrics is in-cluster only.
+# Adding a route to the service means adding it here too.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -32,40 +22,29 @@ spec:
     - "gate.nordbye.it"
   rules:
     - matches:
-        # Meta: the subscription handshake and every message delivery.
+        # Meta: subscription handshake and message deliveries.
         - path:
             type: PathPrefix
             value: /webhook
-        # Meta: fetches the MP4 and the cover while creating a container. There
-        # is no publish without these.
+        # Meta: fetches the MP4 and cover while creating a container.
         - path:
             type: PathPrefix
             value: /media
         - path:
             type: PathPrefix
             value: /covers
-        # The Mac: uploads, post registration and the queue. Bearer token.
+        # The Mac pipeline: uploads, post registration, queue. Bearer token.
         - path:
             type: PathPrefix
             value: /api
-        # Kept public in case anything external is watching it. It answers
-        # "ok" and says nothing else.
         - path:
             type: PathPrefix
             value: /healthz
-        # The privacy policy, the terms, and a page saying what the account is.
-        # Instagram, YouTube, TikTok and Facebook all hold these URLs on their
-        # app records, and TikTok verified gate.nordbye.it by DNS record in
-        # order to accept them, so a 404 here is four broken app registrations
-        # rather than a missing page.
+        # Policy pages held on all four platforms' app records; a 404 here
+        # breaks those registrations.
         #
-        # **Exact, not PathPrefix, and "/" is why.** A PathPrefix of "/"
-        # matches every path there is, which turns this allowlist into a
-        # catch-all and puts /admin and /metrics back on the public internet.
-        # That is the one thing this file exists to prevent. The other two are
-        # Exact for the same reason rather than by habit: the pages are
-        # self-contained, with no assets served beneath them, so a prefix would
-        # buy nothing and widen the surface.
+        # Exact, not PathPrefix: a "/" prefix matches every path and would put
+        # /admin and /metrics back on the public internet.
         - path:
             type: Exact
             value: /
@@ -75,23 +54,13 @@ spec:
         - path:
             type: Exact
             value: /terms
-        # TikTok's OAuth redirect target. The portal refuses to register a
-        # redirect URI that is not https, so the consent trip cannot land on a
-        # loopback listener and lands here instead; the page prints the
-        # authorisation code and the operator pastes it back into
-        # scripts/tiktok_authorise.py. Exact, like the three above.
+        # TikTok OAuth redirect. The portal only accepts https redirect URIs,
+        # so the consent trip cannot use a loopback listener; the page prints
+        # the code for scripts/tiktok_authorise.py.
         - path:
             type: Exact
             value: /tiktok/callback
-        # Facebook's OAuth redirect target, added 2026-08-27 with the Page
-        # publishing path. Facebook does allow a localhost redirect while an
-        # app is in development, and the app that publishes these Reels is
-        # live, so the Page consent trip lands here alongside TikTok's.
-        #
-        # This line is the whole reason the trip 404s without it, and the
-        # reelsmith CLAUDE.md already recorded that trap from the TikTok
-        # rollout. Adding a route to the service means adding it here too, as
-        # the header of this file says.
+        # Facebook OAuth redirect for the Page consent trip.
         - path:
             type: Exact
             value: /facebook/callback
