@@ -4,6 +4,7 @@ import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { makeOak } from "@/components/materials/oak";
+import { FirstFrame } from "@/components/scene/FirstFrame";
 
 // Silence the noisy "THREE.Clock has been deprecated" warning emitted from
 // inside @react-three/fiber. The library still uses Clock internally; the
@@ -25,6 +26,11 @@ const SPIN_SPEED = 0.078; // rad/s — one turn every ~80 seconds
 const TABLE_Y = -(R + 0.81);
 const CAM_Z = 6.9;
 const FOV = 32;
+/* Height of the Oslo pin's head. Must stay inside the meridian ring's outer
+   envelope (R + 0.1 + 0.035) — a head that clears the widest brass reads as a
+   light floating beside the globe rather than a pin pushed into the ball. */
+const PIN_H = R + 0.075;
+const PIN_HEAD_R = 0.032;
 
 function latLonToVec3(lat: number, lon: number, radius: number) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -161,8 +167,12 @@ function Globe({
     () => new THREE.MeshStandardMaterial({ color: "#b98f4e", metalness: 1, roughness: 0.28 }),
     [],
   );
+  /* Not fully metallic, unlike the ring: the scene carries no environment map,
+     and a metal with nothing to reflect renders black. The ring is broad enough
+     to catch the key's specular lobe on its own curvature; the pin stem is not,
+     so it needs some diffuse response to read as copper rather than a notch. */
   const brassDark = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: "#8a6a38", metalness: 1, roughness: 0.42 }),
+    () => new THREE.MeshStandardMaterial({ color: "#8a6a38", metalness: 0.35, roughness: 0.45 }),
     [],
   );
   const pinHead = useMemo(
@@ -180,14 +190,45 @@ function Globe({
   const spinRef = useRef<THREE.Group>(null);
   const glowRef = useRef<THREE.PointLight>(null);
   const scratch = useMemo(
-    () => ({ w: new THREE.Vector3(), n: new THREE.Vector3(), c: new THREE.Vector3(), q: new THREE.Quaternion() }),
+    () => ({
+      w: new THREE.Vector3(),
+      n: new THREE.Vector3(),
+      c: new THREE.Vector3(),
+      q: new THREE.Quaternion(),
+      h: new THREE.Vector3(),
+      e: new THREE.Vector3(),
+    }),
     [],
   );
+
+  /* Grab the ball to turn it. The globe's screen circle is recomputed every
+     frame and the pointer is hit-tested against it, rather than the canvas
+     taking pointer events: the whole backdrop is `pointer-events-none` and
+     must stay that way, or the empty grid column over it would swallow
+     selection and clicks meant for the copy. */
+  const hitRef = useRef({ cx: 0, cy: 0, r: 0 });
+  const dragRef = useRef({ active: false, lastX: 0, lastT: 0, vel: SPIN_SPEED, hover: false });
 
   useFrame((_, dt) => {
     const spin = spinRef.current;
     if (!spin) return;
-    spin.rotation.y += SPIN_SPEED * Math.min(dt, 0.05);
+    const drag = dragRef.current;
+    // While held, the pointer owns the rotation. On release the flick's own
+    // speed decays back to the idle drift, so letting go settles rather than
+    // snapping.
+    if (!drag.active) {
+      drag.vel += (SPIN_SPEED - drag.vel) * Math.min(1, dt * 2.2);
+      spin.rotation.y += drag.vel * Math.min(dt, 0.05);
+    }
+
+    scratch.h.set(gx, -0.05, 0).project(camera);
+    scratch.e.set(gx + R * scale, -0.05, 0).project(camera);
+    const hcx = ((scratch.h.x + 1) / 2) * size.width;
+    hitRef.current = {
+      cx: hcx,
+      cy: ((-scratch.h.y + 1) / 2) * size.height,
+      r: Math.abs(((scratch.e.x + 1) / 2) * size.width - hcx),
+    };
 
     // The Morse schedule keys the pin itself rather than a CSS glow, so the
     // easter egg is now something happening on the object.
@@ -198,7 +239,7 @@ function Globe({
     const el = overlayRef.current;
     if (!el) return;
     spin.updateMatrixWorld(true);
-    scratch.w.copy(OSLO_DIR).multiplyScalar(R + 0.16).applyMatrix4(spin.matrixWorld);
+    scratch.w.copy(OSLO_DIR).multiplyScalar(PIN_H).applyMatrix4(spin.matrixWorld);
     scratch.n.copy(OSLO_DIR).applyQuaternion(spin.getWorldQuaternion(scratch.q)).normalize();
     scratch.c.copy(camera.position).sub(scratch.w).normalize();
 
@@ -216,6 +257,78 @@ function Globe({
     el.style.transform = `translate(${x}px, ${y}px)`;
   });
 
+  useEffect(() => {
+    const inside = (e: PointerEvent) => {
+      const { cx, cy, r } = hitRef.current;
+      if (r <= 0) return false;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      return dx * dx + dy * dy <= r * r;
+    };
+    const setHover = (on: boolean) => {
+      const drag = dragRef.current;
+      if (drag.hover === on) return;
+      drag.hover = on;
+      document.body.style.cursor = on ? "grab" : "";
+    };
+
+    const onDown = (e: PointerEvent) => {
+      // Touch is left alone: the backdrop takes no pointer events, so there is
+      // nothing to set `touch-action` on and a horizontal drag would fight the
+      // page's own scrolling.
+      if (e.pointerType === "touch" || e.button !== 0 || !inside(e)) return;
+      const drag = dragRef.current;
+      drag.active = true;
+      drag.lastX = e.clientX;
+      drag.lastT = e.timeStamp;
+      drag.vel = 0;
+      document.body.style.cursor = "grabbing";
+      document.body.style.userSelect = "none";
+      e.preventDefault();
+    };
+
+    const onMove = (e: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag.active) {
+        if (e.pointerType !== "touch") setHover(inside(e));
+        return;
+      }
+      const spin = spinRef.current;
+      if (!spin) return;
+      // A drag of one projected radius turns the ball one radian, so the
+      // surface keeps pace with the pointer at any viewport size.
+      const step = (e.clientX - drag.lastX) / Math.max(hitRef.current.r, 1);
+      spin.rotation.y += step;
+      const dtms = e.timeStamp - drag.lastT;
+      if (dtms > 0) drag.vel = THREE.MathUtils.clamp((step * 1000) / dtms, -6, 6);
+      drag.lastX = e.clientX;
+      drag.lastT = e.timeStamp;
+      e.preventDefault();
+    };
+
+    const onUp = () => {
+      const drag = dragRef.current;
+      if (!drag.active) return;
+      drag.active = false;
+      drag.hover = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, []);
+
   const osloQuat = useMemo(
     () => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), OSLO_DIR),
     [],
@@ -232,15 +345,15 @@ function Globe({
           {/* Oslo is a pin pushed into the globe, so it turns with the ball
               and is occluded by it without any projection maths. */}
           <group quaternion={osloQuat}>
-            <mesh position={[0, R + 0.05, 0]} material={brassDark}>
-              <cylinderGeometry args={[0.009, 0.009, 0.2, 10]} />
+            <mesh position={[0, R + 0.02, 0]} material={brassDark}>
+              <cylinderGeometry args={[0.009, 0.009, 0.16, 10]} />
             </mesh>
-            <mesh position={[0, R + 0.16, 0]} castShadow material={pinHead}>
-              <sphereGeometry args={[0.038, 24, 18]} />
+            <mesh position={[0, PIN_H, 0]} castShadow material={pinHead}>
+              <sphereGeometry args={[PIN_HEAD_R, 24, 18]} />
             </mesh>
             <pointLight
               ref={glowRef}
-              position={[0, R + 0.16, 0]}
+              position={[0, PIN_H, 0]}
               color="#6fbb7c"
               intensity={0.45}
               distance={0.85}
@@ -249,12 +362,13 @@ function Globe({
           </group>
         </group>
 
-        {/* Meridian ring, pin through the poles, and the pedestal it stands on. */}
+        {/* Meridian ring and the pedestal it stands on. The ring's plane does
+            not contain the tilted polar axis, so there is no polar axle: one
+            drawn to the ring's own radius ends in mid-air beside it rather
+            than seating into it, and next to the Oslo pin it reads as a
+            second pin. */}
         <mesh rotation={[0, Math.PI / 2, TILT]} castShadow material={brass}>
           <torusGeometry args={[R + 0.1, 0.035, 20, 160]} />
-        </mesh>
-        <mesh rotation={[0, 0, TILT]} material={brassDark}>
-          <cylinderGeometry args={[0.02, 0.02, (R + 0.1) * 2, 16]} />
         </mesh>
         <mesh position={[0, -(R + 0.11), 0]} rotation={[Math.PI / 2, 0, 0]} material={brassDark}>
           <torusGeometry args={[0.1, 0.028, 14, 40]} />
@@ -339,9 +453,11 @@ function Lights() {
 export default function InlineGlobeScene({
   overlayRef,
   keyRef,
+  onReady,
 }: {
   overlayRef: React.RefObject<HTMLDivElement | null>;
   keyRef: React.MutableRefObject<number>;
+  onReady?: () => void;
 }) {
   return (
     <Canvas
@@ -358,6 +474,7 @@ export default function InlineGlobeScene({
       <Suspense fallback={null}>
         <Lights />
         <Globe overlayRef={overlayRef} keyRef={keyRef} />
+        <FirstFrame onReady={onReady} />
       </Suspense>
     </Canvas>
   );

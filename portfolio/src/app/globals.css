@@ -447,7 +447,9 @@ details[open] .fold-arrow {
 .oslo-marker-label {
   position: absolute;
   left: 50%;
-  bottom: 44px;
+  /* Keep the label close to the pin. Set far enough off it, the leader below
+     reads as a mast standing out of the globe, taller than the meridian ring. */
+  bottom: 20px;
   transform: translateX(-50%);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10.5px;
@@ -465,9 +467,9 @@ details[open] .fold-arrow {
   content: "";
   position: absolute;
   left: 50%;
-  top: calc(100% + 3px);
+  top: calc(100% + 2px);
   width: 1px;
-  height: 32px;
+  height: 10px;
   background: linear-gradient(to bottom, rgba(188, 220, 190, 0.85), rgba(188, 220, 190, 0));
   transform: translateX(-50%);
 }
