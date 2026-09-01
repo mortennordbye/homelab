@@ -1,0 +1,14 @@
+# Copy to terraform.tfvars and fill in. *.tfvars is gitignored.
+
+# Proxmox Configuration (same token as the talos root)
+proxmox_endpoint     = "https://proxmox.example.local:8006"
+proxmox_api_token    = "terraform-prov@pve!token=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+proxmox_insecure     = true
+proxmox_ssh_username = "root"
+proxmox_ssh_password = "" # empty = use ssh-agent; set to the node's root password otherwise
+
+# Tailscale OAuth client. Create it in the admin console AFTER the one-time
+# tag bootstrap described in the README, with write scope on:
+#   Keys: Auth Keys (tag:subnet-router), Policy File, DNS
+tailscale_oauth_client_id     = ""
+tailscale_oauth_client_secret = ""

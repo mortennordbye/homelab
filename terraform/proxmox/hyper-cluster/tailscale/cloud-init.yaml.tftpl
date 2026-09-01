@@ -1,0 +1,16 @@
+#cloud-config
+hostname: tailscale-router
+package_update: true
+packages:
+  - qemu-guest-agent
+  - curl
+write_files:
+  - path: /etc/sysctl.d/99-tailscale.conf
+    content: |
+      net.ipv4.ip_forward = 1
+      net.ipv6.conf.all.forwarding = 1
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - sysctl -p /etc/sysctl.d/99-tailscale.conf
+  - ["sh", "-c", "curl -fsSL https://tailscale.com/install.sh | sh"]
+  - ["tailscale", "up", "--authkey=${authkey}", "--advertise-routes=${routes}"]
