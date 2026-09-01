@@ -1,7 +1,6 @@
 import { preconnect } from "react-dom";
 import { Section } from "@/components/primitives/Section";
 import { Reveal } from "@/components/primitives/Reveal";
-import { Button } from "@/components/primitives/Button";
 import { getLatestBlogPosts } from "@/lib/blog";
 
 /**
@@ -9,7 +8,7 @@ import { getLatestBlogPosts } from "@/lib/blog";
  * No bounding box — the covers carry their own black, and a second ground a
  * hairline from `--bg` reads as a pasted rectangle. The frame declares the
  * covers' native 1200x630 OG ratio; cropping to 16/9 cuts their straplines
- * (§8). Hover is copper: §2 spends green once per view, on "Read the blog".
+ * (§8). Everything here is ink — the section spends no green.
  */
 export async function LatestWriting() {
   const posts = await getLatestBlogPosts(3);
@@ -29,9 +28,12 @@ export async function LatestWriting() {
       align="between"
       className="section-rule"
       cta={
-        <Button href="https://blog.nordbye.it" variant="primary">
-          Read the blog
-        </Button>
+        <a
+          href="https://blog.nordbye.it"
+          className="focus-ring text-fg underline decoration-copper underline-offset-[5px] transition-colors hover:text-copper"
+        >
+          Read the blog at blog.nordbye.it
+        </a>
       }
     >
       <ul className="grid gap-10 md:grid-cols-3 md:gap-8">

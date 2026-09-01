@@ -183,7 +183,9 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
         {current ? (
           <div className="grid gap-x-10 gap-y-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_auto] md:items-center">
             <div>
-              <p className="mb-1 font-mono text-[0.6rem] uppercase tracking-[0.19em] text-accent">
+              {/* No green in this section (10C): the shelf's foil carries the
+                  warmth, and the volumes themselves are the live thing. */}
+              <p className="mb-1 font-mono text-[0.6rem] uppercase tracking-[0.19em] text-fg-3">
                 {current.kind === "homelab" ? "Homelab" : "Client engagement"}
               </p>
               <h3 className="text-h3 leading-tight text-fg">{current.title}</h3>
@@ -200,7 +202,7 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
                 {current.stack.slice(0, 6).map((t) => (
                   <span
                     key={t}
-                    className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[0.58rem] text-fg-2"
+                    className="rounded-[2px] border border-brass/55 px-2.5 py-0.5 font-mono text-[0.58rem] text-fg-2"
                   >
                     {t}
                   </span>
@@ -218,7 +220,7 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
                 e.preventDefault();
                 onOpen(current.slug);
               }}
-              className="focus-ring shrink-0 self-center whitespace-nowrap rounded-sm border border-accent/40 px-4 py-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-accent transition-colors hover:bg-accent/10"
+              className="focus-ring shrink-0 self-center whitespace-nowrap rounded-[2px] border border-fg px-4 py-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-fg transition-colors hover:border-copper hover:text-copper"
             >
               {opening ? "Opening…" : "Open the volume"}
             </Link>

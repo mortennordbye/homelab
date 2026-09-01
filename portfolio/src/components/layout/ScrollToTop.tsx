@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { ArrowUp } from "lucide-react";
 
 const SHOW_AFTER_PX = 600;
 
@@ -42,9 +41,9 @@ export function ScrollToTop() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
           transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed bottom-20 right-5 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full border border-line-2 bg-surface/70 text-fg-2 backdrop-blur transition-colors hover:border-accent hover:text-accent hover:shadow-[0_0_24px_-6px_var(--accent)] md:bottom-24 md:right-6"
+          className="focus-ring fixed bottom-20 right-5 z-40 rounded-[2px] border border-fg bg-bg px-3.5 py-2 font-mono text-[11px] tracking-[0.12em] text-fg transition-colors hover:border-copper hover:text-copper md:bottom-24 md:right-6"
         >
-          <ArrowUp size={16} />
+          ↑ TOP
         </motion.button>
       )}
     </AnimatePresence>

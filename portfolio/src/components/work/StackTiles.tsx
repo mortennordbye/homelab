@@ -5,10 +5,10 @@ type Props = {
 };
 
 /**
- * Compact stack strip for a case study. Renders each recognised tech in
- * the project's stack as a small chip — icon + canonical label — using the
- * same brand language as WorkCardCover. Lucide icons (MIT) keep us out of
- * trademark territory while the brand colour carries the recognition.
+ * Compact stack strip for a case study. Renders each recognised tech as a
+ * tool mark: icon struck in single-ink copper in a square hairline tile.
+ * Lucide icons (MIT) keep us out of trademark territory; the brand colours
+ * stay in WorkCardCover — on the page everything is one material.
  */
 export function StackTiles({ stack }: Props) {
   const items = pickAllBrands(stack);
@@ -23,12 +23,12 @@ export function StackTiles({ stack }: Props) {
           return (
             <li
               key={key}
-              className="inline-flex items-center gap-2 rounded-full border border-line-2 bg-surface/40 px-3 py-1.5 transition-colors hover:border-accent/50"
+              className="inline-flex items-center gap-2 rounded-[2px] border border-line-2 px-3 py-1.5 transition-colors hover:border-copper"
             >
               <Icon
                 size={14}
                 strokeWidth={1.8}
-                style={{ color: brand.color }}
+                className="text-copper"
                 aria-hidden
               />
               <span className="text-sm text-fg">{brand.label}</span>

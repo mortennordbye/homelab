@@ -175,6 +175,26 @@ details[open] .fold-arrow {
   animation: none;
 }
 
+/* Scrollbars inside the phosphor screen — the browser default paints a light
+   grey bar over an emitting surface. */
+.phosphor-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #2e4633 transparent;
+}
+.phosphor-scroll::-webkit-scrollbar { width: 5px; }
+.phosphor-scroll::-webkit-scrollbar-track { background: transparent; }
+.phosphor-scroll::-webkit-scrollbar-thumb { background: #2e4633; border-radius: 2px; }
+
+/* The availability lamp breathes rather than pings — radar rings are sonar,
+   not a lamp. The reduced-motion block above already freezes it to one frame. */
+@keyframes lamp-breathe {
+  0%, 100% { box-shadow: 0 0 4px rgba(var(--accent-rgb), 0.35); }
+  50% { box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.7); }
+}
+.lamp-breathe {
+  animation: lamp-breathe 3.4s var(--ease-in-out) infinite;
+}
+
 /* Brass — the section label. A short rule over the label rather than a plate
    under it. tokens.css gives brass three jobs, solid fills, card edges and
    rules, and the rule is the only one of the three that does not have to

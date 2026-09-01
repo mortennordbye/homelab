@@ -1,6 +1,6 @@
 "use client";
 
-import { X, ArrowUpRight } from "lucide-react";
+import { Close, ArrowUpRight } from "@/components/icons";
 import { useEffect, useRef } from "react";
 import type { ArchNode } from "@/content/schemas";
 
@@ -62,7 +62,7 @@ export function ArchitectureDrawer({ node, onClose }: Props) {
               aria-label="Close details"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line-2 text-fg-2 transition-colors hover:border-accent hover:text-accent"
             >
-              <X size={16} />
+              <Close size={16} />
             </button>
           </header>
 
