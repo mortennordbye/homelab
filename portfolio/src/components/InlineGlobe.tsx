@@ -64,6 +64,10 @@ type Mode = "loading" | "skip" | "static" | "webgl";
 export function InlineGlobe() {
   const [mode, setMode] = useState<Mode>("loading");
   const [activated, setActivated] = useState(false);
+  // The canvas fades in over the still rather than the still fading out from
+  // under it: the scene draws an opaque backdrop box, so once it paints there
+  // is nothing to see through it and fading the poster would change nothing.
+  const [painted, setPainted] = useState(false);
   // The OSLO label lives in this overlay — HTML rather than 3D text, so it
   // stays crisp at any size. The scene writes its transform and opacity each
   // frame from the pin's projected position.
@@ -132,7 +136,7 @@ export function InlineGlobe() {
           visitor with no JavaScript involved, which is what finally gives
           phones the globe: under 768px the WebGL scene never mounts, because
           it costs 211 KB of gzipped JS (883 KB parsed) plus 577 KB of texture
-          to decode and a canvas that then renders continuously. This is 37 KB
+          to decode and a canvas that then renders continuously. This is 34 KB
           and holds still. Desktop sees it too, until the scene takes over —
           so the upgrade is a change of fidelity rather than of layout, and
           reduced-motion visitors simply keep it. */}
@@ -152,7 +156,7 @@ export function InlineGlobe() {
         <picture>
           <source media="(max-width: 767px)" srcSet="/images/globe-poster-mobile.jpg" />
           <img
-            src="/images/globe-poster.jpg"
+            src="/images/globe-poster.webp"
             alt=""
             className="absolute inset-0 h-full w-full object-cover object-[64%_50%] md:object-center"
           />
@@ -162,14 +166,21 @@ export function InlineGlobe() {
       </div>
 
       {activated && (
-        <>
+        <div
+          className="absolute inset-0 transition-opacity duration-500 ease-out"
+          style={{ opacity: painted ? 1 : 0 }}
+        >
           <div className="absolute inset-0">
-            <InlineGlobeScene overlayRef={osloOverlayRef} keyRef={keyRef} />
+            <InlineGlobeScene
+              overlayRef={osloOverlayRef}
+              keyRef={keyRef}
+              onReady={() => setPainted(true)}
+            />
           </div>
           <div ref={osloOverlayRef} className="absolute top-0 left-0" style={{ opacity: 0 }}>
             <span className="oslo-marker-label">OSLO</span>
           </div>
-        </>
+        </div>
       )}
 
       {/* Painterly finish. The render is lit like a photograph; these give it
