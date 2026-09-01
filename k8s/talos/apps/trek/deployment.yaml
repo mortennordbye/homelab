@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trek
+  namespace: trek
+  labels:
+    app: trek
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: trek
+  template:
+    metadata:
+      labels:
+        app: trek
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - hyper1
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: trek
+          image: mauriceboe/trek:4.1.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          # The entrypoint starts as root and drops to the node user via gosu,
+          # mirroring the upstream compose file's capability set.
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - SETUID
+                - SETGID
+          env:
+            - name: TZ
+              value: Europe/Oslo
+            - name: ALLOWED_ORIGINS
+              value: https://trek.bigd.no
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: trek-secret
+                  key: ENCRYPTION_KEY
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: uploads
+              mountPath: /app/uploads
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            periodSeconds: 20
+            failureThreshold: 3
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data-pvc
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: uploads-pvc
+        - name: tmp
+          emptyDir: {}

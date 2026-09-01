@@ -1,0 +1,25 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: trek
+  namespace: trek
+spec:
+  scaleTargetRef:
+    name: trek
+  minReplicaCount: 0
+  maxReplicaCount: 1
+  cooldownPeriod: 300
+  # Cron keeps 1 replica warm through the day (07:00-23:00 Oslo) so the app
+  # doesn't cold-start on every visit; at night it scales to zero and the HTTP
+  # trigger wakes it on demand. KEDA scales to the max of the two triggers.
+  triggers:
+    - type: cron
+      metadata:
+        timezone: Europe/Oslo
+        start: "0 7 * * *"
+        end: "0 23 * * *"
+        desiredReplicas: "1"
+    - type: external-push
+      metadata:
+        scalerAddress: keda-add-ons-http-external-scaler.keda:9090
+        interceptorRoute: trek
