@@ -11,8 +11,5 @@ resources:
   - unpackerr.yaml
   - exportarr.yaml
   - qbittorrent-exporter.yaml
- # - tdarr.yaml
- # - huntarr.yaml
- # - cleanuparr.yaml
   - httproutes.yaml
   - ciliumnetworkpolicies.yaml

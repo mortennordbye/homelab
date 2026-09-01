@@ -8,15 +8,11 @@
  * a green and a copper land 1.01:1 apart and read as one colour to anyone with
  * a colour-vision deficiency. Separating them by layer avoids that entirely.
  *
- * The brand's saturation is 24, down from 34. As a solid fill beside the wood
- * the old value glared. Every green below holds its exact luminance and only
- * loses saturation, so nothing that was solved has to be re-solved.
- *
- * Every value was solved against its own ground for a target WCAG ratio rather
- * than picked by hand, so the contrast figures below are measured, not
- * aspirational. The categorical data colours were validated for colour-vision
- * deficiency separately, and are deliberately left at their original
- * saturation — re-muting them would invalidate that check.
+ * Every value was solved against its own ground for a target WCAG ratio, so
+ * the contrast figures below are measured, not aspirational. The categorical
+ * data colours were validated for colour-vision deficiency separately and are
+ * deliberately left at their original saturation — re-muting them would
+ * invalidate that check.
  *
  * styles/tokens.css ships the dark half of this system verbatim. The light half
  * has no runtime consumer on the site (dark only) and lives on here: the print
@@ -25,16 +21,10 @@
  */
 
 /**
- * The theme. Everything else in this file serves it.
- *
- * The colour system above answers "which green"; this answers "why is there a
- * room at all". It is the half that has to be agreed before a token is worth
- * solving, and until recently it lived only in `branding/ART-DIRECTION.md`,
- * which meant the spec page documented the paint and never the building.
- *
- * The register is a merge and both halves are load-bearing: English discipline,
- * Norwegian material and light. Drop either half and it goes wrong in a
- * specific, predictable direction. See `register.intro`.
+ * The theme. Everything else in this file serves it: the colour system above
+ * answers "which green", this answers "why is there a room at all". The
+ * register is a merge and both halves are load-bearing — English discipline,
+ * Norwegian material and light. See `register.intro`.
  */
 export const theme = {
   name: "The Study",
@@ -304,19 +294,10 @@ export const typeScale = [
 ];
 
 /**
- * Two faces, and no sans anywhere.
- *
- * Serif headline over grotesque body over mono label is the signature of a
- * generated portfolio, whatever families get substituted into it. Setting body
- * copy in the display serif breaks that pattern harder than any font swap
- * does, and Source Serif's optical-size axis is what makes it honest: the
- * headline gets a lighter cut at 60 and paragraphs get a sturdier one at 12,
- * which is how metal type actually worked.
- *
- * Both faces were checked against Google Fonts popularity rank, out of 1,942
- * families, as a proxy for how worn a choice is. The faces this replaces sat at
- * 5 (Inter), 59 (JetBrains Mono) and 93 (Fraunces), all inside the top five per
- * cent and all staples of generated design.
+ * Two faces, and no sans anywhere. Serif headline over grotesque body over
+ * mono label is the signature of a generated portfolio; body copy in the
+ * display serif breaks that, and Source Serif's optical-size axis makes it
+ * honest — a lighter cut at opsz 60 for headlines, a sturdier 12 for prose.
  */
 export const fonts = [
   {
@@ -358,7 +339,6 @@ export const licensing = {
     "OFL forbids selling the fonts by themselves. Using them in a product, a website or client deliverables is not selling them.",
   ],
   open: [
-    "The site still ships Inter, JetBrains Mono and Fraunces from layout.tsx. The two faces above are the decision, not yet the deployment. Until the swap lands, this table describes the intent and not the bytes.",
     "The wordmark and mark have not been trademark-searched. Before the company name is registered, run a Brønnøysund and EUIPO search on the name and a figurative search on the mark.",
     "next/font self-hosts the faces at build time, so no request reaches Google at runtime. That keeps the site clear of the German Google-Fonts-and-GDPR line of cases.",
   ],

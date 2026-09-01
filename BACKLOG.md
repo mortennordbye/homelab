@@ -4,11 +4,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### Two orphaned app manifests
-- **What:** Both are committed but inert. `arr-stack/huntarr.yaml` is commented out of its `kustomization.yaml`, nothing runs in the cluster, and `ghcr.io/plexguide/huntarr` no longer resolves anywhere (upstream repo gone); Renovate is explicitly disabled for it, which was the source of a permanent "Package lookup failures" entry on the dependency dashboard. `plex-media-stack/tcproute.yaml` defines a `TCPRoute` for `plex-tcp` on the public gateway, is absent from its `kustomization.yaml`, and no `TCPRoute` exists in the cluster — Plex on 32400 reaches the backend by another path, so it has never been in effect.
-- **Why deferred:** Deleting someone's disabled manifest is a judgement call, not a fix, and neither costs anything where it sits. The Renovate disable already removes the huntarr noise.
-- **Unblock:** huntarr — decide whether it comes back; if yes repoint at a maintained fork and drop the Renovate rule, if no delete the manifest, the commented line and the rule. TCPRoute — decide whether Plex should route through the gateway's `plex-tcp` entrypoint; if yes add it to `kustomization.yaml` and confirm the listener exists, if no delete it.
-- **Where:** `k8s/talos/apps/arr-stack/{huntarr.yaml,kustomization.yaml}`, `renovate.json` (huntarr disable rule), `k8s/talos/apps/plex-media-stack/{tcproute.yaml,kustomization.yaml}`.
+### An orphaned Plex TCPRoute manifest
+- **What:** `plex-media-stack/tcproute.yaml` defines a `TCPRoute` for `plex-tcp` on the public gateway, is absent from its `kustomization.yaml`, and no `TCPRoute` exists in the cluster — Plex on 32400 reaches the backend by another path, so it has never been in effect. (The huntarr half of this entry was resolved 2026-09-01: manifest, kustomization line and Renovate disable rule all deleted, along with the equally inert tdarr and cleanuparr manifests.)
+- **Why deferred:** Deleting someone's disabled manifest is a judgement call, not a fix, and it costs nothing where it sits.
+- **Unblock:** Decide whether Plex should route through the gateway's `plex-tcp` entrypoint; if yes add it to `kustomization.yaml` and confirm the listener exists, if no delete it.
+- **Where:** `k8s/talos/apps/plex-media-stack/{tcproute.yaml,kustomization.yaml}`.
 
 ### Remove the old `workout` app after logeverylift cutover
 - **What:** `logeverylift.com` was cut over from the old `workout` app to the renamed `logeverylift` app (PR #369, 2026-07-18). The `workout` namespace, Deployment, Postgres, and PVC are still present — both `workout-app` and `postgres` are scaled to 0 (ArgoCD ignores `/spec/replicas`; also declared in the manifests). The data is preserved on `postgres-pvc`; scale `postgres` back to 1 to re-access it. Nothing routes to it.
