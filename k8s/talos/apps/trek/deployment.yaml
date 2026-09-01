@@ -57,6 +57,16 @@ spec:
                 secretKeyRef:
                   name: trek-secret
                   key: ENCRYPTION_KEY
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: trek-secret
+                  key: ADMIN_EMAIL
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: trek-secret
+                  key: ADMIN_PASSWORD
           volumeMounts:
             - name: data
               mountPath: /app/data
