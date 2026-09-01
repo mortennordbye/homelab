@@ -1,8 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/cn";
 import { statusSnapshot } from "@/content/infrastructure";
+import {
+  PHOS_DIM,
+  PHOS_LIT,
+  PHOS_BRIGHT,
+  PHOS_AMBER,
+  GLOW,
+  GLOW_BRIGHT,
+  BEZEL_STYLE,
+  SCREEN_STYLE,
+  SCANLINES_STYLE,
+} from "@/lib/phosphor";
 
 /** Shape served by /api/v1/infra (the in-cluster CronJob's ConfigMap). */
 type ClusterStatus = {
@@ -10,7 +20,7 @@ type ClusterStatus = {
   build: string;
   deployedAt?: string;
   argocd: { sync: string; health: string; syncedAt?: string };
-  /** `list` is per-node detail; the tiles here only need the counts. */
+  /** `list` is per-node detail; the readout here only needs the counts. */
   nodes: {
     ready: number;
     total: number;
@@ -45,8 +55,8 @@ type UptimeDay = { d: string; pct: number | null };
 
 /**
  * Last 30 UTC days from the publisher's per-day sample counts. Health is as
- * sampled: days with no samples at all render as gaps instead of green, and
- * a silent publisher already trips the stale pill above.
+ * sampled: days with no samples at all render as gaps instead of lit, and
+ * a silent publisher already trips the stale line above.
  */
 function buildUptime(
   history: ClusterStatus["history"],
@@ -84,42 +94,22 @@ function certDaysLeft(notAfter: string | undefined): number | null {
   return Number.isNaN(days) ? null : days;
 }
 
-function Tile({
-  label,
-  value,
-  sub,
-  subTone = "muted",
-  mono = false,
-}: {
-  label: string;
-  value: React.ReactNode;
-  sub: string;
-  subTone?: "muted" | "ok";
-  mono?: boolean;
-}) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="bg-surface p-6">
-      <p className="eyebrow text-[0.65rem]">{label}</p>
-      <p
-        className={cn(
-          "mt-2 text-2xl font-semibold tabular-nums leading-tight tracking-tight text-fg",
-          mono && "font-mono text-xl",
-        )}
-      >
-        {value}
-      </p>
-      <p
-        className={cn(
-          "mt-1.5 font-mono text-xs",
-          subTone === "ok" ? "text-success" : "text-fg-3",
-        )}
-      >
-        {sub}
-      </p>
+    <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-0">
+      <span className="shrink-0 sm:w-[130px]" style={{ color: PHOS_DIM }}>
+        {label}
+      </span>
+      <span style={{ color: PHOS_LIT, textShadow: GLOW }}>{children}</span>
     </div>
   );
 }
 
+/**
+ * The live readout as one instrument (DECISIONS.md §12 / remnants 8B): every
+ * live number the page shows is inside this glass, and nothing outside it on
+ * the page carries green. The bezel is the palette's fixture.
+ */
 export function LiveStatus() {
   const [feed, setFeed] = useState<FeedState>("loading");
   const [status, setStatus] = useState<ClusterStatus | null>(null);
@@ -136,7 +126,7 @@ export function LiveStatus() {
         if (cancelled) return;
         setStatus(data);
         // /api/v1/infra always answers 200; it flags the build-time fallback
-        // with source:"snapshot" (and carries no generatedAt) so the pill
+        // with source:"snapshot" (and carries no generatedAt) so the readout
         // stays honest when the live feed is unavailable.
         setFeed(data.source === "snapshot" || !data.generatedAt ? "snapshot" : "live");
       })
@@ -155,7 +145,7 @@ export function LiveStatus() {
     nodes.ready === nodes.total &&
     argocd.sync === "Synced" &&
     argocd.health === "Healthy";
-  // A green light on old data is a lie: refuse "operational" when the feed is stale.
+  // A lit "operational" on old data is a lie: refuse it when the feed is stale.
   const stale = isStale(status?.generatedAt);
   const ok = healthy && !stale;
   const uptime = buildUptime(status?.history);
@@ -170,114 +160,104 @@ export function LiveStatus() {
     .join(" · ");
 
   return (
-    <div>
-      <div className="inline-flex items-center gap-2.5 rounded-full border border-line-2 bg-surface/60 py-2 pl-3.5 pr-4 font-mono text-xs text-fg-2">
-        <span className="relative flex h-2 w-2">
-          {feed === "live" && !stale && (
-            <span
-              className={cn(
-                "absolute inline-flex h-full w-full animate-ping rounded-full opacity-60",
-                ok ? "bg-success" : "bg-warn",
-              )}
-            />
-          )}
-          <span
-            className={cn(
-              "relative inline-flex h-2 w-2 rounded-full",
-              feed === "live" && ok && "bg-success",
-              feed === "live" && !ok && "bg-warn",
-              feed === "loading" && "bg-fg-3",
-              feed === "snapshot" && "bg-fg-3",
-            )}
-          />
-        </span>
-        {feed === "loading" && <span>checking the cluster…</span>}
-        {feed === "live" && stale && (
-          <span>
-            <b className="font-semibold text-warn">Live feed stale</b>
-            {updated && <span className="text-fg-3"> · last update {updated}</span>}
-          </span>
-        )}
-        {feed === "live" && !stale && (
-          <span>
-            <b className={cn("font-semibold", ok ? "text-success" : "text-warn")}>
-              {ok ? "All systems operational" : "Partially degraded"}
-            </b>
-            {updated && <span className="text-fg-3"> · updated {updated}</span>}
-          </span>
-        )}
-        {feed === "snapshot" && (
-          <span>live feed unreachable · showing the build-time snapshot</span>
-        )}
-      </div>
+    <div className="max-w-3xl rounded-lg p-3.5" style={BEZEL_STYLE}>
+      <div
+        className="relative overflow-hidden rounded font-mono text-[13px] leading-relaxed"
+        style={SCREEN_STYLE}
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-overlay"
+          style={SCANLINES_STYLE}
+        />
 
-      <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line lg:grid-cols-4">
-        <Tile
-          label="Serving build"
-          value={sha}
-          mono
-          sub={deployed ? `deployed ${deployed}` : "pinned to commit SHA"}
-        />
-        <Tile
-          label="ArgoCD app"
-          value={argocd.sync}
-          sub={`${argocd.health.toLowerCase()} · auto-sync`}
-          subTone={argocd.health === "Healthy" ? "ok" : "muted"}
-        />
-        <Tile
-          label="Cluster nodes"
-          value={
-            <>
-              {nodes.ready}
-              <span className="text-base font-medium text-fg-3"> / {nodes.total} ready</span>
-            </>
-          }
-          sub={versions || "Talos Linux · Kubernetes"}
-        />
-        <Tile
-          label="TLS certificate"
-          value={
-            certDays !== null ? (
-              <>
-                {certDays}
-                <span className="text-base font-medium text-fg-3"> days</span>
-              </>
-            ) : (
-              "auto"
-            )
-          }
-          sub="auto-renews · Let's Encrypt"
-        />
-      </div>
-
-      {uptime && (
-        <div className="mt-8">
-          <div className="flex items-baseline justify-between font-mono text-xs text-fg-3">
-            <span>last 30 days · observed in-cluster</span>
-            {uptime.overall && (
+        <div className="px-5 py-4 sm:px-6 sm:py-5">
+          {/* Status line */}
+          <div className="text-[12px]">
+            {feed === "loading" && <span style={{ color: PHOS_DIM }}>genesis · checking the cluster…</span>}
+            {feed === "live" && !stale && (
               <span>
-                <span className="text-success">{uptime.overall}</span> healthy
+                <span style={{ color: PHOS_DIM }}>genesis · </span>
+                <span
+                  style={
+                    ok
+                      ? { color: PHOS_BRIGHT, textShadow: GLOW_BRIGHT }
+                      : { color: PHOS_AMBER }
+                  }
+                >
+                  {ok ? "all systems operational" : "partially degraded"}
+                </span>
+                {updated && <span style={{ color: PHOS_DIM }}> · updated {updated}</span>}
+              </span>
+            )}
+            {feed === "live" && stale && (
+              <span>
+                <span style={{ color: PHOS_DIM }}>genesis · </span>
+                <span style={{ color: PHOS_AMBER }}>live feed stale</span>
+                {updated && <span style={{ color: PHOS_DIM }}> · last update {updated}</span>}
+              </span>
+            )}
+            {feed === "snapshot" && (
+              <span style={{ color: PHOS_DIM }}>
+                genesis · live feed unreachable · showing the build-time snapshot
               </span>
             )}
           </div>
-          <div className="mt-3 flex h-10 items-stretch justify-between gap-[3px]">
-            {uptime.days.map((day) => (
-              <span
-                key={day.d}
-                title={`${day.d} · ${
-                  day.pct === null ? "no data" : `${(day.pct * 100).toFixed(1)}% healthy`
-                }`}
-                className={cn(
-                  "w-full max-w-[9px] flex-1 rounded-full transition-transform duration-150 hover:scale-y-110",
-                  day.pct === null && "bg-line-2",
-                  day.pct !== null && day.pct >= 0.995 && "bg-success",
-                  day.pct !== null && day.pct < 0.995 && "bg-danger",
-                )}
-              />
-            ))}
+
+          {/* The readout */}
+          <div className="mt-4 flex flex-col gap-1.5 text-[12.5px]">
+            <Row label="SERVING BUILD">
+              {sha}
+              {deployed && <span style={{ color: PHOS_DIM }}> · deployed {deployed}</span>}
+            </Row>
+            <Row label="ARGOCD">
+              {argocd.sync.toLowerCase()} · {argocd.health.toLowerCase()}
+              <span style={{ color: PHOS_DIM }}> · auto-sync</span>
+            </Row>
+            <Row label="NODES">
+              {nodes.ready} / {nodes.total} ready
+              {versions && <span style={{ color: PHOS_DIM }}> · {versions}</span>}
+            </Row>
+            <Row label="TLS CERT">
+              {certDays !== null ? `${certDays} days` : "auto"}
+              <span style={{ color: PHOS_DIM }}> · auto-renews · Let&apos;s Encrypt</span>
+            </Row>
           </div>
+
+          {/* History, on the same glass */}
+          {uptime && (
+            <div className="mt-5">
+              <div className="flex items-baseline justify-between text-[11px]">
+                <span style={{ color: PHOS_DIM }}>last 30 days · observed in-cluster</span>
+                {uptime.overall && (
+                  <span style={{ color: PHOS_DIM }}>
+                    <span style={{ color: PHOS_LIT, textShadow: GLOW }}>{uptime.overall}</span>{" "}
+                    healthy
+                  </span>
+                )}
+              </div>
+              <div className="mt-2.5 flex h-6 items-stretch justify-between gap-[2px]">
+                {uptime.days.map((day) => (
+                  <span
+                    key={day.d}
+                    title={`${day.d} · ${
+                      day.pct === null ? "no data" : `${(day.pct * 100).toFixed(1)}% healthy`
+                    }`}
+                    className="w-full max-w-[10px] flex-1"
+                    style={
+                      day.pct === null
+                        ? { background: "#141c15" }
+                        : day.pct >= 0.995
+                          ? { background: PHOS_LIT, boxShadow: GLOW }
+                          : { background: PHOS_AMBER }
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -11,8 +11,6 @@ export const metadata: Metadata = {
     "This site runs on a self-hosted Talos Kubernetes cluster, reconciled by ArgoCD. The request path, the deploy pipeline, and live cluster status.",
 };
 
-const dotTints = ["bg-accent", "bg-accent-3", "bg-accent-2", "bg-brass"];
-
 const statusJsonExample = `{
   "generatedAt": "2026-07-13T05:55:03Z",
   "build": "72088b9",
@@ -28,6 +26,8 @@ const statusJsonExample = `{
   "history": [{ "d": "2026-07-13", "ok": 71, "total": 71 }, ...]
 }`;
 
+// Two inks, no hue: the payload is a document, and the page's only colour
+// lives inside the instrument's glass.
 function JsonCode({ code }: { code: string }) {
   return (
     <>
@@ -35,20 +35,13 @@ function JsonCode({ code }: { code: string }) {
         if (part.endsWith('":')) {
           return (
             <span key={i}>
-              <span className="text-accent">{part.slice(0, -1)}</span>:
+              <span className="text-fg">{part.slice(0, -1)}</span>:
             </span>
           );
         }
-        if (part.startsWith('"')) {
+        if (part.startsWith('"') || /^\d+$/.test(part)) {
           return (
-            <span key={i} className="text-accent-3">
-              {part}
-            </span>
-          );
-        }
-        if (/^\d+$/.test(part)) {
-          return (
-            <span key={i} className="text-copper">
+            <span key={i} className="text-fg-2">
               {part}
             </span>
           );
@@ -62,15 +55,16 @@ function JsonCode({ code }: { code: string }) {
 export default function InfrastructurePage() {
   return (
     <main className="pt-32">
+      {/* The front page makes the claim ("this site is the case study"); this
+          page assumes it and shows the machinery. */}
       <Section
         eyebrow="infrastructure"
-        heading="This site is the case study."
+        heading="The machinery behind the page."
         description={
           <>
-            No Vercel, no Netlify. The page you are reading was built by CI,
-            pushed to a registry, and reconciled by ArgoCD onto a self-hosted
-            Talos Kubernetes cluster in Oslo. The status below is read from
-            that cluster.
+            The page you are reading was built by CI, pushed to a registry, and
+            reconciled by ArgoCD onto a self-hosted Talos Kubernetes cluster in
+            Oslo. The instrument below is reading that cluster.
           </>
         }
       >
@@ -121,8 +115,8 @@ export default function InfrastructurePage() {
             </p>
             <p>
               The page fetches that endpoint client-side. If the fetch fails,
-              the tiles fall back to a build-time snapshot and say so. The page
-              never breaks because the homelab is having a bad day.
+              the screen falls back to a build-time snapshot and says so. The
+              page never breaks because the homelab is having a bad day.
             </p>
             <div className="space-y-4 border-t border-line pt-5 text-sm">
               <p className="eyebrow text-[0.65rem]">design decisions</p>
@@ -135,12 +129,12 @@ export default function InfrastructurePage() {
                 ConfigMap.
               </p>
               <p>
-                The pill checks the timestamp too. Data older than 15 minutes
+                The screen checks the timestamp too. Data older than 15 minutes
                 is reported as stale rather than shown as operational.
               </p>
             </div>
           </div>
-          <Reveal className="overflow-hidden rounded-lg border border-line bg-bg-2">
+          <Reveal className="overflow-hidden rounded-[2px] border border-line bg-bg-2">
             <div className="flex items-center justify-between border-b border-line px-4 py-2.5 font-mono text-xs">
               <span className="text-fg-2">GET /api/v1/infra</span>
               <span className="text-fg-3">refreshed every 5 min</span>
@@ -173,11 +167,7 @@ export default function InfrastructurePage() {
           {platform.map((p, i) => (
             <Reveal key={p.name} delay={i * 0.05}>
               <div className="border-t border-line pt-4">
-                <p className="flex items-center gap-2 font-mono text-sm font-semibold text-fg">
-                  <span
-                    aria-hidden
-                    className={`h-1.5 w-1.5 rounded-[2px] ${dotTints[i % dotTints.length]}`}
-                  />
+                <p className="border-l-2 border-brass pl-3 font-mono text-sm font-semibold text-fg">
                   {p.name}
                 </p>
                 <p className="mt-2 text-xs leading-relaxed text-fg-3">{p.role}</p>

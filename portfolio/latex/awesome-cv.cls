@@ -75,7 +75,6 @@
 % Needed to use icons from font-awesome
 % (https://github.com/posquit0/latex-fontawesome)
 \RequirePackage{fontawesome}
-\RequirePackage[default,opentype]{sourcesanspro}
 % Needed for the photo ID
 \RequirePackage[skins]{tcolorbox}
 % Needed to deal a paragraphs
@@ -162,26 +161,65 @@
 %-------------------------------------------------------------------------------
 % Set the FontAwesome font to be up-to-date.
 % \newfontfamily\FA[Path=\@fontdir]{FontAwesome}
-% Set font for header (default is Roboto)
+% The site's two faces (brand.ts): Source Serif 4 everywhere, Fragment Mono
+% for the footer's label register. Same files the web page is set in.
 \newfontfamily\headerfont[
   Path=\@fontdir,
   UprightFont=*-Regular,
-  ItalicFont=*-Italic,
+  ItalicFont=*-It,
   BoldFont=*-Bold,
-  BoldItalicFont=*-BoldItalic,
-]{Roboto}
+  BoldItalicFont=*-BoldIt,
+  Extension=.otf,
+]{SourceSerif4}
 
 \newfontfamily\headerfontlight[
   Path=\@fontdir,
-  UprightFont=*-Thin,
-  ItalicFont=*-ThinItalic,
-  BoldFont=*-Medium,
-  BoldItalicFont=*-MediumItalic,
-]{Roboto}
+  UprightFont=*-Light,
+  ItalicFont=*-LightIt,
+  BoldFont=*-Semibold,
+  BoldItalicFont=*-SemiboldIt,
+  Extension=.otf,
+]{SourceSerif4}
 
-\newcommand*{\footerfont}{\sourcesanspro}
-\newcommand*{\bodyfont}{\sourcesanspro}
-\newcommand*{\bodyfontlight}{\sourcesansprolight}
+\newfontfamily\bodyfontface[
+  Path=\@fontdir,
+  UprightFont=*-Regular,
+  ItalicFont=*-It,
+  BoldFont=*-Bold,
+  BoldItalicFont=*-BoldIt,
+  Extension=.otf,
+]{SourceSerif4}
+
+\newfontfamily\bodyfontlightface[
+  Path=\@fontdir,
+  UprightFont=*-Light,
+  ItalicFont=*-LightIt,
+  BoldFont=*-Semibold,
+  BoldItalicFont=*-SemiboldIt,
+  Extension=.otf,
+]{SourceSerif4}
+
+\newfontfamily\footerfontface[
+  Path=\@fontdir,
+  UprightFont=*-Regular,
+  ItalicFont=*-Italic,
+  Extension=.ttf,
+]{FragmentMono}
+
+% sourcesanspro's [default] used to set the main font; without an explicit
+% main face anything unstyled falls back to Latin Modern.
+\setmainfont[
+  Path=\@fontdir,
+  UprightFont=*-Regular,
+  ItalicFont=*-It,
+  BoldFont=*-Bold,
+  BoldItalicFont=*-BoldIt,
+  Extension=.otf,
+]{SourceSerif4}
+
+\newcommand*{\footerfont}{\footerfontface}
+\newcommand*{\bodyfont}{\bodyfontface}
+\newcommand*{\bodyfontlight}{\bodyfontlightface}
 
 %-------------------------------------------------------------------------------
 %                Configuration for styles

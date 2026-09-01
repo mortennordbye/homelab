@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "@/components/icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { warmImages, warmOnIdle } from "@/lib/warm";
@@ -178,10 +178,10 @@ export function InfraBench() {
                   onClick={() => setSelected(active ? null : d.id)}
                   aria-pressed={active}
                   className={cn(
-                    "focus-ring rounded-full border px-3 py-1.5 font-mono text-xs transition-colors",
+                    "focus-ring rounded-[2px] border px-3 py-1.5 font-mono text-xs transition-colors",
                     active
-                      ? "border-accent/60 bg-surface text-fg"
-                      : "border-line text-fg-2 hover:border-accent/40 hover:text-fg",
+                      ? "border-copper text-fg"
+                      : "border-brass/55 text-fg-2 hover:border-copper hover:text-fg",
                   )}
                 >
                   {d.label}

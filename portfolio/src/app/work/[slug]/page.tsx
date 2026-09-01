@@ -8,7 +8,7 @@ import { StackTiles } from "@/components/work/StackTiles";
 import { ArchitectureSection } from "@/components/work/ArchitectureSection";
 import { mdxComponents } from "@/components/work/mdx-components";
 import { getAllWork, getWorkBySlug } from "@/lib/work";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/icons";
 
 export function generateStaticParams() {
   return getAllWork().map((w) => ({ slug: w.slug }));

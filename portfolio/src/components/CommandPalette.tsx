@@ -2,9 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { X } from "lucide-react";
 import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
+import {
+  PHOS_DIM,
+  PHOS_LIT,
+  PHOS_BRIGHT,
+  GLOW,
+  GLOW_BRIGHT,
+  BEZEL_STYLE,
+  SCREEN_STYLE,
+  SCANLINES_STYLE,
+} from "@/lib/phosphor";
 
 type WorkItem = { slug: string; title: string };
 type ServiceItem = { slug: string; title: string };
@@ -21,6 +30,15 @@ type Props = {
   services: ServiceItem[];
 };
 
+// The slice of /api/v1/infra the screen prints. Everything shown must come
+// from here: the screen is only allowed to say what is true.
+type Infra = {
+  nodes?: { ready: number; total: number; list?: { name: string; role: string; ready: boolean }[] };
+  argocd?: { sync: string };
+  cert?: { notAfter: string };
+};
+
+
 export function CommandPalette({ work, services }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -30,6 +48,9 @@ export function CommandPalette({ work, services }: Props) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   const [output, setOutput] = useState<string[]>([]);
+  const [infra, setInfra] = useState<Infra | null>(null);
+  // Solved when the feed arrives, not in render — Date.now() is impure there.
+  const [certDays, setCertDays] = useState<number | null>(null);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -41,6 +62,28 @@ export function CommandPalette({ work, services }: Props) {
     setLastPath(pathname);
     if (open) setOpen(false);
   }
+
+  // Fetched once per session, on first open: the status line and the node
+  // table print from it, and a palette nobody opens costs no request.
+  useEffect(() => {
+    if (!open || infra) return;
+    let cancelled = false;
+    fetch("/api/v1/infra")
+      .then((r) => r.json())
+      .then((d: Infra) => {
+        if (cancelled) return;
+        setInfra(d);
+        if (d.cert?.notAfter) {
+          setCertDays(
+            Math.max(0, Math.round((Date.parse(d.cert.notAfter) - Date.now()) / 86400000)),
+          );
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, infra]);
 
   const close = () => {
     setOpen(false);
@@ -115,17 +158,26 @@ export function CommandPalette({ work, services }: Props) {
         hint: "short bio",
         run: () => print([site.description]),
       },
+      // Replaced the invented htop table: this one prints the same feed the
+      // /infrastructure page reads, so the screen never shows a made-up number.
       {
-        id: "htop",
-        label: "htop",
-        hint: "system snapshot",
-        run: () =>
+        id: "kubectl get nodes",
+        label: "kubectl get nodes",
+        hint: "live from the cluster",
+        run: () => {
+          const nodes = infra?.nodes?.list;
+          if (!nodes?.length) {
+            print(["status feed not loaded — try again in a moment"]);
+            return;
+          }
           print([
-            "  PID USER       %CPU %MEM   COMMAND",
-            " 1042 morten      4.2  0.8   next-server",
-            " 2110 morten      1.1  0.3   kubectl get pods -A",
-            " 3301 morten      0.4  0.1   terraform plan",
-          ]),
+            `NAME${" ".repeat(18)}ROLE${" ".repeat(11)}STATUS`,
+            ...nodes.map(
+              (n) =>
+                `${n.name.padEnd(22)}${n.role.padEnd(15)}${n.ready ? "Ready" : "NotReady"}`,
+            ),
+          ]);
+        },
       },
       {
         id: "cd fun",
@@ -168,7 +220,7 @@ export function CommandPalette({ work, services }: Props) {
     const seen = new Map<string, Command>();
     for (const cmd of list) seen.set(cmd.id, cmd);
     return [...seen.values()];
-  }, [router, pathname, work, services]);
+  }, [router, pathname, work, services, infra]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -232,6 +284,17 @@ export function CommandPalette({ work, services }: Props) {
     }
   };
 
+  const statusLine = infra
+    ? [
+        "genesis",
+        infra.nodes ? `${infra.nodes.ready}/${infra.nodes.total} nodes ready` : null,
+        infra.argocd ? `argocd ${infra.argocd.sync.toLowerCase()}` : null,
+        certDays !== null ? `cert ${certDays}d` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "genesis · reading cluster status…";
+
   return (
     <>
       {open && (
@@ -239,93 +302,50 @@ export function CommandPalette({ work, services }: Props) {
           role="dialog"
           aria-modal="true"
           aria-label="Command palette"
-          className="fixed inset-0 z-[100] flex items-start justify-center bg-black/60 px-4 pt-[10vh] backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-start justify-center bg-black/60 px-4 pt-[10vh]"
           onClick={(e) => {
             if (e.target === e.currentTarget) close();
           }}
         >
-          <div
-            className="relative w-full max-w-3xl overflow-hidden rounded-xl border border-snow/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8),0_0_0_1px_rgba(0,0,0,0.5)]"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(8,12,18,0.97) 0%, rgba(5,9,15,0.97) 100%)",
-            }}
-          >
-            {/* CRT scanlines */}
+          {/* The bezel. This surface reflects like everything else on the desk;
+              only what is inside it emits. */}
+          <div className="w-full max-w-3xl rounded-lg p-3.5" style={BEZEL_STYLE}>
             <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-[0.04] mix-blend-overlay"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(0deg, rgba(255,255,255,0.6) 0px, rgba(255,255,255,0.6) 1px, transparent 1px, transparent 3px)",
-              }}
-            />
+              className="relative overflow-hidden rounded font-mono text-[13px] leading-relaxed"
+              style={SCREEN_STYLE}
+            >
+              {/* Scanlines. Legitimate here — this is an actual screen. */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-overlay"
+                style={SCANLINES_STYLE}
+              />
 
-            {/* Title bar — macOS-style traffic lights */}
-            <div className="relative flex items-center justify-between border-b border-snow/10 bg-black/40 px-4 py-2.5">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  aria-label="Close"
-                  onClick={close}
-                  className="h-3 w-3 rounded-full bg-[#ff5f57] ring-1 ring-inset ring-black/20 transition-opacity hover:opacity-80"
-                />
-                <span
-                  aria-hidden
-                  className="h-3 w-3 rounded-full bg-[#febc2e] ring-1 ring-inset ring-black/20"
-                />
-                <span
-                  aria-hidden
-                  className="h-3 w-3 rounded-full bg-[#28c840] ring-1 ring-inset ring-black/20"
-                />
-              </div>
-              <span className="font-mono text-[11px] text-snow/50">
-                morten@talos-cp-01 — bash — 80×24
-              </span>
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={close}
-                className="text-snow/40 transition-colors hover:text-fg"
-              >
-                <X size={14} />
-              </button>
-            </div>
-
-            {/* Buffer (history + output) */}
-            <div className="max-h-64 overflow-y-auto bg-transparent px-5 pt-4 font-mono text-[13px] leading-relaxed text-snow/80">
-              {/* Welcome banner */}
-              <div className="text-snow/40">
-                <div>
-                  <span className="text-accent">●</span> connected to{" "}
-                  <span className="text-snow/70">talos-cp-01.nordbye.local</span>
-                </div>
-                <div>
-                  Last login: now on console — type{" "}
-                  <span className="text-accent">help</span> for available commands.
-                </div>
+              {/* Status line — read from the cluster, never invented. */}
+              <div className="px-5 pt-4 text-[11.5px]" style={{ color: PHOS_DIM }}>
+                {statusLine}
               </div>
 
+              {/* Buffer (command output) */}
               {output.length > 0 && (
-                <div className="mt-3 whitespace-pre text-snow/75">
+                <div
+                  className="phosphor-scroll max-h-64 overflow-y-auto px-5 pt-3 whitespace-pre"
+                  style={{ color: PHOS_LIT }}
+                >
                   {output.map((line, i) => (
                     <div key={i}>{line}</div>
                   ))}
                 </div>
               )}
-            </div>
 
-            {/* Prompt row */}
-            <div className="relative flex items-center gap-2 px-5 py-3 font-mono text-[13px] leading-relaxed">
-              <span className="select-none whitespace-nowrap">
-                <span className="text-accent">morten</span>
-                <span className="text-snow/40">@</span>
-                <span className="text-info">talos-cp-01</span>
-                <span className="text-snow/40">:</span>
-                <span className="text-copper">{pathname}</span>
-                <span className="text-snow/40">$</span>
-              </span>
-              <div className="relative flex-1">
+              {/* Prompt row */}
+              <div className="flex items-center gap-2 px-5 py-3">
+                <span className="select-none whitespace-nowrap">
+                  <span style={{ color: PHOS_LIT, textShadow: GLOW }}>morten@genesis</span>
+                  <span style={{ color: PHOS_DIM }}>:</span>
+                  <span className="text-copper">{pathname}</span>
+                  <span style={{ color: PHOS_DIM }}>$</span>
+                </span>
                 <input
                   ref={inputRef}
                   value={query}
@@ -349,74 +369,84 @@ export function CommandPalette({ work, services }: Props) {
                   aria-activedescendant={
                     filtered[selected] ? `palette-opt-${filtered[selected].id}` : undefined
                   }
-                  placeholder="try cd work, whoami, htop…"
-                  className="w-full caret-accent bg-transparent text-fg placeholder:text-fg-3 focus:outline-none"
+                  placeholder="try cd work, whoami, kubectl get nodes…"
+                  className="w-full flex-1 caret-accent bg-transparent focus:outline-none"
+                  style={{ color: PHOS_BRIGHT, textShadow: GLOW_BRIGHT }}
                   autoComplete="off"
                   spellCheck={false}
                 />
               </div>
+
+              {/* Suggestions */}
+              <ul
+                id="palette-listbox"
+                role="listbox"
+                className="phosphor-scroll max-h-72 overflow-y-auto pb-2"
+                style={{ borderTop: `1px solid rgba(101,161,110,0.12)` }}
+              >
+                {filtered.length === 0 && (
+                  <li className="px-5 py-3 text-[12px] text-danger">
+                    zsh: command not found: {query}
+                  </li>
+                )}
+                {filtered.map((cmd, i) => {
+                  const active = i === selected;
+                  return (
+                    <li
+                      key={cmd.id}
+                      id={`palette-opt-${cmd.id}`}
+                      role="option"
+                      aria-selected={active}
+                      onMouseEnter={() => setSelected(i)}
+                      onClick={() => run(cmd)}
+                      className="flex cursor-pointer items-center justify-between gap-4 px-5 py-1.5 transition-colors"
+                      style={
+                        active
+                          ? { color: PHOS_BRIGHT, textShadow: GLOW_BRIGHT }
+                          : { color: PHOS_DIM }
+                      }
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          aria-hidden
+                          className="w-2 select-none"
+                          style={{ color: active ? PHOS_BRIGHT : "transparent" }}
+                        >
+                          &gt;
+                        </span>
+                        {cmd.label}
+                      </span>
+                      {cmd.hint && (
+                        <span
+                          className="truncate text-[11px]"
+                          style={{ color: PHOS_DIM, textShadow: "none" }}
+                        >
+                          {cmd.hint}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* Status bar */}
+              <div
+                className="flex items-center justify-between px-5 py-2.5 text-[10px] uppercase tracking-[0.18em]"
+                style={{ color: PHOS_DIM, borderTop: "1px solid rgba(101,161,110,0.12)" }}
+              >
+                <span>↑↓ move · ↵ run · esc close</span>
+                <span>
+                  {filtered.length} / {commands.length}
+                </span>
+              </div>
             </div>
 
-            {/* Suggestions */}
-            <ul
-              id="palette-listbox"
-              role="listbox"
-              className="max-h-72 overflow-y-auto border-t border-snow/5 pb-2"
+            {/* The maker's mark on the bezel, ink on the housing, not emitting. */}
+            <div
+              className="mt-2.5 text-center font-mono text-[8.5px] tracking-[0.3em] uppercase"
+              style={{ color: "rgba(243,226,192,0.4)" }}
             >
-              {filtered.length === 0 && (
-                <li className="px-5 py-3 font-mono text-[12px] text-danger">
-                  zsh: command not found: {query}
-                </li>
-              )}
-              {filtered.map((cmd, i) => {
-                const active = i === selected;
-                return (
-                  <li
-                    key={cmd.id}
-                    id={`palette-opt-${cmd.id}`}
-                    role="option"
-                    aria-selected={active}
-                    onMouseEnter={() => setSelected(i)}
-                    onClick={() => run(cmd)}
-                    className={cn(
-                      "flex cursor-pointer items-center justify-between gap-4 px-5 py-1.5 font-mono text-[13px] transition-colors",
-                      active
-                        ? "bg-snow/[0.06] text-fg"
-                        : "text-snow/55 hover:text-snow/80",
-                    )}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "w-2 select-none",
-                          active ? "text-accent" : "text-transparent",
-                        )}
-                      >
-                        ›
-                      </span>
-                      {cmd.label}
-                    </span>
-                    {cmd.hint && (
-                      <span className="truncate text-[11px] text-snow/35">
-                        {cmd.hint}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-
-            {/* Status bar */}
-            <div className="flex items-center justify-between border-t border-snow/10 bg-black/30 px-5 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-snow/40">
-              <span>
-                <span className="text-snow/70">↑↓</span> navigate ·{" "}
-                <span className="text-snow/70">↵</span> run ·{" "}
-                <span className="text-snow/70">esc</span> close
-              </span>
-              <span>
-                {filtered.length} / {commands.length}
-              </span>
+              Genesis Works — Oslo
             </div>
           </div>
         </div>

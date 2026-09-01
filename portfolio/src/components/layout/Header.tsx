@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Menu, Close } from "@/components/icons";
 import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 import { PaletteLauncher } from "@/components/PaletteLauncher";
@@ -23,7 +23,6 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [section, setSection] = useState<string | null>(null);
-  const [hovered, setHovered] = useState<string | null>(null);
   const pathname = usePathname();
 
   const [lastPath, setLastPath] = useState(pathname);
@@ -63,31 +62,6 @@ export function Header() {
     return null;
   }, [pathname, section]);
 
-  // Sliding accent underline. Measured from the live DOM rather than assumed,
-  // so it survives font swap and container width changes.
-  const linkRefs = useRef(new Map<string, HTMLAnchorElement | null>());
-  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
-
-  const measure = useCallback(() => {
-    const target = hovered ?? activeHref;
-    const el = target ? linkRefs.current.get(target) : null;
-    if (!el) {
-      setIndicator((prev) => ({ ...prev, width: 0 }));
-      return;
-    }
-    setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
-  }, [hovered, activeHref]);
-
-  useLayoutEffect(() => {
-    measure();
-  }, [measure]);
-
-  useEffect(() => {
-    window.addEventListener("resize", measure);
-    document.fonts?.ready.then(measure).catch(() => {});
-    return () => window.removeEventListener("resize", measure);
-  }, [measure]);
-
   // Smooth-scroll for in-page anchors when we're already on the home page.
   const onAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (!href.startsWith("/#")) return;
@@ -105,9 +79,8 @@ export function Header() {
     <header
       className={cn(
         "fixed top-0 right-0 left-0 z-50 transition-all duration-300",
-        scrolled
-          ? "border-b border-line/80 bg-bg/70 backdrop-blur-xl"
-          : "border-b border-transparent",
+        // Solid ground, no blur: glass is not one of the four materials.
+        scrolled ? "border-b border-line bg-bg" : "border-b border-transparent",
       )}
     >
       <div className="mx-auto grid max-w-[var(--container-wide)] grid-cols-[auto_1fr_auto] items-center gap-4 px-5 py-3 md:px-8">
@@ -117,9 +90,9 @@ export function Header() {
           href="/"
           aria-label="Home"
           style={{ fontFamily: "var(--font-display-face), ui-serif, Georgia, serif" }}
-          className="focus-ring group flex items-center gap-2.5"
+          className="focus-ring flex items-center gap-3"
         >
-          <span className="grid size-8 place-items-center rounded-lg border border-line-2 bg-surface text-[15px] leading-none text-accent transition-colors group-hover:border-accent/60">
+          <span className="border-b-2 border-brass pb-[3px] text-[19px] leading-none text-fg">
             N
           </span>
           <span className="hidden sm:block">
@@ -139,50 +112,28 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                ref={(el) => {
-                  linkRefs.current.set(item.href, el);
-                }}
                 aria-current={active ? "page" : undefined}
                 onClick={(e) => onAnchorClick(e, item.href)}
-                onMouseEnter={() => setHovered(item.href)}
-                onMouseLeave={() => setHovered(null)}
-                onFocus={() => setHovered(item.href)}
-                onBlur={() => setHovered(null)}
                 className={cn(
-                  "focus-ring py-1.5 text-[13.5px] font-medium transition-colors hover:text-fg",
+                  "focus-ring relative py-1.5 text-[13.5px] font-medium transition-colors hover:text-fg",
                   active ? "text-fg" : "text-fg-2",
+                  // The active mark is a short brass tick above the word — the
+                  // plate position from the shelf, not an underline.
+                  active &&
+                    "before:absolute before:top-0 before:left-0 before:h-px before:w-[18px] before:bg-brass-hi before:content-['']",
                 )}
               >
                 {item.label}
               </Link>
             );
           })}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute bottom-0 h-[2px] rounded-full bg-accent transition-[left,width] duration-300 ease-[var(--ease-out)]"
-            style={{ left: indicator.left, width: indicator.width }}
-          />
         </nav>
 
         <div className="col-start-3 flex items-center justify-end gap-3">
-          {/* The hero already says "available" on the home page, so the header
-              only takes it over once the hero has scrolled away. */}
-          <span
-            className={cn(
-              "hidden items-center gap-2 font-mono text-[11px] tracking-[0.08em] text-fg-3 transition-opacity duration-300 xl:flex",
-              scrolled || pathname !== "/" ? "opacity-100" : "opacity-0",
-            )}
-          >
-            <span className="relative flex size-1.5">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-accent" />
-            </span>
-            AVAILABLE
-          </span>
           <Link
             href={site.headerCta.href}
             onClick={(e) => onAnchorClick(e, site.headerCta.href)}
-            className="focus-ring hidden rounded-lg border border-accent px-3.5 py-1.5 text-[13px] font-semibold text-accent transition-colors hover:bg-accent hover:text-accent-ink sm:inline-flex"
+            className="focus-ring hidden rounded-[2px] border border-fg px-4 py-1.5 text-[13px] text-fg transition-colors hover:border-copper hover:text-copper sm:inline-flex"
           >
             {site.headerCta.label}
           </Link>
@@ -198,16 +149,16 @@ export function Header() {
             type="button"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            className="focus-ring rounded-md p-1 text-fg-2 hover:text-fg lg:hidden"
+            className="focus-ring p-1 text-fg-2 hover:text-fg lg:hidden"
             onClick={() => setOpen((o) => !o)}
           >
-            {open ? <X size={22} /> : <Menu size={22} />}
+            {open ? <Close size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
 
       {open && (
-        <div className="border-t border-line/80 bg-bg/95 backdrop-blur-xl lg:hidden">
+        <div className="border-t border-line bg-bg lg:hidden">
           <nav className="mx-auto flex max-w-[var(--container-wide)] flex-col gap-1 px-5 py-6">
             {NAV.map((item) => (
               <Link
@@ -216,8 +167,8 @@ export function Header() {
                 aria-current={activeHref === item.href ? "page" : undefined}
                 onClick={(e) => onAnchorClick(e, item.href)}
                 className={cn(
-                  "focus-ring rounded-md px-3 py-3 text-base hover:bg-surface hover:text-fg",
-                  activeHref === item.href ? "text-accent" : "text-fg-2",
+                  "focus-ring px-3 py-3 text-base hover:text-fg",
+                  activeHref === item.href ? "text-fg" : "text-fg-2",
                 )}
               >
                 {item.label}
@@ -226,7 +177,7 @@ export function Header() {
             <Link
               href={site.headerCta.href}
               onClick={(e) => onAnchorClick(e, site.headerCta.href)}
-              className="focus-ring mt-2 rounded-lg border border-accent px-3 py-3 text-center text-base font-semibold text-accent hover:bg-accent hover:text-accent-ink"
+              className="focus-ring mt-2 rounded-[2px] border border-fg px-3 py-3 text-center text-base text-fg hover:border-copper hover:text-copper"
             >
               {site.headerCta.label}
             </Link>

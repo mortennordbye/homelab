@@ -143,11 +143,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Decide the route/assertion list, add `portfolio/tests/` with a Playwright config running via `mcr.microsoft.com/playwright` Docker image, add the CI job.
 - **Where:** `.github/workflows/ci-portfolio.yaml`, new `portfolio/tests/`.
 
-### The materials pass has one card grid left
-- **What:** `branding/DECISIONS.md` §12 agreed that everything not rendered is built from the same four materials as the objects. The hero, About, `ServicesGrid`, the resume, the `/work/<slug>` pages, `CtaContact` and `LatestWriting` are all converted. What remains is `FeaturedWork`'s fallback list — the one the shelf falls back to when WebGL is unavailable — which still uses a `rounded-md border border-line` figure at `aspect-[16/9]`. Fifteen files still import `lucide-react`, including the `ArrowLeft` on the case study's own "All work" button.
-- **Why deferred:** The fallback only renders without WebGL, so almost nobody sees it and there is nothing to judge a treatment against on a normal load. It also shares its covers with the shelf, whose `cover` frontmatter gap is its own open item, so the two are worth settling together rather than separately.
-- **Unblock:** Give the fallback figure the same `.print` mount `LatestWriting` now uses, at the covers' native ratio rather than a crop, and drop the `ArrowUpRight` with it. Force the fallback by disabling WebGL in devtools to look at it. The classes and tokens already exist; nothing new needs designing.
-- **Where:** `portfolio/src/app/globals.css` (`.section-label`, `.card-stock`, `.print`, `.sheet`, `.lit`, `.lit-rule`), `portfolio/src/styles/tokens.css` (paper ramp, `--lit-edge`, `--cast`), `portfolio/src/components/sections/FeaturedWork.tsx`, `portfolio/src/components/work/`.
+### lucide-react survives in one file pending a brand-mark decision
+- **What:** The UI icon sweep (2026-09-01) replaced every chrome icon with the owned set in `src/components/icons.tsx` (arrow-left/right/up-right, menu, close, search), and the /infrastructure redesign removed Pipeline's icon chips. One file still imports `lucide-react`, so the dependency stays installed: `work/brand-icons.ts` (22 pictograms feeding `StackTiles` and the shelf/cover canvas art).
+- **Why deferred:** Redrawing 22 brand marks is its own job, not part of a six-icon UI set.
+- **Unblock:** Decide whether the brand pictograms get a monochrome redraw in `icons.tsx` style or stay lucide-fed. When the import is gone, drop `lucide-react` from `package.json`.
+- **Where:** `portfolio/src/components/icons.tsx`, `portfolio/src/components/work/brand-icons.ts`, `portfolio/package.json`.
 
 ### `Callout` has no paper variant
 - **What:** The case study write-up now renders on a `.sheet`, and `.paper-prose` re-inks the elements `mdx-components.tsx` hard-codes dark — headings, prose, list bullets, links, `code`, `strong`, `blockquote`. `Callout` is not covered. Its four tones are tinted panels solved against the dark ground (`border-accent/40 bg-accent/[0.06]`, and a `bg-wood` block for `result`), and every one of them would sit on cream as a dark box with `text-fg-2` inside it.

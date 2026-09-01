@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { ContactCard } from "@/components/sections/ContactCard";
 import { site } from "@/content/site";
@@ -13,7 +13,7 @@ export function CtaContact() {
       <div className="mx-auto grid max-w-[var(--container-wide)] items-center gap-12 px-6 md:grid-cols-12 md:gap-8 md:px-8">
         <div className="md:col-span-6">
           <p className="eyebrow flex items-center gap-2">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)]" />
+            <span className="lamp-breathe inline-block h-1.5 w-1.5 rounded-full bg-accent" />
             Available · Oslo &amp; remote
           </p>
           <h2 className="mt-6 text-display-lg text-fg leading-[1]">Contact.</h2>
