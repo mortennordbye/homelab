@@ -117,7 +117,7 @@ homelab
 | --- | --- |
 | GitOps | [Argo CD](https://argoproj.github.io/cd/) (app-of-apps), [Kargo](https://kargo.io/) (stage to prod promotion for blog, headroom, logeverylift, portfolio, reelsmith and verksted), [Argo Rollouts](https://argoproj.github.io/rollouts/) (installed, no workload uses it yet) |
 | Networking | [Cilium](https://cilium.io/) (CNI, eBPF, L2 announcements and LB IPAM), [Traefik](https://traefik.io/) via [Gateway API](https://gateway-api.sigs.k8s.io/), [external-dns](https://github.com/kubernetes-sigs/external-dns) (Cloudflare) |
-| Security | [Falco](https://falco.org/) (runtime, modern eBPF probe), [Authentik](https://goauthentik.io/) (SSO), [cert-manager](https://cert-manager.io/), [External Secrets Operator](https://external-secrets.io/) (Bitwarden Secrets Manager) |
+| Security | [Falco](https://falco.org/) (runtime, modern eBPF probe), [Authentik](https://goauthentik.io/) (SSO), [cert-manager](https://cert-manager.io/), [External Secrets Operator](https://external-secrets.io/) (Bitwarden Secrets Manager, [pattern](docs/secrets-management.md)) |
 | Observability | [Prometheus and Alertmanager](https://prometheus.io/), [Grafana](https://grafana.com/), [Loki](https://grafana.com/oss/loki/) (logs), [Tempo](https://grafana.com/oss/tempo/) (traces), [OpenTelemetry Collector](https://opentelemetry.io/), [metrics-server](https://github.com/kubernetes-sigs/metrics-server) |
 | Scaling | [KEDA](https://keda.sh/) with the [HTTP add-on](https://github.com/kedacore/http-add-on): nine apps drop to zero replicas and the interceptor wakes them on the first request |
 | Automation | [Reloader](https://github.com/stakater/Reloader) (config and secret triggered rollouts) |
