@@ -1,0 +1,52 @@
+name: CI Terraform
+
+# Format and validate every Terraform root. Deliberately credential-free:
+# init runs with -backend=false, so no cloud auth, no state access and
+# nothing for a fork PR to steal. Plans and applies stay local -- the
+# Proxmox and UniFi APIs are LAN-only, and handing CI the state backend
+# would expose every root's state to a leaked workflow credential.
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - ".github/workflows/ci-terraform.yaml"
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - ".github/workflows/ci-terraform.yaml"
+
+concurrency:
+  group: ci-terraform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fmt-validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Format check
+        run: terraform fmt -check -recursive -diff terraform/
+
+      # Roots are discovered rather than listed so a new root is covered the
+      # commit it lands. validate catches bad references and provider schema
+      # mismatches, which is most of what a local run catches before plan.
+      - name: Validate all roots
+        run: |
+          set -euo pipefail
+          roots=$(find terraform -name '*.tf' -exec dirname {} \; | sort -u)
+          for root in $roots; do
+            echo "::group::$root"
+            terraform -chdir="$root" init -backend=false -input=false > /dev/null
+            terraform -chdir="$root" validate
+            echo "::endgroup::"
+          done
