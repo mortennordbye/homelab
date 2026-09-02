@@ -40,6 +40,11 @@ spec:
             # share, which has its own backups.
             - name: VK_BACKUP_DIR
               value: /mnt/backups
+            # The documents the assistant may read: the whole NAS share, mounted
+            # read-only below. The text it extracts is written beside it on the
+            # PVC (DOCS_INDEX_DIR), never onto the share.
+            - name: DOCS_DIR
+              value: /mnt/shared
           # Ready means serving the SPA at /. timeoutSeconds above the 1s
           # default: a failed readiness check pulls the pod from the Service,
           # which drops every open terminal websocket.
@@ -85,6 +90,16 @@ spec:
             - name: shared-data
               mountPath: /mnt/backups
               subPath: backups/verksted
+            # The same share again, whole and read-only, for reading documents.
+            # readOnly is on the mount rather than the volume because the two
+            # mounts above still write; the kernel enforces it, so a delete
+            # under here fails with EROFS whatever an agent session tries. The
+            # container is unprivileged and cannot remount it, and dind does
+            # not mount it at all, so nothing in the pod can reach the share
+            # writably through this path.
+            - name: shared-data
+              mountPath: /mnt/shared
+              readOnly: true
         # Docker daemon for the agent sessions. Privileged is inherent to dind;
         # shares the pod netns so the app reaches it at localhost:2375.
         - name: dind
