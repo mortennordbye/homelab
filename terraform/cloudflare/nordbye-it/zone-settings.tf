@@ -16,3 +16,27 @@ resource "cloudflare_zone_setting" "always_online" {
   setting_id = "always_online"
   value      = "on"
 }
+
+# Redirect http at the POP. Left off, the request crosses the internet in
+# cleartext just to reach the origin's own redirect.
+resource "cloudflare_zone_setting" "always_use_https" {
+  zone_id    = data.cloudflare_zone.this.zone_id
+  setting_id = "always_use_https"
+  value      = "on"
+}
+
+# Must stay equal to var.edge_cache_ttl_seconds. The zone default only applies
+# where the origin sets no max-age, which here is HTML — the same responses the
+# cache rule pins at the edge, so a split leaves the two lifetimes disagreeing.
+resource "cloudflare_zone_setting" "browser_cache_ttl" {
+  zone_id    = data.cloudflare_zone.this.zone_id
+  setting_id = "browser_cache_ttl"
+  value      = var.edge_cache_ttl_seconds
+}
+
+# Cloudflare's default, declared so a dashboard change shows up as drift.
+resource "cloudflare_zone_setting" "min_tls_version" {
+  zone_id    = data.cloudflare_zone.this.zone_id
+  setting_id = "min_tls_version"
+  value      = "1.0"
+}

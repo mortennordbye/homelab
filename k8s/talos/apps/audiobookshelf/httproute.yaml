@@ -3,6 +3,10 @@ kind: HTTPRoute
 metadata:
   name: audiobookshelf
   namespace: audiobookshelf
+  annotations:
+    # Must stay unproxied. Cloudflare's terms exclude serving audio through the
+    # CDN outside Enterprise, and this route streams it.
+    external-dns.kubernetes.io/cloudflare-proxied: "false"
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
