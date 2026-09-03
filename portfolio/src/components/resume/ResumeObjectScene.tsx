@@ -1,9 +1,9 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Lightformer } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { StudyEnvironment } from "@/components/materials/StudyEnvironment";
 import { FirstFrame } from "@/components/scene/FirstFrame";
 import { makeOak } from "@/components/materials/oak";
 import { makeSheetTexture, type SheetSpec } from "./sheet-art";
@@ -241,16 +241,7 @@ export default function ResumeObjectScene({
       style={{ width: "100%", height: "100%" }}
     >
       <Suspense fallback={null}>
-        {/* Baked once. Deliberately dim: turned up, the large matte desk lifts
-            with everything else and the whole frame goes foggy. */}
-        <Environment resolution={128} frames={1}>
-          <Lightformer intensity={0.9} color="#ffd9a8" position={[-4, 3, 3]} scale={[8, 8, 1]} />
-          <Lightformer intensity={0.22} color="#6f9c72" position={[5, -1, 2]} scale={[6, 6, 1]} />
-          <mesh scale={60}>
-            <sphereGeometry args={[1, 12, 12]} />
-            <meshBasicMaterial color="#1a140d" side={THREE.BackSide} />
-          </mesh>
-        </Environment>
+        <StudyEnvironment scale={60} />
         <Lights />
         <Framing />
         <Desk />

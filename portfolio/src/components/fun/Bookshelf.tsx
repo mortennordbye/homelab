@@ -4,7 +4,8 @@ import { RoundedBox } from "@react-three/drei";
 import { useMemo } from "react";
 import { Interactive } from "./interaction";
 import type { ShelfBook, ShelfCert, ShelfData } from "./shelf";
-import { useSurface } from "./textures";
+import { useSurface } from "@/components/materials/surface";
+import { OAK } from "@/components/materials/oak";
 
 /**
  * A shelf unit holding the case studies as books and the certifications as a
@@ -20,14 +21,23 @@ import { useSurface } from "./textures";
 
 // Bay height is fixed and the unit grows to fit; the inverse strands short
 // rows at the bottom of tall bays.
-const UNIT = { w: 0.92, d: 0.28 };
+const UNIT = { w: 0.92, d: 0.42 };
+/**
+ * How deep the content is, and how far forward it stands. The carcass is deeper
+ * than the books now that the printer stands on top of it, and depth taken off
+ * `UNIT.d` would give a 0.35m hardback floating in the middle of the board.
+ * Width is left alone: at any more than 0.94 the certificates re-flow onto one
+ * row and the unit loses a shelf.
+ */
+const ITEM_D = 0.21;
+const FRONT = (UNIT.d - ITEM_D) / 2 - 0.02;
 const PLINTH = 0.08;
 const BOARD = 0.022;
 const BAY = 0.32;
 const INNER_W = UNIT.w - BOARD * 2;
 const GAP = 0.012;
 
-/** Muted spines that sit with the oak and sage rather than fighting them. */
+/** Muted spines that sit with the oak and the dark walls rather than fighting them. */
 const SPINES = [
   "#6b5344",
   "#4f5f52",
@@ -112,9 +122,9 @@ function Book({
       onActivate={onOpen}
     >
       {(hovered) => (
-        <group position={[x + w / 2, y + h / 2, 0]} rotation={[0, 0, lean]}>
+        <group position={[x + w / 2, y + h / 2, FRONT]} rotation={[0, 0, lean]}>
           <RoundedBox
-            args={[w, h, UNIT.d - 0.07]}
+            args={[w, h, ITEM_D]}
             radius={0.004}
             smoothness={3}
             receiveShadow
@@ -129,7 +139,7 @@ function Book({
           {/* head and tail bands, so a spine is not one flat colour */}
           {[h / 2 - 0.016, -h / 2 + 0.016].map((by) => (
             <mesh key={by} position={[0, by, 0.001]}>
-              <boxGeometry args={[w * 0.98, 0.006, UNIT.d - 0.066]} />
+              <boxGeometry args={[w * 0.98, 0.006, ITEM_D + 0.004]} />
               <meshStandardMaterial color="#cbbfa6" roughness={0.7} />
             </mesh>
           ))}
@@ -169,7 +179,7 @@ function Certificate({
     >
       {(hovered) => (
         <group
-          position={[x + CERT_W / 2, y + CERT_H / 2, -0.03]}
+          position={[x + CERT_W / 2, y + CERT_H / 2, FRONT - 0.03]}
           rotation={[tilt, (hash01(cert.title, 13) - 0.5) * 0.08, 0]}
         >
           {/* frame */}
@@ -219,7 +229,7 @@ export function Bookshelf({
   onOpenBook: (b: ShelfBook) => void;
   onOpenCert: (c: ShelfCert) => void;
 }) {
-  const oak = useSurface("oak_veneer_01", [1.6, 1.2]);
+  const oak = useSurface("black_oak_veneer", [1.6, 1.2]);
 
   const { placed, rows } = useMemo(
     () =>
@@ -250,20 +260,20 @@ export function Bookshelf({
       {[-(UNIT.w - BOARD) / 2, (UNIT.w - BOARD) / 2].map((x) => (
         <mesh key={x} position={[x, height / 2, 0]} castShadow receiveShadow>
           <boxGeometry args={[BOARD, height, UNIT.d]} />
-          <meshStandardMaterial {...oak} color="#b39a72" roughness={0.66} />
+          <meshStandardMaterial {...oak} color={OAK.case} roughness={0.66} />
         </mesh>
       ))}
       {/* back */}
       <mesh position={[0, height / 2, -UNIT.d / 2 + 0.006]} receiveShadow>
         <boxGeometry args={[UNIT.w - BOARD * 2, height, 0.012]} />
-        <meshStandardMaterial {...oak} color="#a8906a" roughness={0.72} />
+        <meshStandardMaterial {...oak} color={OAK.carcass} roughness={0.72} />
       </mesh>
       {/* plinth, top, and one board under each row */}
       {[PLINTH, height - BOARD / 2, ...Array.from({ length: totalRows }, (_, r) => rowY(r) - BOARD / 2)].map(
         (y, i) => (
           <mesh key={i} position={[0, y, 0]} castShadow receiveShadow>
             <boxGeometry args={[UNIT.w - BOARD * 2, BOARD, UNIT.d]} />
-            <meshStandardMaterial {...oak} color="#b39a72" roughness={0.66} />
+            <meshStandardMaterial {...oak} color={OAK.case} roughness={0.66} />
           </mesh>
         ),
       )}

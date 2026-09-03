@@ -9,21 +9,37 @@ import type { Skill } from "@/content/schemas";
 import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
 import { ACCENT } from "./Panels";
+import { PAPER } from "@/components/materials/paper";
 import type { CareerData } from "./shelf";
 
 /**
- * The remaining portfolio sections as objects: socials, contact, the blog,
- * the two interests, and the career timeline. Rule for all of them: anything
- * meant to be looked at presents a face to the room at standing eye level,
- * big enough to put a crosshair on.
+ * The remaining portfolio sections as objects: socials, contact, skills,
+ * services, the two interests, and the career.
+ *
+ * Two rules for all of them. Anything meant to be looked at presents a face to
+ * the room, big enough to put a crosshair on. And it is a thing somebody would
+ * own: none of these hangs on a wall any more, because six portfolio panels
+ * screwed to a flat is the failure `branding/ART-DIRECTION.md` names — a UI
+ * pasted over a photograph — committed in three dimensions.
  */
 
 /**
- * The social links, as framed tiles on the wall above the desk. Real DOM via
- * drei's Html so the icons are sharp SVG at any distance; marks are Simple
- * Icons (CC0) applied as a CSS mask so each takes its own colour. One Html
- * layer holds all four tiles with an invisible mesh per tile for picking —
- * the DOM layer is the expensive part, picking geometry is nearly free.
+ * The social links, as a note held to the fridge door by magnets — which is
+ * where a flat keeps the things it wants to hand. They were a row of framed
+ * tiles screwed to the wall above the desk, which is not something anybody has.
+ *
+ * The marks are still Simple Icons (CC0) through a CSS mask in one `Html`
+ * layer, because a logo built from geometry is unreadable from anywhere you
+ * would stand. The note is what makes that layer legal: `occlude="blending"`
+ * lays an occlusion plane behind the DOM, and behind transparent DOM that
+ * plane is a dark rectangle floating on the door. Every other layer in the
+ * room paints an opaque background for the same reason. Here the opaque thing
+ * is a piece of paper, which is also the only reason three social links would
+ * be on a fridge at all.
+ *
+ * Rendered as a child of the fridge door, so it swings with it. Placed in
+ * world space instead it would hang in mid-air the moment somebody opened the
+ * fridge. Origin is the centre of the door's outer face, local +z out of it.
  */
 const SOCIAL_ICON: Record<string, { file: string; colour: string }> = {
   GitHub: { file: "github", colour: "#e6edf3" },
@@ -31,132 +47,142 @@ const SOCIAL_ICON: Record<string, { file: string; colour: string }> = {
   Blog: { file: "rss", colour: "#f0913a" },
 };
 
-const TILE_W = 0.24;
-const TILE_H = 0.24;
-const TILE_GAP = 0.035;
-const TILE_PX = 200;
+const NOTE_W = 0.21;
+const NOTE_H = 0.285;
+const NOTE_PX = 560;
+/** Where the note sits on the door, measured up from the door's centre. */
+const NOTE_Y = 0.4;
+/** The magnets holding it, in metres from the note centre. Two, off-square,
+ *  because a note held by one magnet hangs askew and by four reads as framed. */
+const MAGNET_AT: [number, number][] = [
+  [-0.068, 0.117],
+  [0.071, 0.121],
+];
+const MAGNET_D = 0.03;
 
-export function SocialWall({
-  position,
-  rotation = [0, 0, 0],
-  onOpen,
-}: {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-  onOpen: (card: InfoCard) => void;
-}) {
+export function FridgeMagnets({ onOpen }: { onOpen: (card: InfoCard) => void }) {
   const socials = site.socials;
-  const n = socials.length;
-  const totalW = n * TILE_W + (n - 1) * TILE_GAP;
-  const xOf = (i: number) => -totalW / 2 + TILE_W / 2 + i * (TILE_W + TILE_GAP);
-
-  const pxW = Math.round((totalW / TILE_W) * TILE_PX);
-  const pxH = TILE_PX;
+  const pxH = Math.round((NOTE_H / NOTE_W) * NOTE_PX);
+  /** Authored pixels per metre, so the rows in the DOM and the picking planes
+   *  in front of them are laid out from one number. */
+  const ppm = NOTE_PX / NOTE_W;
+  const rowH = NOTE_H * 0.19;
+  /** Row i's centre, measured from the note centre. The heading takes the top
+   *  third, so the rows hang off the bottom of the note rather than being
+   *  spread down all of it. */
+  const rowY = (i: number) => NOTE_H / 2 - NOTE_H * 0.4 - rowH * (i + 0.5);
 
   return (
-    <group position={position} rotation={rotation}>
-      {/* backing board, so the tiles read as mounted rather than floating */}
-      <RoundedBox
-        position={[0, 0, -0.012]}
-        args={[totalW + 0.06, TILE_H + 0.06, 0.022]}
-        radius={0.005}
-        smoothness={3}
-        castShadow
-        receiveShadow
-      >
-        <meshStandardMaterial color="#2b2f34" roughness={0.72} />
-      </RoundedBox>
+    <group position={[0, NOTE_Y, 0]}>
+      {/* the paper, with a curl of thickness so it has an edge and a shadow */}
+      <mesh position={[0, 0, 0.0015]} castShadow receiveShadow>
+        <boxGeometry args={[NOTE_W, NOTE_H, 0.003]} />
+        <meshStandardMaterial color={PAPER.stock} roughness={0.93} />
+      </mesh>
+
+      {MAGNET_AT.map(([mx, my]) => (
+        <mesh
+          key={`${mx}`}
+          position={[mx, my, 0.006]}
+          rotation={[Math.PI / 2, 0, 0]}
+          castShadow
+        >
+          <cylinderGeometry args={[MAGNET_D / 2, MAGNET_D / 2, 0.007, 20]} />
+          <meshStandardMaterial color="#1b2027" roughness={0.5} metalness={0.25} />
+        </mesh>
+      ))}
 
       <Html
         transform
         occlude="blending"
-        distanceFactor={(totalW / pxW) * 400}
-        position={[0, 0, 0.002]}
+        distanceFactor={(NOTE_W / NOTE_PX) * 400}
+        position={[0, 0, 0.0035]}
         zIndexRange={[10, 0]}
         style={{
-          width: `${pxW}px`,
+          width: `${NOTE_PX}px`,
           height: `${pxH}px`,
           pointerEvents: "none",
           userSelect: "none",
         }}
       >
         <div
-          className="flex h-full w-full items-center justify-between"
-          style={{ gap: `${(TILE_GAP / TILE_W) * TILE_PX}px` }}
+          className="flex h-full w-full flex-col"
+          /* Top padding clears the magnets: the heading sat under both of
+             them at the note's own 34px margin. */
+          style={{ background: PAPER.stock, color: PAPER.ink, padding: "92px 34px 40px" }}
         >
-          {socials.map((sItem) => {
-            const icon = SOCIAL_ICON[sItem.label];
-            return (
-              <div
-                key={sItem.label}
-                className="flex flex-col items-center justify-center"
-                style={{
-                  width: `${TILE_PX}px`,
-                  height: `${TILE_PX}px`,
-                  background:
-                    "linear-gradient(160deg, #12171d 0%, #0d1216 100%)",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  borderRadius: "10px",
-                }}
-              >
+          <div
+            className="font-mono"
+            style={{ fontSize: "31px", letterSpacing: "0.16em", fontWeight: 600 }}
+          >
+            FIND ME
+          </div>
+          <div style={{ height: "3px", background: "#cfc6b4", margin: "16px 0 6px" }} />
+          <div className="flex flex-1 flex-col justify-start">
+            {socials.map((item) => {
+              const icon = SOCIAL_ICON[item.label];
+              return (
                 <div
-                  style={{
-                    width: "88px",
-                    height: "88px",
-                    backgroundColor: icon?.colour ?? "#ffffff",
-                    WebkitMaskImage: `url(/icons/social/${icon?.file}.svg)`,
-                    maskImage: `url(/icons/social/${icon?.file}.svg)`,
-                    WebkitMaskRepeat: "no-repeat",
-                    maskRepeat: "no-repeat",
-                    WebkitMaskPosition: "center",
-                    maskPosition: "center",
-                    WebkitMaskSize: "contain",
-                    maskSize: "contain",
-                  }}
-                />
-                <span
-                  className="mt-3 font-mono"
-                  style={{
-                    fontSize: "20px",
-                    letterSpacing: "0.12em",
-                    color: "#8ea0b2",
-                  }}
+                  key={item.label}
+                  className="flex items-center"
+                  style={{ height: `${rowH * ppm}px`, gap: "16px" }}
                 >
-                  {sItem.label.toUpperCase()}
-                </span>
-              </div>
-            );
-          })}
+                  <div
+                    style={{
+                      width: "34px",
+                      height: "34px",
+                      flex: "0 0 34px",
+                      backgroundColor: icon?.colour ?? PAPER.ink,
+                      filter: "saturate(0.7) brightness(0.72)",
+                      WebkitMaskImage: `url(/icons/social/${icon?.file}.svg)`,
+                      maskImage: `url(/icons/social/${icon?.file}.svg)`,
+                      WebkitMaskRepeat: "no-repeat",
+                      maskRepeat: "no-repeat",
+                      WebkitMaskPosition: "center",
+                      maskPosition: "center",
+                      WebkitMaskSize: "contain",
+                      maskSize: "contain",
+                    }}
+                  />
+                  <span style={{ fontSize: "30px", fontWeight: 600 }}>
+                    {item.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </Html>
 
-      {socials.map((sItem, i) => (
+      {socials.map((item, i) => (
         <Interactive
-          key={sItem.label}
-          label={sItem.label}
+          key={item.label}
+          label={item.label}
           verb="open"
-          detail={sItem.href.replace(/^https?:\/\//, "")}
+          detail={item.href.replace(/^https?:\/\//, "")}
           onActivate={() =>
             onOpen({
               kicker: "social",
-              title: sItem.label,
-              subtitle: sItem.href.replace(/^https?:\/\//, ""),
+              title: item.label,
+              subtitle: item.href.replace(/^https?:\/\//, ""),
               rows: [],
-              body: `Opens ${sItem.href} in a new tab.`,
-              href: sItem.href,
-              hrefLabel: `open ${sItem.label}`,
+              body: `Opens ${item.href} in a new tab.`,
+              href: item.href,
+              hrefLabel: `open ${item.label}`,
             })
           }
         >
           {(hovered) => (
-            <group position={[xOf(i), 0, 0.004]}>
+            <group position={[0, rowY(i), 0.005]}>
               <mesh visible={false}>
-                <planeGeometry args={[TILE_W, TILE_H]} />
+                <planeGeometry args={[NOTE_W - 0.02, rowH]} />
                 <meshBasicMaterial />
               </mesh>
-              {/* hover ring, drawn behind the DOM layer so it frames the tile */}
-              <mesh position={[0, 0, -0.011]} visible={hovered}>
-                <planeGeometry args={[TILE_W + 0.03, TILE_H + 0.03]} />
+              {/* Hover rings the row rather than lighting it: the layer above
+                  paints the paper opaquely, so a lit mesh under it would never
+                  be seen. */}
+              <mesh position={[0, 0, -0.003]} visible={hovered}>
+                <planeGeometry args={[NOTE_W - 0.006, rowH + 0.008]} />
                 <meshBasicMaterial color="#ffd9a6" />
               </mesh>
             </group>
@@ -299,12 +325,8 @@ export function ContactCard({
   );
 }
 
-/**
- * The skills, as a rack faceplate on the wall right of the desk — deliberately
- * not a second framed print, so the two walls read as different kinds of
- * information. Bars are DOM: labels stay readable, and DOM is self-lit, which
- * matters because this wall faces away from both lamps.
- */
+/** The four groups the skill bars on the site are sorted into, in the order the
+ *  notebook writes them down. */
 const SKILL_GROUPS: { id: Skill["group"]; label: string }[] = [
   { id: "platform", label: "PLATFORM" },
   { id: "delivery", label: "DELIVERY" },
@@ -312,7 +334,27 @@ const SKILL_GROUPS: { id: Skill["group"]; label: string }[] = [
   { id: "soft", label: "TEAM" },
 ];
 
-export function SkillPlate({
+/**
+ * Skills, in the notebook lying open on the desk.
+ *
+ * This was a rack faceplate screwed to the wall, corner screws and all, which
+ * is the least likely object anybody has in a living room. A list of what you
+ * work with, written down beside the keyboard, is what the same content
+ * actually looks like in a flat.
+ *
+ * Only the group names go on the page. The pad is 0.23 across, so the layer
+ * carries roughly a tenth of the pixels the plate had: at the plate's line
+ * count the type would be under 5mm tall on the desk. The full list with
+ * levels is on the card, which is where it was worth reading anyway.
+ *
+ * Origin at the desk top. Written in the desk's own frame like everything else
+ * standing on it, so local +z is toward the visitor.
+ */
+const PAD_W = 0.23;
+const PAD_D = 0.16;
+const PAD_PX = 620;
+
+export function DeskNotebook({
   position,
   rotation = [0, 0, 0],
   onOpen,
@@ -321,25 +363,12 @@ export function SkillPlate({
   rotation?: [number, number, number];
   onOpen: (card: InfoCard) => void;
 }) {
-  const W = 0.62;
-  const H = 0.78;
-  const PX_W = 520;
-  const PX_H = 654;
-  const PAD = 30;
-  /** Inset of the lit face from the plate edge, so the plate reads as a bezel.
-   *  Wide enough to clear the corner screws, which would otherwise sit on the
-   *  boundary and punch through the lit face. */
-  const BEZEL = 0.06;
-  /* The plate is 0.024 deep, so its front face is at z 0.012. Everything drawn
-     on top has to clear that: laid flush, the lit face and the plate front
-     z-fight and the panel tears along a diagonal. */
-  const FACE_Z = 0.0126;
-
   const top = [...skills].sort((a, b) => b.level - a.level)[0];
+  const pxH = Math.round((PAD_D / PAD_W) * PAD_PX);
 
   return (
     <Interactive
-      label="the skills panel"
+      label="the notebook"
       verb="read"
       detail={`${skills.length} across ${SKILL_GROUPS.length} groups`}
       onActivate={() =>
@@ -356,144 +385,98 @@ export function SkillPlate({
     >
       {(hovered) => (
         <group position={position} rotation={rotation}>
-          {/* the plate */}
-          <RoundedBox args={[W, H, 0.024]} radius={0.005} smoothness={3} castShadow>
+          {/* The cover, open flat and proud of the paper on every side, which
+              is the only part of an open notebook you see from the side. */}
+          <RoundedBox
+            position={[0, 0.004, 0]}
+            args={[PAD_W + 0.014, 0.008, PAD_D + 0.012]}
+            radius={0.002}
+            smoothness={3}
+            castShadow
+            receiveShadow
+          >
             <meshStandardMaterial
-              color="#3c434a"
-              roughness={0.38}
-              metalness={0.72}
+              color="#2a2a2d"
+              roughness={0.78}
               emissive={hovered ? "#ffd9a6" : "#000000"}
-              emissiveIntensity={hovered ? 0.22 : 0}
+              emissiveIntensity={hovered ? 0.2 : 0}
             />
           </RoundedBox>
-
-          {/* Rack screws, one per corner. Real geometry rather than painted
-              dots: at this size a printed screw head vanishes, and four of them
-              are most of what makes a flat rectangle read as a faceplate. */}
-          {[-1, 1].map((sx) =>
-            [-1, 1].map((sy) => (
-              <mesh
-                key={`${sx}${sy}`}
-                position={[sx * (W / 2 - 0.016), sy * (H / 2 - 0.016), 0.0125]}
-                rotation={[Math.PI / 2, 0, 0]}
-                castShadow
-              >
-                <cylinderGeometry args={[0.007, 0.007, 0.004, 12]} />
-                <meshStandardMaterial color="#8f979e" roughness={0.3} metalness={0.9} />
-              </mesh>
-            )),
-          )}
-
-          {/* The lit face, inside the bezel. */}
-          <mesh position={[0, 0, FACE_Z]}>
-            <planeGeometry args={[W - BEZEL, H - BEZEL]} />
-            <meshStandardMaterial color="#0b0f14" roughness={0.9} />
+          {/* the block of paper, one leaf either side of the spine */}
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[s * (PAD_W / 4 + 0.001), 0.0105, 0]} receiveShadow>
+              <boxGeometry args={[PAD_W / 2 - 0.004, 0.005, PAD_D]} />
+              <meshStandardMaterial color="#e8e2d5" roughness={0.92} />
+            </mesh>
+          ))}
+          {/* the spine, sunk between them */}
+          <mesh position={[0, 0.0095, 0]}>
+            <boxGeometry args={[0.008, 0.004, PAD_D]} />
+            <meshStandardMaterial color="#3a3a3e" roughness={0.8} />
           </mesh>
 
           <Html
             transform
             occlude="blending"
-            distanceFactor={((W - BEZEL) / PX_W) * 400}
-            position={[0, 0, FACE_Z + 0.001]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            distanceFactor={(PAD_W / PAD_PX) * 400}
+            position={[0, 0.0135, 0]}
             zIndexRange={[10, 0]}
             style={{
-              width: `${PX_W}px`,
-              height: `${PX_H}px`,
+              width: `${PAD_PX}px`,
+              height: `${pxH}px`,
               pointerEvents: "none",
               userSelect: "none",
             }}
           >
+            {/* Paper painted in the DOM rather than left to the mesh: an unlit
+                plane behind a transparent layer renders near-black, which is
+                the trap the career print and the leaflets both hit. */}
             <div
-              className="flex h-full w-full flex-col font-mono"
-              style={{
-                padding: `${PAD}px`,
-                background:
-                  "linear-gradient(165deg, #0e141b 0%, #0a0f15 60%, #080c11 100%)",
-                color: "#c2d0de",
-              }}
+              className="flex h-full w-full"
+              style={{ background: PAPER.stock, color: PAPER.ink }}
             >
-              <div className="flex items-baseline justify-between">
-                <span
-                  style={{
-                    fontSize: "23px",
-                    letterSpacing: "0.22em",
-                    color: "#e6eef7",
-                  }}
-                >
-                  SKILLS
-                </span>
-                <span style={{ fontSize: "14px", color: "#55677a" }}>
-                  self-assessed
-                </span>
-              </div>
               <div
+                className="flex flex-col justify-center"
+                style={{ width: "44%", padding: "34px 0 34px 40px" }}
+              >
+                <div
+                  className="font-mono"
+                  style={{ fontSize: "34px", letterSpacing: "0.14em", fontWeight: 600 }}
+                >
+                  STACK
+                </div>
+                <div style={{ height: "3px", background: "#cfc6b4", margin: "14px 0", width: "80px" }} />
+                <div style={{ fontSize: "27px", lineHeight: 1.3, color: "#7d7364" }}>
+                  {skills.length} things, honestly rated
+                </div>
+              </div>
+              {/* the ruled leaf, with the groups written down it */}
+              <div
+                className="flex flex-col justify-center"
                 style={{
-                  height: "1px",
-                  background: `${ACCENT.brand}3d`,
-                  margin: "12px 0 14px",
+                  width: "56%",
+                  padding: "30px 40px",
+                  borderLeft: "2px solid #ded6c6",
                 }}
-              />
-
-              {SKILL_GROUPS.map((g) => {
-                const rows = skills.filter((s) => s.group === g.id);
-                if (!rows.length) return null;
-                return (
-                  <div key={g.id} style={{ marginBottom: "13px" }}>
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        letterSpacing: "0.2em",
-                        color: "#4d5f72",
-                        marginBottom: "7px",
-                      }}
-                    >
-                      {g.label}
-                    </div>
-                    {rows.map((s) => (
-                      <div
-                        key={s.label}
-                        className="flex items-center"
-                        style={{ gap: "10px", marginBottom: "6px" }}
-                      >
-                        <span
-                          style={{
-                            flex: 1,
-                            fontSize: "16px",
-                            color: "#9fb6cc",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {s.label}
-                        </span>
-                        {/* track */}
-                        <span
-                          style={{
-                            width: "176px",
-                            height: "9px",
-                            background: "#141c25",
-                            border: "1px solid #1e2a36",
-                            position: "relative",
-                            flex: "0 0 176px",
-                          }}
-                        >
-                          {/* fill, glowing so it reads as lit rather than painted */}
-                          <span
-                            style={{
-                              position: "absolute",
-                              inset: "0 auto 0 0",
-                              width: `${s.level}%`,
-                              background: ACCENT.brand,
-                              boxShadow: `0 0 9px ${ACCENT.brand}b3`,
-                            }}
-                          />
-                        </span>
-                      </div>
-                    ))}
+              >
+                {SKILL_GROUPS.map((g) => (
+                  <div
+                    key={g.id}
+                    className="flex items-baseline justify-between"
+                    style={{
+                      fontSize: "29px",
+                      lineHeight: 1.52,
+                      borderBottom: "1px solid #e4dccc",
+                    }}
+                  >
+                    <span>{g.label}</span>
+                    <span style={{ fontSize: "24px", color: "#9a9082" }}>
+                      {skills.filter((s) => s.group === g.id).length}
+                    </span>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </Html>
         </group>
@@ -513,7 +496,23 @@ const SERVICE_TONE: Record<string, string> = {
   brand2: ACCENT.info,
 };
 
-export function ServiceRack({
+/**
+ * The services, as three leaflets stood on the shoe bench by the front door —
+ * post that came through the letterbox and got propped up so it would not be
+ * forgotten. They were in a steel pocket rack screwed to the living room wall,
+ * which is a thing that exists in a doctor's waiting room and nowhere else.
+ *
+ * The paper itself is unchanged, and so is the reason it stands upright rather
+ * than lying in a pile: a flat stack presents only its top sheet to a standing
+ * eye line, which is the failure the certificates had before they were stood
+ * up. Anything meant to be looked at presents a face to the room.
+ *
+ * Origin at the middle of the row, at the paper's own centre. The caller leans
+ * the whole group back against the wall; the leaflets do not lean
+ * individually, because rotated paper cannot share one flat `Html` layer and
+ * three layers here was a fifth of the room's total.
+ */
+export function ServiceLeaflets({
   position,
   rotation = [0, 0, 0],
   onOpen,
@@ -524,99 +523,51 @@ export function ServiceRack({
 }) {
   const LEAF_W = 0.135;
   const LEAF_H = 0.205;
-  const GAP = 0.022;
+  const GAP = 0.01;
   /** Authoring width of one leaflet inside the shared layer. */
   const LEAF_PX = 300;
-  /** How much of the leaflet the pocket lip hides. Titles live above it. */
-  const LIP_H = 0.058;
 
   const n = services.length;
   const totalW = n * LEAF_W + (n - 1) * GAP;
   const xOf = (i: number) => -totalW / 2 + LEAF_W / 2 + i * (LEAF_W + GAP);
 
-  /* One DOM layer for all three leaflets, not one each — the same trade the
-     social wall makes, and for the same reason: an `Html` layer is composited
-     every frame whether or not it is in view, while the invisible plane that
-     makes each leaflet pickable is nearly free. Three layers here was 3 of the
-     room's 14, a fifth of the total, for one object on a wall behind you.
-
-     This is also why the leaflets do not lean. Individually rotated paper
-     cannot share a flat layer, and readability wanted them upright anyway. */
   const pxW = Math.round((totalW / LEAF_W) * LEAF_PX);
   const pxH = Math.round((LEAF_H / LEAF_W) * LEAF_PX);
   const gapPx = (GAP / LEAF_W) * LEAF_PX;
 
-  /* This group is turned 180° onto the front wall, so local +z points into the
-     room. Every offset below is written as "toward the visitor". */
   return (
     <group position={position} rotation={rotation}>
-      {/* backboard */}
-      <RoundedBox
-        position={[0, 0, -0.008]}
-        args={[totalW + 0.05, LEAF_H + 0.02, 0.016]}
-        radius={0.004}
-        smoothness={3}
-        castShadow
-        receiveShadow
-      >
-        <meshStandardMaterial color="#2f353b" roughness={0.62} metalness={0.35} />
-      </RoundedBox>
-
-      {/* The paper, the pockets, and the picking planes. Text comes from the
-          single layer below. */}
       {services.map((svc, i) => (
         <group key={svc.slug} position={[xOf(i), 0, 0]}>
-          {/* pocket lip, standing proud of the board so the leaflet sits in
-              something rather than against it */}
-          <RoundedBox
-            position={[0, -LEAF_H / 2 + LIP_H / 2, 0.026]}
-            args={[LEAF_W + 0.014, LIP_H, 0.012]}
-            radius={0.003}
-            smoothness={3}
-            castShadow
-          >
-            <meshStandardMaterial color="#3a4148" roughness={0.55} metalness={0.4} />
-          </RoundedBox>
-          {/* pocket sides */}
-          {[-1, 1].map((sx) => (
-            <mesh
-              key={sx}
-              position={[sx * (LEAF_W / 2 + 0.006), -LEAF_H / 2 + LIP_H / 2, 0.019]}
-              castShadow
-            >
-              <boxGeometry args={[0.004, LIP_H, 0.03]} />
-              <meshStandardMaterial color="#343b41" roughness={0.6} metalness={0.4} />
-            </mesh>
-          ))}
-
-          {/* the sheet itself, for thickness and a shadow in the pocket */}
-          <mesh position={[0, 0.012, 0.0155]} castShadow receiveShadow>
-            <boxGeometry args={[LEAF_W, LEAF_H, 0.005]} />
+          {/* the sheet itself, for thickness and the shadow it throws on the
+              one behind it */}
+          <mesh position={[0, 0, 0]} castShadow receiveShadow>
+            <boxGeometry args={[LEAF_W, LEAF_H, 0.004]} />
             <meshStandardMaterial color="#f4f1ea" roughness={0.88} />
           </mesh>
 
           <Interactive
-              label={svc.title}
-              verb="take one"
-              detail={svc.blurb}
-              onActivate={() =>
-                onOpen({
-                  kicker: "services",
-                  title: svc.title,
-                  subtitle: svc.blurb,
-                  rows: svc.proof ? [{ k: "Proof", v: svc.proof.label }] : [],
-                  body: svc.summary,
-                  /* The bullets deliberately do not come along. `tags` renders
-                     10px chips for stack labels, and a full sentence in one
-                     reads as a layout accident; the section on the site is one
-                     click away and lays them out properly. */
-                  href: "/#services",
-                  hrefLabel: "see all services",
-                })
-              }
-            >
+            label={svc.title}
+            verb="take one"
+            detail={svc.blurb}
+            onActivate={() =>
+              onOpen({
+                kicker: "services",
+                title: svc.title,
+                subtitle: svc.blurb,
+                rows: svc.proof ? [{ k: "Proof", v: svc.proof.label }] : [],
+                body: svc.summary,
+                /* The bullets deliberately do not come along. `tags` renders
+                   10px chips for stack labels, and a full sentence in one
+                   reads as a layout accident; the section on the site is one
+                   click away and lays them out properly. */
+                href: "/#services",
+                hrefLabel: "see all services",
+              })
+            }
+          >
             {(hovered) => (
-              <group position={[0, 0.012, 0.017]}>
+              <group position={[0, 0, 0.003]}>
                 <mesh visible={false}>
                   <planeGeometry args={[LEAF_W, LEAF_H]} />
                   <meshBasicMaterial />
@@ -624,8 +575,8 @@ export function ServiceRack({
                 {/* Hover shows as a ring peeking around the sheet rather than
                     a glow on it: the layer above paints the paper opaquely, so
                     lighting the mesh underneath would never be seen. */}
-                <mesh position={[0, 0, -0.004]} visible={hovered}>
-                  <planeGeometry args={[LEAF_W + 0.018, LEAF_H + 0.018]} />
+                <mesh position={[0, 0, -0.006]} visible={hovered}>
+                  <planeGeometry args={[LEAF_W + 0.016, LEAF_H + 0.016]} />
                   <meshBasicMaterial color="#ffd9a6" />
                 </mesh>
               </group>
@@ -638,7 +589,7 @@ export function ServiceRack({
         transform
         occlude="blending"
         distanceFactor={(totalW / pxW) * 400}
-        position={[0, 0.012, 0.0185]}
+        position={[0, 0, 0.0035]}
         zIndexRange={[10, 0]}
         style={{
           width: `${pxW}px`,
@@ -658,10 +609,11 @@ export function ServiceRack({
                   width: `${LEAF_PX}px`,
                   flex: `0 0 ${LEAF_PX}px`,
                   padding: "27px 21px",
-                  /* Paper painted here, not left to the mesh — this wall faces
-                     away from the lamps, same as the career frame. */
-                  background: "linear-gradient(160deg, #fbf8f1 0%, #efeae0 100%)",
-                  color: "#26313d",
+                  /* Paper painted here, not left to the mesh: the entré has one
+                     small lamp in it and an unlit plane behind a transparent
+                     layer renders near-black. */
+                  background: PAPER.stock,
+                  color: PAPER.ink,
                 }}
               >
                 <div
@@ -683,9 +635,7 @@ export function ServiceRack({
                     width: "44px",
                   }}
                 />
-                <div
-                  style={{ fontSize: "27px", fontWeight: 600, lineHeight: 1.15 }}
-                >
+                <div style={{ fontSize: "27px", fontWeight: 600, lineHeight: 1.15 }}>
                   {svc.title}
                 </div>
                 <div
@@ -774,12 +724,16 @@ export function GymBag({
 }
 
 /**
- * The career timeline, framed on the wall above the desk. Portrait frame,
- * vertical rail, real type — shapes standing in for words are a diagram of a
- * timeline, not one, and six roles laid horizontally leave no width for a
- * job title.
+ * The career, as a photo album stood on the bookshelf between the lamp and the
+ * printer. It was a framed print of the whole timeline, hung on the wall over
+ * the kitchen return — a chart of your own jobs is not a thing anybody frames.
+ *
+ * The cover carries the years and the current role and nothing else. The album
+ * is 0.24 across against the print's 0.62, so the timeline itself would render
+ * at a third of the type size it needed; it goes on the card, where every role
+ * and every line of education already was.
  */
-export function CareerFrame({
+export function PhotoAlbum({
   position,
   rotation = [0, 0, 0],
   career,
@@ -790,24 +744,37 @@ export function CareerFrame({
   career: CareerData;
   onOpen: (card: InfoCard) => void;
 }) {
-  const W = 0.62;
-  const H = 0.78;
-  const PX_W = 520;
-  const PX_H = 654;
-  const PAD = 34;
+  const W = 0.24;
+  const H = 0.3;
+  const T = 0.042;
+  const PX_W = 480;
+  const PX_H = Math.round((H / W) * PX_W);
+
+  const now = career.roles[0];
+  /* The span comes off the data rather than being written down. A period is
+     "Aug 2021 — Aug 2023" or "Jan 2026 — Present", so the years in it are
+     whatever four digits it holds — and a role with only one of them is the
+     one still running, which is what "now" is for. Reading the end off the
+     clock instead would date the album to this year even if the last job
+     ended three years ago. */
+  const years = career.roles.flatMap((r) => r.period.match(/\d{4}/g) ?? []);
+  const open = career.roles.some((r) => (r.period.match(/\d{4}/g) ?? []).length < 2);
+  const span = years.length
+    ? `${years.reduce((a, b) => (a < b ? a : b))}–${
+        open ? "now" : years.reduce((a, b) => (a > b ? a : b))
+      }`
+    : "";
 
   return (
     <Interactive
-      label="the timeline"
-      verb="read"
+      label="the album"
+      verb="open"
       detail={`${career.roles.length} roles · ${career.education.length} in education`}
       onActivate={() =>
         onOpen({
           kicker: "career",
           title: "Where I have worked",
-          subtitle: career.roles[0]
-            ? `Now: ${career.roles[0].role}, ${career.roles[0].company}`
-            : undefined,
+          subtitle: now ? `Now: ${now.role}, ${now.company}` : undefined,
           rows: [
             ...career.roles.map((r) => ({
               k: r.period,
@@ -823,132 +790,68 @@ export function CareerFrame({
     >
       {(hovered) => (
         <group position={position} rotation={rotation}>
-          {/* frame */}
-          <RoundedBox args={[W, H, 0.022]} radius={0.004} smoothness={3} castShadow>
+          {/* The boards, in cloth. Rounded hard on the spine edge and barely at
+              all on the fore edge, which is most of what tells a bound album
+              from a box. */}
+          <RoundedBox args={[W, H, T]} radius={0.006} smoothness={4} castShadow receiveShadow>
             <meshStandardMaterial
-              color="#8d7350"
-              roughness={0.6}
+              color="#4a3b31"
+              roughness={0.86}
               emissive={hovered ? "#ffd9a6" : "#000000"}
-              emissiveIntensity={hovered ? 0.26 : 0}
+              emissiveIntensity={hovered ? 0.22 : 0}
             />
           </RoundedBox>
-          {/* mount board, so the print sits inside a border rather than
-              filling the frame edge to edge */}
-          <mesh position={[0, 0, 0.0115]}>
-            <planeGeometry args={[W - 0.03, H - 0.03]} />
-            <meshStandardMaterial color="#efece3" roughness={0.9} />
+          {/* the block of pages, set in from the boards on three sides */}
+          <mesh position={[0.004, 0, 0]} receiveShadow>
+            <boxGeometry args={[W - 0.012, H - 0.01, T - 0.014]} />
+            <meshStandardMaterial color="#ded6c4" roughness={0.94} />
+          </mesh>
+          {/* the spine band */}
+          <mesh position={[-W / 2 + 0.018, 0, T / 2 + 0.001]}>
+            <planeGeometry args={[0.006, H - 0.03]} />
+            <meshStandardMaterial color="#8a6133" roughness={0.6} metalness={0.3} />
           </mesh>
 
+          {/* The label on the cover: paper stuck to cloth, not printing on it,
+              because a cover that carries type edge to edge reads as a book
+              jacket and this is meant to be somebody's album. */}
+          <mesh position={[0.012, 0.012, T / 2 + 0.0012]} receiveShadow>
+            <planeGeometry args={[W - 0.075, H * 0.42]} />
+            <meshStandardMaterial color={PAPER.stock} roughness={0.92} />
+          </mesh>
           <Html
             transform
             occlude="blending"
-            distanceFactor={((W - 0.06) / PX_W) * 400}
-            position={[0, 0, 0.013]}
+            distanceFactor={(W / PX_W) * 400}
+            position={[0.012, 0.012, T / 2 + 0.0022]}
             zIndexRange={[10, 0]}
             style={{
-              width: `${PX_W}px`,
-              height: `${PX_H}px`,
+              width: `${PX_W - 150}px`,
+              height: `${Math.round(PX_H * 0.42)}px`,
               pointerEvents: "none",
               userSelect: "none",
             }}
           >
-            {/* Paper painted here, not left to the mesh — this wall faces away
-                from both lamps and an unlit plane behind a transparent layer
-                comes out black. */}
             <div
-              className="flex h-full w-full flex-col"
-              style={{
-                padding: `${PAD}px`,
-                background: "linear-gradient(160deg, #fbf8f1 0%, #f2eee3 100%)",
-                color: "#26313d",
-              }}
+              className="flex h-full w-full flex-col justify-center"
+              style={{ background: PAPER.stock, color: PAPER.ink, padding: "0 26px" }}
             >
-              <div className="flex items-baseline justify-between">
-                <span
-                  className="font-mono"
-                  style={{ fontSize: "23px", letterSpacing: "0.22em", fontWeight: 600 }}
-                >
-                  CAREER
-                </span>
-                <span
-                  className="font-mono"
-                  style={{ fontSize: "15px", color: "#8b8271" }}
-                >
-                  {career.roles.length} roles
-                </span>
-              </div>
-              <div style={{ height: "2px", background: "#ddd6c7", margin: "14px 0 16px" }} />
-
-              {/* The rail is a left border on the list rather than its own
-                  element, so it cannot fall out of step with the entries. */}
               <div
-                className="flex-1"
-                style={{ borderLeft: "2px solid #cfc6b4", paddingLeft: "20px" }}
+                className="font-mono"
+                style={{ fontSize: "34px", letterSpacing: "0.24em", fontWeight: 600 }}
               >
-                {career.roles.map((r, i) => (
-                  <div
-                    key={`${r.company}-${r.period}`}
-                    style={{ position: "relative", marginBottom: "15px" }}
-                  >
-                    {/* dot, pulled back onto the rail; the current role is
-                        filled and larger so "now" reads without a legend */}
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: i === 0 ? "-27px" : "-25px",
-                        top: "6px",
-                        width: i === 0 ? "12px" : "8px",
-                        height: i === 0 ? "12px" : "8px",
-                        borderRadius: "50%",
-                        background: i === 0 ? "#b4653a" : "#efece3",
-                        border: i === 0 ? "none" : "2px solid #a79c88",
-                      }}
-                    />
-                    <div
-                      className="font-mono"
-                      style={{ fontSize: "14px", color: "#8b8271", letterSpacing: "0.04em" }}
-                    >
-                      {r.period}
-                    </div>
-                    <div style={{ fontSize: "19px", fontWeight: 600, lineHeight: 1.2 }}>
-                      {r.role}
-                    </div>
-                    <div style={{ fontSize: "16px", color: "#5d6875", lineHeight: 1.25 }}>
-                      {r.company}
-                    </div>
-                  </div>
-                ))}
+                CAREER
               </div>
-
-              {career.education.length > 0 && (
-                <>
-                  <div
-                    style={{ height: "1px", background: "#ddd6c7", margin: "4px 0 12px" }}
-                  />
-                  <div
-                    className="font-mono"
-                    style={{
-                      fontSize: "13px",
-                      letterSpacing: "0.18em",
-                      color: "#8b8271",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    EDUCATION
-                  </div>
-                  {career.education.map((e) => (
-                    <div
-                      key={`${e.institution}-${e.period}`}
-                      className="flex items-baseline justify-between"
-                      style={{ fontSize: "15px", marginBottom: "4px" }}
-                    >
-                      <span style={{ color: "#3c4753" }}>{e.title}</span>
-                      <span className="font-mono" style={{ fontSize: "13px", color: "#8b8271" }}>
-                        {e.period}
-                      </span>
-                    </div>
-                  ))}
-                </>
+              <div
+                className="font-mono"
+                style={{ fontSize: "30px", color: "#8b8271", marginTop: "10px" }}
+              >
+                {span}
+              </div>
+              {now && (
+                <div style={{ fontSize: "26px", lineHeight: 1.25, marginTop: "18px" }}>
+                  {now.company}
+                </div>
               )}
             </div>
           </Html>

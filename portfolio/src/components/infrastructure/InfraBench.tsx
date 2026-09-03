@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { warmImages, warmOnIdle } from "@/lib/warm";
 import { statusSnapshot } from "@/content/infrastructure";
-import { ALL_DEVICES, HOSTS, deviceById, type NodeState } from "./hardware";
+import { ALL_DEVICES, HOSTS, deviceById, type NodeState } from "@/content/hardware";
 
 const BenchScene = dynamic(() => import("./BenchScene"), { ssr: false });
 

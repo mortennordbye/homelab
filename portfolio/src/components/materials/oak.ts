@@ -1,8 +1,10 @@
 import * as THREE from "three";
 
 /**
- * Procedural oak — costs no request. Shared so every desk in the site is
- * visibly the same desk.
+ * Procedural oak — costs no request. Colour only: no normal or roughness map,
+ * so it holds up on a small object under a fixed camera and goes flat on a
+ * large surface you can walk up to. Anything at room scale takes
+ * `black_oak_veneer` through useSurface instead.
  */
 export function makeOak(repeat = 3) {
   const size = 1024;
@@ -40,3 +42,17 @@ export function makeOak(repeat = 3) {
   t.anisotropy = 8;
   return t;
 }
+
+/**
+ * Tints for the `black_oak_veneer` surface. One table so every oak surface on
+ * the site lands on the same wood: shelf boards, cabinet carcass and the desk
+ * in the room are all this plank at three depths.
+ */
+export const OAK = {
+  /** Shelf boards, uprights, a desk top. */
+  case: "#6a5541",
+  /** Cabinet and sideboard panels. */
+  carcass: "#54422f",
+  /** A back panel, deliberately darker so it does not read as a lit wall. */
+  back: "#33281d",
+} as const;

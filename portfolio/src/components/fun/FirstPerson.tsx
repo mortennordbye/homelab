@@ -3,7 +3,9 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { CHAIR_Z, DESK_D, DESK_Z, ROOM } from "./Room";
+import { HALL_SOLIDS } from "./Hallway";
+import { CHAIR_Z, DESK, DESK_D, DESK_X, DESK_Z, LANTERN, ROOM, STOVE, TABLE } from "./Room";
+import { MARKS, px, pz, rectBox, wallBoxes, type Box } from "./flat";
 
 export const EYE = 1.66;
 const WALK = 1.9;
@@ -11,18 +13,62 @@ const RUN = 3.2;
 const ACCEL = 11;
 const DAMP = 9;
 
-/** Axis-aligned boxes the camera cannot walk into. Cheap stand-in for real
- *  collision meshes, which is all a room this simple needs. */
-const BLOCKERS: { x: number; z: number; hx: number; hz: number }[] = [
-  { x: 0, z: DESK_Z, hx: 1.3, hz: DESK_D / 2 }, // desk
-  // Reads CHAIR_Z rather than repeating it. The chair moved in against the desk
-  // and its box did not follow, which for one build left a chair you walked
-  // straight through standing next to empty floor you could not cross.
-  { x: 0, z: CHAIR_Z, hx: 0.3, hz: 0.3 }, // chair
-  { x: ROOM.w / 2 - 0.42, z: -1.15, hx: 0.36, hz: 0.21 }, // lantern
+/**
+ * Everything the camera cannot walk into: every solid piece of interior wall
+ * from the floor plan, plus the furniture.
+ *
+ * The walls come from `wallBoxes()` rather than being listed again here, so a
+ * partition and its collision cannot disagree — the failure that once left a
+ * chair you walked straight through standing next to floor you could not
+ * cross.
+ */
+const BLOCKERS: Box[] = [
+  ...wallBoxes(),
+  { x: DESK_X, z: DESK_Z, hx: DESK.w / 2, hz: DESK_D / 2 },
+  { x: DESK_X, z: CHAIR_Z, hx: 0.3, hz: 0.3 },
+  { x: LANTERN.x, z: LANTERN.z, hx: 0.36, hz: 0.21 },
+  // The stove with its chimney breast, and the table against the west wall
+  // with both its chairs pushed in. The crossing north past the kitchen
+  // peninsula is 0.95m at the fire and 0.48m at the desk end; it was 0.19m
+  // while the table stood out in the room, which is most of why it does not.
+  // The box is the table and both chairs pushed in — pulled out they are the
+  // widest thing here, not the table.
+  { x: STOVE.x, z: STOVE.z, hx: 0.36, hz: 0.45 },
+  { x: TABLE.x + 0.065, z: TABLE.z + 0.065, hx: 0.495, hz: 0.34 },
+  // The three marked pieces, at the footprints flat.ts gives them.
+  rectBox(MARKS.tvBench),
+  rectBox(MARKS.sofa),
+  // The bookcase, against the south wall beside the desk, with the printer on
+  // top of it.
+  { x: px(2.46), z: pz(5.89), hx: 0.46, hz: 0.21 },
+  // The run, the peninsula butted into its south end, and the fridge column
+  // that ends it at the bedroom-door end. The column is deeper than the run it bookends, so it gets
+  // its own box rather than being folded into it.
+  { x: px(3.62), z: pz(3.185), hx: 0.3, hz: 1.435 },
+  { x: px(3.595), z: pz(1.45), hx: 0.325, hz: 0.3 },
+  { x: px(2.83), z: pz(4.32), hx: 0.5, hz: 0.3 },
+  // Bedroom: the bed crosswise under the wall units, and the mirrored
+  // wardrobe beside it. Both inset a little, so brushing an edge does not stop
+  // you in a room this narrow. The over-bed units are wall-hung and start above
+  // head height, so they have no box.
+  { x: px(5.32), z: pz(2.0), hx: 0.98, hz: 0.66 },
+  { x: px(6.01), z: pz(0.655), hx: 0.27, hz: 0.6 },
+  // Bathroom: the quadrant shower boxed to its full extent, the washing
+  // machine, the WC with its duct, and the vanity. The gap between the shower
+  // and the WC is the only line through the room, so neither may grow.
+  { x: px(4.4), z: pz(3.2), hx: 0.4, hz: 0.4 },
+  { x: px(4.32), z: pz(3.95), hx: 0.3, hz: 0.3 },
+  { x: px(5.96), z: pz(3.1), hx: 0.34, hz: 0.275 },
+  { x: px(6.125), z: pz(3.625), hx: 0.175, hz: 0.375 },
+  // Entré: the built-in run on one side, the shoe bench and the tall cabinet on
+  // the other. Taken from the file that draws them rather than measured off it.
+  ...HALL_SOLIDS.map(rectBox),
 ];
 
-const PLAYER_R = 0.34;
+// 0.60 across rather than 0.68. The flat is a real one and its bedroom is
+// 2.3m wide: at the wider radius the walkway past the bed and the 0.8m
+// doorways were passable only along a 10cm knife edge.
+const PLAYER_R = 0.3;
 
 function resolve(x: number, z: number, px: number, pz: number) {
   let nx = x;

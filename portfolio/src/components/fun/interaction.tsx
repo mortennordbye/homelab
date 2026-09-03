@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import * as THREE from "three";
+import { FLAT, sightBoxes } from "./flat";
 
 /**
  * Look-at-and-press interaction.
@@ -18,10 +19,54 @@ import * as THREE from "three";
  * Pointer lock parks the cursor in the middle of the screen, so r3f's pointer
  * events never fire. Instead we raycast straight down the camera's centre each
  * frame against a registry of opted-in objects, and the nearest hit inside
- * REACH becomes the active target.
+ * REACH becomes the active target — unless a wall is nearer.
  */
 
 const REACH = 2.4;
+
+/**
+ * The interior walls, as boxes the ray stops at.
+ *
+ * The registry only knows about things that opted in, so on its own the ray
+ * has no idea a wall is in the way and everything within REACH is fair game
+ * through one. Taken from `sightBoxes()` rather than listed here, for the
+ * reason the collision boxes are: a wall that moves without its sight line
+ * moving with it is the same class of bug in a different sense.
+ */
+const SIGHT = sightBoxes().map(
+  (b) =>
+    new THREE.Box3(
+      new THREE.Vector3(b.x - b.hx, 0, b.z - b.hz),
+      new THREE.Vector3(b.x + b.hx, FLAT.h, b.z + b.hz),
+    ),
+);
+
+const wallHit = new THREE.Vector3();
+
+
+
+/**
+ * How far the ray gets before a wall stops it, or Infinity in the open.
+ *
+ * A box containing the origin is skipped: standing inside one would otherwise
+ * report zero and make every target in the flat unreachable, and a camera
+ * clipped a few millimetres into a wall is a state the walker can reach.
+ *
+ * The 40mm slack is for things hung on a wall's own face. Their geometry sits
+ * within a hair of the plane the ray stops at, and without it a switch reads
+ * as being behind the wall it is screwed to. Well under WALL_T, so it cannot
+ * reach something on the far side.
+ */
+function wallDistance(ray: THREE.Ray): number {
+  let nearest = Infinity;
+  for (const box of SIGHT) {
+    if (box.containsPoint(ray.origin)) continue;
+    if (ray.intersectBox(box, wallHit)) {
+      nearest = Math.min(nearest, ray.origin.distanceTo(wallHit));
+    }
+  }
+  return nearest + 0.04;
+}
 
 type Target = {
   label: string;
@@ -138,10 +183,12 @@ export function InteractionProvider({
        free; a distance-reject added on that assumption changed nothing. The
        frame cost that did show up came from shadows, not picking — see the
        note in Bookshelf.tsx. Measure before optimising this loop. */
+    const wall = wallDistance(raycaster.ray);
     let best: { root: THREE.Object3D; dist: number } | null = null;
     for (const [root] of targets.current) {
       const hits = raycaster.intersectObject(root, true);
-      if (hits.length && (!best || hits[0].distance < best.dist)) {
+      if (!hits.length || hits[0].distance > wall) continue;
+      if (!best || hits[0].distance < best.dist) {
         best = { root, dist: hits[0].distance };
       }
     }
@@ -195,10 +242,12 @@ export function InteractionProvider({
       if (!enabled) return false;
       raycaster.setFromCamera(ndc, camera);
       raycaster.far = REACH;
+      const wall = wallDistance(raycaster.ray);
       let best: { root: THREE.Object3D; dist: number } | null = null;
       for (const [root] of targets.current) {
         const hits = raycaster.intersectObject(root, true);
-        if (hits.length && (!best || hits[0].distance < best.dist)) {
+        if (!hits.length || hits[0].distance > wall) continue;
+        if (!best || hits[0].distance < best.dist) {
           best = { root, dist: hits[0].distance };
         }
       }

@@ -222,7 +222,7 @@ export const PANELS: PanelDef[] = [
     title: "APPLICATIONS",
     accent: ACCENT.info,
     body: ({ status }) => {
-      const apps = status?.apps;
+      const apps = status?.gitops?.applications?.list;
       if (!apps?.length) return <Empty what="No per-application data." />;
       const degraded = apps.filter(
         (a) => a.health !== "Healthy" || a.sync !== "Synced",
@@ -353,7 +353,7 @@ export const PANELS: PanelDef[] = [
     title: "CERTIFICATES",
     accent: ACCENT.amber,
     body: ({ status }) => {
-      const list = status?.certs;
+      const list = status?.security?.certs?.list;
       const fallback = certDaysLeft(status?.cert?.notAfter);
       if (!list?.length) {
         if (fallback === null) return <Empty what="No certificate data." />;

@@ -22,7 +22,9 @@ build.
 
 The first was scale. A corporate NOC with a wall of screens and a six-metre desk was the wrong
 reference. This is a personal homelab, so the room is a spare room with one desk in it. The
-interior follows reference photos of the real flat: sage green walls, pale oak, warm light.
+interior followed reference photos of the real flat, sage green walls included, until
+`branding/DECISIONS.md` locked green out of the construction entirely: the walls are the warm
+near-black ground, the joinery is dark oak, and green is only ever a lit point.
 
 The second was placement. Putting a 3D room on `/infrastructure` fought with that page's whole
 premise, which is that its claims are checkable. Moving it to its own `fun` entry resolves that:
@@ -39,7 +41,8 @@ Route `/fun`, dynamic-imported with `ssr: false`. Nav entry added in `src/conten
 | Piece | File |
 |---|---|
 | Shell on the middle monitor | `src/components/fun/Terminal.tsx` |
-| Socials, contact, blog, interests, timeline | `src/components/fun/Objects.tsx` |
+| Socials, contact, skills, services, interests, career | `src/components/fun/Objects.tsx` |
+| Blog, as printouts on the dining table | `src/components/fun/PrintedPosts.tsx` |
 | Bookshelf: case studies and certificates | `src/components/fun/Bookshelf.tsx` |
 | Shelf data types | `src/components/fun/shelf.ts` |
 | Hardware inventory, from the README | `src/components/fun/hardware.ts` |
@@ -58,7 +61,9 @@ Route `/fun`, dynamic-imported with `ssr: false`. Nav entry added in `src/conten
 
 The room contains a desk with three monitors, a wall panel above them, two screens on the side
 wall, a chair, a mushroom lamp, keyboard, mouse, mug, framed prints, a jute rug, a panelled
-door, a potted plant, a printer on a low cabinet, a bookshelf, and the homelab sideboard.
+door, a potted plant, a printer on a low cabinet, a bookshelf, the homelab sideboard, and — off
+the same reference photos as the kitchen — the wood stove on the west wall, and the small table
+in the corner between it and the desk, where the flat has it.
 
 The sideboard is modelled from reference photos of the real flat. It is open-fronted, showing
 the actual kit at real dimensions: three ThinkCentres stood on edge, the ISP router, a UniFi
@@ -205,7 +210,7 @@ one asset at a time.
 
 | Model | Replaces |
 |---|---|
-| `dining_chair_02` | a chair built from four boxes |
+| `dining_chair_02` | a chair built from four boxes (the desk chair; the two at the small table are hand-built, see `WoodChair`) |
 | `potted_plant_04` | a plant built from icosahedron blobs |
 | `modern_ceiling_lamp_01` | a flat emissive square on the ceiling plane |
 
@@ -329,12 +334,14 @@ looks like. It failed for the reason the certificates failed, in a different way
 carrying a logo built from primitives is unreadable from anywhere you would stand, and a social
 link that is not recognisable at a glance is not doing its job.
 
-They are now a row of framed tiles on the wall above the desk, in the slot the big panel left
-behind, drawn with real Simple Icons (CC0) marks through drei `Html` — the same real-DOM trick
-the monitors use, so the marks are vector and stay sharp at any distance. The SVGs are applied
-as a CSS mask so each takes its own brand colour. One `Html` layer holds all four tiles with a
-separate invisible mesh per tile for picking, since the DOM layer is the expensive part and
-picking geometry is nearly free.
+They became a row of framed tiles on the wall above the desk, drawn with real Simple Icons (CC0)
+marks through drei `Html` — the same real-DOM trick the monitors use, so the marks are vector
+and stay sharp at any distance. The SVGs are applied as a CSS mask so each takes its own brand
+colour. One `Html` layer holds all the rows with a separate invisible mesh per row for picking,
+since the DOM layer is the expensive part and picking geometry is nearly free.
+
+All of that survived the move off the wall (see "Nothing hangs on a wall" below); what the tiles
+were mounted on did not.
 
 ### The television
 
@@ -343,6 +350,44 @@ lives. It is centred at z 0.15 rather than on the sideboard's own centre, becaus
 on the centre line stands directly in front of the access point on the top at z 0.97, and an
 occluded device is one that can never be looked at. That is the third time that rule has caught
 something.
+
+### Nothing hangs on a wall
+
+Six portfolio panels ended up screwed to the walls of a flat: pinned repositories on a cork
+board, the blog on a whiteboard, the career as a framed print, the socials as framed tiles, the
+skills on a rack faceplate with corner screws, and the services in a steel leaflet pocket. Each
+one was defensible on its own and the six together were not — a doctor's waiting room, not
+somewhere anybody lives. `branding/ART-DIRECTION.md` already names the failure for the flat
+site ("reads as a UI panel pasted onto a photograph"); this was the same mistake committed in
+three dimensions, and nothing in the room's own rules caught it because every panel passed the
+test that was being applied, which was legibility.
+
+Each section moved to the object that would really carry it in a flat: the socials to a note
+held to the fridge door by magnets, the pinned repositories to a third tab on the desk monitor
+(a browser is where a repository is looked at), the blog to printouts on the dining table, the
+skills to a notebook open beside the keyboard, the services to leaflets propped on the shoe
+bench by the front door, and the career to a photo album stood on the bookshelf.
+
+Three things fell out of it worth keeping.
+
+**The rule was incomplete, not wrong.** "Anything meant to be looked at presents a face to the
+room, big enough to put a crosshair on" is still true and every object above obeys it. What it
+needed was a second half: and it is a thing somebody would own. A rule about legibility alone
+will approve a faceplate on a living room wall every time.
+
+**Content has to shrink with the carrier.** A note is 0.21 across against the tile board's 1.07,
+an album cover 0.24 against the framed print's 0.62. Type does not survive that, so the small
+objects carry a label and the card behind `E` carries what the panel used to render — which is
+where it was worth reading anyway. The one place it went the other way is the repositories: the
+monitor is bigger than the cork board was, so the four cards became four rows with nothing lost.
+
+**A transparent `Html` layer shows its own occlusion plane.** `occlude="blending"` lays a plane
+behind the DOM, and behind transparent DOM that plane is a dark rectangle floating in the air —
+which is what the first version of the fridge magnets was, four icons on a black panel. Every
+other layer in the room hides this by painting an opaque background, and none of them documented
+it. That constraint is why the socials are a note held by magnets rather than bare magnets: the
+paper is the opaque background, and it is also the only reason three social links would be on a
+fridge at all.
 
 ### Verifying interaction without a pointer lock
 
@@ -365,12 +410,15 @@ Fun link. Scope the query to the prompt element.
 | Desk monitors ✅ | infrastructure | `/api/v1/infra`, already wired |
 | Bookshelf ✅ | work | `src/content/work/*.mdx` |
 | Certificates ✅ | resume | `resume.ts` certifications |
-| Social wall ✅ | socials | `site.ts` socials |
+| Fridge note ✅ | socials | `site.ts` socials |
 | Terminal ✅ | the public API | `/api/v1/*`, live |
 | Gym bag ✅ | about / interests | `interests.ts` |
 | Printed posts ✅ | blog | `/api/v1/blog`, fetched on open |
 | Notepad ✅ | contact | `site.ts` |
-| Framed timeline ✅ | career and education | `resume.ts` |
+| Photo album ✅ | career and education | `resume.ts` |
+| Desk notebook ✅ | skills | `skills.ts` |
+| Leaflets on the hall bench ✅ | services | `services.ts` |
+| Monitor's third tab ✅ | pinned repositories | `/api/v1/github` |
 
 **The printer is built.** Four rocker switches on the lid map to the same four flags the CV
 customizer uses; the green button resolves them against `cv-manifest.json`, feeds a sheet out of

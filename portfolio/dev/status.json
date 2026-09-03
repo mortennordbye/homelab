@@ -208,48 +208,6 @@
       "total": 288
     }
   ],
-  "apps": [
-    {
-      "name": "portfolio",
-      "sync": "Synced",
-      "health": "Healthy"
-    },
-    {
-      "name": "blog",
-      "sync": "Synced",
-      "health": "Healthy"
-    },
-    {
-      "name": "headroom",
-      "sync": "Synced",
-      "health": "Healthy"
-    },
-    {
-      "name": "homepage",
-      "sync": "Synced",
-      "health": "Healthy"
-    },
-    {
-      "name": "it-tools",
-      "sync": "Synced",
-      "health": "Healthy"
-    },
-    {
-      "name": "logeverylift",
-      "sync": "Synced",
-      "health": "Healthy"
-    },
-    {
-      "name": "mealie",
-      "sync": "Synced",
-      "health": "Degraded"
-    },
-    {
-      "name": "audiobookshelf",
-      "sync": "OutOfSync",
-      "health": "Healthy"
-    }
-  ],
   "capacity": {
     "cpuRequested": 41,
     "cpuAllocatable": 96,
@@ -258,22 +216,87 @@
     "pods": 147,
     "podCapacity": 660
   },
-  "certs": [
-    {
-      "name": "nordbye.it",
-      "daysLeft": 67
+  "gitops": {
+    "applications": {
+      "total": 8,
+      "synced": 7,
+      "healthy": 7,
+      "list": [
+        {
+          "name": "portfolio",
+          "sync": "Synced",
+          "health": "Healthy"
+        },
+        {
+          "name": "blog",
+          "sync": "Synced",
+          "health": "Healthy"
+        },
+        {
+          "name": "headroom",
+          "sync": "Synced",
+          "health": "Healthy"
+        },
+        {
+          "name": "homepage",
+          "sync": "Synced",
+          "health": "Healthy"
+        },
+        {
+          "name": "it-tools",
+          "sync": "Synced",
+          "health": "Healthy"
+        },
+        {
+          "name": "logeverylift",
+          "sync": "Synced",
+          "health": "Healthy"
+        },
+        {
+          "name": "mealie",
+          "sync": "Synced",
+          "health": "Degraded"
+        },
+        {
+          "name": "audiobookshelf",
+          "sync": "OutOfSync",
+          "health": "Healthy"
+        }
+      ]
     },
-    {
-      "name": "blog.nordbye.it",
-      "daysLeft": 67
-    },
-    {
-      "name": "argocd.nordbye.it",
-      "daysLeft": 52
-    },
-    {
-      "name": "grafana.nordbye.it",
-      "daysLeft": 52
+    "syncs24h": 6,
+    "syncs30d": 214,
+    "lastSync": {
+      "name": "portfolio",
+      "at": "2026-07-18T19:33:03Z"
     }
-  ]
+  },
+  "security": {
+    "secretsAtRuntime": 31,
+    "secretsInGit": 0,
+    "networkPolicies": 12,
+    "policyMode": "audit",
+    "certs": {
+      "total": 4,
+      "nextExpiry": "2026-09-25T11:41:28Z",
+      "list": [
+        {
+          "name": "nordbye.it",
+          "daysLeft": 67
+        },
+        {
+          "name": "blog.nordbye.it",
+          "daysLeft": 67
+        },
+        {
+          "name": "argocd.nordbye.it",
+          "daysLeft": 52
+        },
+        {
+          "name": "grafana.nordbye.it",
+          "daysLeft": 52
+        }
+      ]
+    }
+  }
 }

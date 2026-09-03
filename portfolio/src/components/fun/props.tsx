@@ -13,8 +13,7 @@ import * as THREE from "three";
 
 export type PropName =
   | "dining_chair_02"
-  | "potted_plant_04"
-  | "modern_ceiling_lamp_01";
+  | "potted_plant_04";
 
 const url = (n: PropName) => `/models/fun/${n}/${n}.gltf`;
 
@@ -88,7 +87,6 @@ export function preloadProps() {
     [
       "dining_chair_02",
       "potted_plant_04",
-      "modern_ceiling_lamp_01",
     ] as PropName[]
   ).forEach((n) => useGLTF.preload(url(n)));
 }

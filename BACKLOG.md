@@ -87,6 +87,48 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Open `/fun` in a real browser, look at a printer switch, press `E`, and watch the pill. If it does not flip, instrument `onActivate` in `Interactive` — the registry hands activation the ref payload, so the suspect is either hover resolution or the keydown listener's `enabled` gate. Open `/fun` on a desktop, listen to the melody, hard-reload with cache disabled to see the loading bar. Then open it on a phone and tune `LOOK_SENS`, `TAP_SLOP_PX` and `STICK_R` in `Touch.tsx` against how it actually feels.
 - **Where:** `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`; `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Touch.tsx`, `docs/fun-room-guide.md` (known gaps).
 
+### Fun flat: the parts of the plan not yet modelled
+- **What:** `/fun` is the real apartment with all four spaces walkable, the north wall glazed and the entré's two built-ins modelled, but two things on the floor plan are still not built: the **P** marked in the living room (a post, or a flue), and **door leaves** for the bedroom and bathroom — those openings are cased and lined but carry no door, so neither room can be shut.
+- **Why deferred:** Neither changes whether the flat is navigable or whether it reads correctly, and the shell, the windows, the merged TV bench and the furniture were the agreed passes.
+- **Unblock:** The door leaves can reuse the `Door` component the front door already uses. The post needs confirming against the flat before it is worth modelling.
+- **Where:** `portfolio/src/components/fun/flat.ts` (`WALLS`, `doorOpenings`), `portfolio/src/components/fun/Room.tsx` (`Door`, `DoorLining`, `Window`), `portfolio/src/components/fun/Furniture.tsx`.
+
+### Fun room: content parity gaps
+- **What:** `/fun` now carries the site's materials, light and annotation language, but three sections of the site still have no object in the room. The hero's positioning (`site.hero.headline` / `.sub` — "I am a Cloud Engineer", Oslo, Orange Business) is never stated, so the room never says who it belongs to. The About narrative (the two bio paragraphs) and the portrait have no object either, though skills, interests and career all do. And `/brand` is reachable only through the terminal's `brand` command and the command palette, with nothing in the room representing it.
+- **Why deferred:** Scoped out deliberately. The re-skin, the annotation language and the shared geometry were the agreed job; adding new content objects is a separate design question about what shape each one takes, and the room is already at roughly 90% content parity without them.
+- **Unblock:** Decide the object for each before modelling anything — `branding/DECISIONS.md` §4 rejects "click to open" as a toll gate, so each has to read at a glance from where a visitor stands. The hero is the awkward one: a room that announces a job title is a poster, not a study.
+- **Where:** `portfolio/src/content/site.ts` (`hero`), `portfolio/src/components/sections/AboutSection.tsx` (the prose), `portfolio/src/app/brand/page.tsx`, `portfolio/src/components/fun/Room.tsx` (placement), `portfolio/src/components/fun/Objects.tsx` (the existing object patterns).
+
+### Fun room: the skills faceplate still spends green as a surface
+- **What:** `branding/DECISIONS.md` §2 is locked at "green appears once per view as a lit point ... never as a surface, a border or a glow", and `FunRoom.tsx` states the same rule in a comment over the feed dot. The skills faceplate on the south wall draws its self-assessment as a column of green bars, which is a surface, and it is large in frame from the spawn point. The pinned board's pins and the blog board's magnets were brought down to one green point each on 2026-09-03; the faceplate was not.
+- **Why deferred:** Recolouring a bar chart is a design decision, not a find-and-replace. Brass bars on near-black lose the "this is a measured value" reading that green carries, and the alternative — drop the bars for a printed list — changes what the object is. Neither should be picked without the owner.
+- **Unblock:** Decide what a level-of-skill bar is made of in a room with four materials. Brass at three densities, or a printed sheet with no bar at all, are the two candidates. Then check the frame again from the spawn pose, which is where the faceplate is most visible.
+- **Where:** `portfolio/src/components/fun/Objects.tsx` (the skills faceplate), `portfolio/src/content/brand.ts` (the `lit point` token), `portfolio/branding/DECISIONS.md` §2.
+
+### Fun room: `kubectl get applications` now prints 45 rows
+- **What:** The publisher started emitting the full per-application list on 2026-09-03, and the cluster has 45 ArgoCD Applications. The desk monitor's ArgoCD view slices to 12 and the television's panel to 9, but the shell prints every row, so the command fills the portrait monitor and the visitor sees only the tail.
+- **Why deferred:** It is what the real command does, and inventing a filter would make the shell claim something the cluster does not. The honest options are paging or a summary line, and both are shell design rather than a bug fix.
+- **Unblock:** Either page the output the way a pager would, or print a rollup with a `--all` style flag to get the full table. Whatever is chosen has to keep rows inside the 60-character budget `PORTRAIT_PX_W` sets.
+- **Where:** `portfolio/src/components/fun/Terminal.tsx` (`useCommands`, the `applications` case), `portfolio/src/components/fun/Screen.tsx` (`PORTRAIT_PX_W`).
+
+### Fun room: 674 draw calls a frame, ~344 triangles each
+- **What:** The flat is drawn as ~680 separate meshes carrying ~232k triangles between them, so a frame is bound by draw-call submission rather than by anything the GPU does. Frozen-shadow numbers, measured in the browser via `gl.info` with `autoReset` off: 674 calls / 232k triangles at the entry viewpoint. Culling works (104 calls facing into a corner) but a normal view still submits 350-400.
+- **Why deferred:** Fixing it means merging static geometry — the wall panelling, the kitchen carcasses, the bookshelf's books, the sideboard's devices, the coats — into batched meshes or instances, which is a rewrite of how `Furniture.tsx`, `Room.tsx` and `Hallway.tsx` emit geometry, not a tuning pass. The on-demand shadow map already took a quarter of the per-frame work out (912 → 674 calls, 370k → 232k triangles) and that was the one change with no visual cost at all.
+- **Unblock:** Pick the biggest offenders off a per-mesh census first (`scene.traverse` counting by parent) rather than merging everything: the panelling and the kitchen fronts are likely most of it. `BatchedMesh` or per-material `InstancedMesh` for repeated parts. Anything merged has to keep its own `Interactive` subtree separate, or the look-at registry loses the fronts that open.
+- **Where:** `portfolio/src/components/fun/{Furniture,Room,Hallway,Devices,Bookshelf}.tsx`.
+
+### Fun room: five accepted `react-hooks/immutability` warnings for on-demand shadows
+- **What:** `gl.shadowMap.autoUpdate` / `needsUpdate` are written from an effect in `FunRoom`'s `Lighting` and from `useFrame` in `openable.tsx` and `Printer.tsx`. The rule does not model the three.js renderer API, so each write is a warning; lint went 41 → 46. `WorkShelfScene.tsx` already does the same three writes and its two warnings are in the old baseline.
+- **Why deferred:** Mutating the renderer is the documented way to drive shadows on demand — there is no non-mutating form to switch to, so the only fixes are a rule exception or leaving it.
+- **Unblock:** Decide whether to add a narrow `eslint-disable` for renderer writes or to accept the count. Fold into the react-hooks v6 entry above if that is ever revisited.
+- **Where:** `portfolio/src/components/fun/{FunRoom,openable,Printer}.tsx`, `portfolio/src/components/work/WorkShelfScene.tsx`, `portfolio/eslint.config.mjs`.
+
+### Sitemap covers only the home page
+- **What:** `portfolio/src/app/sitemap.ts` emits a single entry for `/`. The 13 case studies at `/work/[slug]`, plus `/infrastructure`, `/api` and `/fun`, are all indexable and all absent. Separately, `services` is a homepage section id that is missing from `site.nav`, so it is reachable only by scrolling or through the command palette.
+- **Why deferred:** Noticed while mapping the site against the room; unrelated to that work and not worth folding into it.
+- **Unblock:** Build the work entries from `getAllWork()` the way `/work/[slug]` already builds its static params, and add the three static routes. Decide separately whether `services` should be a nav entry or stay a scroll target.
+- **Where:** `portfolio/src/app/sitemap.ts`, `portfolio/src/lib/work.ts` (`getAllWork`), `portfolio/src/content/site.ts` (`nav`).
+
 ### Lint debt: react-hooks v6 findings and the ESLint 9 → 10 bump
 - **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI.
 

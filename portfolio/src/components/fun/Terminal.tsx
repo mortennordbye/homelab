@@ -183,10 +183,10 @@ function useCommands(
             case "application":
             case "apps":
             case "app": {
-              const apps = data.status?.apps ?? [];
-              // Mirrors ArgoView on the desk monitor: when the publisher sends
-              // only the root rollup, show the root rather than an empty list
-              // that reads as "no applications".
+              const apps = data.status?.gitops?.applications?.list ?? [];
+              // Mirrors ArgoView on the desk monitor: with no list, show the
+              // root rollup rather than an empty table that reads as "no
+              // applications".
               if (!apps.length)
                 return [
                   ...out(
@@ -218,7 +218,7 @@ function useCommands(
             case "certificate":
             case "certs":
             case "cert": {
-              const certs = data.status?.certs ?? [];
+              const certs = data.status?.security?.certs?.list ?? [];
               const head = `${"NAME".padEnd(24)}EXPIRES`;
               if (!certs.length) {
                 // The publisher always sends the site's own leaf; the per-cert

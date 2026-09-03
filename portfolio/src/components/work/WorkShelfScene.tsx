@@ -1,9 +1,11 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Lightformer, useTexture } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { StudyEnvironment } from "@/components/materials/StudyEnvironment";
+import { useSurface, useSurfaceImages } from "@/components/materials/surface";
+import { OAK } from "@/components/materials/oak";
 import { FirstFrame } from "@/components/scene/FirstFrame";
 import {
   coverStamp,
@@ -115,36 +117,6 @@ function dims(i: number) {
     H: 1.3 + ((i * 7919) % 100) / 100 * 0.28,
     W: 0.94 + ((i * 104729) % 100) / 100 * 0.16,
   };
-}
-
-function useSurface(name: string, repeat: [number, number], withArm: boolean) {
-  const files = withArm
-    ? [
-        `/textures/shelf/${name}_diff.webp`,
-        `/textures/shelf/${name}_nor.webp`,
-        `/textures/shelf/${name}_arm.webp`,
-      ]
-    : [`/textures/shelf/${name}_diff.webp`, `/textures/shelf/${name}_nor.webp`];
-  const loaded = useTexture(files) as THREE.Texture[];
-  return useMemo(() => {
-    const prep = (src: THREE.Texture, colour: boolean) => {
-      const t = src.clone();
-      t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.repeat.set(repeat[0], repeat[1]);
-      t.colorSpace = colour ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-      t.anisotropy = 8;
-      t.needsUpdate = true;
-      return t;
-    };
-    const arm = withArm ? prep(loaded[2], false) : undefined;
-    return {
-      map: prep(loaded[0], true),
-      normalMap: prep(loaded[1], false),
-      roughnessMap: arm,
-      metalnessMap: arm,
-      raw: loaded,
-    };
-  }, [loaded, repeat[0], repeat[1], withArm]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 /**
@@ -282,9 +254,9 @@ function Shelf({
   const { camera, gl, invalidate } = useThree();
   const [hovered, setHovered] = useState<string | null>(null);
 
-  const oak = useSurface("black_oak_veneer", [2.4, 0.5], true);
-  const panels = useSurface("wooden_panels", [2.6, 1.8], true);
-  const clothTex = useSurface("book_pattern", [3.5, 3.5], false);
+  const oak = useSurface("black_oak_veneer", [2.4, 0.5], { metalnessFromArm: true });
+  const panels = useSurface("wooden_panels", [2.6, 1.8], { metalnessFromArm: true });
+  const clothTex = useSurface("book_pattern", [3.5, 3.5]);
 
   const shared = useMemo(() => {
     const cloth = new THREE.MeshStandardMaterial({
@@ -318,13 +290,14 @@ function Shelf({
   }, [clothTex]);
 
   // The bookcloth images are needed as raw bitmaps to tile under each stamp.
-  const clothImgs = useMemo(() => {
-    const src = clothTex.raw as THREE.Texture[];
-    return {
-      diff: src[0].image as HTMLImageElement,
-      nor: src[1].image as HTMLImageElement,
-    };
-  }, [clothTex]);
+  const clothSrc = useSurfaceImages("book_pattern");
+  const clothImgs = useMemo(
+    () => ({
+      diff: clothSrc[0].image as HTMLImageElement,
+      nor: clothSrc[1].image as HTMLImageElement,
+    }),
+    [clothSrc],
+  );
 
   const plates = useMemo(
     () =>
@@ -548,7 +521,7 @@ function Shelf({
             map={oak.map}
             normalMap={oak.normalMap}
             roughnessMap={oak.roughnessMap}
-            color="#6a5541"
+            color={OAK.case}
             normalScale={new THREE.Vector2(0.75, 0.75)}
             envMapIntensity={0.08}
           />
@@ -561,7 +534,7 @@ function Shelf({
             map={oak.map}
             normalMap={oak.normalMap}
             roughnessMap={oak.roughnessMap}
-            color="#6a5541"
+            color={OAK.case}
             envMapIntensity={0.08}
           />
         </mesh>
@@ -680,22 +653,7 @@ export default function WorkShelfScene({
       style={{ width: "100%", height: "100%" }}
     >
       <Suspense fallback={null}>
-        {/* Brass at metalness 1 with nothing to reflect renders as dull brown
-            plastic. Two warm lightformers stand in for an interior HDRI at no
-            asset cost, which is the whole reason the foil reads as metal. */}
-        {/* Brass at metalness 1 with nothing to reflect is dull brown
-            plastic, so this exists purely to give the foil something. It is
-            kept dim, and the large matte surfaces take almost none of it via
-            their own envMapIntensity — turned up across the set it lifts
-            every surface at once and the whole shelf goes foggy. */}
-        <Environment resolution={128} frames={1}>
-          <Lightformer intensity={0.9} color="#ffd9a8" position={[-4, 3, 3]} scale={[8, 8, 1]} />
-          <Lightformer intensity={0.22} color="#6f9c72" position={[5, -1, 2]} scale={[6, 6, 1]} />
-          <mesh scale={40}>
-            <sphereGeometry args={[1, 12, 12]} />
-            <meshBasicMaterial color="#1a140d" side={THREE.BackSide} />
-          </mesh>
-        </Environment>
+        <StudyEnvironment scale={40} />
         <Lights />
         <Shelf {...props} />
         <FirstFrame onReady={onReady} />

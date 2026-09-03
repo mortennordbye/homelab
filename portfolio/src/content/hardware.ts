@@ -2,6 +2,10 @@
  * The homelab's physical inventory, as recorded in the repo's own README.
  * Keep this in step with the Hardware tables there; it is the same estate
  * described twice and the render is the copy that can go stale unnoticed.
+ *
+ * Both the /infrastructure bench and the /fun room read this file. Every entry
+ * here must have a README row: /infrastructure lists them all as checkable
+ * claims, so a device the README does not carry does not belong in it.
  */
 
 export type NodeState = {
@@ -11,8 +15,23 @@ export type NodeState = {
   schedulable?: boolean;
 };
 
+/** Every device the estate contains, so a call site can name one and be checked. */
+export type DeviceId =
+  | "hyper1"
+  | "hyper2"
+  | "hyper3"
+  | "modem"
+  | "gateway"
+  | "ha"
+  | "nas"
+  | "switch"
+  | "sonos"
+  | "ap"
+  | "zigbee"
+  | "hue";
+
 export type Host = {
-  host: string;
+  host: Extract<DeviceId, "hyper1" | "hyper2" | "hyper3">;
   model: string;
   cpu: string;
   ram: string;
@@ -50,10 +69,12 @@ export function hostOf(node: string): Host | undefined {
 }
 
 export type Device = {
-  id: string;
+  id: DeviceId;
   label: string;
   model: string;
   role: string;
+  /** Short enough to sit on one look-at line in the room; `role` is a paragraph. */
+  tag: string;
   /** Fact lines shown when the device is selected. */
   facts: [string, string][];
   /**
@@ -70,6 +91,7 @@ export const DEVICES: Device[] = [
     label: "Modem",
     model: "Telia cable modem",
     role: "The line in. Everything below it depends on this and nothing monitors it.",
+    tag: "ISP modem",
     facts: [["type", "Cable modem"], ["monitored", "No"]],
     live: false,
   },
@@ -78,6 +100,7 @@ export const DEVICES: Device[] = [
     label: "Gateway",
     model: "UniFi Cloud Gateway",
     role: "Routing, firewalling and DHCP for the whole house, including the cluster's VLAN.",
+    tag: "Gateway / router",
     facts: [["type", "Gateway / router"], ["monitored", "No"]],
     live: false,
   },
@@ -86,6 +109,7 @@ export const DEVICES: Device[] = [
     label: "Home Assistant",
     model: "Topton N100 fanless mini PC",
     role: "Home automation, deliberately kept off the cluster so the house survives a Kubernetes outage.",
+    tag: "Home Assistant host",
     facts: [
       ["cpu", "Intel N100"],
       ["storage", "512 GB SSD"],
@@ -99,6 +123,7 @@ export const DEVICES: Device[] = [
     label: "NAS",
     model: "Synology DS1522+",
     role: "Every persistent volume in the cluster, over NFS. Also hosts a Proxmox Backup Server VM.",
+    tag: "NAS · shared storage and backup",
     facts: [
       ["cpu", "AMD Ryzen R1600 · 2C @ 2.6 GHz"],
       ["ram", "8 GB"],
@@ -113,6 +138,7 @@ export const DEVICES: Device[] = [
     label: "Switch",
     model: "UniFi Lite 8 PoE",
     role: "Every machine in the cabinet lands here. Two of the eight ports are spare.",
+    tag: "Managed switch",
     facts: [["type", "Managed switch"], ["ports", "8, PoE"], ["monitored", "No"]],
     live: false,
   },
@@ -121,6 +147,7 @@ export const DEVICES: Device[] = [
     label: "Sonos",
     model: "Sonos Era 100",
     role: "The speaker on the bench. Grouped and triggered from Home Assistant, which is also what plays the obvious thing in the room at /fun.",
+    tag: "Smart speaker",
     facts: [["type", "Smart speaker"], ["control", "Home Assistant"], ["monitored", "No"]],
     live: false,
   },
@@ -129,6 +156,7 @@ export const DEVICES: Device[] = [
     label: "Access point",
     model: "UniFi U6+",
     role: "WiFi 6 for the house. Everything wireless in the estate lands here, including the Zigbee coordinator's host.",
+    tag: "WiFi 6 access point",
     facts: [["type", "WiFi 6 access point"], ["monitored", "No"]],
     live: false,
   },
@@ -137,6 +165,7 @@ export const DEVICES: Device[] = [
     label: "Zigbee",
     model: "Nabu Casa Connect ZBT-2",
     role: "Zigbee coordinator, paired to Home Assistant. Every sensor and button in the house talks to this antenna, not to the cluster.",
+    tag: "Zigbee coordinator",
     facts: [["type", "Zigbee coordinator"], ["host", "Home Assistant"], ["monitored", "No"]],
     live: false,
   },
@@ -145,6 +174,7 @@ export const DEVICES: Device[] = [
     label: "Hue bridge",
     model: "Philips Hue Bridge Pro",
     role: "Lighting hub, paired to Home Assistant rather than to the cluster.",
+    tag: "Smart lighting hub",
     facts: [["type", "Smart lighting hub"], ["monitored", "No"]],
     live: false,
   },
@@ -157,6 +187,7 @@ export function hostDevice(host: Host): Device {
     label: host.host,
     model: `Lenovo ThinkCentre ${host.model}`,
     role: "Proxmox VE. Runs one Talos control-plane VM and one worker, upright in a printed stand.",
+    tag: `Proxmox node · ${host.host}`,
     facts: [
       ["cpu", host.cpu],
       ["ram", host.ram],
@@ -174,3 +205,8 @@ export function deviceById(id: string | null): Device | undefined {
   if (!id) return undefined;
   return ALL_DEVICES.find((d) => d.id === id);
 }
+
+/** Keyed view, for call sites that name one device in their markup. */
+export const DEVICE = Object.fromEntries(
+  ALL_DEVICES.map((d) => [d.id, d]),
+) as Record<DeviceId, Device>;

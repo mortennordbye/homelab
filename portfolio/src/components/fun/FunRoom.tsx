@@ -1,6 +1,6 @@
 "use client";
 
-import { Environment, PointerLockControls, useProgress } from "@react-three/drei";
+import { PointerLockControls, useProgress } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Bloom,
@@ -22,13 +22,16 @@ import { ACCENT, PANELS, type PanelProps } from "./Panels";
 import {
   DESK_SCREEN,
   DESK_TERMINAL,
+  DESK_X,
+  DESK_Z,
   LANTERN,
   ROOM,
   Room,
   SEAT,
+  STOVE,
+  TV_SCREEN,
   type LightKey,
   type Lights,
-  type Placement,
 } from "./Room";
 import { CodeScreen, type Tab } from "./CodeScreen";
 import { Dashboard } from "./Screen";
@@ -40,14 +43,17 @@ import {
   SeatedHint,
   type InfoCard,
 } from "./Hud";
-import type { Hardware } from "./hardware";
+import type { Inspected } from "./Devices";
 import type { CareerData, ShelfBook, ShelfCert, ShelfData } from "./shelf";
 import type { SourceExcerpt } from "@/lib/source-excerpt";
 import { TerminalScreen } from "./Terminal";
 import { Interactive, InteractionProvider, type Prompt } from "./interaction";
+import { LeaderLabel } from "./LeaderLabel";
 import { useInfraFeed } from "./feed";
+import { at } from "./flat";
 import { preloadProps } from "./props";
-import { preloadSurfaces } from "./textures";
+import { preloadSurfaces, type SurfaceSlug } from "@/components/materials/surface";
+import { StudyEnvironment } from "@/components/materials/StudyEnvironment";
 
 // Kick both caches at module scope: the route is dynamic-imported behind a
 // nav click, so this runs only once someone is heading here and the fetches
@@ -80,10 +86,18 @@ function hasWebGL(): boolean {
   }
 }
 
+/** Every surface the room draws with. Preloaded together so it does not pop
+ *  in one wall at a time. */
+const ROOM_SURFACES: SurfaceSlug[] = [
+  "black_oak_veneer",
+  "wooden_panels",
+  "plastered_wall_04",
+];
+
 const WEBGL_OK = hasWebGL();
 
 if (WEBGL_OK && !window.matchMedia("(pointer: coarse)").matches) {
-  preloadSurfaces();
+  preloadSurfaces(ROOM_SURFACES);
   preloadProps();
 }
 
@@ -92,22 +106,17 @@ if (WEBGL_OK && !window.matchMedia("(pointer: coarse)").matches) {
 // lives in Room.tsx — the desk owns the monitor stands, and two sets of
 // numbers that must agree is one set too many.
 
-/**
- * The television. Centred at z 0.15, not the sideboard's centre, so the 1.42m
- * screen does not occlude the access point at z 0.97.
- */
-const WALL_SCREEN: Placement = {
-  position: [2.28, 1.09, 0.15],
-  rotation: [0, -Math.PI / 2, 0],
-  width: 1.42,
-};
-
 // Everything cluster-shaped goes on the television. FEED STATUS gets no
 // screen: the HUD chip already carries live/stale/snapshot everywhere.
 const WALL_PANELS = PANELS.filter((p) => p.id !== "feed");
 
 /** How many things stagger on at boot: the desk monitor, then the television. */
 const POWER_STEPS = 2;
+
+/** The monitor's views, in the order it cycles them. One list, so the timer
+ *  and the E press cannot disagree about what comes next. */
+const TABS: Tab[] = ["code", "argocd", "repos"];
+const nextTab = (v: Tab): Tab => TABS[(TABS.indexOf(v) + 1) % TABS.length];
 
 function ScreenWall({
   data,
@@ -132,7 +141,7 @@ function ScreenWall({
       <Interactive
         label="the desk monitor"
         verb="switch view"
-        detail={deskTab === "code" ? "show the ArgoCD view" : "show deployment.yaml"}
+        detail={DESK_TAB_DETAIL[nextTab(deskTab)]}
         onActivate={onSwitchTab}
       >
         <CodeScreen
@@ -148,21 +157,13 @@ function ScreenWall({
       <Dashboard
         panels={WALL_PANELS}
         data={data}
-        position={WALL_SCREEN.position}
-        rotation={WALL_SCREEN.rotation}
-        width={WALL_SCREEN.width}
+        position={TV_SCREEN.position}
+        rotation={TV_SCREEN.rotation}
+        width={TV_SCREEN.width}
         powered={poweredCount > 1}
       />
     </>
   );
-}
-
-function TempCam() {
-  const { camera } = useThree();
-  useEffect(() => {
-    (window as unknown as { __cam: unknown }).__cam = camera;
-  }, [camera]);
-  return null;
 }
 
 /**
@@ -195,8 +196,15 @@ function Notice({
   );
 }
 
+/** What the crosshair offers, named by the view it would switch to. */
+const DESK_TAB_DETAIL: Record<Tab, string> = {
+  code: "show deployment.yaml",
+  argocd: "show the ArgoCD view",
+  repos: "show the pinned repositories",
+};
+
 const NOTICE_BUTTON =
-  "focus-ring border border-snow/25 px-4 py-2.5 font-mono text-xs text-fg transition-colors hover:border-snow/60 hover:bg-snow/5";
+  "focus-ring border border-brass px-4 py-2.5 font-mono text-xs text-fg transition-colors hover:border-copper";
 const NOTICE_LINK =
   "focus-ring font-mono text-xs text-accent underline-offset-4 hover:underline";
 
@@ -407,6 +415,36 @@ function SeatedFocus({
 }
 
 /** Screens are the light source, so the fill has to follow them on. */
+/**
+ * The stove. Two sines that never come back into phase, so it reads as burning
+ * rather than as a lamp on a timer, and it is the one source in the flat that
+ * is allowed to move.
+ *
+ * Cheap because it casts nothing: the shadow map is drawn on demand (see
+ * `Lighting`) and a caster that changed every frame would redraw all six faces
+ * of it every frame with it.
+ */
+function FireLight({ on }: { on: boolean }) {
+  const ref = useRef<THREE.PointLight>(null);
+  useFrame(({ clock }) => {
+    const l = ref.current;
+    if (!l) return;
+    const t = clock.elapsedTime;
+    l.intensity = on
+      ? 7.2 + Math.sin(t * 7.1) * 0.8 + Math.sin(t * 2.7 + 1.7) * 1.2
+      : 0;
+  });
+  return (
+    <pointLight
+      ref={ref}
+      position={[STOVE.fire.x, STOVE.fire.y, STOVE.fire.z]}
+      distance={5.4}
+      decay={1.8}
+      color="#ff8b3a"
+    />
+  );
+}
+
 function Lighting({
   poweredCount,
   lights,
@@ -414,39 +452,54 @@ function Lighting({
   poweredCount: number;
   lights: Lights;
 }) {
+  const gl = useThree((s) => s.gl);
+
+  /**
+   * The shadow map is drawn on demand rather than every frame.
+   *
+   * There is one shadow caster in the flat and it is a lamp bolted to the
+   * floor, so its cube map is the same six faces frame after frame — and
+   * re-rendering them was measured at 238 draw calls and 138k triangles of the
+   * 912 and 370k a frame costs, better than a quarter of the work, for a
+   * picture that never changed. A point light's shadow is cast from the light,
+   * not the eye, so walking around does not invalidate it either.
+   *
+   * What does invalidate it: these switches, and anything that moves and casts.
+   * Those ask for a redraw themselves — `useEase` in openable.tsx for every
+   * door and drawer, and the printer for its sheet. Add another moving caster
+   * and it has to do the same or it will drag a stale shadow behind it.
+   */
+  useEffect(() => {
+    gl.shadowMap.autoUpdate = false;
+    gl.shadowMap.needsUpdate = true;
+  }, [gl, lights, poweredCount]);
+
   const lit = poweredCount / POWER_STEPS;
   /* Each fitting reads its own switch. The two sources that are not
      fittings follow something else: the ceiling bounce belongs to the lantern
      that throws it, and the door-end fill is spill, so it tracks whether the
      room is lit at all rather than glowing with no source behind it. */
-  const anyOn = lights.lantern || lights.desk || lights.shelf;
+  const anyOn = lights.lantern || lights.desk || lights.shelf || lights.stove;
   return (
     <>
-      {/* A room lit the way a living room is at nine in the evening: nothing
-          overhead, two warm lamps at lamp height, and the ceiling lit only by
-          what bounces off them.
+      {/* A room lit the way a study is at nine in the evening: nothing
+          overhead, warm lamps at lamp height, and the ceiling lit only by what
+          bounces off them. Colours are brand.ts `light` — key, bounce, rake.
 
-          Ambient and hemisphere are kept deliberately low. They add light from
-          everywhere at once, which no real room does, and every unit of it
-          flattens the shading gradient that tells you what shape a thing is.
-          An earlier pass ran these at 0.5 and 0.9 to brighten the room and the
-          result was uniformly lit and fake. Brightness belongs in the fittings,
-          where it arrives from a direction and falls off.
+          Ambient and hemisphere stay low. Light from everywhere at once
+          flattens the gradient that tells you what shape a thing is, so
+          brightness belongs in fittings that have a direction and fall off.
 
-          They are deliberately *cool*, which looks backwards for a warm room
-          and is the thing that makes it work. Warmth only reads as warmth
-          against something colder: tinting the fill orange too made every
-          surface the same sepia and the sage walls disappeared entirely. This
-          is the blue evening light in the room the lamps are fighting, and it
-          is what leaves the walls green and the lamplight orange. */}
-      {/* With the lamps off these come up rather than staying put. At the lit
-          values the room goes almost black, and a visitor who switched the
-          light off across the room then cannot see the lamp well enough to
-          switch it back on — the same dead end the terminal used to be. Raised,
-          it reads as a room at night with the lamps off: cool, low, navigable,
-          and still obviously unlit, because the warmth is what actually left. */}
-      <ambientLight intensity={anyOn ? 0.16 : 0.34} color="#9fb2b8" />
-      <hemisphereLight args={["#aac2c8", "#4a3a2c", anyOn ? 0.38 : 0.62]} />
+          The fill is the cool one, which looks backwards for a warm room and
+          is what makes it work: warmth is a relationship, not a value, and
+          with an amber fill every surface lands on the same sepia. This is the
+          bounce — the forest through the window — against which the lamps read
+          as warm. */}
+      {/* With the lamps off these come up rather than staying put, or a visitor
+          who switched the light off across the room cannot see the lamp well
+          enough to switch it back on. */}
+      <ambientLight intensity={anyOn ? 0.16 : 0.34} color="#31251a" />
+      <hemisphereLight args={["#6f9c72", "#241a12", anyOn ? 0.38 : 0.62]} />
 
       {/* The lantern. Main light and the only shadow caster, sitting inside
           the shade at the height the shade actually is. A point light this low
@@ -457,7 +510,7 @@ function Lighting({
         intensity={lights.lantern ? 26 : 0}
         distance={8.5}
         decay={1.5}
-        color="#ffa758"
+        color="#ffd49a"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0015}
@@ -472,29 +525,75 @@ function Lighting({
         intensity={lights.lantern ? 5 : 0}
         distance={4.4}
         decay={1.9}
-        color="#ff9a45"
+        color="#ffd49a"
       />
+      <FireLight on={lights.stove} />
       {/* the mushroom lamp on the desk, the second pool of warm */}
       <pointLight
-        position={[-1.0, 1.0, -ROOM.d / 2 + 0.55]}
+        position={[DESK_X + 0.66, 1.0, DESK_Z - 0.12]}
         intensity={lights.desk ? 8.5 : 0}
         distance={3.6}
         decay={1.9}
-        color="#ffb066"
+        color="#ffca8a"
       />
-      {/* A low warm fill at the door end, which neither lamp reaches. Kept
-          weak and warm enough to read as spill rather than as a third lamp the
-          visitor can never find. */}
+      {/* Low warm fills for the three rooms no fitting stands in: the entré,
+          the bedroom and the bathroom. Weak enough to read as spill from a
+          ceiling fitting rather than as lamps the visitor can never find, and
+          without them those rooms are caves the moment you walk into them. */}
       <pointLight
-        position={[-0.4, 1.5, ROOM.d / 2 - 1.4]}
-        intensity={anyOn ? 3.6 : 0}
-        distance={5.4}
+        position={at(5.2, 1.95, 5.4)}
+        intensity={anyOn ? 5.4 : 0}
+        distance={5.6}
         decay={1.8}
-        color="#ffb877"
+        color="#ffca8a"
       />
+      <pointLight
+        position={at(5.15, 2.05, 1.15)}
+        intensity={anyOn ? 3.2 : 0}
+        distance={4.6}
+        decay={1.9}
+        color="#ffca8a"
+      />
+      <pointLight
+        position={at(5.15, 2.05, 3.7)}
+        intensity={anyOn ? 3.8 : 0}
+        distance={3.8}
+        decay={1.9}
+        color="#ffd49a"
+      />
+      {/* The strip under the wall units, which is the fitting the worktop is
+          actually lit by and the one part of the living room the lantern at the
+          north end and the desk lamp at the south both fail to reach. */}
+      <pointLight
+        position={at(3.62, 1.4, 4.03)}
+        intensity={anyOn ? 7.2 : 0}
+        distance={2.7}
+        decay={1.6}
+        color="#ffca8a"
+      />
+      {/* The three north windows, as light rather than as scenery. Dusk over
+          the treeline is a real source and the only one in the flat that is
+          not a lamp, so it is cool, weak, and sits just inside the glass where
+          a window's light actually falls off from. It stays on with the lamps
+          off: the room should never go darker than the sky outside it. */}
+      {([
+        [1.075, 5.6],
+        [2.45, 5.8],
+        [5.1, 7.0],
+      ] as const).map(([x, intensity]) => (
+        <pointLight
+          key={x}
+          position={at(x, 1.68, 0.78)}
+          intensity={intensity}
+          distance={4.8}
+          decay={1.6}
+          color="#8fb4c9"
+        />
+      ))}
+
       {/* monitor spill */}
       <pointLight
-        position={[0, 1.25, -ROOM.d / 2 + 0.95]}
+        position={[DESK_X, 1.25, DESK_Z - 0.35]}
         intensity={1.6 * lit}
         distance={2.8}
         decay={2}
@@ -585,7 +684,7 @@ function Scene({
   onPrinterStatus: (msg: string | null) => void;
   shelf: ShelfData;
   career: CareerData;
-  onInspect: (hw: Hardware) => void;
+  onInspect: (hw: Inspected) => void;
   onOpenBook: (b: ShelfBook) => void;
   onOpenCert: (c: ShelfCert) => void;
   onOpenCard: (c: InfoCard) => void;
@@ -610,8 +709,9 @@ function Scene({
      already gone false by then, so without this FirstPerson would grab the
      camera mid-move and snap it to eye height. */
   const [settling, setSettling] = useState(false);
-  /* The desk monitor alternates between the manifest and the ArgoCD view.
-     Held here rather than inside CodeScreen — see the note on its `tab` prop. */
+  /* The desk monitor cycles the manifest, the ArgoCD view and the pinned
+     repositories. Held here rather than inside CodeScreen — see the note on
+     its `tab` prop. */
   const [deskTab, setDeskTab] = useState<Tab>("code");
   /* Set the first time the visitor switches the monitor themselves. The
      rotation exists so the second view is seen at all by someone who never
@@ -620,15 +720,12 @@ function Scene({
   const [deskTabPinned, setDeskTabPinned] = useState(false);
   useEffect(() => {
     if (phase !== "exploring" || deskTabPinned) return;
-    const t = setInterval(
-      () => setDeskTab((v) => (v === "code" ? "argocd" : "code")),
-      9000,
-    );
+    const t = setInterval(() => setDeskTab(nextTab), 9000);
     return () => clearInterval(t);
   }, [phase, deskTabPinned]);
   const switchDeskTab = useCallback(() => {
     setDeskTabPinned(true);
-    setDeskTab((v) => (v === "code" ? "argocd" : "code"));
+    setDeskTab(nextTab);
   }, []);
   const { camera } = useThree();
 
@@ -648,20 +745,22 @@ function Scene({
     return () => timers.forEach(clearTimeout);
   }, [phase, reduced]);
 
-  /* Stand the visitor up just inside the door, facing the desk.
+  /* Stand the visitor up just inside the door, looking down the flat.
      This runs once, behind the loading screen, so the first frame anyone sees
-     is already the view they will be walking from. There is no fly-in any more:
+     is already the view they will be walking from. Stand any further east than
+     4.2 and the bathroom's near corner takes the right third of that frame.
+     There is no fly-in any more:
      an animated approach means the first few seconds of the room are a cutscene
      you cannot steer, and it read as a screensaver rather than a place. */
   useEffect(() => {
     if (phase !== "exploring") return;
-    camera.position.set(0, EYE, ROOM.d / 2 - 1.1);
-    camera.lookAt(0, 1.45, -ROOM.d / 2);
+    camera.position.set(...at(4.2, EYE, 5.25));
+    camera.lookAt(...at(0.06, 1.5, 4.5));
   }, [phase, camera]);
 
   return (
     <>
-      <color attach="background" args={["#1b1410"]} />
+      <color attach="background" args={["#241a12"]} />
       <fog attach="fog" args={["#241a13", 16, 42]} />
       <Lighting poweredCount={poweredCount} lights={lights} />
       <InteractionProvider
@@ -670,18 +769,10 @@ function Scene({
         onEmptyActivate={onStand}
       >
       <Suspense fallback={null}>
-        {/* Image-based lighting. Does most of the work on specular: without an
-            environment map, metal and plastic have nothing to reflect and every
-            surface reads as flat paint.
-
-            Turned well down from 0.75. The map is a neutral studio, so at full
-            strength it is a large cool source washing the whole room, and it
-            was quietly cancelling out the warmth the lamps put in. It is here
-            for reflections now, not for illumination. */}
-        <Environment
-          files="/textures/fun/env_studio_1k.hdr"
-          environmentIntensity={0.28}
-        />
+        {/* Image-based lighting, the same one the shelf and the bench use.
+            Without it metal and plastic have nothing to reflect and every
+            surface reads as flat paint. */}
+        <StudyEnvironment scale={12} />
         <Room
           onPrinterStatus={onPrinterStatus}
           shelf={shelf}
@@ -734,7 +825,6 @@ function Scene({
         }
       />
       </InteractionProvider>
-      <TempCam />
       <TerminalFocus active={terminalActive} onSettling={setSettling} />
       <SeatedFocus active={seated} onStandingUp={setStandingUp} />
       {/* `seated` covers the move in and the whole time in the chair;
@@ -771,12 +861,12 @@ type Phase = "loading" | "exploring";
 /* Card builders. Hardware, case studies and certificates all reduce to the same
    shape, so InfoPanel renders one layout rather than three that drift apart. */
 
-function hardwareCard(hw: Hardware): InfoCard {
+function hardwareCard(hw: Inspected): InfoCard {
   return {
     kicker: "hardware",
-    title: hw.name,
-    subtitle: hw.role,
-    rows: hw.specs.map((s) => ({ k: s.k, v: s.v })),
+    title: hw.model,
+    subtitle: hw.tag,
+    rows: hw.facts.map(([k, v]) => ({ k, v })),
     note: hw.unlisted
       ? "Not in the README hardware tables, so no specification is quoted for it here."
       : "Specifications from the hardware tables in the Homelab README.",
@@ -830,7 +920,7 @@ export default function FunRoom({
   /* Read during the first render rather than in an effect, unlike `reduced`
      below. It gates whether the Canvas mounts at all, and a Canvas that mounts
      for one frame before the gate appears has already started pulling the
-     6.5MB of textures the gate exists to ask about. Safe to touch `window`
+     megabytes of textures the gate exists to ask about. Safe to touch `window`
      here: this component is dynamic-imported with ssr:false. */
   const [coarse] = useState(() =>
     window.matchMedia("(pointer: coarse)").matches,
@@ -851,6 +941,7 @@ export default function FunRoom({
     lantern: true,
     desk: true,
     shelf: true,
+    stove: true,
   });
   const toggleLight = useCallback(
     (k: LightKey) => setLights((l) => ({ ...l, [k]: !l[k] })),
@@ -1058,7 +1149,7 @@ export default function FunRoom({
     return (
       <Notice
         title="A walkable version of this portfolio."
-        body="Drag to look around, use the stick to walk, tap an object to open it. It downloads about 6.5MB of textures and models, served straight from the cluster in Oslo, so it is worth being on wifi."
+        body="Drag to look around, use the stick to walk, tap an object to open it. It downloads about 4.7MB, served straight from the cluster in Oslo, so it is worth being on wifi."
       >
         <button
           type="button"
@@ -1066,7 +1157,7 @@ export default function FunRoom({
             // The module-scope preload skipped touch, so kick it here. Both
             // are cache-backed, so this stays the overlap it is on desktop
             // rather than a second round of fetches.
-            preloadSurfaces();
+            preloadSurfaces(ROOM_SURFACES);
             preloadProps();
             setEntered(true);
           }}
@@ -1085,7 +1176,7 @@ export default function FunRoom({
     <div className="fixed inset-0 z-[200] bg-[#04070a]">
       <div id="fun-lock-target" className="absolute inset-0 z-0">
         <Canvas
-          camera={{ fov: 72, near: 0.1, far: 60, position: [0, 1.5, ROOM.d / 2 - 1.2] }}
+          camera={{ fov: 72, near: 0.1, far: 60, position: at(4.4, 1.5, 5.2) }}
           shadows="soft"
           /* Capped at 1.5, down from 1.8. The room is fill-rate bound and this
              is the cheapest frame time in the build: on a Retina display at a
@@ -1146,13 +1237,14 @@ export default function FunRoom({
 
       {/* persistent status line */}
       <div className="pointer-events-none absolute left-6 top-6 z-20 font-mono text-xs">
-        <div className="flex items-center gap-2.5 border border-snow/10 bg-black/45 px-3.5 py-2 backdrop-blur">
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ background: feedTone, boxShadow: `0 0 10px ${feedTone}` }}
-          />
-          <span style={{ color: feedTone }}>{feedLabel}</span>
-          <span className="text-snow/35">· genesis · oslo</span>
+        {/* The room's one lit point: live cluster state, and nothing else in
+            the frame spends green. A dot, not a glow — nothing emits here. */}
+        <div className="flex items-center gap-2.5">
+          <span className="h-[3px] w-[3px] rounded-full" style={{ background: feedTone }} />
+          <span style={{ color: feedTone, textShadow: "0 0 8px rgba(0,0,0,0.95)" }}>{feedLabel}</span>
+          <span className="text-fg-3" style={{ textShadow: "0 0 8px rgba(0,0,0,0.95)" }}>
+            · genesis · oslo
+          </span>
         </div>
       </div>
 
@@ -1160,13 +1252,14 @@ export default function FunRoom({
           other people's work with no credit is not something to be casual
           about. */}
       <p className="pointer-events-none absolute bottom-6 right-6 z-20 font-mono text-[10px] text-snow/25">
-        surfaces &amp; environment: Poly Haven (CC0)
+        surfaces &amp; models: Poly Haven (CC0)
       </p>
 
       {/* exit */}
       <Link
         href="/"
-        className="focus-ring absolute right-6 top-6 z-20 border border-snow/10 bg-black/45 px-3.5 py-2 font-mono text-xs text-snow/60 backdrop-blur transition-colors hover:text-fg"
+        className="focus-ring absolute right-6 top-6 z-20 font-mono text-xs text-fg-3 transition-colors hover:text-fg"
+        style={{ textShadow: "0 0 8px rgba(0,0,0,0.95)" }}
       >
         exit
       </Link>
@@ -1189,8 +1282,8 @@ export default function FunRoom({
       <InfoPanel card={card} onClose={closeCard} />
 
       {printerStatus && (
-        <div className="pointer-events-none absolute bottom-24 left-1/2 z-20 -translate-x-1/2 rounded-[5px] border border-accent/40 bg-black/75 px-4 py-2 font-mono text-xs text-accent">
-          {printerStatus}
+        <div className="pointer-events-none absolute bottom-24 left-1/2 z-20 -translate-x-1/2 max-sm:bottom-[288px]">
+          <LeaderLabel caption={printerStatus} />
         </div>
       )}
 
@@ -1210,8 +1303,11 @@ export default function FunRoom({
           it. Not shown while a card is open, which releases the pointer on
           purpose. */}
       {phase === "exploring" && !locked && !coarse && !paused && (
-        <div className="pointer-events-none absolute bottom-6 left-1/2 z-30 -translate-x-1/2">
-          <p className="border border-snow/10 bg-black/45 px-3.5 py-2 font-mono text-[11px] text-snow/45 backdrop-blur">
+        <div className="pointer-events-none absolute bottom-6 left-1/2 z-30 -translate-x-1/2 max-sm:bottom-14 max-sm:left-6 max-sm:translate-x-0">
+          <p
+            className="font-mono text-[11px] text-fg-3"
+            style={{ textShadow: "0 0 8px rgba(0,0,0,0.95)" }}
+          >
             click to look around · WASD to move
           </p>
         </div>
@@ -1228,7 +1324,10 @@ export default function FunRoom({
         <>
           <TouchStick move={touchMove} />
           <div className="pointer-events-none absolute bottom-8 right-8 z-30 max-w-[46vw]">
-            <p className="border border-snow/10 bg-black/45 px-3 py-2 text-right font-mono text-[10px] leading-relaxed text-snow/45 backdrop-blur">
+            <p
+              className="text-right font-mono text-[10px] leading-relaxed text-fg-3"
+              style={{ textShadow: "0 0 8px rgba(0,0,0,0.95)" }}
+            >
               drag to look
               <br />
               tap an object to open it
