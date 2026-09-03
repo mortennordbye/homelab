@@ -4,10 +4,12 @@ import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { HARDWARE, type Hardware } from "./hardware";
+import { DEVICE } from "@/content/hardware";
 import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
 import { Sonos } from "./Sonos";
+import { Television } from "./Furniture";
+import { OAK } from "@/components/materials/oak";
 
 /**
  * The real homelab, modelled from reference photos of the actual flat, in an
@@ -24,7 +26,7 @@ const CHASSIS_GREY = { color: "#232629", roughness: 0.52, metalness: 0.42 };
 function Led({
   position,
   rotation = [0, 0, 0],
-  color = "#5ec96e",
+  color = "#7fc48c",
   seed = 1,
   size = 0.005,
   steady = false,
@@ -84,7 +86,7 @@ export function ThinkCentre({
         <ringGeometry args={[0.0035, 0.0055, 20]} />
         <meshBasicMaterial color="#81bccf" transparent opacity={0.85} />
       </mesh>
-      <Led position={[0, 0.03, D / 2 + 0.003]} color="#5ec96e" seed={2.1} size={0.0035} />
+      <Led position={[0, 0.03, D / 2 + 0.003]} color="#7fc48c" seed={2.1} size={0.0035} />
     </group>
   );
 }
@@ -120,7 +122,7 @@ export function SynologyNas({
         <Led
           key={y}
           position={[W / 2 - 0.016, y, D / 2 + 0.003]}
-          color={i === 0 ? "#81bccf" : "#5ec96e"}
+          color={i === 0 ? "#81bccf" : "#7fc48c"}
           seed={0.9 + i * 0.8}
           size={0.0045}
         />
@@ -202,7 +204,7 @@ export function UnifiSwitch8({
         <Led
           key={i}
           position={[-0.075 + i * 0.0215, 0.0095, 0.0526]}
-          color={i % 3 === 0 ? "#5ec96e" : "#81b288"}
+          color={i % 3 === 0 ? "#7fc48c" : "#81b288"}
           seed={0.8 + i * 0.55}
           size={0.003}
         />
@@ -233,7 +235,7 @@ export function IspRouter({
           key={y}
           position={[0.0272, y, 0.055]}
           rotation={[0, Math.PI / 2, 0]}
-          color={i === 0 ? "#5ec96e" : "#9aa3ad"}
+          color={i === 0 ? "#7fc48c" : "#9aa3ad"}
           seed={0.7 + i * 0.9}
           size={0.0035}
         />
@@ -311,6 +313,25 @@ export function UnifiAccessPoint({ position }: { position: [number, number, numb
 }
 
 /** The sideboard: an open-fronted oak unit with the homelab living in it. */
+/** What the room needs to name and card a device. `Device` satisfies it. */
+export type Inspected = {
+  model: string;
+  tag: string;
+  facts: [string, string][];
+  /** Set when the README has no row for it, so the card says so rather than inventing specs. */
+  unlisted?: boolean;
+};
+
+/** On the shelf in the reference photos but absent from the README, so it is
+ *  declared here rather than in the shared inventory, which /infrastructure
+ *  renders as checkable claims. */
+const FLEX_MINI: Inspected = {
+  model: "UniFi Flex Mini",
+  tag: "Desktop switch",
+  facts: [],
+  unlisted: true,
+};
+
 /**
  * Wraps a device so looking at it names it.
  *
@@ -324,21 +345,29 @@ function Inspectable({
   onInspect,
   children,
 }: {
-  hw: Hardware;
-  onInspect: (hw: Hardware) => void;
+  hw: Inspected;
+  onInspect: (hw: Inspected) => void;
   children: React.ReactNode;
 }) {
   return (
     <Interactive
-      label={hw.name}
+      label={hw.model}
       verb="inspect"
-      detail={hw.role}
+      detail={hw.tag}
       onActivate={() => onInspect(hw)}
     >
       {children}
     </Interactive>
   );
 }
+
+/**
+ * Where the television stands on the cabinet top, in the cabinet's own frame.
+ * Exported because the dashboard on its glass is placed from Room.tsx, which is
+ * the only file that knows where the cabinet itself stands.
+ */
+export const SIDEBOARD_H = 0.42;
+export const SIDEBOARD_TV: [number, number, number] = [-0.08, SIDEBOARD_H + 0.021, 0];
 
 export function Sideboard({
   position,
@@ -348,20 +377,24 @@ export function Sideboard({
 }: {
   position: [number, number, number];
   rotation?: [number, number, number];
-  onInspect: (hw: Hardware) => void;
+  onInspect: (hw: Inspected) => void;
   onOpenCard: (card: InfoCard) => void;
 }) {
 
-  const W = 1.92;
-  const H = 0.6;
-  const D = 0.45;
-  const LEG = 0.11;
+  // The real cabinet, at the size /infrastructure models it: a BESTÅ at
+  // 180 x 42 x 38 with three bays. The television stands on it, because in the
+  // flat the TV bench and the homelab are the same piece of furniture.
+  const W = 1.8;
+  const H = SIDEBOARD_H;
+  const D = 0.42;
+  const LEG = 0.06;
   const bodyH = H - LEG;
   const bodyY = LEG + bodyH / 2;
   const floorY = LEG + 0.02;
 
-  const oak = { color: "#b39a72", roughness: 0.66, metalness: 0 };
-  const oakDark = { color: "#9d8763", roughness: 0.74, metalness: 0 };
+  // The same plank as every other oak surface in the flat.
+  const oak = { color: OAK.case, roughness: 0.64, metalness: 0 };
+  const oakDark = { color: OAK.carcass, roughness: 0.72, metalness: 0 };
 
   return (
     <group position={position} rotation={rotation}>
@@ -410,10 +443,10 @@ export function Sideboard({
         )),
       )}
       {/* interior floor and dividers, so the inside reads as compartments */}
-      {[-0.32, 0.32].map((x) => (
+      {[-0.297, 0.297].map((x) => (
         <mesh key={x} position={[x, bodyY, -0.012]} receiveShadow>
           <boxGeometry args={[0.018, bodyH - 0.06, D - 0.05]} />
-          <meshStandardMaterial color="#a8926c" roughness={0.75} />
+          <meshStandardMaterial color={OAK.back} roughness={0.75} />
         </mesh>
       ))}
 
@@ -421,33 +454,33 @@ export function Sideboard({
           from the README hardware tables via ./hardware — the three ThinkCentres
           are three different machines, so they are labelled individually rather
           than as "a ThinkCentre" three times. */}
-      <Inspectable hw={HARDWARE.hyper1} onInspect={onInspect}>
+      <Inspectable hw={DEVICE.hyper1} onInspect={onInspect}>
         <ThinkCentre position={[-0.78, floorY + 0.0915, 0.02]} />
       </Inspectable>
-      <Inspectable hw={HARDWARE.hyper2} onInspect={onInspect}>
+      <Inspectable hw={DEVICE.hyper2} onInspect={onInspect}>
         <ThinkCentre position={[-0.72, floorY + 0.0915, 0.02]} />
       </Inspectable>
-      <Inspectable hw={HARDWARE.hyper3} onInspect={onInspect}>
+      <Inspectable hw={DEVICE.hyper3} onInspect={onInspect}>
         <ThinkCentre position={[-0.66, floorY + 0.0915, 0.02]} />
       </Inspectable>
-      <Inspectable hw={HARDWARE.modem} onInspect={onInspect}>
+      <Inspectable hw={DEVICE.modem} onInspect={onInspect}>
         <IspRouter position={[-0.44, floorY + 0.1, 0.01]} />
       </Inspectable>
 
-      <Inspectable hw={HARDWARE.gateway} onInspect={onInspect}>
+      <Inspectable hw={DEVICE.gateway} onInspect={onInspect}>
         <CloudGateway position={[-0.16, floorY + 0.015, 0.03]} />
       </Inspectable>
-      <Inspectable hw={HARDWARE.homeAssistant} onInspect={onInspect}>
+      <Inspectable hw={DEVICE.ha} onInspect={onInspect}>
         <FanlessBox position={[0.09, floorY + 0.019, -0.02]} />
       </Inspectable>
-      <Inspectable hw={HARDWARE.flexMini} onInspect={onInspect}>
+      <Inspectable hw={FLEX_MINI} onInspect={onInspect}>
         <UnifiFlexMini position={[0.16, floorY + 0.011, 0.12]} />
       </Inspectable>
 
-      <Inspectable hw={HARDWARE.nas} onInspect={onInspect}>
+      <Inspectable hw={DEVICE.nas} onInspect={onInspect}>
         <SynologyNas position={[0.68, floorY + 0.083, -0.02]} />
       </Inspectable>
-      <Inspectable hw={HARDWARE.switch8} onInspect={onInspect}>
+      <Inspectable hw={DEVICE.switch} onInspect={onInspect}>
         <UnifiSwitch8 position={[0.44, floorY + 0.013, 0.09]} />
       </Inspectable>
       {/* Clear of the 8-port switch rather than tucked in behind it. Sat at
@@ -455,24 +488,26 @@ export function Sideboard({
           crosshair could never land on it and it was the one device in the
           room you could not name. Anything given a label has to be lookable
           at from where a visitor can actually stand. */}
-      <Inspectable hw={HARDWARE.hueBridge} onInspect={onInspect}>
+      <Inspectable hw={DEVICE.hue} onInspect={onInspect}>
         <HubPuck position={[0.26, floorY + 0.012, -0.09]} />
       </Inspectable>
 
       {/* access point on top, flat, where a TV would sit in front of it */}
-      <Inspectable hw={HARDWARE.accessPoint} onInspect={onInspect}>
+      <Inspectable hw={DEVICE.ap} onInspect={onInspect}>
         <UnifiAccessPoint position={[0.62, H + 0.032, -0.1]} />
       </Inspectable>
 
       {/* The Sonos, on the free end of the top past the television.
-          Not in HARDWARE and not an <Inspectable>: it is a speaker in the
-          living room, not homelab kit, and the README rule exists so the room
-          never claims infrastructure that does not exist. It carries its own
-          label and its own card instead.
+          Not an <Inspectable>: it owns its own label and card because pressing
+          it plays something rather than opening a spec sheet.
           Placed at x 0.85 rather than tucked beside the access point at 0.62,
           which the two of them would fight over — the access point has been
           occluded once already and is not being buried a second time. */}
       <Sonos position={[0.85, H + 0.021, 0.1]} onOpen={onOpenCard} />
+
+      {/* The television on the cabinet top. Its stand is centred; the access
+          point and the speaker sit either side of it, under the panel. */}
+      <Television position={SIDEBOARD_TV} />
     </group>
   );
 }

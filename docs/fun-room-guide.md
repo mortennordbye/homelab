@@ -7,8 +7,13 @@ reasoning; this file is the practical guide. Read this one first.
 
 ## What it is
 
-`/fun` is a first-person 3D room that *is* the portfolio: every section of the site appears as
-an object you can walk up to, look at and press `E` on. It lives in `portfolio/`, is
+`/fun` is a first-person 3D flat that *is* the portfolio: every section of the site appears as
+an object you can walk up to, look at and press `E` on.
+
+The plan is the real apartment — 6.3 x 6.1m — with all four spaces
+walkable: stue/kjøkken, soverom, bad and entré. `flat.ts` holds the plan, and both the wall
+meshes and the collision boxes are built from that one list, so a wall you can walk through
+cannot happen by editing one and forgetting the other. It lives in `portfolio/`, is
 dynamic-imported with `ssr: false`, and never becomes the only path to anything — every section
 it exposes stays reachable through normal navigation. That is what lets it skip carrying SEO and
 accessibility on its own.
@@ -57,25 +62,32 @@ All under `portfolio/src/`.
 | `app/fun/FunRoomClient.tsx` | Thin client wrapper — `next/dynamic` with `ssr:false` is illegal in a Server Component. |
 | `components/fun/FunRoom.tsx` | Scene composition, lighting, post-processing, HUD, all card state, the loading screen. The root. |
 | `components/fun/Room.tsx` | Room shell and furniture: walls, floor, desk, door, lantern, sideboard placement, object placement. Also owns `DESK_SCREEN` / `DESK_TERMINAL` / `CHAIR_Z`, because the stands and the collision boxes have to agree with them. Holds the shelf lamp's light, whose height comes from `shelfHeight(shelf)`. |
+| `components/fun/flat.ts` | The floor plan: zones, wall runs with door openings, and the plan-to-world helpers (`at`, `px`, `pz`). Placements are written in plan metres so they can be checked against the drawing. |
+| `components/fun/Furniture.tsx` | Sofa and television; the kitchen: runs, fridge column, wall units, sink, hob, oven, extractor, microwave; the bedroom: bed, mirrored wardrobe, over-bed units, fan, poster, blind; the bathroom: quadrant shower, wall-hung WC and duct, vanity, wall cabinet, washing machine, mat. |
 | `components/fun/Devices.tsx` | Homelab hardware models + the sideboard. |
-| `components/fun/hardware.ts` | Hardware names and specs, transcribed from the repo README. |
-| `components/fun/Bookshelf.tsx` | Case studies as books, certificates as framed prints. Self-sizing. |
+| `content/hardware.ts` | Hardware names and specs, transcribed from the repo README. Shared with `/infrastructure`, so every entry must have a README row. |
+| `components/fun/Bookshelf.tsx` | Case studies as books, certificates as framed prints. Self-sizing, and the printer and the shelf lamp read their height off `shelfHeight`. |
 | `components/fun/Objects.tsx` | Social wall, contact card, gym bag, career frame, skills faceplate, services leaflet rack. |
 | `components/fun/Touch.tsx` | Phone controls. `TouchLook` (inside the Canvas **and** inside `InteractionProvider`) does drag-to-look and tap-to-activate; `TouchStick` is the DOM walk stick. |
 | `components/fun/Sonos.tsx` | The speaker on the sideboard and the Web Audio rickroll it plays. No audio files — melody and drum kit are synthesised. |
-| `components/fun/BlogBoard.tsx` | Whiteboard on the left wall. Lays itself out from `/api/v1/blog`, cover images included. Nothing to add here per post. |
+| `components/fun/BlogBoard.tsx` | Whiteboard over the television. Lays itself out from `/api/v1/blog`, cover images included. Nothing to add here per post. |
 | `components/fun/Terminal.tsx` | The shell on the middle monitor. |
 | `components/fun/Screen.tsx` | Monitor mesh + DOM panel mount. `Screen` is one panel; `Dashboard` is the television carrying six at once; `PanelCard` is the chrome both share. |
 | `components/fun/Panels.tsx` | Content of the live infra panels. Authored at one size (640x376) — the television scales them down, so there is no second "small" variant to keep in step. |
 | `components/fun/feed.ts` | `/api/v1/infra` polling and staleness rules. |
 | `components/fun/interaction.tsx` | Look-at-and-press: raycast registry, `Interactive` wrapper. |
-| `components/fun/Hud.tsx` | Crosshair, look-at prompt, keybinds, `InfoPanel` card. |
+| `components/fun/Hud.tsx` | Aiming dot, look-at prompt, keybinds, `InfoPanel` sheet. |
+| `components/fun/LeaderLabel.tsx` | The house annotation device the prompts are built from. |
 | `components/fun/FirstPerson.tsx` | WASD, collision, head bob. Writes the camera position **every frame it is enabled**, `y` included — anything else that moves the camera has to switch it off first. |
 | `components/fun/props.tsx` | Scanned glTF prop loader (`Prop`). |
-| `components/fun/textures.ts` | PBR surface loader (`useSurface`). |
+| `components/materials/surface.ts` | PBR surface loader (`useSurface`), shared with the shelf and the bench. |
+| `components/materials/StudyEnvironment.tsx` | The site's IBL. Shared with the shelf, the bench and the resume object. |
+| `components/materials/oak.ts` | `OAK` tints, so every oak surface on the site is the same plank. |
 | `components/fun/shelf.ts` | Shared data types for shelf and career. |
 
-Assets: `public/textures/fun/` (3.1MB), `public/models/fun/` (3.4MB), `public/icons/social/`.
+Assets: `public/textures/shelf/` (390KB, shared with the home page), `public/textures/fun/` (48KB),
+`public/models/fun/` (2.9MB), `public/icons/social/`. A cold `/fun` measures about 3.2MB of assets.
+No HDRI ships — `StudyEnvironment` builds the probe from two `Lightformer`s at no byte cost.
 
 ---
 
@@ -132,11 +144,14 @@ accident; the services leaflets drop their bullets and link out to the section i
 
 ### A new device in the sideboard
 
-Add the model to `Devices.tsx`, add its entry to `HARDWARE` in `hardware.ts` **copied from the
-README hardware tables**, and wrap the placement in `<Inspectable hw={HARDWARE.x}>`. The README
-is the source of truth — the room must never claim hardware the README does not. If a device has
-no README row, leave `specs: []` and set `unlisted: true`; the card then says so instead of
-inventing numbers.
+Add the model to `Devices.tsx`, add its entry to `DEVICES` in `content/hardware.ts` **copied from
+the README hardware tables**, and wrap the placement in `<Inspectable hw={DEVICE.x}>`. The README
+is the source of truth — the room must never claim hardware the README does not.
+
+That file is shared with `/infrastructure`, which renders every entry as a chip and stakes its
+premise on the claims being checkable. A device with no README row therefore does **not** go in
+it: declare it local to `Devices.tsx` with `unlisted: true`, the way `FLEX_MINI` is, and the card
+says so instead of inventing numbers.
 
 ### A new terminal command
 
@@ -168,6 +183,12 @@ the shelf lays out from array length and grows its own height, and the social wa
 ---
 
 ## Rules learned the hard way
+
+**Furniture is placed in plan space, and its collision box is placed twice.** Every piece in
+`Room.tsx` is positioned with `at(x, y, z)` in plan metres, and every solid one needs a matching
+entry in `BLOCKERS` in `FirstPerson.tsx`. The walls are derived from `wallBoxes()` so they cannot
+drift, but the furniture is not — check a new piece both ways. Rotating a piece swaps its half
+extents, which is how a 2m bed ended up through the bedroom wall.
 
 **Anything meant to be looked at must present a face to the room.** A horizontal surface is only
 targetable from directly above, which no standing visitor is. Certificates modelled as a flat

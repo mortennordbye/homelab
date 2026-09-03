@@ -1,12 +1,15 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Lightformer, RoundedBox, useTexture } from "@react-three/drei";
+import { RoundedBox } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { StudyEnvironment } from "@/components/materials/StudyEnvironment";
+import { useSurface, type Surface } from "@/components/materials/surface";
+import { OAK } from "@/components/materials/oak";
 import { FirstFrame } from "@/components/scene/FirstFrame";
-import type { NodeState } from "./hardware";
-import { HOSTS } from "./hardware";
+import type { NodeState } from "@/content/hardware";
+import { HOSTS } from "@/content/hardware";
 
 /**
  * The homelab as it actually stands: a BESTÅ at its real 180 x 42 x 38 with
@@ -44,33 +47,6 @@ type NodeStatus = "ready" | "notReady" | "unschedulable";
 /* -------------------------------------------------------------------------
    Surfaces
 ------------------------------------------------------------------------- */
-
-function useSurface(name: string, repeat: [number, number]) {
-  const loaded = useTexture([
-    `/textures/shelf/${name}_diff.webp`,
-    `/textures/shelf/${name}_nor.webp`,
-    `/textures/shelf/${name}_arm.webp`,
-  ]) as THREE.Texture[];
-
-  return useMemo(() => {
-    const prep = (src: THREE.Texture, colour: boolean) => {
-      const t = src.clone();
-      t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.repeat.set(repeat[0], repeat[1]);
-      t.colorSpace = colour ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-      t.anisotropy = 8;
-      t.needsUpdate = true;
-      return t;
-    };
-    // metalness is deliberately not fed from the ARM map: its blue channel
-    // turns the veneer into foil.
-    return {
-      map: prep(loaded[0], true),
-      normalMap: prep(loaded[1], false),
-      roughnessMap: prep(loaded[2], false),
-    };
-  }, [loaded, repeat[0], repeat[1]]); // eslint-disable-line react-hooks/exhaustive-deps
-}
 
 /**
  * A perforated panel as a texture rather than geometry. The Tiny's front is
@@ -838,8 +814,6 @@ function Zigbee() {
    The cabinet and everything in it
 ------------------------------------------------------------------------- */
 
-type Surface = { map: THREE.Texture; normalMap: THREE.Texture; roughnessMap: THREE.Texture };
-
 function Slab({ args, position, surface }: {
   args: [number, number, number];
   position: [number, number, number];
@@ -850,7 +824,7 @@ function Slab({ args, position, surface }: {
       <boxGeometry args={args} />
       <meshStandardMaterial
         {...surface}
-        color="#54422f"
+        color={OAK.carcass}
         normalScale={new THREE.Vector2(0.8, 0.8)}
         envMapIntensity={0.06}
       />
@@ -873,7 +847,7 @@ function Bench() {
         <boxGeometry args={[BENCH_W, BENCH_H, PANEL]} />
         <meshStandardMaterial
           {...inner}
-          color="#33281d"
+          color={OAK.back}
           normalScale={new THREE.Vector2(0.7, 0.7)}
           envMapIntensity={0.04}
         />
@@ -1178,18 +1152,7 @@ export default function BenchScene({ feed, selected, onSelect, onReady }: {
       style={{ width: "100%", height: "100%" }}
     >
       <Suspense fallback={null}>
-        {/* Brass at metalness 1 with nothing to reflect is dull brown plastic.
-            Two warm lightformers stand in for an interior HDRI at no asset
-            cost, exactly as the portfolio shelf does. Kept dim: the large matte
-            surfaces take almost none of it via their own envMapIntensity. */}
-        <Environment resolution={128} frames={1}>
-          <Lightformer intensity={0.9} color="#ffd9a8" position={[-4, 3, 3]} scale={[8, 8, 1]} />
-          <Lightformer intensity={0.22} color="#6f9c72" position={[5, -1, 2]} scale={[6, 6, 1]} />
-          <mesh scale={60}>
-            <sphereGeometry args={[1, 12, 12]} />
-            <meshBasicMaterial color="#1a140d" side={THREE.BackSide} />
-          </mesh>
-        </Environment>
+        <StudyEnvironment scale={60} />
         <Lights dim={selected !== null} />
         <Framing />
         <Breath />
