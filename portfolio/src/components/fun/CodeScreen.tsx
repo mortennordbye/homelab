@@ -1,9 +1,10 @@
 "use client";
 
 import { Html } from "@react-three/drei";
+import { site } from "@/content/site";
 import type { SourceExcerpt } from "@/lib/source-excerpt";
 import { ACCENT, type PanelProps } from "./Panels";
-import { relative } from "./feed";
+import { relative, useRepos, type Repo } from "./feed";
 import { Housing, PANEL_PX_H, PANEL_PX_W, distanceFactor } from "./Screen";
 
 /**
@@ -79,12 +80,12 @@ function Line({ text }: { text: string }) {
  * / OutOfSync, Healthy / Degraded, per-application rows) from the same feed the
  * television reads, so what it shows is true even though the chrome is ours.
  *
- * The publisher does not emit per-application data in production yet, only the
- * root application's rollup. When `apps` is missing this says so and falls back
- * to that rollup rather than drawing an empty list that looks like "no apps".
+ * The per-application list can be absent — a stale or failed publish leaves
+ * only the root application's rollup. Keep the fallback: an empty list drawn
+ * without comment reads as "no apps", which is a different claim entirely.
  */
 function ArgoView({ data }: { data: PanelProps }) {
-  const apps = data.status?.apps ?? [];
+  const apps = data.status?.gitops?.applications?.list ?? [];
   const rootSynced = data.argocd.sync === "Synced";
   const rootHealthy = data.argocd.health === "Healthy";
 
@@ -159,8 +160,70 @@ function ArgoView({ data }: { data: PanelProps }) {
   );
 }
 
-/** The two things the desk monitor can show. */
-export type Tab = "code" | "argocd";
+/**
+ * The pinned repositories.
+ *
+ * They were a cork board on the living room wall with four cards pinned to it.
+ * A browser on the desk is where a repository is actually looked at, and it
+ * costs the room one wall object and no content: the board's four cards are
+ * these four rows, with the description and the counts intact.
+ *
+ * Chrome is ours rather than GitHub's. Rendering someone else's interface at
+ * this fidelity claims a screenshot; the row of name, language and stars is
+ * GitHub's vocabulary without pretending to be its page.
+ */
+function ReposView({ repos }: { repos: Repo[] }) {
+  if (!repos.length) {
+    return (
+      <div
+        className="flex h-full w-full items-center justify-center"
+        style={{ color: "#516154", fontSize: "11px" }}
+      >
+        repositories unavailable
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full w-full flex-col" style={{ fontSize: "11px" }}>
+      {repos.map((r) => (
+        <div
+          key={r.url}
+          style={{ padding: "8px 12px", borderBottom: "1px solid #141d15" }}
+        >
+          <div className="flex items-baseline" style={{ gap: "10px" }}>
+            <span style={{ color: "#8fb6d8" }}>{r.name}</span>
+            {r.language && (
+              <span style={{ color: "#627365", fontSize: "9px" }}>{r.language}</span>
+            )}
+            <span style={{ flex: 1 }} />
+            <span style={{ color: ACCENT.amber, fontSize: "10px" }}>
+              &#9733; {r.stars}
+            </span>
+            <span style={{ color: "#627365", fontSize: "10px" }}>
+              &#9282; {r.forks}
+            </span>
+          </div>
+          {r.description && (
+            <div
+              style={{
+                color: "#7f8f82",
+                fontSize: "10px",
+                lineHeight: 1.35,
+                marginTop: "4px",
+              }}
+            >
+              {r.description}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** The three things the desk monitor can show. */
+export type Tab = "code" | "argocd" | "repos";
 
 export function CodeScreen({
   source,
@@ -186,6 +249,7 @@ export function CodeScreen({
 }) {
   const h = width * (PANEL_PX_H / PANEL_PX_W);
   const shown = source.lines.length;
+  const repos = useRepos();
 
   return (
     <group position={position} rotation={rotation}>
@@ -226,6 +290,7 @@ export function CodeScreen({
               [
                 ["code", "deployment.yaml"],
                 ["argocd", "ArgoCD"],
+                ["repos", "github"],
               ] as [Tab, string][]
             ).map(([id, label]) => (
               <span
@@ -253,12 +318,16 @@ export function CodeScreen({
                 ? shown
                   ? `${shown} of ${source.total} lines`
                   : "source unavailable"
-                : "live from the cluster"}
+                : tab === "repos"
+                  ? `github.com/${site.github}`
+                  : "live from the cluster"}
             </span>
           </div>
 
           {tab === "argocd" ? (
             <ArgoView data={data} />
+          ) : tab === "repos" ? (
+            <ReposView repos={repos} />
           ) : (
           <div style={{ padding: "6px 10px", whiteSpace: "pre", overflow: "hidden" }}>
             {source.lines.map((l, i) => (

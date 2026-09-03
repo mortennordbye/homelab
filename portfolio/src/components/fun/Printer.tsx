@@ -1,7 +1,7 @@
 "use client";
 
 import { Html, RoundedBox } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { DEFAULT_FLAGS, type ToggleFlags } from "@/content/cv-variants";
@@ -125,6 +125,7 @@ export function Printer({
   const [printing, setPrinting] = useState(false);
   const paper = useRef<THREE.Group>(null);
   const feed = useRef(0);
+  const gl = useThree((state) => state.gl);
 
   // Same manifest the popover uses. Fetched once when the room loads.
   useEffect(() => {
@@ -179,6 +180,10 @@ export function Printer({
   useFrame((_, d) => {
     if (!paper.current) return;
     const target = printing ? 1 : 0;
+    /* Settled: nothing to move, and nothing to redraw. The shadow map is off
+       auto (see Lighting in FunRoom), so a caster that moves has to ask. */
+    if (Math.abs(target - feed.current) < 0.0005) return;
+    gl.shadowMap.needsUpdate = true;
     feed.current = THREE.MathUtils.damp(feed.current, target, printing ? 3.2 : 7, d);
     paper.current.position.z = 0.16 + feed.current * 0.2;
     paper.current.position.y = 0.052 - feed.current * 0.012;

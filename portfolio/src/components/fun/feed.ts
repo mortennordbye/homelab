@@ -4,10 +4,16 @@ import { useEffect, useState } from "react";
 import { statusSnapshot } from "@/content/infrastructure";
 
 /**
- * Shape served by /api/v1/infra. The first block is what the publisher writes
- * today; `apps`, `capacity` and `certs` are the phase-3 additions from
- * docs/ops-center-plan.md section 7 and are all optional — in production they
- * are absent right now, so every consumer must handle undefined.
+ * Shape served by /api/v1/infra, as the room reads it. Only the fields the
+ * room actually consumes are modelled; the publisher writes more.
+ *
+ * Every field below the first block stays optional. The publisher is a CronJob
+ * on a five-minute schedule, so a fresh cluster, a failed Prometheus query or
+ * a rolled-back publisher all present as absence rather than as an error, and
+ * a panel that cannot say something true has to say nothing.
+ *
+ * Paths match the publisher's own grouping. Do not flatten them: a top-level
+ * `apps` exists in the payload and is the KEDA sleeper rollup, not this list.
  */
 export type ClusterStatus = {
   generatedAt?: string;
@@ -20,7 +26,21 @@ export type ClusterStatus = {
   history?: { d: string; ok: number; total: number }[];
   source?: string;
 
-  apps?: { name: string; sync: string; health: string }[];
+  gitops?: {
+    applications?: {
+      total?: number;
+      synced?: number;
+      healthy?: number;
+      list?: { name: string; sync: string; health: string }[];
+    };
+  };
+  security?: {
+    certs?: {
+      total?: number;
+      nextExpiry?: string;
+      list?: { name: string; daysLeft: number }[];
+    };
+  };
   capacity?: {
     cpuRequested: number;
     cpuAllocatable: number;
@@ -29,7 +49,6 @@ export type ClusterStatus = {
     pods: number;
     podCapacity: number;
   };
-  certs?: { name: string; daysLeft: number }[];
 };
 
 export type FeedState = "loading" | "live" | "snapshot";
@@ -142,4 +161,39 @@ export function useInfraFeed() {
     /** A green light on old data is a lie: never "operational" when stale. */
     ok: healthy && !stale && feed === "live",
   };
+}
+
+export type Repo = {
+  name: string;
+  description: string | null;
+  language: string | null;
+  stars: number;
+  forks: number;
+  url: string;
+};
+
+/**
+ * The pinned repositories, from `/api/v1/github`. The names live in
+ * `content/repos.ts`; everything else on them is live.
+ *
+ * An empty list is the correct failure and every consumer has to render it as
+ * one: the room does not invent projects it could not fetch.
+ */
+export function useRepos(): Repo[] {
+  const [repos, setRepos] = useState<Repo[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/v1/github")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((j: { repos?: Repo[] }) => {
+        if (!cancelled) setRepos((j.repos ?? []).slice(0, 4));
+      })
+      .catch(() => {
+        if (!cancelled) setRepos([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return repos;
 }

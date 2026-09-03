@@ -2,18 +2,19 @@
 
 import { MeshReflectorMaterial, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
-import { BlogBoard } from "./BlogBoard";
 import { Bookshelf, shelfHeight } from "./Bookshelf";
-import { GithubWall } from "./GithubWall";
+import { PrintedPosts } from "./PrintedPosts";
+import { ALCOVE, BENCH_TOP, Hallway } from "./Hallway";
+import { Outside } from "./Outside";
 import { SIDEBOARD_TV, Sideboard, type Inspected } from "./Devices";
 import type { InfoCard } from "./Hud";
 import {
-  CareerFrame,
   ContactCard,
+  DeskNotebook,
+  FridgeMagnets,
   GymBag,
-  ServiceRack,
-  SkillPlate,
-  SocialWall,
+  PhotoAlbum,
+  ServiceLeaflets,
 } from "./Objects";
 import { DASH_PX_H, DASH_PX_W } from "./Screen";
 import { Printer } from "./Printer";
@@ -28,8 +29,10 @@ import { FLAT, MARKS, at, centreOf, doorOpenings, px, pz, wallBoxes } from "./fl
 import {
   BathMat,
   Bed,
+  Curtains,
+  DiningTable,
+  WALNUT,
   Extractor,
-  Fan,
   FridgeColumn,
   Hob,
   KitchenRun,
@@ -49,6 +52,8 @@ import {
   WallUnits,
   WashingMachine,
   WaterTank,
+  WoodChair,
+  WoodStove,
 } from "./Furniture";
 
 // The flat, not a single room. Geometry and collision are both built from the
@@ -56,10 +61,10 @@ import {
 // and forgetting the other.
 export const ROOM = FLAT;
 
-/** The three switchable fittings in the living room, each with its own switch.
+/** The four switchable sources in the living room, each with its own switch.
  *  The point lights that are not fittings — the lantern's ceiling bounce and
  *  the per-room fills — are not keys here. See the rig in FunRoom. */
-export type LightKey = "lantern" | "desk" | "shelf";
+export type LightKey = "lantern" | "desk" | "shelf" | "stove";
 export type Lights = Record<LightKey, boolean>;
 
 /** Height of the dado rail. Every wall-mounted object in the flat hangs at
@@ -77,8 +82,10 @@ const HEAD = 2.15;
  * tinted plane takes light identically at every point and stops reading as a
  * material.
  *
- * `windows` are spans in the wall's own width, centred like the geometry, and
- * the plaster above the rail is built as the pieces between them.
+ * `windows` and `alcoves` are spans in the wall's own width, centred like the
+ * geometry. A window is a hole in the plaster above the rail, so the panelling
+ * and the rail run past it; an alcove is a hole all the way to the floor, so it
+ * cuts those too and the joinery meets its reveals instead of dying into them.
  *
  * Offsets are written as "into the room" (local +z), never as a raw axis: each
  * wall is rotated to face inward, so a signed world offset flips on two of them.
@@ -90,6 +97,7 @@ function Wall({
   panel,
   plaster,
   windows = [],
+  alcoves = [],
 }: {
   width: number;
   position: [number, number, number];
@@ -97,31 +105,39 @@ function Wall({
   panel: Surface;
   plaster: Surface;
   windows?: [number, number][];
+  alcoves?: [number, number][];
 }) {
   const half = width / 2;
   const upper = ROOM.h - DADO;
 
-  // The solid plaster between the openings, plus the strip over each of them.
-  const piers: [number, number][] = [];
-  let cursor = -half;
-  for (const [w0, w1] of [...windows].sort((a, b) => a[0] - b[0])) {
-    if (w0 > cursor) piers.push([cursor, w0]);
-    cursor = w1;
-  }
-  if (cursor < half) piers.push([cursor, half]);
+  // The solid pieces left between a set of openings.
+  const spans = (cuts: [number, number][]) => {
+    const out: [number, number][] = [];
+    let cursor = -half;
+    for (const [c0, c1] of [...cuts].sort((a, b) => a[0] - b[0])) {
+      if (c0 > cursor) out.push([cursor, c0]);
+      cursor = c1;
+    }
+    if (cursor < half) out.push([cursor, half]);
+    return out;
+  };
+  const lower = spans(alcoves);
+  const piers = spans([...windows, ...alcoves]);
 
   return (
     <group position={position} rotation={rotation}>
-      <mesh position={[0, DADO / 2, 0]} receiveShadow>
-        <planeGeometry args={[width, DADO]} />
-        <meshStandardMaterial
-          {...panel}
-          color={OAK.carcass}
-          roughness={0.74}
-          metalness={0}
-          normalScale={[0.7, 0.7]}
-        />
-      </mesh>
+      {lower.map(([p0, p1]) => (
+        <mesh key={p0} position={[(p0 + p1) / 2, DADO / 2, 0]} receiveShadow>
+          <planeGeometry args={[p1 - p0, DADO]} />
+          <meshStandardMaterial
+            {...panel}
+            color={OAK.carcass}
+            roughness={0.74}
+            metalness={0}
+            normalScale={[0.7, 0.7]}
+          />
+        </mesh>
+      ))}
 
       {piers.map(([p0, p1], i) => (
         <mesh key={i} position={[(p0 + p1) / 2, DADO + upper / 2, 0]} receiveShadow>
@@ -153,19 +169,19 @@ function Wall({
         </group>
       ))}
 
-      <mesh position={[0, DADO + 0.015, 0.014]} receiveShadow>
-        <boxGeometry args={[width, 0.03, 0.028]} />
-        <meshStandardMaterial color={OAK.case} roughness={0.5} metalness={0} />
-      </mesh>
+      {lower.map(([p0, p1]) => (
+        <mesh key={p0} position={[(p0 + p1) / 2, DADO + 0.015, 0.014]} receiveShadow>
+          <boxGeometry args={[p1 - p0, 0.03, 0.028]} />
+          <meshStandardMaterial color={OAK.case} roughness={0.5} metalness={0} />
+        </mesh>
+      ))}
     </group>
   );
 }
 
 /**
- * A window in a wall's local frame: the night outside, the glass, a lining and
- * a sill. What is beyond it is cold and blue, which is the whole reason the
- * fill in this flat is the cool one — the warmth of the lamps is a
- * relationship with this, not a value.
+ * A window in a wall's local frame: the view outside, the glass, a lining and
+ * a sill.
  */
 function Window({ x0, x1 }: { x0: number; x1: number }) {
   const w = x1 - x0;
@@ -176,21 +192,18 @@ function Window({ x0, x1 }: { x0: number; x1: number }) {
 
   return (
     <group position={[cx, cy, 0]}>
-      {/* Oslo at nine in the evening, a little way behind the glass so the
-          reveal has something to cast onto. */}
-      <mesh position={[0, 0, -0.22]}>
-        <planeGeometry args={[w + 0.5, h + 0.5]} />
-        <meshBasicMaterial color="#0d1a1e" />
-      </mesh>
-      {/* glass: dark, smooth and reflective rather than transparent, so it
-          takes the lamps back into the room instead of being a hole */}
+      {/* Glass, mostly transparent now that there is a view to carry, but kept
+          reflective: a window that is only a hole stops taking the lamps back
+          into the room, which is what made it read as glazing at night. */}
       <mesh position={[0, 0, -0.02]}>
         <planeGeometry args={[w, h]} />
         <meshStandardMaterial
-          color="#121e21"
-          roughness={0.08}
-          metalness={0.6}
-          envMapIntensity={1.4}
+          color="#1b2a2e"
+          roughness={0.32}
+          metalness={0.22}
+          envMapIntensity={0.55}
+          transparent
+          opacity={0.22}
         />
       </mesh>
 
@@ -234,6 +247,10 @@ function Partition({
 }) {
   const w = box.hx * 2;
   const d = box.hz * 2;
+  /* Which axis is the wall's thickness: x on a run down the plan, z on a run
+     across it. The capping rail has to grow along that one to stand proud of
+     the faces. */
+  const thin = box.hx < box.hz;
   return (
     <group position={[box.x, 0, box.z]}>
       <mesh position={[0, DADO / 2, 0]} receiveShadow>
@@ -244,9 +261,12 @@ function Partition({
         <boxGeometry args={[w, FLAT.h - DADO, d]} />
         <meshStandardMaterial {...plaster} color="#241a12" roughness={0.96} metalness={0} normalScale={[0.42, 0.42]} />
       </mesh>
-      {/* the rail runs round both faces, so it is wider than the wall */}
+      {/* The rail runs round both faces, so it is proud of the wall — grown
+          along the fixed axis instead it came out proud at the run's two ends
+          and dead flush with its faces, sharing their plane the whole length
+          of the run: a 30mm line that flickered along the kitchen wall. */}
       <mesh position={[0, DADO + 0.015, 0]} receiveShadow>
-        <boxGeometry args={[w, 0.03, d + 0.028]} />
+        <boxGeometry args={[thin ? w + 0.028 : w, 0.03, thin ? d : d + 0.028]} />
         <meshStandardMaterial color={OAK.case} roughness={0.5} metalness={0} />
       </mesh>
     </group>
@@ -282,6 +302,27 @@ function DoorLining({ box, horizontal }: { box: Box; horizontal: boolean }) {
  *  the cabinet. The rig hangs its sources off this so the fitting and the
  *  light it casts cannot drift apart. */
 export const LANTERN = { x: px(0.5), z: pz(2.9) };
+
+/**
+ * The wood stove, mid-way along the west wall between the cabinet and the
+ * desk, and the small table in the corner between the stove and the desk,
+ * where the flat has it. Both are exported because the rig hangs the firelight
+ * off `STOVE.fire` and `FirstPerson` blocks the two footprints: a fire that
+ * glows off its own stove, or a table you walk through, is what writing these
+ * numbers out twice buys.
+ *
+ * The stove sits 0.13 north of the middle of its wall run, and that offset is
+ * the table's: it is what makes the clear wall between the chimney breast and
+ * the desk 1.14m instead of 1.01m, which is the difference between a table two
+ * chairs fit at and a side table two chairs crowd. Move the stove back to the
+ * middle and the table has to shrink with it.
+ */
+export const STOVE = {
+  x: px(0.42),
+  z: pz(3.77),
+  fire: { x: px(0.56), y: 0.62, z: pz(3.77) },
+};
+export const TABLE = { x: px(0.51), z: pz(4.495) };
 
 /**
  * The desk, on the blue mark: against the south wall in the south-west corner.
@@ -760,6 +801,24 @@ export function Room({
 
   return (
     <group>
+      {/* The coat alcove's own floor and ceiling. It is outside the flat's
+          rectangle, so neither of the two planes below reaches it. */}
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={at(ALCOVE.x + ALCOVE.d / 2, 0.001, (ALCOVE.z0 + ALCOVE.z1) / 2)}
+        receiveShadow
+      >
+        <planeGeometry args={[ALCOVE.d, ALCOVE.z1 - ALCOVE.z0]} />
+        <meshStandardMaterial {...floorOak} color={OAK.case} roughness={0.9} metalness={0} />
+      </mesh>
+      <mesh
+        rotation={[Math.PI / 2, 0, 0]}
+        position={at(ALCOVE.x + ALCOVE.d / 2, FLAT.h, (ALCOVE.z0 + ALCOVE.z1) / 2)}
+      >
+        <planeGeometry args={[ALCOVE.d, ALCOVE.z1 - ALCOVE.z0]} />
+        <meshStandardMaterial {...ceiling} color="#2a2018" roughness={0.98} metalness={0} />
+      </mesh>
+
       {/* floor, one plane under the whole flat */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[FLAT.w, FLAT.d]} />
@@ -794,6 +853,8 @@ export function Room({
         />
       </mesh>
 
+      <Outside />
+
       {/* perimeter */}
       {/* The north wall is the glazed one on the plan: two windows over the
           living room and one in the bedroom. Spans are plan metres shifted
@@ -812,7 +873,17 @@ export function Room({
       />
       <Wall width={FLAT.w} position={[0, 0, pz(FLAT.d)]} rotation={[0, Math.PI, 0]} panel={panelW} plaster={plasterW} />
       <Wall width={FLAT.d} position={[px(0), 0, 0]} rotation={[0, Math.PI / 2, 0]} panel={panelD} plaster={plasterD} />
-      <Wall width={FLAT.d} position={[px(FLAT.w), 0, 0]} rotation={[0, -Math.PI / 2, 0]} panel={panelD} plaster={plasterD} />
+      {/* The east wall carries the coat alcove, which is a hole in it rather
+          than a cupboard against it. Its own frame runs local +x south, so the
+          span is the plan z range of the alcove. */}
+      <Wall
+        width={FLAT.d}
+        position={[px(FLAT.w), 0, 0]}
+        rotation={[0, -Math.PI / 2, 0]}
+        panel={panelD}
+        plaster={plasterD}
+        alcoves={[[pz(ALCOVE.z0), pz(ALCOVE.z1)]]}
+      />
 
       {/* Interior partitions, built from the same list the collision boxes come
           from. Each is a solid piece of wall between the door openings. */}
@@ -852,37 +923,42 @@ export function Room({
         <Sideboard position={[0, 0, 0]} onInspect={onInspect} onOpenCard={onOpenCard} />
       </group>
 
+      {/* Curtains on the glazed wall, ceiling track to floor, drawing to the
+          sides. One pair across both living-room windows rather than a pair
+          each: the pier between them is 0.30 wide and two panels gathered
+          there would be 0.15 of cloth pretending to be a curtain.
+
+          Set 0.15 off the wall, which clears the window sills — they stand
+          0.09 proud, and a curtain in the same plane as a sill is the flicker
+          the kitchen wall had. */}
+      <Curtains position={at(1.775, 0.02, 0.15)} width={2.85} height={2.42} />
+
       {/* Green on the plan: the sofa, facing west at the television. */}
       <Sofa position={centreOf(MARKS.sofa)} rotation={[0, -Math.PI / 2, 0]} />
 
-      {/* The career timeline, over the kitchen return on the south wall. A
-          framed thing on a wall is already the shape a timeline wants. */}
-      <CareerFrame position={at(2.45, 1.74, FLAT.d - 0.06)} rotation={[0, Math.PI, 0]} career={career} onOpen={onOpenCard} />
-
-      {/* Social links above the desk, where someone sitting at it is looking. */}
-      <SocialWall position={at(DESK.x, 1.66, FLAT.d - 0.06)} rotation={[0, Math.PI, 0]} onOpen={onOpenCard} />
-
-      {/* Skills on the same wall, east of the desk and clear of the kitchen
-          run, so the south wall is not weighted entirely into one corner. */}
-      <SkillPlate position={at(3.45, 1.68, FLAT.d - 0.06)} rotation={[0, Math.PI, 0]} onOpen={onOpenCard} />
-
-      {/* The blog, on the whiteboard over the television — the wall the sofa
-          already faces, and the only one left with 1.5m clear once the kitchen
-          took the east wall. Auto-populated from the RSS feed. */}
-      <BlogBoard position={at(0.06, 1.9, 1.55)} rotation={[0, Math.PI / 2, 0]} onOpen={onOpenCard} />
-
       {/* ---------------------------------------------------------------
-          The entré: the way out, and the two objects that belong beside it.
+          The entré: the way out, and the objects that belong beside it.
           --------------------------------------------------------------- */}
 
-      {/* The pinned repositories, on the west wall between the lamp and the
-          desk corner. The north wall is glazed now, and this is the only run
-          left long enough for a 2.2m board. */}
-      <GithubWall position={at(0.06, 1.77, 4.5)} rotation={[0, Math.PI / 2, 0]} onOpen={onOpenCard} />
+      <Hallway oak={oak} />
 
-      {/* Last thing on the wall before the way out, which is where a leaflet
-          rack belongs. */}
-      <ServiceRack position={at(FLAT.w - 0.08, 1.42, 5.5)} rotation={[0, -Math.PI / 2, 0]} onOpen={onOpenCard} />
+      {/* Outside work: the gym bag, dropped on the shoe bench by the way out.
+          Set 0.01 below the cushion top, because the bag's own base is that far
+          above its origin and on the top itself it hovers over it. */}
+      <GymBag
+        position={[BENCH_TOP[0] + 0.225, BENCH_TOP[1] - 0.01, BENCH_TOP[2]]}
+        rotation={[0, -0.22, 0]}
+        onOpen={onOpenCard}
+      />
+
+      {/* The services, as post propped against the wall at the other end of the
+          bench. The outer group turns them to face the hall; the inner one
+          leans them back onto the wall, which has to be a second group rather
+          than a third Euler angle on the first — the two rotations do not
+          compose in the order that reads. */}
+      <group position={[BENCH_TOP[0] - 0.255, BENCH_TOP[1] + 0.101, BENCH_TOP[2] + 0.11]} rotation={[0, Math.PI, 0]}>
+        <ServiceLeaflets position={[0, 0, 0]} rotation={[-0.18, 0, 0]} onOpen={onOpenCard} />
+      </group>
 
       {/* The front door. A door you can walk up to and open is the obvious
           affordance, and it is the one the plan actually has. */}
@@ -976,6 +1052,14 @@ export function Room({
           onToggle={() => onToggleLight("desk")}
         />
         <ContactCard position={[-0.66, 0.758, 0.2]} onOpen={onOpenCard} />
+        {/* The skills, written down. Left of the keyboard and clear of both
+            monitor stands, which is the only stretch of desk with room for
+            something you would actually open. */}
+        <DeskNotebook
+          position={[-0.5, 0.756, -0.04]}
+          rotation={[0, 0.13, 0]}
+          onOpen={onOpenCard}
+        />
       </group>
 
 
@@ -992,9 +1076,6 @@ export function Room({
         <Chair position={[DESK_X, 0, CHAIR_Z]} />
       </Interactive>
 
-      {/* Outside work: the gym bag in the corner by the desk. */}
-      <GymBag position={at(0.42, 0, 4.5)} rotation={[0, 0.42, 0]} onOpen={onOpenCard} />
-
       {/* The lantern, beside the cabinet where the bookcase used to stand. It
           lights the television end of the room and is in view from the front
           door, which is the whole point of it. */}
@@ -1002,6 +1083,60 @@ export function Room({
 
       {/* y=0: Prop seats a model on its own base, so no manual lift. */}
       <Plant position={at(0.4, 0, 0.4)} />
+
+      {/* The wood stove on the west wall, its chimney breast standing proud to
+          the ceiling the way it does in the flat. Set 0.13 north of the middle
+          of the run so the table below it gets a wall to stand against — see
+          the note on `STOVE`. */}
+      <WoodStove
+        position={at(0.06, 0, 3.77)}
+        rotation={[0, Math.PI / 2, 0]}
+        ceiling={FLAT.h}
+        plaster={plasterD}
+        lit={lights.stove}
+        onToggle={() => onToggleLight("stove")}
+      />
+
+      {/* The small table, hard against the west wall in the 1.0m of it left
+          between the chimney breast and the desk corner — the only stretch of
+          wall it can reach, because at the stove's own z the wall is behind
+          0.74m of stove.
+
+          Long side along the wall, chairs on the two open sides: one backed
+          onto the kitchen facing the wall, one at the desk end. Both pushed
+          in, so what stands past the table edge is a crest rail.
+
+          Turned the other way: short end to the wall, long axis out into the
+          room, chairs on a long side and the far end. Along the wall it had
+          only its two short edges to seat anybody at.
+
+          0.86 out by 0.55 across, sized off its own chairs rather than off the
+          gap: a chair is 0.39 across, so on a 0.60 edge one chair took two
+          thirds of it and two of them read as a side table being crowded
+          rather than a table being laid. */}
+      <DiningTable position={[TABLE.x, 0, TABLE.z]} oak={oak} />
+      {/* On the long side nearest the desk, backed onto the office chair. Set
+          west of the table's middle, which is what keeps it out of that
+          chair. */}
+      <WoodChair
+        position={[TABLE.x - 0.09, 0, TABLE.z + 0.22]}
+        rotation={[0, Math.PI + 0.04, 0]}
+      />
+      {/* At the far end, backed onto the kitchen and facing the wall. */}
+      <WoodChair
+        position={[TABLE.x + 0.375, 0, TABLE.z]}
+        rotation={[0, -Math.PI / 2 - 0.04, 0]}
+        tone={WALNUT}
+      />
+      {/* The blog: three printouts, in a row down the table's length. Askew to
+          the table rather than square to it — the sheets stay square to each
+          other because rotating them one by one costs a flat `Html` layer
+          each. */}
+      <PrintedPosts
+        position={[TABLE.x - 0.07, 0.745, TABLE.z - 0.02]}
+        rotation={[0, 0.08, 0]}
+        onOpen={onOpenCard}
+      />
 
       {/* ---------------------------------------------------------------
           The kitchen, laid out off a photograph of the real one: one long run
@@ -1015,16 +1150,29 @@ export function Room({
           on the last bay. Wall units run over the whole of it and the strip
           under them is what actually lights this end of the room.
           --------------------------------------------------------------- */}
-      <FridgeColumn position={at(3.575, 0, 1.45)} rotation={[0, -Math.PI / 2, 0]} oak={oak} />
+      {/* The run, the column and the peninsula all sit 20mm further into what
+          they back onto than their carcass depth wants.
+          
+          Flush against the wall, a carcass back lands exactly on the wall plane
+          and the two flicker against each other the whole length of the
+          kitchen — the thin crawling line along the wall. Buried 20mm in the
+          wall's 100mm it cannot be seen and cannot fight. Same reason the
+          peninsula runs past the main run's front rather than up to it. */}
+      <FridgeColumn
+        position={at(3.595, 0, 1.45)}
+        rotation={[0, -Math.PI / 2, 0]}
+        oak={oak}
+        door={<FridgeMagnets onOpen={onOpenCard} />}
+      />
 
       {/* Five bays. Local +x points south, so a negative offset is the fridge
           end and the sink sits beside it, as drawn and as photographed. */}
-      <KitchenRun position={at(3.6, 0, 3.185)} rotation={[0, -Math.PI / 2, 0]} length={2.87} doors={5} oak={oak}>
+      <KitchenRun position={at(3.62, 0, 3.185)} rotation={[0, -Math.PI / 2, 0]} length={2.87} doors={5} bays={{ 3: "panel" }} oak={oak}>
         <Sink position={[-0.574, 0, 0]} />
         <Hob position={[0.574, 0, 0]} />
         <Oven position={[0.574, 0, 0]} />
       </KitchenRun>
-      <WallUnits position={at(3.725, 0, 3.185)} rotation={[0, -Math.PI / 2, 0]} length={2.87} doors={5} oak={oak} />
+      <WallUnits position={at(3.745, 0, 3.185)} rotation={[0, -Math.PI / 2, 0]} length={2.87} doors={5} oak={oak} />
       <Extractor position={at(3.72, 1.4, 3.759)} rotation={[0, -Math.PI / 2, 0]} />
       <Microwave position={at(3.6, 0.9, 4.333)} rotation={[0, -Math.PI / 2 + 0.12, 0]} />
 
@@ -1037,8 +1185,8 @@ export function Room({
 
           Doors face north, at the cook rather than at the sofa, and the hot
           water tank the plan marks lives inside it. */}
-      <KitchenRun position={at(2.8, 0, 4.32)} rotation={[0, Math.PI, 0]} length={1.0} doors={2} oak={oak} />
-      <WaterTank position={at(2.6, 0, 4.35)} />
+      <KitchenRun position={at(2.83, 0, 4.32)} rotation={[0, Math.PI, 0]} length={1.0} doors={2} bays={{ 1: "door" }} topDrop={0.002} oak={oak} />
+      <WaterTank position={at(2.55, 0, 4.35)} />
 
       {/* ---------------------------------------------------------------
           Soverom, laid out off a photograph of the real one. Nothing from the
@@ -1053,7 +1201,6 @@ export function Room({
       <OverbedUnits position={at(6.11, 0, 1.98)} rotation={[0, -Math.PI / 2, 0]} width={1.44} oak={oak} />
       <Bed position={at(5.3, 0, 2.0)} rotation={[0, -Math.PI / 2, 0]} />
       <Poster position={at(5.55, 1.62, 2.68)} rotation={[0, Math.PI, 0]} />
-      <Fan position={at(5.05, 0, 1.08)} rotation={[0, 0.45, 0]} />
       {/* Pulled to 0.78 of the opening, where it hangs in the photograph and
           low enough that the head still reads as glazing rather than as wall. */}
       <PleatedBlind position={at(5.1, 2.13, 0.08)} width={1.38} drop={0.86} />
@@ -1070,8 +1217,14 @@ export function Room({
 
           Porcelain is the one place white belongs in the flat.
           --------------------------------------------------------------- */}
-      <Shower position={at(4.0, 0, 2.8)} radius={0.8} />
-      <WashingMachine position={at(4.32, 0, 4.1)} rotation={[0, Math.PI, 0]} />
+      {/* 0.8 square, which is also the footprint `FirstPerson` blocks: a box
+          fills its own footprint, so unlike the quadrant it used to be there is
+          nothing over-boxed about it. */}
+      <Shower position={at(4.0, 0, 2.8)} size={0.8} />
+      {/* Tight against the shower rather than centred in the gap: the entré's
+          built-ins are hollowed out of this wall and their bulkhead now stands
+          0.32 into the room behind where it used to sit. */}
+      <WashingMachine position={at(4.32, 0, 3.95)} rotation={[0, Math.PI, 0]} />
       <Toilet position={at(6.1, 0, 3.1)} rotation={[0, -Math.PI / 2, 0]} />
       <WallCabinet position={at(6.3, 1.62, 3.06)} rotation={[0, -Math.PI / 2, 0]} />
       <Vanity position={at(6.3, 0, 3.625)} rotation={[0, -Math.PI / 2, 0]} length={0.75} />
@@ -1102,6 +1255,15 @@ export function Room({
         />
         <pointLight position={[0, 0.12, 0]} intensity={lights.shelf ? 4.2 : 0} distance={3.2} decay={1.9} color="#ffca8a" />
       </group>
+      {/* The career, in the album stood between the lamp and the printer. That
+          gap is 0.26 wide and the album is 0.21: it is the only clear stretch
+          of shelf top, and nothing on either side may grow into it. */}
+      <PhotoAlbum
+        position={[SHELF_AT[0] - 0.12, shelfHeight(shelf) + 0.15, SHELF_AT[2]]}
+        rotation={[0, Math.PI, 0]}
+        career={career}
+        onOpen={onOpenCard}
+      />
       {/* The printer, on the other end of the shelf top. */}
       <Printer
         position={[SHELF_AT[0] + 0.22, shelfHeight(shelf), SHELF_AT[2]]}

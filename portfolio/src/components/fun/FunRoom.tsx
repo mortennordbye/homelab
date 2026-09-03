@@ -28,6 +28,7 @@ import {
   ROOM,
   Room,
   SEAT,
+  STOVE,
   TV_SCREEN,
   type LightKey,
   type Lights,
@@ -112,6 +113,11 @@ const WALL_PANELS = PANELS.filter((p) => p.id !== "feed");
 /** How many things stagger on at boot: the desk monitor, then the television. */
 const POWER_STEPS = 2;
 
+/** The monitor's views, in the order it cycles them. One list, so the timer
+ *  and the E press cannot disagree about what comes next. */
+const TABS: Tab[] = ["code", "argocd", "repos"];
+const nextTab = (v: Tab): Tab => TABS[(TABS.indexOf(v) + 1) % TABS.length];
+
 function ScreenWall({
   data,
   source,
@@ -135,7 +141,7 @@ function ScreenWall({
       <Interactive
         label="the desk monitor"
         verb="switch view"
-        detail={deskTab === "code" ? "show the ArgoCD view" : "show deployment.yaml"}
+        detail={DESK_TAB_DETAIL[nextTab(deskTab)]}
         onActivate={onSwitchTab}
       >
         <CodeScreen
@@ -189,6 +195,13 @@ function Notice({
     </div>
   );
 }
+
+/** What the crosshair offers, named by the view it would switch to. */
+const DESK_TAB_DETAIL: Record<Tab, string> = {
+  code: "show deployment.yaml",
+  argocd: "show the ArgoCD view",
+  repos: "show the pinned repositories",
+};
 
 const NOTICE_BUTTON =
   "focus-ring border border-brass px-4 py-2.5 font-mono text-xs text-fg transition-colors hover:border-copper";
@@ -402,6 +415,36 @@ function SeatedFocus({
 }
 
 /** Screens are the light source, so the fill has to follow them on. */
+/**
+ * The stove. Two sines that never come back into phase, so it reads as burning
+ * rather than as a lamp on a timer, and it is the one source in the flat that
+ * is allowed to move.
+ *
+ * Cheap because it casts nothing: the shadow map is drawn on demand (see
+ * `Lighting`) and a caster that changed every frame would redraw all six faces
+ * of it every frame with it.
+ */
+function FireLight({ on }: { on: boolean }) {
+  const ref = useRef<THREE.PointLight>(null);
+  useFrame(({ clock }) => {
+    const l = ref.current;
+    if (!l) return;
+    const t = clock.elapsedTime;
+    l.intensity = on
+      ? 7.2 + Math.sin(t * 7.1) * 0.8 + Math.sin(t * 2.7 + 1.7) * 1.2
+      : 0;
+  });
+  return (
+    <pointLight
+      ref={ref}
+      position={[STOVE.fire.x, STOVE.fire.y, STOVE.fire.z]}
+      distance={5.4}
+      decay={1.8}
+      color="#ff8b3a"
+    />
+  );
+}
+
 function Lighting({
   poweredCount,
   lights,
@@ -409,12 +452,34 @@ function Lighting({
   poweredCount: number;
   lights: Lights;
 }) {
+  const gl = useThree((s) => s.gl);
+
+  /**
+   * The shadow map is drawn on demand rather than every frame.
+   *
+   * There is one shadow caster in the flat and it is a lamp bolted to the
+   * floor, so its cube map is the same six faces frame after frame — and
+   * re-rendering them was measured at 238 draw calls and 138k triangles of the
+   * 912 and 370k a frame costs, better than a quarter of the work, for a
+   * picture that never changed. A point light's shadow is cast from the light,
+   * not the eye, so walking around does not invalidate it either.
+   *
+   * What does invalidate it: these switches, and anything that moves and casts.
+   * Those ask for a redraw themselves — `useEase` in openable.tsx for every
+   * door and drawer, and the printer for its sheet. Add another moving caster
+   * and it has to do the same or it will drag a stale shadow behind it.
+   */
+  useEffect(() => {
+    gl.shadowMap.autoUpdate = false;
+    gl.shadowMap.needsUpdate = true;
+  }, [gl, lights, poweredCount]);
+
   const lit = poweredCount / POWER_STEPS;
   /* Each fitting reads its own switch. The two sources that are not
      fittings follow something else: the ceiling bounce belongs to the lantern
      that throws it, and the door-end fill is spill, so it tracks whether the
      room is lit at all rather than glowing with no source behind it. */
-  const anyOn = lights.lantern || lights.desk || lights.shelf;
+  const anyOn = lights.lantern || lights.desk || lights.shelf || lights.stove;
   return (
     <>
       {/* A room lit the way a study is at nine in the evening: nothing
@@ -462,6 +527,7 @@ function Lighting({
         decay={1.9}
         color="#ffd49a"
       />
+      <FireLight on={lights.stove} />
       {/* the mushroom lamp on the desk, the second pool of warm */}
       <pointLight
         position={[DESK_X + 0.66, 1.0, DESK_Z - 0.12]}
@@ -505,6 +571,26 @@ function Lighting({
         decay={1.6}
         color="#ffca8a"
       />
+      {/* The three north windows, as light rather than as scenery. Dusk over
+          the treeline is a real source and the only one in the flat that is
+          not a lamp, so it is cool, weak, and sits just inside the glass where
+          a window's light actually falls off from. It stays on with the lamps
+          off: the room should never go darker than the sky outside it. */}
+      {([
+        [1.075, 5.6],
+        [2.45, 5.8],
+        [5.1, 7.0],
+      ] as const).map(([x, intensity]) => (
+        <pointLight
+          key={x}
+          position={at(x, 1.68, 0.78)}
+          intensity={intensity}
+          distance={4.8}
+          decay={1.6}
+          color="#8fb4c9"
+        />
+      ))}
+
       {/* monitor spill */}
       <pointLight
         position={[DESK_X, 1.25, DESK_Z - 0.35]}
@@ -623,8 +709,9 @@ function Scene({
      already gone false by then, so without this FirstPerson would grab the
      camera mid-move and snap it to eye height. */
   const [settling, setSettling] = useState(false);
-  /* The desk monitor alternates between the manifest and the ArgoCD view.
-     Held here rather than inside CodeScreen — see the note on its `tab` prop. */
+  /* The desk monitor cycles the manifest, the ArgoCD view and the pinned
+     repositories. Held here rather than inside CodeScreen — see the note on
+     its `tab` prop. */
   const [deskTab, setDeskTab] = useState<Tab>("code");
   /* Set the first time the visitor switches the monitor themselves. The
      rotation exists so the second view is seen at all by someone who never
@@ -633,15 +720,12 @@ function Scene({
   const [deskTabPinned, setDeskTabPinned] = useState(false);
   useEffect(() => {
     if (phase !== "exploring" || deskTabPinned) return;
-    const t = setInterval(
-      () => setDeskTab((v) => (v === "code" ? "argocd" : "code")),
-      9000,
-    );
+    const t = setInterval(() => setDeskTab(nextTab), 9000);
     return () => clearInterval(t);
   }, [phase, deskTabPinned]);
   const switchDeskTab = useCallback(() => {
     setDeskTabPinned(true);
-    setDeskTab((v) => (v === "code" ? "argocd" : "code"));
+    setDeskTab(nextTab);
   }, []);
   const { camera } = useThree();
 
@@ -661,15 +745,17 @@ function Scene({
     return () => timers.forEach(clearTimeout);
   }, [phase, reduced]);
 
-  /* Stand the visitor up just inside the door, facing the desk.
+  /* Stand the visitor up just inside the door, looking down the flat.
      This runs once, behind the loading screen, so the first frame anyone sees
-     is already the view they will be walking from. There is no fly-in any more:
+     is already the view they will be walking from. Stand any further east than
+     4.2 and the bathroom's near corner takes the right third of that frame.
+     There is no fly-in any more:
      an animated approach means the first few seconds of the room are a cutscene
      you cannot steer, and it read as a screensaver rather than a place. */
   useEffect(() => {
     if (phase !== "exploring") return;
-    camera.position.set(...at(4.4, EYE, 5.2));
-    camera.lookAt(...at(0.9, 1.45, 3.6));
+    camera.position.set(...at(4.2, EYE, 5.25));
+    camera.lookAt(...at(0.06, 1.5, 4.5));
   }, [phase, camera]);
 
   return (
@@ -834,7 +920,7 @@ export default function FunRoom({
   /* Read during the first render rather than in an effect, unlike `reduced`
      below. It gates whether the Canvas mounts at all, and a Canvas that mounts
      for one frame before the gate appears has already started pulling the
-     6.5MB of textures the gate exists to ask about. Safe to touch `window`
+     megabytes of textures the gate exists to ask about. Safe to touch `window`
      here: this component is dynamic-imported with ssr:false. */
   const [coarse] = useState(() =>
     window.matchMedia("(pointer: coarse)").matches,
@@ -855,6 +941,7 @@ export default function FunRoom({
     lantern: true,
     desk: true,
     shelf: true,
+    stove: true,
   });
   const toggleLight = useCallback(
     (k: LightKey) => setLights((l) => ({ ...l, [k]: !l[k] })),
@@ -1062,7 +1149,7 @@ export default function FunRoom({
     return (
       <Notice
         title="A walkable version of this portfolio."
-        body="Drag to look around, use the stick to walk, tap an object to open it. It downloads about 6.5MB of textures and models, served straight from the cluster in Oslo, so it is worth being on wifi."
+        body="Drag to look around, use the stick to walk, tap an object to open it. It downloads about 4.7MB, served straight from the cluster in Oslo, so it is worth being on wifi."
       >
         <button
           type="button"
@@ -1195,7 +1282,7 @@ export default function FunRoom({
       <InfoPanel card={card} onClose={closeCard} />
 
       {printerStatus && (
-        <div className="pointer-events-none absolute bottom-24 left-1/2 z-20 -translate-x-1/2">
+        <div className="pointer-events-none absolute bottom-24 left-1/2 z-20 -translate-x-1/2 max-sm:bottom-[288px]">
           <LeaderLabel caption={printerStatus} />
         </div>
       )}
@@ -1216,7 +1303,7 @@ export default function FunRoom({
           it. Not shown while a card is open, which releases the pointer on
           purpose. */}
       {phase === "exploring" && !locked && !coarse && !paused && (
-        <div className="pointer-events-none absolute bottom-6 left-1/2 z-30 -translate-x-1/2">
+        <div className="pointer-events-none absolute bottom-6 left-1/2 z-30 -translate-x-1/2 max-sm:bottom-14 max-sm:left-6 max-sm:translate-x-0">
           <p
             className="font-mono text-[11px] text-fg-3"
             style={{ textShadow: "0 0 8px rgba(0,0,0,0.95)" }}

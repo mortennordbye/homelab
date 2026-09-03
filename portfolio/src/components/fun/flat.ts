@@ -35,15 +35,20 @@ export const ZONES = {
 } as const satisfies Record<string, Rect>;
 
 /**
- * An axis-aligned run of wall, with the door openings cut out of it.
- * `doors` are measured along the run from `a`, so a door does not have to be
- * re-derived when a wall moves.
+ * An axis-aligned run of wall, with the openings cut out of it.
+ * `doors` and `niches` are measured along the run from `a`, so an opening does
+ * not have to be re-derived when a wall moves.
+ *
+ * A niche is a door as far as the wall is concerned — a hole — and nothing else
+ * like one: it gets no lining, and whatever is built in it is responsible for
+ * closing the hole again, both to look at and to walk into.
  */
 export type WallRun = {
   id: string;
   a: [number, number];
   b: [number, number];
   doors?: [number, number][];
+  niches?: [number, number][];
 };
 
 /**
@@ -64,6 +69,11 @@ export const WALLS: WallRun[] = [
     a: [3.95, 4.65],
     b: [6.3, 4.65],
     doors: [[1.35, 2.15]],
+    /* The entré's built-in, hollowed out of the bathroom rather than stood in
+       the hall. It runs right up to the door opening: the jamb between them is
+       0.42 deep rather than the wall's 0.10, so `Hallway` draws it and a wall
+       piece here would be a second one inside the first. */
+    niches: [[0.05, 1.35]],
   },
 ];
 
@@ -101,49 +111,63 @@ export function rectBox(r: Rect): Box {
   };
 }
 
+/** One run cut into the solid pieces left between `cuts`. A run with two
+ *  openings yields three pieces; a run with none yields one. */
+function runBoxes(run: WallRun, cuts: [number, number][]): Box[] {
+  const horizontal = run.a[1] === run.b[1];
+  const start = horizontal ? run.a[0] : run.a[1];
+  const end = horizontal ? run.b[0] : run.b[1];
+  const fixed = horizontal ? run.a[1] : run.a[0];
+
+  const sorted = [...cuts].sort((p, q) => p[0] - q[0]);
+  let cursor = start;
+  const pieces: [number, number][] = [];
+  for (const [d0, d1] of sorted) {
+    const from = start + d0;
+    const to = start + d1;
+    if (from > cursor) pieces.push([cursor, from]);
+    cursor = to;
+  }
+  if (cursor < end) pieces.push([cursor, end]);
+
+  return pieces.map(([p0, p1]) =>
+    horizontal
+      ? {
+          x: toWorldX((p0 + p1) / 2),
+          z: toWorldZ(fixed),
+          hx: (p1 - p0) / 2,
+          hz: WALL_T / 2,
+        }
+      : {
+          x: toWorldX(fixed),
+          z: toWorldZ((p0 + p1) / 2),
+          hx: WALL_T / 2,
+          hz: (p1 - p0) / 2,
+        },
+  );
+}
+
 /**
- * Every interior wall run cut into its solid pieces. A run with two doors
- * yields three pieces; a run with none yields one.
+ * Every interior wall run cut into its solid pieces: what the meshes are built
+ * from and what the walker cannot pass. Both doors and niches are holes,
+ * because a niche has no wall in it and whatever is built there closes it
+ * again.
  */
 export function wallBoxes(): Box[] {
-  const out: Box[] = [];
-  for (const run of WALLS) {
-    const horizontal = run.a[1] === run.b[1];
-    const start = horizontal ? run.a[0] : run.a[1];
-    const end = horizontal ? run.b[0] : run.b[1];
-    const fixed = horizontal ? run.a[1] : run.a[0];
+  return WALLS.flatMap((run) => runBoxes(run, [...(run.doors ?? []), ...(run.niches ?? [])]));
+}
 
-    // Walk the run, emitting the solid gaps between the openings.
-    const cuts = [...(run.doors ?? [])].sort((p, q) => p[0] - q[0]);
-    let cursor = start;
-    const pieces: [number, number][] = [];
-    for (const [d0, d1] of cuts) {
-      const from = start + d0;
-      const to = start + d1;
-      if (from > cursor) pieces.push([cursor, from]);
-      cursor = to;
-    }
-    if (cursor < end) pieces.push([cursor, end]);
-
-    for (const [p0, p1] of pieces) {
-      out.push(
-        horizontal
-          ? {
-              x: toWorldX((p0 + p1) / 2),
-              z: toWorldZ(fixed),
-              hx: (p1 - p0) / 2,
-              hz: WALL_T / 2,
-            }
-          : {
-              x: toWorldX(fixed),
-              z: toWorldZ((p0 + p1) / 2),
-              hx: WALL_T / 2,
-              hz: (p1 - p0) / 2,
-            },
-      );
-    }
-  }
-  return out;
+/**
+ * The same runs as far as a line of sight is concerned: doors are holes,
+ * niches are not.
+ *
+ * A niche is closed by the joinery in it, so you can no more see through one
+ * than through the wall it was cut from. This is the list the look-at-and-press
+ * ray stops at, and without it the ray reaches 2.4m through any wall — which
+ * let you stand in the bathroom and open the kitchen cupboards behind it.
+ */
+export function sightBoxes(): Box[] {
+  return WALLS.flatMap((run) => runBoxes(run, run.doors ?? []));
 }
 
 /** Door openings, for the linings and casings that stand in them. */

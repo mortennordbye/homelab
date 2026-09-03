@@ -234,14 +234,19 @@ const BINDS: Bind[] = [
   { keys: <Kbd>H</Kbd>, action: "hide these" },
 ];
 
+/** Below sm the bottom-left corner stacks: the look-around hint, then this
+ *  card above it. Side by side they overlap, and the overlap is silent. */
 export function Keybinds({ visible }: { visible: boolean }) {
   return (
     <div
-      className={`pointer-events-none absolute bottom-6 left-6 transition-opacity duration-200 ${
+      className={`pointer-events-none absolute bottom-6 left-6 transition-opacity duration-200 max-sm:bottom-24 ${
         visible ? "opacity-100" : "opacity-0"
       }`}
     >
-      <div className="px-1 py-1">
+      {/* The card floats over whatever the room puts behind it, and the desk
+          lamp is directly behind it from the chair. Shadowed as a whole rather
+          than with textShadow, so the key chips' borders survive too. */}
+      <div className="px-1 py-1" style={{ filter: "drop-shadow(0 0 6px rgba(0,0,0,0.95)) drop-shadow(0 0 14px rgba(0,0,0,0.8))" }}>
         <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-fg-3">
           controls
         </p>

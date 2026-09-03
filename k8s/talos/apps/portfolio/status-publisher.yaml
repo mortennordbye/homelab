@@ -187,6 +187,15 @@ spec:
                   LAST_NAME=$(jq -r '.metadata.name // empty' /tmp/last.json)
                   LAST_AT=$(jq -r '.status.operationState.finishedAt // empty' /tmp/last.json)
 
+                  # Per-application rows. The room's desk monitor and its
+                  # shell both draw this list; without it they fall back to the
+                  # root rollup and say so.
+                  APP_LIST=$(jq -c '[.items[] | {
+                    name: .metadata.name,
+                    sync: (.status.sync.status // "Unknown"),
+                    health: (.status.health.status // "Unknown")
+                  }] | sort_by(.name)' /tmp/apps.json)
+
                   jq '.items[] | select(.metadata.name=="portfolio") | .status' /tmp/apps.json > /tmp/app.json
                   SYNC=$(jq -r '.sync.status // "Unknown"' /tmp/app.json)
                   HEALTH=$(jq -r '.health.status // "Unknown"' /tmp/app.json)
@@ -218,6 +227,11 @@ spec:
                   CERT_TOTAL=$(jq '.items | length' /tmp/certs.json)
                   CERT_NEXT=$(jq -r '[.items[].status.notAfter // empty] | sort | first // empty' /tmp/certs.json)
                   NOT_AFTER=$(jq -r '.items[] | select(.metadata.name=="nordbye-it") | .status.notAfter // empty' /tmp/certs.json)
+                  CERT_LIST=$(jq -c --argjson now "$(date -u +%s)" '[.items[]
+                    | select(.status.notAfter)
+                    | {name: .metadata.name,
+                       daysLeft: (((.status.notAfter | fromdateiso8601) - $now) / 86400 | floor)}]
+                    | sort_by(.daysLeft)' /tmp/certs.json)
 
                   kubectl get pvc -A -o json > /tmp/pvc.json
                   VOLUMES=$(jq '.items | length' /tmp/pvc.json)
@@ -227,7 +241,38 @@ spec:
                       elif endswith("Mi") then (rtrimstr("Mi") | tonumber / 1024)
                       else 0 end] | add | round' /tmp/pvc.json)
 
-                  PODS=$(kubectl get pods -A --field-selector=status.phase=Running -o name | wc -l | tr -d ' ')
+                  kubectl get pods -A -o json > /tmp/pods.json
+                  PODS=$(jq '[.items[] | select(.status.phase=="Running")] | length' /tmp/pods.json)
+
+                  # What the scheduler has committed, against what the nodes
+                  # offer. Container requests only: an init container's
+                  # reservation is released before the pod is running.
+                  CAPACITY=$(jq -n --slurpfile pods /tmp/pods.json --slurpfile nodes /tmp/nodes.json '
+                    def cpu: if . == null then 0
+                             elif type == "string" then
+                               (if endswith("m") then (rtrimstr("m") | tonumber / 1000) else tonumber end)
+                             else . end;
+                    def mem: if . == null then 0
+                             elif type == "string" then
+                               (if endswith("Ki") then (rtrimstr("Ki") | tonumber * 1024)
+                                elif endswith("Mi") then (rtrimstr("Mi") | tonumber * 1048576)
+                                elif endswith("Gi") then (rtrimstr("Gi") | tonumber * 1073741824)
+                                elif endswith("Ti") then (rtrimstr("Ti") | tonumber * 1099511627776)
+                                else tonumber end)
+                             else . end;
+                    def gib: . / 1073741824 | round;
+                    def dec: . * 10 | round | . / 10;
+                    ($pods[0].items
+                      | map(select(.status.phase == "Running" or .status.phase == "Pending"))) as $live
+                    | ($nodes[0].items) as $n
+                    | {
+                        cpuRequested: ([$live[].spec.containers[].resources.requests.cpu | cpu] | add // 0 | dec),
+                        cpuAllocatable: ([$n[].status.allocatable.cpu | cpu] | add // 0 | dec),
+                        memRequestedGi: ([$live[].spec.containers[].resources.requests.memory | mem] | add // 0 | gib),
+                        memAllocatableGi: ([$n[].status.allocatable.memory | mem] | add // 0 | gib),
+                        pods: ($live | length),
+                        podCapacity: ([$n[].status.capacity.pods | tonumber] | add // 0)
+                      }')
                   SECRETS=$(kubectl get externalsecrets -A -o name | wc -l | tr -d ' ')
                   POLICIES=$(kubectl get ciliumnetworkpolicies -A -o name | wc -l | tr -d ' ')
 
@@ -277,6 +322,9 @@ spec:
                     --argjson appHealthy "$APP_HEALTHY" \
                     --arg lastName "$LAST_NAME" \
                     --arg lastAt "$LAST_AT" \
+                    --argjson appList "$APP_LIST" \
+                    --argjson certList "$CERT_LIST" \
+                    --argjson capacity "$CAPACITY" \
                     --argjson syncs24h "$(num "$SYNCS_24H")" \
                     --argjson syncs30d "$(num "$SYNCS_30D")" \
                     --slurpfile tiles /tmp/tiles.json \
@@ -316,7 +364,12 @@ spec:
                       versions: {kubernetes: $k8s, talos: $talos},
                       cert: {notAfter: $notAfter},
                       gitops: {
-                        applications: {total: $appTotal, synced: $appSynced, healthy: $appHealthy},
+                        applications: {
+                          total: $appTotal,
+                          synced: $appSynced,
+                          healthy: $appHealthy,
+                          list: $appList
+                        },
                         syncs24h: ($syncs24h | i),
                         syncs30d: ($syncs30d | i),
                         lastSync: {name: $lastName, at: $lastAt}
@@ -333,7 +386,7 @@ spec:
                         networkPolicies: $policies,
                         policyMode: "audit",
                         syscalls24h: ($syscalls | i),
-                        certs: {total: $certTotal, nextExpiry: $certNext}
+                        certs: {total: $certTotal, nextExpiry: $certNext, list: $certList}
                       },
                       resources: {
                         cpu: {used: ($cpuUsed | r(100)), allocatable: ($cpuAlloc | r(100))},
@@ -350,7 +403,8 @@ spec:
                         requests24h: ($requests | i),
                         errors5xx24h: ($errors | i)
                       },
-                      storage: {volumes: $volumes, claimedGiB: $claimedGiB}
+                      storage: {volumes: $volumes, claimedGiB: $claimedGiB},
+                      capacity: $capacity
                     }' > /tmp/new.json
 
                   # Fold this run into today's uptime bucket, keep 30 days.

@@ -37,7 +37,7 @@ const BAY = 0.32;
 const INNER_W = UNIT.w - BOARD * 2;
 const GAP = 0.012;
 
-/** Muted spines that sit with the oak and sage rather than fighting them. */
+/** Muted spines that sit with the oak and the dark walls rather than fighting them. */
 const SPINES = [
   "#6b5344",
   "#4f5f52",

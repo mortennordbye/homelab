@@ -63,14 +63,14 @@ All under `portfolio/src/`.
 | `components/fun/FunRoom.tsx` | Scene composition, lighting, post-processing, HUD, all card state, the loading screen. The root. |
 | `components/fun/Room.tsx` | Room shell and furniture: walls, floor, desk, door, lantern, sideboard placement, object placement. Also owns `DESK_SCREEN` / `DESK_TERMINAL` / `CHAIR_Z`, because the stands and the collision boxes have to agree with them. Holds the shelf lamp's light, whose height comes from `shelfHeight(shelf)`. |
 | `components/fun/flat.ts` | The floor plan: zones, wall runs with door openings, and the plan-to-world helpers (`at`, `px`, `pz`). Placements are written in plan metres so they can be checked against the drawing. |
-| `components/fun/Furniture.tsx` | Sofa and television; the kitchen: runs, fridge column, wall units, sink, hob, oven, extractor, microwave; the bedroom: bed, mirrored wardrobe, over-bed units, fan, poster, blind; the bathroom: quadrant shower, wall-hung WC and duct, vanity, wall cabinet, washing machine, mat. |
+| `components/fun/Furniture.tsx` | Sofa and television; the wood stove with its chimney breast, the small corner table and the spindle-back chairs at it; the kitchen: runs, fridge column, wall units, sink, hob, oven, extractor, microwave; the bedroom: bed, mirrored wardrobe, over-bed units, fan, poster, blind; the bathroom: quadrant shower, wall-hung WC and duct, vanity, wall cabinet, washing machine, mat. |
 | `components/fun/Devices.tsx` | Homelab hardware models + the sideboard. |
 | `content/hardware.ts` | Hardware names and specs, transcribed from the repo README. Shared with `/infrastructure`, so every entry must have a README row. |
 | `components/fun/Bookshelf.tsx` | Case studies as books, certificates as framed prints. Self-sizing, and the printer and the shelf lamp read their height off `shelfHeight`. |
-| `components/fun/Objects.tsx` | Social wall, contact card, gym bag, career frame, skills faceplate, services leaflet rack. |
+| `components/fun/Objects.tsx` | The note on the fridge door, contact card, gym bag, the career album, the desk notebook, the service leaflets. Nothing in here hangs on a wall — see the file header. |
 | `components/fun/Touch.tsx` | Phone controls. `TouchLook` (inside the Canvas **and** inside `InteractionProvider`) does drag-to-look and tap-to-activate; `TouchStick` is the DOM walk stick. |
 | `components/fun/Sonos.tsx` | The speaker on the sideboard and the Web Audio rickroll it plays. No audio files — melody and drum kit are synthesised. |
-| `components/fun/BlogBoard.tsx` | Whiteboard over the television. Lays itself out from `/api/v1/blog`, cover images included. Nothing to add here per post. |
+| `components/fun/PrintedPosts.tsx` | Three printouts on the dining table. Lays itself out from `/api/v1/blog`, cover images included. Nothing to add here per post. |
 | `components/fun/Terminal.tsx` | The shell on the middle monitor. |
 | `components/fun/Screen.tsx` | Monitor mesh + DOM panel mount. `Screen` is one panel; `Dashboard` is the television carrying six at once; `PanelCard` is the chrome both share. |
 | `components/fun/Panels.tsx` | Content of the live infra panels. Authored at one size (640x376) — the television scales them down, so there is no second "small" variant to keep in step. |
@@ -81,12 +81,15 @@ All under `portfolio/src/`.
 | `components/fun/FirstPerson.tsx` | WASD, collision, head bob. Writes the camera position **every frame it is enabled**, `y` included — anything else that moves the camera has to switch it off first. |
 | `components/fun/props.tsx` | Scanned glTF prop loader (`Prop`). |
 | `components/materials/surface.ts` | PBR surface loader (`useSurface`), shared with the shelf and the bench. |
+| `components/materials/paper.ts` | `PAPER` stock and ink ramp, so every printed surface in the room is the same sheet. |
 | `components/materials/StudyEnvironment.tsx` | The site's IBL. Shared with the shelf, the bench and the resume object. |
 | `components/materials/oak.ts` | `OAK` tints, so every oak surface on the site is the same plank. |
 | `components/fun/shelf.ts` | Shared data types for shelf and career. |
 
 Assets: `public/textures/shelf/` (390KB, shared with the home page), `public/textures/fun/` (48KB),
-`public/models/fun/` (2.9MB), `public/icons/social/`. A cold `/fun` measures about 3.2MB of assets.
+`public/models/fun/` (1.4MB), `public/icons/social/`. A cold `/fun` pulls 1.7MB of those, and
+4.7MB in total once the production JS is counted — measure it against `make run-prod` on a port
+the browser has never seen, never the dev server and never a port that served an older build.
 No HDRI ships — `StudyEnvironment` builds the probe from two `Lightformer`s at no byte cost.
 
 ---
@@ -108,14 +111,15 @@ FunRoomClient.tsx  (client, dynamic import)
 FunRoom.tsx → Room.tsx → Bookshelf / Objects / Devices
 ```
 
-Live data is different: `feed.ts` polls `/api/v1/infra` every 60s, and `BlogBoard` fetches
-`/api/v1/blog` once when the room loads, because six cover images have to be on the wall before
-anyone looks at the wall.
+Live data is different. `feed.ts` polls `/api/v1/infra` every 60s and holds `useRepos`, which
+the desk monitor's third tab reads; `PrintedPosts` fetches `/api/v1/blog` once when the room
+loads, because the sheets have to be printed before anybody walks up to the table.
 
 Locally `compose.yaml` sets `STATUS_FILE=/app/dev/status.json` so `/api/v1/infra` takes the same
-code path as the cluster against a fixture. The fixture carries `apps`, `capacity` and `certs`,
-which the real publisher does **not** emit yet — every consumer treats them as optional, so
-production degrades to empty panels rather than breaking.
+code path as the cluster against a fixture. **Keep the fixture's shape identical to the
+publisher's.** Its `apps`, `capacity` and `certs` were once flat arrays the publisher never
+wrote, so every panel that read them looked right locally and was empty or broken in
+production. Every field stays optional regardless: a missed publish has to degrade, not throw.
 
 ---
 
@@ -175,8 +179,8 @@ next load, cover image included — Hugo emits the cover as `<media:content>`, w
 ### A new case study, certification or social link
 
 Nothing to do here. Add it to `src/content/work/*.mdx`, `resume.ts` or `site.ts` and it appears:
-the shelf lays out from array length and grows its own height, and the social wall sizes from
-`site.socials`. The lamp standing on the shelf follows, because it is placed from
+the shelf lays out from array length and grows its own height, and the note on the fridge sizes
+its rows from `site.socials`. The lamp standing on the shelf follows, because it is placed from
 `shelfHeight(shelf)` rather than a measured constant — do not replace that with a number. For a new social you also need a mark in `public/icons/social/` and an entry in
 `SOCIAL_ICON` in `Objects.tsx`.
 
@@ -242,9 +246,10 @@ that tells you what shape a thing is. Keep `ambientLight`/`hemisphereLight` low;
 in fittings that have a direction and fall off.
 
 **A warm room needs a cool fill.** The obvious way to make the room feel warm — tint every
-source amber, ambient included — produces a uniform sepia in which the sage walls disappear and
-nothing reads as *lit*, because there is nothing left for the lamplight to be warmer than. The
-fill is cool (`#9fb2b8`) and only the fittings are warm. Warmth is a relationship, not a value.
+source amber, ambient included — produces a uniform sepia in which the walls stop reading as
+walls and nothing reads as *lit*, because there is nothing left for the lamplight to be warmer
+than. The fill is cool (`#9fb2b8`) and only the fittings are warm. Warmth is a relationship, not
+a value.
 
 **Emissive surfaces in front of their own lamp clip to white.** The lantern's panels sit
 directly in front of its point light, so a light base colour gets lit *and* emits; the two sum
@@ -302,13 +307,17 @@ left a chair you walked through beside floor you could not cross.
 **Text on a screen has a width budget, and it is measurable.** The shell's help output is two
 columns held apart with `padEnd`, so it reads as aligned output only while every line fits on
 one row — wrapped, it just looks broken. `PORTRAIT_PX_W` is derived: 7.8px per character at 13px
-JetBrains Mono, 57 characters in the longest line, 40px of padding. Measure it in the browser
-rather than guessing; the first guess was 36px short.
+Fragment Mono, 57 characters in the longest line, 40px of padding. Measure it in the browser
+rather than guessing; the first guess was 36px short. Both the site's mono faces have run at a
+0.6em advance, so the figure survived the swap off JetBrains Mono — check it against the face in
+`layout.tsx` before trusting it through the next one.
 
 **Three pools beat one.** One bright source leaves the rest of the room a cave and invites the
 ambient-raising fix that ruins it. The room runs three small warm fittings — lantern, desk
 mushroom, shelf lamp — placed so that every wall has one within reach of it. The shelf lamp
-exists because the case studies, the most worth-reading thing in the room, were in shadow.
+exists because the case studies, the most worth-reading thing in the room, were in shadow. The
+stove is a fourth switch and the only source allowed to move: `FireLight` in `FunRoom.tsx` beats
+two sines against each other every frame, which it can afford because it casts nothing.
 
 **Shadows are what cost frames, not picking.** The main light is a *point* light, so its shadow
 map is a cube and every caster renders six extra times. Sixty small meshes in a shelf halved the
@@ -339,6 +348,23 @@ the component actually removed and *verify it is gone* — an early A/B here "pr
 board was innocent using a build where the board was still mounted, which happened to be the
 right answer for the wrong reason. And check the window size before blaming the code: the drop
 that started this investigation was 1.6 Mpx versus 8.0.
+
+**A foreign product's palette does not come with its data.** The pinned board was drawn in
+GitHub's own colours — `#1f6feb` names, GitHub's grey ramp, the six language dots — which put
+four hues and a cold white card on the one wall you spawn facing. Data borrowed from a service
+is still drawn in this room's four materials: `PAPER` for the sheet, brass for the fittings, and
+green only where the spec allows a point.
+
+**Everything printed in the room is `PAPER`.** Sheets drifted to three values across three
+files, and the brightest of them read as a hole cut in the wall, because a DOM layer is unlit —
+what you write is exactly what renders, against walls no brighter than `#6a5236` under lamplight.
+The value is the brand `paper` token and it lives in `materials/paper.ts`.
+
+**The status payload's top-level `apps` is not the room's application list.** It is the KEDA
+sleeper rollup, an object. The room's per-application rows are at `gitops.applications.list`,
+certificates at `security.certs.list`, and `capacity` is its own top-level object. Reading the
+flat names gave a shape that was fine against the old fixture and called `.slice` on an object
+in production.
 
 **Preloads are invisible when broken.** `preloadSurfaces` was exported and never called for
 weeks; everything still loaded, just later and one at a time. Both preloads are now invoked at
@@ -398,9 +424,11 @@ Always confirm the hooks are gone before committing: `grep -n "__cam\|TempCam" s
 ## Before committing
 
 - `make typecheck` clean.
-- `make lint` — 0 errors. There is a standing baseline of ~17 warnings, all pre-existing
-  (`FirstPerson`, `ArchitectureDiagram`, `CommandPalette`, `InlineGlobe`); if the count rises,
-  the new one is yours.
+- `make lint` — 0 errors. There is a standing baseline of 41 warnings, all pre-existing and
+  none in `fun/` except `FirstPerson`, `FunRoom`, `interaction` and `Touch`; the rest are
+  `CommandPalette`, `FooterStamp`, `InlineGlobe(Scene)`, `PaletteLauncher`, `BenchScene`,
+  `InfraBench`, `ResumeObject`, `ArchitectureDiagram` and `WorkShelf(Scene)`. Group the output
+  by file rather than trusting the total: if a file you touched appears, the warning is yours.
 - Routes 200: `/`, `/fun`, `/infrastructure`, `/work/<slug>`.
 - Frame rate: **always state the pixel count, not the window size.** 120fps / 8.3ms in headless
   Chromium at 1600x1000 is 1.6 Mpx, because Playwright runs at dpr 1. A real Retina Mac at a
@@ -415,18 +443,20 @@ Always confirm the hooks are gone before committing: `grep -n "__cam\|TempCam" s
 
 ## Known gaps
 
-1. **Assets need a CDN.** 6.5MB and growing, served from the cluster with no CDN in front
-   (Cloudflare is DNS-only), so every megabyte is home-uplink bandwidth per cold visitor. This is
-   closer to blocking than it was. Touch visitors now at least get asked first, and machines
-   without WebGL no longer download any of it, but neither is a fix.
-2. **The publisher does not emit `apps`, `capacity`, `certs`** — those panels are fixture-only
-   and empty in production. There are two consumers now, not one: the desk monitor's ArgoCD view
-   and `kubectl get applications` in the shell. Both degrade honestly, and both look far better
-   locally against the fixture than they do in production, which is the trap.
-3. **Touch has only been driven through synthetic events**, never a real phone. Drag, tap, the
+1. **Assets need a CDN.** A cold `/fun` is 4.7MB over the wire against the production build:
+   2.5MB of JS, 1.7MB of models and textures, 0.4MB of fonts and feeds. It is served from the
+   cluster with no CDN in front (Cloudflare is DNS-only), so every megabyte is home-uplink
+   bandwidth per cold visitor. Touch visitors are asked first and machines without WebGL download
+   none of it, but neither is a fix. The JS is now the larger half; the remaining texture win is
+   `dining_chair_02`, whose three 1K maps are 365KB for a chair you sit at.
+2. **Touch has only been driven through synthetic events**, never a real phone. Drag, tap, the
    stick, and the entry gate were all verified by dispatching `TouchEvent`s in headless
    Chromium, which proves the wiring and nothing about how any of it feels in a hand.
-4. **Reduced motion** has a skip-entry path that has never been verified.
+3. **Reduced motion** has a skip-entry path that has never been verified.
 
 Two entries that used to live here were found stale rather than fixed — the ArgoCD desk view and
 the loading screen both already worked. Check a gap still reproduces before planning work off it.
+
+A third is closed rather than stale: the publisher now writes the per-application, certificate
+and capacity fields the panels read, so what the room shows locally is what it shows in
+production.

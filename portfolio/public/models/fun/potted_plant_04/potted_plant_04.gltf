@@ -127,17 +127,17 @@
     {
       "mimeType": "image/jpeg",
       "name": "potted_plant_04_nor_gl",
-      "uri": "textures/potted_plant_04_nor_gl_1k.jpg"
+      "uri": "textures/potted_plant_04_nor_gl_512.jpg"
     },
     {
       "mimeType": "image/jpeg",
       "name": "potted_plant_04_diff",
-      "uri": "textures/potted_plant_04_diff_1k.jpg"
+      "uri": "textures/potted_plant_04_diff_512.jpg"
     },
     {
       "mimeType": "image/jpeg",
       "name": "potted_plant_04_rough",
-      "uri": "textures/potted_plant_04_arm_1k.jpg"
+      "uri": "textures/potted_plant_04_arm_512.jpg"
     }
   ],
   "accessors": [

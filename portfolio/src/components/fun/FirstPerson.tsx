@@ -3,7 +3,8 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { CHAIR_Z, DESK, DESK_D, DESK_X, DESK_Z, LANTERN, ROOM } from "./Room";
+import { HALL_SOLIDS } from "./Hallway";
+import { CHAIR_Z, DESK, DESK_D, DESK_X, DESK_Z, LANTERN, ROOM, STOVE, TABLE } from "./Room";
 import { MARKS, px, pz, rectBox, wallBoxes, type Box } from "./flat";
 
 export const EYE = 1.66;
@@ -26,6 +27,14 @@ const BLOCKERS: Box[] = [
   { x: DESK_X, z: DESK_Z, hx: DESK.w / 2, hz: DESK_D / 2 },
   { x: DESK_X, z: CHAIR_Z, hx: 0.3, hz: 0.3 },
   { x: LANTERN.x, z: LANTERN.z, hx: 0.36, hz: 0.21 },
+  // The stove with its chimney breast, and the table against the west wall
+  // with both its chairs pushed in. The crossing north past the kitchen
+  // peninsula is 0.95m at the fire and 0.48m at the desk end; it was 0.19m
+  // while the table stood out in the room, which is most of why it does not.
+  // The box is the table and both chairs pushed in — pulled out they are the
+  // widest thing here, not the table.
+  { x: STOVE.x, z: STOVE.z, hx: 0.36, hz: 0.45 },
+  { x: TABLE.x + 0.065, z: TABLE.z + 0.065, hx: 0.495, hz: 0.34 },
   // The three marked pieces, at the footprints flat.ts gives them.
   rectBox(MARKS.tvBench),
   rectBox(MARKS.sofa),
@@ -35,9 +44,9 @@ const BLOCKERS: Box[] = [
   // The run, the peninsula butted into its south end, and the fridge column
   // that ends it at the bedroom-door end. The column is deeper than the run it bookends, so it gets
   // its own box rather than being folded into it.
-  { x: px(3.6), z: pz(3.185), hx: 0.3, hz: 1.435 },
-  { x: px(3.575), z: pz(1.45), hx: 0.325, hz: 0.3 },
-  { x: px(2.8), z: pz(4.32), hx: 0.5, hz: 0.3 },
+  { x: px(3.62), z: pz(3.185), hx: 0.3, hz: 1.435 },
+  { x: px(3.595), z: pz(1.45), hx: 0.325, hz: 0.3 },
+  { x: px(2.83), z: pz(4.32), hx: 0.5, hz: 0.3 },
   // Bedroom: the bed crosswise under the wall units, and the mirrored
   // wardrobe beside it. Both inset a little, so brushing an edge does not stop
   // you in a room this narrow. The over-bed units are wall-hung and start above
@@ -48,9 +57,12 @@ const BLOCKERS: Box[] = [
   // machine, the WC with its duct, and the vanity. The gap between the shower
   // and the WC is the only line through the room, so neither may grow.
   { x: px(4.4), z: pz(3.2), hx: 0.4, hz: 0.4 },
-  { x: px(4.32), z: pz(4.1), hx: 0.3, hz: 0.3 },
+  { x: px(4.32), z: pz(3.95), hx: 0.3, hz: 0.3 },
   { x: px(5.96), z: pz(3.1), hx: 0.34, hz: 0.275 },
   { x: px(6.125), z: pz(3.625), hx: 0.175, hz: 0.375 },
+  // Entré: the built-in run on one side, the shoe bench and the tall cabinet on
+  // the other. Taken from the file that draws them rather than measured off it.
+  ...HALL_SOLIDS.map(rectBox),
 ];
 
 // 0.60 across rather than 0.68. The flat is a real one and its bedroom is
