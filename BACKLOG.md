@@ -191,12 +191,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Cluster / infra
 
-### logeverylift.com accepts mail and delivers none
-- **What:** Cloudflare Email Routing is enabled on the zone and publishes its three MX records and the DKIM key, and two destination addresses are verified, but there are no custom-address rules and the catch-all is `drop` with `enabled: false`. Mail to any address at the domain is accepted by Cloudflare and then dropped. The comment in `dns.tf` justifying `p=none` says the domain "receives through Cloudflare Email Routing, which forwards", which is not what is configured.
-- **Why deferred:** Found while auditing the zone, not while working on mail. Whether the domain should receive at all is a decision, not a fix: routing nothing is a legitimate answer for an app domain, in which case the DMARC comment is what needs correcting rather than the routing.
-- **Unblock:** Decide whether logeverylift.com should receive mail. If yes, add a routing rule to a verified destination, keep `p=none` until the forwarded mail is seen to pass, then tighten. If no, disable Email Routing, drop the SPF record's Cloudflare include, and rewrite the `p=none` comment to say the domain sends and receives nothing.
-- **Where:** `terraform/cloudflare/logeverylift-com/dns.tf` (`spf`, `dmarc` and their comments), `README.md` in the same directory. Email Routing itself is dashboard-owned; the provider does not manage the read-only MX and DKIM records.
-
 ### Run a Terraform apply before 2026-12-29 or the cluster credentials lapse
 - **What:** The talosconfig and kubeconfig client certificates both expire **2026-12-29**. The provider reissues them automatically, but only during a `terraform apply`, and only once they are inside their renewal window. `talos_cluster_kubeconfig` uses `certificate_renewal_duration`, now widened from the 720h default to `2160h` (90 days), so any apply after roughly 2026-09-30 renews the kubeconfig. `talos_machine_secrets` has a **hardcoded 30 day** window for the talosconfig client certificate, so that one only renews on an apply between 2026-11-29 and 2026-12-29.
 - **Why deferred:** Nothing to fix. Reissuing by hand does not help: `local_sensitive_file` rewrites both files from Terraform state on the next apply, so a manually generated certificate is discarded. The renewal is genuinely automatic; the only failure mode is nobody running Terraform in the window.

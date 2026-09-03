@@ -30,7 +30,10 @@ terraform import cloudflare_dns_record.spf  "$ZONE_ID/<record id>"
 ## Notes
 
 - The three MX records and the DKIM TXT are not managed. Cloudflare Email
-  Routing owns them and the API rejects writes.
+  Routing owns them and the API rejects writes. The catch-all is the writable
+  half and lives in `email.tf`; it forwards every address to `var.forward_to`.
+  A new destination has to be verified through an emailed link before the rule
+  will accept it.
 - TXT values keep their escaped quotes, to match what the API returns.
 - DMARC is `p=none` on purpose. Email Routing forwards mail, and forwarded mail
   routinely fails SPF alignment. Tighten to quarantine once monitoring is clean.
