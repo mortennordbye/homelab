@@ -38,5 +38,6 @@ terraform import cloudflare_dns_record.ddns <zone_id>/<record_id>
   would route every hostname pointing at it through the edge, audiobookshelf
   included.
 - Not every hostname here can be proxied. `audiobookshelf` serves audio, which
-  Cloudflare's terms exclude outside Enterprise. Plex is not in DNS at all; it
+  Cloudflare's terms exclude outside Enterprise, so its route pins
+  `cloudflare-proxied: "false"` rather than relying on the provider default. Plex is not in DNS at all; it
   is a TCPRoute on port 32400 and advertises the address to plex.tv directly.

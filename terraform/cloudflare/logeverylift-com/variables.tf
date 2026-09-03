@@ -15,3 +15,9 @@ variable "origin_hostname" {
   type        = string
   default     = "ddns.nordbye.it"
 }
+
+variable "forward_to" {
+  description = "Where the catch-all sends mail. Must already be a verified destination address on the account; Cloudflare rejects the rule otherwise, and verification is an emailed link that cannot be automated."
+  type        = string
+  default     = "morten@nordbye.it"
+}

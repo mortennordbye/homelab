@@ -28,6 +28,10 @@ kind: HTTPRoute
 metadata:
   name: seerr
   namespace: plex-media-stack
+  annotations:
+    # Unproxied, matching the record this replaces. seerr resolves onto
+    # ddns.bigd.no, which is already public, so proxying would hide nothing.
+    external-dns.kubernetes.io/cloudflare-proxied: "false"
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
