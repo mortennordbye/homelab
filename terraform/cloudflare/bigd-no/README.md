@@ -31,6 +31,13 @@ otherwise apply fails with "record already exists":
 terraform import cloudflare_dns_record.ddns <zone_id>/<record_id>
 ```
 
+## Web Analytics
+
+`web-analytics.tf` creates the beacon site for bigd.no. After the first apply,
+`terraform output web_analytics_site_token` gives the token for the snippet in
+`k8s/talos/apps/bigd/index.html`. `auto_install` stays off because the snippet
+is in the page.
+
 ## Notes
 
 - `ddns` content is ignored. The DDNS client owns the address.

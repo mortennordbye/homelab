@@ -13,7 +13,8 @@ terraform apply
 ```
 
 The token needs Zone:Read, DNS:Edit, Zone Settings:Edit and Cache Rules:Edit,
-in a policy scoped to zones. An account-scoped policy alone does not grant DNS.
+in a policy scoped to zones, plus Web Analytics:Edit in an account-scoped one.
+An account-scoped policy alone does not grant DNS.
 It is the same token external-dns, cert-manager and the Kargo purge step read
 from Bitwarden, so it also carries Cache Purge, which nothing here needs.
 
@@ -37,6 +38,19 @@ The purge step reads a `cloudflare-api-token` Secret in each Kargo Project
 namespace — the shared broad token, not a purge-only one. It resolves the zone
 ID by name at promotion time rather than carrying it, so nothing has to be
 updated here if the zone is ever recreated.
+
+## Web Analytics
+
+`web-analytics.tf` adopts the two beacon sites that back nordbye.it and
+blog.nordbye.it. Their tokens are hardcoded in the pages
+(`portfolio/src/app/layout.tsx`, `blog/config/_default/params.toml`); an
+in-place update leaves those tokens alone.
+
+The two are not the same shape and cannot be made so. nordbye.it is bound to
+the zone (`zone_tag`, orange in the dashboard); blog is a gray-clouded site
+carrying a `host`. Cloudflare only builds that binding when a site is created,
+so converting blog means recreating it, with a new token and no history. The
+difference is cosmetic while the beacon is in the page.
 
 ## Notes
 
