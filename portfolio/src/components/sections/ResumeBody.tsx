@@ -7,8 +7,8 @@ import { site } from "@/content/site";
  * is an object or a document). Reading happens here with no click; the object
  * on the desk is how you take the PDF away (§4). The broadsheet layout is
  * load-bearing: every word of every role stays on the sheet, height paid for
- * with columns; everything flush left off one edge, dates as overlines; short
- * entries (education, certs) run two-up.
+ * with columns; everything flush left off one edge, dates as overlines;
+ * education runs two-up and the certifications one line to an entry.
  */
 
 // Current engagement plus the one before it; the rest is one press away, and
@@ -41,112 +41,158 @@ export function ResumeBody() {
     <article className="sheet mx-auto max-w-[60rem] px-7 py-14 sm:px-10 sm:py-16 lg:px-14 lg:py-20">
       <Masthead />
 
-      <Run label="Experience">{roles(0, ABOVE_THE_FOLD)}</Run>
+      {/* Ahead of Experience, not between two of its roles: a run dropped into
+          the middle of the list is what forces a "continued" label on the half
+          below the fold. Here nothing is split and the fold stays the only
+          break on the sheet. */}
+      <Run label="Licenses and certifications">
+        <Certifications />
+      </Run>
 
-      {/* The fold.
-          A <details> rather than a state hook, which is what keeps this file a
-          server component: no client JS, keyboard and screen-reader behaviour
-          for free, the hidden text still in the DOM for crawlers, and Chrome's
-          find-in-page opens it on a hit. */}
-      <details className="group [&_summary::-webkit-details-marker]:hidden">
-        {/* The control has to read as pressable, and the first version did not.
-            A line of small caption-grey type between two hairlines is the exact
-            shape of a divider, so it was taken for one and the rest of the
-            record went unread.
+      <Run label="Experience">
+        {roles(0, ABOVE_THE_FOLD)}
 
-            What it cannot be is green: §2 spends that once per view, and this
-            section already spends it on the take action above the object. So
-            the affordance is ink and shape instead — a bordered box at full
-            8.9:1 contrast, big enough to be a target, with a real arrow in it.
-            That is what a control printed on a form looks like, which is the
-            only kind of button this sheet can carry. */}
-        <summary className="focus-ring mt-14 flex cursor-pointer list-none flex-col items-center gap-3">
-          <span className="inline-flex items-center gap-3 rounded-[2px] border border-[rgba(58,46,29,0.55)] bg-[rgba(58,46,29,0.05)] px-5 py-3.5 font-mono text-[0.68rem] tracking-[0.16em] whitespace-nowrap text-[color:var(--paper-ink)] uppercase transition-colors duration-200 hover:border-[rgba(58,46,29,0.9)] hover:bg-[rgba(58,46,29,0.11)] sm:gap-3.5 sm:px-7 sm:text-[0.72rem] sm:tracking-[0.18em]">
-            <span className="group-open:hidden">Read the full record</span>
-            <span className="hidden group-open:inline">Fold the record back</span>
-            {/* The nod lives on the wrapper so it does not fight the flip: the
-                arrow's rotation and its bob would otherwise be the same
-                property on the same element. */}
-            <span aria-hidden className="fold-arrow">
-              <svg
-                width="17"
-                height="17"
-                viewBox="0 0 16 16"
-                fill="none"
-                className="transition-transform duration-300 group-open:-rotate-180"
-              >
-                <circle cx="8" cy="8" r="7.2" stroke="currentColor" strokeOpacity="0.5" />
-                <path
-                  d="M4.9 6.7 8 9.8l3.1-3.1"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+        {/* The fold, inside the Experience run so the roles below it continue
+            the same list.
+            A <details> rather than a state hook, which is what keeps this file
+            a server component: no client JS, keyboard and screen-reader
+            behaviour for free, the hidden text still in the DOM for crawlers,
+            and Chrome's find-in-page opens it on a hit. */}
+        <details className="group [&_summary::-webkit-details-marker]:hidden">
+          {/* The control has to read as pressable, and the first version did not.
+              A line of small caption-grey type between two hairlines is the exact
+              shape of a divider, so it was taken for one and the rest of the
+              record went unread.
+
+              What it cannot be is green: §2 spends that once per view, and this
+              section already spends it on the take action above the object. So
+              the affordance is ink and shape instead — a bordered box at full
+              8.9:1 contrast, big enough to be a target, with a real arrow in it.
+              That is what a control printed on a form looks like, which is the
+              only kind of button this sheet can carry. */}
+          <summary className="focus-ring mt-14 flex cursor-pointer list-none flex-col items-center gap-3">
+            <span className="inline-flex items-center gap-3 rounded-[2px] border border-[rgba(58,46,29,0.55)] bg-[rgba(58,46,29,0.05)] px-5 py-3.5 font-mono text-[0.68rem] tracking-[0.16em] whitespace-nowrap text-[color:var(--paper-ink)] uppercase transition-colors duration-200 hover:border-[rgba(58,46,29,0.9)] hover:bg-[rgba(58,46,29,0.11)] sm:gap-3.5 sm:px-7 sm:text-[0.72rem] sm:tracking-[0.18em]">
+              <span className="group-open:hidden">Read the full record</span>
+              <span className="hidden group-open:inline">Fold the record back</span>
+              {/* The nod lives on the wrapper so it does not fight the flip: the
+                  arrow's rotation and its bob would otherwise be the same
+                  property on the same element. */}
+              <span aria-hidden className="fold-arrow">
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="transition-transform duration-300 group-open:-rotate-180"
+                >
+                  <circle cx="8" cy="8" r="7.2" stroke="currentColor" strokeOpacity="0.5" />
+                  <path
+                    d="M4.9 6.7 8 9.8l3.1-3.1"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
             </span>
-          </span>
-          <span className="font-mono text-[0.62rem] tracking-[0.14em] text-[color:var(--paper-ink-3)] uppercase group-open:hidden">
-            {experience.length - ABOVE_THE_FOLD} more roles · education · certifications
-          </span>
-        </summary>
+            <span className="font-mono text-[0.62rem] tracking-[0.14em] text-[color:var(--paper-ink-3)] uppercase group-open:hidden">
+              {experience.length - ABOVE_THE_FOLD} more roles · education
+            </span>
+          </summary>
 
-        {/* The remaining roles continue the run above without repeating its
-            label, so the fold reads as a break in one list rather than as the
-            start of a second one. */}
-        <div>{roles(ABOVE_THE_FOLD)}</div>
+          {/* The remaining roles continue the run above without repeating its
+              label, so the fold reads as a break in one list rather than as the
+              start of a second one. */}
+          <div>{roles(ABOVE_THE_FOLD)}</div>
 
-        <Run label="Education">
-          <Rows>
-            {education.map((e, i) => (
-              <Cell key={e.title} index={i}>
-                <EntryHead title={e.title} meta={e.institution} when={e.period} small />
-                {e.detail && (
-                  <p className="mt-3 text-[0.94rem] leading-relaxed">{e.detail}</p>
-                )}
-              </Cell>
-            ))}
-          </Rows>
-        </Run>
+          <Run label="Education">
+            <Rows>
+              {education.map((e, i) => (
+                <Cell key={e.title} index={i}>
+                  <EntryHead title={e.title} meta={e.institution} when={e.period} small />
+                  {e.detail && (
+                    <p className="mt-3 text-[0.94rem] leading-relaxed">{e.detail}</p>
+                  )}
+                </Cell>
+              ))}
+            </Rows>
+          </Run>
 
-        <Run label="Licenses and certifications">
-          <Rows>
-            {certs.map((c, i) => (
-              <Cell key={c.title} index={i}>
-                <EntryHead title={c.title} meta={c.issuer} when={c.date} small />
-                {(c.credentialId || c.href) && (
-                  <p className="mt-2.5 font-mono text-[0.64rem] tracking-[0.08em] text-[color:var(--paper-ink-3)]">
-                    {c.credentialId && <span className="break-all">{c.credentialId}</span>}
-                    {c.credentialId && c.href && <Sep />}
-                    {c.href && (
-                      <a
-                        href={c.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="focus-ring uppercase underline underline-offset-4 hover:text-[color:var(--paper-ink)]"
-                      >
-                        Certificate
-                      </a>
-                    )}
-                  </p>
-                )}
-              </Cell>
-            ))}
-          </Rows>
-        </Run>
-
-        {/* The sheet states its own provenance, the way FooterStamp does for the
-            page. Every value here is measured rather than typed. */}
-        <p className="mt-16 flex flex-wrap justify-between gap-x-8 gap-y-2 border-t border-[rgba(58,46,29,0.22)] pt-5 font-mono text-[0.64rem] tracking-[0.08em] text-[color:var(--paper-ink-3)]">
-          <span>
-            {site.firstName} {site.lastName} · {site.location}
-          </span>
-          <span>
-            {experience.length} roles · {certs.length} certifications
-          </span>
-        </p>
-      </details>
+          {/* The sheet states its own provenance, the way FooterStamp does for
+              the page. Every value here is measured rather than typed. */}
+          <p className="mt-16 flex flex-wrap justify-between gap-x-8 gap-y-2 border-t border-[rgba(58,46,29,0.22)] pt-5 font-mono text-[0.64rem] tracking-[0.08em] text-[color:var(--paper-ink-3)]">
+            <span>
+              {site.firstName} {site.lastName} · {site.location}
+            </span>
+            <span>
+              {experience.length} roles · {certs.length} certifications
+            </span>
+          </p>
+        </details>
+      </Run>
     </article>
+  );
+}
+
+/**
+ * The certifications, one line to a certificate rather than two-up.
+ *
+ * The two-up grid this replaced existed because a four-line entry given the
+ * full 848px measure is mostly empty paper. One line to an entry answers that
+ * the other way round, and it is what lets the whole run sit above the fold:
+ * six certificates cost ~190px set this way against ~340px set as cells.
+ *
+ * Nothing is abbreviated to make it fit. The title, the issuer and the
+ * paperwork are the strings the record already carries; only their
+ * arrangement changed.
+ */
+function Certifications() {
+  return (
+    <div className="mt-6">
+      {certs.map((c) => (
+        <div
+          key={c.title}
+          className="flex flex-wrap items-baseline border-b border-[rgba(58,46,29,0.18)] py-2.5 first:border-t first:border-t-[rgba(58,46,29,0.18)] sm:flex-nowrap sm:py-3"
+        >
+          {/* Below sm the date leads as an overline: trailing the issuer, it
+              lands hard against the credential number with nothing between. */}
+          <p className="order-first w-full shrink-0 pb-0.5 font-mono text-[0.63rem] tracking-[0.13em] whitespace-nowrap text-[color:var(--paper-ink-3)] uppercase sm:order-last sm:w-[9ch] sm:pb-0 sm:pl-4 sm:text-right">
+            {c.date}
+          </p>
+          <h5
+            className="font-display text-[1.02rem] font-semibold tracking-[-0.005em]"
+            style={{ fontVariationSettings: '"opsz" 18' }}
+          >
+            {c.title}
+          </h5>
+          <p className="text-[0.93rem] text-[color:var(--paper-ink-2)] sm:pl-2.5">
+            {c.issuer}
+          </p>
+          <span aria-hidden className="hidden min-w-6 flex-1 sm:block" />
+          {(c.credentialId || c.href) && (
+            <p className="font-mono text-[0.63rem] tracking-[0.09em] whitespace-nowrap text-[color:var(--paper-ink-3)] sm:pl-4">
+              {/* Only below sm, where this runs straight on from the issuer with
+                  nothing between. Above it the flex fill is the separation. */}
+              <span className="sm:hidden">
+                <Sep />
+              </span>
+              {c.credentialId}
+              {c.href && (
+                <a
+                  href={c.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="focus-ring uppercase underline underline-offset-4 hover:text-[color:var(--paper-ink)]"
+                >
+                  Certificate
+                </a>
+              )}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
 
