@@ -11,9 +11,7 @@ import * as THREE from "three";
  * so this is limited to the props carrying the most visual weight.
  */
 
-export type PropName =
-  | "dining_chair_02"
-  | "potted_plant_04";
+export type PropName = "potted_plant_04";
 
 const url = (n: PropName) => `/models/fun/${n}/${n}.gltf`;
 
@@ -83,10 +81,5 @@ export function Prop({
 
 /** Preload so props do not pop in one at a time after the room appears. */
 export function preloadProps() {
-  (
-    [
-      "dining_chair_02",
-      "potted_plant_04",
-    ] as PropName[]
-  ).forEach((n) => useGLTF.preload(url(n)));
+  (["potted_plant_04"] as PropName[]).forEach((n) => useGLTF.preload(url(n)));
 }

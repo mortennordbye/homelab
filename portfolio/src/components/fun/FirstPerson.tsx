@@ -53,13 +53,17 @@ const BLOCKERS: Box[] = [
   // head height, so they have no box.
   { x: px(5.32), z: pz(2.0), hx: 0.98, hz: 0.66 },
   { x: px(6.01), z: pz(0.655), hx: 0.27, hz: 0.6 },
-  // Bathroom: the quadrant shower boxed to its full extent, the washing
-  // machine, the WC with its duct, and the vanity. The gap between the shower
-  // and the WC is the only line through the room, so neither may grow.
-  { x: px(4.4), z: pz(3.2), hx: 0.4, hz: 0.4 },
+  // Bathroom: the washing machine, the WC with its duct, and the vanity. The
+  // gap between the shower and the WC is the only line through the room, so
+  // neither may grow.
+  //
+  // The shower is its fixed pane only. Boxed to its full extent it was a solid
+  // 0.8m block, and a shower you cannot step into is scenery — the two sides
+  // that are wall already come from `wallBoxes`, and the fourth is the door.
+  { x: px(4.425), z: pz(3.65), hx: 0.425, hz: 0.04 },
   { x: px(4.32), z: pz(3.95), hx: 0.3, hz: 0.3 },
   { x: px(5.96), z: pz(3.1), hx: 0.34, hz: 0.275 },
-  { x: px(6.125), z: pz(3.625), hx: 0.175, hz: 0.375 },
+  { x: px(6.125), z: pz(3.85), hx: 0.175, hz: 0.375 },
   // Entré: the built-in run on one side, the shoe bench and the tall cabinet on
   // the other. Taken from the file that draws them rather than measured off it.
   ...HALL_SOLIDS.map(rectBox),
