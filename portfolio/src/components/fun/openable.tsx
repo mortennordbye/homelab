@@ -72,15 +72,20 @@ export function Door({
   pivot,
   axis = "y",
   angle,
+  startOpen = false,
   children,
 }: {
   label: string;
   pivot: [number, number, number];
   axis?: "x" | "y";
   angle: number;
+  /** Rest open rather than shut. A room door has to: the collision resolver is
+   *  handed a hole where a doorway is and cannot know a leaf swung across it,
+   *  so a door resting shut is one you walk straight through. */
+  startOpen?: boolean;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
   const g = useRef<THREE.Group>(null);
   useEase(open, (t) => {
     if (g.current) g.current.rotation[axis] = t * angle;
@@ -125,15 +130,17 @@ export function Drawer({
 const FACE_ORDER = ["px", "nx", "py", "ny", "pz", "nz"] as const;
 type Face = (typeof FACE_ORDER)[number];
 
-/** A box with one face dropped, so the inside of it is the thing you see. */
-function useOpenGeometry(w: number, h: number, d: number, face: Face) {
+/** A box with its named faces dropped, so the inside of it is the thing you
+ *  see. */
+function useOpenGeometry(w: number, h: number, d: number, faces: Face[]) {
+  const key = faces.join();
   const geo = useMemo(() => {
     const g = new THREE.BoxGeometry(w, h, d);
-    const start = FACE_ORDER.indexOf(face) * 6;
+    const cut = key.split(",").map((f) => FACE_ORDER.indexOf(f as Face) * 6);
     const idx = Array.from(g.getIndex()!.array);
-    g.setIndex(idx.filter((_, i) => i < start || i >= start + 6));
+    g.setIndex(idx.filter((_, i) => !cut.some((c) => i >= c && i < c + 6)));
     return g;
-  }, [w, h, d, face]);
+  }, [w, h, d, key]);
   useEffect(() => () => geo.dispose(), [geo]);
   return geo;
 }
@@ -178,6 +185,7 @@ export function OpenBox({
   depth,
   thickness = 0.018,
   face = "pz",
+  openTop = false,
   material,
 }: {
   width: number;
@@ -185,9 +193,17 @@ export function OpenBox({
   depth: number;
   thickness?: number;
   face?: Extract<Face, "pz" | "py">;
+  /** Drop the lid as well, for a carcass something hangs down into. It gets no
+   *  rim: this is a face nobody looks at, only one that must not occlude. */
+  openTop?: boolean;
   material: React.ReactElement<{ side?: THREE.Side }>;
 }) {
-  const shell = useOpenGeometry(width, height, depth, face);
+  const shell = useOpenGeometry(
+    width,
+    height,
+    depth,
+    openTop && face !== "py" ? [face, "py"] : [face],
+  );
   const front = face === "pz";
   /* Rotated onto the XZ plane below, where the shape's y becomes the box's
      depth — so a top opening's lip is measured across the box, not up it. */

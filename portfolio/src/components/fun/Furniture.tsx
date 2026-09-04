@@ -1,6 +1,7 @@
 "use client";
 
 import { MeshReflectorMaterial, RoundedBox } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OAK } from "@/components/materials/oak";
@@ -546,6 +547,199 @@ export function WoodChair({
 }
 
 /**
+ * The desk chair: a five-star task chair on castors, with a gas lift, a
+ * shaped seat pan, a lumbar back on a single spine and loop arms.
+ *
+ * It replaced a scanned leather dining chair, which was a real chair and still
+ * wrong — the one seat in the flat that is worked in read as one pulled over
+ * from the table. A task chair is the opposite case to a Windsor: everything
+ * below the seat is extruded nylon and a steel column, which is what these
+ * primitives already are.
+ *
+ * Origin on the floor under the column, local +z the direction the sitter
+ * faces. Nothing below the seat casts a shadow, for the reason `WoodChair`
+ * gives.
+ */
+export function TaskChair({
+  position,
+  rotation = [0, 0, 0],
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+}) {
+  const SEAT_H = 0.46;
+  const W = 0.47;
+  const D = 0.45;
+  /** Top of the backrest. Higher than a dining chair and lower than a gaming
+   *  one, which is the difference between the two shapes at this distance. */
+  const BACK_TOP = 1.0;
+  const BACK_H = BACK_TOP - 0.6;
+  const LEAN = 0.16;
+  /** Star radius. Wider than the seat, or the chair reads as tipping. */
+  const STAR = 0.32;
+
+  const nylon = (
+    <meshStandardMaterial color="#26282b" roughness={0.55} metalness={0.15} />
+  );
+  const steel = (
+    <meshStandardMaterial color="#4a4d52" roughness={0.4} metalness={0.6} />
+  );
+  const pad = (
+    <meshStandardMaterial color={WOOL} roughness={0.9} metalness={0} />
+  );
+
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Five arms and five castors. The arms taper and drop toward the floor,
+          so the star sits on its rim rather than lying flat like a plate. */}
+      {[0, 1, 2, 3, 4].map((i) => {
+        const a = (i / 5) * Math.PI * 2 + Math.PI / 5;
+        return (
+          <group key={i} rotation={[0, a, 0]}>
+            <mesh position={[0, 0.075, STAR / 2]} rotation={[0.09, 0, 0]}>
+              <boxGeometry args={[0.055, 0.038, STAR]} />
+              {nylon}
+            </mesh>
+            {/* castor: a wheel on its side, on a short stem */}
+            <mesh position={[0, 0.048, STAR - 0.01]}>
+              <cylinderGeometry args={[0.012, 0.012, 0.03, 8]} />
+              {nylon}
+            </mesh>
+            <mesh
+              position={[0, 0.026, STAR - 0.01]}
+              rotation={[0, 0, Math.PI / 2]}
+            >
+              <cylinderGeometry args={[0.026, 0.026, 0.022, 12]} />
+              {nylon}
+            </mesh>
+          </group>
+        );
+      })}
+
+      {/* hub, then the column: a steel shaft inside a nylon shroud */}
+      <mesh position={[0, 0.095, 0]}>
+        <cylinderGeometry args={[0.055, 0.062, 0.075, 12]} />
+        {nylon}
+      </mesh>
+      <mesh position={[0, 0.22, 0]}>
+        <cylinderGeometry args={[0.037, 0.042, 0.19, 12]} />
+        {nylon}
+      </mesh>
+      <mesh position={[0, 0.36, 0]}>
+        <cylinderGeometry args={[0.021, 0.021, 0.13, 10]} />
+        {steel}
+      </mesh>
+
+      {/* The tilt mechanism under the pan, and the paddle on its right. */}
+      <RoundedBox
+        position={[0, SEAT_H - 0.075, -0.01]}
+        args={[0.17, 0.055, 0.24]}
+        radius={0.012}
+        smoothness={3}
+      >
+        {nylon}
+      </RoundedBox>
+      <mesh
+        position={[0.12, SEAT_H - 0.075, 0.05]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
+        <cylinderGeometry args={[0.008, 0.008, 0.09, 8]} />
+        {steel}
+      </mesh>
+
+      {/* Seat pan. Squashed on y so the rounding gives a soft edge all round
+          rather than a cushion, and tipped a degree back the way a seat with
+          any tension on it sits. */}
+      <group position={[0, SEAT_H - 0.03, 0.01]} rotation={[0.035, 0, 0]}>
+        <RoundedBox
+          args={[W, 0.075, D]}
+          radius={0.03}
+          smoothness={4}
+          castShadow
+          receiveShadow
+        >
+          {pad}
+        </RoundedBox>
+        {/* the waterfall front edge, rolled under */}
+        <mesh position={[0, -0.012, D / 2 - 0.015]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.033, 0.033, W - 0.06, 12]} />
+          {pad}
+        </mesh>
+      </group>
+
+      {/* The spine: one arm off the back of the mechanism, leaning with the
+          backrest. A task chair carries its back on this and nothing else,
+          which is the gap under the lumbar that gives the shape away. */}
+      <mesh
+        position={[0, SEAT_H + 0.06, -D / 2 + 0.02 - Math.sin(LEAN) * 0.06]}
+        rotation={[LEAN, 0, 0]}
+        castShadow
+      >
+        <boxGeometry args={[0.075, 0.24, 0.045]} />
+        {nylon}
+      </mesh>
+
+      {/* Backrest, on the spine and leaning off it. The frame stands a little
+          proud of the pad on all four sides, so the back reads as a shell with
+          something stretched in it. */}
+      <group
+        position={[
+          0,
+          BACK_TOP - BACK_H / 2,
+          -D / 2 + 0.035 - Math.sin(LEAN) * (BACK_TOP - BACK_H / 2 - SEAT_H),
+        ]}
+        rotation={[LEAN, 0, 0]}
+      >
+        <RoundedBox
+          args={[0.44, BACK_H, 0.05]}
+          radius={0.022}
+          smoothness={4}
+          castShadow
+          receiveShadow
+        >
+          {nylon}
+        </RoundedBox>
+        <RoundedBox
+          position={[0, 0, 0.028]}
+          args={[0.395, BACK_H - 0.05, 0.035]}
+          radius={0.016}
+          smoothness={4}
+          castShadow
+        >
+          {pad}
+        </RoundedBox>
+        {/* lumbar swell, low on the back where one belongs */}
+        <mesh position={[0, -BACK_H / 2 + 0.1, 0.035]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.038, 0.038, 0.36, 12]} />
+          {pad}
+        </mesh>
+      </group>
+
+      {/* Loop arms: an upright off the seat, a curve forward, a pad along the
+          top. Kept below the desk's 0.755 apron so the chair can be pushed in
+          without a rest standing on the desk. */}
+      {[-1, 1].map((sx) => (
+        <group key={sx} position={[sx * (W / 2 - 0.005), 0, 0]}>
+          <mesh position={[0, SEAT_H + 0.09, -0.09]} castShadow>
+            <boxGeometry args={[0.026, 0.19, 0.05]} />
+            {nylon}
+          </mesh>
+          <RoundedBox
+            position={[0, SEAT_H + 0.195, 0.02]}
+            args={[0.05, 0.028, 0.23]}
+            radius={0.012}
+            smoothness={3}
+            castShadow
+          >
+            {nylon}
+          </RoundedBox>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/**
  * The small table against the west wall between the chimney breast and the
  * desk, on tapered legs. 0.86 out from the wall by 0.55 across it — end to
  * the wall, not side to it, so the chairs get a long edge to sit at. Sized off
@@ -612,6 +806,107 @@ export function DiningTable({
   );
 }
 
+/**
+ * One piece of a cut worktop, carrying its share of the whole top's UVs.
+ *
+ * A box is mapped 0..1 on every face whatever its size, so four of them butted
+ * together tile the veneer four times at four different scales and every cut
+ * shows as a change of grain. Remapped, the four read as one board with a hole
+ * in it.
+ */
+function TopSlice({
+  x,
+  z,
+  w,
+  d,
+  y,
+  thickness,
+  span,
+  oak,
+}: {
+  x: number;
+  z: number;
+  w: number;
+  d: number;
+  y: number;
+  thickness: number;
+  /** The uncut top this piece was taken out of: centre z, and both extents. */
+  span: { z: number; w: number; d: number };
+  oak: Surface;
+}) {
+  const geo = useMemo(() => {
+    const g = new THREE.BoxGeometry(w, thickness, d);
+    const uv = g.attributes.uv;
+    const u0 = (x - w / 2 + span.w / 2) / span.w;
+    const v0 = (z - d / 2 - span.z + span.d / 2) / span.d;
+    for (let i = 0; i < uv.count; i++) {
+      uv.setXY(i, u0 + uv.getX(i) * (w / span.w), v0 + uv.getY(i) * (d / span.d));
+    }
+    return g;
+  }, [x, z, w, d, thickness, span.z, span.w, span.d]);
+  useEffect(() => () => geo.dispose(), [geo]);
+
+  return (
+    <mesh geometry={geo} position={[x, y, z]} receiveShadow>
+      <meshStandardMaterial {...oak} color={OAK.case} roughness={0.5} metalness={0} />
+    </mesh>
+  );
+}
+
+/**
+ * A run's worktop: one slab, or the four pieces a sink cutout leaves. The
+ * pieces butt rather than overlap — two tops sharing a plane flicker, which is
+ * the same trap `topDrop` exists for.
+ */
+function Worktop({
+  y,
+  z,
+  w,
+  d,
+  thickness,
+  cutout,
+  oak,
+}: {
+  y: number;
+  z: number;
+  w: number;
+  d: number;
+  thickness: number;
+  cutout?: { x: number; w: number; d: number };
+  oak: Surface;
+}) {
+  if (!cutout) {
+    return (
+      <RoundedBox
+        position={[0, y, z]}
+        args={[w, thickness, d]}
+        radius={0.005}
+        smoothness={3}
+        castShadow={false}
+        receiveShadow
+      >
+        <meshStandardMaterial {...oak} color={OAK.case} roughness={0.5} metalness={0} />
+      </RoundedBox>
+    );
+  }
+
+  const span = { z, w, d };
+  const [x0, x1] = [cutout.x - cutout.w / 2, cutout.x + cutout.w / 2];
+  const [z0, z1] = [-cutout.d / 2, cutout.d / 2];
+  const [back, front] = [z - d / 2, z + d / 2];
+  const slice = { y, thickness, span, oak };
+
+  return (
+    <>
+      <TopSlice {...slice} x={(-w / 2 + x0) / 2} w={x0 + w / 2} z={z} d={d} />
+      <TopSlice {...slice} x={(x1 + w / 2) / 2} w={w / 2 - x1} z={z} d={d} />
+      {/* the rails the tap stands on and the front lip you lean against */}
+      <TopSlice {...slice} x={cutout.x} w={cutout.w} z={(back + z0) / 2} d={z0 - back} />
+      <TopSlice {...slice} x={cutout.x} w={cutout.w} z={(z1 + front) / 2} d={front - z1} />
+    </>
+  );
+}
+
 /** Drawer heights as fractions of the carcass, and the centre of each as a
  *  fraction from the bottom. One shallow drawer over one deep one, which is
  *  what the run is: cutlery on top, pans under it. */
@@ -636,6 +931,7 @@ export function KitchenRun({
   oak,
   doors = 3,
   bays = {},
+  cutout,
   topDrop = 0,
   children,
 }: {
@@ -648,6 +944,13 @@ export function KitchenRun({
    *  an appliance is built into and covers; "door" is a single hinged door,
    *  which is what a bay with the water tank standing in it actually has. */
   bays?: Record<number, "panel" | "door">;
+  /**
+   * A hole through the worktop for an inset bowl, in the run's own x and
+   * centred on its z. A hob sits on the top and needs nothing; a sink goes
+   * through it, and painting the bowl on the oak is what made this one read as
+   * a tray somebody had left out.
+   */
+  cutout?: { x: number; w: number; d: number };
   /**
    * Drops the worktop by this much, for a run whose top butts into another
    * one's.
@@ -677,10 +980,14 @@ export function KitchenRun({
 
       {/* carcass */}
       <group position={[0, PLINTH + bodyH / 2, 0]}>
+        {/* No lid where a bowl hangs through the worktop, or the carcass top
+            is what you see down the plughole. It is under the top everywhere
+            else, so nothing else notices it has gone. */}
         <OpenBox
           width={length}
           height={bodyH}
           depth={D}
+          openTop={!!cutout}
           material={<meshStandardMaterial {...oak} color={OAK.back} roughness={0.7} metalness={0} />}
         />
       </group>
@@ -745,16 +1052,15 @@ export function KitchenRun({
       {/* Worktop in oak, proud of the carcass so it casts its own line. The
           light top over dark fronts is the one thing that makes this read as
           the real kitchen rather than as a row of cupboards. */}
-      <RoundedBox
-        position={[0, H - TOP / 2 - topDrop, 0.012]}
-        args={[length + 0.02, TOP, D + 0.024]}
-        radius={0.005}
-        smoothness={3}
-        castShadow={false}
-        receiveShadow
-      >
-        <meshStandardMaterial {...oak} color={OAK.case} roughness={0.5} metalness={0} />
-      </RoundedBox>
+      <Worktop
+        y={H - TOP / 2 - topDrop}
+        z={0.012}
+        w={length + 0.02}
+        d={D + 0.024}
+        thickness={TOP}
+        cutout={cutout}
+        oak={oak}
+      />
 
       {children}
     </group>
@@ -1052,34 +1358,214 @@ export function Microwave({
  * way the hob is rather than sunk below it: the worktop is a solid slab with no
  * hole in it, so anything modelled under the top is simply buried.
  */
-export function Sink({ position }: { position: [number, number, number] }) {
+/** Every tap in the flat, one metal. Gunmetal rather than bright steel: these
+ *  all stand under a light, and a brighter finish comes back looking like the
+ *  brass they used to be. */
+const TAP = { color: "#61686e", roughness: 0.28, metalness: 0.6, envMapIntensity: 0.7 } as const;
+
+/**
+ * Vertical streaks on a translucent ground, wrapping top to bottom so a stream
+ * can be scrolled through it without a seam. Greyscale, because it serves as
+ * the alpha map as well and that reads the green channel.
+ *
+ * Placed off a hash rather than `Math.random`: three taps that differ for no
+ * reason is worse than three that match, and a stream should look the same
+ * every time it is turned on.
+ */
+function waterTexture() {
+  const w = 32;
+  const h = 128;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const x = c.getContext("2d")!;
+  const rnd = (i: number, k: number) => {
+    const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+    return v - Math.floor(v);
+  };
+  x.fillStyle = "#6e6e6e";
+  x.fillRect(0, 0, w, h);
+  for (let i = 0; i < 24; i++) {
+    const sx = rnd(i, 1) * w;
+    const sy = rnd(i, 2) * h;
+    const len = 14 + rnd(i, 3) * 54;
+    const wd = 1 + rnd(i, 4) * 1.4;
+    const v = Math.round(150 + rnd(i, 5) * 105);
+    x.fillStyle = `rgb(${v},${v},${v})`;
+    x.fillRect(sx, sy, wd, len);
+    /* A streak running off the bottom has to come back on at the top, or the
+       scroll shows a line where the texture wraps. */
+    if (sy + len > h) x.fillRect(sx, sy - h, wd, len);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+/**
+ * Running water: the falling stream and the ring where it lands.
+ *
+ * A cylinder with the streaks scrolled down it. Water at this size is the
+ * streaks moving and nothing else — held still, a translucent cylinder reads
+ * as a glass rod. The ring is there for the same reason: a stream landing in a
+ * dry basin reads as one too.
+ *
+ * Origin at the spout, falling to -height. Mounted only while the tap is on,
+ * so the scroll costs nothing the rest of the time.
+ */
+function Water({
+  radius,
+  height,
+  spread = 1.4,
+  opacity = 0.52,
+}: {
+  radius: number;
+  height: number;
+  /** How much wider the stream lands than it leaves. */
+  spread?: number;
+  opacity?: number;
+}) {
+  const map = useMemo(() => waterTexture(), []);
+  const ripple = useRef<THREE.Mesh>(null);
+  useEffect(() => () => map.dispose(), [map]);
+
+  useFrame(({ clock }, dt) => {
+    map.offset.y -= Math.min(dt, 0.05) * 3.4;
+    const r = ripple.current;
+    if (r) {
+      const k = 0.88 + Math.sin(clock.elapsedTime * 8.4) * 0.11;
+      r.scale.set(k, k, 1);
+    }
+  });
+
   return (
-    <group position={position}>
-      {/* the steel surround, flush with the top */}
-      <mesh position={[0, 0.896, 0]} receiveShadow>
-        <boxGeometry args={[0.46, 0.014, 0.4]} />
-        <meshStandardMaterial color="#8d9298" roughness={0.3} metalness={0.85} />
+    <group>
+      <mesh position={[0, -height / 2, 0]}>
+        <cylinderGeometry args={[radius, radius * spread, height, 12, 1, true]} />
+        <meshStandardMaterial
+          color="#dbeaf0"
+          map={map}
+          alphaMap={map}
+          transparent
+          opacity={opacity}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+          roughness={0.12}
+          metalness={0}
+        />
       </mesh>
-      {/* the bowl, a dark face inside the surround so it reads as a hole */}
-      <mesh position={[0, 0.904, 0.01]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[0.38, 0.3]} />
-        <meshStandardMaterial color="#4a4f53" roughness={0.42} metalness={0.7} />
-      </mesh>
-      {/* mixer: a column and a curved spout, in brass */}
-      <mesh position={[0, 1.0, -0.2]}>
-        <cylinderGeometry args={[0.018, 0.02, 0.22, 14]} />
-        <meshStandardMaterial color="#b98f4e" roughness={0.26} metalness={1} />
-      </mesh>
-      <mesh position={[0, 1.11, -0.13]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.075, 0.017, 10, 24, Math.PI / 2]} />
-        <meshStandardMaterial color="#b98f4e" roughness={0.26} metalness={1} />
+      <mesh ref={ripple} position={[0, -height + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[radius * spread * 1.2, radius * spread * 4, 20]} />
+        <meshBasicMaterial
+          color="#cfe2ea"
+          transparent
+          opacity={opacity * 0.5}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
       </mesh>
     </group>
   );
 }
 
-/** Four induction rings printed on the worktop, and nothing else. A hob is a
- *  sheet of black glass; modelling knobs it does not have reads as a cooker. */
+/** The hole the bowl needs in the worktop. The run cuts it and the sink fills
+ *  it, so the two read the size from here rather than from each other. */
+export const SINK_HOLE = { w: 0.42, d: 0.36 };
+
+/**
+ * A single-bowl inset sink and its mixer.
+ *
+ * The bowl is a real well hung through the worktop, not a dark rectangle laid
+ * on it — which is what this was, and it read as a doormat. Everything else on
+ * a counter sits on the top; a sink is the one thing that goes through it, and
+ * nothing about it works until the hole is real.
+ */
+export function Sink({ position }: { position: [number, number, number] }) {
+  /** The oak's top face. The steel rim sits a hair over it the way a
+   *  top-mounted sink does: flush would share a plane with the wood it laps
+   *  onto, and a shared plane flickers. */
+  const TOP = 0.9015;
+  const DEEP = 0.15;
+  /** How far the rim laps onto the oak on each side. */
+  const LAP = 0.012;
+  const RIM = 0.022;
+
+  const steel = (
+    <meshStandardMaterial
+      color="#979ea4"
+      roughness={0.34}
+      metalness={0.6}
+      envMapIntensity={1.3}
+    />
+  );
+  const tap = <meshStandardMaterial {...TAP} />;
+  const [on, setOn] = useState(false);
+
+  return (
+    <group position={position}>
+      {/* The well. `OpenBox` is a box short one face with a lip around the
+          opening, which is a sink: five steel walls and a rolled rim. */}
+      <group position={[0, TOP - DEEP / 2, 0]}>
+        <OpenBox
+          width={SINK_HOLE.w + LAP * 2}
+          height={DEEP}
+          depth={SINK_HOLE.d + LAP * 2}
+          thickness={RIM}
+          face="py"
+          material={steel}
+        />
+      </group>
+
+      {/* waste, off centre toward the back the way a single bowl's is */}
+      <mesh position={[0, TOP - DEEP + 0.003, -0.04]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.03, 20]} />
+        <meshStandardMaterial color="#16191b" roughness={0.55} metalness={0.5} />
+      </mesh>
+
+      {/* Mixer on the back rail: a column, a half-round gooseneck and a nozzle
+          over the bowl. The arc is a half torus turned into the run's z, so
+          its two ends land on the column and on the nozzle without either
+          having to be aimed by hand. */}
+      <Interactive
+        label="the kitchen tap"
+        verb={on ? "turn it off" : "run the tap"}
+        onActivate={() => setOn((o) => !o)}
+      >
+        <mesh position={[0, 0.98, -0.24]} castShadow>
+          <cylinderGeometry args={[0.019, 0.022, 0.16, 14]} />
+          {tap}
+        </mesh>
+        <mesh position={[0, 1.06, -0.15]} rotation={[0, Math.PI / 2, 0]} castShadow>
+          <torusGeometry args={[0.09, 0.016, 10, 28, Math.PI]} />
+          {tap}
+        </mesh>
+        <mesh position={[0, 1.03, -0.06]}>
+          <cylinderGeometry args={[0.016, 0.016, 0.06, 12]} />
+          {tap}
+        </mesh>
+        <mesh position={[0, 0.996, -0.06]}>
+          <cylinderGeometry args={[0.019, 0.019, 0.012, 12]} />
+          <meshStandardMaterial color="#6f757a" roughness={0.5} metalness={0.7} />
+        </mesh>
+        {/* The lever, off the side of the column. Turned down with the tap: it
+            is the one part that says which way the mixer is set, and a lever
+            that never moves gives the whole fitting away. */}
+        <mesh position={[0.045, 1.055, -0.24]} rotation={[0, 0, on ? 0.5 : -0.35]}>
+          <cylinderGeometry args={[0.008, 0.009, 0.075, 10]} />
+          {tap}
+        </mesh>
+      </Interactive>
+
+      {on && (
+        <group position={[0, 0.99, -0.06]}>
+          <Water radius={0.009} height={0.99 - (TOP - DEEP) - 0.004} />
+        </group>
+      )}
+    </group>
+  );
+}
+
 export function Hob({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
@@ -1175,6 +1661,12 @@ const PORCELAIN = { color: "#ddd8cd", roughness: 0.28, metalness: 0.04 };
  * flush plate, so a separate exposed cistern would be modelling a different
  * toilet.
  *
+ * The pan is an open tapered tube rather than a rounded box with a ring drawn
+ * on it. A box cannot have a bowl: its top face is exactly where the water
+ * should be and everything under it is buried, which is the same trap the two
+ * sinks were in. A tube is double-sided, so the one surface is the porcelain
+ * you see from outside and the bowl you see from above.
+ *
  * Origin at the front face of the duct, on the floor, with local +z pointing
  * into the room.
  */
@@ -1187,7 +1679,49 @@ export function Toilet({
 }) {
   const DUCT_W = 0.55;
   const DUCT_D = 0.2;
-  const DUCT_H = 1.05;
+  /** Boxing height, and the plate on it. The plate has to clear a raised lid:
+   *  standing up, the lid reaches 1.0, and a plate at the old 0.92 was behind
+   *  it — you could open the toilet or flush it, never both. */
+  const DUCT_H = 1.2;
+  const PLATE_Y = 1.09;
+
+  /** Pan: rim height, how far it stands off the wall, and the squash that
+   *  turns the tube's circle into the ellipse a pan actually is. */
+  const RIM = 0.5;
+  const PAN_Z = 0.245;
+  const OVAL = 1.3;
+  const R_TOP = 0.175;
+  const R_LOW = 0.112;
+  const PAN_H = 0.24;
+  /** Resting water line, a little under half way down the bowl. */
+  const WATER = 0.395;
+
+  const porcelain = <meshStandardMaterial {...PORCELAIN} />;
+
+  /* The flush, as a single 0..1 phase. Held in a ref and advanced in the frame
+     loop rather than kept in state: it runs for two seconds and touches two
+     transforms, and re-rendering the bathroom sixty times to move a disc is
+     the one cost this could add to a room that already draws continuously. */
+  const phase = useRef(1);
+  const water = useRef<THREE.Mesh>(null);
+  const swirl = useRef<THREE.Mesh>(null);
+
+  useFrame((_, dt) => {
+    if (phase.current >= 1) return;
+    const t = Math.min(phase.current + Math.min(dt, 0.05) / 2.4, 1);
+    phase.current = t;
+    /* Down fast and back up slow: a cistern empties in about a second and
+       takes the next two to refill, and a level that returns as quickly as it
+       left reads as a bounce. */
+    const drop = t < 0.22 ? t / 0.22 : 1 - (t - 0.22) / 0.78;
+    if (water.current) water.current.position.y = WATER - drop * 0.075;
+    if (swirl.current) {
+      swirl.current.visible = t < 1;
+      swirl.current.rotation.z -= dt * 9 * drop;
+      const m = swirl.current.material as THREE.MeshBasicMaterial;
+      m.opacity = 0.3 * drop;
+    }
+  });
 
   return (
     <group position={position} rotation={rotation}>
@@ -1196,31 +1730,110 @@ export function Toilet({
         <boxGeometry args={[DUCT_W, DUCT_H, DUCT_D]} />
         <meshStandardMaterial color="#575049" roughness={0.6} metalness={0} />
       </mesh>
-      {/* flush plate */}
-      <mesh position={[0, 0.92, 0.004]}>
-        <boxGeometry args={[0.2, 0.14, 0.012]} />
-        <meshStandardMaterial {...PORCELAIN} roughness={0.34} />
-      </mesh>
 
-      {/* pan, cantilevered off the duct with nothing under it */}
-      <RoundedBox position={[0, 0.44, 0.24]} args={[0.36, 0.17, 0.48]} radius={0.07} smoothness={4} castShadow receiveShadow>
-        <meshStandardMaterial {...PORCELAIN} />
+      {/* Flush plate: a plate and the two buttons on it, which is the pair
+          every cistern buried in a wall here has. */}
+      <Interactive
+        label="the flush plate"
+        verb="flush"
+        onActivate={() => {
+          phase.current = 0;
+        }}
+      >
+        <mesh position={[0, PLATE_Y, 0.004]}>
+          <boxGeometry args={[0.2, 0.14, 0.012]} />
+          <meshStandardMaterial {...PORCELAIN} roughness={0.34} />
+        </mesh>
+        {([[-0.045, 0.05], [0.045, 0.036]] as const).map(([x, w]) => (
+          <mesh key={x} position={[x, PLATE_Y, 0.013]}>
+            <boxGeometry args={[w, 0.09, 0.006]} />
+            <meshStandardMaterial color="#c9c3b7" roughness={0.42} metalness={0.1} />
+          </mesh>
+        ))}
+      </Interactive>
+
+      {/* The collar between the duct and the pan, which is what makes it read
+          as hung off the wall rather than standing clear of it. */}
+      <RoundedBox
+        position={[0, RIM - 0.075, 0.055]}
+        args={[0.25, 0.16, 0.14]}
+        radius={0.05}
+        smoothness={3}
+        castShadow
+      >
+        {porcelain}
       </RoundedBox>
-      {/* The opening, elongated along the pan. At the full width of the bowl a
-          flat ring reads as a black hole cut in the porcelain rather than as a
-          toilet, so it is kept small and dark-warm instead of black. */}
-      <mesh position={[0, 0.53, 0.25]} rotation={[-Math.PI / 2, 0, 0]} scale={[1, 1.35, 1]}>
-        <ringGeometry args={[0.055, 0.115, 24]} />
-        <meshStandardMaterial color="#4f483c" roughness={0.6} side={THREE.DoubleSide} />
-      </mesh>
+
+      <group position={[0, 0, PAN_Z]} scale={[1, 1, OVAL]}>
+        {/* the pan itself: outside and bowl in one double-sided surface */}
+        <mesh position={[0, RIM - PAN_H / 2, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[R_TOP, R_LOW, PAN_H, 26, 1, true]} />
+          <meshStandardMaterial {...PORCELAIN} side={THREE.DoubleSide} />
+        </mesh>
+        {/* the rim, capping an edge that is otherwise a paper thickness */}
+        <mesh position={[0, RIM, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[R_TOP, 0.009, 8, 26]} />
+          {porcelain}
+        </mesh>
+        {/* the trap under it, closed off */}
+        <mesh position={[0, RIM - PAN_H, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[R_LOW, 20]} />
+          <meshStandardMaterial color="#8f897c" roughness={0.5} />
+        </mesh>
+
+        <mesh ref={water} position={[0, WATER, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.146, 24]} />
+          <meshStandardMaterial
+            color="#7f8f96"
+            roughness={0.08}
+            metalness={0.2}
+            transparent
+            opacity={0.86}
+            envMapIntensity={1.6}
+          />
+        </mesh>
+        {/* Only while it is flushing: the pull of the water going round. */}
+        <mesh
+          ref={swirl}
+          visible={false}
+          position={[0, WATER + 0.004, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <ringGeometry args={[0.05, 0.135, 22, 1, 0, Math.PI * 1.35]} />
+          <meshBasicMaterial color="#dceaf0" transparent opacity={0} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+
+        {/* the seat, sat on the rim */}
+        <mesh position={[0, RIM + 0.023, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+          <torusGeometry args={[0.148, 0.023, 8, 28]} />
+          <meshStandardMaterial {...PORCELAIN} roughness={0.34} />
+        </mesh>
+      </group>
+
+      {/* The lid, hinged at the back the way one is. An oval off the pan's own
+          radius and squash, not a rounded box: a lid is cut to the china under
+          it, and a rectangle laid over an oval pan overhangs it on all four
+          corners.
+
+          It stops a few degrees past upright — far enough to stay there,
+          not so far that its top edge swings back inside the boxing. */}
+      <Door label="the toilet lid" pivot={[0, RIM + 0.05, 0.03]} axis="x" angle={-1.62}>
+        <group position={[0, RIM + 0.05, PAN_Z]} scale={[1, 1, OVAL]}>
+          <mesh castShadow receiveShadow>
+            <cylinderGeometry args={[R_TOP + 0.004, R_TOP + 0.008, 0.022, 26]} />
+            <meshStandardMaterial {...PORCELAIN} roughness={0.32} />
+          </mesh>
+        </group>
+      </Door>
     </group>
   );
 }
 
 /**
- * The vanity: a run of drawers, a countertop basin cut into the top, and the
- * mirror over it. Origin at the wall face, local +z into the room, so it is
- * placed the same way the duct and the wall units are.
+ * The vanity: a run of drawers and a countertop basin. The mirror over it is
+ * `WallCabinet`, which carries the glass on its own doors. Origin at the wall
+ * face, local +z into the room, so it is placed the same way the duct and the
+ * wall units are.
  */
 export function Vanity({
   position,
@@ -1234,6 +1847,16 @@ export function Vanity({
   const H = 0.85;
   const D = 0.35;
   const PLINTH = 0.08;
+  /** Counter face, and the basin standing on it. */
+  const TOP = H + 0.1;
+  const BOWL = 0.12;
+  const RIM = TOP + BOWL;
+  /** Where the spout hangs, and the floor of the well under it. */
+  const SPOUT = { x: 0.06, y: RIM + 0.07, z: 0.2 };
+  const FLOOR = TOP + 0.016;
+
+  const tap = <meshStandardMaterial {...TAP} />;
+  const [on, setOn] = useState(false);
 
   return (
     <group position={position} rotation={rotation}>
@@ -1278,40 +1901,82 @@ export function Vanity({
       <RoundedBox position={[0, H + 0.05, D / 2]} args={[length + 0.02, 0.1, D + 0.02]} radius={0.012} smoothness={3} receiveShadow>
         <meshStandardMaterial {...PORCELAIN} roughness={0.28} />
       </RoundedBox>
-      {/* The bowl, drawn on top of the slab rather than cut into it. The
-          counter's upper face is at H + 0.1, and anything modelled below that
-          is buried in it — the same way the kitchen sink went missing. */}
-      <mesh position={[0.06, H + 0.102, D / 2 + 0.01]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[length * 0.56, D * 0.62]} />
-        <meshStandardMaterial color="#a09889" roughness={0.32} metalness={0.05} />
-      </mesh>
-      <mesh position={[0.06, H + 0.105, D / 2 + 0.01]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.016, 0.03, 18]} />
+      {/* A basin standing on the slab, not sunk into it. Sunk would mean
+          cutting the top into four the way the kitchen worktop is cut, and a
+          vanity this narrow gets a countertop bowl anyway — which is the one
+          way the well can be real rather than painted on the stone. */}
+      <group position={[SPOUT.x, TOP + BOWL / 2, SPOUT.z]}>
+        <OpenBox
+          width={0.42}
+          height={BOWL}
+          depth={0.24}
+          thickness={0.016}
+          face="py"
+          material={<meshStandardMaterial {...PORCELAIN} roughness={0.24} />}
+        />
+      </group>
+      <mesh position={[SPOUT.x, FLOOR + 0.002, SPOUT.z]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.014, 0.028, 18]} />
         <meshStandardMaterial color="#6f7478" roughness={0.3} metalness={0.8} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* brass mixer, the same metal as every other tap in the flat */}
-      <mesh position={[0.06, H + 0.19, 0.11]}>
-        <cylinderGeometry args={[0.016, 0.018, 0.18, 14]} />
-        <meshStandardMaterial color="#b98f4e" roughness={0.26} metalness={1} />
-      </mesh>
-      <mesh position={[0.06, H + 0.28, 0.17]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.06, 0.015, 10, 20, Math.PI / 2]} />
-        <meshStandardMaterial color="#b98f4e" roughness={0.26} metalness={1} />
-      </mesh>
+      {/* The mixer, built as the kitchen's is so the two read as one flat's
+          fittings: column, half-round gooseneck, nozzle. The arc's two ends
+          land on the column and over the waste by construction. */}
+      <Interactive
+        label="the basin tap"
+        verb={on ? "turn it off" : "run the tap"}
+        onActivate={() => setOn((o) => !o)}
+      >
+        <mesh position={[SPOUT.x, (TOP + SPOUT.y + 0.04) / 2, 0.045]} castShadow>
+          <cylinderGeometry args={[0.015, 0.018, SPOUT.y + 0.04 - TOP, 14]} />
+          {tap}
+        </mesh>
+        <mesh
+          position={[SPOUT.x, SPOUT.y + 0.04, (0.045 + SPOUT.z) / 2]}
+          rotation={[0, Math.PI / 2, 0]}
+          castShadow
+        >
+          <torusGeometry args={[(SPOUT.z - 0.045) / 2, 0.014, 10, 26, Math.PI]} />
+          {tap}
+        </mesh>
+        <mesh position={[SPOUT.x, SPOUT.y + 0.018, SPOUT.z]}>
+          <cylinderGeometry args={[0.014, 0.014, 0.05, 12]} />
+          {tap}
+        </mesh>
+        <mesh position={[SPOUT.x, SPOUT.y - 0.004, SPOUT.z]}>
+          <cylinderGeometry args={[0.016, 0.016, 0.01, 12]} />
+          <meshStandardMaterial color="#6f757a" roughness={0.5} metalness={0.7} />
+        </mesh>
+        <mesh
+          position={[SPOUT.x + 0.04, SPOUT.y + 0.03, 0.045]}
+          rotation={[0, 0, on ? 0.5 : -0.35]}
+        >
+          <cylinderGeometry args={[0.007, 0.008, 0.07, 10]} />
+          {tap}
+        </mesh>
+      </Interactive>
 
-      {/* Mirror, flat to the wall. Kept a dim grey rather than the near-black
-          the windows use: this one is at eye height and an arm's length away,
-          and at that size a black rectangle reads as a hole in the wall. */}
-      <mesh position={[0, 1.52, 0.012]}>
-        <boxGeometry args={[length - 0.06, 0.78, 0.02]} />
-        <meshStandardMaterial color="#4a5057" roughness={0.05} metalness={0.55} envMapIntensity={2.4} />
-      </mesh>
+      {on && (
+        <group position={[SPOUT.x, SPOUT.y - 0.008, SPOUT.z]}>
+          <Water radius={0.008} height={SPOUT.y - 0.008 - FLOOR} />
+        </group>
+      )}
     </group>
   );
 }
 
-/** The cabinet high on the wall past the WC. Origin at the wall face. */
+/**
+ * The mirror cabinet over the basin: a carcass with two mirror-fronted doors
+ * that open out like a wardrobe's.
+ *
+ * It is the bathroom's only mirror, which is why it hangs here rather than on
+ * the wall past the WC where it used to — a cabinet you cannot see yourself in
+ * while you are at the basin is a cupboard, and the flat already had one of
+ * those over the toilet.
+ *
+ * Origin at the wall face on the cabinet's centre line, local +z into the room.
+ */
 export function WallCabinet({
   position,
   rotation = [0, 0, 0],
@@ -1319,41 +1984,72 @@ export function WallCabinet({
   position: [number, number, number];
   rotation?: [number, number, number];
 }) {
-  const W = 0.5;
-  const H = 0.6;
-  const D = 0.18;
+  const W = 0.7;
+  const H = 0.66;
+  const D = 0.16;
+  /** How far the carcass runs into the wall behind it. Sat flush, its back
+   *  panel shares a plane with the wall and the two dither against each other
+   *  — which inside a lit cupboard came out as a chequerboard, not as the
+   *  usual thin flickering line. */
+  const BURY = 0.02;
+  /** Gap down the middle, so the two leaves read as two and not as one pane
+   *  with a line drawn on it. */
+  const GAP = 0.006;
+  const LEAF = (W - GAP) / 2;
+
+  /* The same glass the vanity used to carry on the wall behind this. Kept a
+     dim grey rather than a true mirror: nothing in the room reflects, and at
+     this size a black rectangle reads as a hole in the wall. */
+  const mirror = (
+    <meshStandardMaterial color="#4a5057" roughness={0.05} metalness={0.55} envMapIntensity={2.4} />
+  );
 
   return (
     <group position={position} rotation={rotation}>
-      <group position={[0, 0, D / 2]}>
+      <group position={[0, 0, (D - BURY) / 2]}>
         <OpenBox
           width={W}
           height={H}
-          depth={D}
+          depth={D + BURY}
           material={<meshStandardMaterial {...PORCELAIN} roughness={0.5} />}
         />
       </group>
-      <mesh position={[0, 0, D / 2 - 0.01]} receiveShadow>
-        <boxGeometry args={[W - 0.03, 0.014, D - 0.03]} />
-        <meshStandardMaterial {...PORCELAIN} roughness={0.6} />
-      </mesh>
-      <Door label="the bathroom cabinet" pivot={[-W / 2, 0, D]} angle={-1.9}>
-        <mesh position={[0, 0, D + 0.004]} castShadow>
-          <boxGeometry args={[W - 0.016, H - 0.016, 0.016]} />
-          <meshStandardMaterial {...PORCELAIN} roughness={0.38} />
+      {/* two shelves, which is what is behind a door this tall */}
+      {[-0.11, 0.11].map((y) => (
+        <mesh key={y} position={[0, y, D / 2 - 0.008]} receiveShadow>
+          <boxGeometry args={[W - 0.03, 0.012, D - 0.03]} />
+          <meshStandardMaterial {...PORCELAIN} roughness={0.6} />
         </mesh>
-      </Door>
+      ))}
+
+      {/* Both leaves hinge on the outer edge and swing into the room. The sign
+          of the angle follows the pivot: a leaf whose free edge is at +x from
+          its hinge opens on a negative one, and the mirrored leaf on a
+          positive. */}
+      {([-1, 1] as const).map((side) => (
+        <Door
+          key={side}
+          label="the mirror cabinet"
+          pivot={[side * (W / 2), 0, D]}
+          angle={side * 1.9}
+        >
+          <group position={[side * (LEAF + GAP) / 2, 0, 0]}>
+            <mesh position={[0, 0, D + 0.008]} castShadow>
+              <boxGeometry args={[LEAF, H - 0.014, 0.016]} />
+              <meshStandardMaterial {...PORCELAIN} roughness={0.38} />
+            </mesh>
+            {/* the glass, laid on the front and inset so the leaf keeps an edge */}
+            <mesh position={[0, 0, D + 0.018]}>
+              <boxGeometry args={[LEAF - 0.024, H - 0.038, 0.004]} />
+              {mirror}
+            </mesh>
+          </group>
+        </Door>
+      ))}
     </group>
   );
 }
 
-/**
- * A shower corner: a quadrant tray, the curved screen that closes it and a
- * riser with a rain head and a handset. Origin at the corner where the two
- * walls meet, with the enclosure filling the quadrant toward local +x and +z —
- * placed off the corner rather than off a centre, because the corner is the
- * thing it has to line up with.
- */
 /**
  * The shower: a square enclosure in the corner, tiled on the two sides that
  * are wall and glazed on the two that are not.
@@ -1385,6 +2081,7 @@ export function Shower({
   const TRAY = 0.05;
 
   const steel = <meshStandardMaterial color="#8d9298" roughness={0.3} metalness={0.85} />;
+  const [on, setOn] = useState(false);
   const glass = (
     <meshPhysicalMaterial
       color="#cfe0e4"
@@ -1415,15 +2112,28 @@ export function Shower({
         </mesh>
       ))}
 
-      {/* the two glazed sides, each one pane */}
-      <mesh position={[S - T / 2, TRAY + HEIGHT / 2, (S - BURY) / 2]}>
-        <boxGeometry args={[T, HEIGHT, S + BURY]} />
-        {glass}
-      </mesh>
+      {/* The fixed pane, on the side the washing machine stands against. */}
       <mesh position={[(S - T - BURY) / 2, TRAY + HEIGHT / 2, S - T / 2]}>
         <boxGeometry args={[S - T + BURY, HEIGHT, T]} />
         {glass}
       </mesh>
+
+      {/* The door, on the only side of the enclosure with room in front of it.
+          Hinged on the corner post nearest the WC, so it opens back across the
+          room. Stopped at 63 degrees: the pan's nearest corner is 0.79m off
+          this hinge against a 0.85m leaf, so anywhere between about 66 and 82
+          degrees the outer edge is inside the china. */}
+      <Door label="the shower door" pivot={[S, 0, 0]} angle={1.1}>
+        <mesh position={[S - T / 2, TRAY + HEIGHT / 2, (S - BURY) / 2]}>
+          <boxGeometry args={[T, HEIGHT, S + BURY]} />
+          {glass}
+        </mesh>
+        {/* handle, on the outside of the swinging edge */}
+        <mesh position={[S + 0.03, TRAY + HEIGHT / 2, S - 0.14]}>
+          <boxGeometry args={[0.05, 0.22, 0.018]} />
+          {steel}
+        </mesh>
+      </Door>
 
       {/* Head rails over each pane and a post at each exposed corner. Three
           posts, not four: the fourth corner is the one the walls make. */}
@@ -1444,18 +2154,121 @@ export function Shower({
       ))}
 
       {/* riser in the corner: a rain head on the gooseneck, a handset below */}
-      <mesh position={[0.11, 1.05, 0.11]}>
-        <cylinderGeometry args={[0.014, 0.014, 1.9, 12]} />
-        <meshStandardMaterial color="#8d9298" roughness={0.28} metalness={0.9} />
-      </mesh>
-      <mesh position={[0.26, 1.98, 0.26]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.085, 0.085, 0.022, 20]} />
-        {steel}
-      </mesh>
-      <mesh position={[0.17, 1.28, 0.17]} rotation={[0.5, -Math.PI / 4, 0]}>
-        <cylinderGeometry args={[0.048, 0.03, 0.05, 16]} />
-        <meshStandardMaterial color="#8d9298" roughness={0.34} metalness={0.85} />
-      </mesh>
+      <Interactive
+        label="the shower"
+        verb={on ? "turn it off" : "turn it on"}
+        onActivate={() => setOn((o) => !o)}
+      >
+        <mesh position={[0.11, 1.05, 0.11]}>
+          <cylinderGeometry args={[0.014, 0.014, 1.9, 12]} />
+          <meshStandardMaterial color="#8d9298" roughness={0.28} metalness={0.9} />
+        </mesh>
+        <mesh position={[0.26, 1.98, 0.26]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.085, 0.085, 0.022, 20]} />
+          {steel}
+        </mesh>
+        <mesh position={[0.17, 1.28, 0.17]} rotation={[0.5, -Math.PI / 4, 0]}>
+          <cylinderGeometry args={[0.048, 0.03, 0.05, 16]} />
+          <meshStandardMaterial color="#8d9298" roughness={0.34} metalness={0.85} />
+        </mesh>
+      </Interactive>
+
+      {/* Falls the full height of the enclosure. Thinner and fainter than a
+          tap's: a rain head is a lot of small streams, and drawn at a tap's
+          weight the column comes out looking solid. */}
+      {on && (
+        <group position={[0.26, 1.967, 0.26]}>
+          <Water radius={0.078} height={1.967 - TRAY} spread={1.06} opacity={0.3} />
+        </group>
+      )}
+    </group>
+  );
+}
+
+/**
+ * Two towels on chrome hooks.
+ *
+ * In the door reveal, on the left as you come in. The jamb there is the whole
+ * 0.42m between the hall's built-in and the opening rather than the wall's
+ * 0.10, so that side of the doorway is a deep nook — which is the only face in
+ * the bathroom these belong on. They hang from one point each rather than
+ * folded
+ * over a rail: gathered to almost nothing at the hook and flaring as they
+ * fall, which is the shape a towel on a hook actually makes and the reason a
+ * rounded box does not read as one.
+ *
+ * Thin. A towel hanging free is a couple of centimetres front to back at the
+ * top and not much more at the hem — the drape is a squashed taper, not a
+ * slab.
+ *
+ * Origin at the wall face, local +z into the room.
+ */
+export function Towels({
+  position,
+  rotation = [0, 0, 0],
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+}) {
+  const HOOK_Y = 1.62;
+  /**
+   * Across, length, hang, how far it stands off the wall, colour. Two of each,
+   * because a matching pair hung dead straight reads as one towel drawn twice.
+   *
+   * The colours are well under the ones they read as: the wall takes the
+   * hall's lamp full on, and at a true linen and mid-grey both came back cream.
+   *
+   * The second is stepped forward because at this spacing the hems cross, and
+   * two slabs sharing a plane z-fight into stripes — the same step the coats on
+   * the hall rail are given.
+   */
+  const TOWELS: [number, number, number, number, string][] = [
+    [-0.06, 0.97, 0.035, 0, "#8f8574"],
+    [0.06, 0.88, -0.028, 0.026, "#4a4d50"],
+  ];
+  const chrome = (
+    <meshStandardMaterial color="#b7bcc0" roughness={0.16} metalness={0.9} />
+  );
+
+  return (
+    <group position={position} rotation={rotation}>
+      {TOWELS.map(([x, len, tilt, step, colour]) => (
+        <group key={x} position={[x, 0, 0]} rotation={[0, 0, tilt]}>
+          {/* the rose flat to the wall, then the peg off it */}
+          <mesh position={[0, HOOK_Y, 0.007]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.023, 0.023, 0.014, 16]} />
+            {chrome}
+          </mesh>
+          {/* A straight peg, not a J. Long enough that both towels find it:
+              the stepped one hangs further out along the same length. */}
+          <mesh position={[0, HOOK_Y, 0.042]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+            <cylinderGeometry args={[0.007, 0.007, 0.075, 10]} />
+            {chrome}
+          </mesh>
+
+          {/* The drape. A taper squashed on z: 90mm across and 20mm deep where
+              the hook has it, 300mm across and 60mm deep at the hem.
+
+              Leaned off the wall about the hook, not about the group's origin
+              — that sits on the floor, and a few degrees there swings the whole
+              towel back through the wall it hangs on. */}
+          <group position={[0, HOOK_Y - 0.021, 0.04 + step]} rotation={[-0.07, 0, 0]}>
+            <group position={[0, -len / 2, 0]} scale={[1, 1, 0.2]}>
+              <mesh castShadow receiveShadow>
+                <cylinderGeometry args={[0.045, 0.15, len, 8, 1]} />
+                <meshStandardMaterial color={colour} roughness={0.96} metalness={0} />
+              </mesh>
+            </group>
+          </group>
+          {/* The loop it hangs by. A torus lies in xy as it comes, which is
+              already the plane across the peg — turned flat it read as a ring
+              lying on nothing and left the towel hanging in mid-air under it. */}
+          <mesh position={[0, HOOK_Y, 0.04 + step]}>
+            <torusGeometry args={[0.021, 0.0045, 6, 16]} />
+            <meshStandardMaterial color={colour} roughness={0.96} metalness={0} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
@@ -1521,7 +2334,11 @@ export function WashingMachine({
         <meshStandardMaterial color="#33372f" roughness={0.5} metalness={0.4} />
       </mesh>
 
-      <Door label="the washing machine" pivot={[-0.21, 0.44, 0.3]} angle={-2.0}>
+      {/* Opens to a right angle and no further. Hinged away from the shower,
+          whose corner post stands 0.3m off the machine's other side, and
+          stopped before the hall's built-in, which comes through the wall
+          behind it — past 90 degrees the leaf reaches both. */}
+      <Door label="the washing machine" pivot={[-0.21, 0.44, 0.3]} angle={-1.5}>
         <mesh position={[0, 0.44, 0.312]} rotation={[Math.PI / 2, 0, 0]} castShadow>
           <cylinderGeometry args={[0.21, 0.21, 0.02, 28]} />
           <meshStandardMaterial color="#b4b6b3" roughness={0.4} metalness={0.2} />

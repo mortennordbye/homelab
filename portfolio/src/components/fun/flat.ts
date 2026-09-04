@@ -171,8 +171,8 @@ export function sightBoxes(): Box[] {
 }
 
 /** Door openings, for the linings and casings that stand in them. */
-export function doorOpenings(): { box: Box; horizontal: boolean }[] {
-  const out: { box: Box; horizontal: boolean }[] = [];
+export function doorOpenings(): { id: string; box: Box; horizontal: boolean }[] {
+  const out: { id: string; box: Box; horizontal: boolean }[] = [];
   for (const run of WALLS) {
     const horizontal = run.a[1] === run.b[1];
     const start = horizontal ? run.a[0] : run.a[1];
@@ -181,6 +181,7 @@ export function doorOpenings(): { box: Box; horizontal: boolean }[] {
       const p0 = start + d0;
       const p1 = start + d1;
       out.push({
+        id: run.id,
         horizontal,
         box: horizontal
           ? {

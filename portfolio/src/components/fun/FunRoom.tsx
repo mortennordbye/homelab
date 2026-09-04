@@ -354,7 +354,7 @@ function SeatedFocus({
     const look = new THREE.Vector3(...DESK_SCREEN.position)
       .add(new THREE.Vector3(...DESK_TERMINAL.position))
       .multiplyScalar(0.5);
-    const pos = new THREE.Vector3(0, SEAT.eye, SEAT.z);
+    const pos = new THREE.Vector3(SEAT.x, SEAT.eye, SEAT.z);
     const quat = new THREE.Quaternion().setFromRotationMatrix(
       new THREE.Matrix4().lookAt(pos, look, new THREE.Vector3(0, 1, 0)),
     );

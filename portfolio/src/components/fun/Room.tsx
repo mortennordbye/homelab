@@ -18,6 +18,7 @@ import {
 } from "./Objects";
 import { DASH_PX_H, DASH_PX_W } from "./Screen";
 import { Printer } from "./Printer";
+import { Door } from "./openable";
 import { Interactive } from "./interaction";
 import { Html } from "@react-three/drei";
 import type { CareerData, ShelfBook, ShelfCert, ShelfData } from "./shelf";
@@ -42,10 +43,13 @@ import {
   OverbedUnits,
   PleatedBlind,
   Poster,
+  SINK_HOLE,
   Shower,
   Sink,
   Sofa,
   TV_PANEL,
+  TaskChair,
+  Towels,
   Toilet,
   Vanity,
   WallCabinet,
@@ -273,12 +277,33 @@ function Partition({
   );
 }
 
+/** Head height of every door in the flat. The lining stops here, the leaf
+ *  hangs to it, and the wall over the opening starts from it. */
+export const DOOR_H = 2.04;
+
+/**
+ * The wall over a door, from the lining's head to the ceiling.
+ *
+ * `wallBoxes` cuts an opening through the wall's whole height, which is what
+ * an opening is to somebody walking through it. To somebody looking at it, it
+ * left a door frame hanging under half a metre of open sky.
+ */
+function OverDoor({ box, plaster }: { box: Box; plaster: Surface }) {
+  const h = FLAT.h - DOOR_H;
+  return (
+    <mesh position={[box.x, DOOR_H + h / 2, box.z]} receiveShadow>
+      <boxGeometry args={[box.hx * 2, h, box.hz * 2]} />
+      <meshStandardMaterial {...plaster} color="#241a12" roughness={0.96} metalness={0} normalScale={[0.42, 0.42]} />
+    </mesh>
+  );
+}
+
 /**
  * The lining of a door opening: two jambs and a head. An unlined opening shows
  * the wall's cut edge and reads as a hole rather than a doorway.
  */
 function DoorLining({ box, horizontal }: { box: Box; horizontal: boolean }) {
-  const H = 2.04;
+  const H = DOOR_H;
   const T = 0.04;
   const span = horizontal ? box.hx * 2 : box.hz * 2;
   const thick = horizontal ? box.hz * 2 : box.hx * 2;
@@ -294,6 +319,130 @@ function DoorLining({ box, horizontal }: { box: Box; horizontal: boolean }) {
         <boxGeometry args={[span, T, thick + 0.012]} />
         <meshStandardMaterial color={OAK.case} roughness={0.55} metalness={0} />
       </mesh>
+    </group>
+  );
+}
+
+/**
+ * Which jamb each door hangs on and how far it stands open. Keyed by the wall
+ * run its opening was cut from: a run knows where its holes are, not what is
+ * hung in them, and both runs here carry exactly one door.
+ *
+ * `hinge` is which end of the opening the leaf pivots on in the opening's own
+ * frame, and the sign of `angle` is which way it swings. Both stand short of a
+ * right angle: flat against the wall a door disappears into it, and the point
+ * of hanging these was to see them.
+ *
+ * The bathroom's opens out into the hall rather than into the room, off the
+ * jamb by the coat alcove — so it stands turned toward the rack, which is what
+ * you are looking at as you come in the front door. Out is also the way a
+ * bathroom this size is hung: there is a washing machine behind the swing.
+ */
+const DOOR_HANG: Record<string, { label: string; hinge: -1 | 1; angle: number }> = {
+  "living/east": { label: "the bedroom door", hinge: -1, angle: -1.3 },
+  "bath/south": { label: "the bathroom door", hinge: 1, angle: 1.2 },
+};
+
+/**
+ * The leaf hanging in a lined opening: a panelled door, both faces, and a
+ * lever on each.
+ *
+ * Framed rather than laid on, for the reason `FrontDoor` gives: a panel drawn
+ * as a sunk rectangle on a slab gives a step of a few millimetres that
+ * disappears under any light in this flat. The frame has to stand proud of the
+ * panel and throw a real shadow line, and on a door you walk round it has to
+ * do it on both sides.
+ *
+ * One column of panels, not the front door's two: at 720mm clear a centre
+ * stile leaves two 195mm fields, which reads as a cupboard front.
+ *
+ * Rests open, for the reason `Door`'s `startOpen` gives.
+ */
+function RoomDoor({
+  box,
+  horizontal,
+  hang,
+}: {
+  box: Box;
+  horizontal: boolean;
+  hang: { label: string; hinge: -1 | 1; angle: number };
+}) {
+  /* Clear of the lining on both jambs and off the floor, so the leaf reads as
+     hung in the opening rather than cut from it. */
+  const W = (horizontal ? box.hx : box.hz) * 2 - 0.08 - 0.008;
+  const H = DOOR_H - 0.04 - 0.02;
+  /** 12mm panel with a 14mm frame each side: a 40mm leaf. */
+  const CORE = 0.012;
+  const FRAME = 0.014;
+  const stile = 0.1;
+
+  /* Stiles and rails, in the leaf's own frame. Written once and drawn on both
+     faces — a door is symmetrical and the two sides of these are not worth
+     two lists. */
+  const members: [number, number, number, number][] = [
+    [-(W - stile) / 2, H / 2, stile, H],
+    [(W - stile) / 2, H / 2, stile, H],
+    [0, 0.115, W, 0.23],
+    [0, 1.09, W, 0.13],
+    [0, H - 0.09, W, 0.18],
+  ];
+
+  return (
+    <group position={[box.x, 0, box.z]} rotation={[0, horizontal ? 0 : Math.PI / 2, 0]}>
+      <Door
+        label={hang.label}
+        pivot={[hang.hinge * (W / 2), 0, 0]}
+        angle={hang.angle}
+        startOpen
+      >
+        <group position={[0, 0.012, 0]}>
+          {/* the panel the frame is built either side of */}
+          <mesh position={[0, H / 2, 0]} castShadow receiveShadow>
+            <boxGeometry args={[W, H, CORE]} />
+            <meshStandardMaterial color="#ded9d0" roughness={0.72} metalness={0} />
+          </mesh>
+          {[-1, 1].map((face) =>
+            members.map(([x, y, w, h], i) => (
+              <mesh
+                key={`${face}-${i}`}
+                position={[x, y, face * (CORE / 2 + FRAME / 2)]}
+                castShadow
+                receiveShadow
+              >
+                <boxGeometry args={[w, h, FRAME]} />
+                <meshStandardMaterial color={OAK.case} roughness={0.62} metalness={0} />
+              </mesh>
+            )),
+          )}
+          {/* lever on a rose, on the swinging stile, one each side */}
+          {[-1, 1].map((face) => (
+            <group
+              key={face}
+              position={[-hang.hinge * (W / 2 - 0.075), 1.03, face * (CORE / 2 + FRAME)]}
+            >
+              <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+                <cylinderGeometry args={[0.029, 0.029, 0.012, 18]} />
+                <meshStandardMaterial color="#8d8579" roughness={0.38} metalness={0.75} />
+              </mesh>
+              <mesh
+                position={[-hang.hinge * 0.03, 0, face * 0.018]}
+                rotation={[0, 0, Math.PI / 2]}
+                castShadow
+              >
+                <cylinderGeometry args={[0.011, 0.011, 0.105, 12]} />
+                <meshStandardMaterial color="#8d8579" roughness={0.38} metalness={0.75} />
+              </mesh>
+            </group>
+          ))}
+          {/* hinges, on the stile the leaf pivots on */}
+          {[0.3, 1.68].map((y) => (
+            <mesh key={y} position={[hang.hinge * (W / 2 - 0.004), y, 0]} castShadow>
+              <boxGeometry args={[0.016, 0.1, CORE + FRAME * 2 + 0.004]} />
+              <meshStandardMaterial color="#a8adb3" roughness={0.34} metalness={0.85} />
+            </mesh>
+          ))}
+        </group>
+      </Door>
     </group>
   );
 }
@@ -324,6 +473,11 @@ export const STOVE = {
 };
 export const TABLE = { x: px(0.51), z: pz(4.495) };
 
+/** Which bay of the kitchen run the sink stands over, in the run's own x.
+ *  Shared by the bowl and by the hole cut for it: two numbers that have to
+ *  agree is one number. */
+const SINK_X = -0.574;
+
 /**
  * The desk, on the blue mark: against the south wall in the south-west corner.
  *
@@ -352,8 +506,12 @@ export const CHAIR_Z = pz(DESK.z - 0.62);
  * Where the camera goes when the visitor takes the chair. Pulled in from
  * CHAIR_Z toward the desk — the chair's origin is its centre, and a camera
  * there looks through the backrest. Height 1.25 is a seated eye.
+ *
+ * x is part of the seat, not assumed: the desk stands 2.2m off the room's
+ * centre line, and a seat that leaves x out sits the visitor in mid-floor
+ * looking back at the monitors from the side.
  */
-export const SEAT = { z: pz(DESK.z - 0.44), eye: 1.25 };
+export const SEAT = { x: DESK_X, z: pz(DESK.z - 0.44), eye: 1.25 };
 
 /**
  * Where the bookcase stands: against the south wall beside the desk, with the
@@ -431,38 +589,6 @@ export const DESK_TERMINAL: Placement = {
   rotation: [0, Math.PI + PORTRAIT_TOE, 0],
   width: PORTRAIT_W,
 };
-
-/** Desk task chair, pushed back from the desk. */
-/* The chair and the plant are scanned models rather than primitives. They were
-   the two worst offenders: a chair assembled from four boxes and a plant made
-   of icosahedron blobs are both shapes the eye knows far too well to be fooled
-   by an approximation. See props.tsx for why only some objects are swapped. */
-/**
- * The task chair. The scanned model faces local +z as it comes, so a chair at
- * rotation 0 looks the way the room's +z does — which is why the desk chair
- * takes no rotation at all.
- *
- * `rotation` used to be destructured here and then dropped on the floor, with
- * a hard-coded half turn going to the Prop instead. The caller asked for a
- * half turn, got one it did not control, and the chair sat with its back to
- * the monitors.
- */
-function Chair({
-  position,
-  rotation = [0, 0, 0],
-}: {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-}) {
-  return (
-    <Prop
-      name="dining_chair_02"
-      position={position}
-      rotation={rotation}
-      height={0.92}
-    />
-  );
-}
 
 /** Monitor stand. The panel itself is a <Screen>, mounted just above this. */
 function Stand({ position }: { position: [number, number, number] }) {
@@ -651,12 +777,15 @@ function Plant({ position }: { position: [number, number, number] }) {
 }
 
 /**
- * A panelled interior door at joinery dimensions (825 x 2040 x 40mm leaf).
+ * The front door, at joinery dimensions (825 x 2040 x 40mm leaf), with its own
+ * architrave and lining: it stands against the perimeter wall rather than in a
+ * cut opening, so nothing else supplies those.
+ *
  * Hand-built — Poly Haven's only CC0 doors are a castle door and a roller
  * shutter. Depth is what sells it: every part sits proud of or recessed into
  * its neighbour by a few millimetres, giving AO the creases to draw.
  */
-function Door({
+function FrontDoor({
   position,
   rotation = [0, 0, 0],
 }: {
@@ -896,6 +1025,14 @@ export function Room({
       {openings.map((o, i) => (
         <DoorLining key={i} box={o.box} horizontal={o.horizontal} />
       ))}
+      {openings.map((o, i) => (
+        <OverDoor key={i} box={o.box} plaster={plasterD} />
+      ))}
+
+      {/* The leaves themselves, hung on the jambs the flat hangs them on. */}
+      {openings.map((o) => (
+        <RoomDoor key={o.id} box={o.box} horizontal={o.horizontal} hang={DOOR_HANG[o.id]} />
+      ))}
 
       {/* skirting, following the perimeter */}
       {(
@@ -965,7 +1102,7 @@ export function Room({
       <Interactive label="the front door" verb="leave" detail="back to the site" onActivate={onExitRoom}>
         {(hovered) => (
           <group>
-            <Door position={at(5.7, 0, FLAT.d - 0.02)} rotation={[0, Math.PI, 0]} />
+            <FrontDoor position={at(5.7, 0, FLAT.d - 0.02)} rotation={[0, Math.PI, 0]} />
             <group position={at(5.7, 2.24, FLAT.d - 0.09)} rotation={[0, Math.PI, 0]}>
               <RoundedBox args={[0.3, 0.11, 0.03]} radius={0.006} smoothness={3} castShadow>
                 <meshStandardMaterial color="#1d2226" roughness={0.6} metalness={0.3} />
@@ -1073,7 +1210,7 @@ export function Room({
         onActivate={onSit}
         disabled={seated}
       >
-        <Chair position={[DESK_X, 0, CHAIR_Z]} />
+        <TaskChair position={[DESK_X, 0, CHAIR_Z]} />
       </Interactive>
 
       {/* The lantern, beside the cabinet where the bookcase used to stand. It
@@ -1167,8 +1304,10 @@ export function Room({
 
       {/* Five bays. Local +x points south, so a negative offset is the fridge
           end and the sink sits beside it, as drawn and as photographed. */}
-      <KitchenRun position={at(3.62, 0, 3.185)} rotation={[0, -Math.PI / 2, 0]} length={2.87} doors={5} bays={{ 3: "panel" }} oak={oak}>
-        <Sink position={[-0.574, 0, 0]} />
+      {/* Bay 1 is a door, not drawers: the bowl hangs through the top into it,
+          and a drawer would pull straight out through the well. */}
+      <KitchenRun position={at(3.62, 0, 3.185)} rotation={[0, -Math.PI / 2, 0]} length={2.87} doors={5} bays={{ 1: "door", 3: "panel" }} cutout={{ x: SINK_X, ...SINK_HOLE }} oak={oak}>
+        <Sink position={[SINK_X, 0, 0]} />
         <Hob position={[0.574, 0, 0]} />
         <Oven position={[0.574, 0, 0]} />
       </KitchenRun>
@@ -1224,11 +1363,28 @@ export function Room({
       {/* Tight against the shower rather than centred in the gap: the entré's
           built-ins are hollowed out of this wall and their bulkhead now stands
           0.32 into the room behind where it used to sit. */}
-      <WashingMachine position={at(4.32, 0, 3.95)} rotation={[0, Math.PI, 0]} />
+      {/* Turned to face east, into the middle of the bathroom. Its porthole
+          used to look north at the shower glass 0.3m away: a door that opens
+          into another fitting is one nobody can reach or see. East is the only
+          side of this corner that is open — the shower is north, the hall's
+          built-in comes through the wall to the south, and the west is wall. */}
+      <WashingMachine position={at(4.32, 0, 3.95)} rotation={[0, Math.PI / 2, 0]} />
       <Toilet position={at(6.1, 0, 3.1)} rotation={[0, -Math.PI / 2, 0]} />
-      <WallCabinet position={at(6.3, 1.62, 3.06)} rotation={[0, -Math.PI / 2, 0]} />
-      <Vanity position={at(6.3, 0, 3.625)} rotation={[0, -Math.PI / 2, 0]} length={0.75} />
-      <BathMat position={at(5.18, 0, 3.95)} rotation={[0, 0.05, 0]} />
+      {/* Over the basin, not over the WC: the cabinet doors carry the room's
+          only mirror. High enough to clear the tap's gooseneck under it. */}
+      <WallCabinet position={at(6.3, 1.66, 3.85)} rotation={[0, -Math.PI / 2, 0]} />
+      {/* Clear of the WC's boxing, which it used to run 125mm into: at 3.625
+          the unit's north end and the duct's south end were the same 0.125m of
+          wall, and the basin sat crowded against it. */}
+      <Vanity position={at(6.3, 0, 3.85)} rotation={[0, -Math.PI / 2, 0]} length={0.75} />
+      {/* Centred in the floor the room actually has: between the shower and
+          washing machine on one side and the vanity on the other. */}
+      <BathMat position={at(5.4, 0, 3.94)} rotation={[0, 0.05, 0]} />
+      {/* In the door reveal, facing out through the opening: the jamb between
+          the hall's built-in and the door is 0.42m deep rather than the wall's
+          0.10, so the left of the doorway is a nook 0.45m across. That is the
+          small dent you pass through coming in, before the washing machine. */}
+      <Towels position={at(5.33, 0, 4.4)} rotation={[0, Math.PI / 2, 0]} />
 
       {/* The case studies as books, certificates on the bottom shelf. Shelf
           count follows the content, which is why everything standing on top
