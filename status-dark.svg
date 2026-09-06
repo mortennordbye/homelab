@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="492" viewBox="0 0 840 492" role="img" aria-label="Live cluster status">
+  <defs>
+    <style>
+  .reveal{animation:rise .7s cubic-bezier(.2,.7,.3,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .pulse{animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .grow{transform-origin:left center;animation:grow 1.4s cubic-bezier(.2,.7,.3,1) both}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+</style>
+    <clipPath id="topclip"><rect x="0" y="0" width="840" height="2"/></clipPath>
+  </defs>
+  <rect x="0.5" y="0.5" width="839" height="491" rx="14" fill="#0f1410" stroke="#2a382c"/>
+  <g clip-path="url(#topclip)">
+    <rect x="0" y="0" width="840" height="2" fill="#51a45e"/>
+  </g>
+  <g class="reveal">
+    <circle class="pulse" cx="46" cy="36" r="5" fill="#51a45e"/>
+    <text x="60" y="40" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="start">CLUSTER · LIVE</text>
+    <text x="800" y="40" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="12" font-weight="600" fill="#a1ada3" text-anchor="end">v1.12.11 talos · v1.35.7 kubernetes</text>
+    <text x="40" y="92" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="23" font-weight="700" fill="#51a45e" text-anchor="start">45/45</text>
+        <text x="40" y="114" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="start">APPLICATIONS</text>
+        <text x="40" y="132" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#a1ada3" text-anchor="start">synced · healthy</text><text x="230" y="92" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="23" font-weight="700" fill="#51a45e" text-anchor="start">6/6</text>
+        <text x="230" y="114" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="start">NODES READY</text>
+        <text x="230" y="132" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#a1ada3" text-anchor="start">28.1d since boot</text><text x="420" y="92" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="23" font-weight="700" fill="#51a45e" text-anchor="start">138</text>
+        <text x="420" y="114" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="start">PODS RUNNING</text>
+        <text x="420" y="132" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#a1ada3" text-anchor="start">85 distinct images</text><text x="610" y="92" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="23" font-weight="700" fill="#51a45e" text-anchor="start">0</text>
+        <text x="610" y="114" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="start">CRITICAL ALERTS</text>
+        <text x="610" y="132" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#a1ada3" text-anchor="start">1 restarts in 24h</text>
+    <line x1="40" y1="150" x2="800" y2="150" stroke="#2a382c"/>
+    
+    
+    <text x="40" y="168" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="start">CPU</text>
+    <text x="390" y="168" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="12" font-weight="700" fill="#51a45e" text-anchor="end">4.4%</text>
+    <rect x="40" y="178" width="350" height="8" rx="4" fill="#2a382c"/>
+    <rect class="grow" x="40" y="178" width="15.4" height="8" rx="4" fill="#51a45e"/>
+    <text x="40" y="204" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="#a1ada3" text-anchor="start">1.48 of 33.70 cores · prometheus</text>
+    
+    <text x="450" y="168" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="start">MEMORY</text>
+    <text x="800" y="168" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="12" font-weight="700" fill="#51a45e" text-anchor="end">32.3%</text>
+    <rect x="450" y="178" width="350" height="8" rx="4" fill="#2a382c"/>
+    <rect class="grow" x="450" y="178" width="113.1" height="8" rx="4" fill="#51a45e"/>
+    <text x="450" y="204" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="#a1ada3" text-anchor="start">21.6 GiB of 66.8 GiB · prometheus</text>
+    <line x1="40" y1="228" x2="800" y2="228" stroke="#2a382c"/>
+    
+    <text x="40" y="252" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="start">10 OF 10 ASLEEP · THE NEXT REQUEST WAKES THEM</text>
+    
+        <rect x="40.0" y="262" width="115.4" height="24" rx="12"
+          fill="none" fill-opacity="0"
+          stroke="#2a382c" stroke-dasharray="3 3"/>
+        <text x="97.69999999999999" y="278" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="middle">audiobookshelf</text>
+        <rect x="163.4" y="262" width="87.0" height="24" rx="12"
+          fill="none" fill-opacity="0"
+          stroke="#2a382c" stroke-dasharray="3 3"/>
+        <text x="206.89999999999998" y="278" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="middle">blog-stage</text>
+        <rect x="258.4" y="262" width="72.8" height="24" rx="12"
+          fill="none" fill-opacity="0"
+          stroke="#2a382c" stroke-dasharray="3 3"/>
+        <text x="294.79999999999995" y="278" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="middle">headroom</text>
+        <rect x="339.2" y="262" width="72.8" height="24" rx="12"
+          fill="none" fill-opacity="0"
+          stroke="#2a382c" stroke-dasharray="3 3"/>
+        <text x="375.59999999999997" y="278" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="middle">homepage</text>
+        <rect x="420.0" y="262" width="72.8" height="24" rx="12"
+          fill="none" fill-opacity="0"
+          stroke="#2a382c" stroke-dasharray="3 3"/>
+        <text x="456.4" y="278" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="middle">it-tools</text>
+        <rect x="500.8" y="262" width="58.6" height="24" rx="12"
+          fill="none" fill-opacity="0"
+          stroke="#2a382c" stroke-dasharray="3 3"/>
+        <text x="530.1" y="278" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="middle">ollama</text>
+        <rect x="567.4" y="262" width="87.0" height="24" rx="12"
+          fill="none" fill-opacity="0"
+          stroke="#2a382c" stroke-dasharray="3 3"/>
+        <text x="610.9" y="278" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="middle">omni-tools</text>
+        <rect x="662.4" y="262" width="87.0" height="24" rx="12"
+          fill="none" fill-opacity="0"
+          stroke="#2a382c" stroke-dasharray="3 3"/>
+        <text x="705.9" y="278" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="middle">open-webui</text>
+        <rect x="40.0" y="292" width="122.5" height="24" rx="12"
+          fill="none" fill-opacity="0"
+          stroke="#2a382c" stroke-dasharray="3 3"/>
+        <text x="101.25" y="308" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="middle">portfolio-stage</text>
+        <rect x="170.5" y="292" width="44.4" height="24" rx="12"
+          fill="none" fill-opacity="0"
+          stroke="#2a382c" stroke-dasharray="3 3"/>
+        <text x="192.7" y="308" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="middle">trek</text>
+    <line x1="40" y1="336" x2="800" y2="336" stroke="#2a382c"/>
+    <text x="40" y="362" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="13" font-weight="700" fill="#a1ada3" text-anchor="start">29 secrets at runtime</text>
+        <text x="40" y="377" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#708373" text-anchor="start">0 in git</text><text x="293.33333333333337" y="362" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="13" font-weight="700" fill="#a1ada3" text-anchor="start">2,830,060,137 syscalls</text>
+        <text x="293.33333333333337" y="377" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#708373" text-anchor="start">inspected by falco, last 24h</text><text x="546.6666666666667" y="362" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="13" font-weight="700" fill="#a1ada3" text-anchor="start">4.50 GB of logs</text>
+        <text x="546.6666666666667" y="377" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#708373" text-anchor="start">shipped to loki, last 24h</text><text x="40" y="396" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="13" font-weight="700" fill="#a1ada3" text-anchor="start">47 network policies</text>
+        <text x="40" y="411" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#708373" text-anchor="start">audit mode, not enforcing</text><text x="293.33333333333337" y="396" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="13" font-weight="700" fill="#a1ada3" text-anchor="start">218 GiB claimed</text>
+        <text x="293.33333333333337" y="411" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#708373" text-anchor="start">across 29 volumes</text><text x="546.6666666666667" y="396" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="13" font-weight="700" fill="#a1ada3" text-anchor="start">cert renews in 38d</text>
+        <text x="546.6666666666667" y="411" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#708373" text-anchor="start">139 syncs in 30 days</text>
+    <rect x="40.0" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="56.1" y="440" width="13.1" height="18" rx="3" fill="#8ec798" fill-opacity="0.8"/><rect x="72.2" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="88.3" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="104.4" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="120.5" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="136.6" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="152.7" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="168.8" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="184.9" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="201.0" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="217.1" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="233.2" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="249.3" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="265.4" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="281.5" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="297.6" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="313.7" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="329.8" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="345.9" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="362.0" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="378.1" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="394.2" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="410.3" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="426.4" y="440" width="13.1" height="18" rx="3" fill="#8ec798" fill-opacity="0.8"/><rect x="442.5" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="458.6" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="474.7" y="440" width="13.1" height="18" rx="3" fill="#8ec798" fill-opacity="0.8"/><rect x="490.8" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/><rect x="506.9" y="440" width="13.1" height="18" rx="3" fill="#51a45e" fill-opacity="0.9"/>
+    <text x="40" y="432" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="start">LAST 30 DAYS · 99.84%</text>
+    <text x="800" y="432" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="end">last deploy · cilium · 2h ago</text>
+    <text x="40" y="478" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#708373" text-anchor="start">SOURCE</text>
+    <text x="94" y="478" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="500" fill="#708373" text-anchor="start">kubernetes api and prometheus, read in cluster 2026-09-06 22:50:15Z · nordbye.it/api/v1/infra</text></g>
+</svg>
