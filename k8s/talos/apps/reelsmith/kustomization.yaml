@@ -17,4 +17,4 @@ resources:
 # the inline tag in deployment.yaml.
 images:
 - name: ghcr.io/mortennordbye/reelsmith-gateway
-  newTag: 0.0.92
+  newTag: 0.0.94
