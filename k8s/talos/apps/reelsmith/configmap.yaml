@@ -19,11 +19,27 @@ data:
   # slot+date, not rolled at runtime, so a restart cannot double-publish.
   # The Facebook id is the Page id from GET /me/accounts, not the number in the
   # Page's profile URL.
+  # Two slots a day per platform since 2026-09-10, restoring cadence without
+  # restoring the slot that was dropped for cause. Measured 2026-08-19 at n=58,
+  # the three slots then running scored 06:00 UTC at 63.6% median skip with 27%
+  # of posts over 500 views, 10:00 UTC at 65.5% and 22%, and 17:00 UTC at 76.3%
+  # and 6%. The cut on 2026-08-27 kept only the first and dropped both others,
+  # including the one that was nearly as good. Per-post views did not improve
+  # afterwards: 132 median on three-post days against 126 on one-post days over
+  # 93 posts, so the cut removed two thirds of the volume and bought nothing.
+  #
+  # 12:10 Oslo is the 10:00 UTC group above. The evening slot stays gone. Two
+  # populated slots also restore `--cohorts slot`, which has been unable to
+  # answer anything since 11 of 13 posts landed in a single slot.
   GATEWAY_SLOTS: |
     08:10 Europe/Oslo jitter=15 account=17841441696714445
     08:10 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
     08:10 Europe/Oslo jitter=15 account=-000y6NKYZ3EEbUGgXiyJ9nG66a_xqrF68Me
     08:10 Europe/Oslo jitter=15 account=1236596692875712
+    12:10 Europe/Oslo jitter=15 account=17841441696714445
+    12:10 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
+    12:10 Europe/Oslo jitter=15 account=-000y6NKYZ3EEbUGgXiyJ9nG66a_xqrF68Me
+    12:10 Europe/Oslo jitter=15 account=1236596692875712
 
   # Named zone, not an offset, so slots keep their local hour across DST.
   GATEWAY_DEFAULT_TIMEZONE: "Europe/Oslo"
