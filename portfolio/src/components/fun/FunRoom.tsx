@@ -234,6 +234,29 @@ function ContextGuard({ onLost }: { onLost: () => void }) {
   return null;
 }
 
+/**
+ * World matrices, once a frame rather than once per render.
+ *
+ * three.js walks the whole scene graph at the start of every `render`, and this
+ * room renders the scene several times a frame: the main pass, each reflector,
+ * and N8AO's transparency pass. Priority 0.5 runs after every default-priority
+ * callback has moved what it moves and before the composer draws at 1. The
+ * reflectors render at 0 and see the previous frame's matrices, which their
+ * blur hides.
+ */
+function WorldMatrices() {
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    const { scene } = get();
+    scene.matrixWorldAutoUpdate = false;
+    return () => {
+      scene.matrixWorldAutoUpdate = true;
+    };
+  }, [get]);
+  useFrame(({ scene }) => scene.updateMatrixWorld(), 0.5);
+  return null;
+}
+
 /** Mounts inside the Suspense boundary, so its effect cannot run until every
  *  asset under it has resolved. */
 function SceneReady({ onReady }: { onReady: () => void }) {
@@ -1242,6 +1265,7 @@ export default function FunRoom({
             onSit={sitDown}
             onStand={standUp}
           />
+          <WorldMatrices />
           <ContextGuard onLost={onContextLost} />
         </Canvas>
       </div>

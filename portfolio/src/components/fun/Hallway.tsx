@@ -1,7 +1,7 @@
 "use client";
 
-import { Instance, Instances, RoundedBox } from "@react-three/drei";
-import { useEffect, useMemo } from "react";
+import { RoundedBox } from "@react-three/drei";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { OAK } from "@/components/materials/oak";
 import type { Surface } from "@/components/materials/surface";
@@ -372,22 +372,31 @@ function Plant({ position }: { position: [number, number, number] }) {
 /** The vertical reeding on the cabinet doors, as half-rounds. */
 function Reeding({ width, height, count }: { width: number; height: number; count: number }) {
   const step = width / count;
+  const ref = useRef<THREE.InstancedMesh>(null);
+  /* Matrices set once, for the reason the forest sets its own: drei's
+     Instances would re-derive every reed from an Object3D each frame. */
+  useLayoutEffect(() => {
+    const mesh = ref.current;
+    if (!mesh) return;
+    const o = new THREE.Object3D();
+    for (let i = 0; i < count; i++) {
+      o.position.set(-width / 2 + step * (i + 0.5), 0, 0);
+      o.scale.set(1, height, 1);
+      o.updateMatrix();
+      mesh.setMatrixAt(i, o.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+  }, [width, height, count, step]);
+
   return (
     /* Culling off for the reason the forest needs it: the instanced mesh keeps
        its bounding sphere at this group's origin, inside the carcass. */
-    <Instances limit={count} range={count} frustumCulled={false}>
+    <instancedMesh ref={ref} args={[undefined, undefined, count]} frustumCulled={false}>
       {/* Half-round, opening toward +z: three sweeps theta from +z through +x,
           so the front-facing half starts a quarter turn back. */}
       <cylinderGeometry args={[step * 0.42, step * 0.42, 1, 8, 1, false, -Math.PI / 2, Math.PI]} />
       <meshStandardMaterial color={OAK.case} roughness={0.6} metalness={0} />
-      {Array.from({ length: count }, (_, i) => (
-        <Instance
-          key={i}
-          position={[-width / 2 + step * (i + 0.5), 0, 0]}
-          scale={[1, height, 1]}
-        />
-      ))}
-    </Instances>
+    </instancedMesh>
   );
 }
 
