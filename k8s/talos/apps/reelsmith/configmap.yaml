@@ -31,15 +31,15 @@ data:
   # 12:10 Oslo is the 10:00 UTC group above. The evening slot stays gone. Two
   # populated slots also restore `--cohorts slot`, which has been unable to
   # answer anything since 11 of 13 posts landed in a single slot.
+  #
+  # One line per identity per time. A brand covers every destination it holds,
+  # so registering a fourth platform needs no edit here, and a brand matching
+  # no account freezes the sweep rather than deleting slots. One a day for the
+  # second identity, which has one episode and no measured cadence yet.
   GATEWAY_SLOTS: |
-    08:10 Europe/Oslo jitter=15 account=17841441696714445
-    08:10 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
-    08:10 Europe/Oslo jitter=15 account=-000y6NKYZ3EEbUGgXiyJ9nG66a_xqrF68Me
-    08:10 Europe/Oslo jitter=15 account=1236596692875712
-    12:10 Europe/Oslo jitter=15 account=17841441696714445
-    12:10 Europe/Oslo jitter=20 account=UCH8RDOkbzDna2mDAlq4GaFw
-    12:10 Europe/Oslo jitter=15 account=-000y6NKYZ3EEbUGgXiyJ9nG66a_xqrF68Me
-    12:10 Europe/Oslo jitter=15 account=1236596692875712
+    08:10 Europe/Oslo jitter=15 brand=thenightlybuild
+    12:10 Europe/Oslo jitter=15 brand=thenightlybuild
+    08:10 Europe/Oslo jitter=15 brand=thewholequote
 
   # Named zone, not an offset, so slots keep their local hour across DST.
   GATEWAY_DEFAULT_TIMEZONE: "Europe/Oslo"
