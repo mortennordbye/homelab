@@ -209,6 +209,6 @@ export function doorOpenings(): { id: string; box: Box; horizontal: boolean }[] 
  */
 export const MARKS = {
   tvBench: { x0: 0.05, z0: 0.55, x1: 0.5, z1: 2.55 },
-  sofa: { x0: 1.65, z0: 0.5, x1: 2.55, z1: 2.4 },
+  sofa: { x0: 1.65, z0: 0.3, x1: 2.55, z1: 2.4 },
   desk: { x0: 0.15, z0: 5.35, x1: 1.55, z1: 6.05 },
 } as const satisfies Record<string, Rect>;

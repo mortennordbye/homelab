@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RoomLoading } from "@/components/fun/RoomLoading";
+import { RoomIntro } from "./RoomIntro";
 import * as THREE from "three";
 import type { PointerLockControls as PointerLockControlsImpl } from "three-stdlib";
 import { EYE, FirstPerson, isTyping, type MoveInput } from "./FirstPerson";
@@ -27,11 +28,13 @@ import {
   LANTERN,
   ROOM,
   Room,
-  SEAT,
+  SEATS,
   STOVE,
   TV_SCREEN,
   type LightKey,
   type Lights,
+  type Seat,
+  type SeatId,
 } from "./Room";
 import { CodeScreen, type Tab } from "./CodeScreen";
 import { Dashboard } from "./Screen";
@@ -109,6 +112,8 @@ if (WEBGL_OK && !window.matchMedia("(pointer: coarse)").matches) {
 // Everything cluster-shaped goes on the television. FEED STATUS gets no
 // screen: the HUD chip already carries live/stale/snapshot everywhere.
 const WALL_PANELS = PANELS.filter((p) => p.id !== "feed");
+/** Every panel at once, then one channel per panel. */
+const TV_CHANNELS = WALL_PANELS.length + 1;
 
 /** How many things stagger on at boot: the desk monitor, then the television. */
 const POWER_STEPS = 2;
@@ -124,12 +129,14 @@ function ScreenWall({
   deskTab,
   onSwitchTab,
   poweredCount,
+  tvChannel,
 }: {
   data: PanelProps;
   source: SourceExcerpt;
   deskTab: Tab;
   onSwitchTab: () => void;
   poweredCount: number;
+  tvChannel: number;
 }) {
   return (
     <>
@@ -161,6 +168,7 @@ function ScreenWall({
         rotation={TV_SCREEN.rotation}
         width={TV_SCREEN.width}
         powered={poweredCount > 1}
+        channel={tvChannel}
       />
     </>
   );
@@ -331,35 +339,31 @@ function TerminalFocus({
 const SEAT_ARRIVE = 0.02;
 
 /**
- * Sits the visitor down at the desk and stands them back up where they were.
+ * Sits the visitor down in a seat and stands them back up where they were.
  * Unlike TerminalFocus, this lets go of the camera once the move lands —
  * sitting is somewhere you look around from. Safe only because FirstPerson
  * stays off for the whole time seated: position frozen, rotation free.
  */
 function SeatedFocus({
-  active,
+  seat,
   onStandingUp,
 }: {
-  active: boolean;
+  seat: Seat | null;
   onStandingUp: (busy: boolean) => void;
 }) {
   const { camera } = useThree();
   const saved = useRef<{ pos: THREE.Vector3; quat: THREE.Quaternion } | null>(null);
   const mode = useRef<"idle" | "in" | "held" | "out">("idle");
+  const active = seat !== null;
 
   const view = useMemo(() => {
-    // Aim at the midpoint of the pair rather than at either panel, so neither
-    // is the one you are "really" looking at. Read off the placements so the
-    // seat cannot drift when the monitors are nudged.
-    const look = new THREE.Vector3(...DESK_SCREEN.position)
-      .add(new THREE.Vector3(...DESK_TERMINAL.position))
-      .multiplyScalar(0.5);
-    const pos = new THREE.Vector3(SEAT.x, SEAT.eye, SEAT.z);
+    if (!seat) return null;
+    const pos = new THREE.Vector3(...seat.pos);
     const quat = new THREE.Quaternion().setFromRotationMatrix(
-      new THREE.Matrix4().lookAt(pos, look, new THREE.Vector3(0, 1, 0)),
+      new THREE.Matrix4().lookAt(pos, new THREE.Vector3(...seat.look), new THREE.Vector3(0, 1, 0)),
     );
     return { pos, quat };
-  }, []);
+  }, [seat]);
 
   useEffect(() => {
     if (active) mode.current = "in";
@@ -381,6 +385,7 @@ function SeatedFocus({
           quat: camera.quaternion.clone(),
         };
       }
+      if (!view) return;
       camera.position.lerp(view.pos, k);
       camera.quaternion.slerp(view.quat, k);
       if (camera.position.distanceTo(view.pos) < SEAT_ARRIVE) {
@@ -479,7 +484,7 @@ function Lighting({
      fittings follow something else: the ceiling bounce belongs to the lantern
      that throws it, and the door-end fill is spill, so it tracks whether the
      room is lit at all rather than glowing with no source behind it. */
-  const anyOn = lights.lantern || lights.desk || lights.shelf || lights.stove;
+  const anyOn = lights.lantern || lights.desk || lights.stove;
   return (
     <>
       {/* A room lit the way a study is at nine in the evening: nothing
@@ -695,8 +700,8 @@ function Scene({
   paused: boolean;
   lights: Lights;
   onToggleLight: (k: LightKey) => void;
-  seated: boolean;
-  onSit: () => void;
+  seated: SeatId | null;
+  onSit: (seat: SeatId) => void;
   onStand: () => void;
 }) {
   const [poweredCount, setPoweredCount] = useState(0);
@@ -727,6 +732,12 @@ function Scene({
     setDeskTabPinned(true);
     setDeskTab(nextTab);
   }, []);
+  const [tvChannel, setTvChannel] = useState(0);
+  const nextChannel = useCallback(() => setTvChannel((c) => (c + 1) % TV_CHANNELS), []);
+  const upNext = (tvChannel + 1) % TV_CHANNELS;
+  const remoteDetail = `to ch ${upNext + 1} · ${
+    upNext === 0 ? "all panels" : WALL_PANELS[upNext - 1].title.toLowerCase()
+  }`;
   const { camera } = useThree();
 
   // Screens come on once the room is up.
@@ -786,6 +797,7 @@ function Scene({
           onToggleLight={onToggleLight}
           seated={seated}
           onSit={onSit}
+          remote={{ detail: remoteDetail, onPress: nextChannel }}
         />
         <Post />
         {/* Fires only once everything above has resolved, which is the honest
@@ -801,6 +813,7 @@ function Scene({
         deskTab={deskTab}
         onSwitchTab={switchDeskTab}
         poweredCount={poweredCount}
+        tvChannel={tvChannel}
       />
       <TerminalScreen
         position={DESK_TERMINAL.position}
@@ -826,7 +839,7 @@ function Scene({
       />
       </InteractionProvider>
       <TerminalFocus active={terminalActive} onSettling={setSettling} />
-      <SeatedFocus active={seated} onStandingUp={setStandingUp} />
+      <SeatedFocus seat={seated ? SEATS[seated] : null} onStandingUp={setStandingUp} />
       {/* `seated` covers the move in and the whole time in the chair;
           `standingUp` covers the move back out, after seated has gone false. */}
       <FirstPerson
@@ -925,14 +938,17 @@ export default function FunRoom({
   const [coarse] = useState(() =>
     window.matchMedia("(pointer: coarse)").matches,
   );
-  /** Touch visitors opt in explicitly; desktop is never gated. */
+  /** Touch visitors opt in before anything downloads. */
   const [entered, setEntered] = useState(false);
+  /** Desktop reads the intro while the room loads behind it. Touch skips it:
+   *  its opt-in screen already explains the room. */
+  const [introOpen, setIntroOpen] = useState(!coarse);
   const touchMove = useRef<MoveInput>({ x: 0, y: 0 });
   const [contextLost, setContextLost] = useState(false);
   const onContextLost = useCallback(() => setContextLost(true), []);
   const [card, setCard] = useState<InfoCard | null>(null);
   const [terminalActive, setTerminalActive] = useState(false);
-  const [seated, setSeated] = useState(false);
+  const [seated, setSeated] = useState<SeatId | null>(null);
   /* All on from the start, always. The room is a lamplit evening and that is
      what it should be the first time you see it — the switches are something to
      find, not a state to arrive in. Not persisted for the same reason: a return
@@ -940,7 +956,6 @@ export default function FunRoom({
   const [lights, setLights] = useState<Lights>({
     lantern: true,
     desk: true,
-    shelf: true,
     stove: true,
   });
   const toggleLight = useCallback(
@@ -953,7 +968,7 @@ export default function FunRoom({
      Without this, WASD still walks you across the room while a card is open
      or you are typing at the terminal — the pointer is released but the key
      handlers are on window and do not know that. */
-  const paused = card !== null || terminalActive;
+  const paused = card !== null || terminalActive || introOpen;
 
   /* Opening a card releases the pointer, because the card is a DOM panel and
      the visitor needs a cursor to click its link. Closing it hands the pointer
@@ -980,13 +995,19 @@ export default function FunRoom({
     setTerminalActive(false);
   }, []);
 
-  const sitDown = useCallback(() => setSeated(true), []);
+  const sitDown = useCallback((seat: SeatId) => setSeated(seat), []);
   /* Reached by every interact that hit nothing, not only the ones made while
      seated. That is fine and is why it is written as a plain set rather than a
      toggle: standing when already standing is a no-op React bails out of, and
      an empty press should never be able to seat someone who was not aiming at
      the chair. */
-  const standUp = useCallback(() => setSeated(false), []);
+  const standUp = useCallback(() => setSeated(null), []);
+
+  // A click is a gesture the lock can ride on; a key leaves it to the next click.
+  const enterRoom = useCallback((byPointer: boolean) => {
+    setIntroOpen(false);
+    if (byPointer) controlsRef.current?.lock();
+  }, []);
 
   /* Walking out of the door leaves the room. Uses the router rather than
      window.location so it is a client navigation like any other nav link —
@@ -1019,8 +1040,8 @@ export default function FunRoom({
     return () => clearTimeout(t);
   }, []);
 
-  /* Into the room the moment it is actually ready — no gate, no click.
-     Both conditions matter: `sceneReady` is the Suspense boundary resolving,
+  /* The room counts as ready the moment it actually is; on desktop the intro
+     then holds the visitor until they press something. Both conditions matter: `sceneReady` is the Suspense boundary resolving,
      which is the real signal, and the floor keeps the transition legible. */
   useEffect(() => {
     if (sceneReady && floorDone) {
@@ -1060,7 +1081,7 @@ export default function FunRoom({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [paused]);
 
   // Hide the site chrome and lock scrolling while the room owns the viewport.
   useEffect(() => {
@@ -1271,7 +1292,7 @@ export default function FunRoom({
           {/* Both occupy the same spot under the crosshair, so a live prompt
               wins: while seated and looking at the shell the useful line is
               "open the terminal", not the way out of a chair. */}
-          {seated && prompt === null && <SeatedHint touch={coarse} />}
+          {seated && prompt === null && <SeatedHint caption={SEATS[seated].label} touch={coarse} />}
           {/* Every bind on that card is a key, and touch has no keyboard —
               it would sit under the walk stick advertising controls that do
               not exist. The touch hint bottom-right says the equivalent. */}
@@ -1291,7 +1312,16 @@ export default function FunRoom({
           rendering behind it as it goes. pointer-events-none throughout, which
           is what lets the very first click land on the canvas and take the
           pointer lock instead of being eaten by an overlay. */}
-      <LoadingScreen progress={shownProgress} done={phase === "exploring"} />
+      {coarse ? (
+        <LoadingScreen progress={shownProgress} done={phase === "exploring"} />
+      ) : (
+        <RoomIntro
+          progress={shownProgress}
+          ready={phase === "exploring"}
+          entered={!introOpen}
+          onEnter={enterRoom}
+        />
+      )}
 
       {/* A hint, not a gate.
           Pointer lock cannot be taken without a user gesture, and the click on
@@ -1308,7 +1338,7 @@ export default function FunRoom({
             className="font-mono text-[11px] text-fg-3"
             style={{ textShadow: "0 0 8px rgba(0,0,0,0.95)" }}
           >
-            click to look around · WASD to move
+            click to look around · WASD to move · brass markers show what to open
           </p>
         </div>
       )}
@@ -1329,6 +1359,8 @@ export default function FunRoom({
               style={{ textShadow: "0 0 8px rgba(0,0,0,0.95)" }}
             >
               drag to look
+              <br />
+              brass markers show what to open
               <br />
               tap an object to open it
             </p>

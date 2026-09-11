@@ -1,6 +1,7 @@
 "use client";
 
 import { Html, RoundedBox } from "@react-three/drei";
+import { TV_GLASS } from "./Furniture";
 import type { PanelDef, PanelProps } from "./Panels";
 
 // The DOM panel is authored at a fixed pixel size and mapped onto the screen
@@ -30,9 +31,9 @@ export const PORTRAIT_PX_W = 512;
 export const PORTRAIT_PX_H = 872;
 
 /** The television. Big enough to carry six panels side by side and still be
- *  read from across the room. */
+ *  read from across the room, and at the glass's own ratio so it fills it. */
 export const DASH_PX_W = 1280;
-export const DASH_PX_H = 752;
+export const DASH_PX_H = Math.round((DASH_PX_W * TV_GLASS.h) / TV_GLASS.w);
 
 /** drei wants this expressed as distanceFactor = (metres per px) * 400. */
 export const distanceFactor = (width: number, pxW: number) =>
@@ -169,16 +170,21 @@ export function Screen({
 }
 
 /**
- * The television, carrying every observability panel at once.
+ * The television. Channel 0 carries every observability panel at once, and
+ * each channel after it puts one panel on the whole screen; the remote on the
+ * sofa steps through them.
  *
  * The panels are laid into a grid at ~62% rather than rewritten for a smaller
  * box. Each cell holds a full-size PanelCard scaled with a CSS transform, so
  * the bodies in Panels.tsx stay authored at one size and there is no second set
  * of "small" variants to keep in step with the first. Adding a seventh panel
- * changes the grid, not the panels.
+ * changes the grid, not the panels. A solo channel is the same card scaled up.
  *
  * Cells cascade in on a transition delay instead of being driven by a powered
  * count. Same effect on screen, none of the state plumbing.
+ *
+ * No Housing: this lies on the television's glass, and the set has its own
+ * bezel. A second one drew a frame inside the frame.
  */
 export function Dashboard({
   panels,
@@ -187,6 +193,7 @@ export function Dashboard({
   rotation,
   width,
   powered,
+  channel,
 }: {
   panels: PanelDef[];
   data: PanelProps;
@@ -194,6 +201,7 @@ export function Dashboard({
   rotation: [number, number, number];
   width: number;
   powered: boolean;
+  channel: number;
 }) {
   const h = width * (DASH_PX_H / DASH_PX_W);
 
@@ -205,9 +213,20 @@ export function Dashboard({
   const scale = cellW / PANEL_PX_W;
   const cellH = PANEL_PX_H * scale;
 
+  const solo = channel > 0 ? (panels[channel - 1] ?? null) : null;
+  const soloScale = Math.min(
+    (DASH_PX_W - PAD * 2) / PANEL_PX_W,
+    (DASH_PX_H - PAD * 2 - HEADER - GAP) / PANEL_PX_H,
+  );
+
   return (
     <group position={position} rotation={rotation}>
-      <Housing w={width} h={h} powered={powered} />
+      {/* Dark when unpowered, faintly lit when on, so the power-on sequence
+          reads even before the DOM fades in. */}
+      <mesh>
+        <planeGeometry args={[width, h]} />
+        <meshBasicMaterial color={powered ? "#0a110b" : "#060a07"} />
+      </mesh>
       <Html
         transform
         occlude="blending"
@@ -241,44 +260,65 @@ export function Dashboard({
               GENESIS · OBSERVABILITY
             </span>
             <span className="text-[15px] tracking-[0.18em] text-[#465548]">
-              OSLO · TALOS
+              CH {channel + 1} · {solo ? solo.title : "ALL PANELS"}
             </span>
           </div>
 
           <div className="flex flex-1 items-center justify-center">
-            <div
-              className="grid"
-              style={{
-                gridTemplateColumns: `repeat(${COLS}, ${cellW}px)`,
-                gap: `${GAP}px`,
-              }}
-            >
-              {panels.map((panel, i) => (
+            {solo ? (
+              <div
+                key={solo.id}
+                style={{
+                  width: `${PANEL_PX_W * soloScale}px`,
+                  height: `${PANEL_PX_H * soloScale}px`,
+                }}
+              >
                 <div
-                  key={panel.id}
                   style={{
-                    width: `${cellW}px`,
-                    height: `${cellH}px`,
-                    opacity: powered ? 1 : 0,
-                    transform: powered ? "translateY(0)" : "translateY(6px)",
-                    transition: `opacity 420ms ease-out ${i * 90}ms, transform 420ms ease-out ${i * 90}ms`,
+                    width: `${PANEL_PX_W}px`,
+                    height: `${PANEL_PX_H}px`,
+                    transform: `scale(${soloScale})`,
+                    transformOrigin: "top left",
                   }}
                 >
-                  {/* Full-size card, shrunk to the cell. transform-origin has to
-                      be top left or the scaled box drifts out of its cell. */}
+                  <PanelCard panel={solo} data={data} />
+                </div>
+              </div>
+            ) : (
+              <div
+                className="grid"
+                style={{
+                  gridTemplateColumns: `repeat(${COLS}, ${cellW}px)`,
+                  gap: `${GAP}px`,
+                }}
+              >
+                {panels.map((panel, i) => (
                   <div
+                    key={panel.id}
                     style={{
-                      width: `${PANEL_PX_W}px`,
-                      height: `${PANEL_PX_H}px`,
-                      transform: `scale(${scale})`,
-                      transformOrigin: "top left",
+                      width: `${cellW}px`,
+                      height: `${cellH}px`,
+                      opacity: powered ? 1 : 0,
+                      transform: powered ? "translateY(0)" : "translateY(6px)",
+                      transition: `opacity 420ms ease-out ${i * 90}ms, transform 420ms ease-out ${i * 90}ms`,
                     }}
                   >
-                    <PanelCard panel={panel} data={data} compact />
+                    {/* Full-size card, shrunk to the cell. transform-origin has to
+                        be top left or the scaled box drifts out of its cell. */}
+                    <div
+                      style={{
+                        width: `${PANEL_PX_W}px`,
+                        height: `${PANEL_PX_H}px`,
+                        transform: `scale(${scale})`,
+                        transformOrigin: "top left",
+                      }}
+                    >
+                      <PanelCard panel={panel} data={data} compact />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div

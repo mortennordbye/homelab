@@ -35,9 +35,12 @@ function tag(item: string, name: string): string | null {
   return m ? decode(m[1]) : null;
 }
 
-/** Cover image. Hugo emits it as `<media:content url="...">`, not an enclosure. */
+/** Cover image. Themes carry it as either `<media:content>` or `<enclosure>`,
+ *  and matching only one fails silently, as `lib/blog.ts` also notes. */
 function cover(item: string): string | null {
-  const m = item.match(/<media:content[^>]*\surl="([^"]*)"/);
+  const m =
+    item.match(/<media:content[^>]*\surl="([^"]*)"/) ??
+    item.match(/<enclosure[^>]*\surl="([^"]*)"/);
   return m ? decode(m[1]) : null;
 }
 

@@ -4,8 +4,6 @@ import { Html, RoundedBox } from "@react-three/drei";
 import { site } from "@/content/site";
 import { interests } from "@/content/interests";
 import { services } from "@/content/services";
-import { skills } from "@/content/skills";
-import type { Skill } from "@/content/schemas";
 import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
 import { ACCENT } from "./Panels";
@@ -13,8 +11,8 @@ import { PAPER } from "@/components/materials/paper";
 import type { CareerData } from "./shelf";
 
 /**
- * The remaining portfolio sections as objects: socials, contact, skills,
- * services, the two interests, and the career.
+ * The remaining portfolio sections as objects: socials, contact, services,
+ * the two interests, and the career.
  *
  * Two rules for all of them. Anything meant to be looked at presents a face to
  * the room, big enough to put a crosshair on. And it is a thing somebody would
@@ -51,7 +49,7 @@ const NOTE_W = 0.21;
 const NOTE_H = 0.285;
 const NOTE_PX = 560;
 /** Where the note sits on the door, measured up from the door's centre. */
-const NOTE_Y = 0.4;
+const NOTE_Y = 0;
 /** The magnets holding it, in metres from the note centre. Two, off-square,
  *  because a note held by one magnet hangs askew and by four reads as framed. */
 const MAGNET_AT: [number, number][] = [
@@ -325,166 +323,6 @@ export function ContactCard({
   );
 }
 
-/** The four groups the skill bars on the site are sorted into, in the order the
- *  notebook writes them down. */
-const SKILL_GROUPS: { id: Skill["group"]; label: string }[] = [
-  { id: "platform", label: "PLATFORM" },
-  { id: "delivery", label: "DELIVERY" },
-  { id: "ops", label: "OPERATIONS" },
-  { id: "soft", label: "TEAM" },
-];
-
-/**
- * Skills, in the notebook lying open on the desk.
- *
- * This was a rack faceplate screwed to the wall, corner screws and all, which
- * is the least likely object anybody has in a living room. A list of what you
- * work with, written down beside the keyboard, is what the same content
- * actually looks like in a flat.
- *
- * Only the group names go on the page. The pad is 0.23 across, so the layer
- * carries roughly a tenth of the pixels the plate had: at the plate's line
- * count the type would be under 5mm tall on the desk. The full list with
- * levels is on the card, which is where it was worth reading anyway.
- *
- * Origin at the desk top. Written in the desk's own frame like everything else
- * standing on it, so local +z is toward the visitor.
- */
-const PAD_W = 0.23;
-const PAD_D = 0.16;
-const PAD_PX = 620;
-
-export function DeskNotebook({
-  position,
-  rotation = [0, 0, 0],
-  onOpen,
-}: {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-  onOpen: (card: InfoCard) => void;
-}) {
-  const top = [...skills].sort((a, b) => b.level - a.level)[0];
-  const pxH = Math.round((PAD_D / PAD_W) * PAD_PX);
-
-  return (
-    <Interactive
-      label="the notebook"
-      verb="read"
-      detail={`${skills.length} across ${SKILL_GROUPS.length} groups`}
-      onActivate={() =>
-        onOpen({
-          kicker: "skills",
-          title: "What I work with",
-          subtitle: top ? `Strongest: ${top.label}` : undefined,
-          rows: skills.map((s) => ({ k: s.label, v: `${s.level}` })),
-          body: "Levels are self-assessed and carried over from the published skill bars on the site, not scored by anyone else.",
-          href: "/#about",
-          hrefLabel: "see these on the site",
-        })
-      }
-    >
-      {(hovered) => (
-        <group position={position} rotation={rotation}>
-          {/* The cover, open flat and proud of the paper on every side, which
-              is the only part of an open notebook you see from the side. */}
-          <RoundedBox
-            position={[0, 0.004, 0]}
-            args={[PAD_W + 0.014, 0.008, PAD_D + 0.012]}
-            radius={0.002}
-            smoothness={3}
-            castShadow
-            receiveShadow
-          >
-            <meshStandardMaterial
-              color="#2a2a2d"
-              roughness={0.78}
-              emissive={hovered ? "#ffd9a6" : "#000000"}
-              emissiveIntensity={hovered ? 0.2 : 0}
-            />
-          </RoundedBox>
-          {/* the block of paper, one leaf either side of the spine */}
-          {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * (PAD_W / 4 + 0.001), 0.0105, 0]} receiveShadow>
-              <boxGeometry args={[PAD_W / 2 - 0.004, 0.005, PAD_D]} />
-              <meshStandardMaterial color="#e8e2d5" roughness={0.92} />
-            </mesh>
-          ))}
-          {/* the spine, sunk between them */}
-          <mesh position={[0, 0.0095, 0]}>
-            <boxGeometry args={[0.008, 0.004, PAD_D]} />
-            <meshStandardMaterial color="#3a3a3e" roughness={0.8} />
-          </mesh>
-
-          <Html
-            transform
-            occlude="blending"
-            rotation={[-Math.PI / 2, 0, 0]}
-            distanceFactor={(PAD_W / PAD_PX) * 400}
-            position={[0, 0.0135, 0]}
-            zIndexRange={[10, 0]}
-            style={{
-              width: `${PAD_PX}px`,
-              height: `${pxH}px`,
-              pointerEvents: "none",
-              userSelect: "none",
-            }}
-          >
-            {/* Paper painted in the DOM rather than left to the mesh: an unlit
-                plane behind a transparent layer renders near-black, which is
-                the trap the career print and the leaflets both hit. */}
-            <div
-              className="flex h-full w-full"
-              style={{ background: PAPER.stock, color: PAPER.ink }}
-            >
-              <div
-                className="flex flex-col justify-center"
-                style={{ width: "44%", padding: "34px 0 34px 40px" }}
-              >
-                <div
-                  className="font-mono"
-                  style={{ fontSize: "34px", letterSpacing: "0.14em", fontWeight: 600 }}
-                >
-                  STACK
-                </div>
-                <div style={{ height: "3px", background: "#cfc6b4", margin: "14px 0", width: "80px" }} />
-                <div style={{ fontSize: "27px", lineHeight: 1.3, color: "#7d7364" }}>
-                  {skills.length} things, honestly rated
-                </div>
-              </div>
-              {/* the ruled leaf, with the groups written down it */}
-              <div
-                className="flex flex-col justify-center"
-                style={{
-                  width: "56%",
-                  padding: "30px 40px",
-                  borderLeft: "2px solid #ded6c6",
-                }}
-              >
-                {SKILL_GROUPS.map((g) => (
-                  <div
-                    key={g.id}
-                    className="flex items-baseline justify-between"
-                    style={{
-                      fontSize: "29px",
-                      lineHeight: 1.52,
-                      borderBottom: "1px solid #e4dccc",
-                    }}
-                  >
-                    <span>{g.label}</span>
-                    <span style={{ fontSize: "24px", color: "#9a9082" }}>
-                      {skills.filter((s) => s.group === g.id).length}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Html>
-        </group>
-      )}
-    </Interactive>
-  );
-}
-
 /**
  * The three services, as a leaflet rack by the door: an offer belongs where a
  * visitor is already leaving. The pockets are real geometry — a printed
@@ -724,8 +562,8 @@ export function GymBag({
 }
 
 /**
- * The career, as a photo album stood on the bookshelf between the lamp and the
- * printer. It was a framed print of the whole timeline, hung on the wall over
+ * The career, as a photo album stood in the hall cabinet with the case studies.
+ * It was a framed print of the whole timeline, hung on the wall over
  * the kitchen return — a chart of your own jobs is not a thing anybody frames.
  *
  * The cover carries the years and the current role and nothing else. The album

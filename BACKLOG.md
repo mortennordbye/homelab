@@ -92,12 +92,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Decide the object for each before modelling anything — `branding/DECISIONS.md` §4 rejects "click to open" as a toll gate, so each has to read at a glance from where a visitor stands. The hero is the awkward one: a room that announces a job title is a poster, not a study.
 - **Where:** `portfolio/src/content/site.ts` (`hero`), `portfolio/src/components/sections/AboutSection.tsx` (the prose), `portfolio/src/app/brand/page.tsx`, `portfolio/src/components/fun/Room.tsx` (placement), `portfolio/src/components/fun/Objects.tsx` (the existing object patterns).
 
-### Fun room: the skills faceplate still spends green as a surface
-- **What:** `branding/DECISIONS.md` §2 is locked at "green appears once per view as a lit point ... never as a surface, a border or a glow", and `FunRoom.tsx` states the same rule in a comment over the feed dot. The skills faceplate on the south wall draws its self-assessment as a column of green bars, which is a surface, and it is large in frame from the spawn point. The pinned board's pins and the blog board's magnets were brought down to one green point each on 2026-09-03; the faceplate was not.
-- **Why deferred:** Recolouring a bar chart is a design decision, not a find-and-replace. Brass bars on near-black lose the "this is a measured value" reading that green carries, and the alternative — drop the bars for a printed list — changes what the object is. Neither should be picked without the owner.
-- **Unblock:** Decide what a level-of-skill bar is made of in a room with four materials. Brass at three densities, or a printed sheet with no bar at all, are the two candidates. Then check the frame again from the spawn pose, which is where the faceplate is most visible.
-- **Where:** `portfolio/src/components/fun/Objects.tsx` (the skills faceplate), `portfolio/src/content/brand.ts` (the `lit point` token), `portfolio/branding/DECISIONS.md` §2.
-
 ### Fun room: `kubectl get applications` now prints 45 rows
 - **What:** The publisher started emitting the full per-application list on 2026-09-03, and the cluster has 45 ArgoCD Applications. The desk monitor's ArgoCD view slices to 12 and the television's panel to 9, but the shell prints every row, so the command fills the portrait monitor and the visitor sees only the tail.
 - **Why deferred:** It is what the real command does, and inventing a filter would make the shell claim something the cluster does not. The honest options are paging or a summary line, and both are shell design rather than a bug fix.
@@ -115,6 +109,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** Mutating the renderer is the documented way to drive shadows on demand — there is no non-mutating form to switch to, so the only fixes are a rule exception or leaving it.
 - **Unblock:** Decide whether to add a narrow `eslint-disable` for renderer writes or to accept the count. Fold into the react-hooks v6 entry above if that is ever revisited.
 - **Where:** `portfolio/src/components/fun/{FunRoom,openable,Printer}.tsx`, `portfolio/src/components/work/WorkShelfScene.tsx`, `portfolio/eslint.config.mjs`.
+
+### Fun room: the hall cabinet holds 13 case studies and no more
+- **What:** The case studies stand in the three bays behind the hall cabinet's open sliding door, with the career album taking the start of the top bay. At the current 13 books every bay is full, and `ShelvedBooks` skips any book that finds no bay left without saying so, so a 14th case study would list in the terminal's `ls work` but never appear in the room.
+- **Why deferred:** 13 is what exists today, and the cabinet was matched to the real one in the flat, so growing it changes an object the owner chose.
+- **Unblock:** When a case study is added, pick one in order of cost: move the album out of the top bay (about three more books), lower the bay pitch to fit a fourth bay, or split the books across both halves and slide the other door open.
+- **Where:** `portfolio/src/components/fun/Bookshelf.tsx` (`ShelvedBooks`), `portfolio/src/components/fun/Hallway.tsx` (`CABINET`), `portfolio/src/components/fun/Room.tsx` (the cabinet group).
 
 ### Sitemap covers only the home page
 - **What:** `portfolio/src/app/sitemap.ts` emits a single entry for `/`. The 13 case studies at `/work/[slug]`, plus `/infrastructure`, `/api` and `/fun`, are all indexable and all absent. Separately, `services` is a homepage section id that is missing from `site.nav`, so it is reachable only by scrolling or through the command palette.
