@@ -8,6 +8,20 @@ import { OAK } from "@/components/materials/oak";
 import type { Surface } from "@/components/materials/surface";
 import { Door, Drawer, OpenBox, useEase } from "./openable";
 import { Interactive } from "./interaction";
+import {
+  COLUMN_STOCK,
+  FRIDGE_DOOR,
+  Items,
+  MIRROR_CABINET,
+  PANS,
+  UNDER_SINK,
+  VANITY_LOW,
+  VANITY_TOP,
+  drawerStock,
+  overbedStock,
+  wallStock,
+  wardrobeStock,
+} from "./Contents";
 
 /**
  * The living room, from the three pieces marked on the floor plan: the TV
@@ -27,7 +41,6 @@ export const WALNUT = "#4a3527";
  *  grey-green so it sits between the oak and the ground without becoming a
  *  fifth material. */
 const WOOL = "#3d423a";
-const WOOL_HI = "#474d43";
 
 /** The bedroom's two soft colours, off the photograph of the real room: an
  *  olive-khaki fitted sheet and a bleached linen for duvet and pillows. Kept
@@ -37,9 +50,65 @@ const SHEET = "#3b3829";
 const LINEN = "#7a7361";
 
 /**
- * The sofa. Faces west at the TV, which is the whole reason it is where it is.
- * Built as a plinth, a back, two arms and loose cushions rather than one
- * rounded box: a sofa is mostly the shadow lines between those parts.
+ * The sofa's dimensions. `length` and `depth` must match `MARKS.sofa`, and the
+ * chaise's collision box in FirstPerson is built from the rest, so what you
+ * walk into cannot drift from what is drawn.
+ */
+export const SOFA = { length: 2.1, depth: 0.9, arm: 0.13, armTop: 0.62, chaiseW: 0.62, chaiseExt: 0.6 };
+
+/** Well darker than the photograph's olive: under the lamps and the filmic
+ *  tone map, anything lighter renders as mustard. */
+const CORD = "#33341f";
+const CORD_HI = "#393b25";
+const LEG_WOOD = "#b38f62";
+
+let wales: THREE.CanvasTexture | null = null;
+
+/**
+ * Corduroy wales as a bump map, eight to a tile. RoundedBox takes its UVs in
+ * metres, so one repeat every 0.1m gives the same 12.5mm wale on every part.
+ */
+function waleTexture(): THREE.CanvasTexture {
+  if (wales) return wales;
+  const c = document.createElement("canvas");
+  c.width = 64;
+  c.height = 4;
+  const x = c.getContext("2d")!;
+  for (let i = 0; i < 8; i++) {
+    const g = x.createLinearGradient(i * 8, 0, i * 8 + 8, 0);
+    g.addColorStop(0, "#000");
+    g.addColorStop(0.5, "#fff");
+    g.addColorStop(1, "#000");
+    x.fillStyle = g;
+    x.fillRect(i * 8, 0, 8, 4);
+  }
+  wales = new THREE.CanvasTexture(c);
+  wales.wrapS = THREE.RepeatWrapping;
+  wales.wrapT = THREE.RepeatWrapping;
+  wales.repeat.set(10, 10);
+  return wales;
+}
+
+function Cord({ colour }: { colour: string }) {
+  return (
+    <meshStandardMaterial
+      color={colour}
+      roughness={0.95}
+      metalness={0}
+      bumpMap={waleTexture()}
+      bumpScale={0.4}
+    />
+  );
+}
+
+/**
+ * The sofa, off the product photograph: olive corduroy, slim square arms,
+ * three loose back cushions over one long seat cushion, and a chaise standing
+ * out toward the TV at the window end, all on pale tapered legs.
+ *
+ * Origin on the floor at the middle of the main section. Local +z is the
+ * front, and the chaise is at local -x, beside that end's arm rather than
+ * under it.
  */
 export function Sofa({
   position,
@@ -48,77 +117,123 @@ export function Sofa({
   position: [number, number, number];
   rotation?: [number, number, number];
 }) {
-  const L = 1.9;
-  const D = 0.9;
-  const SEAT = 0.42;
+  const { length: L, depth: D, arm: ARM, armTop: ARM_TOP, chaiseW: CW, chaiseExt: CE } = SOFA;
+  const LEG = 0.14;
+  /** Top of the frame the cushions sit on. */
+  const BASE = 0.34;
+  const CUSH = 0.12;
+  const BACK_TOP = 0.6;
+  /** The front face of the back cushions, which is where the seat cushions start. */
+  const SEAT_Z0 = -D / 2 + 0.26;
+  const inner0 = -L / 2 + ARM;
+  const inner1 = L / 2 - ARM;
+  const chaise1 = inner0 + CW;
+  const backW = (inner1 - inner0) / 3;
+
+  const legs: [number, number][] = [
+    [-L / 2 + 0.06, -D / 2 + 0.07],
+    [L / 2 - 0.06, -D / 2 + 0.07],
+    [L / 2 - 0.06, D / 2 - 0.07],
+    [-L / 2 + 0.06, D / 2 - 0.07],
+    [inner0 + 0.06, D / 2 + CE - 0.07],
+    [chaise1 - 0.06, D / 2 + CE - 0.07],
+  ];
 
   return (
     <group position={position} rotation={rotation}>
-      {/* plinth, set in from the body so the sofa reads as standing on feet */}
+      {/* frame under the main seat, and the chaise's, run 20mm into it */}
       <RoundedBox
-        position={[0, 0.07, 0]}
-        args={[L - 0.12, 0.14, D - 0.12]}
+        position={[0, LEG + (BASE - LEG) / 2, 0]}
+        args={[L, BASE - LEG, D]}
         radius={0.02}
         smoothness={3}
         castShadow={false}
         receiveShadow
       >
-        <meshStandardMaterial color={OAK.back} roughness={0.7} metalness={0} />
+        <Cord colour={CORD} />
+      </RoundedBox>
+      <RoundedBox
+        position={[inner0 + CW / 2, LEG + (BASE - LEG) / 2, D / 2 + CE / 2 - 0.01]}
+        args={[CW, BASE - LEG, CE + 0.02]}
+        radius={0.02}
+        smoothness={3}
+        castShadow={false}
+        receiveShadow
+      >
+        <Cord colour={CORD} />
       </RoundedBox>
 
-      {/* seat base */}
+      {/* slim square arms */}
+      {[-1, 1].map((s) => (
+        <RoundedBox
+          key={s}
+          position={[s * (L / 2 - ARM / 2), LEG + (ARM_TOP - LEG) / 2, 0]}
+          args={[ARM, ARM_TOP - LEG, D]}
+          radius={0.03}
+          smoothness={4}
+          castShadow={false}
+          receiveShadow
+        >
+          <Cord colour={CORD} />
+        </RoundedBox>
+      ))}
+
+      {/* the back frame the cushions lean on */}
       <RoundedBox
-        position={[0, SEAT - 0.09, 0]}
-        args={[L, 0.18, D]}
+        position={[0, BASE + (BACK_TOP - BASE) / 2, -D / 2 + 0.07]}
+        args={[inner1 - inner0 + 0.02, BACK_TOP - BASE, 0.14]}
+        radius={0.02}
+        smoothness={3}
+        castShadow={false}
+        receiveShadow
+      >
+        <Cord colour={CORD} />
+      </RoundedBox>
+
+      {/* three loose back cushions, leaning back */}
+      {[0, 1, 2].map((i) => (
+        <RoundedBox
+          key={i}
+          position={[inner0 + backW * (i + 0.5), BASE + CUSH + 0.21, SEAT_Z0 - 0.1]}
+          rotation={[-0.1, 0, 0]}
+          args={[backW - 0.012, 0.42, 0.2]}
+          radius={0.06}
+          smoothness={4}
+          castShadow={false}
+          receiveShadow
+        >
+          <Cord colour={CORD_HI} />
+        </RoundedBox>
+      ))}
+
+      {/* the long seat cushion, and the chaise's, with a seam between */}
+      <RoundedBox
+        position={[(chaise1 + inner1) / 2 + 0.005, BASE + CUSH / 2, (SEAT_Z0 + D / 2) / 2]}
+        args={[inner1 - chaise1 - 0.01, CUSH, D / 2 - SEAT_Z0]}
         radius={0.03}
         smoothness={4}
         castShadow={false}
         receiveShadow
       >
-        <meshStandardMaterial color={WOOL} roughness={0.94} metalness={0} />
+        <Cord colour={CORD_HI} />
       </RoundedBox>
-
-      {/* back, leaning very slightly */}
       <RoundedBox
-        position={[0, SEAT + 0.21, -D / 2 + 0.11]}
-        rotation={[-0.05, 0, 0]}
-        args={[L, 0.62, 0.2]}
-        radius={0.035}
+        position={[inner0 + CW / 2, BASE + CUSH / 2, (SEAT_Z0 + D / 2 + CE) / 2]}
+        args={[CW - 0.01, CUSH, D / 2 + CE - SEAT_Z0]}
+        radius={0.03}
         smoothness={4}
         castShadow={false}
         receiveShadow
       >
-        <meshStandardMaterial color={WOOL} roughness={0.94} metalness={0} />
+        <Cord colour={CORD_HI} />
       </RoundedBox>
 
-      {/* arms */}
-      {[-1, 1].map((s) => (
-        <RoundedBox
-          key={s}
-          position={[s * (L / 2 - 0.09), SEAT + 0.08, 0.02]}
-          args={[0.18, 0.34, D - 0.06]}
-          radius={0.045}
-          smoothness={4}
-          castShadow={false}
-          receiveShadow
-        >
-          <meshStandardMaterial color={WOOL_HI} roughness={0.94} metalness={0} />
-        </RoundedBox>
-      ))}
-
-      {/* two seat cushions, with a gap so the join reads */}
-      {[-1, 1].map((s) => (
-        <RoundedBox
-          key={s}
-          position={[s * (L / 4 - 0.02), SEAT + 0.06, 0.05]}
-          args={[L / 2 - 0.24, 0.12, D - 0.3]}
-          radius={0.035}
-          smoothness={4}
-          castShadow={false}
-          receiveShadow
-        >
-          <meshStandardMaterial color={WOOL_HI} roughness={0.95} metalness={0} />
-        </RoundedBox>
+      {/* pale tapered legs */}
+      {legs.map(([x, z]) => (
+        <mesh key={`${x},${z}`} position={[x, LEG / 2, z]}>
+          <cylinderGeometry args={[0.022, 0.015, LEG, 12]} />
+          <meshStandardMaterial color={LEG_WOOD} roughness={0.6} metalness={0} />
+        </mesh>
       ))}
     </group>
   );
@@ -139,6 +254,10 @@ export function Sofa({
  */
 export const TV_PANEL = { y: 0.16 + 0.345, w: 1.22, h: 0.69, z: 0.019 };
 
+/** The glass inside the bezel. The dashboard is authored at this ratio, so it
+ *  fills the glass edge to edge. */
+export const TV_GLASS = { w: TV_PANEL.w - 0.03, h: TV_PANEL.h - 0.025 };
+
 export function Television({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
@@ -156,7 +275,7 @@ export function Television({ position }: { position: [number, number, number] })
         </RoundedBox>
         {/* the glass, a hair proud of the bezel so it catches the lamp */}
         <mesh position={[0, 0, TV_PANEL.z]}>
-          <planeGeometry args={[TV_PANEL.w - 0.03, TV_PANEL.h - 0.025]} />
+          <planeGeometry args={[TV_GLASS.w, TV_GLASS.h]} />
           <meshStandardMaterial
             color="#0a0c0e"
             roughness={0.12}
@@ -166,6 +285,58 @@ export function Television({ position }: { position: [number, number, number] })
         </mesh>
       </group>
     </group>
+  );
+}
+
+/**
+ * The TV remote, left on the sofa arm. Pressing it steps the television to its
+ * next channel; the channel is FunRoom's, which owns the screen.
+ *
+ * Origin on the surface it lies on, long axis along local z.
+ */
+export function TvRemote({
+  position,
+  rotation = [0, 0, 0],
+  detail,
+  onPress,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  detail: string;
+  onPress: () => void;
+}) {
+  const W = 0.048;
+  const T = 0.018;
+  const L = 0.18;
+  return (
+    <Interactive label="the remote" verb="change channel" detail={detail} onActivate={onPress}>
+      {(hovered) => (
+        <group position={position} rotation={rotation}>
+          <RoundedBox position={[0, T / 2, 0]} args={[W, T, L]} radius={0.008} smoothness={3}>
+            <meshStandardMaterial
+              color="#1b1c1f"
+              roughness={0.55}
+              metalness={0.1}
+              emissive={hovered ? "#ffd9a6" : "#000000"}
+              emissiveIntensity={hovered ? 0.25 : 0}
+            />
+          </RoundedBox>
+          {/* power, then the pad */}
+          <mesh position={[0, T + 0.0005, -L / 2 + 0.025]} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[0.0055, 12]} />
+            <meshStandardMaterial color="#7d2a24" roughness={0.5} metalness={0} />
+          </mesh>
+          {[-0.012, 0, 0.012].flatMap((x) =>
+            [-0.02, 0, 0.02, 0.04].map((z) => (
+              <mesh key={`${x},${z}`} position={[x, T + 0.0005, z]} rotation={[-Math.PI / 2, 0, 0]}>
+                <circleGeometry args={[0.0038, 10]} />
+                <meshStandardMaterial color="#3a3c40" roughness={0.6} metalness={0} />
+              </mesh>
+            )),
+          )}
+        </group>
+      )}
+    </Interactive>
   );
 }
 
@@ -940,10 +1111,11 @@ export function KitchenRun({
   length: number;
   oak: Surface;
   doors?: number;
-  /** Bays that are not a stack of drawers. "panel" is a fixed front for a bay
-   *  an appliance is built into and covers; "door" is a single hinged door,
-   *  which is what a bay with the water tank standing in it actually has. */
-  bays?: Record<number, "panel" | "door">;
+  /** Bays that are not a stack of drawers. "oven" is the bay the oven is built
+   *  into: the oven is its front, with a strip of joinery above and below, so
+   *  the door opens onto the cavity rather than onto a panel. "door" is a
+   *  single hinged door. */
+  bays?: Record<number, "oven" | "door">;
   /**
    * A hole through the worktop for an inset bowl, in the run's own x and
    * centred on its z. A hob sits on the top and needs nothing; a sink goes
@@ -991,10 +1163,35 @@ export function KitchenRun({
           material={<meshStandardMaterial {...oak} color={OAK.back} roughness={0.7} metalness={0} />}
         />
       </group>
+      {/* A partition at every bay boundary, as each unit is its own box.
+          Without them an open door looks straight along the inside of the run. */}
+      {Array.from({ length: doors - 1 }, (_, k) => (
+        <mesh key={k} position={[-length / 2 + w * (k + 1), PLINTH + bodyH / 2, -0.01]} receiveShadow>
+          <boxGeometry args={[0.018, bodyH - 0.004, D - 0.02]} />
+          <meshStandardMaterial {...oak} color={OAK.back} roughness={0.7} metalness={0} />
+        </mesh>
+      ))}
 
       {Array.from({ length: doors }, (_, i) => {
         const x = -length / 2 + w * (i + 0.5);
         const kind = bays[i];
+
+        if (kind === "oven") {
+          const strips: [number, number][] = [
+            [PLINTH + 0.006, OVEN.y - 0.006],
+            [OVEN.y + OVEN.h + 0.006, PLINTH + bodyH - 0.006],
+          ];
+          return (
+            <group key={i}>
+              {strips.map(([y0, y1]) => (
+                <mesh key={y0} position={[x, (y0 + y1) / 2, D / 2 + 0.004]} castShadow>
+                  <boxGeometry args={[w - 0.016, y1 - y0, 0.018]} />
+                  <meshStandardMaterial {...oak} color={OAK.carcass} roughness={0.62} metalness={0} />
+                </mesh>
+              ))}
+            </group>
+          );
+        }
 
         if (kind) {
           /* A full-height front. Drawn as one panel rather than a stack of
@@ -1006,16 +1203,20 @@ export function KitchenRun({
               <meshStandardMaterial {...oak} color={OAK.carcass} roughness={0.62} metalness={0} />
             </mesh>
           );
-          if (kind === "panel") return <group key={i}>{slab}</group>;
+          const underSink = !!cutout && Math.abs(cutout.x - x) < w / 2;
           return (
-            <Door
-              key={i}
-              label="the cupboard"
-              pivot={[x + (w - 0.016) / 2, PLINTH + bodyH / 2, D / 2]}
-              angle={1.8}
-            >
-              {slab}
-            </Door>
+            <group key={i}>
+              <Door
+                label="the cupboard"
+                pivot={[x + (w - 0.016) / 2, PLINTH + bodyH / 2, D / 2]}
+                angle={1.8}
+              >
+                {slab}
+              </Door>
+              <group position={[x, PLINTH, 0]}>
+                <Items items={underSink ? UNDER_SINK : PANS} />
+              </group>
+            </group>
           );
         }
 
@@ -1043,6 +1244,9 @@ export function KitchenRun({
                   face="py"
                   material={<meshStandardMaterial color={OAK.back} roughness={0.85} metalness={0} />}
                 />
+                <group position={[0, -trayH / 2 + 0.002, 0]}>
+                  <Items items={drawerStock(i, j)} />
+                </group>
               </group>
             </Drawer>
           );
@@ -1094,8 +1298,8 @@ export function FridgeColumn({
   /* Three compartments, bottom up, each its own box so the reveals between the
      fronts are the ends of real carcasses rather than lines drawn on one. */
   const BAYS = [
-    { y0: PLINTH, h: 1.32, label: "the fridge", shelves: [0.42, 0.86] },
-    { y0: 1.34, h: 0.72, label: "the freezer", shelves: [0.36] },
+    { y0: PLINTH, h: 0.66, label: "the freezer", shelves: [0.33] },
+    { y0: 0.78, h: 1.28, label: "the fridge", shelves: [0.42, 0.86] },
     { y0: 2.08, h: 0.34, label: "the cupboard", shelves: [] as number[] },
   ];
 
@@ -1116,21 +1320,25 @@ export function FridgeColumn({
               material={<meshStandardMaterial {...oak} color={OAK.back} roughness={0.72} metalness={0} />}
             />
           </group>
+          {/* Short of the door, or the fridge door's bins close through them. */}
           {shelves.map((y) => (
-            <mesh key={y} position={[0, y, -0.01]} receiveShadow>
-              <boxGeometry args={[W - 0.04, 0.014, D - 0.05]} />
+            <mesh key={y} position={[0, y, -0.065]} receiveShadow>
+              <boxGeometry args={[W - 0.04, 0.014, D - 0.16]} />
               <meshStandardMaterial color="#767a7d" roughness={0.35} metalness={0.1} />
             </mesh>
           ))}
+          <Items items={COLUMN_STOCK[label]} />
           {/* All three hinge the same side, as one appliance does. */}
           <Door label={label} pivot={[-W / 2, h / 2, D / 2]} angle={-1.9}>
             <mesh position={[0, h / 2, D / 2 + 0.005]} castShadow>
               <boxGeometry args={[W - 0.016, h - 0.014, 0.018]} />
               <meshStandardMaterial {...oak} color={OAK.carcass} roughness={0.6} metalness={0} />
             </mesh>
-            {/* Only the fridge door carries anything; the freezer and the
-                cupboard above it are too high and too small to stick to. */}
-            {door && y0 === PLINTH && (
+            {/* the bins on its inside face, which swing out with it */}
+            {label === "the fridge" && <Items items={FRIDGE_DOOR} />}
+            {/* Only the fridge door carries anything: the freezer under it is
+                too low to read and the cupboard over it too high. */}
+            {door && label === "the fridge" && (
               <group position={[0, h / 2, D / 2 + 0.0145]}>{door}</group>
             )}
           </Door>
@@ -1142,6 +1350,151 @@ export function FridgeColumn({
         <planeGeometry args={[W - 0.12, PLINTH - 0.04]} />
         <meshStandardMaterial color="#1b1712" roughness={0.9} metalness={0} />
       </mesh>
+    </group>
+  );
+}
+
+/**
+ * The narrow bookcase between the bedroom door and the fridge column, off the
+ * photograph: one bay wide, full height, seven fixed shelves, and what a flat
+ * keeps on them. Nothing on the shelves casts, for the reason in Bookshelf.
+ *
+ * Origin on the floor at the middle of its back, local +z out of the wall.
+ */
+export function TallBookcase({
+  position,
+  rotation = [0, 0, 0],
+  oak,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  oak: Surface;
+}) {
+  const W = 0.4;
+  const H = 2.02;
+  const D = 0.28;
+  const T = 0.018;
+  const PLINTH = 0.06;
+  const PITCH = 0.28;
+  /** The top face of each shelf, bottom first. */
+  const boards = Array.from({ length: 7 }, (_, i) => PLINTH + i * PITCH);
+  const wood = <meshStandardMaterial {...oak} color={OAK.case} roughness={0.62} metalness={0} />;
+
+  /** What stands on each shelf, bottom first: width, height, depth, colour. */
+  const contents: ([number, number, number, string] | null)[] = [
+    [0.3, 0.05, 0.2, "#b58c5e"],
+    [0.28, 0.15, 0.2, "#8a6a45"],
+    [0.3, 0.16, 0.22, "#1d1c1a"],
+    [0.2, 0.1, 0.18, "#2a2a2c"],
+    null,
+    [0.14, 0.09, 0.16, "#5d6b6f"],
+    null,
+  ];
+  /** The books on the fifth shelf: width, height, colour. */
+  const books: [number, number, string][] = [
+    [0.035, 0.22, "#6b5344"],
+    [0.05, 0.2, "#4f5f52"],
+    [0.03, 0.24, "#7a6047"],
+    [0.045, 0.21, "#59544d"],
+    [0.04, 0.19, "#75604f"],
+  ];
+
+  return (
+    <group position={position} rotation={rotation}>
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * (W / 2 - T / 2), H / 2, D / 2]} castShadow receiveShadow>
+          <boxGeometry args={[T, H, D]} />
+          {wood}
+        </mesh>
+      ))}
+      <mesh position={[0, H - T / 2, D / 2]} castShadow receiveShadow>
+        <boxGeometry args={[W, T, D]} />
+        {wood}
+      </mesh>
+      <mesh position={[0, H / 2, 0.003]} receiveShadow>
+        <boxGeometry args={[W - T * 2, H, 0.006]} />
+        <meshStandardMaterial color={OAK.back} roughness={0.8} metalness={0} />
+      </mesh>
+      <mesh position={[0, (PLINTH - T) / 2, D - T / 2 - 0.004]}>
+        <boxGeometry args={[W - T * 2, PLINTH - T, T]} />
+        {wood}
+      </mesh>
+      {boards.map((y) => (
+        <mesh key={y} position={[0, y - T / 2, D / 2]} receiveShadow>
+          <boxGeometry args={[W - T * 2, T, D - 0.012]} />
+          {wood}
+        </mesh>
+      ))}
+
+      {contents.map((c, i) =>
+        c ? (
+          <mesh key={i} position={[(i % 2 ? -1 : 1) * 0.02, boards[i] + c[1] / 2, D / 2]}>
+            <boxGeometry args={[c[0], c[1], c[2]]} />
+            <meshStandardMaterial color={c[3]} roughness={0.88} metalness={0} />
+          </mesh>
+        ) : null,
+      )}
+      {books.map(([w, h, colour], i) => {
+        const x = -W / 2 + T + 0.02 + books.slice(0, i).reduce((a, b) => a + b[0] + 0.004, 0) + w / 2;
+        return (
+          <mesh key={i} position={[x, boards[4] + h / 2, D / 2]} rotation={[0, 0, i === 4 ? -0.18 : 0]}>
+            <boxGeometry args={[w, h, 0.17]} />
+            <meshStandardMaterial color={colour} roughness={0.8} metalness={0} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+/**
+ * The oak shelf high over the bedroom door, running from the window wall to
+ * the fridge column, with what gets put up there and left: two rolls of paper
+ * and a small silver figure.
+ *
+ * Origin at the wall face under the middle of the board, local +x along it and
+ * +z out of the wall.
+ */
+export function HighShelf({
+  position,
+  rotation = [0, 0, 0],
+  length,
+  oak,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  length: number;
+  oak: Surface;
+}) {
+  const D = 0.24;
+  const T = 0.028;
+  const silver = <meshStandardMaterial color="#b9bcc0" roughness={0.25} metalness={0.85} />;
+
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[0, T / 2, D / 2]} castShadow receiveShadow>
+        <boxGeometry args={[length, T, D]} />
+        <meshStandardMaterial {...oak} color={OAK.case} roughness={0.55} metalness={0} />
+      </mesh>
+      {([
+        [0.12, 0.035, 0.7, 0.09, "#8f8aa3"],
+        [0.22, 0.03, 0.55, 0.17, "#5d6b76"],
+      ] as const).map(([x, r, len, z, colour]) => (
+        <mesh key={x} position={[x, T + r, z]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[r, r, len, 16]} />
+          <meshStandardMaterial color={colour} roughness={0.8} metalness={0} />
+        </mesh>
+      ))}
+      <group position={[-length / 2 + 0.45, T, 0.1]}>
+        <mesh position={[0, 0.05, 0]}>
+          <sphereGeometry args={[0.05, 16, 12]} />
+          {silver}
+        </mesh>
+        <mesh position={[0, 0.125, 0]}>
+          <sphereGeometry args={[0.035, 16, 12]} />
+          {silver}
+        </mesh>
+      </group>
     </group>
   );
 }
@@ -1169,6 +1522,10 @@ export function WallUnits({
   const TOP = 2.44;
   const H = TOP - BOTTOM;
   const D = 0.35;
+  const stock = useMemo(
+    () => wallStock(length, doors, BOTTOM, BOTTOM + H / 2 + 0.008),
+    [length, doors, BOTTOM, H],
+  );
 
   return (
     <group position={position} rotation={rotation}>
@@ -1186,6 +1543,14 @@ export function WallUnits({
         <boxGeometry args={[length - 0.04, 0.016, D - 0.05]} />
         <meshStandardMaterial color={OAK.back} roughness={0.8} metalness={0} />
       </mesh>
+      {/* a partition between each pair of doors, for the reason KitchenRun has them */}
+      {Array.from({ length: doors - 1 }, (_, k) => (
+        <mesh key={k} position={[-length / 2 + (length / doors) * (k + 1), BOTTOM + H / 2, -0.01]} receiveShadow>
+          <boxGeometry args={[0.016, H - 0.004, D - 0.02]} />
+          <meshStandardMaterial {...oak} color={OAK.back} roughness={0.72} metalness={0} />
+        </mesh>
+      ))}
+      <Items items={stock} />
 
       {/* Doors hinged on the outer edge of the run, so a pair either side of
           the middle opens away from each other rather than into each other. */}
@@ -1220,26 +1585,98 @@ export function WallUnits({
 
 /** The oven, under the hob. Sits in a bay of the run, so it is placed as a
  *  child of it in the run's own frame. */
+/** The oven's front, in its bay's frame. KitchenRun keeps its joinery off this
+ *  much of the "oven" bay, or a panel stands in front of the cavity. */
+export const OVEN = { w: 0.6, h: 0.59, y: 0.24, z: 0.3 };
+
+let rack: THREE.CanvasTexture | null = null;
+
+/** A wire shelf as an alpha grid: one plane per rack rather than a mesh per bar. */
+function rackTexture(): THREE.CanvasTexture {
+  if (rack) return rack;
+  const n = 128;
+  const c = document.createElement("canvas");
+  c.width = n;
+  c.height = n;
+  const x = c.getContext("2d")!;
+  x.strokeStyle = "#fff";
+  x.lineWidth = 3;
+  x.strokeRect(2, 2, n - 4, n - 4);
+  for (let i = 1; i < 9; i++) {
+    const p = (i * n) / 9;
+    x.beginPath();
+    x.moveTo(p, 0);
+    x.lineTo(p, n);
+    x.stroke();
+  }
+  rack = new THREE.CanvasTexture(c);
+  return rack;
+}
+
 export function Oven({ position }: { position: [number, number, number] }) {
-  const W = 0.6;
-  const H = 0.59;
-  const Y = 0.24;
-  const Z = 0.3;
+  const { w: W, h: H, y: Y, z: Z } = OVEN;
+  /** The cavity: inside the face frame, and set back so its mouth meets it. */
+  const CW = W - 0.06;
+  const CH = H - 0.09;
+  const CD = 0.5;
+  const CZ = 0.04;
+  const cy = Y + H / 2;
+  const lower = cy - 0.1;
 
   return (
     <group position={position}>
-      {/* the cavity, and the one shelf in it */}
-      <group position={[0, Y + H / 2, 0.04]}>
+      <group position={[0, cy, CZ]}>
         <OpenBox
-          width={W - 0.06}
-          height={H - 0.09}
-          depth={0.5}
+          width={CW}
+          height={CH}
+          depth={CD}
           material={<meshStandardMaterial color="#25262a" roughness={0.55} metalness={0.15} />}
         />
       </group>
-      <mesh position={[0, Y + H / 2 - 0.06, 0.04]} receiveShadow>
-        <boxGeometry args={[W - 0.1, 0.012, 0.44]} />
-        <meshStandardMaterial color="#6f7478" roughness={0.35} metalness={0.75} />
+
+      {/* the face frame round the cavity, which the door closes on */}
+      {([
+        [0, Y + H - 0.0225, W, 0.045],
+        [0, Y + 0.0225, W, 0.045],
+        [-(W - 0.03) / 2, cy, 0.03, H],
+        [(W - 0.03) / 2, cy, 0.03, H],
+      ] as const).map(([fx, fy, fw, fh]) => (
+        <mesh key={`${fx},${fy}`} position={[fx, fy, Z - 0.008]}>
+          <boxGeometry args={[fw, fh, 0.012]} />
+          <meshStandardMaterial color="#141516" roughness={0.35} metalness={0.4} />
+        </mesh>
+      ))}
+
+      {/* two wire racks, and a tray on the lower one */}
+      {[lower, cy + 0.08].map((ry) => (
+        <mesh key={ry} position={[0, ry, CZ]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[CW - 0.02, CD - 0.04]} />
+          <meshStandardMaterial
+            color="#9aa0a5"
+            roughness={0.35}
+            metalness={0.8}
+            alphaMap={rackTexture()}
+            alphaTest={0.5}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+      <RoundedBox position={[0, lower + 0.012, CZ]} args={[CW - 0.08, 0.02, CD - 0.1]} radius={0.004} smoothness={3}>
+        <meshStandardMaterial color="#1f2023" roughness={0.4} metalness={0.4} />
+      </RoundedBox>
+
+      {/* the fan cover on the back wall, and the lamp in the top corner */}
+      <mesh position={[0, cy, CZ - CD / 2 + 0.003]}>
+        <circleGeometry args={[0.11, 32]} />
+        <meshStandardMaterial color="#44474b" roughness={0.4} metalness={0.6} />
+      </mesh>
+      <mesh position={[0, cy, CZ - CD / 2 + 0.004]}>
+        <ringGeometry args={[0.03, 0.045, 24]} />
+        <meshStandardMaterial color="#16171a" roughness={0.6} metalness={0.2} />
+      </mesh>
+      <mesh position={[-CW / 2 + 0.002, cy + CH / 2 - 0.06, CZ - 0.12]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[0.035, 0.035]} />
+        <meshBasicMaterial color="#ffd9a0" />
       </mesh>
 
       {/* The door drops forward off its bottom edge, the way an oven does and
@@ -1341,14 +1778,33 @@ export function Microwave({
           <planeGeometry args={[CAV - 0.06, H - 0.06]} />
           <meshStandardMaterial color="#17181a" roughness={0.22} metalness={0.55} />
         </mesh>
+        {/* the pull, on the door's free edge so it swings with it */}
+        <mesh position={[-W / 2 + CAV - 0.025, H / 2, D / 2 + 0.03]} castShadow>
+          <boxGeometry args={[0.014, H - 0.09, 0.02]} />
+          <meshStandardMaterial color="#5f5a4f" roughness={0.45} metalness={0.2} />
+        </mesh>
       </Door>
 
-      {[0.06, -0.01].map((dy) => (
-        <mesh key={dy} position={[0.16, H / 2 + dy, D / 2 + 0.008]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.026, 0.026, 0.012, 16]} />
-          <meshStandardMaterial color="#a49d8e" roughness={0.45} metalness={0.1} />
-        </mesh>
-      ))}
+      {/* the control strip: a display over a pad of buttons */}
+      <mesh position={[W / 2 - (W - CAV) / 2, H - 0.05, D / 2 + 0.001]}>
+        <planeGeometry args={[0.1, 0.03]} />
+        <meshStandardMaterial color="#0f1011" roughness={0.3} metalness={0.3} />
+      </mesh>
+      <mesh position={[W / 2 - (W - CAV) / 2, H - 0.05, D / 2 + 0.002]}>
+        <planeGeometry args={[0.05, 0.012]} />
+        <meshBasicMaterial color="#e8a23a" />
+      </mesh>
+      {[0, 1, 2].flatMap((r) =>
+        [-1, 1].map((c) => (
+          <mesh
+            key={`${r}${c}`}
+            position={[W / 2 - (W - CAV) / 2 + c * 0.025, H - 0.11 - r * 0.035, D / 2 + 0.002]}
+          >
+            <planeGeometry args={[0.035, 0.022]} />
+            <meshStandardMaterial color="#5f5a4f" roughness={0.5} metalness={0.1} />
+          </mesh>
+        )),
+      )}
     </group>
   );
 }
@@ -1584,26 +2040,6 @@ export function Hob({ position }: { position: [number, number, number] }) {
           <meshBasicMaterial color="#3a3d41" transparent opacity={0.7} side={THREE.DoubleSide} />
         </mesh>
       ))}
-    </group>
-  );
-}
-
-/**
- * The hot water tank the plan marks VVB, standing inside the kitchen run.
- *
- * Three clearances, all of which it broke at some point: 0.84 tall, because the
- * worktop's underside is at 0.86; 0.25 across, and set back, because the plinth
- * is recessed 0.03 and a drum flush with the carcass bulges out under the
- * doors; and no lid, because a disc at 0.89 shares a plane with the worktop's
- * top face and z-fights it into a flickering white ellipse.
- */
-export function WaterTank({ position }: { position: [number, number, number] }) {
-  return (
-    <group position={position}>
-      <mesh position={[0, 0.42, 0]} castShadow={false} receiveShadow>
-        <cylinderGeometry args={[0.25, 0.25, 0.84, 24]} />
-        <meshStandardMaterial color="#b9bcbe" roughness={0.46} metalness={0.35} />
-      </mesh>
     </group>
   );
 }
@@ -1892,6 +2328,9 @@ export function Vanity({
                 face="py"
                 material={<meshStandardMaterial color="#6d6656" roughness={0.8} metalness={0} />}
               />
+              <group position={[0, -trayH / 2 + 0.002, 0]}>
+                <Items items={f > 0.5 ? VANITY_TOP : VANITY_LOW} />
+              </group>
             </group>
           </Drawer>
         );
@@ -2021,6 +2460,7 @@ export function WallCabinet({
           <meshStandardMaterial {...PORCELAIN} roughness={0.6} />
         </mesh>
       ))}
+      <Items items={MIRROR_CABINET} />
 
       {/* Both leaves hinge on the outer edge and swing into the room. The sign
           of the angle follows the pivot: a leaf whose free edge is at +x from
@@ -2392,6 +2832,7 @@ export function MirrorWardrobe({
   const D = 0.58;
   const F = 0.035;
   const lw = width / 2;
+  const stock = useMemo(() => wardrobeStock(width, H - 0.36, H - 0.22 + 0.009), [width, H]);
 
   /** One leaf: an aluminium panel with a mirror laid on its face. */
   const leaf = (z: number) => (
@@ -2439,6 +2880,7 @@ export function MirrorWardrobe({
         <boxGeometry args={[width - 0.04, 0.018, D - 0.05]} />
         <meshStandardMaterial color={OAK.back} roughness={0.8} metalness={0} />
       </mesh>
+      <Items items={stock} />
 
       {/* Two leaves in two tracks, the front one the only one that moves — that
           is what a slider is, and it is why the carcass behind is only ever
@@ -2485,6 +2927,7 @@ export function OverbedUnits({
   const D = 0.38;
   const w = width / cols;
   const rowH = H / 2;
+  const stock = useMemo(() => overbedStock(width, cols, bottom, rowH), [width, cols, bottom, rowH]);
 
   return (
     <group position={position} rotation={rotation}>
@@ -2500,6 +2943,15 @@ export function OverbedUnits({
           />
         </group>
       ))}
+
+      {/* a partition between the columns, through both rows */}
+      {Array.from({ length: cols - 1 }, (_, k) => (
+        <mesh key={k} position={[-width / 2 + w * (k + 1), bottom + H / 2, -0.01]} receiveShadow>
+          <boxGeometry args={[0.016, H - 0.004, D - 0.02]} />
+          <meshStandardMaterial {...oak} color={OAK.carcass} roughness={0.72} metalness={0} />
+        </mesh>
+      ))}
+      <Items items={stock} />
 
       {/* Doors separated by a reveal. Push-open in the real room, so no
           handles — the shadow gaps are the whole detail. Each hinges on the

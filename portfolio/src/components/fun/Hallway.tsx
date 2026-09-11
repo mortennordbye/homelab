@@ -1,7 +1,7 @@
 "use client";
 
-import { Instance, Instances, RoundedBox } from "@react-three/drei";
-import { useEffect, useMemo } from "react";
+import { RoundedBox } from "@react-three/drei";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { OAK } from "@/components/materials/oak";
 import type { Surface } from "@/components/materials/surface";
@@ -63,6 +63,32 @@ const CABINET_X = 3.62;
 
 /** The south wall's inner face. Everything along it stands hard against it. */
 const SOUTH = 6.08;
+
+const CABINET_H = 1.1;
+const CABINET_LEG = 0.15;
+/** Board thickness inside the cabinet. */
+const CABINET_T = 0.018;
+const CABINET_BAY = (CABINET_H - 2 * CABINET_T) / 3;
+
+/**
+ * The tall cabinet's placement, and where other files may stand things in it:
+ * the top, and the floors of the three bays behind its open door, top bay
+ * first. Everything here is cabinet-local, for a group at `CABINET_AT` turned
+ * to face the room the way the cabinet is.
+ */
+export const CABINET_AT = at(CABINET_X, 0, SOUTH);
+export const CABINET = {
+  d: CABINET_D,
+  /** The rounded cap stands 5mm proud of the carcass top, so the two faces are
+   *  never coplanar. */
+  top: CABINET_LEG + CABINET_H + 0.005,
+  open: { x0: 0.015, x1: CABINET_W / 2 - 0.01, z: 0.18 },
+  bays: [
+    CABINET_LEG + 2 * (CABINET_BAY + CABINET_T),
+    CABINET_LEG + CABINET_BAY + CABINET_T,
+    CABINET_LEG,
+  ],
+};
 
 /** The top of the bench cushion. Anything set down on the bench is placed off
  *  this rather than measured against it, so the bench cannot move out from
@@ -206,7 +232,7 @@ function EntryCloset({
  * The open shelf built-in, off the photograph of it: two columns of boards in
  * the niche, the left one shelves all the way up, the right one a hanging bay
  * at the top over shelves below. A plant on the left, baskets and boxes in most
- * of the rest, and the bags that live on the floor in front of it.
+ * of the rest.
  *
  * The upright between the columns is the unit's own, not the wall's — in the
  * flat this is one carcass built into the hole rather than two niches.
@@ -316,28 +342,6 @@ function ShelfCloset({
         );
       })}
       <Plant position={[lx + 0.02, LEFT[3] + 0.02, z]} />
-
-      {/* The rucksack and the leather bag, on the floor in front of it. */}
-      <RoundedBox
-        position={[lx - 0.1, 0.23, DEEP + 0.16]}
-        rotation={[0.05, 0.3, -0.04]}
-        args={[0.28, 0.44, 0.2]}
-        radius={0.07}
-        smoothness={4}
-        castShadow
-      >
-        <meshStandardMaterial color="#17181a" roughness={0.9} metalness={0.03} />
-      </RoundedBox>
-      <RoundedBox
-        position={[rx + 0.04, 0.17, DEEP + 0.13]}
-        rotation={[0.03, -0.22, 0.03]}
-        args={[0.2, 0.32, 0.16]}
-        radius={0.06}
-        smoothness={4}
-        castShadow
-      >
-        <meshStandardMaterial color="#4a3a2e" roughness={0.72} metalness={0.05} />
-      </RoundedBox>
     </group>
   );
 }
@@ -368,30 +372,41 @@ function Plant({ position }: { position: [number, number, number] }) {
 /** The vertical reeding on the cabinet doors, as half-rounds. */
 function Reeding({ width, height, count }: { width: number; height: number; count: number }) {
   const step = width / count;
+  const ref = useRef<THREE.InstancedMesh>(null);
+  /* Matrices set once, for the reason the forest sets its own: drei's
+     Instances would re-derive every reed from an Object3D each frame. */
+  useLayoutEffect(() => {
+    const mesh = ref.current;
+    if (!mesh) return;
+    const o = new THREE.Object3D();
+    for (let i = 0; i < count; i++) {
+      o.position.set(-width / 2 + step * (i + 0.5), 0, 0);
+      o.scale.set(1, height, 1);
+      o.updateMatrix();
+      mesh.setMatrixAt(i, o.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+  }, [width, height, count, step]);
+
   return (
     /* Culling off for the reason the forest needs it: the instanced mesh keeps
        its bounding sphere at this group's origin, inside the carcass. */
-    <Instances limit={count} range={count} frustumCulled={false}>
+    <instancedMesh ref={ref} args={[undefined, undefined, count]} frustumCulled={false}>
       {/* Half-round, opening toward +z: three sweeps theta from +z through +x,
           so the front-facing half starts a quarter turn back. */}
       <cylinderGeometry args={[step * 0.42, step * 0.42, 1, 8, 1, false, -Math.PI / 2, Math.PI]} />
       <meshStandardMaterial color={OAK.case} roughness={0.6} metalness={0} />
-      {Array.from({ length: count }, (_, i) => (
-        <Instance
-          key={i}
-          position={[-width / 2 + step * (i + 0.5), 0, 0]}
-          scale={[1, height, 1]}
-        />
-      ))}
-    </Instances>
+    </instancedMesh>
   );
 }
 
 /**
- * The tall cabinet: a reeded carcass with rounded top corners standing on thin
- * legs, and what stands on it. The lamp on top is a real source — it is the
- * only fitting in the entré, and without it the way out is the darkest part of
- * the flat.
+ * The tall cabinet: a reeded carcass standing on thin legs, with two sliding
+ * doors. The right-hand door is slid across behind the left, and the case
+ * studies stand in the bays it opens; Room.tsx puts them there, off `CABINET`.
+ *
+ * The lamp on top is a real source. It is the only fitting in the entré, and
+ * without it the way out is the darkest part of the flat.
  */
 function TallCabinet({
   position,
@@ -403,9 +418,13 @@ function TallCabinet({
   oak: Surface;
 }) {
   const W = CABINET_W;
-  const H = 1.1;
+  const H = CABINET_H;
   const D = CABINET_D;
-  const LEG = 0.15;
+  const LEG = CABINET_LEG;
+  const T = CABINET_T;
+  const DOOR_W = W / 2 - 0.015;
+  const DOOR_H = H - 0.08;
+  const carcass = <meshStandardMaterial {...oak} color={OAK.carcass} roughness={0.66} metalness={0} />;
 
   return (
     <group position={position} rotation={rotation}>
@@ -422,23 +441,54 @@ function TallCabinet({
         )),
       )}
 
+      {/* carcass, open at the front, under a rounded cap */}
+      <group position={[0, LEG + H / 2, D / 2]}>
+        <OpenBox width={W} height={H} depth={D} thickness={T} material={carcass} />
+      </group>
       <RoundedBox
-        position={[0, LEG + H / 2, D / 2]}
-        args={[W, H, D]}
-        radius={0.055}
+        position={[0, CABINET.top - 0.02, D / 2]}
+        args={[W + 0.01, 0.04, D + 0.01]}
+        radius={0.018}
         smoothness={4}
         castShadow
         receiveShadow
       >
-        <meshStandardMaterial {...oak} color={OAK.carcass} roughness={0.66} metalness={0} />
+        {carcass}
       </RoundedBox>
 
-      <group position={[0, LEG + H / 2, D + 0.004]}>
-        <Reeding width={W - 0.09} height={H - 0.12} count={26} />
-      </group>
+      {/* The upright between the halves, and the boards of the open half. Only
+          that half gets boards: the other is behind a door. */}
+      <mesh position={[0, LEG + H / 2, (D - 0.04) / 2]} receiveShadow>
+        <boxGeometry args={[T, H - 0.01, D - 0.04]} />
+        {carcass}
+      </mesh>
+      {[1, 2].map((i) => (
+        <mesh key={i} position={[W / 4, LEG + i * (CABINET_BAY + T) - T / 2, (D - 0.04) / 2]} receiveShadow>
+          <boxGeometry args={[W / 2 - T, T, D - 0.04]} />
+          {carcass}
+        </mesh>
+      ))}
+
+      {/* The doors, on two tracks. The rear one is slid across behind the
+          front one, far enough back that its reeding clears the front door's
+          back and close enough that it stays in front of the upright. */}
+      {([
+        [-W / 4, D + 0.009],
+        [-W / 4 + 0.02, D - 0.03],
+      ] as const).map(([x, z]) => (
+        <group key={z} position={[x, LEG + H / 2, z]}>
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[DOOR_W, DOOR_H, 0.014]} />
+            {carcass}
+          </mesh>
+          <group position={[0, 0, 0.011]}>
+            <Reeding width={DOOR_W - 0.02} height={DOOR_H - 0.04} count={13} />
+          </group>
+        </group>
+      ))}
 
       {/* The lamp: fluted ceramic base, pleated shade, and the light in it. */}
-      <group position={[-0.19, LEG + H, D / 2 + 0.02]}>
+      <group position={[-0.19, CABINET.top, D / 2 + 0.02]}>
         <mesh position={[0, 0.13, 0]} castShadow>
           <cylinderGeometry args={[0.055, 0.075, 0.26, 16]} />
           <meshStandardMaterial color={LINEN} roughness={0.5} metalness={0} />
@@ -449,30 +499,6 @@ function TallCabinet({
         </mesh>
         <pointLight position={[0, 0.3, 0]} intensity={4.6} distance={3.2} decay={1.8} color="#ffc98a" />
       </group>
-
-      {/* vase of dried stems, and the small figure beside it */}
-      <group position={[0.26, LEG + H, D / 2 + 0.01]}>
-        <mesh position={[0, 0.05, 0]} castShadow>
-          <sphereGeometry args={[0.052, 14, 10]} />
-          <meshStandardMaterial color={LINEN} roughness={0.55} />
-        </mesh>
-        {[-0.05, 0, 0.05].map((dx, i) => (
-          <group key={dx} position={[dx * 0.5, 0.09, dx * 0.3]} rotation={[0, 0, dx * 2.2]}>
-            <mesh position={[0, 0.06, 0]}>
-              <cylinderGeometry args={[0.003, 0.004, 0.13, 5]} />
-              <meshStandardMaterial color="#5c5142" roughness={0.9} />
-            </mesh>
-            <mesh position={[0, 0.13, 0]}>
-              <sphereGeometry args={[0.012 + i * 0.003, 8, 6]} />
-              <meshStandardMaterial color="#8d6f72" roughness={0.9} />
-            </mesh>
-          </group>
-        ))}
-      </group>
-      <mesh position={[0.06, LEG + H + 0.06, D / 2 - 0.03]} castShadow>
-        <capsuleGeometry args={[0.02, 0.042, 4, 10]} />
-        <meshStandardMaterial color="#e2dbcf" roughness={0.6} />
-      </mesh>
     </group>
   );
 }
@@ -525,8 +551,7 @@ function ArchMirror({
 }
 
 /**
- * The shoe bench: an open cubby case with a cushion on it and the rucksack
- * against one end. Not a bench with legs — in the flat it is a shoe unit you
+ * The shoe bench: an open cubby case with a cushion on it. Not a bench with legs — in the flat it is a shoe unit you
  * happen to sit on, and the cubbies are most of what you see of it.
  */
 function ShoeBench({
@@ -580,18 +605,6 @@ function ShoeBench({
         castShadow
       >
         <meshStandardMaterial color={WOOL} roughness={0.96} metalness={0} />
-      </RoundedBox>
-
-      {/* the rucksack, stood against the end of it */}
-      <RoundedBox
-        position={[W / 2 + 0.13, 0.24, D / 2 + 0.03]}
-        rotation={[0.06, -0.25, 0.05]}
-        args={[0.26, 0.42, 0.2]}
-        radius={0.07}
-        smoothness={4}
-        castShadow
-      >
-        <meshStandardMaterial color="#17181a" roughness={0.9} metalness={0.03} />
       </RoundedBox>
     </group>
   );
@@ -781,9 +794,7 @@ function AlcoveLining() {
  * Exported rather than restated in `FirstPerson` for the reason the walls are
  * built from `wallBoxes()`: a piece that moves without its collision moving
  * with it is how you get furniture you walk through standing next to floor you
- * cannot cross. The rucksack is folded into the bench because it sits on the
- * floor beside it, and a bag you walk through beside a bench you cannot is
- * worse than either.
+ * cannot cross.
  *
  * The gap these leave down the middle of the entré is the only route to the
  * front door, and it is 1.04m against a player 0.60 wide. Anything added here
@@ -797,7 +808,7 @@ function AlcoveLining() {
 export const HALL_SOLIDS: Rect[] = [
   { x0: RETURN_X, z0: SKIN, x1: JAMB, z1: FACE },
   {
-    x0: BENCH_X - BENCH_W / 2 - 0.26,
+    x0: BENCH_X - BENCH_W / 2,
     z0: SOUTH - BENCH_D,
     x1: BENCH_X + BENCH_W / 2,
     z1: SOUTH,

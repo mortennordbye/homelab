@@ -2,22 +2,23 @@
 
 import { MeshReflectorMaterial, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
-import { Bookshelf, shelfHeight } from "./Bookshelf";
+import { ShelvedBooks } from "./Bookshelf";
 import { PrintedPosts } from "./PrintedPosts";
-import { ALCOVE, BENCH_TOP, Hallway } from "./Hallway";
+import { WallCertificates } from "./WallCertificates";
+import { Abacus } from "./Abacus";
+import { ALCOVE, BENCH_TOP, CABINET, CABINET_AT, Hallway } from "./Hallway";
 import { Outside } from "./Outside";
-import { SIDEBOARD_TV, Sideboard, type Inspected } from "./Devices";
+import { SIDEBOARD_H, SIDEBOARD_TV, Sideboard, type Inspected } from "./Devices";
 import type { InfoCard } from "./Hud";
 import {
   ContactCard,
-  DeskNotebook,
   FridgeMagnets,
   GymBag,
   PhotoAlbum,
   ServiceLeaflets,
 } from "./Objects";
-import { DASH_PX_H, DASH_PX_W } from "./Screen";
 import { Printer } from "./Printer";
+import { Marker } from "./Marker";
 import { Door } from "./openable";
 import { Interactive } from "./interaction";
 import { Html } from "@react-three/drei";
@@ -35,6 +36,7 @@ import {
   WALNUT,
   Extractor,
   FridgeColumn,
+  HighShelf,
   Hob,
   KitchenRun,
   Microwave,
@@ -46,16 +48,19 @@ import {
   SINK_HOLE,
   Shower,
   Sink,
+  SOFA,
   Sofa,
+  TV_GLASS,
   TV_PANEL,
+  TallBookcase,
   TaskChair,
+  TvRemote,
   Towels,
   Toilet,
   Vanity,
   WallCabinet,
   WallUnits,
   WashingMachine,
-  WaterTank,
   WoodChair,
   WoodStove,
 } from "./Furniture";
@@ -68,7 +73,7 @@ export const ROOM = FLAT;
 /** The four switchable sources in the living room, each with its own switch.
  *  The point lights that are not fittings — the lantern's ceiling bounce and
  *  the per-room fills — are not keys here. See the rig in FunRoom. */
-export type LightKey = "lantern" | "desk" | "shelf" | "stove";
+export type LightKey = "lantern" | "desk" | "stove";
 export type Lights = Record<LightKey, boolean>;
 
 /** Height of the dado rail. Every wall-mounted object in the flat hangs at
@@ -337,9 +342,12 @@ function DoorLining({ box, horizontal }: { box: Box; horizontal: boolean }) {
  * jamb by the coat alcove — so it stands turned toward the rack, which is what
  * you are looking at as you come in the front door. Out is also the way a
  * bathroom this size is hung: there is a washing machine behind the swing.
+ *
+ * The bedroom's opens into the living room off the jamb by the windows, as it
+ * is hung in the flat, which keeps the swing clear of the bookcase beside it.
  */
 const DOOR_HANG: Record<string, { label: string; hinge: -1 | 1; angle: number }> = {
-  "living/east": { label: "the bedroom door", hinge: -1, angle: -1.3 },
+  "living/east": { label: "the bedroom door", hinge: 1, angle: -1.3 },
   "bath/south": { label: "the bathroom door", hinge: 1, angle: 1.2 },
 };
 
@@ -476,7 +484,7 @@ export const TABLE = { x: px(0.51), z: pz(4.495) };
 /** Which bay of the kitchen run the sink stands over, in the run's own x.
  *  Shared by the bowl and by the hole cut for it: two numbers that have to
  *  agree is one number. */
-const SINK_X = -0.574;
+const SINK_X = -0.9075;
 
 /**
  * The desk, on the blue mark: against the south wall in the south-west corner.
@@ -512,15 +520,6 @@ export const CHAIR_Z = pz(DESK.z - 0.62);
  * looking back at the monitors from the side.
  */
 export const SEAT = { x: DESK_X, z: pz(DESK.z - 0.44), eye: 1.25 };
-
-/**
- * Where the bookcase stands: against the south wall beside the desk, with the
- * printer on top of it. 0.25m clear of the desk's end, so the two read as two
- * pieces rather than one run.
- *
- * The lamp and the printer both read their x and z from here.
- */
-const SHELF_AT: [number, number, number] = at(2.46, 0, 5.89);
 
 export type Placement = {
   position: [number, number, number];
@@ -565,9 +564,8 @@ export const TV_SCREEN: Placement = {
     TV_BENCH_AT[2] - SIDEBOARD_TV[0],
   ],
   rotation: [0, Math.PI / 2, 0],
-  /* Sized so the dashboard's own housing lands inside the glass rather than
-     over the bezel. The two aspect ratios differ, so height is what binds. */
-  width: (TV_PANEL.h - 0.055) * (DASH_PX_W / DASH_PX_H),
+  /* The glass edge to edge: the dashboard is authored at the glass's ratio. */
+  width: TV_GLASS.w,
 };
 
 /** The landscape monitor. Shows real source from this repo — see CodeScreen.
@@ -589,6 +587,44 @@ export const DESK_TERMINAL: Placement = {
   rotation: [0, Math.PI + PORTRAIT_TOE, 0],
   width: PORTRAIT_W,
 };
+
+/** A place to sit: where the eye goes, and what it faces on arrival. */
+export type Seat = {
+  label: string;
+  pos: [number, number, number];
+  look: [number, number, number];
+};
+
+/**
+ * Every seat in the flat. Module-level, so each seat is one stable object:
+ * `SeatedFocus` keys the pose it eases to on that identity.
+ */
+export const SEATS = {
+  desk: {
+    label: "the chair",
+    pos: [SEAT.x, SEAT.eye, SEAT.z],
+    /* The midpoint of the pair rather than either panel, read off the
+       placements so the seat cannot drift when the monitors are nudged. */
+    look: [
+      (DESK_SCREEN.position[0] + DESK_TERMINAL.position[0]) / 2,
+      (DESK_SCREEN.position[1] + DESK_TERMINAL.position[1]) / 2,
+      (DESK_SCREEN.position[2] + DESK_TERMINAL.position[2]) / 2,
+    ],
+  },
+  sofa: {
+    label: "the sofa",
+    /* Over the back half of the middle of the seat, where a sitting head is.
+       The back is on the east side, away from the television. */
+    pos: [
+      px((MARKS.sofa.x0 + MARKS.sofa.x1) / 2) + 0.1,
+      1.02,
+      pz((MARKS.sofa.z0 + MARKS.sofa.z1) / 2),
+    ],
+    look: TV_SCREEN.position,
+  },
+} satisfies Record<string, Seat>;
+
+export type SeatId = keyof typeof SEATS;
 
 /** Monitor stand. The panel itself is a <Screen>, mounted just above this. */
 function Stand({ position }: { position: [number, number, number] }) {
@@ -718,10 +754,7 @@ function Lantern({
   );
 }
 
-/** Mushroom lamp: cream glass dome on a small base.
- *  Takes its own label because there are two of them — one on the desk, one on
- *  top of the bookshelf — and "the lamp" twice would name them identically in
- *  the crosshair prompt. */
+/** Mushroom lamp: cream glass dome on a small base. */
 function MushroomLamp({
   position,
   label,
@@ -901,6 +934,7 @@ export function Room({
   onToggleLight,
   seated,
   onSit,
+  remote,
 }: {
   onPrinterStatus: (msg: string | null) => void;
   shelf: ShelfData;
@@ -912,8 +946,10 @@ export function Room({
   onExitRoom: () => void;
   lights: Lights;
   onToggleLight: (k: LightKey) => void;
-  seated: boolean;
-  onSit: () => void;
+  seated: SeatId | null;
+  onSit: (seat: SeatId) => void;
+  /** The remote on the sofa: what pressing it would switch to, and the switch. */
+  remote: { detail: string; onPress: () => void };
 }) {
   // Tiling is in real units: roughly one texture tile per 1.3m of floor and
   // 1.7m of wall, so the grain reads at the right physical scale.
@@ -1058,6 +1094,9 @@ export function Room({
           furniture. Every device in it is named from the README tables. */}
       <group position={TV_BENCH_AT} rotation={[0, Math.PI / 2, 0]}>
         <Sideboard position={[0, 0, 0]} onInspect={onInspect} onOpenCard={onOpenCard} />
+        {/* On the cabinet's front edge, in front of the set, pointing down at
+            the hardware in the shelves. Out at the end it read as the speaker's. */}
+        <Marker position={[0.2, SIDEBOARD_H + 0.1, 0.17]} />
       </group>
 
       {/* Curtains on the glazed wall, ceiling track to floor, drawing to the
@@ -1071,7 +1110,26 @@ export function Room({
       <Curtains position={at(1.775, 0.02, 0.15)} width={2.85} height={2.42} />
 
       {/* Green on the plan: the sofa, facing west at the television. */}
-      <Sofa position={centreOf(MARKS.sofa)} rotation={[0, -Math.PI / 2, 0]} />
+      <Interactive
+        label="the sofa"
+        verb="sit down"
+        detail="facing the dashboard on the TV"
+        onActivate={() => onSit("sofa")}
+        disabled={seated !== null}
+      >
+        <Sofa position={centreOf(MARKS.sofa)} rotation={[0, -Math.PI / 2, 0]} />
+      </Interactive>
+      {/* The remote on the sofa's south arm, in the sofa's own frame. A sibling
+          of the sofa's Interactive, not a child: nested, a look at the remote
+          would also be a look at the sofa. */}
+      <group position={centreOf(MARKS.sofa)} rotation={[0, -Math.PI / 2, 0]}>
+        <TvRemote
+          position={[SOFA.length / 2 - SOFA.arm / 2, SOFA.armTop, 0.12]}
+          rotation={[0, 0.15, 0]}
+          detail={remote.detail}
+          onPress={remote.onPress}
+        />
+      </group>
 
       {/* ---------------------------------------------------------------
           The entré: the way out, and the objects that belong beside it.
@@ -1087,6 +1145,7 @@ export function Room({
         rotation={[0, -0.22, 0]}
         onOpen={onOpenCard}
       />
+      <Marker position={[BENCH_TOP[0] + 0.225, BENCH_TOP[1] + 0.4, BENCH_TOP[2]]} />
 
       {/* The services, as post propped against the wall at the other end of the
           bench. The outer group turns them to face the hall; the inner one
@@ -1096,6 +1155,7 @@ export function Room({
       <group position={[BENCH_TOP[0] - 0.255, BENCH_TOP[1] + 0.101, BENCH_TOP[2] + 0.11]} rotation={[0, Math.PI, 0]}>
         <ServiceLeaflets position={[0, 0, 0]} rotation={[-0.18, 0, 0]} onOpen={onOpenCard} />
       </group>
+      <Marker position={[BENCH_TOP[0] - 0.255, BENCH_TOP[1] + 0.45, BENCH_TOP[2] + 0.11]} />
 
       {/* The front door. A door you can walk up to and open is the obvious
           affordance, and it is the one the plan actually has. */}
@@ -1189,14 +1249,7 @@ export function Room({
           onToggle={() => onToggleLight("desk")}
         />
         <ContactCard position={[-0.66, 0.758, 0.2]} onOpen={onOpenCard} />
-        {/* The skills, written down. Left of the keyboard and clear of both
-            monitor stands, which is the only stretch of desk with room for
-            something you would actually open. */}
-        <DeskNotebook
-          position={[-0.5, 0.756, -0.04]}
-          rotation={[0, 0.13, 0]}
-          onOpen={onOpenCard}
-        />
+        <Marker position={[-0.66, 0.98, 0.2]} />
       </group>
 
 
@@ -1207,11 +1260,13 @@ export function Room({
         label="the desk chair"
         verb="sit down"
         detail="both screens, at reading distance"
-        onActivate={onSit}
-        disabled={seated}
+        onActivate={() => onSit("desk")}
+        disabled={seated !== null}
       >
         <TaskChair position={[DESK_X, 0, CHAIR_Z]} />
       </Interactive>
+      <Marker position={[DESK_SCREEN.position[0], DESK_SCREEN.position[1] + 0.3, DESK_SCREEN.position[2]]} />
+      <Marker position={[DESK_TERMINAL.position[0], DESK_TERMINAL.position[1] + 0.48, DESK_TERMINAL.position[2]]} />
 
       {/* The lantern, beside the cabinet where the bookcase used to stand. It
           lights the television end of the room and is in view from the front
@@ -1265,27 +1320,32 @@ export function Room({
         rotation={[0, -Math.PI / 2 - 0.04, 0]}
         tone={WALNUT}
       />
-      {/* The blog: three printouts, in a row down the table's length. Askew to
-          the table rather than square to it — the sheets stay square to each
-          other because rotating them one by one costs a flat `Html` layer
-          each. */}
-      <PrintedPosts
-        position={[TABLE.x - 0.07, 0.745, TABLE.z - 0.02]}
-        rotation={[0, 0.08, 0]}
-        onOpen={onOpenCard}
-      />
+      {/* The skills, on an abacus facing into the room. Set back toward the
+          wall so it stands on the table rather than at its edge. */}
+      <Abacus position={[TABLE.x - 0.12, 0.745, TABLE.z]} rotation={[0, Math.PI / 2, 0]} onOpen={onOpenCard} />
+      <Marker position={[TABLE.x - 0.12, 1.32, TABLE.z]} />
+      {/* The blog, framed on the south wall right of the screens, whose pair
+          ends at plan x 1.47. */}
+      <PrintedPosts position={at(1.745, 1.42, FLAT.d - 0.03)} rotation={[0, Math.PI, 0]} onOpen={onOpenCard} />
+      <Marker position={at(1.745, 1.94, FLAT.d - 0.12)} />
+      {/* The certificates, on a shelf on the west wall above the desk's end.
+          The corner side of the screens has 0.4m of wall, too little for seven.
+          Clear of the table, whose far edge is at plan z 4.77. */}
+      <WallCertificates position={at(0.02, 1.4, 5.45)} rotation={[0, Math.PI / 2, 0]} certs={shelf.certs} onOpen={onOpenCert} />
+      <Marker position={at(0.2, 1.8, 5.45)} />
 
       {/* ---------------------------------------------------------------
           The kitchen, laid out off a photograph of the real one: one long run
           down the east wall of the living room, then the return west along the
           south wall.
 
-          The east wall is the only stretch in the flat long enough to hold it,
-          which is why the bookcase and the blog board moved off it. From the
-          bedroom door southward: the fridge column, then 2.87m of worktop
-          carrying the sink, the hob with the oven under it, and the microwave
-          on the last bay. Wall units run over the whole of it and the strip
-          under them is what actually lights this end of the room.
+          From the bedroom door southward, as photographed: the narrow bookcase
+          with the high shelf running over it and the door, the fridge column,
+          then 2.42m of worktop with the sink beside the column, a bay of
+          drawers, the hob over the oven, and the microwave on the last bay.
+          The run's south end stays at 4.62, where the wall stops for the
+          entré. Wall units run over the whole of it and the strip under them
+          is what actually lights this end of the room.
           --------------------------------------------------------------- */}
       {/* The run, the column and the peninsula all sit 20mm further into what
           they back onto than their carcass depth wants.
@@ -1295,25 +1355,37 @@ export function Room({
           kitchen — the thin crawling line along the wall. Buried 20mm in the
           wall's 100mm it cannot be seen and cannot fight. Same reason the
           peninsula runs past the main run's front rather than up to it. */}
+      {/* The narrow bookcase in the half metre between the bedroom door's jamb
+          (plan z 1.1) and the fridge column (1.6), and the shelf running over
+          both. The shelf's underside has to clear the door lining's head. */}
+      <TallBookcase position={at(3.92, 0, 1.37)} rotation={[0, -Math.PI / 2, 0]} oak={oak} />
+      <HighShelf position={at(3.92, DOOR_H + 0.12, 0.8)} rotation={[0, -Math.PI / 2, 0]} length={1.59} oak={oak} />
       <FridgeColumn
-        position={at(3.595, 0, 1.45)}
+        position={at(3.595, 0, 1.9)}
         rotation={[0, -Math.PI / 2, 0]}
         oak={oak}
-        door={<FridgeMagnets onOpen={onOpenCard} />}
+        door={
+          <>
+            <FridgeMagnets onOpen={onOpenCard} />
+            <Marker position={[0, 0.3, 0.12]} />
+          </>
+        }
       />
 
-      {/* Five bays. Local +x points south, so a negative offset is the fridge
-          end and the sink sits beside it, as drawn and as photographed. */}
-      {/* Bay 1 is a door, not drawers: the bowl hangs through the top into it,
+      {/* Four bays of 0.605. Local +x points south, so a negative offset is the
+          fridge end: the sink in the bay against the column, as photographed,
+          then drawers, the hob over the oven, and the microwave's bay. */}
+      {/* Bay 0 is a door, not drawers: the bowl hangs through the top into it,
           and a drawer would pull straight out through the well. */}
-      <KitchenRun position={at(3.62, 0, 3.185)} rotation={[0, -Math.PI / 2, 0]} length={2.87} doors={5} bays={{ 1: "door", 3: "panel" }} cutout={{ x: SINK_X, ...SINK_HOLE }} oak={oak}>
+      <KitchenRun position={at(3.62, 0, 3.41)} rotation={[0, -Math.PI / 2, 0]} length={2.42} doors={4} bays={{ 0: "door", 2: "oven" }} cutout={{ x: SINK_X, ...SINK_HOLE }} oak={oak}>
         <Sink position={[SINK_X, 0, 0]} />
-        <Hob position={[0.574, 0, 0]} />
-        <Oven position={[0.574, 0, 0]} />
+        <Hob position={[0.3025, 0, 0]} />
+        <Oven position={[0.3025, 0, 0]} />
       </KitchenRun>
-      <WallUnits position={at(3.745, 0, 3.185)} rotation={[0, -Math.PI / 2, 0]} length={2.87} doors={5} oak={oak} />
-      <Extractor position={at(3.72, 1.4, 3.759)} rotation={[0, -Math.PI / 2, 0]} />
-      <Microwave position={at(3.6, 0.9, 4.333)} rotation={[0, -Math.PI / 2 + 0.12, 0]} />
+      <WallUnits position={at(3.745, 0, 3.41)} rotation={[0, -Math.PI / 2, 0]} length={2.42} doors={4} oak={oak} />
+      <Extractor position={at(3.72, 1.4, 3.7125)} rotation={[0, -Math.PI / 2, 0]} />
+      {/* Square to the wall with its back 20mm off the wall face at 3.90. */}
+      <Microwave position={at(3.71, 0.9, 4.3175)} rotation={[0, -Math.PI / 2, 0]} />
 
       {/* The return, butted into the south end of the run so the worktop turns
           the corner in one line. It is a peninsula standing out into the room,
@@ -1322,10 +1394,8 @@ export function Room({
           would leave a metre of floor between the two legs and seal the way out
           to the front door.
 
-          Doors face north, at the cook rather than at the sofa, and the hot
-          water tank the plan marks lives inside it. */}
+          Doors face north, at the cook rather than at the sofa. */}
       <KitchenRun position={at(2.83, 0, 4.32)} rotation={[0, Math.PI, 0]} length={1.0} doors={2} bays={{ 1: "door" }} topDrop={0.002} oak={oak} />
-      <WaterTank position={at(2.55, 0, 4.35)} />
 
       {/* ---------------------------------------------------------------
           Soverom, laid out off a photograph of the real one. Nothing from the
@@ -1386,46 +1456,31 @@ export function Room({
           small dent you pass through coming in, before the washing machine. */}
       <Towels position={at(5.33, 0, 4.4)} rotation={[0, Math.PI / 2, 0]} />
 
-      {/* The case studies as books, certificates on the bottom shelf. Shelf
-          count follows the content, which is why everything standing on top
-          reads its height from shelfHeight rather than a number. */}
-      <Bookshelf
-        position={SHELF_AT}
-        rotation={[0, Math.PI, 0]}
-        shelf={shelf}
-        onOpenBook={onOpenBook}
-        onOpenCert={onOpenCert}
-      />
-      {/* A lamp on top of the shelf, and its light with it. The case studies
-          are the thing most worth reading in here and both other lamps are at
-          the far end, so this is a third fitting rather than more ambient.
-          Its height comes from the shelf's content, which is why the light is
-          declared next to the lamp instead of in the rig. */}
-      <group position={[SHELF_AT[0] - 0.33, shelfHeight(shelf), SHELF_AT[2]]}>
-        <MushroomLamp
-          position={[0, 0, 0]}
-          label="the shelf lamp"
-          detail="the case studies"
-          on={lights.shelf}
-          onToggle={() => onToggleLight("shelf")}
+      {/* The hall cabinet, in its own frame: the career album and the case
+          studies in the bays behind its open door, the printer on top. The
+          album takes the start of the top bay, which is what firstRowStart
+          leaves room for. */}
+      <group position={CABINET_AT} rotation={[0, Math.PI, 0]}>
+        <PhotoAlbum
+          position={[CABINET.open.x0 + 0.125, CABINET.bays[0] + 0.15, CABINET.open.z]}
+          career={career}
+          onOpen={onOpenCard}
         />
-        <pointLight position={[0, 0.12, 0]} intensity={lights.shelf ? 4.2 : 0} distance={3.2} decay={1.9} color="#ffca8a" />
+        <ShelvedBooks
+          books={shelf.books}
+          x0={CABINET.open.x0}
+          width={CABINET.open.x1 - CABINET.open.x0}
+          bayYs={CABINET.bays}
+          firstRowStart={0.26}
+          z={CABINET.open.z}
+          onOpenBook={onOpenBook}
+        />
+        {/* Over the open half, clear of the lamp's shade, which reaches x 0.01
+            from the other side. */}
+        <Printer position={[0.225, CABINET.top, CABINET.d / 2 - 0.02]} onStatus={onPrinterStatus} />
+        <Marker position={[0.225, CABINET.top + 0.35, CABINET.d / 2]} />
+        <Marker position={[0.23, CABINET.bays[1] + 0.3, CABINET.d + 0.12]} />
       </group>
-      {/* The career, in the album stood between the lamp and the printer. That
-          gap is 0.26 wide and the album is 0.21: it is the only clear stretch
-          of shelf top, and nothing on either side may grow into it. */}
-      <PhotoAlbum
-        position={[SHELF_AT[0] - 0.12, shelfHeight(shelf) + 0.15, SHELF_AT[2]]}
-        rotation={[0, Math.PI, 0]}
-        career={career}
-        onOpen={onOpenCard}
-      />
-      {/* The printer, on the other end of the shelf top. */}
-      <Printer
-        position={[SHELF_AT[0] + 0.22, shelfHeight(shelf), SHELF_AT[2]]}
-        rotation={[0, Math.PI, 0]}
-        onStatus={onPrinterStatus}
-      />
     </group>
   );
 }

@@ -3,6 +3,33 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+/** The drifting poster behind both RoomLoading and RoomIntro, which have to
+ *  match or the handover between them is a visible cut. */
+export function RoomBackdrop() {
+  return (
+    <>
+      <Image
+        src="/images/room-poster.jpg"
+        alt=""
+        aria-hidden
+        fill
+        priority
+        sizes="100vw"
+        className="room-enter__poster object-cover brightness-[0.42] saturate-[0.85]"
+        style={{ objectPosition: "50% 58%" }}
+      />
+      <span
+        aria-hidden
+        className="absolute inset-0 bg-[repeating-linear-gradient(180deg,rgba(0,0,0,0.26)_0_1px,transparent_1px_3px)]"
+      />
+      <span
+        aria-hidden
+        className="absolute inset-0 shadow-[inset_0_0_200px_70px_rgba(0,0,0,0.85)]"
+      />
+    </>
+  );
+}
+
 /**
  * The screen between the hero and the room: the hero's poster, drifting
  * inward until the scene resolves behind it. Only works while the poster's
@@ -38,24 +65,7 @@ export function RoomLoading({
       className="pointer-events-none fixed inset-0 z-[120] overflow-hidden bg-bg transition-opacity duration-700"
       style={{ opacity: done ? 0 : 1 }}
     >
-      <Image
-        src="/images/room-poster.jpg"
-        alt=""
-        aria-hidden
-        fill
-        priority
-        sizes="100vw"
-        className="room-enter__poster object-cover brightness-[0.42] saturate-[0.85]"
-        style={{ objectPosition: "50% 58%" }}
-      />
-      <span
-        aria-hidden
-        className="absolute inset-0 bg-[repeating-linear-gradient(180deg,rgba(0,0,0,0.26)_0_1px,transparent_1px_3px)]"
-      />
-      <span
-        aria-hidden
-        className="absolute inset-0 shadow-[inset_0_0_200px_70px_rgba(0,0,0,0.85)]"
-      />
+      <RoomBackdrop />
 
       <div className="absolute inset-0 grid place-content-center">
         <p className="eyebrow mb-6 text-center text-[0.65rem] text-fg-3">

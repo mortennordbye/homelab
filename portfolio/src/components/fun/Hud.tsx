@@ -128,7 +128,7 @@ export function InfoPanel({
             {card.rows.map((r) => (
               <div key={r.k} className="flex gap-3">
                 <dt
-                  className="w-24 shrink-0 font-mono text-[11px] uppercase tracking-wider"
+                  className="w-40 shrink-0 break-words font-mono text-[11px] uppercase tracking-wider"
                   style={{ color: "var(--paper-ink-3)" }}
                 >
                   {r.k}
@@ -198,11 +198,11 @@ export function InfoPanel({
  * A prompt that only appeared on hover would leave the visitor holding W at a
  * view that will not move.
  */
-export function SeatedHint({ touch = false }: { touch?: boolean }) {
+export function SeatedHint({ caption, touch = false }: { caption: string; touch?: boolean }) {
   return (
     <div className="pointer-events-none absolute left-1/2 top-[calc(50%+30px)] -translate-x-1/2">
       <LeaderLabel
-        caption="the chair"
+        caption={caption}
         action={
           <>
             {touch ? "tap to" : <Kbd>E</Kbd>}
@@ -229,6 +229,7 @@ const BINDS: Bind[] = [
     action: "move",
   },
   { keys: <Kbd>shift</Kbd>, action: "run" },
+  { keys: <Kbd>C</Kbd>, action: "crouch" },
   { keys: <Kbd>E</Kbd>, action: "interact" },
   { keys: <Kbd>esc</Kbd>, action: "back / release cursor" },
   { keys: <Kbd>H</Kbd>, action: "hide these" },

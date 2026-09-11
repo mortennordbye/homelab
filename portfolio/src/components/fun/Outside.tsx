@@ -1,7 +1,6 @@
 "use client";
 
-import { Instance, Instances } from "@react-three/drei";
-import { Fragment, useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { pz } from "./flat";
 
@@ -92,6 +91,50 @@ const TIERS: [number, number, number][] = [
   [0.82, 0.46, 0.38],
 ];
 
+type Tree = { x: number; z: number; height: number; width: number; spin: number; far: boolean };
+
+/**
+ * One tier of one depth band, as a plain instanced mesh with its matrices set
+ * once. drei's Instances re-derives every instance from an Object3D each frame,
+ * which for a forest that never moves is 720 matrix updates for nothing.
+ */
+function Trees({
+  rows,
+  tier,
+  color,
+}: {
+  rows: Tree[];
+  tier: [number, number, number];
+  color: string;
+}) {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  useLayoutEffect(() => {
+    const mesh = ref.current;
+    if (!mesh) return;
+    const [at, wf, hf] = tier;
+    const o = new THREE.Object3D();
+    rows.forEach((t, i) => {
+      o.position.set(t.x, GROUND + t.height * at, t.z);
+      o.rotation.set(0, t.spin, 0);
+      o.scale.set(t.width * wf, t.height * hf, t.width * wf);
+      o.updateMatrix();
+      mesh.setMatrixAt(i, o.matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+  }, [rows, tier]);
+
+  return (
+    /* Culling off: the instanced mesh keeps the unit cone's bounding sphere at
+       the origin, so three culls the whole forest the moment the flat's centre
+       leaves the frustum, which is every time you actually look out of a
+       window. */
+    <instancedMesh ref={ref} args={[undefined, undefined, rows.length]} frustumCulled={false}>
+      <coneGeometry args={[1, 1, 7]} />
+      <meshBasicMaterial color={color} fog={false} />
+    </instancedMesh>
+  );
+}
+
 export function Outside() {
   const sky = useMemo(() => skyTexture(), []);
 
@@ -114,6 +157,10 @@ export function Outside() {
       };
     });
   }, []);
+  const [nearTrees, farTrees] = useMemo(
+    () => [trees.filter((t) => !t.far), trees.filter((t) => t.far)],
+    [trees],
+  );
 
   return (
     <group>
@@ -137,31 +184,16 @@ export function Outside() {
       {([
         { far: false, color: "#080f0f" },
         { far: true, color: "#18272f" },
-      ] as const).map((band) => (
-        <Fragment key={String(band.far)}>
-          {TIERS.map(([at, wf, hf], tier) => {
-            const rows = trees.filter((t) => t.far === band.far);
-            return (
-              /* Culling off: the instanced mesh keeps the unit cone's bounding
-                 sphere at the origin, so three culls the whole forest the
-                 moment the flat's centre leaves the frustum — which is every
-                 time you actually look out of a window. */
-              <Instances key={tier} limit={rows.length} range={rows.length} frustumCulled={false}>
-                <coneGeometry args={[1, 1, 7]} />
-                <meshBasicMaterial color={band.color} fog={false} />
-                {rows.map((t, i) => (
-                  <Instance
-                    key={i}
-                    position={[t.x, GROUND + t.height * at, t.z]}
-                    rotation={[0, t.spin, 0]}
-                    scale={[t.width * wf, t.height * hf, t.width * wf]}
-                  />
-                ))}
-              </Instances>
-            );
-          })}
-        </Fragment>
-      ))}
+      ] as const).map((band) =>
+        TIERS.map((tier, i) => (
+          <Trees
+            key={`${band.far}-${i}`}
+            rows={band.far ? farTrees : nearTrees}
+            tier={tier}
+            color={band.color}
+          />
+        )),
+      )}
     </group>
   );
 }

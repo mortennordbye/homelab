@@ -3,11 +3,15 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { SOFA } from "./Furniture";
 import { HALL_SOLIDS } from "./Hallway";
 import { CHAIR_Z, DESK, DESK_D, DESK_X, DESK_Z, LANTERN, ROOM, STOVE, TABLE } from "./Room";
 import { MARKS, px, pz, rectBox, wallBoxes, type Box } from "./flat";
 
 export const EYE = 1.66;
+/** Held C. Low enough to look under the wall units and into the shelves. */
+const CROUCH_EYE = 1.05;
+const CROUCH_WALK = 0.9;
 const WALK = 1.9;
 const RUN = 3.2;
 const ACCEL = 11;
@@ -38,14 +42,20 @@ const BLOCKERS: Box[] = [
   // The three marked pieces, at the footprints flat.ts gives them.
   rectBox(MARKS.tvBench),
   rectBox(MARKS.sofa),
-  // The bookcase, against the south wall beside the desk, with the printer on
-  // top of it.
-  { x: px(2.46), z: pz(5.89), hx: 0.46, hz: 0.21 },
+  // The sofa's chaise, standing out toward the TV beside the window-end arm.
+  {
+    x: px(MARKS.sofa.x0 - SOFA.chaiseExt / 2),
+    z: pz(MARKS.sofa.z0 + SOFA.arm + SOFA.chaiseW / 2),
+    hx: SOFA.chaiseExt / 2,
+    hz: SOFA.chaiseW / 2,
+  },
   // The run, the peninsula butted into its south end, and the fridge column
   // that ends it at the bedroom-door end. The column is deeper than the run it bookends, so it gets
   // its own box rather than being folded into it.
-  { x: px(3.62), z: pz(3.185), hx: 0.3, hz: 1.435 },
-  { x: px(3.595), z: pz(1.45), hx: 0.325, hz: 0.3 },
+  { x: px(3.62), z: pz(3.41), hx: 0.3, hz: 1.21 },
+  { x: px(3.595), z: pz(1.9), hx: 0.325, hz: 0.3 },
+  // The narrow bookcase between the column and the bedroom door.
+  { x: px(3.78), z: pz(1.37), hx: 0.14, hz: 0.2 },
   { x: px(2.83), z: pz(4.32), hx: 0.5, hz: 0.3 },
   // Bedroom: the bed crosswise under the wall units, and the mirrored
   // wardrobe beside it. Both inset a little, so brushing an edge does not stop
@@ -138,6 +148,7 @@ export function FirstPerson({
   const keys = useRef<Record<string, boolean>>({});
   const vel = useRef(new THREE.Vector3());
   const bob = useRef(0);
+  const eye = useRef(EYE);
   const fwd = useMemo(() => new THREE.Vector3(), []);
   const right = useMemo(() => new THREE.Vector3(), []);
   const want = useMemo(() => new THREE.Vector3(), []);
@@ -174,7 +185,8 @@ export function FirstPerson({
     // walk faster than either alone.
     const f = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) + (m?.y ?? 0);
     const s = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + (m?.x ?? 0);
-    const speed = k.ShiftLeft || k.ShiftRight ? RUN : WALK;
+    const crouching = !!k.KeyC;
+    const speed = crouching ? CROUCH_WALK : k.ShiftLeft || k.ShiftRight ? RUN : WALK;
 
     camera.getWorldDirection(fwd);
     fwd.y = 0;
@@ -206,7 +218,9 @@ export function FirstPerson({
     // head bob, scaled by actual speed so it stops when you stop
     const moving = vel.current.length();
     bob.current += delta * moving * 2.4;
-    camera.position.y = EYE + Math.sin(bob.current * 2) * 0.014 * Math.min(1, moving / WALK);
+    // Eased rather than snapped, so crouching is a movement and not a cut.
+    eye.current = THREE.MathUtils.damp(eye.current, crouching ? CROUCH_EYE : EYE, 10, delta);
+    camera.position.y = eye.current + Math.sin(bob.current * 2) * 0.014 * Math.min(1, moving / WALK);
   });
 
   return null;
