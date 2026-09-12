@@ -56,6 +56,11 @@ server:
         external-dns.kubernetes.io/cloudflare-proxied: "true"
       hostnames:
         - "auth.bigd.no"
+      # Spelled out: the API server defaults it and ArgoCD reports drift.
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
       parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
