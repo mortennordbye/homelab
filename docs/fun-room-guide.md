@@ -363,6 +363,15 @@ browser finish compiling that program there and then, one at a time, on the main
 was most of the wait, so the Canvas turns the check off in production and leaves it on in dev,
 where a broken shader should still say why. Starting the room's chunk early from the nav
 link or the Hero's enter button was tried and measured no reliable gain, so it is not done.
+On phones, where building the scene takes seconds, the loading screen lights one of the room's
+fittings over the poster per real stage (`LoadStage` in `RoomLoading.tsx`): the lantern when the
+code arrives, the desk lamp when the assets are in, the stove while the scene builds. The stove
+flicker is an opacity animation because only the compositor keeps running through that freeze.
+The Canvas holds `frameloop="never"` until two frames after `sceneReady`, because the first
+frame that draws the scene is the freeze: without the hold, it starts before React has painted
+the building stage, and the phone sits on the previous stage for the whole freeze.
+The glows are placed in the poster's own pixels, so a re-cut `room-poster.jpg` has to move
+`LIGHTS` with it.
 
 **A foreign product's palette does not come with its data.** The pinned board was drawn in
 GitHub's own colours — `#1f6feb` names, GitHub's grey ramp, the six language dots — which put

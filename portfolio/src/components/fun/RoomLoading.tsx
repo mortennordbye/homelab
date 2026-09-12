@@ -30,6 +30,36 @@ export function RoomBackdrop() {
   );
 }
 
+/** How far the room has really got: its code has arrived, its textures and
+ *  model are in, or it is building the scene. Each lights one fitting. */
+export type LoadStage = "code" | "assets" | "building";
+
+const STAGES: LoadStage[] = ["code", "assets", "building"];
+
+/** Pixel positions in room-poster.jpg. The phone crop shows the stove whole
+ *  and catches the lantern and desk lamp spilling in from the edges. */
+const LIGHTS: { stage: LoadStage; x: number; y: number; r: number; fire?: boolean }[] = [
+  { stage: "code", x: 446, y: 272, r: 82 },
+  { stage: "assets", x: 217, y: 279, r: 56 },
+  { stage: "building", x: 390, y: 313, r: 60, fire: true },
+];
+
+function RoomLights({ stage }: { stage: LoadStage }) {
+  const reached = STAGES.indexOf(stage);
+  return (
+    <div aria-hidden className="room-enter__poster room-lights pointer-events-none absolute inset-0">
+      {LIGHTS.map((l) => (
+        <span
+          key={l.stage}
+          data-on={STAGES.indexOf(l.stage) <= reached}
+          className={l.fire ? "room-light room-light--fire" : "room-light"}
+          style={{ "--x": l.x, "--y": l.y, "--r": l.r } as React.CSSProperties}
+        />
+      ))}
+    </div>
+  );
+}
+
 /**
  * The screen between the hero and the room: the hero's poster, drifting
  * inward until the scene resolves behind it. Only works while the poster's
@@ -41,11 +71,17 @@ export function RoomBackdrop() {
 export function RoomLoading({
   progress,
   done = false,
+  stage,
 }: {
   progress?: number;
   done?: boolean;
+  /** Lights the poster stage by stage. Building the scene reports no
+   *  progress, so that stage gets the indeterminate bar rather than a bar
+   *  sitting at 100%. */
+  stage?: LoadStage;
 }) {
-  const indeterminate = progress === undefined;
+  const building = stage === "building" && !done;
+  const indeterminate = progress === undefined || building;
 
   /* Unmount once the fade has run. A full-viewport image left sitting at
      opacity 0 over the canvas is an extra compositing layer for the rest of
@@ -66,6 +102,7 @@ export function RoomLoading({
       style={{ opacity: done ? 0 : 1 }}
     >
       <RoomBackdrop />
+      {stage && <RoomLights stage={stage} />}
 
       <div className="absolute inset-0 grid place-content-center">
         <p className="eyebrow mb-6 text-center text-[0.65rem] text-fg-3">
@@ -82,7 +119,9 @@ export function RoomLoading({
           />
         </div>
         <p className="mt-4 text-center font-mono text-[11px] tabular-nums text-fg-3">
-          {indeterminate
+          {building
+            ? "building the room"
+            : indeterminate
             ? "warming up the room…"
             : done
               ? "ready"

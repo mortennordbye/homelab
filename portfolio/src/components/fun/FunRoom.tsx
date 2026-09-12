@@ -13,7 +13,7 @@ import { BlendFunction, ToneMappingMode } from "postprocessing";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RoomLoading } from "@/components/fun/RoomLoading";
+import { RoomLoading, type LoadStage } from "@/components/fun/RoomLoading";
 import { RoomIntro } from "./RoomIntro";
 import * as THREE from "three";
 import type { PointerLockControls as PointerLockControlsImpl } from "three-stdlib";
@@ -269,8 +269,16 @@ function SceneReady({ onReady }: { onReady: () => void }) {
  * asset bytes through `useProgress`, held to whichever is slower — assets or
  * a short floor — so a warm cache does not flash.
  */
-function LoadingScreen({ progress, done }: { progress: number; done: boolean }) {
-  return <RoomLoading progress={progress} done={done} />;
+function LoadingScreen({
+  progress,
+  done,
+  stage,
+}: {
+  progress: number;
+  done: boolean;
+  stage: LoadStage;
+}) {
+  return <RoomLoading progress={progress} done={done} stage={stage} />;
 }
 
 /**
@@ -946,6 +954,11 @@ export default function FunRoom({
   const { status, feed, stale, ok, nodes, argocd } = useInfraFeed();
   const [phase, setPhase] = useState<Phase>("loading");
   const [sceneReady, setSceneReady] = useState(false);
+  /* The first frame with the scene in it compiles every shader, which blocks
+     the main thread for seconds on a phone. Frames wait until the loading
+     screen has painted the building stage, or that freeze shows the stage
+     before it. */
+  const [drawing, setDrawing] = useState(false);
   const [floorDone, setFloorDone] = useState(false);
   const { progress } = useProgress();
   const [locked, setLocked] = useState(false);
@@ -1075,6 +1088,19 @@ export default function FunRoom({
 
   const onSceneReady = useCallback(() => setSceneReady(true), []);
 
+  // Two frames: the first runs before the paint that shows the building stage.
+  useEffect(() => {
+    if (!sceneReady) return;
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setDrawing(true));
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, [sceneReady]);
+
   /* The bar cannot show real progress and also wait on the floor, so it shows
      whichever is further behind. It never goes backwards. */
   const shownProgress = sceneReady ? 100 : Math.min(progress, 96);
@@ -1193,7 +1219,7 @@ export default function FunRoom({
     return (
       <Notice
         title="A walkable version of this portfolio."
-        body="Drag to look around, use the stick to walk, tap an object to open it. It downloads about 4.7MB, served straight from the cluster in Oslo, so it is worth being on wifi."
+        body="Drag to look around, use the stick to walk, tap an object to open it. It downloads about 2MB, served straight from the cluster in Oslo, so it is worth being on wifi."
       >
         <button
           type="button"
@@ -1229,6 +1255,7 @@ export default function FunRoom({
              that is not. Measured 74 -> 91fps together with the multisampling
              change below. */
           dpr={[1, 1.5]}
+          frameloop={drawing ? "always" : "never"}
           gl={{
             antialias: false, // the composer multisamples instead
             powerPreference: "high-performance",
@@ -1286,7 +1313,7 @@ export default function FunRoom({
       />
 
       {/* persistent status line */}
-      <div className="pointer-events-none absolute left-6 top-6 z-20 font-mono text-xs">
+      <div className="pointer-events-none absolute left-6 top-6 z-20 font-mono text-xs max-sm:right-20">
         {/* The room's one lit point: live cluster state, and nothing else in
             the frame spends green. A dot, not a glow — nothing emits here. */}
         <div className="flex items-center gap-2.5">
@@ -1342,7 +1369,11 @@ export default function FunRoom({
           is what lets the very first click land on the canvas and take the
           pointer lock instead of being eaten by an overlay. */}
       {coarse ? (
-        <LoadingScreen progress={shownProgress} done={phase === "exploring"} />
+        <LoadingScreen
+          progress={shownProgress}
+          done={phase === "exploring"}
+          stage={sceneReady ? "building" : progress >= 100 ? "assets" : "code"}
+        />
       ) : (
         <RoomIntro
           progress={shownProgress}
@@ -1382,7 +1413,7 @@ export default function FunRoom({
       {coarse && phase === "exploring" && !paused && !seated && (
         <>
           <TouchStick move={touchMove} />
-          <div className="pointer-events-none absolute bottom-8 right-8 z-30 max-w-[46vw]">
+          <div className="pointer-events-none absolute bottom-12 right-8 z-30 max-w-[46vw]">
             <p
               className="text-right font-mono text-[10px] leading-relaxed text-fg-3"
               style={{ textShadow: "0 0 8px rgba(0,0,0,0.95)" }}

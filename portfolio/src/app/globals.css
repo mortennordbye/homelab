@@ -563,6 +563,63 @@ body.fun-immersive > main {
   100% { transform: scale(1.21); }
 }
 
+/* The room's own fittings coming on over the poster, one per real load stage.
+   --x, --y and --r are pixels in room-poster.jpg (640x450), mapped through the
+   same object-cover fit and 50% 58% position the poster is drawn with, so a
+   glow stays on its lamp at any viewport. The layer carries .room-enter__poster
+   too, or the dolly would slide the poster out from under the lights. */
+.room-lights {
+  container-type: size;
+}
+
+.room-light {
+  --s: max(100cqw / 640, 100cqh / 450);
+  position: absolute;
+  left: calc((100cqw - 640 * var(--s)) * 0.5 + var(--x) * var(--s));
+  top: calc((100cqh - 450 * var(--s)) * 0.58 + var(--y) * var(--s));
+  width: calc(var(--r) * 2 * var(--s));
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 200, 130, 0.62) 0%,
+    rgba(255, 170, 90, 0.22) 32%,
+    rgba(255, 150, 70, 0) 70%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 900ms var(--ease-out);
+}
+
+.room-light[data-on="true"] {
+  opacity: 1;
+
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+/* Opacity only, so it keeps running on the compositor while the main thread
+   is blocked building the scene, which is exactly when it is on screen. */
+.room-light--fire[data-on="true"] {
+  animation: room-fire 1.9s ease-in-out infinite alternate;
+}
+
+@keyframes room-fire {
+  0%   { opacity: 0.55; }
+  22%  { opacity: 1; }
+  47%  { opacity: 0.68; }
+  71%  { opacity: 0.94; }
+  100% { opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-light--fire[data-on="true"] {
+    animation: none;
+  }
+}
+
 /* Indeterminate bar for the moment before byte progress exists. */
 .room-enter__bar {
   animation: room-enter-bar 1.4s var(--ease-in-out) infinite;

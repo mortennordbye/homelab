@@ -11,6 +11,9 @@
 export const PAPER = {
   /** The sheet. Faces away from the lamps, so the fall is painted in. */
   stock: "linear-gradient(160deg, #eeeade 0%, #e3ddcf 100%)",
+  /** The same sheet as one colour, for a mesh. A material cannot take a
+   *  gradient and silently renders white when handed one. */
+  sheet: "#e8e3d6",
   /** Headings and the text of an entry. */
   ink: "#26313d",
   /** Body prose, one step back. */
