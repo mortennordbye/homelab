@@ -1167,6 +1167,7 @@ export function Room({
                 distanceFactor={(0.26 / 260) * 400}
                 position={[0, 0, 0.017]}
                 zIndexRange={[10, 0]}
+                wrapperClass="room-html-wall"
                 style={{ width: "260px", height: "96px", pointerEvents: "none", userSelect: "none" }}
               >
                 {/* An engraved brass plate, not a backlit sign. Nothing in the

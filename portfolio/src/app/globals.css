@@ -620,6 +620,15 @@ body.fun-immersive > main {
   }
 }
 
+/* The room's DOM layers for things hung flat on a wall, always at the bottom of
+   the stack. drei orders its Html layers by camera distance in steps coarse
+   enough that the whole room ties, and then by mount order, so a print mounted
+   after the desk monitor drew over it. Nothing can stand behind a wall. Needs
+   !important: drei writes an inline z-index on this element every frame. */
+.room-html-wall {
+  z-index: 0 !important;
+}
+
 /* Indeterminate bar for the moment before byte progress exists. */
 .room-enter__bar {
   animation: room-enter-bar 1.4s var(--ease-in-out) infinite;
