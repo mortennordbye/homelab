@@ -9,6 +9,7 @@ import type { Surface } from "@/components/materials/surface";
 import { Door, Drawer, OpenBox, useEase } from "./openable";
 import { Interactive } from "./interaction";
 import { ZONES, px, pz } from "./flat";
+import { NO_MERGE } from "./StaticMerge";
 import {
   COLUMN_STOCK,
   FRIDGE_DOOR,
@@ -1912,7 +1913,7 @@ function Water({
           metalness={0}
         />
       </mesh>
-      <mesh ref={ripple} position={[0, -height + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh ref={ripple} position={[0, -height + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]} userData={NO_MERGE}>
         <ringGeometry args={[radius * spread * 1.2, radius * spread * 4, 20]} />
         <meshBasicMaterial
           color="#cfe2ea"
@@ -2218,7 +2219,7 @@ export function Toilet({
           <meshStandardMaterial color="#8f897c" roughness={0.5} />
         </mesh>
 
-        <mesh ref={water} position={[0, WATER, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh ref={water} position={[0, WATER, 0]} rotation={[-Math.PI / 2, 0, 0]} userData={NO_MERGE}>
           <circleGeometry args={[0.146, 24]} />
           <meshStandardMaterial
             color="#7f8f96"

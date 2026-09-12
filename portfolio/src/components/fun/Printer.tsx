@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { DEFAULT_FLAGS, type ToggleFlags } from "@/content/cv-variants";
 import { pdfFilename } from "@/lib/download-name";
 import { Interactive } from "./interaction";
+import { NO_MERGE } from "./StaticMerge";
 
 /**
  * The CV printer.
@@ -177,12 +178,14 @@ export function Printer({
   }, [printing, ready, url, onStatus]);
 
   // Sheet slides out of the front slot, then retracts once the job finishes.
+  // eslint-disable-next-line react-hooks/immutability -- renderer state is mutable by design; on-demand shadows are driven this way
   useFrame((_, d) => {
     if (!paper.current) return;
     const target = printing ? 1 : 0;
     /* Settled: nothing to move, and nothing to redraw. The shadow map is off
        auto (see Lighting in FunRoom), so a caster that moves has to ask. */
     if (Math.abs(target - feed.current) < 0.0005) return;
+    // eslint-disable-next-line react-hooks/immutability -- see the useFrame above
     gl.shadowMap.needsUpdate = true;
     feed.current = THREE.MathUtils.damp(feed.current, target, printing ? 3.2 : 7, d);
     paper.current.position.z = 0.16 + feed.current * 0.2;
@@ -238,7 +241,7 @@ export function Printer({
       </RoundedBox>
 
       {/* the sheet */}
-      <group ref={paper} position={[0, 0.052, 0.16]} rotation={[-0.06, 0, 0]}>
+      <group ref={paper} position={[0, 0.052, 0.16]} rotation={[-0.06, 0, 0]} userData={NO_MERGE}>
         <mesh castShadow>
           <planeGeometry args={[0.21, 0.297]} />
           <meshStandardMaterial

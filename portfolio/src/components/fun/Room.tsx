@@ -28,6 +28,7 @@ import { useSurface, type Surface } from "@/components/materials/surface";
 import { OAK } from "@/components/materials/oak";
 import type { Box } from "./flat";
 import { FLAT, MARKS, at, centreOf, doorOpenings, px, pz, wallBoxes } from "./flat";
+import { StaticMerge } from "./StaticMerge";
 import {
   BathMat,
   Bed,
@@ -965,7 +966,7 @@ export function Room({
   const openings = doorOpenings();
 
   return (
-    <group>
+    <StaticMerge>
       {/* The coat alcove's own floor and ceiling. It is outside the flat's
           rectangle, so neither of the two planes below reaches it. */}
       <mesh
@@ -1474,6 +1475,6 @@ export function Room({
         <Marker position={[0.225, CABINET.top + 0.35, CABINET.d / 2]} />
         <Marker position={[0.23, CABINET.bays[1] + 0.3, CABINET.d + 0.12]} />
       </group>
-    </group>
+    </StaticMerge>
   );
 }

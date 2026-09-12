@@ -92,23 +92,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Decide the object for each before modelling anything — `branding/DECISIONS.md` §4 rejects "click to open" as a toll gate, so each has to read at a glance from where a visitor stands. The hero is the awkward one: a room that announces a job title is a poster, not a study.
 - **Where:** `portfolio/src/content/site.ts` (`hero`), `portfolio/src/components/sections/AboutSection.tsx` (the prose), `portfolio/src/app/brand/page.tsx`, `portfolio/src/components/fun/Room.tsx` (placement), `portfolio/src/components/fun/Objects.tsx` (the existing object patterns).
 
-### Fun room: `kubectl get applications` now prints 45 rows
-- **What:** The publisher started emitting the full per-application list on 2026-09-03, and the cluster has 45 ArgoCD Applications. The desk monitor's ArgoCD view slices to 12 and the television's panel to 9, but the shell prints every row, so the command fills the portrait monitor and the visitor sees only the tail.
-- **Why deferred:** It is what the real command does, and inventing a filter would make the shell claim something the cluster does not. The honest options are paging or a summary line, and both are shell design rather than a bug fix.
-- **Unblock:** Either page the output the way a pager would, or print a rollup with a `--all` style flag to get the full table. Whatever is chosen has to keep rows inside the 60-character budget `PORTRAIT_PX_W` sets.
-- **Where:** `portfolio/src/components/fun/Terminal.tsx` (`useCommands`, the `applications` case), `portfolio/src/components/fun/Screen.tsx` (`PORTRAIT_PX_W`).
-
-### Fun room: ~590 draw calls a frame
-- **What:** The flat is drawn as ~680 separate meshes, so a frame is bound by draw-call submission rather than by anything the GPU does. At the entry viewpoint a frame submits 593 draw calls in total, counted by wrapping the WebGL draw functions in the browser, which includes the post-processing passes; the main scene pass is most of it. The floor reflector that used to render the flat a second time is gone and the wardrobe mirrors only render from inside the bedroom, so what is left is the scene itself. Culling works (a view facing into a corner submits far fewer) but a normal view still submits several hundred.
-- **Why deferred:** Fixing it means merging static geometry — the wall panelling, the kitchen carcasses, the bookshelf's books, the sideboard's devices, the coats — into batched meshes or instances, which is a rewrite of how `Furniture.tsx`, `Room.tsx` and `Hallway.tsx` emit geometry, not a tuning pass. The on-demand shadow map already took a quarter of the per-frame work out (912 → 674 calls, 370k → 232k triangles) and that was the one change with no visual cost at all.
-- **Unblock:** Pick the biggest offenders off a per-mesh census first (`scene.traverse` counting by parent) rather than merging everything: the panelling and the kitchen fronts are likely most of it. `BatchedMesh` or per-material `InstancedMesh` for repeated parts. Anything merged has to keep its own `Interactive` subtree separate, or the look-at registry loses the fronts that open.
-- **Where:** `portfolio/src/components/fun/{Furniture,Room,Hallway,Devices,Bookshelf}.tsx`.
-
-### Fun room: five accepted `react-hooks/immutability` warnings for on-demand shadows
-- **What:** `gl.shadowMap.autoUpdate` / `needsUpdate` are written from an effect in `FunRoom`'s `Lighting` and from `useFrame` in `openable.tsx` and `Printer.tsx`. The rule does not model the three.js renderer API, so each write is a warning; lint went 41 → 46. `WorkShelfScene.tsx` already does the same three writes and its two warnings are in the old baseline.
-- **Why deferred:** Mutating the renderer is the documented way to drive shadows on demand — there is no non-mutating form to switch to, so the only fixes are a rule exception or leaving it.
-- **Unblock:** Decide whether to add a narrow `eslint-disable` for renderer writes or to accept the count. Fold into the react-hooks v6 entry above if that is ever revisited.
-- **Where:** `portfolio/src/components/fun/{FunRoom,openable,Printer}.tsx`, `portfolio/src/components/work/WorkShelfScene.tsx`, `portfolio/eslint.config.mjs`.
+### Fun room: the interactive subtrees still draw one mesh each
+- **What:** `StaticMerge` now draws the room's static meshes as one mesh per material (281 originals into 66), which took the entry view from 594 to 511 draw calls a frame and the kitchen from 506 to 374. What is left is mostly inside `Interactive`: the sideboard's devices, the kitchen and bathroom fronts, the hall cabinet's books, the certificates. A census counted 973 meshes with 970 separate materials but only 279 distinct material looks, so those subtrees are still one draw per piece.
+- **Why deferred:** Everything under an `Interactive` can move, hover-highlight or switch, so it cannot be baked once at mount the way the static shell is. Merging it needs a merge that knows which parts of each object actually change.
+- **Unblock:** Per interactive object, split the parts that move (a door leaf, a drawer box, a lamp shade's emissive panel) from the carcass that does not, and put the carcass outside the `Interactive` so `StaticMerge` picks it up. The big wins are the sideboard devices and the kitchen run. For repeated identical parts (the bookshelf spines, the certificate frames), `InstancedMesh` keeps per-instance picking.
+- **Where:** `portfolio/src/components/fun/StaticMerge.tsx`, `portfolio/src/components/fun/{Devices,Furniture,Bookshelf,WallCertificates}.tsx`.
 
 ### Fun room: the hall cabinet holds 13 case studies and no more
 - **What:** The case studies stand in the three bays behind the hall cabinet's open sliding door, with the career album taking the start of the top bay. At the current 13 books every bay is full, and `ShelvedBooks` skips any book that finds no bay left without saying so, so a 14th case study would list in the terminal's `ls work` but never appear in the room.
@@ -117,22 +105,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `portfolio/src/components/fun/Bookshelf.tsx` (`ShelvedBooks`), `portfolio/src/components/fun/Hallway.tsx` (`CABINET`), `portfolio/src/components/fun/Room.tsx` (the cabinet group).
 
 ### Fun room: building the scene still blocks the main thread
-- **What:** With `checkShaderErrors` off in production, the loading screen's longest main-thread task is about 0.95s on an M4 Pro, and on a phone-class CPU (4x throttled) the stretch between the textures arriving and the room appearing is several seconds. The room's ~42 shader programs still compile synchronously on the first render. The phone loader covers that stretch with the stove flickering on the compositor, but the page cannot respond during it.
-- **Why deferred:** Turning the error check off was a one-line change that took most of the wait out. Compiling in the background changes what "ready" means for the loading screen, which is more than that change needed.
-- **Unblock:** Call `gl.compileAsync(scene, camera)` (three.js, uses `KHR_parallel_shader_compile`, which Chromium exposes) once the Suspense boundary resolves, and fire `SceneReady` only when it settles. The post-processing passes compile outside the scene, so measure the first composer frame afterwards rather than assuming it is free.
-- **Where:** `portfolio/src/components/fun/FunRoom.tsx` (`SceneReady`, the `Canvas` `onCreated`), `portfolio/src/components/fun/RoomLoading.tsx` (the `building` stage).
-
-### Fun room: `shadows="soft"` quietly renders plain PCF shadows
-- **What:** The room's `Canvas` asks for `shadows="soft"`, which is `PCFSoftShadowMap`. three.js r185 deprecated it and falls back to `PCFShadowMap` with a console warning on every shadow render setup, so the lantern's shadows are not the soft ones the prop promises.
-- **Why deferred:** Out of scope for the performance pass, and picking a replacement is a look decision: plain PCF, VSM, or PCF with a larger radius all change the shadow edges.
-- **Unblock:** Compare `shadows="percentage"` (what renders today) against `shadows="variance"` in the entry view and the lantern's floor pool, keep whichever reads right, and set it explicitly so the warning goes.
-- **Where:** `portfolio/src/components/fun/FunRoom.tsx` (the `Canvas`), and `WorkShelfScene.tsx` if it asks for the same.
-
-### Fun room: the potted plant is the heaviest asset
-- **What:** `potted_plant_04` is about 480KB, a 236KB geometry buffer and three 512px JPEG maps, which makes one plant the largest single download in the room after the JavaScript.
-- **Why deferred:** Found while measuring load time, which turned out to be bound by shader compilation rather than bytes, so shrinking it would not have moved the number being fixed.
-- **Unblock:** Try meshopt-compressing the buffer and dropping the maps to 256px or WebP, then compare the plant up close in the room. drei's `useGLTF` already carries the meshopt decoder.
-- **Where:** `portfolio/public/models/fun/potted_plant_04/`, `portfolio/src/components/fun/props.tsx`.
+- **What:** The room's shaders now compile in the background (`compileAsync` in `SceneReady`), and on a phone-class profile (4x CPU throttling, 8Mbps) that took the time into the room from 6.3 to 6.8s down to 4.5 to 4.7s. What still blocks is the first frame drawn after compilation: texture uploads, and the post-processing passes, whose programs compile outside the scene. On that profile the page stops responding for about 1.9s, covered by the stove flickering on the compositor.
+- **Why deferred:** The shader compile was the bulk of the freeze and is gone. What is left is split between texture upload and the composer, and each needs measuring on its own before a change is worth making.
+- **Unblock:** Profile the first frame after `compiled`. Upload the textures during the building stage with `gl.initTexture`, and warm the `EffectComposer` by rendering it once to an offscreen target before `SceneReady` reports compiled, then re-measure the gap.
+- **Where:** `portfolio/src/components/fun/FunRoom.tsx` (`SceneReady`, `Post`), `portfolio/src/components/fun/RoomLoading.tsx` (the `building` stage).
 
 ### Sitemap covers only the home page
 - **What:** `portfolio/src/app/sitemap.ts` emits a single entry for `/`. The 13 case studies at `/work/[slug]`, plus `/infrastructure`, `/api` and `/fun`, are all indexable and all absent. Separately, `services` is a homepage section id that is missing from `site.nav`, so it is reachable only by scrolling or through the command palette.

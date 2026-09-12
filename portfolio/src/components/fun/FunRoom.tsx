@@ -258,9 +258,26 @@ function WorldMatrices() {
 }
 
 /** Mounts inside the Suspense boundary, so its effect cannot run until every
- *  asset under it has resolved. */
-function SceneReady({ onReady }: { onReady: () => void }) {
-  useEffect(() => onReady(), [onReady]);
+ *  asset under it has resolved. Then compiles every shader in the background,
+ *  which is what the loading screen's building stage is waiting on. */
+function SceneReady({
+  onReady,
+  onCompiled,
+}: {
+  onReady: () => void;
+  onCompiled: () => void;
+}) {
+  const { gl, scene, camera } = useThree();
+  useEffect(() => {
+    onReady();
+    let live = true;
+    gl.compileAsync(scene, camera).then(() => {
+      if (live) onCompiled();
+    });
+    return () => {
+      live = false;
+    };
+  }, [gl, scene, camera, onReady, onCompiled]);
   return null;
 }
 
@@ -506,6 +523,7 @@ function Lighting({
    * and it has to do the same or it will drag a stale shadow behind it.
    */
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- renderer state is mutable by design; on-demand shadows are driven this way
     gl.shadowMap.autoUpdate = false;
     gl.shadowMap.needsUpdate = true;
   }, [gl, lights, poweredCount]);
@@ -684,6 +702,7 @@ function Scene({
   phase,
   reduced,
   onSceneReady,
+  onSceneCompiled,
   controlsRef,
   interacting,
   onPrompt,
@@ -714,6 +733,7 @@ function Scene({
   coarse: boolean;
   touchMove: React.RefObject<MoveInput>;
   onSceneReady: () => void;
+  onSceneCompiled: () => void;
   controlsRef: React.RefObject<PointerLockControlsImpl | null>;
   interacting: boolean;
   onPrompt: (p: Prompt) => void;
@@ -836,7 +856,7 @@ function Scene({
             hits 100 while the last texture is still being uploaded and the
             scene has yet to mount, so a bar driven purely by it finishes to a
             blank canvas. */}
-        <SceneReady onReady={onSceneReady} />
+        <SceneReady onReady={onSceneReady} onCompiled={onSceneCompiled} />
       </Suspense>
       <ScreenWall
         data={data}
@@ -954,11 +974,10 @@ export default function FunRoom({
   const { status, feed, stale, ok, nodes, argocd } = useInfraFeed();
   const [phase, setPhase] = useState<Phase>("loading");
   const [sceneReady, setSceneReady] = useState(false);
-  /* The first frame with the scene in it compiles every shader, which blocks
-     the main thread for seconds on a phone. Frames wait until the loading
-     screen has painted the building stage, or that freeze shows the stage
-     before it. */
-  const [drawing, setDrawing] = useState(false);
+  /* Nothing is drawn until the shaders have compiled in the background. A
+     frame drawn sooner compiles them all on the main thread instead, which is
+     the multi-second freeze this exists to avoid. */
+  const [compiled, setCompiled] = useState(false);
   const [floorDone, setFloorDone] = useState(false);
   const { progress } = useProgress();
   const [locked, setLocked] = useState(false);
@@ -1080,26 +1099,14 @@ export default function FunRoom({
      then holds the visitor until they press something. Both conditions matter: `sceneReady` is the Suspense boundary resolving,
      which is the real signal, and the floor keeps the transition legible. */
   useEffect(() => {
-    if (sceneReady && floorDone) {
+    if (compiled && floorDone) {
       const t = setTimeout(() => setPhase("exploring"), 260);
       return () => clearTimeout(t);
     }
-  }, [sceneReady, floorDone]);
+  }, [compiled, floorDone]);
 
   const onSceneReady = useCallback(() => setSceneReady(true), []);
-
-  // Two frames: the first runs before the paint that shows the building stage.
-  useEffect(() => {
-    if (!sceneReady) return;
-    let inner = 0;
-    const outer = requestAnimationFrame(() => {
-      inner = requestAnimationFrame(() => setDrawing(true));
-    });
-    return () => {
-      cancelAnimationFrame(outer);
-      cancelAnimationFrame(inner);
-    };
-  }, [sceneReady]);
+  const onSceneCompiled = useCallback(() => setCompiled(true), []);
 
   /* The bar cannot show real progress and also wait on the floor, so it shows
      whichever is further behind. It never goes backwards. */
@@ -1247,7 +1254,9 @@ export default function FunRoom({
       <div id="fun-lock-target" className="absolute inset-0 z-0">
         <Canvas
           camera={{ fov: 72, near: 0.1, far: 60, position: at(4.4, 1.5, 5.2) }}
-          shadows="soft"
+          /* PCF, set explicitly: "soft" asks for PCFSoftShadowMap, which three.js
+             r185 no longer has and replaces with PCF plus a warning. */
+          shadows="percentage"
           /* Capped at 1.5, down from 1.8. The room is fill-rate bound and this
              is the cheapest frame time in the build: on a Retina display at a
              2056x1202 window, 1.8 renders 8.0 Mpx against 5.6 at 1.5, for a
@@ -1255,7 +1264,7 @@ export default function FunRoom({
              that is not. Measured 74 -> 91fps together with the multisampling
              change below. */
           dpr={[1, 1.5]}
-          frameloop={drawing ? "always" : "never"}
+          frameloop={compiled ? "always" : "never"}
           gl={{
             antialias: false, // the composer multisamples instead
             powerPreference: "high-performance",
@@ -1274,6 +1283,7 @@ export default function FunRoom({
             phase={phase}
             reduced={reduced}
             onSceneReady={onSceneReady}
+            onSceneCompiled={onSceneCompiled}
             controlsRef={controlsRef}
             interacting={phase === "exploring"}
             onPrompt={setPrompt}

@@ -76,6 +76,7 @@ All under `portfolio/src/`.
 | `components/fun/Panels.tsx` | Content of the live infra panels. Authored at one size (640x376) — the television scales them down, so there is no second "small" variant to keep in step. |
 | `components/fun/feed.ts` | `/api/v1/infra` polling and staleness rules. |
 | `components/fun/interaction.tsx` | Look-at-and-press: raycast registry, `Interactive` wrapper. |
+| `components/fun/StaticMerge.tsx` | Wraps `Room`: after mount, draws the static meshes as one mesh per material and hides the originals. `NO_MERGE` is the opt-out. |
 | `components/fun/Hud.tsx` | Aiming dot, look-at prompt, keybinds, `InfoPanel` sheet. |
 | `components/fun/LeaderLabel.tsx` | The house annotation device the prompts are built from. |
 | `components/fun/FirstPerson.tsx` | WASD, collision, head bob. Writes the camera position **every frame it is enabled**, `y` included — anything else that moves the camera has to switch it off first. |
@@ -87,9 +88,10 @@ All under `portfolio/src/`.
 | `components/fun/shelf.ts` | Shared data types for shelf and career. |
 
 Assets: `public/textures/shelf/` (390KB, shared with the home page), `public/textures/fun/` (48KB),
-`public/models/fun/` (1.4MB), `public/icons/social/`. A cold `/fun` pulls 1.7MB of those, and
-4.7MB in total once the production JS is counted — measure it against `make run-prod` on a port
-the browser has never seen, never the dev server and never a port that served an older build.
+`public/models/fun/` (190KB, meshopt geometry and WebP maps), `public/icons/social/`. A cold
+`/fun` on a phone measured about 2MB compressed, 1.2MB of it JavaScript — measure it against
+`make run-prod` on a port the browser has never seen, never the dev server and never a port that
+served an older build.
 No HDRI ships — `StudyEnvironment` builds the probe from two `Lightformer`s at no byte cost.
 
 ---
@@ -349,6 +351,16 @@ board was innocent using a build where the board was still mounted, which happen
 right answer for the wrong reason. And check the window size before blaming the code: the drop
 that started this investigation was 1.6 Mpx versus 8.0.
 
+**Anything that changes after mount must opt out of the merge.** `StaticMerge` bakes every
+static mesh in the room into one mesh per material, once, when the room mounts, and hides the
+originals. A mesh whose transform or material changes later keeps its mount-time pose in the
+merged copy while the hidden original moves, so it looks frozen. `Interactive` carries
+`NO_MERGE`, which covers everything picked, hovered, opened or switched; meshes with a
+`visible` prop, transparent or shader-patched materials, instanced meshes and anything mounted
+later are skipped on their own. A new animated mesh outside an `Interactive` (a `useFrame` that
+moves it, a prop driven by state) needs `userData={NO_MERGE}` on it or on a group above it, the
+way `Marker`, the printer's sheet and the running water have.
+
 **A reflector is a second copy of the flat.** drei's `MeshReflectorMaterial` renders the whole
 scene from a mirrored camera every frame, whatever its resolution or blur. The floor used to be
 one, costing more than a third of every frame's draw calls for a sheen the lamps and the
@@ -367,9 +379,11 @@ On phones, where building the scene takes seconds, the loading screen lights one
 fittings over the poster per real stage (`LoadStage` in `RoomLoading.tsx`): the lantern when the
 code arrives, the desk lamp when the assets are in, the stove while the scene builds. The stove
 flicker is an opacity animation because only the compositor keeps running through that freeze.
-The Canvas holds `frameloop="never"` until two frames after `sceneReady`, because the first
-frame that draws the scene is the freeze: without the hold, it starts before React has painted
-the building stage, and the phone sits on the previous stage for the whole freeze.
+Once the Suspense boundary resolves, `SceneReady` calls `gl.compileAsync`, which uses
+`KHR_parallel_shader_compile` to compile every program off the main thread, and the Canvas holds
+`frameloop="never"` until it settles. The hold is load-bearing: any frame drawn while programs
+are still compiling makes three.js wait on them synchronously, which is the freeze all over
+again.
 The glows are placed in the poster's own pixels, so a re-cut `room-poster.jpg` has to move
 `LIGHTS` with it.
 
@@ -467,12 +481,10 @@ Always confirm the hooks are gone before committing: `grep -n "__cam\|TempCam" s
 
 ## Known gaps
 
-1. **Assets need a CDN.** A cold `/fun` is 4.7MB over the wire against the production build:
-   2.5MB of JS, 1.7MB of models and textures, 0.4MB of fonts and feeds. It is served from the
-   cluster with no CDN in front (Cloudflare is DNS-only), so every megabyte is home-uplink
-   bandwidth per cold visitor. Touch visitors are asked first and machines without WebGL download
-   none of it, but neither is a fix. The JS is now the larger half; the remaining texture win is
-   `dining_chair_02`, whose three 1K maps are 365KB for a chair you sit at.
+1. **Assets need a CDN.** A cold `/fun` is about 2MB compressed against the production build,
+   1.2MB of it JavaScript. It is served from the cluster with no CDN in front (Cloudflare is
+   DNS-only), so every megabyte is home-uplink bandwidth per cold visitor. Touch visitors are asked
+   first and machines without WebGL download none of it, but neither is a fix.
 2. **Touch has only been driven through synthetic events**, never a real phone. Drag, tap, the
    stick, and the entry gate were all verified by dispatching `TouchEvent`s in headless
    Chromium, which proves the wiring and nothing about how any of it feels in a hand.
