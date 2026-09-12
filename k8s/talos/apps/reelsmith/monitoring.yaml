@@ -115,6 +115,21 @@ spec:
               Usually a full state volume. The copies live beside the database and the newest 14 are kept.
               Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i backup
 
+        # The copy that survives losing the state volume. Same shape as the
+        # rule above; a mount that went away shows here and nowhere else.
+        - alert: ReelsmithOffsiteBackupStale
+          expr: |
+            (time() - reelsmith_backup_offsite_last_success_timestamp > 86400)
+              and (reelsmith_backup_offsite_last_success_timestamp > 0)
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'reelsmith has not copied a backup off its volume in {{ $value | printf "%.0f" }}s'
+            description: |
+              The copies go to /volume1/shared-data/media/reelsmith/gateway-backups on the NAS.
+              Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i offsite
+
         - alert: ReelsmithPublishFailing
           expr: increase(reelsmith_publish_failures_total[1h]) > 0
           for: 5m
