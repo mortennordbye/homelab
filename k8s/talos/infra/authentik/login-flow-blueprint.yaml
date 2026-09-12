@@ -17,13 +17,17 @@ data:
       labels:
         blueprints.goauthentik.io/instantiate: "true"
     entries:
-      # Only password_stage is set; the stage itself is owned by authentik's
-      # default blueprint, which leaves this field alone on reconcile.
+      # The stage itself is owned by authentik's default blueprint, which
+      # leaves password_stage alone on reconcile. user_fields must be repeated:
+      # the stage is validated whole, and without it the entry fails.
       - model: authentik_stages_identification.identificationstage
         state: present
         identifiers:
           name: default-authentication-identification
         attrs:
+          user_fields:
+            - email
+            - username
           password_stage: !Find [authentik_stages_password.passwordstage, [name, default-authentication-password]]
 
       # authentik's default ends the session when the browser closes, which on
