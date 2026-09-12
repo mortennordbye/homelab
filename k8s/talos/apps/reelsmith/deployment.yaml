@@ -68,12 +68,22 @@ spec:
             # Service address.
             - name: GATEWAY_PUBLIC_BASE_URL
               value: "https://gate.nordbye.it"
+            # A second copy of each state backup, off the state volume. The
+            # copies in /state/backups die with the PVC (reclaim policy
+            # Delete); these are on a different NAS share.
+            - name: GATEWAY_BACKUP_OFFSITE_DIR
+              value: /offsite
           envFrom:
             - configMapRef:
                 name: reelsmith-config
           volumeMounts:
             - name: state
               mountPath: /state
+            # Only the gateway-backups directory of the share, not the
+            # render host's private half that sits beside it.
+            - name: offsite
+              mountPath: /offsite
+              subPath: gateway-backups
             # readOnlyRootFilesystem is on; Python still needs a writable /tmp.
             - name: tmp
               mountPath: /tmp
@@ -102,6 +112,12 @@ spec:
         - name: state
           persistentVolumeClaim:
             claimName: reelsmith-state
+        # The same share verksted mounts at /mnt/reelsmith. Inline NFS rather
+        # than a PVC, so deleting anything in this namespace cannot take it.
+        - name: offsite
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/shared-data/media/reelsmith
         - name: tmp
           emptyDir: {}
 
