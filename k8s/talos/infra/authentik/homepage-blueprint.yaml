@@ -1,0 +1,70 @@
+# Forward-auth in front of the public dashboard at hub.bigd.no. Homepage
+# speaks no OIDC, so this is a proxy provider in forward_single mode, which is
+# why its HTTPRoute carries an unauthenticated /outpost.goauthentik.io/ rule.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-homepage
+  namespace: identity
+  annotations:
+    # Ahead of the chart-inflated worker Deployment (wave 0), which mounts this.
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  homepage.yaml: |
+    version: 1
+    metadata:
+      name: homepage-forward-auth
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      - model: authentik_core.group
+        id: group-homepage-users
+        state: present
+        identifiers:
+          name: homepage-users
+        attrs:
+          is_superuser: false
+          # Reconciliation resets this list, so add members here rather than
+          # in authentik.
+          users:
+            - !Find [authentik_core.user, [username, akadmin]]
+
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-homepage
+        state: present
+        identifiers:
+          name: homepage
+        attrs:
+          name: homepage
+          external_host: https://hub.bigd.no
+          mode: forward_single
+          # How long the outpost's cookie for this host lasts before it
+          # re-checks authentik. The re-check is silent while the authentik
+          # session (days=30, login-flow-blueprint.yaml) is alive.
+          access_token_validity: hours=24
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          intercept_header_auth: true
+
+      - model: authentik_core.application
+        id: app-homepage
+        state: present
+        identifiers:
+          slug: homepage
+        attrs:
+          name: homepage
+          slug: homepage
+          provider: !KeyOf provider-homepage
+          meta_description: The homelab dashboard
+          meta_launch_url: https://hub.bigd.no/
+          policy_engine_mode: any
+
+      # Without a binding, an application is reachable by every authenticated
+      # user.
+      - model: authentik_policies.policybinding
+        id: binding-homepage
+        state: present
+        identifiers:
+          target: !KeyOf app-homepage
+          group: !KeyOf group-homepage-users
+          order: 0

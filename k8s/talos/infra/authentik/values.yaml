@@ -19,6 +19,9 @@ blueprints:
     - authentik-blueprint-kargo
     - authentik-blueprint-grafana
     - authentik-blueprint-reelsmith
+    - authentik-blueprint-login-flow
+    - authentik-blueprint-homepage
+    - authentik-blueprint-embedded-outpost
 
 server:
   env:
@@ -44,6 +47,19 @@ server:
         - group: gateway.networking.k8s.io
           kind: Gateway
           name: traefik-gateway-private
+          namespace: traefik
+    # The sign-in page for forward-auth on public hosts (hub.bigd.no). The
+    # whole of authentik is internet-facing through this, admin UI included.
+    public:
+      enabled: true
+      annotations:
+        external-dns.kubernetes.io/cloudflare-proxied: "true"
+      hostnames:
+        - "auth.bigd.no"
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: traefik-gateway-public
           namespace: traefik
 
 worker:

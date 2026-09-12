@@ -10,7 +10,11 @@ resources:
   - kargo-blueprint.yaml
   - grafana-blueprint.yaml
   - reelsmith-blueprint.yaml
+  - login-flow-blueprint.yaml
+  - homepage-blueprint.yaml
+  - embedded-outpost-blueprint.yaml
   - referencegrant-reelsmith.yaml
+  - referencegrant-homepage.yaml
 
 helmCharts:
   - name: authentik

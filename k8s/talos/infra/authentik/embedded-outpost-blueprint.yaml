@@ -1,0 +1,48 @@
+# The embedded outpost that Traefik's forward-auth calls. One blueprint owns it
+# because `providers` is replaced wholesale on reconcile: every forward-auth
+# provider must be listed here, or it answers 404 on
+# /outpost.goauthentik.io/auth/traefik.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-embedded-outpost
+  namespace: identity
+  annotations:
+    # Ahead of the chart-inflated worker Deployment (wave 0), which mounts this.
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  embedded-outpost.yaml: |
+    version: 1
+    metadata:
+      name: embedded-outpost
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Apply the provider blueprints first so the !Find lookups below resolve.
+      - model: authentik_blueprints.metaapplyblueprint
+        attrs:
+          identifiers:
+            name: reelsmith-forward-auth
+          required: true
+      - model: authentik_blueprints.metaapplyblueprint
+        attrs:
+          identifiers:
+            name: homepage-forward-auth
+          required: true
+
+      - model: authentik_outposts.outpost
+        state: present
+        identifiers:
+          managed: goauthentik.io/outposts/embedded
+        attrs:
+          name: authentik Embedded Outpost
+          providers:
+            - !Find [authentik_providers_proxy.proxyprovider, [name, reelsmith]]
+            - !Find [authentik_providers_proxy.proxyprovider, [name, homepage]]
+          # Where browsers are sent to sign in, for every provider on this
+          # outpost. Must be the public host: hub.bigd.no is reached from the
+          # internet, where auth.local.bigd.no does not resolve. `config` is
+          # replaced wholesale; unset keys fall back to authentik's defaults.
+          config:
+            authentik_host: https://auth.bigd.no
+            authentik_host_browser: https://auth.bigd.no

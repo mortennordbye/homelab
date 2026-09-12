@@ -6,10 +6,9 @@
 # keeps the callback on the app's own hostname — which is why the HTTPRoute
 # grows an unauthenticated /outpost.goauthentik.io/ rule.
 #
-# The panel keeps its own password (GATEWAY_ADMIN_TRUST_PROXY_AUTH stays off):
-# trusting the proxy would leave any path that reaches the Service without
-# traversing this HTTPRoute with no auth at all. authentik adds per-user
-# identity and an audit trail, not the lock.
+# This is the panel's only lock: the gateway runs with
+# GATEWAY_ADMIN_TRUST_PROXY_AUTH, so any path that reaches the Service without
+# traversing this HTTPRoute has no auth at all.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -51,6 +50,9 @@ data:
           # the in-cluster Service.
           external_host: https://reelsmith.local.bigd.no
           mode: forward_single
+          # Outpost cookie lifetime. The default hour expires mid-session, and
+          # the re-check redirect drops a form POST in the panel.
+          access_token_validity: hours=24
           authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
           # The panel is used from a browser by one operator. No token access
@@ -82,16 +84,4 @@ data:
           group: !KeyOf group-reelsmith-admins
           order: 0
 
-      # The embedded outpost is what Traefik calls; a provider not attached to
-      # an outpost answers nothing (the symptom is a 404 from
-      # /outpost.goauthentik.io/auth/traefik). `providers` is replaced
-      # wholesale on reconcile, so every served provider must be listed here.
-      - model: authentik_outposts.outpost
-        id: embedded-outpost
-        state: present
-        identifiers:
-          managed: goauthentik.io/outposts/embedded
-        attrs:
-          name: authentik Embedded Outpost
-          providers:
-            - !KeyOf provider-reelsmith
+      # Attached to the embedded outpost in embedded-outpost-blueprint.yaml.

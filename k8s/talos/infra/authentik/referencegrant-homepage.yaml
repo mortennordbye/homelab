@@ -1,0 +1,18 @@
+# Lets homepage's HTTPRoute send /outpost.goauthentik.io/ to authentik-server.
+# Without it the route sits at ResolvedRefs=False and the sign-in callback 500s.
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: homepage-to-authentik
+  namespace: identity
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: homepage
+  to:
+    - group: ""
+      kind: Service
+      name: authentik-server
