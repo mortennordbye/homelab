@@ -357,6 +357,13 @@ real, but live only inside `MIRROR_LIVE` in `Furniture.tsx`. Outside it they are
 `<Activity>` and a dark metal stand-in shows. Hide them, never unmount them: drei does not
 dispose its render targets, so every remount leaks GPU memory.
 
+**The loading screen waits on shader compilation, not on bytes.** The room builds about 42
+shader programs, and three.js's `checkShaderErrors` reads each one's info log, which makes the
+browser finish compiling that program there and then, one at a time, on the main thread. That
+was most of the wait, so the Canvas turns the check off in production and leaves it on in dev,
+where a broken shader should still say why. Starting the room's chunk early from the nav
+link or the Hero's enter button was tried and measured no reliable gain, so it is not done.
+
 **A foreign product's palette does not come with its data.** The pinned board was drawn in
 GitHub's own colours — `#1f6feb` names, GitHub's grey ramp, the six language dots — which put
 four hues and a cold white card on the one wall you spawn facing. Data borrowed from a service

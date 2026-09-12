@@ -1235,6 +1235,11 @@ export default function FunRoom({
             // the ToneMapping effect owns this; leaving it on here double-applies
             toneMapping: THREE.NoToneMapping,
           }}
+          /* Reading each shader's error log makes the browser finish compiling
+             it on the spot, one at a time, which blocks the loading screen. */
+          onCreated={({ gl }) => {
+            gl.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
+          }}
         >
           <Scene
             data={data}
