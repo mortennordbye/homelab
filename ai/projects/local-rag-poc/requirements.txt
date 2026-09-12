@@ -9,13 +9,13 @@
 langchain==1.4.0
 langchain-community==0.4.2
 langchain-text-splitters==1.1.2
-langchain-openai==1.6.0
+langchain-openai==1.6.1
 langchain-chroma==1.1.0
 
 # Vector store + parsers.
 # chromadb is pulled in transitively by langchain-chroma; pinning it directly
 # led to a resolver conflict (langchain-chroma 0.2.4 needs chromadb>=1.0.9).
-pypdf==6.17.0
+pypdf==6.18.0
 docx2txt==0.9
 
 # Sparse retrieval
