@@ -21,9 +21,9 @@
     "motion": "^12.40.0",
     "next": "16.3.4",
     "next-mdx-remote": "^6.0.0",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "three": "^0.185.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "three": "^0.186.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
