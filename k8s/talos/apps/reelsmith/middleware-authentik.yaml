@@ -1,7 +1,6 @@
 # Forward-auth for the control panel. Lives in this namespace because Traefik
 # resolves an HTTPRoute ExtensionRef in the route's own namespace; the address
-# itself is an ordinary cross-namespace HTTP call. Second lock alongside
-# GATEWAY_ADMIN_TOKEN.
+# itself is an ordinary cross-namespace HTTP call. The only lock on the panel.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:

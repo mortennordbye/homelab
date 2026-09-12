@@ -49,9 +49,12 @@ data:
   # gateway warns if a returned status ever differs.
   GATEWAY_YOUTUBE_PRIVACY_STATUS: "public"
 
-  # The /admin control panel. Requires GATEWAY_ADMIN_TOKEN and is only routed
-  # on the private gateway (httproute-admin.yaml).
+  # The /admin control panel, authenticated by authentik forward-auth only.
+  # Trusting the proxy means the app checks nothing itself: /admin must never
+  # be routed anywhere but the private gateway (httproute-admin.yaml), and the
+  # network policy must keep port 8000 closed to other pods.
   GATEWAY_ADMIN_ENABLED: "true"
+  GATEWAY_ADMIN_TRUST_PROXY_AUTH: "true"
 
   # Gates the token refresher, the insights sweep and publishing — TikTok has
   # daily background loops of its own, unlike YouTube where nothing runs

@@ -1,6 +1,6 @@
 # The control panel, on the private gateway only — httproute.yaml deliberately
-# does not serve /admin publicly. The panel also checks GATEWAY_ADMIN_TOKEN, so
-# authentik here is a second lock, not the only one. The *.local.bigd.no
+# does not serve /admin publicly. authentik is the only lock: the app runs with
+# GATEWAY_ADMIN_TRUST_PROXY_AUTH and checks nothing itself. The *.local.bigd.no
 # listener already carries a wildcard cert and external-dns manages the zone.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -50,8 +50,7 @@ spec:
               replaceFullPath: /admin/
             statusCode: 302
 
-    # The whole app behind authentik; the panel still checks
-    # GATEWAY_ADMIN_TOKEN behind it.
+    # The whole app behind authentik. Removing this filter opens the panel.
     - matches:
         - path:
             type: PathPrefix

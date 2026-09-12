@@ -60,11 +60,6 @@ spec:
                 secretKeyRef:
                   name: reelsmith-secret
                   key: GATEWAY_API_TOKEN
-            - name: GATEWAY_ADMIN_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: reelsmith-secret
-                  key: GATEWAY_ADMIN_TOKEN
             - name: GATEWAY_DB_PATH
               value: /state/gateway.sqlite3
             - name: GATEWAY_COVERS_DIR
