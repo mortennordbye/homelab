@@ -349,6 +349,14 @@ board was innocent using a build where the board was still mounted, which happen
 right answer for the wrong reason. And check the window size before blaming the code: the drop
 that started this investigation was 1.6 Mpx versus 8.0.
 
+**A reflector is a second copy of the flat.** drei's `MeshReflectorMaterial` renders the whole
+scene from a mirrored camera every frame, whatever its resolution or blur. The floor used to be
+one, costing more than a third of every frame's draw calls for a sheen the lamps and the
+environment map already give, so it is a plain standard material now. The wardrobe mirrors stay
+real, but live only inside `MIRROR_LIVE` in `Furniture.tsx`. Outside it they are hidden with
+`<Activity>` and a dark metal stand-in shows. Hide them, never unmount them: drei does not
+dispose its render targets, so every remount leaks GPU memory.
+
 **A foreign product's palette does not come with its data.** The pinned board was drawn in
 GitHub's own colours — `#1f6feb` names, GitHub's grey ramp, the six language dots — which put
 four hues and a cold white card on the one wall you spawn facing. Data borrowed from a service

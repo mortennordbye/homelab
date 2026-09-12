@@ -2,12 +2,13 @@
 
 import { MeshReflectorMaterial, RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Activity, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OAK } from "@/components/materials/oak";
 import type { Surface } from "@/components/materials/surface";
 import { Door, Drawer, OpenBox, useEase } from "./openable";
 import { Interactive } from "./interaction";
+import { ZONES, px, pz } from "./flat";
 import {
   COLUMN_STOCK,
   FRIDGE_DOOR,
@@ -2811,6 +2812,15 @@ export function WashingMachine({
 /** Anodised aluminium: the sliding-door frames and nothing else in the flat. */
 const ANODISED = { color: "#8d9095", roughness: 0.32, metalness: 0.85 };
 
+/** Where the wardrobe mirrors reflect for real: the bedroom and the half metre
+ *  in front of its door. */
+const MIRROR_LIVE = {
+  x0: px(ZONES.bedroom.x0 - 0.5),
+  x1: px(ZONES.bedroom.x1),
+  z0: pz(ZONES.bedroom.z0),
+  z1: pz(ZONES.bedroom.z1),
+};
+
 /**
  * The tall half: two mirrored sliding doors in an aluminium frame, facing the
  * bedroom door. One reflector plane spans both leaves and the centre stile is
@@ -2834,6 +2844,17 @@ export function MirrorWardrobe({
   const lw = width / 2;
   const stock = useMemo(() => wardrobeStock(width, H - 0.36, H - 0.22 + 0.009), [width, H]);
 
+  /* A reflector renders the whole flat again every frame, and seen through the
+     bedroom door that includes the living room. Hidden, never unmounted,
+     outside MIRROR_LIVE: drei does not dispose its render targets. */
+  const [live, setLive] = useState(false);
+  useFrame(({ camera }) => {
+    const { x, z } = camera.position;
+    const inside =
+      x > MIRROR_LIVE.x0 && x < MIRROR_LIVE.x1 && z > MIRROR_LIVE.z0 && z < MIRROR_LIVE.z1;
+    if (inside !== live) setLive(inside);
+  });
+
   /** One leaf: an aluminium panel with a mirror laid on its face. */
   const leaf = (z: number) => (
     <>
@@ -2843,19 +2864,27 @@ export function MirrorWardrobe({
       </mesh>
       {/* Low resolution and heavily blurred: it exists to double the room's
           depth and hand back the lamps, not to be looked into. */}
-      <mesh position={[0, H / 2, z + 0.011]}>
+      <Activity mode={live ? "visible" : "hidden"}>
+        <mesh position={[0, H / 2, z + 0.011]}>
+          <planeGeometry args={[lw - F * 2, H - F * 2]} />
+          <MeshReflectorMaterial
+            resolution={128}
+            mirror={0.82}
+            blur={[220, 90]}
+            mixBlur={1.1}
+            mixStrength={1.5}
+            depthScale={0.2}
+            color="#7d827e"
+            roughness={0.22}
+            metalness={0.7}
+          />
+        </mesh>
+      </Activity>
+      {/* Darker and fully metal, unlike the reflector: most of what that one
+          shows is the dim room, and its own colour here reads as a lit panel. */}
+      <mesh position={[0, H / 2, z + 0.011]} visible={!live}>
         <planeGeometry args={[lw - F * 2, H - F * 2]} />
-        <MeshReflectorMaterial
-          resolution={128}
-          mirror={0.82}
-          blur={[220, 90]}
-          mixBlur={1.1}
-          mixStrength={1.5}
-          depthScale={0.2}
-          color="#7d827e"
-          roughness={0.22}
-          metalness={0.7}
-        />
+        <meshStandardMaterial color="#5a5e5b" roughness={0.22} metalness={1} />
       </mesh>
     </>
   );

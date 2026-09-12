@@ -1,6 +1,6 @@
 "use client";
 
-import { MeshReflectorMaterial, RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import { ShelvedBooks } from "./Bookshelf";
 import { PrintedPosts } from "./PrintedPosts";
@@ -984,18 +984,11 @@ export function Room({
         <meshStandardMaterial {...ceiling} color="#2a2018" roughness={0.98} metalness={0} />
       </mesh>
 
-      {/* floor, one plane under the whole flat */}
+      {/* floor, one plane under the whole flat. Not a reflector: that renders
+          the entire flat a second time every frame. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[FLAT.w, FLAT.d]} />
-        <MeshReflectorMaterial
-          resolution={256}
-          mirror={0.12}
-          mixBlur={14}
-          mixStrength={1.1}
-          blur={[500, 200]}
-          depthScale={0.4}
-          minDepthThreshold={0.6}
-          maxDepthThreshold={1.4}
+        <meshStandardMaterial
           {...floorOak}
           color={OAK.case}
           roughness={0.9}
