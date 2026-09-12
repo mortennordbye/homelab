@@ -5,7 +5,7 @@ resources:
   - namespace.yaml
   - httproute.yaml
   - secrets.yaml
-  - basicauth.yaml
+  - middleware-authentik.yaml
   - ciliumnetworkpolicy.yaml
   - interceptorroute.yaml
   - scaledobject.yaml

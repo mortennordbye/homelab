@@ -5,8 +5,8 @@ metadata:
   namespace: homepage
   annotations:
     argocd.argoproj.io/sync-wave: "2"
-    # Proxied for edge TLS and DDoS cover. Basic auth passes through
-    # unchanged; keep this hostname out of any cache rule.
+    # Proxied for edge TLS and DDoS cover. Keep this hostname out of any
+    # cache rule: authentik's session cookie decides every response.
     external-dns.kubernetes.io/cloudflare-proxied: "true"
 spec:
   parentRefs:
@@ -17,6 +17,22 @@ spec:
   hostnames:
     - "hub.bigd.no"
   rules:
+    # authentik's callback. Must stay reachable unauthenticated and must reach
+    # authentik, not the app: the auth filter here would deadlock the sign-in
+    # against itself. Longer prefix beats "/" regardless of rule order.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /outpost.goauthentik.io/
+      backendRefs:
+        # Cross-namespace: permitted by a ReferenceGrant in identity.
+        - group: ""
+          kind: Service
+          name: authentik-server
+          namespace: identity
+          port: 80
+          weight: 1
+
     - matches:
         - path:
             type: PathPrefix
@@ -26,10 +42,10 @@ spec:
           extensionRef:
             group: traefik.io
             kind: Middleware
-            name: homepage-basicauth
+            name: homepage-authentik
       backendRefs:
         # Route through the KEDA HTTP interceptor so homepage wakes from zero.
-        # basicauth (above) runs at Traefik first, so only authenticated
+        # authentik (above) runs at Traefik first, so only authenticated
         # requests reach the interceptor and wake the pod.
         - group: ""
           kind: Service
