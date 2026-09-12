@@ -24,6 +24,10 @@ import type { ShelfData } from "./shelf";
 
 const ACCENT = "#81b288";
 
+/** Rows `kubectl get apps` prints before summarising, the same as the desk
+ *  monitor's ArgoCD view. The full list overflows the portrait screen. */
+const APPS_SHOWN = 12;
+
 type Line = { kind: "in" | "out" | "err" | "note"; text: string };
 
 const BANNER: Line[] = [
@@ -151,7 +155,8 @@ function useCommands(
          */
         case "k":
         case "kubectl": {
-          const [verb, kind] = rest;
+          const all = rest.includes("--all");
+          const [verb, kind] = rest.filter((r) => r !== "--all");
           const trust: Line[] =
             data.feed === "snapshot"
               ? [{ kind: "note", text: "# build-time snapshot, not the cluster" }]
@@ -196,11 +201,18 @@ function useCommands(
                   { kind: "note", text: "# publisher sends the root app only" },
                   ...trust,
                 ];
+              const shown = all ? apps : apps.slice(0, APPS_SHOWN);
+              const synced = apps.filter((a) => a.sync === "Synced").length;
+              const healthy = apps.filter((a) => a.health === "Healthy").length;
               return [
                 ...out(
                   row("NAME", "SYNC", "HEALTH"),
-                  ...apps.map((a) => row(a.name, a.sync, a.health)),
+                  ...shown.map((a) => row(a.name, a.sync, a.health)),
                 ),
+                ...(shown.length < apps.length
+                  ? [{ kind: "note", text: `# ${apps.length - shown.length} more · kubectl get apps --all` } as Line]
+                  : []),
+                { kind: "note", text: `# ${apps.length} apps · ${synced} synced · ${healthy} healthy` },
                 ...trust,
               ];
             }

@@ -12,6 +12,7 @@ import {
 } from "react";
 import * as THREE from "three";
 import { FLAT, sightBoxes } from "./flat";
+import { NO_MERGE } from "./StaticMerge";
 
 /**
  * Look-at-and-press interaction.
@@ -323,7 +324,7 @@ export function Interactive({
   const hovered = hoveredObject !== null && hoveredObject === group;
 
   return (
-    <group ref={setGroup}>
+    <group ref={setGroup} userData={NO_MERGE}>
       {typeof children === "function" ? children(hovered) : children}
     </group>
   );

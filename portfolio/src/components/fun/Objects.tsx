@@ -75,7 +75,7 @@ export function FridgeMagnets({ onOpen }: { onOpen: (card: InfoCard) => void }) 
       {/* the paper, with a curl of thickness so it has an edge and a shadow */}
       <mesh position={[0, 0, 0.0015]} castShadow receiveShadow>
         <boxGeometry args={[NOTE_W, NOTE_H, 0.003]} />
-        <meshStandardMaterial color={PAPER.stock} roughness={0.93} />
+        <meshStandardMaterial color={PAPER.sheet} roughness={0.93} />
       </mesh>
 
       {MAGNET_AT.map(([mx, my]) => (
@@ -655,7 +655,7 @@ export function PhotoAlbum({
               jacket and this is meant to be somebody's album. */}
           <mesh position={[0.012, 0.012, T / 2 + 0.0012]} receiveShadow>
             <planeGeometry args={[W - 0.075, H * 0.42]} />
-            <meshStandardMaterial color={PAPER.stock} roughness={0.92} />
+            <meshStandardMaterial color={PAPER.sheet} roughness={0.92} />
           </mesh>
           <Html
             transform

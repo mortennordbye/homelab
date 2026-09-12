@@ -39,12 +39,14 @@ export function useEase(open: boolean, apply: (t: number) => void) {
     applyRef.current(t.current);
   }, []);
 
+  // eslint-disable-next-line react-hooks/immutability -- renderer state is mutable by design; on-demand shadows are driven this way
   useFrame((_, dt) => {
     const goal = open ? 1 : 0;
     if (Math.abs(goal - t.current) < SETTLED) {
       if (t.current !== goal) {
         t.current = goal;
         applyRef.current(goal);
+        // eslint-disable-next-line react-hooks/immutability -- see the useFrame above
         gl.shadowMap.needsUpdate = true;
       }
       return;

@@ -13,7 +13,7 @@ import { BlendFunction, ToneMappingMode } from "postprocessing";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RoomLoading } from "@/components/fun/RoomLoading";
+import { RoomLoading, type LoadStage } from "@/components/fun/RoomLoading";
 import { RoomIntro } from "./RoomIntro";
 import * as THREE from "three";
 import type { PointerLockControls as PointerLockControlsImpl } from "three-stdlib";
@@ -258,9 +258,26 @@ function WorldMatrices() {
 }
 
 /** Mounts inside the Suspense boundary, so its effect cannot run until every
- *  asset under it has resolved. */
-function SceneReady({ onReady }: { onReady: () => void }) {
-  useEffect(() => onReady(), [onReady]);
+ *  asset under it has resolved. Then compiles every shader in the background,
+ *  which is what the loading screen's building stage is waiting on. */
+function SceneReady({
+  onReady,
+  onCompiled,
+}: {
+  onReady: () => void;
+  onCompiled: () => void;
+}) {
+  const { gl, scene, camera } = useThree();
+  useEffect(() => {
+    onReady();
+    let live = true;
+    gl.compileAsync(scene, camera).then(() => {
+      if (live) onCompiled();
+    });
+    return () => {
+      live = false;
+    };
+  }, [gl, scene, camera, onReady, onCompiled]);
   return null;
 }
 
@@ -269,8 +286,16 @@ function SceneReady({ onReady }: { onReady: () => void }) {
  * asset bytes through `useProgress`, held to whichever is slower — assets or
  * a short floor — so a warm cache does not flash.
  */
-function LoadingScreen({ progress, done }: { progress: number; done: boolean }) {
-  return <RoomLoading progress={progress} done={done} />;
+function LoadingScreen({
+  progress,
+  done,
+  stage,
+}: {
+  progress: number;
+  done: boolean;
+  stage: LoadStage;
+}) {
+  return <RoomLoading progress={progress} done={done} stage={stage} />;
 }
 
 /**
@@ -498,6 +523,7 @@ function Lighting({
    * and it has to do the same or it will drag a stale shadow behind it.
    */
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- renderer state is mutable by design; on-demand shadows are driven this way
     gl.shadowMap.autoUpdate = false;
     gl.shadowMap.needsUpdate = true;
   }, [gl, lights, poweredCount]);
@@ -676,6 +702,7 @@ function Scene({
   phase,
   reduced,
   onSceneReady,
+  onSceneCompiled,
   controlsRef,
   interacting,
   onPrompt,
@@ -706,6 +733,7 @@ function Scene({
   coarse: boolean;
   touchMove: React.RefObject<MoveInput>;
   onSceneReady: () => void;
+  onSceneCompiled: () => void;
   controlsRef: React.RefObject<PointerLockControlsImpl | null>;
   interacting: boolean;
   onPrompt: (p: Prompt) => void;
@@ -828,7 +856,7 @@ function Scene({
             hits 100 while the last texture is still being uploaded and the
             scene has yet to mount, so a bar driven purely by it finishes to a
             blank canvas. */}
-        <SceneReady onReady={onSceneReady} />
+        <SceneReady onReady={onSceneReady} onCompiled={onSceneCompiled} />
       </Suspense>
       <ScreenWall
         data={data}
@@ -946,6 +974,10 @@ export default function FunRoom({
   const { status, feed, stale, ok, nodes, argocd } = useInfraFeed();
   const [phase, setPhase] = useState<Phase>("loading");
   const [sceneReady, setSceneReady] = useState(false);
+  /* Nothing is drawn until the shaders have compiled in the background. A
+     frame drawn sooner compiles them all on the main thread instead, which is
+     the multi-second freeze this exists to avoid. */
+  const [compiled, setCompiled] = useState(false);
   const [floorDone, setFloorDone] = useState(false);
   const { progress } = useProgress();
   const [locked, setLocked] = useState(false);
@@ -1067,13 +1099,14 @@ export default function FunRoom({
      then holds the visitor until they press something. Both conditions matter: `sceneReady` is the Suspense boundary resolving,
      which is the real signal, and the floor keeps the transition legible. */
   useEffect(() => {
-    if (sceneReady && floorDone) {
+    if (compiled && floorDone) {
       const t = setTimeout(() => setPhase("exploring"), 260);
       return () => clearTimeout(t);
     }
-  }, [sceneReady, floorDone]);
+  }, [compiled, floorDone]);
 
   const onSceneReady = useCallback(() => setSceneReady(true), []);
+  const onSceneCompiled = useCallback(() => setCompiled(true), []);
 
   /* The bar cannot show real progress and also wait on the floor, so it shows
      whichever is further behind. It never goes backwards. */
@@ -1193,7 +1226,7 @@ export default function FunRoom({
     return (
       <Notice
         title="A walkable version of this portfolio."
-        body="Drag to look around, use the stick to walk, tap an object to open it. It downloads about 4.7MB, served straight from the cluster in Oslo, so it is worth being on wifi."
+        body="Drag to look around, use the stick to walk, tap an object to open it. It downloads about 2MB, served straight from the cluster in Oslo, so it is worth being on wifi."
       >
         <button
           type="button"
@@ -1221,7 +1254,9 @@ export default function FunRoom({
       <div id="fun-lock-target" className="absolute inset-0 z-0">
         <Canvas
           camera={{ fov: 72, near: 0.1, far: 60, position: at(4.4, 1.5, 5.2) }}
-          shadows="soft"
+          /* PCF, set explicitly: "soft" asks for PCFSoftShadowMap, which three.js
+             r185 no longer has and replaces with PCF plus a warning. */
+          shadows="percentage"
           /* Capped at 1.5, down from 1.8. The room is fill-rate bound and this
              is the cheapest frame time in the build: on a Retina display at a
              2056x1202 window, 1.8 renders 8.0 Mpx against 5.6 at 1.5, for a
@@ -1229,11 +1264,17 @@ export default function FunRoom({
              that is not. Measured 74 -> 91fps together with the multisampling
              change below. */
           dpr={[1, 1.5]}
+          frameloop={compiled ? "always" : "never"}
           gl={{
             antialias: false, // the composer multisamples instead
             powerPreference: "high-performance",
             // the ToneMapping effect owns this; leaving it on here double-applies
             toneMapping: THREE.NoToneMapping,
+          }}
+          /* Reading each shader's error log makes the browser finish compiling
+             it on the spot, one at a time, which blocks the loading screen. */
+          onCreated={({ gl }) => {
+            gl.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
           }}
         >
           <Scene
@@ -1242,6 +1283,7 @@ export default function FunRoom({
             phase={phase}
             reduced={reduced}
             onSceneReady={onSceneReady}
+            onSceneCompiled={onSceneCompiled}
             controlsRef={controlsRef}
             interacting={phase === "exploring"}
             onPrompt={setPrompt}
@@ -1281,7 +1323,7 @@ export default function FunRoom({
       />
 
       {/* persistent status line */}
-      <div className="pointer-events-none absolute left-6 top-6 z-20 font-mono text-xs">
+      <div className="pointer-events-none absolute left-6 top-6 z-20 font-mono text-xs max-sm:right-20">
         {/* The room's one lit point: live cluster state, and nothing else in
             the frame spends green. A dot, not a glow — nothing emits here. */}
         <div className="flex items-center gap-2.5">
@@ -1337,7 +1379,11 @@ export default function FunRoom({
           is what lets the very first click land on the canvas and take the
           pointer lock instead of being eaten by an overlay. */}
       {coarse ? (
-        <LoadingScreen progress={shownProgress} done={phase === "exploring"} />
+        <LoadingScreen
+          progress={shownProgress}
+          done={phase === "exploring"}
+          stage={sceneReady ? "building" : progress >= 100 ? "assets" : "code"}
+        />
       ) : (
         <RoomIntro
           progress={shownProgress}
@@ -1377,7 +1423,7 @@ export default function FunRoom({
       {coarse && phase === "exploring" && !paused && !seated && (
         <>
           <TouchStick move={touchMove} />
-          <div className="pointer-events-none absolute bottom-8 right-8 z-30 max-w-[46vw]">
+          <div className="pointer-events-none absolute bottom-12 right-8 z-30 max-w-[46vw]">
             <p
               className="text-right font-mono text-[10px] leading-relaxed text-fg-3"
               style={{ textShadow: "0 0 8px rgba(0,0,0,0.95)" }}

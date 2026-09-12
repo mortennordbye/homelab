@@ -180,6 +180,7 @@ export function PrintedPosts({
         distanceFactor={400 / PX}
         position={[0, 0, 0.011]}
         zIndexRange={[10, 0]}
+        wrapperClass="room-html-wall"
         style={{
           width: `${matW * PX}px`,
           height: `${matH * PX}px`,

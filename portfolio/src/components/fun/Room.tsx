@@ -1,6 +1,6 @@
 "use client";
 
-import { MeshReflectorMaterial, RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import { ShelvedBooks } from "./Bookshelf";
 import { PrintedPosts } from "./PrintedPosts";
@@ -28,6 +28,7 @@ import { useSurface, type Surface } from "@/components/materials/surface";
 import { OAK } from "@/components/materials/oak";
 import type { Box } from "./flat";
 import { FLAT, MARKS, at, centreOf, doorOpenings, px, pz, wallBoxes } from "./flat";
+import { StaticMerge } from "./StaticMerge";
 import {
   BathMat,
   Bed,
@@ -965,7 +966,7 @@ export function Room({
   const openings = doorOpenings();
 
   return (
-    <group>
+    <StaticMerge>
       {/* The coat alcove's own floor and ceiling. It is outside the flat's
           rectangle, so neither of the two planes below reaches it. */}
       <mesh
@@ -984,18 +985,11 @@ export function Room({
         <meshStandardMaterial {...ceiling} color="#2a2018" roughness={0.98} metalness={0} />
       </mesh>
 
-      {/* floor, one plane under the whole flat */}
+      {/* floor, one plane under the whole flat. Not a reflector: that renders
+          the entire flat a second time every frame. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[FLAT.w, FLAT.d]} />
-        <MeshReflectorMaterial
-          resolution={256}
-          mirror={0.12}
-          mixBlur={14}
-          mixStrength={1.1}
-          blur={[500, 200]}
-          depthScale={0.4}
-          minDepthThreshold={0.6}
-          maxDepthThreshold={1.4}
+        <meshStandardMaterial
           {...floorOak}
           color={OAK.case}
           roughness={0.9}
@@ -1173,6 +1167,7 @@ export function Room({
                 distanceFactor={(0.26 / 260) * 400}
                 position={[0, 0, 0.017]}
                 zIndexRange={[10, 0]}
+                wrapperClass="room-html-wall"
                 style={{ width: "260px", height: "96px", pointerEvents: "none", userSelect: "none" }}
               >
                 {/* An engraved brass plate, not a backlit sign. Nothing in the
@@ -1481,6 +1476,6 @@ export function Room({
         <Marker position={[0.225, CABINET.top + 0.35, CABINET.d / 2]} />
         <Marker position={[0.23, CABINET.bays[1] + 0.3, CABINET.d + 0.12]} />
       </group>
-    </group>
+    </StaticMerge>
   );
 }

@@ -3,6 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef, useState } from "react";
 import * as THREE from "three";
+import { NO_MERGE } from "./StaticMerge";
 
 /** Brass, the room's marker colour. The emissive is what lets it read against
  *  lamplit wood; drop it and the pin sinks into the warm background. */
@@ -28,7 +29,7 @@ export function Marker({ position }: { position: [number, number, number] }) {
   });
 
   return (
-    <group ref={ref} position={position}>
+    <group ref={ref} position={position} userData={NO_MERGE}>
       <mesh position={[0, 0.03, 0]}>
         <sphereGeometry args={[0.02, 20, 14]} />
         <meshStandardMaterial color={BRASS} emissive={GLOW} emissiveIntensity={1.6} metalness={0.6} roughness={0.35} />
