@@ -1,0 +1,46 @@
+# Where reelsmith's gateway copies its state backups, off the state volume.
+#
+# reelsmith-state is a dynamically provisioned PVC that reclaims with Delete,
+# and the gateway's VACUUM INTO copies sit beside the database on it, so they
+# do not survive the volume. This is a different NAS share, statically bound.
+#
+# A PersistentVolume rather than an inline nfs volume on the pod: the namespace
+# enforces Pod Security restricted, which refuses inline nfs volumes (that is
+# what took the gateway down on 2026-09-12, reverted in #948). PSA checks the
+# pod's volume types, and a PVC is allowed whatever backs it.
+#
+# The pod mounts this with subPath: gateway-backups, so it sees only that
+# directory and not the render host's private files beside it on the share.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: reelsmith-offsite-backups
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  # Retain: deleting the claim must never take the backups with it, which is
+  # the whole reason this exists.
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: reelsmith
+    name: reelsmith-offsite-backups
+  nfs:
+    server: nas.local.bigd.no
+    path: /volume1/shared-data/media/reelsmith
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: reelsmith-offsite-backups
+  namespace: reelsmith
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: reelsmith-offsite-backups
+  resources:
+    requests:
+      storage: 5Gi
