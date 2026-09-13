@@ -131,6 +131,24 @@ spec:
               through the retained reelsmith-offsite-backups volume.
               Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i offsite
 
+        # A render host that stops producing is invisible to every alert above
+        # until the queue drains days later. The gauge is 0 for a brand that has
+        # never reported a finished run, so the guard keeps it quiet until then.
+        - alert: ReelsmithRenderHostSilent
+          expr: |
+            (time() - reelsmith_last_run_timestamp > 108000)
+              and (reelsmith_last_run_timestamp > 0)
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'reelsmith has not finished a render host run for {{ $labels.brand }} in {{ $value | printf "%.0f" }}s'
+            description: |
+              The nightly run on verksted reports each account's night to POST /api/runs.
+              No finished run in 30 hours means the 02:00 session did not run, died mid batch,
+              or cannot reach the gateway. A run still marked running shows on the System page.
+              Check: kubectl --context admin@genesis -n verksted exec deploy/verksted-app -c verksted -- tail -30 /data/repos/reelsmith/build/nightly.log
+
         - alert: ReelsmithPublishFailing
           expr: increase(reelsmith_publish_failures_total[1h]) > 0
           for: 5m
