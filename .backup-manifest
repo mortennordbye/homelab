@@ -24,3 +24,6 @@ terraform/proxmox/hyper-cluster/k8s/talos/terraform.tfvars
 terraform/azure/state/terraform.tfvars
 terraform/cloudflare/nordbye-it/terraform.tfvars
 terraform/cloudflare/logeverylift-com/terraform.tfvars
+
+# Local device API access (key itself lives in the macOS Keychain, not here)
+hue.env

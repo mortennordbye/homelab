@@ -144,3 +144,43 @@ the cluster.
 - Rotation is `bws secret edit <uuid> --value ...`. The UUID is stable across
   edits, so no manifest change is needed — only deletion and recreation changes
   the UUID.
+
+## Local device credentials (not in Bitwarden)
+
+Some credentials are for LAN devices driven from the laptop, never from the
+cluster. Those do not belong in Bitwarden: nothing in-cluster consumes them, and
+an ExternalSecret for them would be dead weight. They live in the macOS login
+Keychain, the same way the `bws-homelab` token does, and a gitignored `*.env`
+file at the repo root exports them by reference.
+
+The Hue bridge is the current example. `hue.env` holds the bridge address and
+resolves the key at source time:
+
+```bash
+export HUE_APPLICATION_KEY="$(security find-generic-password -s hue-bridge -w)"
+```
+
+so the key itself is never written to disk, never committed, and never appears
+in an agent transcript. `**/*.env` is already gitignored; a new file must match
+that glob, so name it `<thing>.env` rather than `.env.<thing>`, which the
+pattern does not catch.
+
+To recreate the Hue key, press the round link button on top of the bridge and
+run this within 30 seconds:
+
+```bash
+key=$(curl -sk -X POST https://10.3.10.16/api -H 'Content-Type: application/json' \
+    -d '{"devicetype":"homelab#macbook"}' \
+    | grep -o '"username":"[^"]*"' | cut -d'"' -f4)
+[ -n "$key" ] && security add-generic-password -s hue-bridge -a "$USER" -w "$key" -U
+```
+
+Revoke it with `DELETE /api/<key>/config/whitelist/<key>`. Pressing the link
+button does not invalidate existing keys, so re-pairing never breaks the Home
+Assistant integration's own separate key.
+
+A `behavior_instance` PUT rejects a partial patch with "The instance doesn't
+support triggers". Send `enabled`, `configuration` and `metadata` together,
+read back from the collection endpoint, and confirm the field actually changed:
+the bridge returns the object's rid on a rejected write, so a 200 with an rid in
+it is not proof that anything happened.
