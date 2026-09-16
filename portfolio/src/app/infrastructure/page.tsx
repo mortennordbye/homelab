@@ -4,6 +4,7 @@ import { Reveal } from "@/components/primitives/Reveal";
 import { LiveStatus } from "@/components/infrastructure/LiveStatus";
 import { Pipeline } from "@/components/infrastructure/Pipeline";
 import { deployPath, platform, requestPath } from "@/content/infrastructure";
+import { readClusterStatus, type ClusterStatus } from "@/lib/cluster-status";
 
 export const metadata: Metadata = {
   title: "Infrastructure",
@@ -12,20 +13,42 @@ export const metadata: Metadata = {
     "This site runs on a self-hosted Talos Kubernetes cluster, reconciled by ArgoCD. The request path, the deploy pipeline, and live cluster status.",
 };
 
-const statusJsonExample = `{
-  "generatedAt": "2026-07-13T05:55:03Z",
-  "build": "72088b9",
-  "deployedAt": "2026-07-12T19:33:47Z",
-  "argocd": {
-    "sync": "Synced",
-    "health": "Healthy",
-    "syncedAt": "2026-07-12T19:32:48Z"
-  },
-  "nodes": { "ready": 6, "total": 6 },
-  "versions": { "talos": "v1.11.6", "kubernetes": "v1.34.0" },
-  "cert": { "notAfter": "2026-09-25T11:41:28Z" },
-  "history": [{ "d": "2026-07-13", "ok": 71, "total": 71 }, ...]
-}`;
+// The block below is captioned as this endpoint's response and says it
+// refreshes every five minutes, so it is rendered from the same ConfigMap the
+// endpoint reads rather than a pasted string. A pasted one was three months
+// stale and about to publish an expired certificate as current cluster state.
+// `history` is truncated to its first entry; the real array is 30 days long.
+function renderStatusJson(s: ClusterStatus): string {
+  const line = (k: string, v: unknown) => `  ${JSON.stringify(k)}: ${v}`;
+  const parts = [
+    line("generatedAt", JSON.stringify(s.generatedAt ?? null)),
+    line("build", JSON.stringify(s.build ?? null)),
+    line("deployedAt", JSON.stringify(s.deployedAt ?? null)),
+    line(
+      "argocd",
+      `{\n    "sync": ${JSON.stringify(s.argocd?.sync ?? null)},\n    "health": ${JSON.stringify(s.argocd?.health ?? null)},\n    "syncedAt": ${JSON.stringify(s.argocd?.syncedAt ?? null)}\n  }`,
+    ),
+    line(
+      "nodes",
+      `{ "ready": ${s.nodes?.ready ?? 0}, "total": ${s.nodes?.total ?? 0} }`,
+    ),
+    line(
+      "versions",
+      `{ "talos": ${JSON.stringify(s.versions?.talos ?? null)}, "kubernetes": ${JSON.stringify(s.versions?.kubernetes ?? null)} }`,
+    ),
+    line("cert", `{ "notAfter": ${JSON.stringify(s.cert?.notAfter ?? null)} }`),
+  ];
+  const first = s.history?.[0];
+  if (first) {
+    parts.push(
+      line(
+        "history",
+        `[{ "d": ${JSON.stringify(first.d)}, "ok": ${first.ok}, "total": ${first.total} }, ...]`,
+      ),
+    );
+  }
+  return `{\n${parts.join(",\n")}\n}`;
+}
 
 // Two inks, no hue: the payload is a document, and the page's only colour
 // lives inside the instrument's glass.
@@ -53,7 +76,13 @@ function JsonCode({ code }: { code: string }) {
   );
 }
 
-export default function InfrastructurePage() {
+// The publisher writes every 5 minutes, so the page is regenerated on the same
+// cadence rather than being baked once at build time and frozen.
+export const revalidate = 300;
+
+export default async function InfrastructurePage() {
+  const { live, data: status } = await readClusterStatus();
+  const statusJson = renderStatusJson(status);
   return (
     <main className="pt-32">
       {/* The front page makes the claim ("this site is the case study"); this
@@ -138,10 +167,12 @@ export default function InfrastructurePage() {
           <Reveal className="overflow-hidden rounded-[2px] border border-line bg-bg-2">
             <div className="flex items-center justify-between border-b border-line px-4 py-2.5 font-mono text-xs">
               <span className="text-fg-2">GET /api/v1/infra</span>
-              <span className="text-fg-3">refreshed every 5 min</span>
+              <span className="text-fg-3">
+                {live ? "refreshed every 5 min" : "example \u2014 feed unavailable"}
+              </span>
             </div>
             <pre className="overflow-x-auto p-4 font-mono text-[0.78rem] leading-relaxed text-fg-3">
-              <JsonCode code={statusJsonExample} />
+              <JsonCode code={statusJson} />
             </pre>
           </Reveal>
         </div>
