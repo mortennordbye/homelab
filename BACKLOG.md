@@ -118,21 +118,15 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ### Lint debt: react-hooks v6 warnings
 - **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI, which is why lint reports 0 errors and 42 warnings.
-- **Why deferred:** each one is a real component change in code that works today, not a config fix.
+- **Why deferred:** each one is a real component change in code that works today, not a config fix: effect restructuring, and moving the three.js texture setup into the loader callback. Decide per case rather than refactoring all five, since the R3F texture mutations may be acceptable as they are, being idiomatic three.js.
 - **Unblock:** Refactor each component (or add per-line disables where the pattern is intentional), verify in the browser via `make up`, then remove the two `warn` overrides from `eslint.config.mjs`.
-- **Where:** `portfolio/eslint.config.mjs`, `portfolio/src/components/{CommandPalette,FooterStamp,InlineGlobe,InlineGlobeScene}.tsx`, `portfolio/src/components/work/ArchitectureDiagram.tsx`.
+- **Where:** `portfolio/eslint.config.mjs`, `portfolio/src/components/{CommandPalette,FooterStamp,InlineGlobe,InlineGlobeScene}.tsx`, `portfolio/src/components/work/ArchitectureDiagram.tsx`, `portfolio/src/components/fun/{Touch,FirstPerson,interaction}.tsx`.
 
 ### TypeScript 7 is blocked by typescript-eslint's peer range
 - **What:** Renovate PR #603 bumps `typescript` ^6 → ^7. Lint then dies with `TypeError: Cannot read properties of undefined (reading 'Cjs')`. Every published `typescript-eslint`, including `latest` (8.70.0) and `canary` (8.70.1-alpha.21), declares `peer typescript: ">=4.8.4 <6.1.0"`, so nothing on npm admits TS 7 yet. The repo sits at typescript 6.0.3, inside the supported range.
 - **Why deferred:** no amount of local configuration bridges a peer range no release satisfies. TS 7 is the native port, so this is a rewrite of the toolchain's TS integration rather than a version bump.
 - **Unblock:** Watch for a `typescript-eslint` release whose `peerDependencies.typescript` admits 7.x, then take #603 and re-run `make lint` and `make typecheck`.
 - **Where:** `portfolio/package.json` (`typescript`), `portfolio/eslint.config.mjs`.
-
-
-  Separately, `eslint` still needs bumping to `^10` in `portfolio/package.json`. Originally paired with a TypeScript 5 → 6 bump; the TS half has since shipped (`typescript` is now `^6.0.0`), leaving only ESLint.
-- **Why deferred:** Fixing them means refactoring 5 working components (effect restructuring, moving three.js texture setup into the loader callback) with visual/behavioral risk that needs browser re-verification — out of scope for the CI-wiring change that surfaced them. The R3F texture mutations may be acceptable as-is (idiomatic three.js); decide per-case rather than blanket-refactor.
-- **Unblock:** Refactor each component (or add per-line disables where the pattern is intentional), verify in the browser via `make up`, then remove the two `warn` overrides from `eslint.config.mjs`. Wait for an `eslint-config-next` release built on `typescript-eslint@9` (supports ESLint 10). Then bump, and run a containerised `make lint` to confirm the config still loads.
-- **Where:** `portfolio/eslint.config.mjs`, `portfolio/src/components/{CommandPalette,FooterStamp,InlineGlobe,InlineGlobeScene}.tsx`, `portfolio/src/components/work/ArchitectureDiagram.tsx`, `portfolio/src/components/fun/{Touch,FirstPerson,interaction}.tsx`; `portfolio/package.json`, `portfolio/eslint.config.mjs`; see `portfolio/DEPENDENCY-UPGRADE-PLAN.md` (Phase 3).
 
 ### Image optimization pass
 - **What:** Re-encode the migrated case-study images via `sharp` to a normalised max-width and AVIF + WebP. Drop any unused PNGs that weren't migrated.
