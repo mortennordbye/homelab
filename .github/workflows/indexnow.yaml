@@ -30,11 +30,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  # IndexNow keys are public by design — the endpoint verifies a submission by
-  # fetching this same value from the host it claims to be for.
-  KEY: cbecea0b0bd943cd957513031b281f54
-
 jobs:
   submit:
     if: github.repository_owner == 'mortennordbye'
@@ -43,11 +38,17 @@ jobs:
       # Never fail one site because the other's endpoint misbehaved.
       fail-fast: false
       matrix:
+        # IndexNow keys are public by design — the endpoint verifies a submission
+        # by fetching this same value from the host it claims to be for. Each host
+        # keeps its own key, so rotating one to clear a failed verification does
+        # not disturb the other.
         include:
           - site: portfolio
             host: nordbye.it
+            key: 1a31813f4523c14e10c3a9ff595a3a3a
           - site: blog
             host: blog.nordbye.it
+            key: cbecea0b0bd943cd957513031b281f54
     steps:
       - uses: actions/checkout@v5
         with:
@@ -71,10 +72,35 @@ jobs:
           fi
           echo "run=${run}" >> "$GITHUB_OUTPUT"
 
+      - name: Wait for the key file to be live
+        if: steps.gate.outputs.run == 'true'
+        env:
+          HOST: ${{ matrix.host }}
+          KEY: ${{ matrix.key }}
+        run: |
+          set -euo pipefail
+
+          # The promotion commit lands minutes before ArgoCD has rolled the pod
+          # out, so submitting straight away makes IndexNow read the key file off
+          # the previous image and cache the host as unverified — a state only a
+          # new key clears. Poll the canonical URL, exactly as the endpoint will.
+          for _ in $(seq 40); do
+            if [ "$(curl -fsS --max-time 10 "https://${HOST}/${KEY}.txt" || true)" = "$KEY" ]; then
+              echo "https://${HOST}/${KEY}.txt is live."
+              exit 0
+            fi
+            sleep 15
+          done
+
+          echo "https://${HOST}/${KEY}.txt did not serve ${KEY} within 10 minutes."
+          echo "Not submitting — an unverifiable key poisons the host."
+          exit 1
+
       - name: Submit sitemap URLs
         if: steps.gate.outputs.run == 'true'
         env:
           HOST: ${{ matrix.host }}
+          KEY: ${{ matrix.key }}
         run: |
           set -euo pipefail
 
