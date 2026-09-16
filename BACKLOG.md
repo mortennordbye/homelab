@@ -4,12 +4,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### An orphaned Plex TCPRoute manifest
-- **What:** `plex-media-stack/tcproute.yaml` defines a `TCPRoute` for `plex-tcp` on the public gateway, is absent from its `kustomization.yaml`, and no `TCPRoute` exists in the cluster — Plex on 32400 reaches the backend by another path, so it has never been in effect. (The huntarr half of this entry was resolved 2026-09-01: manifest, kustomization line and Renovate disable rule all deleted, along with the equally inert tdarr and cleanuparr manifests.)
-- **Why deferred:** Deleting someone's disabled manifest is a judgement call, not a fix, and it costs nothing where it sits.
-- **Unblock:** Decide whether Plex should route through the gateway's `plex-tcp` entrypoint; if yes add it to `kustomization.yaml` and confirm the listener exists, if no delete it.
-- **Where:** `k8s/talos/apps/plex-media-stack/{tcproute.yaml,kustomization.yaml}`.
-
 ### Lock the proxied hostnames to Cloudflare with an IPAllowList
 - **What:** `nordbye.it`, `blog.nordbye.it`, `gate.nordbye.it`, `headroom.nordbye.it` and `logeverylift.com` are proxied, but the origin still answers anyone who reaches it directly with the right Host header, so the WAF and the per-client rate limits in `k8s/talos/apps/{portfolio,blog}/ratelimit-middleware.yaml` can be skipped entirely.
 - **Why deferred:** the ranges to allow are not known yet. Traefik's access log resolves X-Forwarded-For before writing the client address, so a Cloudflare-fronted request and a direct one look identical in it. What is visible is that requests arrive on the portfolio and blog routes from `10.3.10.1`, a LAN browser on a path carrying no Cloudflare header, which a Cloudflare-only list would answer with 403. `accessLog.format: json` was turned on to record `ClientAddr`, the real peer, alongside `ClientHost`.
@@ -23,16 +17,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `k8s/talos/apps/{audiobookshelf,plex-media-stack}/httproute*.yaml`, `terraform/cloudflare/bigd-no/dns.tf`.
 
 ### Plex hardcodes the public address and bypasses DNS entirely
-- **What:** `ADVERTISE_IP` is set to `http://84.212.143.165:32400/`, and Plex is a `TCPRoute` on port 32400 rather than an HTTP hostname. Plex hands that address to plex.tv and to every client, so no amount of DNS proxying hides it while remote access is on.
-- **Why deferred:** it is the same decision as the entry above, and turning remote access off is a household call rather than a technical one.
+- **What:** `ADVERTISE_IP` is set to `http://84.212.143.165:32400/`, and Plex answers on its own LoadBalancer VIP `10.3.10.103:32400` rather than on an HTTP hostname behind the gateway. Plex hands that address to plex.tv and to every client, so no amount of DNS proxying hides it while remote access is on.
+- **Why deferred:** turning remote access off is a household call rather than a technical one.
 - **Unblock:** decide whether Plex remote access is worth publishing the address. If it is, the hardcoded value should at least become a reference to something the DDNS client updates, because it silently breaks remote access the day Telia reassigns the address.
-- **Where:** `k8s/talos/apps/plex-media-stack/plex.yaml:101`, `k8s/talos/apps/plex-media-stack/tcproute.yaml`.
-
-### Retire Mealie's inert ScaledObject and interceptor hop
-- **What:** Mealie is pinned to `minReplicaCount: 1` / `maxReplicaCount: 1`, so its `ScaledObject` triggers (cron + external-push) never fire. Its `HTTPRoute` still sends traffic through `keda-add-ons-http-interceptor-proxy` rather than straight at `mealie-service`, which is now a pointless extra hop.
-- **Why deferred:** Removing the ScaledObject and InterceptorRoute and repointing the HTTPRoute is a structural change to the request path of a live household app, and the pin already fixes the logout bug on its own. Not worth bundling into the fix.
-- **Unblock:** Delete `scaledobject.yaml` and `interceptorroute.yaml`, drop them from `kustomization.yaml`, and point the `HTTPRoute` `backendRefs` at `mealie-service` port 9000 (drop the cross-namespace ref to `keda`). Check whether `k8s/talos/infra/keda-http-add-on/referencegrant.yaml` still needs a mealie entry afterwards. Verify with `kubectl diff` before merging.
-- **Where:** `k8s/talos/apps/mealie/{scaledobject,interceptorroute,httproute,kustomization}.yaml`, `k8s/talos/infra/keda-http-add-on/referencegrant.yaml`.
+- **Where:** `k8s/talos/apps/plex-media-stack/plex.yaml:101` (`ADVERTISE_IP`), the `plex` Service in the same file.
 
 ### Mealie still hard-logs-out every 48h (upstream)
 - **What:** Mealie's frontend never refreshes its access token (`mealie-recipes/mealie#7835`) — only one `/api/auth/refresh` call appears across the whole app log. At `TOKEN_TIME` (default 48h) the token expires and the axios 401 interceptor wipes the cookie and redirects to `/login`. The replica pin fixes cold-start logouts but not this.
@@ -115,12 +103,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** The shader compile was the bulk of the freeze and is gone. What is left is split between texture upload and the composer, and each needs measuring on its own before a change is worth making.
 - **Unblock:** Profile the first frame after `compiled`. Upload the textures during the building stage with `gl.initTexture`, and warm the `EffectComposer` by rendering it once to an offscreen target before `SceneReady` reports compiled, then re-measure the gap.
 - **Where:** `portfolio/src/components/fun/FunRoom.tsx` (`SceneReady`, `Post`), `portfolio/src/components/fun/RoomLoading.tsx` (the `building` stage).
-
-### Sitemap covers only the home page
-- **What:** `portfolio/src/app/sitemap.ts` emits a single entry for `/`. The 13 case studies at `/work/[slug]`, plus `/infrastructure`, `/api` and `/fun`, are all indexable and all absent. Separately, `services` is a homepage section id that is missing from `site.nav`, so it is reachable only by scrolling or through the command palette.
-- **Why deferred:** Noticed while mapping the site against the room; unrelated to that work and not worth folding into it.
-- **Unblock:** Build the work entries from `getAllWork()` the way `/work/[slug]` already builds its static params, and add the three static routes. Decide separately whether `services` should be a nav entry or stay a scroll target.
-- **Where:** `portfolio/src/app/sitemap.ts`, `portfolio/src/lib/work.ts` (`getAllWork`), `portfolio/src/content/site.ts` (`nav`).
 
 ### Lint debt: react-hooks v6 findings and the ESLint 9 → 10 bump
 - **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI.
@@ -269,8 +251,9 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
   - `argocd/argocd-repo-server → world:443` (egress; git/helm fetch)
   - `plex-media-stack/seerr ↔ traefik:8444` (verify direction before writing the rule)
 - **Why deferred:** The Hubble ring buffer only retained ~3 minutes (flooded by `VLAN_FILTERED` noise), and there was no Prometheus history of policy verdicts (the `policy` Hubble metric wasn't enabled). 3 minutes can't capture periodic flows (cron, cert-manager renewals, backups, KEDA wake events, infrequently-used apps), so enforcing off that sample would break things. The `policy` Hubble metric was enabled on 2026-06-29 to record verdicts over Prometheus' 7d retention — but the audit window hasn't elapsed yet.
+- **Note:** authentik's CNP was written in `ab6f6dfc` but never listed in its `kustomization.yaml`, so it was not loaded until 2026-09-16 — the identity namespace has no audit history before that date and its own ≥7d window starts there, separately from the rest. Its egress allows DNS and in-namespace only; watch for world egress (the embedded outpost's `authentik_host: https://auth.bigd.no`, gravatar avatars, SMTP) before enforcing.
 - **Unblock:** After ≥7d, query `sum by (source, destination, source_namespace, destination_namespace, direction) (increase(hubble_policy_verdicts_total{action="audit"}[7d]))` (verified label keys: `action="audit"` is the would-be-denied verdict; `source`/`destination` = workload names, plus the `*_namespace` labels — matching the `workload-name` / `labelsContext` config in cilium values), add an allow rule for each gap (start with the 5 above), then flip `policyAuditMode: false` **namespace-by-namespace**, not cluster-wide. NOTE: enabling the `policy` metric rolls the Cilium DaemonSet — see the 2026-05-16 BPF LB map corruption record in `docs/incidents.md`; verify per-node BPF LB state right after the roll.
-- **Where:** `k8s/talos/infra/cilium/values.yaml` (audit mode + the metric), and the per-app CNPs: `k8s/talos/infra/kube-prometheus-stack/ciliumnetworkpolicy.yaml`, `k8s/talos/infra/loki/ciliumnetworkpolicy.yaml`, `k8s/talos/infra/argocd/ciliumnetworkpolicy.yaml`, `k8s/talos/apps/plex-media-stack/ciliumnetworkpolicies.yaml`.
+- **Where:** `k8s/talos/infra/cilium/values.yaml` (audit mode + the metric), and the per-app CNPs: `k8s/talos/infra/kube-prometheus-stack/ciliumnetworkpolicy.yaml`, `k8s/talos/infra/loki/ciliumnetworkpolicy.yaml`, `k8s/talos/infra/argocd/ciliumnetworkpolicy.yaml`, `k8s/talos/apps/plex-media-stack/ciliumnetworkpolicies.yaml`, `k8s/talos/infra/authentik/ciliumnetworkpolicy.yaml`.
 
 ### Cilium L2 announce VIP co-location risk
 - **What:** Both `traefik-private` (10.3.10.102) and `traefik-public` (10.3.10.101) L2 leases are claimed by whichever node wins the election — historically `genesis-ctrl-02`. A single bad node takes down every internal *and* external Traefik VIP at once.
@@ -293,12 +276,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** Fixing it means deleting the leading `# Title` line from seven published posts, which changes what every one of them looks like (the title stops appearing twice on screen). That is a visible design change across the whole blog rather than a config fix, and it was not part of the agreed scope.
 - **Unblock:** Decide whether the title should render once. If yes, drop the first `# ...` line from each post body and rebuild; nothing else references those headings, though check that no post's table of contents or anchor link points at the removed heading id first.
 - **Where:** `blog/content/blog/*/index.md` (first heading line of each), `blog/themes/northlight/layouts/_partials/article-head.html` for the theme-side H1.
-
-### `content/series/_index.md` is orphaned
-- **What:** The file exists and carries a `noindex` cascade, but `config/_default/config.toml` deliberately does not register a `series` taxonomy (there is a comment saying so), so Hugo generates no series pages for it to apply to. It was added alongside the tag noindex in `c3f5031c`.
-- **Why deferred:** Harmless where it sits, and deleting a file someone added on purpose is a judgement call. It also becomes correct again the day a series is registered.
-- **Unblock:** Either register the `series` taxonomy or delete the file.
-- **Where:** `blog/content/series/_index.md`, `blog/config/_default/config.toml`.
 
 ## Media stack observability (arr-stack)
 
