@@ -71,6 +71,17 @@ config:
               href: https://aistudio.google.com/
               description: Gemini developer playground
 
+    - Search:
+        - Google Search Console:
+            - icon: si-googlesearchconsole
+              href: https://search.google.com/search-console?resource_id=sc-domain%3Anordbye.it
+              description: Indexing, canonicals and search performance
+        - Bing Webmaster Tools:
+            # No simple-icons slug for Bing, so the favicon, as with OpenRouter.
+            - icon: https://www.bing.com/favicon.ico
+              href: https://www.bing.com/webmasters/home
+              description: The index behind ChatGPT search and Copilot
+
   services:
     - Network:
         - Traefik:
