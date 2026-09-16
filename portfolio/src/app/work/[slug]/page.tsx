@@ -8,6 +8,7 @@ import { StackTiles } from "@/components/work/StackTiles";
 import { ArchitectureSection } from "@/components/work/ArchitectureSection";
 import { mdxComponents } from "@/components/work/mdx-components";
 import { getAllWork, getWorkBySlug } from "@/lib/work";
+import { site } from "@/content/site";
 import { ArrowLeft } from "@/components/icons";
 
 export function generateStaticParams() {
@@ -22,9 +23,18 @@ export async function generateMetadata({
   const { slug } = await params;
   const w = getWorkBySlug(slug);
   if (!w) return {};
+  const url = `/work/${w.slug}/`;
   return {
-    title: `${w.title} — case study`,
+    title: w.title,
     description: w.summary,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      url,
+      title: w.title,
+      description: w.summary,
+      images: [w.cover],
+    },
   };
 }
 
@@ -37,12 +47,59 @@ export default async function WorkDetailPage({
   const w = getWorkBySlug(slug);
   if (!w) notFound();
 
+  // CreativeWork, not Article: these pages carry no publication date, and
+  // `period` is when the engagement ran, not when the write-up was published.
+  // Article without datePublished is ineligible anyway, so claim the type the
+  // page can actually support.
+  const workJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "@id": `${site.url}/work/${w.slug}/#case-study`,
+    mainEntityOfPage: `${site.url}/work/${w.slug}/`,
+    name: w.title,
+    headline: w.title,
+    description: w.summary,
+    image: `${site.url}${w.cover}`,
+    author: { "@id": `${site.url}/#person` },
+    publisher: { "@id": `${site.url}/#person` },
+    isPartOf: { "@id": `${site.url}/#website` },
+    inLanguage: "en-GB",
+    about: w.stack,
+    temporalCoverage: w.period,
+  };
+
+  // Two levels, not three: there is no /work index route to point a middle
+  // crumb at, and the visible "All work" link goes to a homepage fragment.
+  // A crumb pointing at a fragment is not a page, so it does not get one.
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "@id": `${site.url}/work/${w.slug}/#breadcrumb`,
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: `${site.firstName} ${site.lastName}`,
+        item: `${site.url}/`,
+      },
+      { "@type": "ListItem", position: 2, name: w.title },
+    ],
+  };
+
   return (
     // Halved section padding for this route only; the two-column hero keeps
     // meta + stack on the fold instead of pushing the body down.
     <main
       className="pt-20 [--space-section-y:clamp(2.5rem,5vw,4.5rem)]"
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(workJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* 1. Header — title left, meta + stack right */}
       <Section width="wide">
         <div className="grid gap-12 md:grid-cols-12 md:gap-16">

@@ -30,9 +30,19 @@ image = "images/profile.png"
 headline = "Cloud engineer. Homelab enthusiast."
 bio = "I write about Kubernetes, infrastructure, and making things work."
 links = [
-    { linkedin = "https://www.linkedin.com/in/morten-nordbye-325bb71bb" },
+    { linkedin = "https://www.linkedin.com/in/morten-victor-nordbye" },
     { github = "https://github.com/mortennordbye" },
     { link = "https://nordbye.it" },
+]
+# Resolves this blog's author to the same Person node nordbye.it publishes.
+# Without the @id, the two properties describe two people who share a name and
+# neither accrues the other's authority on a name query.
+id = "https://nordbye.it/#person"
+url = "https://nordbye.it"
+sameAs = [
+    "https://github.com/mortennordbye",
+    "https://www.linkedin.com/in/morten-victor-nordbye",
+    "https://nordbye.it",
 ]
 
 [header]
