@@ -211,13 +211,13 @@ export const endpoints: readonly Endpoint[] = [
     caching: "public, max-age=30",
     curl: "curl -s https://nordbye.it/api/v1/infra",
     sample: {
-      generatedAt: "2026-07-19T08:05:03Z",
-      build: "0.0.80",
+      generatedAt: "2026-09-16T08:30:16Z",
+      build: "0.0.141",
       argocd: { sync: "Synced", health: "Healthy" },
       nodes: { ready: 6, total: 6 },
-      versions: { kubernetes: "v1.34.0", talos: "v1.11.6" },
-      cert: { notAfter: "2026-09-25T11:41:28Z" },
-      history: [{ d: "2026-07-16", ok: 286, total: 288 }],
+      versions: { kubernetes: "v1.35.7", talos: "v1.12.11" },
+      cert: { notAfter: "2026-11-24T10:46:20Z" },
+      history: [{ d: "2026-08-18", ok: 288, total: 288 }],
     },
     // Passthrough of the status ConfigMap, so extra keys are allowed. Only
     // argocd and nodes are guaranteed: the baked fallback carries just those.

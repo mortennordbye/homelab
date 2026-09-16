@@ -78,12 +78,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Decide per item whether it is worth a content pass. The byline is the highest value and the cheapest — it is the site's strongest E-E-A-T signal going unattributed. The numbers need the author's own recall plus a confidentiality judgement; leaving them out is a legitimate answer. Do not let a tool invent a downtime figure to close the finding.
 - **Where:** `portfolio/src/app/work/[slug]/page.tsx` (template), `portfolio/src/content/work/*.mdx` (copy), `portfolio/src/components/sections/` (homepage sections). Full findings: the audit run persisted at `~/.claude/plugins/data/claude-seo-ai-claude-seo-ai/runs/nordbye.it/2026-09-16T05-49-53Z/report.md`.
 
-### /infrastructure and /api publish a two-month-old snapshot as live state
-- **What:** `/infrastructure` renders a payload with `generatedAt: 2026-07-13` and `/api` a sample with `2026-07-19`, both ~60 days stale as of 2026-09-16. Both quote `cert.notAfter: 2026-09-25`, so unless the data is regenerated those pages will shortly publish an expired certificate as the cluster's current state. Neither page labels the data's age.
-- **Why deferred:** Found during the SEO audit, outside the metadata scope the work was limited to. Fixing it is either a build-time regeneration step or a visible caption, both of which are functional changes.
-- **Unblock:** Either regenerate the payload as part of the deploy (or on a cron) so `generatedAt` tracks reality, or add a visible "snapshot taken <date>" caption. The page describes its own collection mechanism already — a CronJob reading the Kubernetes API, ArgoCD and cert-manager into a ConfigMap — so the data exists; it is the rendering that is frozen.
-- **Where:** `portfolio/src/content/infrastructure.ts`, `portfolio/src/app/{infrastructure,api}/page.tsx`.
-
 ### Fun room: real-device pass, printer switches and melody
 - **What:** The printer's rocker switches read their prompt correctly under the crosshair, but pressing `E` was reported to produce no visible change in the ON/OFF pill. Never reproduced in a browser with working pointer lock, so it may be a headless-harness artifact rather than a real fault.
 
