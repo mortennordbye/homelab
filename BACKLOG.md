@@ -104,12 +104,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Profile the first frame after `compiled`. Upload the textures during the building stage with `gl.initTexture`, and warm the `EffectComposer` by rendering it once to an offscreen target before `SceneReady` reports compiled, then re-measure the gap.
 - **Where:** `portfolio/src/components/fun/FunRoom.tsx` (`SceneReady`, `Post`), `portfolio/src/components/fun/RoomLoading.tsx` (the `building` stage).
 
-### Sitemap covers only the home page
-- **What:** `portfolio/src/app/sitemap.ts` emits a single entry for `/`. The 13 case studies at `/work/[slug]`, plus `/infrastructure`, `/api` and `/fun`, are all indexable and all absent. Separately, `services` is a homepage section id that is missing from `site.nav`, so it is reachable only by scrolling or through the command palette.
-- **Why deferred:** Noticed while mapping the site against the room; unrelated to that work and not worth folding into it.
-- **Unblock:** Build the work entries from `getAllWork()` the way `/work/[slug]` already builds its static params, and add the three static routes. Decide separately whether `services` should be a nav entry or stay a scroll target.
-- **Where:** `portfolio/src/app/sitemap.ts`, `portfolio/src/lib/work.ts` (`getAllWork`), `portfolio/src/content/site.ts` (`nav`).
-
 ### Lint debt: react-hooks v6 findings and the ESLint 9 → 10 bump
 - **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI.
 
@@ -281,12 +275,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** Fixing it means deleting the leading `# Title` line from seven published posts, which changes what every one of them looks like (the title stops appearing twice on screen). That is a visible design change across the whole blog rather than a config fix, and it was not part of the agreed scope.
 - **Unblock:** Decide whether the title should render once. If yes, drop the first `# ...` line from each post body and rebuild; nothing else references those headings, though check that no post's table of contents or anchor link points at the removed heading id first.
 - **Where:** `blog/content/blog/*/index.md` (first heading line of each), `blog/themes/northlight/layouts/_partials/article-head.html` for the theme-side H1.
-
-### `content/series/_index.md` is orphaned
-- **What:** The file exists and carries a `noindex` cascade, but `config/_default/config.toml` deliberately does not register a `series` taxonomy (there is a comment saying so), so Hugo generates no series pages for it to apply to. It was added alongside the tag noindex in `c3f5031c`.
-- **Why deferred:** Harmless where it sits, and deleting a file someone added on purpose is a judgement call. It also becomes correct again the day a series is registered.
-- **Unblock:** Either register the `series` taxonomy or delete the file.
-- **Where:** `blog/content/series/_index.md`, `blog/config/_default/config.toml`.
 
 ## Media stack observability (arr-stack)
 
