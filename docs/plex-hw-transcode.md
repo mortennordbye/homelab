@@ -19,7 +19,7 @@ Working. The GPU is bound to `vfio-pci` on the host, attached to VM 134, and
 - [x] Node label `hardware.nordbye.it/gpu=intel-quicksync` on worker-01
 - [x] `plex.yaml` selects that label and requests `gpu.intel.com/i915`
 - [x] Merged to main, ArgoCD synced, Plex running on `gpu.intel.com/i915`
-- [ ] Enable hardware acceleration in Plex settings (Plex Pass confirmed active)
+- [x] Hardware acceleration enabled, transcodes run `final decoder: vaapi, final encoder: vaapi`
 - [ ] Boot kernel pin **failed**, host runs `7.0.6-2-pve`. See the open issue at the end
 
 ## Established facts
@@ -330,7 +330,22 @@ kubectl exec -n plex-media-stack deploy/plex -- ls -l /dev/dri
 ```
 
 Then in Plex: Settings, Transcoder, "Use hardware acceleration when available". That option requires an active
-Plex Pass, which this server has.
+Plex Pass, which this server has. It is stored as `HardwareAcceleratedCodecs` in `Preferences.xml` on the
+config PVC, not in this repo, so it survives a restart but is not declarative and is not restored by a
+rebuild from git.
+
+Confirm it is actually being used. A transcode logs its runtime decision, and both ends must say vaapi:
+
+```bash
+kubectl exec -n plex-media-stack deploy/plex -- sh -c 'grep "TPU: hardware transcoding" "/config/Library/Application Support/Plex Media Server/Logs/Plex Media Server.log" | tail -3'
+```
+
+```
+TPU: hardware transcoding: zero-copy support present
+TPU: hardware transcoding: final decoder: vaapi, final encoder: vaapi
+```
+
+An empty `final decoder: , final encoder:` means it fell back to software.
 
 ---
 
