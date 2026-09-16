@@ -14,6 +14,15 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
+    // Pin the version eslint-plugin-react asks for. eslint-config-next sets
+    // "detect", whose lookup calls context.getFilename(), removed in ESLint 10.
+    settings: {
+      react: {
+        version: "19.2",
+      },
+    },
+  },
+  {
     // New react-hooks v6 rules (via eslint-config-next 16) flag pre-existing
     // component patterns (setState-in-effect guards, three.js texture mutation
     // in R3F). Downgraded to warnings so lint can gate CI; see BACKLOG.md.
