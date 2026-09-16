@@ -76,9 +76,10 @@ function JsonCode({ code }: { code: string }) {
   );
 }
 
-// The publisher writes every 5 minutes, so the page is regenerated on the same
-// cadence rather than being baked once at build time and frozen.
-export const revalidate = 300;
+// Per request, not ISR: the status ConfigMap is not mounted during the image
+// build, so anything prerendered bakes in the "feed unavailable" fallback and
+// serves it from every cold pod. The route behind this block does the same.
+export const dynamic = "force-dynamic";
 
 export default async function InfrastructurePage() {
   const { live, data: status } = await readClusterStatus();
