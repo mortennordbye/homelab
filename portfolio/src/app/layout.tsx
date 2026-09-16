@@ -7,6 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { CommandPalette } from "@/components/CommandPalette";
 import { site } from "@/content/site";
+import { certs } from "@/content/resume";
 import { getAllWork } from "@/lib/work";
 import { services } from "@/content/services";
 
@@ -61,17 +62,19 @@ export const metadata: Metadata = {
     ...site.keywords,
   ],
   openGraph: {
+    // Only the values that are genuinely site-wide. A literal title or url
+    // here overrides every child route, so a shared case study previews as
+    // the homepage. Title and description fall through from each page.
     type: "website",
     locale: "en_GB",
-    url: site.url,
     siteName: `${site.firstName} ${site.lastName}`,
-    title: `${site.firstName} ${site.lastName} — ${site.role}`,
-    description: site.description,
   },
   twitter: {
     card: "summary_large_image",
   },
-  alternates: { canonical: "/" },
+  // No canonical here. metadata.alternates inherits into every child route,
+  // so a value set on the layout points the whole site at "/" and deindexes
+  // every case study. Each route declares its own.
   icons: {
     icon: [
       { url: "/favicon/favicon-32x32.png", sizes: "32x32" },
@@ -122,32 +125,17 @@ const jsonLd = {
     name: "Orange Business",
     url: "https://www.orange-business.com",
   },
-  hasCredential: [
-    {
-      "@type": "EducationalOccupationalCredential",
-      name: "Certified Kubernetes Administrator (CKA)",
-      credentialCategory: "certification",
-      recognizedBy: { "@type": "Organization", name: "The Linux Foundation" },
-    },
-    {
-      "@type": "EducationalOccupationalCredential",
-      name: "Microsoft Certified: DevOps Engineer Expert (AZ-400)",
-      credentialCategory: "certification",
-      recognizedBy: { "@type": "Organization", name: "Microsoft" },
-    },
-    {
-      "@type": "EducationalOccupationalCredential",
-      name: "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)",
-      credentialCategory: "certification",
-      recognizedBy: { "@type": "Organization", name: "Microsoft" },
-    },
-    {
-      "@type": "EducationalOccupationalCredential",
-      name: "Microsoft Certified: Azure Administrator Associate (AZ-104)",
-      credentialCategory: "certification",
-      recognizedBy: { "@type": "Organization", name: "Microsoft" },
-    },
-  ],
+  // Generated from `certs`, never hand-listed. The hand-maintained version
+  // drifted: it carried 4 of 7 credentials and appended exam codes the page
+  // does not render, so the markup claimed strings no reader could see.
+  hasCredential: certs.map((c) => ({
+    "@type": "EducationalOccupationalCredential",
+    name: c.title,
+    credentialCategory: "certification",
+    ...(c.credentialId ? { identifier: c.credentialId } : {}),
+    ...(c.href ? { url: `${site.url}${c.href}` } : {}),
+    recognizedBy: { "@type": "Organization", name: c.issuer },
+  })),
   sameAs: site.socials.map((s) => s.href),
   knowsAbout: site.keywords,
 };
@@ -157,7 +145,12 @@ const websiteJsonLd = {
   "@type": "WebSite",
   "@id": `${site.url}/#website`,
   url: site.url,
-  name: `${site.firstName} ${site.lastName} — ${site.role}`,
+  // This is the site-name mechanism Google reads for the name shown above a
+  // result, not a place for a tagline — "Name — Role" is the shape its
+  // guidance says may be dropped. alternateName is where the shorter forms
+  // go, and it is the only structured place the bare surname is declared.
+  name: `${site.firstName} ${site.lastName}`,
+  alternateName: [site.name, `${site.lastName}`, "Morten V. Nordbye"],
   inLanguage: "en-GB",
   publisher: { "@id": `${site.url}/#person` },
 };

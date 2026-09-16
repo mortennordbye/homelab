@@ -10,7 +10,10 @@ import {
 } from "@/content/api";
 
 export const metadata: Metadata = {
-  title: "API — Morten Nordbye",
+  // The layout's title template appends the name; repeating it here rendered
+  // "API — Morten Nordbye — Morten Victor Nordbye".
+  title: "API",
+  alternates: { canonical: "/api/" },
   description:
     "The public JSON API this site serves: endpoints, authentication, caching and example responses.",
 };

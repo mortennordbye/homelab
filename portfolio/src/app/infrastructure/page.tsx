@@ -7,6 +7,7 @@ import { deployPath, platform, requestPath } from "@/content/infrastructure";
 
 export const metadata: Metadata = {
   title: "Infrastructure",
+  alternates: { canonical: "/infrastructure/" },
   description:
     "This site runs on a self-hosted Talos Kubernetes cluster, reconciled by ArgoCD. The request path, the deploy pipeline, and live cluster status.",
 };

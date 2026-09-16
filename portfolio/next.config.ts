@@ -67,6 +67,33 @@ const nextConfig: NextConfig = {
         destination: "https://nordbye.it/:path*",
         permanent: true,
       },
+      // The pre-Next static site's URLs are still indexed and still rank for
+      // name queries. Without these they are hard 404s, so a search for the
+      // name lands on nothing. Each project page has an exact successor.
+      ...[
+        ["professional-project-1", "sovereign-cloud-migration"],
+        ["professional-project-2", "puppet-to-ansible"],
+        ["professional-project-3", "healthcare-rhel-migration"],
+        ["homelabbing-project-1", "k8s-homelab"],
+        ["homelabbing-project-2", "ansible-server-mgmt"],
+        ["homelabbing-project-3", "tick-grafana-monitoring"],
+      ].map(([legacy, slug]) => ({
+        source: `/portfolio/${legacy}.html`,
+        destination: `/work/${slug}/`,
+        permanent: true,
+      })),
+      // The service pages have no successor route; the homepage carries that
+      // content now.
+      ...[
+        "gitops-ansible",
+        "kubernetes-containerization",
+        "technical-support-consulting",
+      ].map((legacy) => ({
+        source: `/services/${legacy}.html`,
+        destination: "/",
+        permanent: true,
+      })),
+      { source: "/index.html", destination: "/", permanent: true },
     ];
   },
 };
