@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: intel-gpu-plugin
+  labels:
+    # The plugin hostPath-mounts /dev/dri, /sys/class/drm and the kubelet socket,
+    # which baseline forbids. Audit and warn stay at baseline so the violation is
+    # still reported. Nothing but the DaemonSet belongs in this namespace.
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
