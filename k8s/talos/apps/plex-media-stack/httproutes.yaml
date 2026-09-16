@@ -29,9 +29,9 @@ metadata:
   name: seerr
   namespace: plex-media-stack
   annotations:
-    # Unproxied, matching the record this replaces. seerr resolves onto
-    # ddns.bigd.no, which is already public, so proxying would hide nothing.
-    external-dns.kubernetes.io/cloudflare-proxied: "false"
+    # Only safe while Jellyseerr's cacheImages stays off. With it on, TMDB posters
+    # stream through the origin and fall under Cloudflare's media clause.
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
