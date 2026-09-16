@@ -17,7 +17,7 @@ Working. The GPU is bound to `vfio-pci` on the host, attached to VM 134, and
 - [x] `hostpci0` attached to VM 134, GPU visible inside Talos as `0000:01:00.0`
 - [x] Talos `i915` extension via schematic `95d432d6…`, `/dev/dri/renderD128` present
 - [x] Node label `hardware.nordbye.it/gpu=intel-quicksync` on worker-01
-- [x] `plex.yaml` selects that label and mounts `/dev/dri`
+- [x] `plex.yaml` selects that label and requests `gpu.intel.com/i915`
 - [ ] **Merge to main** so ArgoCD syncs the Plex change
 - [ ] Enable hardware acceleration in Plex settings (Plex Pass confirmed active)
 - [ ] Boot kernel pin **failed**, host runs `7.0.6-2-pve`. See the open issue at the end
@@ -242,16 +242,17 @@ install.
 
 ---
 
-## 6. Kubernetes: /dev/dri into Plex
+## 6. Kubernetes: the GPU into Plex
 
-`renderD128` is mode `crw-rw-rw-`, so Plex reaches it as PUID 1000 with no supplemental groups and
-no privileged container. A `hostPath` mount is enough.
+Plex reaches the iGPU through Intel's GPU device plugin, not through a `hostPath` mount. The plugin
+runs as a DaemonSet on the GPU node, advertises `gpu.intel.com/i915` as an extended resource, and
+injects the `/dev/dri` device nodes into any container that requests it.
 
-### PodSecurity blocks hostPath by default
+### Why not hostPath
 
 Talos configures PodSecurity admission cluster-wide with `enforce: baseline`, exempting only
-`kube-system`. Baseline forbids `hostPath` volumes outright, so the Plex pod is rejected at
-admission:
+`kube-system`. Baseline forbids `hostPath` volumes outright, so a pod mounting `/dev/dri` is
+rejected at admission:
 
 ```
 Error creating: pods "plex-..." is forbidden: violates PodSecurity "baseline:latest": hostPath volumes (volume "dri")
@@ -261,21 +262,25 @@ The Deployment applies cleanly and `kubectl diff` shows nothing wrong, because a
 **pod**, not the Deployment. With `strategy: Recreate` the old pod is already gone by then, so Plex
 goes down rather than failing over. Check the ReplicaSet events, not the Deployment.
 
-`namespace.yaml` therefore raises the level:
+Raising the whole namespace to `enforce: privileged` clears the error, and that is what
+`plex-media-stack` did until the plugin landed. It is too broad: seerr and tautulli share the
+namespace and need none of it, and seerr answers from the internet. The plugin confines the
+`hostPath` privilege to `intel-gpu-plugin`, a namespace that holds nothing but the DaemonSet, and
+lets `plex-media-stack` sit at baseline with everything in it enforced.
 
-```yaml
-pod-security.kubernetes.io/enforce: privileged
-pod-security.kubernetes.io/audit: baseline
-pod-security.kubernetes.io/warn: baseline
-```
+### The plugin
 
-Audit and warn stay at baseline so the violation is still reported, just not enforced. This is
-broader than ideal since seerr and tautulli share the namespace and need none of it. The narrower
-fix is Intel's GPU device plugin, which advertises `gpu.intel.com/i915` as a schedulable resource
-and removes the need for `hostPath` entirely, letting the namespace return to baseline. Tracked in
-`BACKLOG.md`.
+`k8s/talos/infra/intel-gpu-plugin/daemonset.yaml` is vendored from upstream
+`deployments/gpu_plugin/base` — re-sync it when Renovate moves the image tag. The one local change
+is the `nodeSelector`: upstream ships `kubernetes.io/arch: amd64` alone, which would place the
+plugin on all six nodes and hostPath-create `/dev/dri` on the five without a GPU.
 
-Node selection is by capability label, not hostname. `talos-cluster.tf` derives the label from
+The namespace runs `enforce: privileged` with audit and warn left at baseline, so the four
+`hostPath` mounts and the `seLinuxOptions` type are still reported, just not enforced.
+
+### Node selection
+
+Selection is by capability label, not hostname. `talos-cluster.tf` derives the label from
 `pci_mapping`, so it is declared with the hardware and only lands on nodes that have a GPU:
 
 ```hcl
@@ -288,23 +293,37 @@ nodeLabels = merge(
 )
 ```
 
-`plex.yaml` selects on that label instead of `topology.kubernetes.io/zone=hyper1`, and mounts the
-device. The `plex-config` PV carries its own `nodeAffinity` for zone hyper1, which the scheduler
-enforces independently, so the zone constraint is not repeated on the pod. Both are satisfied by
-`genesis-worker-01`.
+Both the plugin and `plex.yaml` select on that label. The resource request pins Plex on its own
+anyway, since only a node running the plugin advertises `gpu.intel.com/i915`. The `plex-config` PV
+carries its own `nodeAffinity` for zone hyper1, which the scheduler enforces independently. All
+three are satisfied by `genesis-worker-01`.
 
 ```bash
 kubectl get nodes -L hardware.nordbye.it/gpu
 ```
 
+### Rollout
+
+Ship the plugin and the Plex change as two merges, not one. Plex uses `strategy: Recreate`, so if it
+is switched to a resource the node does not advertise yet, the old pod is already gone and Plex sits
+Pending until the plugin catches up.
+
+First merge `k8s/talos/infra/intel-gpu-plugin/`, then confirm the node advertises the resource:
+
+```bash
+kubectl -n intel-gpu-plugin rollout status ds/intel-gpu-plugin
+kubectl get node genesis-worker-01 -o jsonpath='{.status.allocatable.gpu\.intel\.com/i915}'
+```
+
+Then merge the `plex-media-stack` change, which drops the namespace to baseline and swaps the
+`hostPath` volume for the resource request:
+
 ```bash
 kubectl diff -f k8s/talos/apps/plex-media-stack/plex.yaml --server-side --field-manager=argocd-controller
 ```
 
-The manifest change only reaches the cluster once merged to `main`, since ArgoCD reconciles from
-there.
-
-After it syncs, confirm Plex can see the device:
+Manifest changes only reach the cluster once merged to `main`, since ArgoCD reconciles from there.
+After it syncs, confirm Plex still sees the device:
 
 ```bash
 kubectl exec -n plex-media-stack deploy/plex -- ls -l /dev/dri

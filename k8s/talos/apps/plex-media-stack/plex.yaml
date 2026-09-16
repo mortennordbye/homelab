@@ -124,6 +124,14 @@ spec:
             - containerPort: 32414
               name: plex-gdm-4
               protocol: UDP
+          # The device plugin injects /dev/dri, so no hostPath is needed and the
+          # namespace stays at baseline. Only a node running the plugin advertises
+          # this resource, so the request is also what places Plex on the iGPU node.
+          resources:
+            requests:
+              gpu.intel.com/i915: 1
+            limits:
+              gpu.intel.com/i915: 1
           volumeMounts:
             - name: config
               mountPath: /config
@@ -137,8 +145,6 @@ spec:
               mountPath: /youtube
             - name: transcode
               mountPath: /transcode
-            - name: dri
-              mountPath: /dev/dri
           livenessProbe:
             httpGet:
               path: /identity
@@ -156,12 +162,6 @@ spec:
             timeoutSeconds: 30
             failureThreshold: 10
       volumes:
-        # Intel render node from the passed-through iGPU. renderD128 is mode 0666 on the host, so
-        # Plex reaches it as PUID 1000 without extra groups or a privileged container.
-        - name: dri
-          hostPath:
-            path: /dev/dri
-            type: Directory
         - name: config
           persistentVolumeClaim:
             claimName: plex-config
