@@ -110,6 +110,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Profile the first frame after `compiled`. Upload the textures during the building stage with `gl.initTexture`, and warm the `EffectComposer` by rendering it once to an offscreen target before `SceneReady` reports compiled, then re-measure the gap.
 - **Where:** `portfolio/src/components/fun/FunRoom.tsx` (`SceneReady`, `Post`), `portfolio/src/components/fun/RoomLoading.tsx` (the `building` stage).
 
+### React 19.3 and three 0.186 are blocked by the 3D stack's peer ranges
+- **What:** Renovate PR #938 bundles `next`, `react`/`react-dom` and `three`. Only the `next` half is installable. `@react-three/fiber@9.7.0` declares `peer react@">=19 <19.3"` and `postprocessing@6.39.3` declares `peer three@">= 0.168.0 < 0.186.0"`, so `react@19.3.0` and `three@0.186.0` both fail to resolve. `next` and `eslint-config-next` 16.3.5 were taken on their own; `react`/`react-dom` stay at 19.2.8 and `three` at 0.185.x.
+- **Why deferred:** The bounds are upstream declarations, not preferences. Forcing them with `--legacy-peer-deps` would install a combination neither library claims to support, on the globe and the whole `/fun` room.
+- **Unblock:** Wait for `@react-three/fiber` to widen its react peer past 19.3 and for `postprocessing` to admit three 0.186, then take both bumps together and re-run `make lint`, `make typecheck` and a browser pass over `/` and `/fun/`. Renovate will keep #938 open and rebase it.
+- **Where:** `portfolio/package.json` (`react`, `react-dom`, `three`, `@types/three`), `portfolio/package-lock.json`.
+
 ### Lint debt: react-hooks v6 findings and the ESLint 9 → 10 bump
 - **What:** `eslint-config-next@16` ships the new react-hooks v6 rules; two of them flag 8 pre-existing errors: `react-hooks/set-state-in-effect` (CommandPalette ×2, FooterStamp, InlineGlobe, ArchitectureDiagram — setState called directly in effect bodies) and `react-hooks/immutability` (InlineGlobeScene — mutating `colorSpace` on textures returned from `useTexture`). Both rules are downgraded to `warn` in `eslint.config.mjs` so lint can gate CI.
 
