@@ -3,10 +3,8 @@ kind: Namespace
 metadata:
   name: plex-media-stack
   labels:
-    # Baseline PodSecurity forbids hostPath, and Plex mounts /dev/dri for
-    # QuickSync transcoding, so this namespace sits above baseline. Broader than
-    # ideal (lifts it for seerr/tautulli too); the narrower fix is Intel's GPU
-    # device plugin — tracked in BACKLOG.md.
-    pod-security.kubernetes.io/enforce: privileged
+    # Pinned rather than inherited: seerr answers from the internet, so this
+    # namespace must not follow the cluster default if that ever loosens.
+    pod-security.kubernetes.io/enforce: baseline
     pod-security.kubernetes.io/audit: baseline
     pod-security.kubernetes.io/warn: baseline
