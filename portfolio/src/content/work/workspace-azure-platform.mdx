@@ -1,11 +1,11 @@
 ---
-title: "Internal Azure Platform for an IAM Automation App"
+title: "Internal Azure Platform for a Multi-Tenant IAM and M365 Toolchain"
 slug: "workspace-azure-platform"
 kind: "professional"
 client: "Internal Orange Business department"
 role: "Platform architect"
 period: "2026"
-summary: "Designed and built the Azure platform for another Orange department's IAM and Microsoft 365 automation app, covering landing zone, container hosting, DNS and the GitHub repo with pipelines."
+summary: "Designed and built the Azure platform for another Orange department's Entra ID and Microsoft 365 automation products, covering the landing zone, container hosting, DNS and the deploy pipelines, then built a third product on top of it."
 stack:
   - "Azure"
   - "ACR"
@@ -19,6 +19,7 @@ outcomes:
   - "Azure Container Registry and Azure Container Apps for hosting the application services."
   - "Azure DNS and supporting services configured for the platform."
   - "Full GitHub repository with pipelines for deploying and managing the infrastructure, so the receiving team runs it themselves."
+  - "Image deploys wired so Terraform stays the single source of truth for what runs, with federated OIDC and a GitHub App in place of long-lived tokens or portal continuous deployment."
 cover: "/images/work/workspace-azure-platform/front.webp"
 featured: false
 order: 7
@@ -26,14 +27,18 @@ order: 7
 
 ## The brief
 
-Another Orange department had built an automation app for IAM and Microsoft 365 work that scaled to thousands of users. The app worked. What it needed was a real Azure home, covering subscription layout, container hosting, the supporting services, and the pipelines to run that home over time. They wrote the app; I built the platform under it.
+Another Orange department had built their automation for Entra ID and Microsoft 365 work without a developer on the team, and needed it to run in Azure. The products govern configuration as code across 15 of Orange's customer tenants, operated by 10 to 15 internal users, so a fault in the platform reaches several customers at once. What it needed was a real Azure home, covering subscription layout, container hosting, the supporting services, and the pipelines to run that home over time. They wrote the application code, I built the platform under it.
 
 ## What I did
 
 The landing zone followed Microsoft's WAF Application Landing Zone pattern, including subscription-management-group structure, network shape and policy guardrails. Container hosting on Azure Container Apps with images coming from Azure Container Registry. Azure DNS plus the surrounding cert and identity pieces.
 
-Everything is Terraform. The GitHub repository with the deployment pipelines is part of the deliverable; the receiving team operates the platform without me as a single point of failure.
+Everything is Terraform. The GitHub repository with the deployment pipelines is part of the deliverable, so the receiving team operates the platform without me as a single point of failure. Image deploys close the loop back to Terraform. The application repository publishes an immutable digest-tagged image, the platform repository bumps the variable file and applies, and nothing updates a running container outside that path.
+
+The application side needed steering as much as hosting. The team had specified a set of Azure services heavier than the workload justified, including SQL, and I moved them onto storage account tables and blobs instead. The harder half of the engagement was reading what they actually needed out of code written by people who are not developers.
+
+A third product followed on the same platform, a self-service remediation portal for first-line operations, where I did both the infrastructure and the application development.
 
 ## Why it mattered
 
-A department that had been running their own automation without a proper Azure home now operates a landing-zone-compliant platform via Terraform, without needing to involve me. The team owns it end-to-end from day one.
+A department that had been running their own automation without a proper Azure home now operates a landing-zone-compliant platform via Terraform, without needing to involve me. Two departments share it going forward, and the structure takes a new application as a new folder and a new pipeline rather than a rebuild.

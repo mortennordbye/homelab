@@ -34,7 +34,7 @@ export const site = {
   hero: {
     rotating: ["Cloud Engineer", "IT Specialist", "Homelabber", "Platform Engineer"],
     headline: "I am a Cloud Engineer.",
-    sub: "Based in Oslo. I build and run Azure infrastructure for customer environments. Azure networking, AKS with GitOps, observability, and the platform pieces that keep a cluster running properly. Available through Orange Business and for direct engagements.",
+    sub: "Based in Oslo. I build and run Azure infrastructure for customer environments. Azure networking, AKS with GitOps, observability, and the platform pieces that keep a cluster running properly. Open to consulting and platform engagements.",
   },
   socials: [
     { label: "GitHub", href: "https://github.com/mortennordbye" },

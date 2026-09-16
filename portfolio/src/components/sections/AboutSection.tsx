@@ -32,10 +32,11 @@ export function AboutSection() {
             reacting to alerts to building the platforms that produce them.
           </p>
           <p className="text-fg-2 leading-relaxed">
-            Today I work as a Cloud Engineer at Orange Business, on Azure
-            platforms for customers across a range of regulated sectors. On the
-            side I run a homelab cluster that doubles as my proving ground for
-            anything I want to try before it touches production.
+            My work has been Azure platforms for customers across a range of
+            regulated sectors, most recently as a Cloud Engineer at Orange
+            Business. On the side I run a homelab cluster that doubles as my
+            proving ground for anything I want to try before it touches
+            production.
           </p>
         </div>
       </div>
