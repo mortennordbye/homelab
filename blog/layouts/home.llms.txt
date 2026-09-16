@@ -1,0 +1,21 @@
+{{- /* llms.txt — plain-text site index for retrieval systems.
+     Generated from the same content as the HTML, so it cannot drift.
+     Local override; the theme stays generic. */ -}}
+# {{ site.Title }}
+
+> {{ with site.Params.description }}{{ . }}{{ end }}
+
+{{ with site.Params.author -}}
+{{ .name }}{{ with .headline }} — {{ . }}{{ end }}
+{{ with .url }}Main site: {{ . }}{{ end }}
+{{ end }}
+## Posts
+
+{{ range where site.RegularPages "Section" "in" site.Params.mainSections -}}
+- [{{ .Title }}]({{ .Permalink }}){{ with .Date }} — {{ .Format "2006-01-02" }}{{ end }}{{ with .Description }}: {{ . }}{{ end }}
+{{ end }}
+## Elsewhere
+
+{{ range site.Params.author.links -}}
+{{ range $k, $v := . }}- {{ $k }}: {{ $v }}
+{{ end }}{{- end }}

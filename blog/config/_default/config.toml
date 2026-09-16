@@ -11,7 +11,14 @@ summaryLength = 30
 pagerSize = 10
 
 [outputs]
-home = ["HTML", "RSS", "JSON"]
+home = ["HTML", "RSS", "JSON", "LLMS"]
+
+# llms.txt: a plain-text index of the site for retrieval systems, generated
+# from the same content the pages are, so it cannot drift from what is published.
+[outputFormats.LLMS]
+mediaType = "text/plain"
+baseName = "llms"
+isPlainText = true
 
 # `series` is deliberately absent. The theme supports a series taxonomy and
 # renders series navigation when one is registered, but no post here uses it —

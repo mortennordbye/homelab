@@ -1,0 +1,109 @@
+name: IndexNow submit
+
+# Pushes a site's indexable URLs to the IndexNow endpoint, which Bing, Yandex,
+# Seznam and Naver share. Google does not participate. This exists because Bing
+# is the index behind ChatGPT search and Copilot, and it accepts roughly 10k URL
+# submissions a month against Search Console's 10 a day.
+#
+# Triggered by the Kargo prod promotion, which is the commit that actually
+# changes what the public site serves — building an image does not.
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: Which site to submit
+        required: true
+        type: choice
+        options: [both, portfolio, blog]
+        default: both
+  push:
+    branches:
+      - main
+    paths:
+      - "k8s/talos/apps/portfolio/kustomization.yaml"
+      - "k8s/talos/apps/blog/kustomization.yaml"
+
+concurrency:
+  group: indexnow
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # IndexNow keys are public by design — the endpoint verifies a submission by
+  # fetching this same value from the host it claims to be for.
+  KEY: cbecea0b0bd943cd957513031b281f54
+
+jobs:
+  submit:
+    if: github.repository_owner == 'mortennordbye'
+    runs-on: ubuntu-latest
+    strategy:
+      # Never fail one site because the other's endpoint misbehaved.
+      fail-fast: false
+      matrix:
+        include:
+          - site: portfolio
+            host: nordbye.it
+          - site: blog
+            host: blog.nordbye.it
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Does this run cover ${{ matrix.site }}?
+        id: gate
+        env:
+          EVENT: ${{ github.event_name }}
+          CHOICE: ${{ inputs.site }}
+          SITE: ${{ matrix.site }}
+        run: |
+          set -euo pipefail
+          run=false
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            if [ "$CHOICE" = "both" ] || [ "$CHOICE" = "$SITE" ]; then run=true; fi
+          # A promotion commit touches exactly one app's kustomization, so only
+          # the site that actually changed is submitted.
+          elif git diff --name-only HEAD^ HEAD | grep -qx "k8s/talos/apps/${SITE}/kustomization.yaml"; then
+            run=true
+          fi
+          echo "run=${run}" >> "$GITHUB_OUTPUT"
+
+      - name: Submit sitemap URLs
+        if: steps.gate.outputs.run == 'true'
+        env:
+          HOST: ${{ matrix.host }}
+        run: |
+          set -euo pipefail
+
+          # The sitemap is the source of truth for what is indexable; anything
+          # absent from it is absent on purpose (noindex, or no content).
+          urls=$(curl -fsS --max-time 30 "https://${HOST}/sitemap.xml" \
+                 | grep -o '<loc>[^<]*</loc>' | sed 's|</\?loc>||g')
+
+          count=$(printf '%s\n' "$urls" | grep -c . || true)
+          if [ "$count" -eq 0 ]; then
+            echo "No URLs in https://${HOST}/sitemap.xml — refusing to submit an empty list."
+            exit 1
+          fi
+          echo "Submitting ${count} URL(s) for ${HOST}"
+
+          payload=$(printf '%s\n' "$urls" | jq -R . | jq -sc \
+            --arg host "$HOST" --arg key "$KEY" \
+            --arg loc "https://${HOST}/${KEY}.txt" \
+            '{host: $host, key: $key, keyLocation: $loc, urlList: .}')
+
+          code=$(curl -sS -o /tmp/indexnow.out -w '%{http_code}' \
+                 --max-time 30 -X POST "https://api.indexnow.org/indexnow" \
+                 -H 'Content-Type: application/json; charset=utf-8' \
+                 -d "$payload")
+
+          echo "IndexNow responded ${code}"
+          cat /tmp/indexnow.out || true
+          # 200 accepted; 202 accepted while the key is still being validated.
+          case "$code" in
+            200|202) ;;
+            *) echo "IndexNow rejected the submission."; exit 1 ;;
+          esac
