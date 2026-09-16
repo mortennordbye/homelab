@@ -156,6 +156,7 @@ spec:
         job:
           spec:
             backoffLimit: 2
+            ttlSecondsAfterFinished: 86400
             activeDeadlineSeconds: 180
             template:
               spec:
@@ -188,6 +189,7 @@ spec:
         job:
           spec:
             backoffLimit: 2
+            ttlSecondsAfterFinished: 86400
             activeDeadlineSeconds: 180
             template:
               spec:
