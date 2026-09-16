@@ -4,12 +4,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### An orphaned Plex TCPRoute manifest
-- **What:** `plex-media-stack/tcproute.yaml` defines a `TCPRoute` for `plex-tcp` on the public gateway, is absent from its `kustomization.yaml`, and no `TCPRoute` exists in the cluster — Plex on 32400 reaches the backend by another path, so it has never been in effect. (The huntarr half of this entry was resolved 2026-09-01: manifest, kustomization line and Renovate disable rule all deleted, along with the equally inert tdarr and cleanuparr manifests.)
-- **Why deferred:** Deleting someone's disabled manifest is a judgement call, not a fix, and it costs nothing where it sits.
-- **Unblock:** Decide whether Plex should route through the gateway's `plex-tcp` entrypoint; if yes add it to `kustomization.yaml` and confirm the listener exists, if no delete it.
-- **Where:** `k8s/talos/apps/plex-media-stack/{tcproute.yaml,kustomization.yaml}`.
-
 ### Lock the proxied hostnames to Cloudflare with an IPAllowList
 - **What:** `nordbye.it`, `blog.nordbye.it`, `gate.nordbye.it`, `headroom.nordbye.it` and `logeverylift.com` are proxied, but the origin still answers anyone who reaches it directly with the right Host header, so the WAF and the per-client rate limits in `k8s/talos/apps/{portfolio,blog}/ratelimit-middleware.yaml` can be skipped entirely.
 - **Why deferred:** the ranges to allow are not known yet. Traefik's access log resolves X-Forwarded-For before writing the client address, so a Cloudflare-fronted request and a direct one look identical in it. What is visible is that requests arrive on the portfolio and blog routes from `10.3.10.1`, a LAN browser on a path carrying no Cloudflare header, which a Cloudflare-only list would answer with 403. `accessLog.format: json` was turned on to record `ClientAddr`, the real peer, alongside `ClientHost`.
@@ -23,16 +17,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `k8s/talos/apps/{audiobookshelf,plex-media-stack}/httproute*.yaml`, `terraform/cloudflare/bigd-no/dns.tf`.
 
 ### Plex hardcodes the public address and bypasses DNS entirely
-- **What:** `ADVERTISE_IP` is set to `http://84.212.143.165:32400/`, and Plex is a `TCPRoute` on port 32400 rather than an HTTP hostname. Plex hands that address to plex.tv and to every client, so no amount of DNS proxying hides it while remote access is on.
-- **Why deferred:** it is the same decision as the entry above, and turning remote access off is a household call rather than a technical one.
+- **What:** `ADVERTISE_IP` is set to `http://84.212.143.165:32400/`, and Plex answers on its own LoadBalancer VIP `10.3.10.103:32400` rather than on an HTTP hostname behind the gateway. Plex hands that address to plex.tv and to every client, so no amount of DNS proxying hides it while remote access is on.
+- **Why deferred:** turning remote access off is a household call rather than a technical one.
 - **Unblock:** decide whether Plex remote access is worth publishing the address. If it is, the hardcoded value should at least become a reference to something the DDNS client updates, because it silently breaks remote access the day Telia reassigns the address.
-- **Where:** `k8s/talos/apps/plex-media-stack/plex.yaml:101`, `k8s/talos/apps/plex-media-stack/tcproute.yaml`.
-
-### Retire Mealie's inert ScaledObject and interceptor hop
-- **What:** Mealie is pinned to `minReplicaCount: 1` / `maxReplicaCount: 1`, so its `ScaledObject` triggers (cron + external-push) never fire. Its `HTTPRoute` still sends traffic through `keda-add-ons-http-interceptor-proxy` rather than straight at `mealie-service`, which is now a pointless extra hop.
-- **Why deferred:** Removing the ScaledObject and InterceptorRoute and repointing the HTTPRoute is a structural change to the request path of a live household app, and the pin already fixes the logout bug on its own. Not worth bundling into the fix.
-- **Unblock:** Delete `scaledobject.yaml` and `interceptorroute.yaml`, drop them from `kustomization.yaml`, and point the `HTTPRoute` `backendRefs` at `mealie-service` port 9000 (drop the cross-namespace ref to `keda`). Check whether `k8s/talos/infra/keda-http-add-on/referencegrant.yaml` still needs a mealie entry afterwards. Verify with `kubectl diff` before merging.
-- **Where:** `k8s/talos/apps/mealie/{scaledobject,interceptorroute,httproute,kustomization}.yaml`, `k8s/talos/infra/keda-http-add-on/referencegrant.yaml`.
+- **Where:** `k8s/talos/apps/plex-media-stack/plex.yaml:101` (`ADVERTISE_IP`), the `plex` Service in the same file.
 
 ### Mealie still hard-logs-out every 48h (upstream)
 - **What:** Mealie's frontend never refreshes its access token (`mealie-recipes/mealie#7835`) — only one `/api/auth/refresh` call appears across the whole app log. At `TOKEN_TIME` (default 48h) the token expires and the axios 401 interceptor wipes the cookie and redirects to `/login`. The replica pin fixes cold-start logouts but not this.
