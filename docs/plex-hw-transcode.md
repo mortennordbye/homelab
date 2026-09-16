@@ -18,7 +18,7 @@ Working. The GPU is bound to `vfio-pci` on the host, attached to VM 134, and
 - [x] Talos `i915` extension via schematic `95d432d6…`, `/dev/dri/renderD128` present
 - [x] Node label `hardware.nordbye.it/gpu=intel-quicksync` on worker-01
 - [x] `plex.yaml` selects that label and requests `gpu.intel.com/i915`
-- [ ] **Merge to main** so ArgoCD syncs the Plex change
+- [x] Merged to main, ArgoCD synced, Plex running on `gpu.intel.com/i915`
 - [ ] Enable hardware acceleration in Plex settings (Plex Pass confirmed active)
 - [ ] Boot kernel pin **failed**, host runs `7.0.6-2-pve`. See the open issue at the end
 
