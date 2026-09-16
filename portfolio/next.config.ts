@@ -94,6 +94,10 @@ const nextConfig: NextConfig = {
         permanent: true,
       })),
       { source: "/index.html", destination: "/", permanent: true },
+      // The certificates moved out of /assets when the static site was
+      // replaced. Both old paths are still indexed, and they are the proof
+      // behind the credentials the Person schema claims.
+      { source: "/assets/pdf/:file", destination: "/pdf/:file", permanent: true },
     ];
   },
 };
