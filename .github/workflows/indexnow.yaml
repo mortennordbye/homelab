@@ -50,7 +50,7 @@ jobs:
             host: blog.nordbye.it
             key: cbecea0b0bd943cd957513031b281f54
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
 
