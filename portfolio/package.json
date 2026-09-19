@@ -21,9 +21,9 @@
     "motion": "^13.0.0",
     "next": "16.3.5",
     "next-mdx-remote": "^6.0.0",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "three": "^0.185.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "three": "^0.186.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -31,7 +31,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/three": "^0.185.0",
+    "@types/three": "^0.186.0",
     "eslint": "^10.0.0",
     "eslint-config-next": "16.3.5",
     "sharp": "^0.35.1",
