@@ -31,7 +31,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: trek
-          image: mauriceboe/trek:4.2.0
+          image: mauriceboe/trek:4.2.1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
