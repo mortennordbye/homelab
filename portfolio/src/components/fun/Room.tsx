@@ -623,6 +623,14 @@ export const SEATS = {
     ],
     look: TV_SCREEN.position,
   },
+  bed: {
+    label: "the bed",
+    /* A head on the walkway-side pillow, clear of the wall units' ledge. Looks
+       up and toward the feet, never straight up: lookAt degenerates when the
+       sight line is parallel to the up vector. */
+    pos: at(5.9, 0.8, 1.67),
+    look: at(5.0, 2.4, 1.67),
+  },
 } satisfies Record<string, Seat>;
 
 export type SeatId = keyof typeof SEATS;
@@ -1403,7 +1411,15 @@ export function Room({
           --------------------------------------------------------------- */}
       <MirrorWardrobe position={at(6.01, 0, 0.655)} rotation={[0, -Math.PI / 2, 0]} width={1.21} oak={oak} />
       <OverbedUnits position={at(6.11, 0, 1.98)} rotation={[0, -Math.PI / 2, 0]} width={1.44} oak={oak} />
-      <Bed position={at(5.3, 0, 2.0)} rotation={[0, -Math.PI / 2, 0]} />
+      {/* No detail line: what lying down does is for the visitor to find. */}
+      <Interactive
+        label="the bed"
+        verb="lie down"
+        onActivate={() => onSit("bed")}
+        disabled={seated !== null}
+      >
+        <Bed position={at(5.3, 0, 2.0)} rotation={[0, -Math.PI / 2, 0]} />
+      </Interactive>
       <Poster position={at(5.55, 1.62, 2.68)} rotation={[0, Math.PI, 0]} />
       {/* Pulled to 0.78 of the opening, where it hangs in the photograph and
           low enough that the head still reads as glazing rather than as wall. */}

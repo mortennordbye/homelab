@@ -52,7 +52,7 @@ const midiToHz = (n: number) => 440 * Math.pow(2, (n - 69) / 12);
 ----------------------------------------------------------------------------- */
 
 /** A short block of white noise, the raw material for snare and hat. */
-function makeNoise(ctx: BaseAudioContext): AudioBuffer {
+export function makeNoise(ctx: BaseAudioContext): AudioBuffer {
   const len = Math.floor(ctx.sampleRate * 0.4);
   const buf = ctx.createBuffer(1, len, ctx.sampleRate);
   const data = buf.getChannelData(0);

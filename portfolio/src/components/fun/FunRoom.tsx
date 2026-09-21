@@ -52,6 +52,8 @@ import type { SourceExcerpt } from "@/lib/source-excerpt";
 import { TerminalScreen } from "./Terminal";
 import { Interactive, InteractionProvider, type Prompt } from "./interaction";
 import { LeaderLabel } from "./LeaderLabel";
+import { SleepOverlay, useSleep } from "./Sleep";
+import { Visitor } from "./Visitor";
 import { useInfraFeed } from "./feed";
 import { at } from "./flat";
 import { preloadProps } from "./props";
@@ -725,6 +727,8 @@ function Scene({
   seated,
   onSit,
   onStand,
+  visitor,
+  dragging,
 }: {
   data: PanelProps;
   source: SourceExcerpt;
@@ -754,6 +758,8 @@ function Scene({
   seated: SeatId | null;
   onSit: (seat: SeatId) => void;
   onStand: () => void;
+  visitor: boolean;
+  dragging: boolean;
 }) {
   const [poweredCount, setPoweredCount] = useState(0);
   /* True only while the camera is easing back out of the chair. `seated` has
@@ -891,6 +897,7 @@ function Scene({
       </InteractionProvider>
       <TerminalFocus active={terminalActive} onSettling={setSettling} />
       <SeatedFocus seat={seated ? SEATS[seated] : null} onStandingUp={setStandingUp} />
+      <Visitor active={visitor} dragging={dragging} onDragged={onStand} />
       {/* `seated` covers the move in and the whole time in the chair;
           `standingUp` covers the move back out, after seated has gone false. */}
       <FirstPerson
@@ -1050,7 +1057,15 @@ export default function FunRoom({
     setTerminalActive(false);
   }, []);
 
-  const sitDown = useCallback((seat: SeatId) => setSeated(seat), []);
+  const sleep = useSleep(seated === "bed", reduced);
+  const armSleep = sleep.arm;
+  const sitDown = useCallback(
+    (seat: SeatId) => {
+      if (seat === "bed") armSleep();
+      setSeated(seat);
+    },
+    [armSleep],
+  );
   /* Reached by every interact that hit nothing, not only the ones made while
      seated. That is fine and is why it is written as a plain set rather than a
      toggle: standing when already standing is a no-op React bails out of, and
@@ -1251,7 +1266,7 @@ export default function FunRoom({
 
   return (
     <div className="fixed inset-0 z-[200] bg-[#04070a]">
-      <div id="fun-lock-target" className="absolute inset-0 z-0">
+      <div id="fun-lock-target" className="absolute inset-0 z-0" style={sleep.canvasStyle}>
         <Canvas
           camera={{ fov: 72, near: 0.1, far: 60, position: at(4.4, 1.5, 5.2) }}
           /* PCF, set explicitly: "soft" asks for PCFSoftShadowMap, which three.js
@@ -1306,6 +1321,8 @@ export default function FunRoom({
             seated={seated}
             onSit={sitDown}
             onStand={standUp}
+            visitor={sleep.visitor}
+            dragging={sleep.dragging}
           />
           <WorldMatrices />
           <ContextGuard onLost={onContextLost} />
@@ -1350,6 +1367,8 @@ export default function FunRoom({
       >
         exit
       </Link>
+
+      <SleepOverlay lid={sleep.lid} asleep={sleep.asleep} blast={sleep.blast} shout={sleep.shout} reduced={reduced} />
 
       {phase === "exploring" && !paused && (
         <div className="pointer-events-none absolute inset-0 z-20">

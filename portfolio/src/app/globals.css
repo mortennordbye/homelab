@@ -620,6 +620,36 @@ body.fun-immersive > main {
   }
 }
 
+/* The dream over the bed in /fun. Transform and opacity only, and mounted only
+   when reduced motion is off, so no media query here. */
+@keyframes room-sheep-run {
+  0%   { transform: translateX(-20vw); }
+  100% { transform: translateX(110vw); }
+}
+
+@keyframes room-sheep-hop {
+  0%, 34%   { transform: translateY(0) rotate(0deg); }
+  42%       { transform: translateY(-11vh) rotate(-14deg); }
+  50%       { transform: translateY(-18vh) rotate(0deg); }
+  58%       { transform: translateY(-11vh) rotate(14deg); }
+  66%, 100% { transform: translateY(0) rotate(0deg); }
+}
+
+/* Towards and past the viewer: starts small under the caption, ends large and
+   off to the side given by --dx/--dy. */
+@keyframes room-dream-pass {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+  25%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), var(--dy)) scale(2.4); }
+}
+
+@keyframes room-blast {
+  0%   { opacity: 0; }
+  8%   { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
 /* The room's DOM layers for things hung flat on a wall, always at the bottom of
    the stack. drei orders its Html layers by camera distance in steps coarse
    enough that the whole room ties, and then by mount order, so a print mounted

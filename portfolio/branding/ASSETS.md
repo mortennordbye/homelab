@@ -194,3 +194,24 @@ gesture and every asset here inherits that gate.
 Any asset that makes the room read as rustic goes back, however good it looks on
 its own. The failure mode named in `ART-DIRECTION.md` is drift toward the cabin,
 and it will arrive one defensible texture at a time.
+
+
+## 11. The bedroom easter egg
+
+The two files under `public/fun/` are not Poly Haven.
+
+`goggins.webp` is a US Navy photo, `US Navy 070723-N-6138R-001` on Wikimedia
+Commons (Badwater Ultra Marathon, 2007, Mass Communication Specialist Seaman
+Brandon Rogers). A work of the US Navy made on official duty, so public domain
+under PD-USGov-Military, checked on the Commons file page rather than assumed.
+It is cropped with a hand-drawn polygon on purpose.
+
+`order.mp3` is five lines written for the joke and generated with Voiceley using
+one of its stock voices, joined in ffmpeg. It is not a clone of his voice and
+must not be replaced with one. Check the Voiceley plan terms cover use on a
+public site before it ships. The caption timings in `Sleep.tsx` are read off
+this file, so a re-cut has to re-time them.
+
+Public domain covers copyright only. A real person's likeness is a separate
+right, and this stays a joke inside `/fun`: it must never be used to suggest he
+endorses the site or anything on it.
