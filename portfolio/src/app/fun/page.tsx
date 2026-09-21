@@ -97,7 +97,7 @@ export default function FunPage() {
         <h2>Career</h2>
         <ul>
           {career.roles.map((r) => (
-            <li key={`${r.role}-${r.company}`}>{`${r.role} — ${r.company}, ${r.period}`}</li>
+            <li key={`${r.role}-${r.company}-${r.period}`}>{`${r.role} — ${r.company}, ${r.period}`}</li>
           ))}
           {career.education.map((e) => (
             <li key={e.title}>{`${e.title} — ${e.institution}, ${e.period}`}</li>
