@@ -45,12 +45,10 @@ spec:
             # PVC (DOCS_INDEX_DIR), never onto the share.
             - name: DOCS_DIR
               value: /mnt/shared
-            # Sessions, their agents, git, gh and chromium run as this uid
-            # (1001, made in the image) instead of root, so a session's shell
-            # cannot read settings.json or call the backend's API. The first
-            # boot with it set chowns the repos and HOME on the PVC to it.
-            - name: VK_AGENT_USER
-              value: vk-agent
+            # VK_AGENT_USER=vk-agent is off: the Synology share refuses uid
+            # 1001 whatever the file modes say (root is not squashed, so root
+            # works). It needs the share to grant that uid first. The repos and
+            # HOME are already owned by 1001 from the one boot it was on.
           # Ready means serving the SPA at /. timeoutSeconds above the 1s
           # default: a failed readiness check pulls the pod from the Service,
           # which drops every open terminal websocket.
