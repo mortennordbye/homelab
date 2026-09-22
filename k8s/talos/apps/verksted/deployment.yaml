@@ -62,6 +62,17 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
+          # Holds the liveness probe off until the server first answers. The
+          # boot that turns VK_AGENT_USER on chowns every repo on NFS before it
+          # listens, which is minutes, and the liveness window alone killed it
+          # partway through on every attempt. 30 minutes for that one boot.
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 180
           # Deliberately hard to trip: a restart kills the tmux server and every
           # agent session. /api/health is a constant with no disk behind it, and
           # the long window keeps NFS stalls and CPU throttling from firing it.
