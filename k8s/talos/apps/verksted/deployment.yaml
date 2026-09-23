@@ -49,12 +49,14 @@ spec:
             # 1001 whatever the file modes say (root is not squashed, so root
             # works). It needs the share to grant that uid first. The repos and
             # HOME are already owned by 1001 from the one boot it was on.
-          # Ready means serving the SPA at /. timeoutSeconds above the 1s
-          # default: a failed readiness check pulls the pod from the Service,
-          # which drops every open terminal websocket.
+          # Ready means tmux answers and the sessions directory takes a write;
+          # liveness stays on /api/health, since a restart ends every session
+          # and does not fix either. timeoutSeconds above the 1s default: a
+          # failed readiness check pulls the pod from the Service, which drops
+          # every open terminal websocket.
           readinessProbe:
             httpGet:
-              path: /
+              path: /api/ready
               port: http
             initialDelaySeconds: 15
             periodSeconds: 10
