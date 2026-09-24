@@ -204,12 +204,14 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 #### Devices
 
-| Device                  | Type               | Purpose                    |
-| ----------------------- | ------------------ | -------------------------- |
-| Philips Hue Bridge Pro  | Smart Lighting Hub | Lighting control           |
-| Nabu Casa Connect ZBT-2 | Zigbee Coordinator | Zigbee device coordination |
-| M5Stack Atom Lite       | Bluetooth Proxy    | Bluetooth range extension  |
-| UniFi G6 Instant        | Security Camera    | Indoor surveillance        |
+| Device                                         | Type                  | Purpose                               |
+| ---------------------------------------------- | --------------------- | ------------------------------------- |
+| Philips Hue Bridge Pro                         | Smart Lighting Hub    | Lighting control                      |
+| Nabu Casa Connect ZBT-2                        | Zigbee Coordinator    | Zigbee device coordination            |
+| M5Stack Atom Lite                              | Bluetooth Proxy       | Bluetooth range extension             |
+| UniFi G6 Instant                               | Security Camera       | Indoor surveillance                   |
+| Nabu Casa Home Assistant Voice Preview Edition | Voice Satellite       | Voice control (ESPHome, Wi-Fi)        |
+| Aqara T1 Temperature and Humidity Sensor       | Zigbee Climate Sensor | Indoor temperature and humidity (ZHA) |
 
 ---
 
