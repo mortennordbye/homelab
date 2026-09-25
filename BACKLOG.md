@@ -281,6 +281,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** read the failed task logs and the ownership/permissions under `/mnt/synology` from the PBS shell, and check whether the switch to token-based backups in `69896582` changed the backup owner (groups are owner-sensitive). Confirm the next 03:00 run succeeds before closing.
 - **Where:** `terraform/proxmox/pbs/`, `terraform/proxmox/hyper-cluster/datacenter/backup.tf`, PBS datastore `Synology` on the NAS NFS share.
 
+### UniFi follow-ups from the IoT onboarding prep
+- **What:** loose ends after moving the site into `terraform/unifi/network`: (1) an unidentified Wi-Fi client `WINC-00-00` (Microchip module in some appliance) needs the new Eden-IoT password and then a reservation and name in `clients.tf`; (2) the Voice PE, once onboarded on Eden-IoT, should get a reservation there too, like the Bluetooth proxy; (3) the old state blob `unifi/firewall.tfstate` is still in the azurerm container after the move to `unifi/network.tfstate`; (4) the wireless mesh key (`x_mesh_psk`) was printed during a session and could be regenerated, although nothing uses wireless uplinks.
+- **Why deferred:** (1) and (2) wait on physical devices, (3) needs the Azure login the user drives, (4) is low risk.
+- **Unblock:** (1) identify the appliance, reconnect it, add `{ mac, ip }` to `local.reservations`; (2) same for the Voice PE after setup; (3) delete the blob once `unifi/network.tfstate` has been in use for a while; (4) regenerate from the console if wanted.
+- **Where:** `terraform/unifi/network/clients.tf`, azurerm container `tfstate` in `sttfstatemvnhomelab`.
+
 ## Repo hygiene
 
 ### Local-only AI work is not backed up
