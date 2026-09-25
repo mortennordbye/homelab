@@ -131,12 +131,6 @@ ports:
     protocol: TCP
     expose:
       default: true
-  plex:
-    port: 32400
-    exposedPort: 32400
-    protocol: TCP
-    expose:
-      default: true
   metrics:
     port: 9100
     expose:

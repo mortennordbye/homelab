@@ -16,12 +16,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** only seerr is still movable, and it is ready: its `cacheImages` setting reads `false` in `/app/config/settings.json`, so it loads TMDB posters straight from `image.tmdb.org` and nothing third-party flows through the origin. Its HTTPRoute annotation can flip to `"true"` like the others, since external-dns owns the record. That buys seerr the WAF and the edge rate limits but hides nothing, because audiobookshelf and `ddns` keep the address public regardless. Hiding it outright needs either a Cloudflare plan that permits audio or a second CDN in front of audiobookshelf alone, and Plex would still hand the address to plex.tv (see the `ADVERTISE_IP` entry below).
 - **Where:** `k8s/talos/apps/{audiobookshelf,plex-media-stack}/httproute*.yaml`, `terraform/cloudflare/bigd-no/dns.tf`.
 
-### The traefik `plex` entrypoint has no router behind it
-- **What:** `traefik-public` (10.3.10.101) publishes 32400 and `values.yaml` defines a `plex` entrypoint on it, but no `TCPRoute` or `TLSRoute` exists anywhere in the cluster and the public `Gateway` declares no TCP listener, so nothing routes that port. Plex's own Service answers on a separate VIP, 10.3.10.103:32400, verified returning 200 on `/identity`.
-- **Why deferred:** which of the two VIPs the WAN forward for 32400 points at is not visible from the cluster. If it points at .103 the entrypoint is dead weight; if it points at .101, Plex remote access has been broken since the `TCPRoute` stopped existing and deleting the entrypoint would hide the real fault.
-- **Unblock:** Read the 32400 port-forward destination in UniFi. If .103, delete the `plex` entrypoint from `values.yaml` and the `plex` port from `service-public.yaml`. If .101, repoint the forward at .103 and then delete both.
-- **Where:** `k8s/talos/infra/traefik/values.yaml` (`ports.plex`), `k8s/talos/infra/traefik/service-public.yaml` (the `plex` port), `k8s/talos/apps/plex-media-stack/plex.yaml` (the `plex` Service and its `lbipam.cilium.io/ips`).
-
 ### Plex hardcodes the public address and bypasses DNS entirely
 - **What:** `ADVERTISE_IP` is set to `http://84.212.143.165:32400/`, and Plex answers on its own LoadBalancer VIP `10.3.10.103:32400` rather than on an HTTP hostname behind the gateway. Plex hands that address to plex.tv and to every client, so no amount of DNS proxying hides it while remote access is on.
 - **Why deferred:** turning remote access off is a household call rather than a technical one.

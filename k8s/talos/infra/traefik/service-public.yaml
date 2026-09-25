@@ -23,7 +23,3 @@ spec:
       port: 443
       targetPort: 8443
       protocol: UDP
-    - name: plex
-      port: 32400
-      targetPort: 32400
-      protocol: TCP
