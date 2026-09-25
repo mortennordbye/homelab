@@ -275,6 +275,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** read each section from `/proxy/network/api/s/default/get/setting`, declare one section at a time in a `settings.tf`, and apply only when `plan` shows no change for it. Start with `country` (code 578), the one with the widest blast radius.
 - **Where:** `terraform/unifi/network/` (new `settings.tf`), resource `unifi_setting`, import ID `default`.
 
+### PBS nightly backups fail on the Synology datastore
+- **What:** the 03:00 backup of all six VMs (131, 132, 133, 135, 136, 140) on 2026-09-25 ended with "backup ended but finished flag is not set" or "removing backup snapshot ... failed - Directory not empty (os error 39)", and the 00:00 garbage collection failed with "permission denied on: /mnt/synology/images/1000". There may be no complete backup from that night.
+- **Why deferred:** found while tracing a slow Plex start (a manual GC was saturating the NAS disks) at the end of a UniFi session; not investigated yet.
+- **Unblock:** read the failed task logs and the ownership/permissions under `/mnt/synology` from the PBS shell, and check whether the switch to token-based backups in `69896582` changed the backup owner (groups are owner-sensitive). Confirm the next 03:00 run succeeds before closing.
+- **Where:** `terraform/proxmox/pbs/`, `terraform/proxmox/hyper-cluster/datacenter/backup.tf`, PBS datastore `Synology` on the NAS NFS share.
+
 ## Repo hygiene
 
 ### Local-only AI work is not backed up
