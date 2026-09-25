@@ -29,6 +29,7 @@ terraform/cloudflare/bigd-no/terraform.tfvars
 terraform/cloudflare/nordbye-it/terraform.tfvars
 terraform/cloudflare/logeverylift-com/terraform.tfvars
 terraform/unifi/dns/terraform.tfvars
+terraform/unifi/network/terraform.tfvars
 
 # Local device API access (key itself lives in the macOS Keychain, not here)
 hue.env
