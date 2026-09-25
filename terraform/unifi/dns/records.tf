@@ -25,6 +25,7 @@ locals {
   # HTTPRoute attached to gateway-private, so this list tracks the apps in
   # k8s/talos/apps/ rather than any addressing decision.
   aliases = [
+    "alertmanager",
     "argocd",
     "auth",
     "bazarr",

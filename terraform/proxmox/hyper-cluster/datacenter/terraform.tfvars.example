@@ -1,0 +1,2 @@
+proxmox_endpoint  = "https://hyper1.local.bigd.no:8006/"
+proxmox_api_token = "terraform-prov@pve!token=<secret>"
