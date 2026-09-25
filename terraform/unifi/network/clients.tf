@@ -12,7 +12,6 @@ locals {
     hyper3            = { mac = "00:2b:67:1c:c7:29", ip = "10.3.10.14" }
     home              = { mac = "00:d0:b4:04:30:70", ip = "10.3.10.15", name = "Home Assistant" }
     hue-bridge-pro    = { mac = "c4:29:96:b8:8b:02", ip = "10.3.10.16", name = "Hue Bridge Pro" }
-    adguard           = { mac = "bc:24:11:c3:9d:e7", ip = "10.3.10.25" }
     genesis-ctrl-01   = { mac = "bc:24:11:2e:c8:00", ip = "10.3.10.31" }
     genesis-ctrl-02   = { mac = "bc:24:11:2e:c8:01", ip = "10.3.10.32" }
     genesis-ctrl-03   = { mac = "bc:24:11:2e:c8:02", ip = "10.3.10.33" }

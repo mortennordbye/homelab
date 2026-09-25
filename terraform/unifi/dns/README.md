@@ -9,7 +9,7 @@ and external-dns writes the app hostnames into it; this one is LAN-only and
 external-dns is barred from it by `excludeDomains: [local.bigd.no]` in
 `k8s/talos/infra/external-dns/values.yaml`. Nothing else writes the user-defined
 records, so Terraform can own all of them - but see the scope note below for the
-14 records the console shows that Terraform deliberately does not manage.
+13 records the console shows that Terraform deliberately does not manage.
 
 ## Use
 
@@ -44,16 +44,16 @@ Each `_id` becomes `id` in an `import` block addressing
 `unifi_dns_record.vip["<name>"]` or `.alias["<name>"]`. Confirm the plan reports
 imports and no adds, changes or destroys before applying.
 
-## Scope: 27 records, not the 41 the console shows
+## Scope: 27 records, not the 40 the console shows
 
-The console's DNS Records view counts 41 because "View Default Policies (14)" is
-on. Those 14 are generated from DHCP fixed-IP reservations - `nas`, `pbs`,
-`hyper1`-`hyper3`, `home`, `hue-bridge-pro`, `adguard`, `genesis-ctrl-01..03`,
-`genesis-worker-01..03`. They are absent from both the legacy `static-dns` API
-and the newer `dns/policies` API, which return the same 27 `USER_DEFINED`
-records, so there is nothing to import. Declaring one here would create a second,
-user-defined record shadowing the generated one. Rename or renumber those in the
-DHCP reservation instead.
+The console's DNS Records view counts 40 because "View Default Policies (13)" is
+on. Those 13 are generated from the DHCP reservations in `../network/clients.tf`:
+`nas`, `pbs`, `hyper1`-`hyper3`, `home`, `hue-bridge-pro`,
+`genesis-ctrl-01..03`, `genesis-worker-01..03`. They are absent from both the
+legacy `static-dns` API and the newer `dns/policies` API, which return the same
+27 `USER_DEFINED` records, so there is nothing to import. Declaring one here
+would create a second, user-defined record shadowing the generated one. Rename
+or renumber those in `../network/clients.tf` instead.
 
 ## Notes
 
