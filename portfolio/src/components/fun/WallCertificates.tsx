@@ -158,8 +158,9 @@ function Certificate({
 }
 
 /**
- * The certifications, framed and stood on a shelf hung on the wall. Rows follow
- * the content: past PER_ROW a second board goes up above the first.
+ * The certifications, framed and stood on a shelf hung on the wall. Past PER_ROW
+ * a second board goes up above the first, as long as the first; a part-filled
+ * board fills from the left and leaves the rest empty.
  *
  * Origin at the wall, level with the top of the lowest board's brackets, with
  * local +z out into the room. Nothing here casts, for the reason in Bookshelf.
@@ -176,44 +177,42 @@ export function WallCertificates({
   onOpen: (c: ShelfCert) => void;
 }) {
   const oak = useSurface("black_oak_veneer", [1.2, 0.3]);
+  const len = PER_ROW * (CERT_W + GAP) + GAP;
   const rows = Array.from({ length: Math.ceil(certs.length / PER_ROW) }, (_, r) =>
     certs.slice(r * PER_ROW, (r + 1) * PER_ROW),
   );
 
   return (
     <group position={position} rotation={rotation}>
-      {rows.map((row, r) => {
-        const len = row.length * (CERT_W + GAP) + GAP;
-        return (
-          <group key={r} position={[0, r * ROW_H, 0]}>
-            <mesh position={[0, BOARD.t / 2, BOARD.d / 2]} receiveShadow>
-              <boxGeometry args={[len, BOARD.t, BOARD.d]} />
-              <meshStandardMaterial {...oak} color={OAK.case} roughness={0.66} />
-            </mesh>
-            {/* brackets: a plate on the wall and an arm under the board */}
-            {[-1, 1].map((s) => (
-              <group key={s} position={[s * (len / 2 - 0.09), 0, 0]}>
-                <mesh position={[0, -0.05, 0.003]}>
-                  <boxGeometry args={[0.018, 0.1, 0.006]} />
-                  <meshStandardMaterial color={BRASS} roughness={0.4} metalness={0.6} />
-                </mesh>
-                <mesh position={[0, -0.003, BOARD.d * 0.4]}>
-                  <boxGeometry args={[0.018, 0.006, BOARD.d * 0.8]} />
-                  <meshStandardMaterial color={BRASS} roughness={0.4} metalness={0.6} />
-                </mesh>
-              </group>
-            ))}
-            {row.map((c, i) => (
-              <Certificate
-                key={c.title}
-                cert={c}
-                x={-len / 2 + GAP + CERT_W / 2 + i * (CERT_W + GAP)}
-                onOpen={() => onOpen(c)}
-              />
-            ))}
-          </group>
-        );
-      })}
+      {rows.map((row, r) => (
+        <group key={r} position={[0, r * ROW_H, 0]}>
+          <mesh position={[0, BOARD.t / 2, BOARD.d / 2]} receiveShadow>
+            <boxGeometry args={[len, BOARD.t, BOARD.d]} />
+            <meshStandardMaterial {...oak} color={OAK.case} roughness={0.66} />
+          </mesh>
+          {/* brackets: a plate on the wall and an arm under the board */}
+          {[-1, 1].map((s) => (
+            <group key={s} position={[s * (len / 2 - 0.09), 0, 0]}>
+              <mesh position={[0, -0.05, 0.003]}>
+                <boxGeometry args={[0.018, 0.1, 0.006]} />
+                <meshStandardMaterial color={BRASS} roughness={0.4} metalness={0.6} />
+              </mesh>
+              <mesh position={[0, -0.003, BOARD.d * 0.4]}>
+                <boxGeometry args={[0.018, 0.006, BOARD.d * 0.8]} />
+                <meshStandardMaterial color={BRASS} roughness={0.4} metalness={0.6} />
+              </mesh>
+            </group>
+          ))}
+          {row.map((c, i) => (
+            <Certificate
+              key={c.title}
+              cert={c}
+              x={-len / 2 + GAP + CERT_W / 2 + i * (CERT_W + GAP)}
+              onOpen={() => onOpen(c)}
+            />
+          ))}
+        </group>
+      ))}
     </group>
   );
 }

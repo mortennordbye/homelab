@@ -9,6 +9,12 @@ import {
 
 const certsRaw: Cert[] = [
   {
+    title: "GitHub Advanced Security Certification",
+    issuer: "GitHub (Microsoft)",
+    date: "Sep 2026",
+    credentialId: "97A7AC3B9D0D3172",
+  },
+  {
     title: "GitHub Copilot Certification",
     issuer: "GitHub (Microsoft)",
     date: "Sep 2026",
