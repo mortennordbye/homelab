@@ -1,0 +1,17 @@
+# Copy to terraform.tfvars and fill in. *.tfvars is gitignored.
+#
+# Create the key in the UniFi console at /network/default/integrations (left nav:
+# Integrations) via "Create New API Key". It is shown once.
+unifi_api_key = ""
+
+# Current values from the console; the import writes these back, so a new value
+# here rotates the secret on apply.
+wifi_passphrases = {
+  trusted = ""
+  iot     = ""
+  guest   = ""
+}
+ddns_cloudflare_tokens = {
+  "bigd.no"    = ""
+  "nordbye.it" = ""
+}

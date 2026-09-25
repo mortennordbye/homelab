@@ -275,6 +275,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Split into two separate `CiliumL2AnnouncementPolicy` resources with disjoint `nodeSelector`s (e.g. private → ctrl-only, public → worker-only) so an election blip never blackholes both. Validate that L2 lease params (`leaseDuration` / `leaseRenewDeadline` / `leaseRetryPeriod`) are set conservatively — defaults can re-elect aggressively under control-plane load.
 - **Where:** `k8s/talos/infra/cilium/l2-announcement-policy.yaml`.
 
+### UniFi site settings are still console-only
+- **What:** country, NTP, IGMP snooping, DPI, IPS, auto speedtest and the rest of the site-level settings are not in `terraform/unifi/network`. Everything else the provider can express is.
+- **Why deferred:** `unifi_setting` imports with every section empty, so the import gives no record of the live values. Declaring a section means writing it from the console by hand, and a wrong value applies site-wide (the country code alone decides which Wi-Fi channels are legal).
+- **Unblock:** read each section from `/proxy/network/api/s/default/get/setting`, declare one section at a time in a `settings.tf`, and apply only when `plan` shows no change for it. Start with `country` (code 578), the one with the widest blast radius.
+- **Where:** `terraform/unifi/network/` (new `settings.tf`), resource `unifi_setting`, import ID `default`.
+
 ## Repo hygiene
 
 ### Local-only AI work is not backed up
