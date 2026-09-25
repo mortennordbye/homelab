@@ -1,4 +1,11 @@
-# The Proxmox API, called directly. See notifications.tf for why not bpg/proxmox.
+provider "proxmox" {
+  endpoint  = var.proxmox_endpoint
+  insecure  = var.proxmox_insecure
+  api_token = var.proxmox_api_token
+}
+
+# The Proxmox API, called directly, for what bpg/proxmox cannot manage yet.
+# See notifications.tf.
 provider "restapi" {
   uri      = "${trimsuffix(var.proxmox_endpoint, "/")}/api2/json"
   insecure = var.proxmox_insecure

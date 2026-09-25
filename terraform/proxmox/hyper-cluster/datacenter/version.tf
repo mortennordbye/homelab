@@ -2,6 +2,10 @@ terraform {
   required_version = ">= 1.9.0"
 
   required_providers {
+    proxmox = {
+      source  = "bpg/proxmox"
+      version = "0.112.0"
+    }
     restapi = {
       source  = "Mastercard/restapi"
       version = "3.0.0"
