@@ -14,6 +14,8 @@ block.
 | `hyper-cluster/k8s/talos`, `hyper-cluster/tailscale` | their VMs | `terraform-prov@pve!token` |
 | `pbs` | Proxmox Backup Server | `terraform@pbs!terraform` |
 
+Proxmox VE backs up to PBS as `pve@pbs!hyper-cluster`, also created here.
+
 ## 1. Proxmox VE
 
 In the shell of any node (Datacenter → hyper1 → Shell):
@@ -44,26 +46,46 @@ proxmox-backup-manager user create terraform@pbs --comment "Terraform (terraform
 proxmox-backup-manager acl update / Admin --auth-id terraform@pbs
 proxmox-backup-manager user generate-token terraform@pbs terraform
 proxmox-backup-manager acl update / Admin --auth-id 'terraform@pbs!terraform'
+
+proxmox-backup-manager user create pve@pbs --comment "Proxmox VE hyper-cluster backups"
+proxmox-backup-manager user generate-token pve@pbs hyper-cluster
 ```
 
 A PBS token only gets what both it and its user are granted, hence the two
-ACLs. `generate-token` prints the secret once. In `pbs/terraform.tfvars`:
+ACLs for Terraform. The backup identity gets its ACLs from the `pbs` stack.
+
+Each `generate-token` prints its secret once, as `"value"`. In
+`pbs/terraform.tfvars`:
 
 ```hcl
 pbs_api_token = "terraform@pbs!terraform:<secret>"
 ```
 
+and in `hyper-cluster/datacenter/terraform.tfvars`:
+
+```hcl
+pbs_backup_token = "<secret of pve@pbs!hyper-cluster>"
+```
+
 PBS separates user and secret with `:`, Proxmox VE with `=`.
+
+A lost PBS secret is regenerated in place, keeping the token's ACLs (a
+delete and re-create would drop them). The call prints the new secret:
+
+```bash
+curl -sk -X PUT "https://pbs.local.bigd.no:8007/api2/json/access/users/pve@pbs/token/hyper-cluster" \
+  -H 'Authorization: PBSAPIToken=terraform@pbs!terraform:<secret>' -d regenerate=1
+```
 
 ## 3. Apply order
 
-1. `pbs`: creates `pve@pbs!hyper-cluster`, the identity Proxmox VE backs up
-   as, and publishes its secret in this stack's state.
+1. `pbs`: grants `pve@pbs!hyper-cluster` DatastorePowerUser on the datastore,
+   and sets the datastore, prune job and notifications.
 2. Only when adopting an existing datastore: hand the backup groups over to
    that identity (below). PBS refuses a backup into a group owned by anyone
    else, so skipping this breaks every backup of an existing VM.
-3. `hyper-cluster/datacenter`: points the `pbs` storage at that identity,
-   reading the secret from the `pbs` state.
+3. `hyper-cluster/datacenter`: points the `pbs` storage at that identity with
+   `pbs_backup_token`.
 
 ### One-time owner handover
 

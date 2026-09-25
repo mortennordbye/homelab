@@ -11,7 +11,7 @@ What it owns today:
 |---|---|
 | `notifications.tf` | webhook target `alertmanager` and matcher `alertmanager-errors`: every error-severity notification (failed backups first) goes to Alertmanager, which routes `namespace="proxmox"` to Discord. The built-in `mail-to-root` target and `default-matcher` stay as they are. |
 | `backup.tf` | the nightly backup job (03:00, all guests except 1000) |
-| `storage.tf` | `nfs-vmstore` on the Synology |
+| `storage.tf` | `nfs-vmstore` on the Synology, and `pbs`, which backs up to PBS as `pve@pbs!hyper-cluster` |
 | `nodes.tf` | DNS, timezone and apt repositories for hyper1-3 |
 | `hardware.tf` | the `igpu-hyper1` PCI mapping used by `../k8s/talos` |
 | `access.tf` | the Proxmox CSI user, role and ACL |

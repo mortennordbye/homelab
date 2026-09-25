@@ -14,3 +14,9 @@ variable "proxmox_api_token" {
   type        = string
   sensitive   = true
 }
+
+variable "pbs_backup_token" {
+  description = "Secret of pve@pbs!hyper-cluster, the PBS identity the pbs storage backs up as. From ../../BOOTSTRAP.md."
+  type        = string
+  sensitive   = true
+}

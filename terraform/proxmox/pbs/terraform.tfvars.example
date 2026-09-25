@@ -1,0 +1,2 @@
+# From the PBS block in ../BOOTSTRAP.md.
+pbs_api_token = "terraform@pbs!terraform:<secret>"
