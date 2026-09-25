@@ -224,6 +224,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Cluster / infra
 
+### Two PBS backup groups kept for VMs that no longer exist
+- **What:** `vm/200` (Servarr) and `vm/201` (Plex) on the PBS datastore, 3 backups each, last from 2026-04-03, about 96 GiB logical each. The VMs are gone; the other 19 groups for deleted VMs were removed on 2026-09-25.
+- **Why deferred:** they are the newest pre-Kubernetes copies of the *arr and Plex VMs, and it is not confirmed that nothing in them (Plex metadata, *arr databases) was left behind when those apps moved into the cluster.
+- **Unblock:** confirm the in-cluster `arr-stack` and `plex-media-stack` hold everything wanted, then delete both groups in PBS (Datastore → Synology → Content, or `DELETE /admin/datastore/Synology/groups?backup-type=vm&backup-id=<id>`). The next garbage collection frees the space.
+- **Where:** PBS datastore `Synology`; `terraform/proxmox/pbs` manages the datastore but not its contents.
+
 ### Run a Terraform apply before 2026-12-29 or the cluster credentials lapse
 - **What:** The talosconfig and kubeconfig client certificates both expire **2026-12-29**. The provider reissues them automatically, but only during a `terraform apply`, and only once they are inside their renewal window. `talos_cluster_kubeconfig` uses `certificate_renewal_duration`, now widened from the 720h default to `2160h` (90 days), so any apply after roughly 2026-09-30 renews the kubeconfig. `talos_machine_secrets` has a **hardcoded 30 day** window for the talosconfig client certificate, so that one only renews on an apply between 2026-11-29 and 2026-12-29.
 - **Why deferred:** Nothing to fix. Reissuing by hand does not help: `local_sensitive_file` rewrites both files from Terraform state on the next apply, so a manually generated certificate is discarded. The renewal is genuinely automatic; the only failure mode is nobody running Terraform in the window.
