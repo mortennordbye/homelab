@@ -169,8 +169,11 @@ spec:
               mountPath: /youtube
             - name: transcode
               mountPath: /transcode
+            # subPath: a whole ConfigMap mount makes the directory 0777, which
+            # linuxserver flags as a security risk on every start.
             - name: init
-              mountPath: /custom-cont-init.d
+              mountPath: /custom-cont-init.d/set-custom-connections
+              subPath: set-custom-connections
               readOnly: true
           livenessProbe:
             httpGet:
