@@ -56,6 +56,32 @@ spec:
       port: 32414
       targetPort: 32414
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plex-init
+  namespace: plex-media-stack
+data:
+  # linuxserver runs /custom-cont-init.d/* as root before Plex starts. It
+  # ignores ADVERTISE_IP, so this is what makes LAN clients offer the VIP
+  # instead of the unreachable pod IP.
+  set-custom-connections: |
+    #!/bin/sh
+    prefs="/config/Library/Application Support/Plex Media Server/Preferences.xml"
+    url="https://10.3.10.103:32400"
+
+    # First boot: Plex has not written its preferences yet; the next start applies.
+    [ -f "$prefs" ] || exit 0
+
+    owner=$(stat -c %u:%g "$prefs")
+    if grep -q 'customConnections="' "$prefs"; then
+      sed -i "s#customConnections=\"[^\"]*\"#customConnections=\"${url}\"#" "$prefs"
+    else
+      sed -i "s#<Preferences #<Preferences customConnections=\"${url}\" #" "$prefs"
+    fi
+    chown "$owner" "$prefs"
+    echo "customConnections set to ${url}"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -97,8 +123,6 @@ spec:
               value: "Europe/Oslo"
             - name: VERSION
               value: "docker"
-            - name: ADVERTISE_IP
-              value: "http://84.212.143.165:32400/"
           ports:
             - containerPort: 32400
               name: plex
@@ -145,6 +169,9 @@ spec:
               mountPath: /youtube
             - name: transcode
               mountPath: /transcode
+            - name: init
+              mountPath: /custom-cont-init.d
+              readOnly: true
           livenessProbe:
             httpGet:
               path: /identity
@@ -188,3 +215,8 @@ spec:
         - name: transcode
           emptyDir:
             sizeLimit: 35Gi
+        # Executable and root-owned, or linuxserver skips the script.
+        - name: init
+          configMap:
+            name: plex-init
+            defaultMode: 0755
