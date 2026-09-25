@@ -51,3 +51,34 @@ spec:
           name: kube-prometheus-stack-grafana
           port: 80
           weight: 1
+---
+# Proxmox posts its notifications here (webhook target "alertmanager").
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: traefik-gateway-private
+      namespace: traefik
+  hostnames:
+    - "alertmanager.local.bigd.no"
+  rules:
+    # POST to the alerts endpoint only. Alertmanager's API has no auth, and a
+    # PathPrefix would hand anyone on the LAN the silences and the UI.
+    - matches:
+        - method: POST
+          path:
+            type: Exact
+            value: /api/v2/alerts
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: kube-prometheus-stack-alertmanager
+          port: 9093
+          weight: 1

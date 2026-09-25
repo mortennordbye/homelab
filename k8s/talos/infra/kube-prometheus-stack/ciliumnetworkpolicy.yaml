@@ -52,6 +52,11 @@ spec:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
             "k8s:app.kubernetes.io/name": prometheus
+    # Traefik forwards Proxmox's webhook posts (HTTPRoute alertmanager).
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
     - fromEntities:
         - host
         - health
