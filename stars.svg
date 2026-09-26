@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="360" viewBox="0 0 840 360" role="img" aria-label="Star history">
+  <defs>
+    <style>.reveal{animation:rise .24s cubic-bezier(.2,.7,.3,1)}
+    @keyframes rise{from{opacity:0;transform:translateY(4px)}}</style>
+    <linearGradient id="paper" x1="0" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#e8ddc9"/><stop offset="1" stop-color="#d9cbb2"/>
+    </linearGradient>
+    <radialGradient id="key" cx="0.22" cy="-0.05" r="0.85">
+      <stop offset="0" stop-color="#fff3dd" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#fff3dd" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bounce" cx="1.02" cy="0.42" r="0.72">
+      <stop offset="0" stop-color="#6f9c72" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#6f9c72" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="oak" x1="0" y1="0" x2="1" y2="0.6">
+      <stop offset="0" stop-color="#4a3520"/><stop offset="0.55" stop-color="#241a12"/>
+      <stop offset="1" stop-color="#241a12"/>
+    </linearGradient>
+    <linearGradient id="contact" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000000" stop-opacity="0.6"/><stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="brassrule" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7f5a2f"/><stop offset="1" stop-color="#7f5a2f" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="hairline" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7f5a2f" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#7f5a2f" stop-opacity="0.08"/>
+    </linearGradient>
+    <radialGradient id="halo">
+      <stop offset="0" stop-color="#4d7d54" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#4d7d54" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="ruling" width="14" height="14" patternUnits="userSpaceOnUse">
+      <path d="M14 0 V14 M0 14 H14" fill="none" stroke="#7f5a2f" stroke-width="0.5" stroke-opacity="0.13"/>
+    </pattern>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0"/></filter>
+    <filter id="woodgrain"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.5" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix values="0 0 0 0 0.62  0 0 0 0 0.44  0 0 0 0 0.22  0 0 0 0.11 0"/></filter>
+  </defs>
+  <rect width="840" height="360" fill="url(#paper)"/>
+  <rect width="840" height="360" fill="url(#key)"/>
+  <rect width="840" height="360" fill="url(#bounce)"/>
+  <rect width="840" height="360" filter="url(#grain)" opacity="0.1"/>
+  <path d="M0 0.5 H840 M0.5 0 V360" stroke="rgba(255,255,255,0.55)" stroke-width="1" fill="none"/>
+  <g class="reveal">
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cabb9f" stop-opacity="0.55"/><stop offset="1" stop-color="#cabb9f" stop-opacity="0"/>
+    </linearGradient>
+    
+    <rect x="48" y="36" width="56" height="1.5" fill="url(#brassrule)"/>
+    <text x="48" y="56" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="400" fill="#574733" letter-spacing="1.5">STAR HISTORY</text>
+    <circle cx="155.7" cy="52" r="11" fill="url(#halo)" opacity="1"/>
+    <circle cx="155.7" cy="52" r="3.2" fill="#4d7d54"/>
+    <text x="792" y="56" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#62523c" text-anchor="end">Jan 2026 to today</text>
+    <text x="48" y="118" font-family="'Source Serif 4','Iowan Old Style',Georgia,'Times New Roman',serif" font-size="32" font-weight="600" fill="#3a2e1d">321</text>
+        <text x="48" y="140" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" letter-spacing="1.5">TOTAL STARS</text><text x="234" y="118" font-family="'Source Serif 4','Iowan Old Style',Georgia,'Times New Roman',serif" font-size="32" font-weight="600" fill="#3a2e1d">+9</text>
+        <text x="234" y="140" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" letter-spacing="1.5">LAST 30 DAYS</text><text x="420" y="118" font-family="'Source Serif 4','Iowan Old Style',Georgia,'Times New Roman',serif" font-size="32" font-weight="600" fill="#3a2e1d">+2</text>
+        <text x="420" y="140" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" letter-spacing="1.5">LAST 7 DAYS</text><text x="606" y="118" font-family="'Source Serif 4','Iowan Old Style',Georgia,'Times New Roman',serif" font-size="32" font-weight="600" fill="#3a2e1d">81</text>
+        <text x="606" y="140" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" letter-spacing="1.5">PEAK DAY · 19 JUN</text>
+    <line x1="48" y1="164" x2="792" y2="164" stroke="url(#hairline)"/>
+    
+    <text x="48" y="190" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="400" fill="#574733" letter-spacing="1.5">CUMULATIVE STARS</text>
+    <rect x="96" y="206" width="696" height="72" fill="url(#ruling)"/>
+    <text x="82" y="281.5" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="end" letter-spacing="1.5">0</text><text x="82" y="245.5" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="end" letter-spacing="1.5">200</text><text x="82" y="209.5" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="end" letter-spacing="1.5">400</text>
+    <line x1="162.2" y1="278" x2="162.2" y2="283" stroke="#7f5a2f" stroke-opacity="0.5"/>
+        <text x="162.2361860899515" y="298" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="middle" letter-spacing="1.5">FEB</text><line x1="236.4" y1="278" x2="236.4" y2="283" stroke="#7f5a2f" stroke-opacity="0.5"/>
+        <text x="236.42071451069722" y="298" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="middle" letter-spacing="1.5">MAR</text><line x1="318.6" y1="278" x2="318.6" y2="283" stroke="#7f5a2f" stroke-opacity="0.5"/>
+        <text x="318.5535852622371" y="298" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="middle" letter-spacing="1.5">APR</text><line x1="398.0" y1="278" x2="398.0" y2="283" stroke="#7f5a2f" stroke-opacity="0.5"/>
+        <text x="398.03700857017895" y="298" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="middle" letter-spacing="1.5">MAY</text><line x1="480.2" y1="278" x2="480.2" y2="283" stroke="#7f5a2f" stroke-opacity="0.5"/>
+        <text x="480.16987932171884" y="298" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="middle" letter-spacing="1.5">JUN</text><line x1="559.7" y1="278" x2="559.7" y2="283" stroke="#7f5a2f" stroke-opacity="0.5"/>
+        <text x="559.6533026296606" y="298" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="middle" letter-spacing="1.5">JUL</text><line x1="641.8" y1="278" x2="641.8" y2="283" stroke="#7f5a2f" stroke-opacity="0.5"/>
+        <text x="641.7861733812006" y="298" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="middle" letter-spacing="1.5">AUG</text><line x1="723.9" y1="278" x2="723.9" y2="283" stroke="#7f5a2f" stroke-opacity="0.5"/>
+        <text x="723.9190441327404" y="298" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#62523c" text-anchor="middle" letter-spacing="1.5">SEP</text>
+    <line x1="96" y1="278" x2="792" y2="278" stroke="url(#hairline)"/>
+    <path d="M96.0,278.0 L96.0,278.0 L96.0,277.8 L119.8,275.1 L130.4,274.6 L135.7,274.4 L186.1,274.2 L435.1,274.0 L448.4,273.7 L459.0,273.5 L509.3,273.3 L527.9,258.7 L530.5,254.6 L533.2,253.5 L535.8,252.4 L538.5,251.4 L541.1,249.7 L543.8,247.8 L546.4,246.5 L549.1,246.3 L554.4,246.1 L557.0,246.0 L559.7,245.8 L562.3,245.2 L570.3,245.1 L572.9,244.7 L578.2,244.5 L580.8,244.3 L591.4,244.2 L596.7,244.0 L602.0,243.6 L607.3,243.4 L610.0,243.3 L612.6,243.1 L615.3,242.9 L617.9,242.7 L620.6,242.5 L623.2,242.4 L636.5,242.2 L639.1,235.0 L641.8,232.5 L644.4,230.8 L647.1,230.3 L652.4,229.9 L657.7,229.6 L660.3,229.4 L663.0,229.2 L670.9,229.0 L678.9,228.9 L686.8,227.2 L689.5,225.6 L694.8,222.0 L697.4,221.8 L718.6,221.7 L721.3,221.5 L737.2,221.3 L739.8,221.1 L745.1,220.9 L758.4,220.8 L763.7,220.6 L774.3,220.4 L790.2,220.2 L792.0,220.2 L792.0,278 Z" fill="url(#area)"/>
+    <polyline points="96.0,278.0 96.0,277.8 119.8,275.1 130.4,274.6 135.7,274.4 186.1,274.2 435.1,274.0 448.4,273.7 459.0,273.5 509.3,273.3 527.9,258.7 530.5,254.6 533.2,253.5 535.8,252.4 538.5,251.4 541.1,249.7 543.8,247.8 546.4,246.5 549.1,246.3 554.4,246.1 557.0,246.0 559.7,245.8 562.3,245.2 570.3,245.1 572.9,244.7 578.2,244.5 580.8,244.3 591.4,244.2 596.7,244.0 602.0,243.6 607.3,243.4 610.0,243.3 612.6,243.1 615.3,242.9 617.9,242.7 620.6,242.5 623.2,242.4 636.5,242.2 639.1,235.0 641.8,232.5 644.4,230.8 647.1,230.3 652.4,229.9 657.7,229.6 660.3,229.4 663.0,229.2 670.9,229.0 678.9,228.9 686.8,227.2 689.5,225.6 694.8,222.0 697.4,221.8 718.6,221.7 721.3,221.5 737.2,221.3 739.8,221.1 745.1,220.9 758.4,220.8 763.7,220.6 774.3,220.4 790.2,220.2 792.0,220.2" fill="none" stroke="#956b23" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+    
+    <circle cx="792.0" cy="220.2" r="11" fill="url(#halo)"/>
+    <path d="M792.0 220.2 L748.0 186.2 h-130.0" fill="none" stroke="#7f5a2f" stroke-width="1"/>
+    <circle cx="792.0" cy="220.2" r="3.2" fill="#4d7d54"/>
+    <text x="743" y="179.22" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="400" fill="#574733" text-anchor="end" letter-spacing="1.5">321 STARS TODAY</text></g>
+  
+  <g>
+    <rect x="0" y="318" width="840" height="42" fill="url(#oak)"/>
+    <rect x="0" y="318" width="840" height="42" filter="url(#woodgrain)" opacity="0.5"/>
+    <rect x="0" y="318" width="840" height="14" fill="url(#contact)"/>
+    <rect x="0" y="318" width="840" height="1" fill="#ffca8a" opacity="0.34"/>
+  </g>
+  <text x="48" y="344" font-family="'Fragment Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="10" font-weight="400" fill="#956b23" letter-spacing="1.5">GITHUB STARGAZER API · DRAWN IN THIS REPO</text>
+</svg>
