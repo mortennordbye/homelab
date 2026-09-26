@@ -159,7 +159,7 @@ spec:
                 limits:
                   memory: 512Mi
             - name: authentik
-              image: docker.io/library/postgres:17-alpine
+              image: docker.io/library/postgres:18-alpine
               command:
                 - /bin/sh
                 - /scripts/pg-restore.sh
