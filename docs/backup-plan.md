@@ -1,5 +1,8 @@
 # Cluster backups: plan
 
+> Historical planning record. The current setup and where to watch it is
+> [`backups.md`](backups.md); restores are in [`backup-restore.md`](backup-restore.md).
+
 Working document for adding app-level backups to the Genesis cluster and Home Assistant.
 Section 3 was read from the cluster, Home Assistant and DSM on 2026-09-26; section 5 is a
 proposal until the decisions in section 6 are made.
