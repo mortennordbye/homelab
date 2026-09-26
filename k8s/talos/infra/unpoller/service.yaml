@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: unpoller
+  labels:
+    app.kubernetes.io/name: unpoller
+spec:
+  selector:
+    app.kubernetes.io/name: unpoller
+  ports:
+    - name: metrics
+      port: 9130
+      targetPort: metrics
