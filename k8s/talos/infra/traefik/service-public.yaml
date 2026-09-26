@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: traefik-public
   namespace: traefik
+  labels:
+    network.nordbye.it/vip: public
   annotations:
     lbipam.cilium.io/ips: "10.3.10.101"
 spec:
