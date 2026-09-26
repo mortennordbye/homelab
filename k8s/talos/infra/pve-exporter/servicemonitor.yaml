@@ -25,7 +25,8 @@ spec:
         node:
           - "1"
       relabelings:
-        - targetLabel: instance
+        - action: replace
+          targetLabel: instance
           replacement: hyper1
     - port: metrics
       path: /pve
@@ -41,7 +42,8 @@ spec:
         node:
           - "1"
       relabelings:
-        - targetLabel: instance
+        - action: replace
+          targetLabel: instance
           replacement: hyper2
     - port: metrics
       path: /pve
@@ -57,5 +59,6 @@ spec:
         node:
           - "1"
       relabelings:
-        - targetLabel: instance
+        - action: replace
+          targetLabel: instance
           replacement: hyper3
