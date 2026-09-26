@@ -28,6 +28,9 @@ spec:
         - ports:
             - port: "53"
               protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
     # Let's Encrypt ACME + Cloudflare DNS-01 validation.
     - toFQDNs:
         - matchName: "acme-v02.api.letsencrypt.org"

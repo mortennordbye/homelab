@@ -16,6 +16,15 @@ spec:
         - ports:
             - port: "6767"
               protocol: TCP
+    # Exportarr scrapes the Bazarr API.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": arr-stack
+            app: exportarr-bazarr
+      toPorts:
+        - ports:
+            - port: "6767"
+              protocol: TCP
     - fromEntities:
         - host
         - health

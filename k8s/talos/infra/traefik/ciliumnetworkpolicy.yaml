@@ -22,6 +22,17 @@ spec:
               protocol: UDP
             - port: "8444"
               protocol: TCP
+    # In-cluster clients calling public or *.local hostnames hairpin through the LB.
+    - fromEntities:
+        - cluster
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+            - port: "8443"
+              protocol: TCP
+            - port: "8444"
+              protocol: TCP
     # Dashboard / metrics endpoint scraped by Prometheus.
     - fromEndpoints:
         - matchLabels:
@@ -45,3 +56,10 @@ spec:
     # will reveal the actual destination set if a tighter rule is wanted later.
     - toEntities:
         - cluster
+    # Home Assistant runs outside the cluster (Endpoints home-assistant/home-assistant).
+    - toCIDR:
+        - "10.3.10.15/32"
+      toPorts:
+        - ports:
+            - port: "8123"
+              protocol: TCP

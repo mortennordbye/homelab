@@ -25,6 +25,9 @@ spec:
         - ports:
             - port: "53"
               protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
     # Cloudflare API for record reconciliation.
     - toFQDNs:
         - matchName: "api.cloudflare.com"
