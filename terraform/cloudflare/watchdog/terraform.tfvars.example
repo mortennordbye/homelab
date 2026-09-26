@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars and fill in. *.tfvars is gitignored.
+#
+# Create the token at https://dash.cloudflare.com/profile/api-tokens with the
+# account permissions Workers Scripts:Edit and Workers KV Storage:Edit.
+cloudflare_api_token = ""
+account_id           = ""
+workers_subdomain    = ""
+
+# Not stored here: pass the Discord webhook from Bitwarden at plan time, see README.md.
