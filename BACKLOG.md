@@ -4,11 +4,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### Cluster backups: offsite copy and restore test
-- **What:** add `k8s-backups` to the Google Drive Hyper Backup task; run a restore test for each layer (etcd snapshot, a `pg_dump` into a scratch database, one VolSync `ReplicationDestination` into a scratch namespace, one Home Assistant backup) and write the runbook; delete logeverylift's unused pre-18 `postgres-pvc`.
-- **Why deferred:** the Google Drive quota and the task's version rotation are unknown, and at about 50 GB with nightly-changing HA archives the upload could outgrow the plan. A restore test needs the backups from the first nights to exist.
-- **Unblock:** the Drive quota from the Google account; a few nights of successful runs of every layer in `docs/backup-plan.md` section 5.
-- **Where:** `docs/backup-plan.md`, DSM Hyper Backup task "Google Workspace", `k8s/talos/apps/logeverylift/postgres.yaml`.
+### Cluster backups: restore test and runbook
+- **What:** restore each layer once (an etcd snapshot, a `pg_dump` into a scratch database, one VolSync `ReplicationDestination` into a scratch namespace, one Home Assistant backup) and write the runbook; delete logeverylift's unused pre-18 `postgres-pvc`.
+- **Why deferred:** a restore test needs the backups from the first nights to exist.
+- **Unblock:** a few nights of successful runs of every layer in `docs/backup-plan.md` section 5.
+- **Where:** `docs/backup-plan.md`, `k8s/talos/apps/logeverylift/postgres.yaml`.
 
 ### Mealie still hard-logs-out every 48h (upstream)
 - **What:** Mealie's frontend never refreshes its access token (`mealie-recipes/mealie#7835`) — only one `/api/auth/refresh` call appears across the whole app log. At `TOKEN_TIME` (default 48h) the token expires and the axios 401 interceptor wipes the cookie and redirects to `/login`. The replica pin fixes cold-start logouts but not this.

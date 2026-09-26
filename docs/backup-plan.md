@@ -124,8 +124,8 @@ running: Snapshot Replication, Hyper Backup, Container Manager, Replication Serv
   snapshots for about 11 days. They can be recovered from the NAS, though only as whole
   directories and only by someone with DSM access.
 - One Hyper Backup task exists: "Google Workspace", daily 03:20, client-side encrypted,
-  to Google Drive. It covers `shared-data/documents` and `shared-data/media/personal-media`
-  only. It is the only offsite copy of anything.
+  to Google Drive (152 GB stored). Before this plan it covered only
+  `shared-data/documents` and `shared-data/media/personal-media`.
 - No Snapshot Replication plans, no immutable snapshots, no snapshots on `pve-backup`.
 - DSM has no native S3 server. Container Manager could host one if ever needed.
 
@@ -325,9 +325,11 @@ VolSync details that matter:
 
 The nightly Proxmox to PBS job stays as the whole-VM fallback.
 
-Offsite: the Hyper Backup task to Google Drive (daily 03:20, client-side encrypted)
-currently holds only `documents` and `personal-media`, 160 MB. Adding `k8s-backups`
-waits on knowing the Google Drive quota and the task's version rotation (BACKLOG.md).
+Offsite: `k8s-backups` is in the Hyper Backup task "Google Workspace" to Google Drive
+since 2026-09-26, next to `shared-data/documents` and `shared-data/media/personal-media`:
+daily 03:20, client-side encrypted, Smart Recycle rotation with at most 30 versions. The
+account has 2 TB (153 GB used before this). Each nightly HA archive is new data to Hyper
+Backup, so expect roughly 65 GB of HA archives on Drive at steady state.
 
 ### 5.1 Retention
 
@@ -348,8 +350,8 @@ Share quota 200 GB, which leaves room for the NFS volumes if they are added.
 
 ## 6. Decisions
 
-- Offsite: only the small, important backups. `k8s-backups` (tens of GB) joins the
-  existing Google Drive Hyper Backup task; nothing measured in terabytes does.
+- Offsite: `k8s-backups` goes to Google Drive through the existing Hyper Backup task;
+  nothing measured in terabytes does. Configured, see section 5.
 - Synology configuration is made by hand in DSM when needed and recorded in this
   document. The `synology-community/synology` provider (v0.6.11) has no resources for
   shares, NFS rules, snapshots or Hyper Backup.
