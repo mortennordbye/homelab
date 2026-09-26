@@ -66,6 +66,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            - name: data
+              mountPath: /data
             - name: movies
               mountPath: /movies
             - name: torrents
@@ -110,6 +112,10 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: radarr-config
+        - name: data
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/shared-data/media
         - name: movies
           nfs:
             server: nas.local.bigd.no
