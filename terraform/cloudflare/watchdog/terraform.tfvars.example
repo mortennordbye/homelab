@@ -5,5 +5,3 @@
 cloudflare_api_token = ""
 account_id           = ""
 workers_subdomain    = ""
-
-# Not stored here: pass the Discord webhook from Bitwarden at plan time, see README.md.

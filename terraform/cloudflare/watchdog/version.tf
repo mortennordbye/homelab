@@ -6,6 +6,10 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 5.23"
     }
+    bitwarden-secrets = {
+      source  = "bitwarden/bitwarden-secrets"
+      version = "~> 1.0"
+    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.7"

@@ -1,5 +1,4 @@
-output "heartbeat_url" {
-  description = "Where Alertmanager posts the Watchdog alert. Stored in Bitwarden as alertmanager-heartbeat-url."
-  value       = "https://${local.script_name}.${var.workers_subdomain}.workers.dev/heartbeat/${random_password.heartbeat_token.result}"
-  sensitive   = true
+output "heartbeat_secret_id" {
+  description = "Bitwarden id of alertmanager-heartbeat-url, for the ExternalSecret's remoteRef.key"
+  value       = bitwarden-secrets_secret.heartbeat_url.id
 }

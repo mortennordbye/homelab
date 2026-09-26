@@ -9,10 +9,10 @@ variable "account_id" {
   type        = string
 }
 
-variable "discord_webhook_url" {
-  description = "The Discord webhook Alertmanager uses (Bitwarden alertmanager-discord-webhook). A trailing /slack is removed; the Worker posts Discord's own format."
+variable "bitwarden_project_id" {
+  description = "Bitwarden Secrets Manager project the heartbeat URL is written to"
   type        = string
-  sensitive   = true
+  default     = "1ea61322-5f4a-44a4-b4d0-b29b00ba1134"
 }
 
 variable "sites" {
@@ -28,6 +28,6 @@ variable "sites" {
 }
 
 variable "workers_subdomain" {
-  description = "The account's workers.dev subdomain (Workers & Pages > Overview), used only to build the heartbeat URL output."
+  description = "The account's workers.dev subdomain (Workers & Pages > Overview), used to build the heartbeat URL."
   type        = string
 }

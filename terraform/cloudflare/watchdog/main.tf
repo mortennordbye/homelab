@@ -2,6 +2,12 @@ locals {
   script_name = "homelab-watchdog"
 }
 
+# The webhook Alertmanager posts to, stored with /slack appended; the Worker posts
+# Discord's own format, so the suffix is removed.
+data "bitwarden-secrets_secret" "discord_webhook" {
+  id = "d810abf7-40ad-4b1c-9d30-b44c0108ecad"
+}
+
 resource "random_password" "heartbeat_token" {
   length  = 40
   special = false
@@ -38,7 +44,7 @@ resource "cloudflare_workers_script" "watchdog" {
     {
       name = "DISCORD_WEBHOOK_URL"
       type = "secret_text"
-      text = trimsuffix(var.discord_webhook_url, "/slack")
+      text = trimsuffix(data.bitwarden-secrets_secret.discord_webhook.value, "/slack")
     },
   ]
 }
@@ -58,4 +64,11 @@ resource "cloudflare_workers_script_subdomain" "watchdog" {
   script_name      = cloudflare_workers_script.watchdog.script_name
   enabled          = true
   previews_enabled = false
+}
+
+# Read by the alertmanager-heartbeat ExternalSecret in kube-prometheus-stack.
+resource "bitwarden-secrets_secret" "heartbeat_url" {
+  key        = "alertmanager-heartbeat-url"
+  value      = "https://${local.script_name}.${var.workers_subdomain}.workers.dev/heartbeat/${random_password.heartbeat_token.result}"
+  project_id = var.bitwarden_project_id
 }
