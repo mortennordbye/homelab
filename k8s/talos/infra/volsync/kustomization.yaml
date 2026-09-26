@@ -18,6 +18,14 @@ helmCharts:
 # The chart renders its ServiceMonitor only when the monitoring API is present (as it is
 # under ArgoCD), without the label Prometheus selects on. It feeds VolSyncBackupStale.
 patches:
+  # The chart's templates carry no metadata.namespace, and the namespace field above
+  # does not add one to them; ArgoCD then refuses the objects.
+  - target:
+      kind: ^(ServiceAccount|Service|Deployment|Role|RoleBinding|ServiceMonitor)$
+    patch: |-
+      - op: add
+        path: /metadata/namespace
+        value: volsync-system
   - target:
       kind: ServiceMonitor
       name: volsync
