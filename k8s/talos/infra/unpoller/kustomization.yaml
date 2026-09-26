@@ -5,6 +5,7 @@ namespace: monitoring
 
 resources:
   - externalsecret.yaml
+  - configmap.yaml
   - deployment.yaml
   - service.yaml
   - servicemonitor.yaml

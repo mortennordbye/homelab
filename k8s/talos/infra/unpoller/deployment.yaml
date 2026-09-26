@@ -27,32 +27,19 @@ spec:
       containers:
         - name: unpoller
           image: ghcr.io/unpoller/unpoller:v5.2.8
-          env:
-            - name: UP_UNIFI_DEFAULT_URL
-              value: https://10.3.10.1
-            # The gateway serves a self-signed certificate on its LAN address.
-            - name: UP_UNIFI_DEFAULT_VERIFY_SSL
-              value: "false"
-            - name: UP_UNIFI_DEFAULT_SAVE_SITES
-              value: "true"
-            - name: UP_UNIFI_DEFAULT_SAVE_DPI
-              value: "false"
-            - name: UP_UNIFI_DEFAULT_SAVE_SYSLOG
-              value: "true"
-            - name: UP_INFLUXDB_DISABLE
-              value: "true"
-            - name: UP_PROMETHEUS_HTTP_LISTEN
-              value: 0.0.0.0:9130
-            - name: UP_LOKI_URL
-              value: http://loki.monitoring.svc:3100
-            - name: UP_POLLER_QUIET
-              value: "true"
+          args:
+            - --config
+            - /etc/unpoller-config/up.conf
           envFrom:
             - secretRef:
                 name: unpoller
           ports:
             - name: metrics
               containerPort: 9130
+          volumeMounts:
+            - name: config
+              mountPath: /etc/unpoller-config
+              readOnly: true
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
@@ -65,3 +52,7 @@ spec:
               memory: 48Mi
             limits:
               memory: 128Mi
+      volumes:
+        - name: config
+          configMap:
+            name: unpoller

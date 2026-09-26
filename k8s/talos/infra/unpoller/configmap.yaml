@@ -1,0 +1,25 @@
+# A config file, not env vars: this image loads its bundled up.conf, and the Loki
+# output only switched on when configured here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: unpoller
+data:
+  up.conf: |
+    [poller]
+      quiet = true
+    [prometheus]
+      http_listen = "0.0.0.0:9130"
+    [influxdb]
+      disable = true
+    [loki]
+      url = "http://loki.monitoring.svc:3100"
+      interval = "1m"
+    [unifi.defaults]
+      url = "https://10.3.10.1"
+      # The gateway serves a self-signed certificate on its LAN address.
+      verify_ssl = false
+      sites = ["all"]
+      save_sites = true
+      save_dpi = false
+      save_syslog = true

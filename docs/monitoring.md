@@ -36,7 +36,7 @@ line is back.
 |---|---|---|---|
 | kube-prometheus-stack | cluster, nodes, kube-state-metrics | none | `k8s/talos/infra/kube-prometheus-stack/` |
 | blackbox-exporter, Probe `internet` | HTTPS to google.com/generate_204 and cloudflare.com/cdn-cgi/trace every 15 s | none | `k8s/talos/infra/blackbox-exporter/` |
-| unpoller | UniFi gateway `https://10.3.10.1` every 30 s | UniFi API key, Bitwarden `unpoller-unifi-api-key` | `k8s/talos/infra/unpoller/` |
+| unpoller | UniFi gateway `https://10.3.10.1` every 30 s; the gateway's system log to Loki | UniFi API key, Bitwarden `unpoller-unifi-api-key` | `k8s/talos/infra/unpoller/` |
 | snmp-exporter | NAS `10.3.10.10`, modules `if_mib` + `synology`, every 60 s | SNMPv3 `snmp-exporter`, SHA/AES, Bitwarden `synology-snmp-auth-password`, `synology-snmp-priv-password` | `k8s/talos/infra/snmp-exporter/` |
 | VolSync metrics | ReplicationSource sync state | none | `k8s/talos/infra/volsync/` |
 | exportarr, qbittorrent-exporter | media apps | app API keys | `k8s/talos/apps/arr-stack/` |
@@ -74,8 +74,6 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 ## Known gaps
 
 - unpoller uses the admin-scoped UniFi API key; a key from a view-only admin would be narrower.
-- unpoller is configured to ship the gateway's system log to Loki, but nothing arrives yet
-  (BACKLOG.md).
 - No outside-in probe of the public sites (BACKLOG.md), and no Proxmox host exporter.
 - Cluster DNS forwards to the gateway `10.3.10.1`, so ISP trouble also degrades in-cluster
   name resolution.
