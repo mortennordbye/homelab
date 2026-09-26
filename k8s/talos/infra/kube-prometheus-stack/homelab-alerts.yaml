@@ -158,3 +158,72 @@ spec:
             description: |
               HPA `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` has been at max replicas for over 15 minutes and cannot scale higher to meet demand. (KEDA-driven HPAs are excluded — their max is set by schedule/trigger, not load.)
               Check: kubectl -n {{ $labels.namespace }} describe hpa {{ $labels.horizontalpodautoscaler }}
+
+    # Media stack (arr-stack, exportarr + qbittorrent-exporter). Critical so they reach Discord.
+    - name: homelab.media
+      rules:
+        # warning/error queue items never clear on their own: they wait for a manual import or removal.
+        - alert: ArrQueueStuck
+          expr: |
+            sum by (namespace, job, download_state) (
+              {__name__=~"sonarr_queue_total|radarr_queue_total", download_status=~"warning|error"}
+            ) > 0
+          for: 2h
+          labels:
+            severity: critical
+          annotations:
+            summary: '{{ $labels.job }}: {{ $value | printf "%.0f" }} queue items stuck in {{ $labels.download_state }}'
+            description: |
+              `{{ $labels.job }}` has {{ $value | printf "%.0f" }} queue items in state `{{ $labels.download_state }}` with a warning or error for over 2 hours.
+              Open Activity > Queue in the app and import or remove them.
+
+        - alert: MediaRootFolderLow
+          expr: |
+            min by (namespace, job, path) (
+              {__name__=~"sonarr_rootfolder_freespace_bytes|radarr_rootfolder_freespace_bytes"}
+            ) < 200e9
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: '{{ $labels.job }} root folder {{ $labels.path }} has {{ $value | humanize1024 }}B free'
+            description: |
+              Root folder `{{ $labels.path }}` in `{{ $labels.job }}` is under 200 GB free. Imports fail once it fills.
+
+        # exportarr reports 0 when it cannot reach the app's API, even while the pod is Running.
+        - alert: ArrAppUnreachable
+          expr: |
+            min by (namespace, job) (
+              {__name__=~"sonarr_system_status|radarr_system_status|prowlarr_system_status|bazarr_system_status"}
+            ) == 0
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: '{{ $labels.job }} cannot reach its app API'
+            description: |
+              `{{ $labels.job }}` has reported the app as down for 15 minutes.
+              Check: kubectl -n {{ $labels.namespace }} logs deploy/{{ $labels.job }}
+
+        - alert: MediaExporterDown
+          expr: up{namespace="arr-stack"} == 0
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Media stack exporter {{ $labels.job }} is down'
+            description: |
+              Prometheus has failed to scrape `{{ $labels.job }}` for 15 minutes, so the other media alerts are blind.
+              Check: kubectl -n {{ $labels.namespace }} get pods
+
+        # qBittorrent runs inside the gluetun VPN pod; disconnected means the tunnel is down.
+        - alert: QbittorrentDisconnected
+          expr: min by (namespace, server) (qbittorrent_connected) == 0
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'qBittorrent at {{ $labels.server }} has no connection'
+            description: |
+              qBittorrent has reported no connection for 30 minutes, so downloads are stalled.
+              Check: kubectl -n gluetun-vpn logs deploy/gluetun -c gluetun
