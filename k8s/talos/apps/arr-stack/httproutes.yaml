@@ -101,3 +101,29 @@ spec:
           name: flaresolverr
           port: 8191
           weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: cleanuparr
+  namespace: arr-stack
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: traefik-gateway-private
+      namespace: traefik
+      sectionName: local-bigd-no
+  hostnames:
+    - "cleanuparr.local.bigd.no"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: cleanuparr
+          port: 11011
+          weight: 1
