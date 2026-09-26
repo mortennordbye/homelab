@@ -59,6 +59,11 @@ grafana:
       # fails authentik's strict matching. TLS terminates at Traefik; this is
       # the browser-facing URL, not how the pod is reached.
       root_url: https://grafana.local.bigd.no
+    # Renovate tracks versions; these would otherwise need egress to grafana.com.
+    analytics:
+      check_for_updates: false
+      check_for_plugin_updates: false
+      reporting_enabled: false
     auth:
       # Both already default to false. Spelled out because keeping the local
       # admin login working is a hard requirement, and a later edit flipping
