@@ -257,12 +257,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **The query:** port-forward `svc/kube-prometheus-stack-prometheus` in `monitoring` and run `sum by (source_namespace, source, destination_namespace, destination, direction) (increase(hubble_policy_verdicts_total{action="audit"}[7d]))`. Prometheus retention is 7d, so the window cannot be widened.
 - **Where:** `k8s/talos/infra/cilium/values.yaml` (audit mode), and the per-app CNPs listed by `kubectl get ciliumnetworkpolicy -A`.
 
-### Cilium L2 announce VIP co-location risk
-- **What:** Both `traefik-private` (10.3.10.102) and `traefik-public` (10.3.10.101) L2 leases are claimed by whichever node wins the election — historically `genesis-ctrl-02`. A single bad node takes down every internal *and* external Traefik VIP at once.
-- **Why deferred:** Out of scope for the BPF fix above; needs a policy design decision.
-- **Unblock:** Split into two separate `CiliumL2AnnouncementPolicy` resources with disjoint `nodeSelector`s (e.g. private → ctrl-only, public → worker-only) so an election blip never blackholes both. Validate that L2 lease params (`leaseDuration` / `leaseRenewDeadline` / `leaseRetryPeriod`) are set conservatively — defaults can re-elect aggressively under control-plane load.
-- **Where:** `k8s/talos/infra/cilium/l2-announcement-policy.yaml`.
-
 ### UniFi site settings are still console-only
 - **What:** country, NTP, IGMP snooping, DPI, IPS, auto speedtest and the rest of the site-level settings are not in `terraform/unifi/network`. Everything else the provider can express is.
 - **Why deferred:** `unifi_setting` imports with every section empty, so the import gives no record of the live values. Declaring a section means writing it from the console by hand, and a wrong value applies site-wide (the country code alone decides which Wi-Fi channels are legal).
