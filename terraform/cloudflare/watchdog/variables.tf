@@ -1,5 +1,5 @@
 variable "cloudflare_api_token" {
-  description = "API token with account-level Workers Scripts:Edit and Workers KV Storage:Edit."
+  description = "API token with account-level Workers Scripts:Edit and Workers KV Storage:Edit, and Workers Routes:Edit plus Zone:Read on the zone."
   type        = string
   sensitive   = true
 }
@@ -27,7 +27,14 @@ variable "sites" {
   ]
 }
 
-variable "workers_subdomain" {
-  description = "The account's workers.dev subdomain (Workers & Pages > Overview), used to build the heartbeat URL."
+variable "zone_name" {
+  description = "Zone the Worker's hostname lives in"
   type        = string
+  default     = "bigd.no"
+}
+
+variable "hostname" {
+  description = "Hostname the Worker is served on, used for the heartbeat URL"
+  type        = string
+  default     = "watchdog.bigd.no"
 }

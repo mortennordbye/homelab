@@ -2,6 +2,12 @@ locals {
   script_name = "homelab-watchdog"
 }
 
+data "cloudflare_zone" "this" {
+  filter = {
+    name = var.zone_name
+  }
+}
+
 # The webhook Alertmanager posts to, stored with /slack appended; the Worker posts
 # Discord's own format, so the suffix is removed.
 data "bitwarden-secrets_secret" "discord_webhook" {
@@ -59,16 +65,17 @@ resource "cloudflare_workers_cron_trigger" "watchdog" {
   ]
 }
 
-resource "cloudflare_workers_script_subdomain" "watchdog" {
-  account_id       = var.account_id
-  script_name      = cloudflare_workers_script.watchdog.script_name
-  enabled          = true
-  previews_enabled = false
+# external-dns runs upsert-only on this zone, so it leaves the Worker's record alone.
+resource "cloudflare_workers_custom_domain" "watchdog" {
+  account_id = var.account_id
+  zone_id    = data.cloudflare_zone.this.zone_id
+  hostname   = var.hostname
+  service    = cloudflare_workers_script.watchdog.script_name
 }
 
 # Read by the alertmanager-heartbeat ExternalSecret in kube-prometheus-stack.
 resource "bitwarden-secrets_secret" "heartbeat_url" {
   key        = "alertmanager-heartbeat-url"
-  value      = "https://${local.script_name}.${var.workers_subdomain}.workers.dev/heartbeat/${random_password.heartbeat_token.result}"
+  value      = "https://${cloudflare_workers_custom_domain.watchdog.hostname}/heartbeat/${random_password.heartbeat_token.result}"
   project_id = var.bitwarden_project_id
 }

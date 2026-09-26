@@ -7,7 +7,7 @@ A Worker that watches the homelab from outside it. Every minute it:
   being down;
 - requests each public site through Cloudflare and alerts after three failures in a row.
 
-It posts to the same Discord channel as Alertmanager, directly, so it works while
+It is served at `watchdog.bigd.no`. It posts to the same Discord channel as Alertmanager, directly, so it works while
 the homelab is down. Terraform reads that webhook from Bitwarden and writes the
 heartbeat URL back to Bitwarden as `alertmanager-heartbeat-url`. Messages start with `[WATCHDOG]`, one on DOWN and one on UP.
 State is one KV key per check, written only on change.
@@ -15,7 +15,7 @@ State is one KV key per check, written only on change.
 ## Use
 
 ```bash
-cp terraform.tfvars.example terraform.tfvars   # token, account id, workers.dev subdomain
+cp terraform.tfvars.example terraform.tfvars   # token and account id
 export BW_ACCESS_TOKEN=$(security find-generic-password -s bws-homelab -w)
 export BW_ORGANIZATION_ID=$(BWS_ACCESS_TOKEN=$BW_ACCESS_TOKEN bws project get 1ea61322-5f4a-44a4-b4d0-b29b00ba1134 --output json | jq -r .organizationId)
 terraform init
