@@ -133,3 +133,6 @@ ai/skills/prompt-eval-loop/
 
 # Auto-written by `next dev` on startup; regenerated, not source.
 portfolio/AGENTS.md
+
+# bitwarden/bitwarden-secrets Terraform provider session state
+.bw-provider-state
