@@ -39,6 +39,7 @@ line is back.
 | blackbox-exporter, Probe `public-sites` | nordbye.it, blog.nordbye.it, logeverylift.com, auth.bigd.no, hub.bigd.no through public DNS and Cloudflare, every 60 s | none | `k8s/talos/infra/blackbox-exporter/probe.yaml` |
 | unpoller | UniFi gateway `https://10.3.10.1` every 30 s; the gateway's system log to Loki | UniFi API key, Bitwarden `unpoller-unifi-api-key` | `k8s/talos/infra/unpoller/` |
 | snmp-exporter | NAS `10.3.10.10`, modules `if_mib` + `synology`, every 60 s | SNMPv3 `snmp-exporter`, SHA/AES, Bitwarden `synology-snmp-auth-password`, `synology-snmp-priv-password` | `k8s/talos/infra/snmp-exporter/` |
+| pve-exporter | Proxmox API on hyper1-3 (`/pve`, hyper1 also cluster-wide) every 60 s | token of `prometheus@pve` (PVEAuditor), Bitwarden `proxmox-exporter-token` | `k8s/talos/infra/pve-exporter/`, identity in `terraform/proxmox/hyper-cluster/datacenter/access.tf` |
 | VolSync metrics | ReplicationSource sync state | none | `k8s/talos/infra/volsync/` |
 | exportarr, qbittorrent-exporter | media apps | app API keys | `k8s/talos/apps/arr-stack/` |
 | Proxmox VE, PBS webhooks | push to Alertmanager on errors | none | `terraform/proxmox/hyper-cluster/datacenter`, `terraform/proxmox/pbs` |
@@ -76,6 +77,6 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 ## Known gaps
 
 - unpoller uses the admin-scoped UniFi API key; a key from a view-only admin would be narrower.
-- The public-site probes run from inside the LAN (out and back through Cloudflare), so they cannot see an outage of the line itself; `InternetDown` covers that. No Proxmox host exporter yet.
+- The public-site probes run from inside the LAN (out and back through Cloudflare), so they cannot see an outage of the line itself; `InternetDown` covers that. 
 - Cluster DNS forwards to the gateway `10.3.10.1`, so ISP trouble also degrades in-cluster
   name resolution.
