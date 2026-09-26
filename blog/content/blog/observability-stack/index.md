@@ -6,8 +6,6 @@ draft: false
 tags: ["kubernetes", "observability", "prometheus", "grafana", "loki", "tempo", "falco", "intermediate"]
 ---
 
-# Seeing Into a Talos Cluster: The Observability Stack I Actually Run
-
 `kubectl logs` is not observability. It is a flashlight you point at one pod after you already know which pod broke.
 
 By default a Kubernetes cluster tells you almost nothing. A pod flaps and recovers before you open a terminal. A certificate expires and the first sign is a browser warning. Something runs a shell inside a container at three in the morning and nobody hears about it. You find out when a user does.

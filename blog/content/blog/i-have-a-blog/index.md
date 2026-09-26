@@ -6,8 +6,6 @@ draft: false
 tags: ["kubernetes", "gitops", "argocd", "intermediate", "homelab"]
 ---
 
-# Yet Another Tech Blog (I'm Sorry)
-
 You know what 2026 was really missing? Another tech blog. The internet was dangerously close to running out of hot takes on Kubernetes, Docker, and homelab setups. But don't worry I'm here to fix that. Welcome to [blog.nordbye.it](https://blog.nordbye.it).
 
 _If you find this useful or just appreciate the over-engineering, drop a ⭐ on the [Homelab repo](https://github.com/mortennordbye/Homelab). I'm chasing that sweet GitHub achievement._

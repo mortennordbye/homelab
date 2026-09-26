@@ -6,8 +6,6 @@ draft: false
 tags: ["self-hosted", "docker", "personal-finance", "privacy", "cilium", "kubernetes", "intermediate"]
 ---
 
-# Headroom: The Private Finance Overview School Never Gave You
-
 <img src="/images/headroom-logo.svg" alt="Headroom" title="Headroom" style="width:15%;" />
 
 You learned the volume of a cone. Nothing in your life since has been a cone.
