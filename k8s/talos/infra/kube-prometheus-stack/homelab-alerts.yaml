@@ -276,3 +276,48 @@ spec:
             description: |
               Every internet probe (Google, Cloudflare) has failed for over a minute. The UniFi gateway log under Telia Norge AS shows whether the WAN dropped.
               Latency history: probe_duration_seconds{job="internet"} in Grafana.
+
+    - name: homelab.nas
+      rules:
+        # diskStatus and diskHealthStatus are 1 when normal; anything else is a
+        # disk DSM itself considers failing, crashed or uninitialised.
+        - alert: NasDiskUnhealthy
+          expr: (diskStatus{job="snmp-exporter"} != 1) or (diskHealthStatus{job="snmp-exporter"} != 1)
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'NAS disk {{ $labels.diskID }} is not healthy'
+            description: |
+              DSM reports a disk as not normal (status {{ $value }}). Check Storage Manager > HDD/SSD on nas.local.bigd.no.
+
+        - alert: NasRaidDegraded
+          expr: raidStatus{job="snmp-exporter"} != 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'NAS {{ $labels.raidName }} is not normal'
+            description: |
+              DSM reports {{ $labels.raidName }} with RAID status {{ $value }} (1 is normal). Check Storage Manager on nas.local.bigd.no before anything else writes to it.
+
+        - alert: NasVolumeAlmostFull
+          expr: 1 - raidFreeSize{raidName="Volume 1"} / raidTotalSize{raidName="Volume 1"} > 0.9
+          for: 1h
+          labels:
+            severity: critical
+          annotations:
+            summary: 'NAS Volume 1 is {{ $value | humanizePercentage }} full'
+            description: |
+              Volume 1 holds the media, the cluster volumes and every backup. Free space before it fills.
+
+        - alert: NasMetricsDown
+          expr: up{job="snmp-exporter"} == 0
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'NAS SNMP scrape failing'
+            description: |
+              Prometheus has not reached the NAS over SNMPv3 for 30 minutes, so the NAS disk and RAID alerts are blind.
+              Check: kubectl -n monitoring logs deploy/snmp-exporter, and DSM > Terminal & SNMP.
