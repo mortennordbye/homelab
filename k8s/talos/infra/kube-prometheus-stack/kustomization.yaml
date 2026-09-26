@@ -10,6 +10,7 @@ resources:
   - grafana-admin-credentials-secret.yaml
   - grafana-oidc-secret.yaml
   - alertmanager-discord-webhook-secret.yaml
+  - alertmanager-heartbeat-secret.yaml
   - homelab-alerts.yaml
   - alertmanager-pdb.yaml
   - dashboards
