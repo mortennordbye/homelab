@@ -28,6 +28,8 @@ reads (`k8s/talos/infra/kube-prometheus-stack/alertmanager-heartbeat-secret.yaml
 
 ## Notes
 
+- Cron triggers need the account to have a workers.dev subdomain (`bigd-no`), set by
+  `terraform_data.workers_subdomain`. The Worker itself is not served on it.
 - Replacing `random_password` changes the heartbeat URL. Terraform updates the
   Bitwarden secret; Alertmanager picks it up within the ExternalSecret's refresh.
 - The site list mirrors the `public-sites` Probe. The in-cluster probe sees the

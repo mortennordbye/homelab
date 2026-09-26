@@ -55,7 +55,39 @@ resource "cloudflare_workers_script" "watchdog" {
   ]
 }
 
+# Cron triggers refuse to save until the account has a workers.dev subdomain, and the
+# provider has no resource for it, so it is set with an idempotent PUT. Renaming it
+# here re-runs the PUT; removing it from here does not release the name.
+resource "terraform_data" "workers_subdomain" {
+  input = var.workers_subdomain
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      curl -fsS --max-time 60 -X PUT \
+        "https://api.cloudflare.com/client/v4/accounts/${var.account_id}/workers/subdomain" \
+        -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+        -H "Content-Type: application/json" \
+        --data '{"subdomain":"${self.input}"}' >/dev/null
+    EOT
+    environment = {
+      CLOUDFLARE_API_TOKEN = var.cloudflare_api_token
+    }
+  }
+}
+
+# Reachable only on the custom domain.
+resource "cloudflare_workers_script_subdomain" "watchdog" {
+  account_id       = var.account_id
+  script_name      = cloudflare_workers_script.watchdog.script_name
+  enabled          = false
+  previews_enabled = false
+
+  depends_on = [terraform_data.workers_subdomain]
+}
+
 resource "cloudflare_workers_cron_trigger" "watchdog" {
+  depends_on = [terraform_data.workers_subdomain]
+
   account_id  = var.account_id
   script_name = cloudflare_workers_script.watchdog.script_name
   schedules = [

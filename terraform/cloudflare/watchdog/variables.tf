@@ -38,3 +38,9 @@ variable "hostname" {
   type        = string
   default     = "watchdog.bigd.no"
 }
+
+variable "workers_subdomain" {
+  description = "The account's <name>.workers.dev subdomain. Nothing is served on it; cron triggers require it to exist."
+  type        = string
+  default     = "bigd-no"
+}
