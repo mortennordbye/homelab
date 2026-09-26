@@ -4,12 +4,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### unpoller: gateway system log does not reach Loki
-- **What:** unpoller has `UP_UNIFI_DEFAULT_SAVE_SYSLOG=true` and `UP_LOKI_URL=http://loki.monitoring.svc:3100`, and Loki's policy admits it, but no unpoller streams appear in Loki. Its metrics work. Even with `UP_POLLER_DEBUG=true` it logs nothing past startup.
-- **Why deferred:** a nice-to-have next to the metrics and the DSM/UniFi webhooks; the cause was not obvious in a quick look.
-- **Unblock:** run unpoller with a config file (`up.conf`) instead of env vars to rule out env mapping, or test the syslog endpoint with the API key directly.
-- **Where:** `k8s/talos/infra/unpoller/deployment.yaml`, `k8s/talos/infra/loki/ciliumnetworkpolicy.yaml`.
-
 ### Media dedupe run: finish and clean up
 - **What:** the one-off `rdfind-dedupe` pod in `arr-stack` is hardlinking duplicate media between `/data/series`, `/data/movies` and `/data/torrents/completed` (about 1850 candidate files, 5 TB of reads). When its log shows `done`: note the before and after `df` it prints, delete the pod, and unpause the Tdarr node (`genesis-worker-01`) in the Tdarr UI, which is paused so it cannot re-encode a file rdfind is about to link.
 - **Why deferred:** the read is still running; a session watcher unpauses Tdarr on completion, but only while that session stays open.
