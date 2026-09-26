@@ -1,0 +1,12 @@
+# baseline, not restricted: the job writes to the NAS as root, the only identity the
+# k8s-backups NFS export lets write without a uid mapping.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: etcd-backup
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"

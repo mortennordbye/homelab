@@ -1,0 +1,32 @@
+# Statically bound to k8s-backups/etcd on the NAS (see docs/backup-plan.md). Retain:
+# deleting the claim must never take the snapshots with it.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: etcd-backup
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: etcd-backup
+    name: etcd-backup
+  nfs:
+    server: nas.local.bigd.no
+    path: /volume1/k8s-backups/etcd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: etcd-backup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: etcd-backup
+  resources:
+    requests:
+      storage: 10Gi

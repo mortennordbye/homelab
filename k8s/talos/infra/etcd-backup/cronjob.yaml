@@ -1,0 +1,122 @@
+# Nightly etcd snapshot to the NAS, 30 kept. Runs before the 02:45 snapshot of the
+# k8s-backups share and the 03:20 Hyper Backup upload, so both see a finished file.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup
+spec:
+  schedule: "30 0 * * *"
+  timeZone: Europe/Oslo
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          labels:
+            app: etcd-backup
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          automountServiceAccountToken: false
+          # talosctl talks to the node it runs on, and only control planes run etcd.
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/control-plane
+                        operator: Exists
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          initContainers:
+            # The image is only the talosctl binary, no shell; the naming and pruning
+            # happen in the next container.
+            - name: snapshot
+              image: ghcr.io/siderolabs/talosctl:v1.13.10
+              env:
+                - name: NODE_IP
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.hostIP
+                - name: TALOSCONFIG
+                  value: /var/run/secrets/talos.dev/config
+              args:
+                - --endpoints=$(NODE_IP)
+                - --nodes=$(NODE_IP)
+                - etcd
+                - snapshot
+                - /work/etcd.db
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 65534
+                runAsGroup: 65534
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: work
+                  mountPath: /work
+                - name: talos-secrets
+                  mountPath: /var/run/secrets/talos.dev
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+          containers:
+            - name: store
+              image: docker.io/library/alpine:3.24
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  name="etcd-$(date -u +%Y%m%dT%H%M%SZ).db.gz"
+                  gzip -c /work/etcd.db > "/backup/.$name.tmp"
+                  mv "/backup/.$name.tmp" "/backup/$name"
+                  ls -1t /backup/etcd-*.db.gz | tail -n +31 | xargs -r rm -f
+                  ls -lh "/backup/$name"
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                  add:
+                    - DAC_OVERRIDE
+              volumeMounts:
+                - name: work
+                  mountPath: /work
+                  readOnly: true
+                - name: backup
+                  mountPath: /backup
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+          volumes:
+            - name: work
+              emptyDir:
+                sizeLimit: 1Gi
+            - name: talos-secrets
+              secret:
+                secretName: etcd-backup
+            - name: backup
+              persistentVolumeClaim:
+                claimName: etcd-backup

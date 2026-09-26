@@ -227,3 +227,24 @@ spec:
             description: |
               qBittorrent has reported no connection for 30 minutes, so downloads are stalled.
               Check: kubectl -n gluetun-vpn logs deploy/gluetun -c gluetun
+
+    - name: homelab.backup
+      rules:
+        # The second branch catches a job that has been scheduled but never succeeded,
+        # for which last_successful_time does not exist yet.
+        - alert: EtcdBackupStale
+          expr: |
+            (time() - kube_cronjob_status_last_successful_time{namespace="etcd-backup"}) > 26 * 3600
+            or
+            (
+              kube_cronjob_status_last_schedule_time{namespace="etcd-backup"}
+              unless on (namespace, cronjob) kube_cronjob_status_last_successful_time
+            )
+          for: 1h
+          labels:
+            severity: critical
+          annotations:
+            summary: 'No successful etcd snapshot in over a day'
+            description: |
+              CronJob `{{ $labels.namespace }}/{{ $labels.cronjob }}` has not completed a snapshot in over 26 hours.
+              Check: kubectl -n etcd-backup get jobs,pods and the logs of the snapshot and store containers.

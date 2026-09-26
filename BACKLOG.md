@@ -4,17 +4,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### The residential address is published in the bigd.no zone
-- **What:** `bigd.no`, `www.bigd.no`, `hub.bigd.no`, `auth.bigd.no`, `it-tools.bigd.no`, `mealie.bigd.no`, `omni-tools.bigd.no`, `seerr.bigd.no` and `trek.bigd.no` are proxied. `audiobookshelf.bigd.no` and `ddns.bigd.no` are not, so the address is public in this zone despite `nordbye.it` and `logeverylift.com` being clean.
-- **Why deferred:** audiobookshelf serves users outside the household and must stay publicly reachable, so moving it behind the tailnet is ruled out even though the subnet router and the `*.local.bigd.no` private gateway would carry them today. audiobookshelf cannot be proxied either: Cloudflare's terms exclude serving audio through the CDN outside Enterprise, enforced per account rather than per hostname. `ddns.bigd.no` is therefore pinned unproxied too, because Cloudflare resolves a DNS-only CNAME through to its target's answer, so proxying it would route every hostname pointing at it through the edge whatever its own proxy flag says. Verified in the zone with a throwaway CNAME.
-- **Unblock:** Hiding the address needs either a Cloudflare plan that permits audio or a second CDN in front of audiobookshelf alone, and Plex would still hand the address to plex.tv (see the Plex remote-access entry below).
-- **Where:** `k8s/talos/apps/audiobookshelf/httproute.yaml`, `terraform/cloudflare/bigd-no/dns.tf`.
-
-### Plex remote access publishes the public address
-- **What:** Plex remote access (manual port 32400, forwarded by `unifi_port_forward.plex`) publishes the WAN address to plex.tv, and Plex hands it to every client, so no amount of DNS proxying hides it while remote access is on. Plex detects the address itself, so a Telia reassignment follows without any change here.
-- **Why deferred:** turning remote access off is a household call rather than a technical one.
-- **Unblock:** decide whether Plex remote access is worth publishing the address. If not, turn off Settings > Remote Access in Plex and delete `unifi_port_forward.plex`.
-- **Where:** Plex Settings > Remote Access (config PVC), `terraform/unifi/network/port-forwards.tf`, the `plex` Service in `k8s/talos/apps/plex-media-stack/plex.yaml`.
+### Cluster backups: steps after etcd
+- **What:** the rest of `docs/backup-plan.md` section 5: `pg_dump` CronJobs for logeverylift and Authentik, daily app-native backups in the *arr apps, Plex, Tautulli and Tdarr, VolSync restic for the app volumes, adding `k8s-backups` to the Google Drive Hyper Backup task, and a restore test with a runbook. Also delete logeverylift's unused pre-18 `postgres-pvc`.
+- **Why deferred:** rolled out one layer per PR, each validated before the next; Home Assistant and etcd went first.
+- **Unblock:** the etcd CronJob producing snapshots on the NAS. VolSync then starts with a one-volume pilot to prove the NFS-path restic repository and mover permissions.
+- **Where:** `docs/backup-plan.md`, `k8s/talos/infra/etcd-backup/`, `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`.
 
 ### Mealie still hard-logs-out every 48h (upstream)
 - **What:** Mealie's frontend never refreshes its access token (`mealie-recipes/mealie#7835`) — only one `/api/auth/refresh` call appears across the whole app log. At `TOKEN_TIME` (default 48h) the token expires and the axios 401 interceptor wipes the cookie and redirects to `/login`. The replica pin fixes cold-start logouts but not this.

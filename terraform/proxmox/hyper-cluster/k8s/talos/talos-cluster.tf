@@ -98,6 +98,15 @@ data "talos_machine_configuration" "controlplane" {
           },
           each.value.pci_mapping != null ? { "hardware.nordbye.it/gpu" = "intel-quicksync" } : {}
         )
+        # Lets k8s/talos/infra/etcd-backup take etcd snapshots. From Talos 1.14 this block
+        # moves to its own KubeTalosAPIAccessConfig document.
+        features = {
+          kubernetesTalosAPIAccess = {
+            enabled                     = true
+            allowedRoles                = ["os:etcd:backup"]
+            allowedKubernetesNamespaces = ["etcd-backup"]
+          }
+        }
       }
       cluster = {
         allowSchedulingOnControlPlanes = true
