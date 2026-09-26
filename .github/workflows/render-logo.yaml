@@ -27,7 +27,7 @@ jobs:
     permissions:
       contents: write # Needed to commit the re-rendered logo
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Crop the logo to a 512 round mark
         # Square crop around the fruit, then a circular mask: the full frame is

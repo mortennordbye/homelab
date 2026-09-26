@@ -2,7 +2,7 @@
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
 # Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
-FROM node:24-alpine AS texgen
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS texgen
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -20,7 +20,7 @@ RUN npx tsx scripts/build-cv.ts
 # TeX Live image is large but layer-cached in CI between builds.
 # Compiles every entry point emitted by build-cv.ts: resume.tex + 16
 # cv-SCHP.tex variants (S/C/H/P = skills, clientProjects, homeLab, photo).
-FROM texlive/texlive:latest AS pdfbuild
+FROM texlive/texlive:latest@sha256:7334b00bf8e7a0996f7ddd65482363aaf7711d372e569f3ea78509619e3083ff AS pdfbuild
 WORKDIR /work
 
 COPY --from=texgen /app/latex ./latex
@@ -33,7 +33,7 @@ RUN mkdir -p output && \
     done
 
 # ---- Stage 3: build the Next.js server bundle ----
-FROM node:24-alpine AS build
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS build
 WORKDIR /app
 
 # Install deps with cache-friendly two-step copy
@@ -64,7 +64,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
 # Merges host public/ with the built CV artifacts for compose.yaml's one-shot
 # service, so the dev server serves the real CV without writing to the host.
 # Skipped automatically when CI targets the runtime image.
-FROM alpine AS cv-bundle
+FROM alpine@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 AS cv-bundle
 WORKDIR /staging
 COPY public/ ./
 COPY --from=pdfbuild /work/latex/output/resume.pdf ./resume.pdf
@@ -75,7 +75,7 @@ COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 # No shell, runs as nonroot (uid 65532). The only writable path the server
 # needs is .next/cache, mounted as an emptyDir in the Deployment so
 # readOnlyRootFilesystem still holds.
-FROM gcr.io/distroless/nodejs24-debian13 AS runtime
+FROM gcr.io/distroless/nodejs24-debian13@sha256:b1fc33242cc74151f50c62b4a03d48afd759dccf81279b5f8e401db4546479c1 AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production \

@@ -27,11 +27,11 @@ jobs:
     permissions:
       contents: write # pushes scores to the lighthouse-data branch
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Run Lighthouse CI
         id: lighthouse
-        uses: treosh/lighthouse-ci-action@v12
+        uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # v12
         with:
           urls: |
             https://nordbye.it/
@@ -139,7 +139,7 @@ jobs:
 
       - name: Publish to lighthouse-data branch
         if: ${{ always() && hashFiles('dist/lighthouse.json') != '' }}
-        uses: crazy-max/ghaction-github-pages@v5
+        uses: crazy-max/ghaction-github-pages@1d6ee9b181a81033a16bd707a1401afa978daab4 # v5
         with:
           target_branch: lighthouse-data
           build_dir: dist
