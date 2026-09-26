@@ -5,7 +5,6 @@ namespace: volsync-system
 
 resources:
   - namespace.yaml
-  - servicemonitor.yaml
 
 helmCharts:
   - name: volsync
@@ -15,3 +14,14 @@ helmCharts:
     namespace: volsync-system
     includeCRDs: true
     valuesFile: values.yaml
+
+# The chart renders its ServiceMonitor only when the monitoring API is present (as it is
+# under ArgoCD), without the label Prometheus selects on. It feeds VolSyncBackupStale.
+patches:
+  - target:
+      kind: ServiceMonitor
+      name: volsync
+    patch: |-
+      - op: add
+        path: /metadata/labels/release
+        value: kube-prometheus-stack
