@@ -40,6 +40,15 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
 - Alerts (critical, Discord): `BackupJobStale` (etcd or a dump not successful for 26 h),
   `VolSyncBackupStale` (a source behind schedule for 6 h). DSM failures (Hyper Backup,
   snapshots) arrive as `SynologyNotification` and by email.
+- Backups made outside the cluster only report failures, so daily checks in
+  `k8s/talos/infra/backup-check/` look for the newest one at 09:00 and fail past 26 h;
+  `BackupJobStale` covers them. `pbs-backup-check` asks the Proxmox API for the newest
+  PBS backup of every guest the job includes, `ha-backup-check` looks for a fresh `.tar`
+  in `home-assistant/`. Hyper Backup and the DSM snapshots have no staleness check.
+- `restore-test` runs on the 1st of each month at 10:00: `restic check` with 5 % of the
+  data read on every VolSync repository, a full restore of `mealie/data-pvc`, and the
+  newest logeverylift and Authentik dumps loaded into a scratch Postgres. It reads the
+  NAS only. `RestoreTestFailed` alerts when a run does not pass.
 - By hand:
 
   ```sh

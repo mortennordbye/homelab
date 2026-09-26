@@ -127,7 +127,7 @@ spec:
           expr: certmanager_certificate_expiration_timestamp_seconds - time() < 7 * 24 * 3600
           for: 1h
           labels:
-            severity: warning
+            severity: critical
           annotations:
             summary: 'Certificate {{ $labels.namespace }}/{{ $labels.name }} expires in {{ $value | humanizeDuration }}'
             description: |
@@ -230,15 +230,15 @@ spec:
 
     - name: homelab.backup
       rules:
-        # Covers etcd-backup and every *-db-backup CronJob. The second branch catches a
+        # Covers etcd-backup, every *-db-backup and every *-backup-check CronJob. The second branch catches a
         # job that has been scheduled but never succeeded, which has no
         # last_successful_time yet.
         - alert: BackupJobStale
           expr: |
-            (time() - kube_cronjob_status_last_successful_time{cronjob=~"etcd-backup|.+-db-backup"}) > 26 * 3600
+            (time() - kube_cronjob_status_last_successful_time{cronjob=~"etcd-backup|.+-db-backup|.+-backup-check"}) > 26 * 3600
             or
             (
-              kube_cronjob_status_last_schedule_time{cronjob=~"etcd-backup|.+-db-backup"}
+              kube_cronjob_status_last_schedule_time{cronjob=~"etcd-backup|.+-db-backup|.+-backup-check"}
               unless on (namespace, cronjob) kube_cronjob_status_last_successful_time
             )
           for: 1h
@@ -249,6 +249,28 @@ spec:
             description: |
               CronJob `{{ $labels.namespace }}/{{ $labels.cronjob }}` has not completed a backup in over 26 hours.
               Check: kubectl -n {{ $labels.namespace }} get jobs,pods and the failed pod's logs.
+
+        # Monthly job: fires 6 h after a run that did not succeed, or when no run has
+        # succeeded for 32 days.
+        - alert: RestoreTestFailed
+          expr: |
+            kube_cronjob_status_last_schedule_time{cronjob="restore-test"}
+              > on (namespace, cronjob) kube_cronjob_status_last_successful_time
+            or
+            (time() - kube_cronjob_status_last_successful_time{cronjob="restore-test"}) > 32 * 24 * 3600
+            or
+            (
+              kube_cronjob_status_last_schedule_time{cronjob="restore-test"}
+              unless on (namespace, cronjob) kube_cronjob_status_last_successful_time
+            )
+          for: 6h
+          labels:
+            severity: critical
+          annotations:
+            summary: 'The monthly restore test did not pass'
+            description: |
+              CronJob `backup-check/restore-test` has not completed a successful run since it was last scheduled.
+              Check: kubectl -n backup-check logs job/<latest restore-test job> --all-containers
 
         - alert: VolSyncBackupStale
           expr: max by (obj_namespace, obj_name) (volsync_volume_out_of_sync{role="source"}) == 1

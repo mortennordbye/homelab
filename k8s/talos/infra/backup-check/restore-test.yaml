@@ -1,0 +1,171 @@
+# Monthly proof that the backups restore, not only that they exist: every VolSync
+# repository is checked with 5 % of its data read back, one volume is restored in
+# full, and the newest dump of each database is loaded into a scratch Postgres of
+# the same major. Nothing here writes to the NAS or touches a live app.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: restore-test
+data:
+  pg-restore.sh: |
+    set -eu
+    f=$(ls -t "/backup/postgres/$DB"/*.dump | head -1)
+    echo "restoring $f"
+    mkdir -p "/work/$DB"
+    cp "$f" "/work/$DB/latest.dump"
+    chown -R postgres:postgres "/work/$DB"
+    pg() { su-exec postgres "$@"; }
+    pg initdb -D "/work/$DB/data" -A trust >/dev/null
+    pg pg_ctl -D "/work/$DB/data" -o "-k /work/$DB -c listen_addresses=''" -w start >/dev/null
+    pg createdb -h "/work/$DB" restored
+    pg pg_restore -h "/work/$DB" --no-owner --no-acl -d restored "/work/$DB/latest.dump"
+    tables=$(pg psql -h "/work/$DB" -d restored -Atc "select count(*) from information_schema.tables where table_schema = 'public'")
+    rows=$(pg psql -h "/work/$DB" -d restored -Atc "select count(*) from $TABLE")
+    pg pg_ctl -D "/work/$DB/data" -w stop >/dev/null
+    echo "$DB: $tables tables, $rows rows in $TABLE"
+    [ "$tables" -gt 0 ] && [ "$rows" -gt 0 ]
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: restore-test
+spec:
+  schedule: "0 10 1 * *"
+  timeZone: Europe/Oslo
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 10800
+      template:
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          automountServiceAccountToken: false
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          initContainers:
+            - name: volsync
+              image: docker.io/restic/restic:0.18.1
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  for repo in /backup/volsync/*/*; do
+                    echo "== check $repo"
+                    restic -r "$repo" --no-lock --no-cache check --read-data-subset=5%
+                  done
+                  echo "== restore mealie/data-pvc"
+                  restic -r /backup/volsync/mealie/data-pvc --no-lock --no-cache \
+                    restore latest --target /work/mealie --verify
+                  find /work/mealie -name mealie.db -size +0 | grep -q .
+                  echo "mealie: $(find /work/mealie -type f | wc -l) files, $(du -sh /work/mealie | cut -f1)"
+              envFrom:
+                - secretRef:
+                    name: restic-password
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+                  readOnly: true
+                - name: work
+                  mountPath: /work
+                - name: work
+                  mountPath: /tmp
+                  subPath: tmp
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  memory: 1Gi
+            - name: logeverylift
+              image: docker.io/library/postgres:18-alpine
+              command:
+                - /bin/sh
+                - /scripts/pg-restore.sh
+              env:
+                - name: DB
+                  value: logeverylift
+                - name: TABLE
+                  value: workout_sets
+              securityContext: &pg-security
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                  add:
+                    - CHOWN
+                    - SETUID
+                    - SETGID
+              volumeMounts: &pg-mounts
+                - name: backup
+                  mountPath: /backup
+                  readOnly: true
+                - name: work
+                  mountPath: /work
+                - name: work
+                  mountPath: /tmp
+                  subPath: tmp
+                - name: scripts
+                  mountPath: /scripts
+              resources: &pg-resources
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+            - name: authentik
+              image: docker.io/library/postgres:17-alpine
+              command:
+                - /bin/sh
+                - /scripts/pg-restore.sh
+              env:
+                - name: DB
+                  value: authentik
+                - name: TABLE
+                  value: authentik_core_user
+              securityContext: *pg-security
+              volumeMounts: *pg-mounts
+              resources: *pg-resources
+          containers:
+            - name: done
+              image: docker.io/library/alpine:3.24
+              command:
+                - echo
+                - restore test passed
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 8Mi
+                limits:
+                  memory: 16Mi
+          volumes:
+            - name: backup
+              nfs:
+                server: nas.local.bigd.no
+                path: /volume1/k8s-backups
+                readOnly: true
+            - name: work
+              emptyDir:
+                sizeLimit: 4Gi
+            - name: scripts
+              configMap:
+                name: restore-test

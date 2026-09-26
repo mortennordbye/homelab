@@ -54,7 +54,8 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 |---|---|---|
 | `InternetDown` | both internet probes fail for 1 min | critical |
 | `PublicSiteDown` | a public site fails for 5 min while the internet is up | critical |
-| `BackupJobStale` | etcd or a `*-db-backup` CronJob not successful for 26 h, or scheduled and never succeeded | critical |
+| `BackupJobStale` | etcd, a `*-db-backup` or a `*-backup-check` CronJob not successful for 26 h, or scheduled and never succeeded | critical |
+| `RestoreTestFailed` | the monthly restore test did not pass, or has not passed for 32 days | critical |
 | `VolSyncBackupStale` | a ReplicationSource out of sync for 6 h | critical |
 | `NasDiskUnhealthy` | `diskStatus` or `diskHealthStatus` not 1 for 10 min | critical |
 | `NasRaidDegraded` | `raidStatus` not 1 for 10 min | critical |
@@ -65,7 +66,8 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 | `ProxmoxMetricsDown` | Proxmox exporter scrape failing for 30 min | critical |
 | `DeploymentUnavailable`, `PodCrashLooping` | a workload down | critical |
 | `ArrQueueStuck`, `MediaRootFolderLow`, `ArrAppUnreachable`, `MediaExporterDown`, `QbittorrentDisconnected` | media stack | critical |
-| `ContainerRestartingFrequently`, `ContainerOOMKilled`, `ArgoCDAppDegraded`, `ArgoCDAppSyncStuck`, `ExternalSecretNotReady`, `CertificateExpiringSoon`, `KubeHpaMaxedOut` | platform | warning (not sent) |
+| `CertificateExpiringSoon` | a cert-manager certificate within 7 days of expiry | critical |
+| `ContainerRestartingFrequently`, `ContainerOOMKilled`, `ArgoCDAppDegraded`, `ArgoCDAppSyncStuck`, `ExternalSecretNotReady`, `KubeHpaMaxedOut` | platform | warning (not sent) |
 | `SynologyNotification` | DSM pushed a Warning or Critical event | critical, `discord-event` |
 | `ProxmoxNotification` | Proxmox or PBS pushed an error | critical, `discord-event` |
 
