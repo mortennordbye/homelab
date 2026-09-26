@@ -19,6 +19,9 @@ on:
       - "terraform/**"
       - ".github/workflows/ci-terraform.yaml"
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-terraform-${{ github.ref }}
   cancel-in-progress: true

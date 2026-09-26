@@ -11,6 +11,9 @@ on:
       - ".github/workflows/render-logo.yaml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 # Commits the rendered logo back to main; queue rather than cancel so a run is
 # never killed between rendering and pushing.
 concurrency:

@@ -10,6 +10,9 @@ on:
       - "portfolio/**"
       - ".github/workflows/ci-portfolio.yaml"
 
+permissions:
+  contents: read
+
 # PR gate: a new push supersedes the old run, so cancelling is free.
 concurrency:
   group: ci-portfolio-${{ github.ref }}

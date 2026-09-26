@@ -12,8 +12,7 @@ on:
     - cron: "40 */6 * * *"
 
 permissions:
-  # write so the job can push to the stars-data branch.
-  contents: write
+  contents: read
 
 concurrency:
   group: star-history
@@ -23,6 +22,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write # pushes to the stars-data branch
     steps:
       - uses: actions/checkout@v7
 

@@ -8,6 +8,9 @@ on:
     paths:
       - "blog/**"
 
+permissions:
+  contents: read
+
 # Serialise image builds. Never cancel in progress, which could tear a
 # half-finished build. Kargo (not this workflow) owns the manifest write and
 # promotion; the same image is promoted stage -> prod, so there is no

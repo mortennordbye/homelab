@@ -14,9 +14,7 @@ on:
     - cron: "0 6 * * 1"
 
 permissions:
-  # write so the nordbye.it job can push its scores to the lighthouse-data
-  # branch (read from there by the profile README's card generator).
-  contents: write
+  contents: read
 
 concurrency:
   group: lighthouse
@@ -26,6 +24,8 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: write # pushes scores to the lighthouse-data branch
     steps:
       - uses: actions/checkout@v7
 

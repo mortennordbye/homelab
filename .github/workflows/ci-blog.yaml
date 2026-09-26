@@ -10,6 +10,9 @@ on:
       - "blog/**"
       - ".github/workflows/ci-blog.yaml"
 
+permissions:
+  contents: read
+
 # PR gate: a new push supersedes the old run, so cancelling is free.
 concurrency:
   group: ci-blog-${{ github.ref }}
