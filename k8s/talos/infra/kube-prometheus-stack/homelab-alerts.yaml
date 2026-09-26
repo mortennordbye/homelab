@@ -274,7 +274,7 @@ spec:
           annotations:
             summary: 'Internet unreachable from the homelab'
             description: |
-              Every internet probe (Google, Cloudflare) has failed for over a minute. The UniFi gateway log under Telia Norge AS shows whether the WAN dropped.
+              Every internet probe (Google, Cloudflare) has failed for over a minute. The UniFi gateway's system log shows whether the WAN dropped.
               Latency history: probe_duration_seconds{job="internet"} in Grafana.
 
     - name: homelab.nas
