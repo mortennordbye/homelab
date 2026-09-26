@@ -1,0 +1,141 @@
+# Backups made outside the cluster only report failures, so a job that stops running
+# stays silent. These checks fail when the newest backup is older than 26 h, and
+# BackupJobStale alerts on any *-backup-check that has not succeeded.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pbs-backup-check
+spec:
+  schedule: "0 9 * * *"
+  timeZone: Europe/Oslo
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 300
+      template:
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: check
+              image: docker.io/library/python:3.13-alpine
+              command:
+                - python3
+                - -c
+                - |
+                  import json, os, ssl, sys, time, urllib.request
+
+                  hosts = ["hyper1", "hyper2", "hyper3"]
+                  # Mirrors exclude in terraform/proxmox/hyper-cluster/datacenter/backup.tf.
+                  excluded = {1000}
+                  ctx = ssl._create_unverified_context()
+
+                  def get(path):
+                      for host in hosts:
+                          req = urllib.request.Request(
+                              f"https://{host}.local.bigd.no:8006/api2/json{path}",
+                              headers={"Authorization": "PVEAPIToken=" + os.environ["PVE_TOKEN"]},
+                          )
+                          try:
+                              return json.load(urllib.request.urlopen(req, context=ctx, timeout=30))["data"]
+                          except OSError as e:
+                              print(f"{host}: {e}")
+                      sys.exit("no Proxmox host answered")
+
+                  guests = [g for g in get("/cluster/resources?type=vm")
+                            if not g.get("template") and g["vmid"] not in excluded]
+                  node = next(n["node"] for n in get("/cluster/resources?type=node") if n["status"] == "online")
+                  newest = {}
+                  for b in get(f"/nodes/{node}/storage/pbs/content?content=backup"):
+                      newest[b["vmid"]] = max(newest.get(b["vmid"], 0), b["ctime"])
+
+                  stale = 0
+                  for g in sorted(guests, key=lambda g: g["vmid"]):
+                      age = (time.time() - newest.get(g["vmid"], 0)) / 3600
+                      ok = age < 26
+                      stale += not ok
+                      print(f"{'ok   ' if ok else 'STALE'} {g['vmid']} {g.get('name', '')}: {age:.1f} h")
+                  sys.exit(1 if stale else 0)
+              envFrom:
+                - secretRef:
+                    name: pve-token
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 64Mi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ha-backup-check
+spec:
+  schedule: "0 9 * * *"
+  timeZone: Europe/Oslo
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 300
+      template:
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          automountServiceAccountToken: false
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: check
+              image: docker.io/library/alpine:3.24
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  ls -lt /backup/home-assistant | head -4
+                  find /backup/home-assistant -maxdepth 1 -name '*.tar' -mmin -1560 | grep -q . \
+                    || { echo "no Home Assistant backup newer than 26 h"; exit 1; }
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  memory: 32Mi
+          volumes:
+            - name: backup
+              nfs:
+                server: nas.local.bigd.no
+                path: /volume1/k8s-backups
+                readOnly: true

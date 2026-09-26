@@ -121,4 +121,5 @@ Bitwarden.
 | 2026-09-26 | VolSync | `mealie/data-pvc` restored into a new PVC in a scratch namespace | 17 files, 5.1 MB, `mealie.db` md5 identical to live |
 | 2026-09-26 | Home Assistant | Archive on the NAS listed | complete: core, 8 add-ons, `protected: true` |
 
-Repeat one layer per quarter and add a row.
+VolSync and Postgres are retested every month by `backup-check/restore-test` (see
+`backups.md`). Test etcd and Home Assistant by hand once a year and add a row.

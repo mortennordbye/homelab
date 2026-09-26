@@ -1,0 +1,12 @@
+# baseline, not restricted: the jobs mount the NAS over NFS and read it as root, the
+# only identity the k8s-backups export maps.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: backup-check
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
