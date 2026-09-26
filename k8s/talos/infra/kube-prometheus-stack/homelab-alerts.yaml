@@ -335,3 +335,37 @@ spec:
             description: |
               Prometheus has not reached the NAS over SNMPv3 for 30 minutes, so the NAS disk and RAID alerts are blind.
               Check: kubectl -n monitoring logs deploy/snmp-exporter, and DSM > Terminal & SNMP.
+
+    - name: homelab.proxmox
+      rules:
+        - alert: ProxmoxHostDown
+          expr: pve_up{id=~"node/.*"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Proxmox {{ $labels.id }} is down'
+            description: |
+              The Proxmox cluster reports {{ $labels.id }} offline for 5 minutes; its Talos VMs are down with it.
+
+        # Shared storages (pbs, nfs-vmstore) report once per host; the max keeps one alert each.
+        - alert: ProxmoxStorageAlmostFull
+          expr: max by (id) (pve_disk_usage_bytes{id=~"storage/.*"} / pve_disk_size_bytes) > 0.85
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Proxmox {{ $labels.id }} is {{ $value | humanizePercentage }} full'
+            description: |
+              local-lvm holds the proxmox-local PVCs, where Proxmox-CSI leaves orphaned volumes; pbs holds every VM backup.
+
+        - alert: ProxmoxMetricsDown
+          expr: max(up{job="pve-exporter"}) == 0
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Proxmox exporter scrape failing'
+            description: |
+              Prometheus has not reached the Proxmox API for 30 minutes, so the Proxmox alerts are blind.
+              Check: kubectl -n monitoring logs deploy/pve-exporter

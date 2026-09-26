@@ -15,6 +15,7 @@ SPOG rows added for the infrastructure around the cluster:
 |---|---|
 | Internet & Backups | public sites up/down and response time, internet up/down, availability, downtime and outages over the range, up/down timeline, probe latency; backup job ages, VolSync sources behind |
 | Network (UniFi) | WAN latency, internet session uptime, WAN drops, gateway CPU, traffic to and from each switch port, port errors and drops |
+| Proxmox | host up/down, VMs running and stopped (templates excluded), host CPU and memory, storage used per host (local, local-lvm) and shared (pbs, nfs-vmstore) |
 | NAS (Synology) | system status, Volume 1 used and free, RAID status, unhealthy disks, temperature, eth0 traffic, disk temperatures |
 
 ## Alert path
@@ -59,6 +60,9 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 | `NasRaidDegraded` | `raidStatus` not 1 for 10 min | critical |
 | `NasVolumeAlmostFull` | Volume 1 above 90 % for 1 h | critical |
 | `NasMetricsDown` | SNMP scrape failing for 30 min | critical |
+| `ProxmoxHostDown` | a Proxmox host offline for 5 min | critical |
+| `ProxmoxStorageAlmostFull` | a Proxmox storage above 85 % for 30 min | critical |
+| `ProxmoxMetricsDown` | Proxmox exporter scrape failing for 30 min | critical |
 | `DeploymentUnavailable`, `PodCrashLooping` | a workload down | critical |
 | `ArrQueueStuck`, `MediaRootFolderLow`, `ArrAppUnreachable`, `MediaExporterDown`, `QbittorrentDisconnected` | media stack | critical |
 | `ContainerRestartingFrequently`, `ContainerOOMKilled`, `ArgoCDAppDegraded`, `ArgoCDAppSyncStuck`, `ExternalSecretNotReady`, `CertificateExpiringSoon`, `KubeHpaMaxedOut` | platform | warning (not sent) |
