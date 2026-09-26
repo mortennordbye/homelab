@@ -1,0 +1,172 @@
+{
+  "_id": "h264ToHevcQsv",
+  "name": "H.264 to HEVC (QSV), skip seeding and remux",
+  "description": "",
+  "tags": "",
+  "flowPlugins": [
+    {
+      "name": "Input File",
+      "sourceRepo": "Community",
+      "pluginName": "inputFile",
+      "version": "1.0.0",
+      "id": "in",
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "inputsDB": {
+        "fileAccessChecks": "false",
+        "pauseNodeIfAccessChecksFail": "false"
+      }
+    },
+    {
+      "name": "Is H.264",
+      "sourceRepo": "Community",
+      "pluginName": "checkVideoCodec",
+      "version": "1.0.0",
+      "id": "codec",
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "inputsDB": {
+        "codec": "h264"
+      }
+    },
+    {
+      "name": "Skip seeding or remux",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "id": "skip",
+      "position": {
+        "x": 400,
+        "y": 200
+      },
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const fs = require('fs');\n  const file = args.inputFileObj._id;\n  const nlink = fs.statSync(file).nlink;\n  const remux = /remux/i.test(file);\n  args.jobLog(`links=${nlink} remux=${remux}`);\n  // A second link means a seeding torrent shares this inode; re-encoding would split it into two copies.\n  const skip = nlink > 1 || remux;\n  return { outputFileObj: args.inputFileObj, outputNumber: skip ? 2 : 1, variables: args.variables };\n};\n"
+      }
+    },
+    {
+      "name": "FFmpeg Start",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandStart",
+      "version": "1.0.0",
+      "id": "start",
+      "position": {
+        "x": 400,
+        "y": 300
+      }
+    },
+    {
+      "name": "HEVC via QSV",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandSetVideoEncoder",
+      "version": "1.0.0",
+      "id": "enc",
+      "position": {
+        "x": 400,
+        "y": 400
+      },
+      "inputsDB": {
+        "outputCodec": "hevc",
+        "ffmpegPresetEnabled": "true",
+        "ffmpegPreset": "slow",
+        "ffmpegQualityEnabled": "true",
+        "ffmpegQuality": "23",
+        "hardwareEncoding": "true",
+        "hardwareType": "qsv",
+        "hardwareDecoding": "true",
+        "forceEncoding": "false"
+      }
+    },
+    {
+      "name": "FFmpeg Execute",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandExecute",
+      "version": "1.0.0",
+      "id": "exec",
+      "position": {
+        "x": 400,
+        "y": 500
+      }
+    },
+    {
+      "name": "New file 20-85% of original",
+      "sourceRepo": "Community",
+      "pluginName": "compareFileSizeRatio",
+      "version": "1.0.0",
+      "id": "ratio",
+      "position": {
+        "x": 400,
+        "y": 600
+      },
+      "inputsDB": {
+        "greaterThan": "20",
+        "lessThan": "85"
+      }
+    },
+    {
+      "name": "Replace Original File",
+      "sourceRepo": "Community",
+      "pluginName": "replaceOriginalFile",
+      "version": "1.0.0",
+      "id": "replace",
+      "position": {
+        "x": 400,
+        "y": 700
+      }
+    }
+  ],
+  "flowEdges": [
+    {
+      "source": "in",
+      "sourceHandle": "1",
+      "target": "codec",
+      "targetHandle": null,
+      "id": "e1"
+    },
+    {
+      "source": "codec",
+      "sourceHandle": "1",
+      "target": "skip",
+      "targetHandle": null,
+      "id": "e2"
+    },
+    {
+      "source": "skip",
+      "sourceHandle": "1",
+      "target": "start",
+      "targetHandle": null,
+      "id": "e3"
+    },
+    {
+      "source": "start",
+      "sourceHandle": "1",
+      "target": "enc",
+      "targetHandle": null,
+      "id": "e4"
+    },
+    {
+      "source": "enc",
+      "sourceHandle": "1",
+      "target": "exec",
+      "targetHandle": null,
+      "id": "e5"
+    },
+    {
+      "source": "exec",
+      "sourceHandle": "1",
+      "target": "ratio",
+      "targetHandle": null,
+      "id": "e6"
+    },
+    {
+      "source": "ratio",
+      "sourceHandle": "1",
+      "target": "replace",
+      "targetHandle": null,
+      "id": "e7"
+    }
+  ]
+}

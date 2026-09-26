@@ -243,6 +243,10 @@ config:
             icon: mdi-broom
             href: https://cleanuparr.local.bigd.no
             description: Download queue cleanup
+        - Tdarr:
+            icon: mdi-transcode
+            href: https://tdarr.local.bigd.no
+            description: Transcode automation
 
     - Infrastructure:
         - Proxmox Hyper1:
