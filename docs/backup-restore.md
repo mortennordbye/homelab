@@ -120,6 +120,7 @@ Bitwarden.
 | 2026-09-26 | etcd | Newest snapshot gunzipped, `etcdutl snapshot status` (3.6.14) | valid, 4029 keys, hash matches the snapshot taken |
 | 2026-09-26 | VolSync | `mealie/data-pvc` restored into a new PVC in a scratch namespace | 17 files, 5.1 MB, `mealie.db` md5 identical to live |
 | 2026-09-26 | Home Assistant | Archive on the NAS listed | complete: core, 8 add-ons, `protected: true` |
+| 2026-09-26 | VolSync, Postgres | First `backup-check/restore-test` run | 19 repositories checked (5 % read), mealie restored and verified (17 files); logeverylift 26 tables, 2441 `workout_sets`; Authentik 230 tables, 3 users |
 
 VolSync and Postgres are retested every month by `backup-check/restore-test` (see
 `backups.md`). Test etcd and Home Assistant by hand once a year and add a row.

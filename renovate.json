@@ -292,6 +292,13 @@
       "addLabels": ["major-update"]
     },
     {
+      "description": "Postgres majors move with the server's data directory, by hand (docs/postgres-18-migration.md). The dump and restore-test images must stay on the server's major, so a tag bump alone is always wrong.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["postgres", "docker.io/library/postgres"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
       "description": "Disable: Kargo owns these tags. The Warehouse writes newTag in kustomization.yaml via kustomize-set-image, and the inline tag in deployment.yaml is dead weight the overlay overrides. Renovate bumping either one just fights the promotion pipeline.",
       "matchDatasources": ["docker"],
       "matchPackageNames": [
