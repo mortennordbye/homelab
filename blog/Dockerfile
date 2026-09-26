@@ -16,7 +16,7 @@ RUN hugo --minify --gc -d /target
 # --- Stage 2: Serve with Nginx ---
 # nginx-unprivileged (uid 101, no root master) so the Deployment can assert
 # runAsNonRoot and drop every capability; minor tag so Renovate tracks it.
-FROM nginxinc/nginx-unprivileged:1.31-alpine
+FROM nginxinc/nginx-unprivileged:1.31-alpine-slim
 
 # Drop the base image's default index.html/50x.html — serve only Hugo's output.
 USER root
