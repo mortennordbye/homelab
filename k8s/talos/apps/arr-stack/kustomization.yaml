@@ -7,6 +7,7 @@ resources:
   - sonarr.yaml
   - radarr.yaml
   - bazarr.yaml
+  - cleanuparr.yaml
   - flaresolverr.yaml
   - unpackerr.yaml
   - exportarr.yaml
