@@ -27,7 +27,7 @@ spec:
         hardware.nordbye.it/gpu: intel-quicksync
       containers:
         - name: intel-gpu-plugin
-          image: intel/intel-gpu-plugin:0.36.0
+          image: intel/intel-gpu-plugin:0.37.0
           imagePullPolicy: IfNotPresent
           env:
             - name: NODE_NAME
