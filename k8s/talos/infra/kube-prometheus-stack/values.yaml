@@ -152,10 +152,10 @@ alertmanager:
         - matchers:
             - namespace = "reelsmith"
           receiver: discord
-        # Proxmox notifications are one-shot events pushed by its webhook, so
-        # they "resolve" when the push expires, not when anything is fixed.
+        # Proxmox and DSM notifications are one-shot events pushed by their
+        # webhooks, so they "resolve" when the push expires, not when anything is fixed.
         - matchers:
-            - namespace = "proxmox"
+            - namespace =~ "proxmox|synology"
           receiver: discord-event
         # Only critical alerts reach Discord; everything else is dropped.
         - matchers:
@@ -168,11 +168,11 @@ alertmanager:
           - api_url_file: /etc/alertmanager/secrets/alertmanager-discord-webhook/url
             channel: "#homelab-alerts"
             send_resolved: false
-            title: '[PROXMOX] {{ .Alerts | len }} notification{{ if gt (len .Alerts) 1 }}s{{ end }}'
+            title: '[{{ .CommonLabels.namespace | toUpper }}] {{ .Alerts | len }} notification{{ if gt (len .Alerts) 1 }}s{{ end }}'
             text: |-
               {{ range .Alerts }}
               *{{ .Annotations.summary }}*
-              *Node:* `{{ .Labels.node }}` · *Severity:* `{{ .Labels.pve_severity }}`
+              *Node:* `{{ .Labels.node }}`{{ if .Labels.pve_severity }} · *Severity:* `{{ .Labels.pve_severity }}`{{ end }}
               {{ .Annotations.description }}
               {{ end }}
       - name: discord
