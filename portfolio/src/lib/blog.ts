@@ -72,14 +72,15 @@ function pick(xml: string, tag: string): string {
 }
 
 function decode(s: string): string {
+  // &amp; last, or "&amp;lt;" would decode twice into "<".
   return s
-    .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;|&apos;|&rsquo;/g, "'")
     .replace(/&ldquo;|&rdquo;/g, '"')
-    .replace(/&hellip;/g, "…");
+    .replace(/&hellip;/g, "…")
+    .replace(/&amp;/g, "&");
 }
 
 function snippet(html: string, maxLen: number): string {
@@ -92,8 +93,8 @@ function snippet(html: string, maxLen: number): string {
   const firstP = body.indexOf("<p");
   if (firstP > 0) body = body.slice(firstP);
 
-  const text = body
-    .replace(/<[^>]+>/g, " ")
+  // Second decode: text inside the HTML carries its own entities.
+  const text = decode(body.replace(/<[^>]+>/g, " "))
     .replace(/\s+/g, " ")
     .trim();
   if (text.length <= maxLen) return text;

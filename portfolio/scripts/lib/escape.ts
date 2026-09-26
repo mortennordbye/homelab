@@ -6,9 +6,19 @@
  */
 export function tex(s: string | undefined | null): string {
   if (s == null) return "";
-  return s
-    .replace(/\\/g, "\\textbackslash{}")
-    .replace(/([&%$#_{}])/g, "\\$1")
-    .replace(/~/g, "\\textasciitilde{}")
-    .replace(/\^/g, "\\textasciicircum{}");
+  // One pass: chained replaces would re-escape the braces of \textbackslash{}.
+  return s.replace(/[\\&%$#_{}~^]/g, (c) => TEX[c]);
 }
+
+const TEX: Record<string, string> = {
+  "\\": "\\textbackslash{}",
+  "~": "\\textasciitilde{}",
+  "^": "\\textasciicircum{}",
+  "&": "\\&",
+  "%": "\\%",
+  $: "\\$",
+  "#": "\\#",
+  _: "\\_",
+  "{": "\\{",
+  "}": "\\}",
+};
