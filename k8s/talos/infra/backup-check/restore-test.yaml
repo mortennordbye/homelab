@@ -68,12 +68,16 @@ spec:
               envFrom:
                 - secretRef:
                     name: restic-password
+              # restore sets each file's original owner and mode, and fails without these.
               securityContext:
                 readOnlyRootFilesystem: true
                 allowPrivilegeEscalation: false
                 capabilities:
                   drop:
                     - ALL
+                  add:
+                    - CHOWN
+                    - FOWNER
               volumeMounts:
                 - name: backup
                   mountPath: /backup

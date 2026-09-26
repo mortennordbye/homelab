@@ -34,12 +34,13 @@ spec:
                 - python3
                 - -c
                 - |
-                  import json, os, ssl, sys, time, urllib.request
+                  import json, os, re, ssl, sys, time, urllib.parse, urllib.request
 
                   hosts = ["hyper1", "hyper2", "hyper3"]
                   # Mirrors exclude in terraform/proxmox/hyper-cluster/datacenter/backup.tf.
                   excluded = {1000}
                   ctx = ssl._create_unverified_context()
+                  since = int(time.time()) - 26 * 3600
 
                   def get(path):
                       for host in hosts:
@@ -53,19 +54,28 @@ spec:
                               print(f"{host}: {e}")
                       sys.exit("no Proxmox host answered")
 
+                  # PVEAuditor cannot list the backups on the pbs storage, so read the vzdump
+                  # task log instead: a guest counts once a task finished its backup.
+                  done = set()
+                  for node in get("/cluster/resources?type=node"):
+                      if node["status"] != "online":
+                          continue
+                      n = node["node"]
+                      for t in get(f"/nodes/{n}/tasks?typefilter=vzdump&source=all&since={since}&limit=100"):
+                          if t.get("id") and t.get("status") == "OK":
+                              done.add(int(t["id"]))
+                          elif not t.get("id") and t.get("status"):
+                              upid = urllib.parse.quote(t["upid"], safe="")
+                              for line in get(f"/nodes/{n}/tasks/{upid}/log?limit=5000"):
+                                  m = re.match(r"INFO: Finished Backup of VM (\d+)", line["t"])
+                                  if m:
+                                      done.add(int(m.group(1)))
+
                   guests = [g for g in get("/cluster/resources?type=vm")
                             if not g.get("template") and g["vmid"] not in excluded]
-                  node = next(n["node"] for n in get("/cluster/resources?type=node") if n["status"] == "online")
-                  newest = {}
-                  for b in get(f"/nodes/{node}/storage/pbs/content?content=backup"):
-                      newest[b["vmid"]] = max(newest.get(b["vmid"], 0), b["ctime"])
-
-                  stale = 0
+                  stale = [g for g in guests if g["vmid"] not in done]
                   for g in sorted(guests, key=lambda g: g["vmid"]):
-                      age = (time.time() - newest.get(g["vmid"], 0)) / 3600
-                      ok = age < 26
-                      stale += not ok
-                      print(f"{'ok   ' if ok else 'STALE'} {g['vmid']} {g.get('name', '')}: {age:.1f} h")
+                      print(f"{'STALE' if g in stale else 'ok   '} {g['vmid']} {g.get('name', '')}")
                   sys.exit(1 if stale else 0)
               envFrom:
                 - secretRef:
