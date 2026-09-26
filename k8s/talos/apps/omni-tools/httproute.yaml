@@ -15,7 +15,13 @@ spec:
   hostnames:
     - omni-tools.bigd.no
   rules:
-    - backendRefs:
+    - filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: omni-tools-cloudflare-only
+      backendRefs:
         - group: ""
           kind: Service
           name: keda-add-ons-http-interceptor-proxy

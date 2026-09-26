@@ -8,6 +8,7 @@ resources:
   - deployment.yaml
   - service.yaml
   - httproute.yaml
+  - cloudflare-only-middleware.yaml
   - namespace.yaml
   - ciliumnetworkpolicy.yaml
   - interceptorroute.yaml

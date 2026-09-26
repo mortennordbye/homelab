@@ -15,7 +15,13 @@ spec:
   hostnames:
     - it-tools.bigd.no
   rules:
-    - backendRefs:
+    - filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: it-tools-cloudflare-only
+      backendRefs:
         - group: ""
           kind: Service
           name: keda-add-ons-http-interceptor-proxy
