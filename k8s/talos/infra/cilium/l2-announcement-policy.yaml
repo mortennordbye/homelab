@@ -4,6 +4,11 @@ metadata:
   name: default-l2-policy
   namespace: kube-system
 spec:
+  # Services with a vip label are announced by the policies below only.
+  serviceSelector:
+    matchExpressions:
+      - key: network.nordbye.it/vip
+        operator: DoesNotExist
   loadBalancerIPs: true
   externalIPs: true
   interfaces:
@@ -11,3 +16,43 @@ spec:
     - ^tmp.*$
   nodeSelector:
     matchLabels: {}
+---
+# The two Traefik VIPs get disjoint node sets, so one bad node cannot take
+# both the public and the private gateway down.
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: traefik-public-l2-policy
+  namespace: kube-system
+spec:
+  serviceSelector:
+    matchLabels:
+      network.nordbye.it/vip: public
+  loadBalancerIPs: true
+  externalIPs: true
+  interfaces:
+    - ^eth[0-9]+$
+    - ^tmp.*$
+  nodeSelector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/control-plane
+        operator: DoesNotExist
+---
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: traefik-private-l2-policy
+  namespace: kube-system
+spec:
+  serviceSelector:
+    matchLabels:
+      network.nordbye.it/vip: private
+  loadBalancerIPs: true
+  externalIPs: true
+  interfaces:
+    - ^eth[0-9]+$
+    - ^tmp.*$
+  nodeSelector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
