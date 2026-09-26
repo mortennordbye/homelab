@@ -22,6 +22,8 @@ SPOG rows added for the infrastructure around the cluster:
 
 Prometheus rules → Alertmanager → Discord. Routing (`k8s/talos/infra/kube-prometheus-stack/values.yaml`):
 
+- `alertname=Watchdog` (always firing) → `heartbeat`: a POST to the Cloudflare watchdog
+  Worker every 5 min.
 - `severity=critical` → `discord`, with resolved messages.
 - namespace `proxmox` or `synology` → `discord-event`: one-shot pushes from Proxmox, PBS and
   DSM, no resolved message (they expire, they do not resolve).
@@ -30,6 +32,13 @@ Prometheus rules → Alertmanager → Discord. Routing (`k8s/talos/infra/kube-pr
 
 During an internet outage Discord is unreachable; Alertmanager retries and delivers once the
 line is back.
+
+The watchdog Worker (`terraform/cloudflare/watchdog`, served at `watchdog.bigd.no`) runs
+on Cloudflare and posts to the same Discord channel directly, as `[WATCHDOG] DOWN` and
+`[WATCHDOG] UP`:
+
+- no heartbeat for 15 min: the cluster, Prometheus, Alertmanager or the home line is down;
+- a public site failing three one-minute checks in a row, seen from the internet.
 
 ## Sources
 
@@ -83,6 +92,5 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 
 ## Known gaps
 
-- The public-site probes run from inside the LAN (out and back through Cloudflare), so they cannot see an outage of the line itself; `InternetDown` covers that. 
 - Cluster DNS forwards to the gateway `10.3.10.1`, so ISP trouble also degrades in-cluster
   name resolution.

@@ -4,12 +4,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Backups & monitoring
 
-### Watchdog Worker: apply, then route the heartbeat
-- **What:** apply `terraform/cloudflare/watchdog` (PR #1204), then add to kube-prometheus-stack an `alertmanager-heartbeat` ExternalSecret reading `terraform output heartbeat_secret_id`, a `webhook_configs` receiver with `url_file` on that secret, and a first route `alertname = "Watchdog"` with `repeat_interval: 5m`. Merge the route only after the secret exists: Alertmanager mounts it and will not start without it.
-- **Why deferred:** needs a Cloudflare API token with account-level Workers Scripts:Edit and Workers KV Storage:Edit, created in the dashboard.
-- **Unblock:** the token in `terraform/cloudflare/watchdog/terraform.tfvars` with the account id and workers.dev subdomain.
-- **Where:** `terraform/cloudflare/watchdog/`, `k8s/talos/infra/kube-prometheus-stack/values.yaml`.
-
 ### Nightly Proxmox backup job ends with errors
 - **What:** the 03:00 vzdump job has finished with "job errors" on some host most nights. On 2026-09-26: VM 134 (genesis-worker-01) failed with `Device 'drive-scsi6' not found`, which is the Proxmox-CSI silent hot-plug (disk in the VM config, missing in QEMU); VM 133 (genesis-ctrl-03) failed with `error during syncfs: Input/output error` writing to the PBS datastore on NFS. Manual reruns of both succeeded, so `pbs-backup-check` passes today, but the next night can fail again.
 - **Why deferred:** the scsi6 fix is a reboot of VM 134 from Proxmox, which restarts Plex and the worker's pods; the syncfs error needs a look at the PBS host's NFS mount and the Synology logs around 03:00.

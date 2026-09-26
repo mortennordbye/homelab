@@ -98,6 +98,11 @@ spec:
         - matchPattern: "*.discord.com"
       toPorts:
         - ports: [{ port: "443", protocol: TCP }]
+    # Heartbeat to the Cloudflare watchdog Worker.
+    - toFQDNs:
+        - matchName: "watchdog.bigd.no"
+      toPorts:
+        - ports: [{ port: "443", protocol: TCP }]
     # Peer gossip between Alertmanager replicas.
     - toEndpoints:
         - matchLabels:

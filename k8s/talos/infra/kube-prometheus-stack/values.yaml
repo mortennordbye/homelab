@@ -120,6 +120,7 @@ alertmanager:
     # The secret key 'url' is then read via api_url_file (see alertmanager.config below).
     secrets:
       - alertmanager-discord-webhook
+      - alertmanager-heartbeat
     storage:
       volumeClaimTemplate:
         spec:
@@ -142,6 +143,14 @@ alertmanager:
       group_interval: 5m
       repeat_interval: 12h
       routes:
+        # The always-firing Watchdog goes to the Cloudflare watchdog Worker every 5 min;
+        # the Worker alerts Discord when it stops. Keep this route first.
+        - matchers:
+            - alertname = "Watchdog"
+          receiver: heartbeat
+          group_wait: 0s
+          group_interval: 1m
+          repeat_interval: 5m
         # reelsmith runs unattended with nobody else watching it, and its
         # warning-tier alerts (queue starved, backup stale, a post stuck) are
         # the whole point of gateway/monitoring.yaml: the failure mode they
@@ -163,6 +172,10 @@ alertmanager:
           receiver: discord
     receivers:
       - name: "null"
+      - name: heartbeat
+        webhook_configs:
+          - url_file: /etc/alertmanager/secrets/alertmanager-heartbeat/url
+            send_resolved: false
       - name: discord-event
         slack_configs:
           - api_url_file: /etc/alertmanager/secrets/alertmanager-discord-webhook/url
