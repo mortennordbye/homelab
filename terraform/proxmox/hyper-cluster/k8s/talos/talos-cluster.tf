@@ -5,6 +5,15 @@ locals {
   kubernetes_endpoint    = coalesce(var.cluster_vip, local.first_control_plane_ip)
 }
 
+# Machine configs render the Kubernetes components at kubernetes_config_contract, so a
+# contract left behind the running version downgrades the control plane on the next apply.
+check "kubernetes_config_contract_current" {
+  assert {
+    condition     = var.kubernetes_config_contract == var.kubernetes_version
+    error_message = "kubernetes_config_contract (${var.kubernetes_config_contract}) differs from kubernetes_version (${var.kubernetes_version}). Applying machine configs now sets the control plane to ${var.kubernetes_config_contract}. Raise the contract once upgrade-k8s has finished."
+  }
+}
+
 resource "talos_machine_secrets" "cluster" {
   talos_version = var.talos_secrets_contract
 
