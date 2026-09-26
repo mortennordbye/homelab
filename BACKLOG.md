@@ -4,12 +4,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### Cluster backups: restore test and runbook
-- **What:** restore each layer once (an etcd snapshot, a `pg_dump` into a scratch database, one VolSync `ReplicationDestination` into a scratch namespace, one Home Assistant backup) and write the runbook; delete logeverylift's unused pre-18 `postgres-pvc`.
-- **Why deferred:** a restore test needs the backups from the first nights to exist.
-- **Unblock:** a few nights of successful runs of every layer in `docs/backup-plan.md` section 5.
-- **Where:** `docs/backup-plan.md`, `k8s/talos/apps/logeverylift/postgres.yaml`.
-
 ### Mealie still hard-logs-out every 48h (upstream)
 - **What:** Mealie's frontend never refreshes its access token (`mealie-recipes/mealie#7835`) — only one `/api/auth/refresh` call appears across the whole app log. At `TOKEN_TIME` (default 48h) the token expires and the axios 401 interceptor wipes the cookie and redirects to `/login`. The replica pin fixes cold-start logouts but not this.
 - **Why deferred:** The only local lever is raising `TOKEN_TIME`, which delays the logout rather than fixing it; the real fix is upstream implementing a refresh loop. Not worth changing config until we know whether a 48h re-login actually bothers anyone.

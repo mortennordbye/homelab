@@ -247,6 +247,7 @@ Log in to logeverylift.com and confirm real workout history renders.
 Leave `postgres-pvc` in place until you have used the app for a while. When you
 are satisfied, delete the PVC declaration from `postgres.yaml` and let ArgoCD
 prune it. Add a line to `BACKLOG.md` if you are not doing that immediately.
+Done 2026-09-26, once nightly `pg_dump` backups of the 18 database existed.
 
 ## The other Postgres 16 in this repo
 

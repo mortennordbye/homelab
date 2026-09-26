@@ -95,7 +95,7 @@ The PBS datastore is itself on the Synology (NFS share `pve-backup`, 2T).
 | Namespace | PVC | Size | In scope |
 |---|---|---|---|
 | logeverylift | postgres-pvc-18 | 1Gi | via pg_dump |
-| logeverylift | postgres-pvc | 1Gi | no: pre-18 data kept from the migration, check whether it can be deleted |
+| logeverylift | postgres-pvc | 1Gi | removed 2026-09-26 (pre-18 rollback volume; the NAS keeps an archived copy) |
 | mealie | data-pvc | 10Gi | yes |
 | open-webui | data-pvc | 5Gi | yes |
 | headroom | headroom-data-pvc | 5Gi | yes |
@@ -300,7 +300,7 @@ A new share, `k8s-backups`, holds everything below, one folder per layer:
 | 3 | App-native backup zips, daily, 14 kept | Sonarr, Radarr, Prowlarr settings (`docs/media-stack/README.md`) | app-internal | set |
 | 4 | VolSync restic, `copyMethod: Direct`, one repository per PVC | controller `k8s/talos/infra/volsync/`, `volsync.yaml` in each app | 01:00 to 01:45, staggered per namespace | running, first sync of all 19 on 2026-09-26 |
 | 5 | Alerts `BackupJobStale`, `VolSyncBackupStale` | `homelab-alerts.yaml` | | loaded; expressions checked against live metrics |
-| 6 | Restore test and runbook | `docs/` | | open, see BACKLOG.md |
+| 6 | Restore test and runbook | `docs/backup-restore.md` | | done 2026-09-26, repeat quarterly |
 
 VolSync covers, per namespace: arr-stack (sonarr, radarr, bazarr, cleanuparr, tdarr
 config), gluetun-vpn (prowlarr, qbittorrent config), plex-media-stack (plex, tautulli,
@@ -325,8 +325,11 @@ VolSync details that matter:
   the VolSync CRDs exist.
 - The chart's templates set no `metadata.namespace` and render their own ServiceMonitor
   under ArgoCD; `k8s/talos/infra/volsync/kustomization.yaml` patches both.
-- DSM failures (Hyper Backup, snapshots, disks) reach the Synology Account by email,
-  not Discord; DSM has no webhook to Alertmanager.
+- DSM notifications at Warning and above (Hyper Backup, snapshots, disks) go to the
+  Synology Account by email and, through a Custom webhook "Alertmanager" (POST to
+  `https://alertmanager.local.bigd.no/api/v2/alerts`, JSON array body with
+  `alertname: SynologyNotification`, `severity: critical`, summary `@@TEXT@@`), to
+  Discord. Verified with DSM's test message.
 
 The nightly Proxmox to PBS job stays as the whole-VM fallback.
 
@@ -366,4 +369,3 @@ Still open:
 
 - Whether to add immutable snapshots to `k8s-volumes` too, and turn on its data
   checksumming (only possible on a new share).
-- Delete logeverylift's old `postgres-pvc` (pre-18 data). No pod mounts it.
