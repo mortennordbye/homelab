@@ -47,6 +47,9 @@ spec:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
             "k8s:app.kubernetes.io/name": loki
+    # Rules sidecar watches ConfigMaps.
+    - toEntities:
+        - kube-apiserver
     # Filesystem storage only; no S3/MinIO egress needed.
 ---
 # Alloy: DaemonSet collecting logs/metrics from every node, pushes to Loki.
@@ -74,6 +77,9 @@ spec:
             "k8s:k8s-app": kube-dns
       toPorts:
         - ports: [{ port: "53", protocol: ANY }]
+          rules:
+            dns:
+              - matchPattern: "*"
     # Push logs to Loki.
     - toEndpoints:
         - matchLabels:

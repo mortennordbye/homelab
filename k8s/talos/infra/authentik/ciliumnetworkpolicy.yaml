@@ -30,9 +30,15 @@ spec:
         - ports:
             - port: "53"
               protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
     # Internal: server -> postgres, worker -> postgres, server <-> worker.
     - toEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": identity
             "k8s:app.kubernetes.io/instance": authentik
     # No external IdP configured yet. Audit mode will reveal SMTP / OIDC upstreams if any.
+    # The worker manages outposts through the Kubernetes API.
+    - toEntities:
+        - kube-apiserver

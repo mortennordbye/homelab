@@ -26,6 +26,13 @@ spec:
         - ports:
             - port: "32400"
               protocol: TCP
+    # Plex remote access through the forwarded port (unifi_port_forward.plex).
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "32400"
+              protocol: TCP
     - fromEntities:
         - host
         - health
@@ -44,6 +51,15 @@ spec:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": traefik
             "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "5055"
+              protocol: TCP
+    # Homepage's Seerr widget.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": homepage
+            "k8s:app.kubernetes.io/name": homepage
       toPorts:
         - ports:
             - port: "5055"

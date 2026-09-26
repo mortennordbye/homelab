@@ -34,6 +34,9 @@ spec:
             "k8s:k8s-app": kube-dns
       toPorts:
         - ports: [{ port: "53", protocol: ANY }]
+          rules:
+            dns:
+              - matchPattern: "*"
     # Public statistics the app proxies: SSB and Norges Bank.
     - toFQDNs:
         - matchName: "data.ssb.no"

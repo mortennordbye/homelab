@@ -41,6 +41,9 @@ spec:
             "k8s:k8s-app": kube-dns
       toPorts:
         - ports: [{ port: "53", protocol: ANY }]
+          rules:
+            dns:
+              - matchPattern: "*"
     # The Meta Graph API — every outbound call this service makes.
     - toFQDNs:
         - matchName: "graph.instagram.com"

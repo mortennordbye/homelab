@@ -35,15 +35,37 @@ spec:
         - ports:
             - port: "53"
               protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
     # GitHub for manifest fetches by argocd-repo-server.
     # *.github.com covers api.github.com, codeload.github.com, etc.
     # *.githubusercontent.com covers raw.githubusercontent.com.
     - toFQDNs:
+        - matchName: "github.com"
         - matchPattern: "*.github.com"
         - matchPattern: "*.githubusercontent.com"
+        # Helm chart repositories rendered by kustomize --enable-helm.
+        - matchName: "ghcr.io"
+        - matchPattern: "*.github.io"
+        - matchName: "charts.external-secrets.io"
+        - matchName: "charts.goauthentik.io"
+        - matchName: "charts.jetstack.io"
+        - matchName: "helm.cilium.io"
       toPorts:
         - ports:
             - port: "443"
+              protocol: TCP
+    # argocd-server reaches Authentik for OIDC through the gateway.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/name": traefik
+      toPorts:
+        - ports:
+            - port: "8443"
+              protocol: TCP
+            - port: "8444"
               protocol: TCP
     # Kubernetes API server for application-controller to reconcile resources.
     - toEntities:

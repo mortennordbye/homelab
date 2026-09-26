@@ -34,6 +34,9 @@ spec:
         - ports:
             - port: "53"
               protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
     # Bitwarden Secrets Manager API + identity (called by the bitwarden-sdk-server pod).
     - toFQDNs:
         - matchName: "api.bitwarden.com"

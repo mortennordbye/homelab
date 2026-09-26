@@ -14,6 +14,13 @@ spec:
         - ports:
             - port: "10250"
               protocol: TCP
+    # API servers on other control planes are seen as remote-node.
+    - fromEntities:
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "10250"
+              protocol: TCP
     - fromEntities:
         - host
         - health
