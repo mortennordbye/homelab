@@ -3,7 +3,8 @@
   "extends": [
     "config:recommended",
     ":rebaseStalePrs",
-    ":semanticCommits"
+    ":semanticCommits",
+    "helpers:pinGitHubActionDigests"
   ],
   "timezone": "Europe/Oslo",
   "schedule": [
@@ -46,6 +47,11 @@
     }
   ],
   "packageRules": [
+    {
+      "description": "Scorecard wants base images pinned by digest. Dockerfiles only; k8s manifests keep plain version tags.",
+      "matchManagers": ["dockerfile"],
+      "pinDigests": true
+    },
     {
       "description": "GitHub Actions: group all minor/patch/digest, automerge",
       "matchManagers": ["github-actions"],
