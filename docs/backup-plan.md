@@ -58,8 +58,9 @@ Out of scope:
     parameters `backup: "true"`, `cache: writethrough`, `ssd: "true"`.
   - `syno-nfs-csi`: csi-driver-nfs against `nas.local.bigd.no:/volume1/k8s-volumes/talos`,
     one `<namespace>/<pvc>` subdirectory per claim, `onDelete: archive`.
-- No VolumeSnapshot CRDs or snapshot controller are installed, so CSI snapshots and
-  clones are not available today.
+- The VolumeSnapshot CRDs are installed (`k8s/talos/infra/crds`, because VolSync's
+  controller will not reconcile without them), but no snapshot controller runs, so CSI
+  snapshots and clones are still not available.
 
 ### 3.2 Current backup coverage
 
@@ -294,11 +295,11 @@ A new share, `k8s-backups`, holds everything below, one folder per layer:
 | # | Layer | Where | Schedule (Europe/Oslo) | Status |
 |---|---|---|---|---|
 | 0 | Home Assistant automatic backups | HA UI, see 3.5 | 01:30 | running |
-| 1 | etcd snapshot CronJob via a Talos API ServiceAccount (`os:etcd:backup`) | `k8s/talos/infra/etcd-backup/`, patch in `talos-cluster.tf` | 00:30 | Talos side applied, manifests in PR |
-| 2 | `pg_dump --format=custom` CronJobs | `k8s/talos/apps/logeverylift/db-backup.yaml`, `k8s/talos/infra/authentik/db-backup.yaml` | 00:45, 00:50 | in PR |
+| 1 | etcd snapshot CronJob via a Talos API ServiceAccount (`os:etcd:backup`) | `k8s/talos/infra/etcd-backup/`, patch in `talos-cluster.tf` | 00:30 | running, tested 2026-09-26 (13 MB gzipped) |
+| 2 | `pg_dump --format=custom` CronJobs | `k8s/talos/apps/logeverylift/db-backup.yaml`, `k8s/talos/infra/authentik/db-backup.yaml` | 00:45, 00:50 | running, tested 2026-09-26 |
 | 3 | App-native backup zips, daily, 14 kept | Sonarr, Radarr, Prowlarr settings (`docs/media-stack/README.md`) | app-internal | set |
-| 4 | VolSync restic, `copyMethod: Direct`, one repository per PVC | controller `k8s/talos/infra/volsync/`, `volsync.yaml` in each app | 01:00 to 01:45, staggered per namespace | in PR |
-| 5 | Alerts `BackupJobStale`, `VolSyncBackupStale` | `homelab-alerts.yaml` | | in PR |
+| 4 | VolSync restic, `copyMethod: Direct`, one repository per PVC | controller `k8s/talos/infra/volsync/`, `volsync.yaml` in each app | 01:00 to 01:45, staggered per namespace | running, first sync of all 19 on 2026-09-26 |
+| 5 | Alerts `BackupJobStale`, `VolSyncBackupStale` | `homelab-alerts.yaml` | | loaded; expressions checked against live metrics |
 | 6 | Restore test and runbook | `docs/` | | open, see BACKLOG.md |
 
 VolSync covers, per namespace: arr-stack (sonarr, radarr, bazarr, cleanuparr, tdarr
@@ -322,6 +323,10 @@ VolSync details that matter:
   Proxmox-CSI disk churn (and its orphaned-volume problem) out of it.
 - The ReplicationSources carry `SkipDryRunOnMissingResource`, so the apps sync before
   the VolSync CRDs exist.
+- The chart's templates set no `metadata.namespace` and render their own ServiceMonitor
+  under ArgoCD; `k8s/talos/infra/volsync/kustomization.yaml` patches both.
+- DSM failures (Hyper Backup, snapshots, disks) reach the Synology Account by email,
+  not Discord; DSM has no webhook to Alertmanager.
 
 The nightly Proxmox to PBS job stays as the whole-VM fallback.
 
