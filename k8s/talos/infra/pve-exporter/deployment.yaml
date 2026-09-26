@@ -1,0 +1,53 @@
+# Queries the Proxmox API on each host for node, VM and storage metrics.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pve-exporter
+  labels:
+    app.kubernetes.io/name: pve-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pve-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pve-exporter
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: pve-exporter
+          image: prompve/prometheus-pve-exporter:3.10.0
+          args:
+            - --config.file=/etc/pve-exporter/pve.yml
+          ports:
+            - name: metrics
+              containerPort: 9221
+          volumeMounts:
+            - name: config
+              mountPath: /etc/pve-exporter
+              readOnly: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 192Mi
+      volumes:
+        - name: config
+          secret:
+            secretName: pve-exporter

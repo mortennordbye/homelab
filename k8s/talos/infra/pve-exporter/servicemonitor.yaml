@@ -1,0 +1,61 @@
+# One endpoint per Proxmox host for node metrics; hyper1 also returns the
+# cluster-wide view (VMs, storage), the others would only repeat it.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pve-exporter
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pve-exporter
+  endpoints:
+    - port: metrics
+      path: /pve
+      interval: 60s
+      scrapeTimeout: 30s
+      params:
+        target:
+          - hyper1.local.bigd.no
+        module:
+          - default
+        cluster:
+          - "1"
+        node:
+          - "1"
+      relabelings:
+        - targetLabel: instance
+          replacement: hyper1
+    - port: metrics
+      path: /pve
+      interval: 60s
+      scrapeTimeout: 30s
+      params:
+        target:
+          - hyper2.local.bigd.no
+        module:
+          - default
+        cluster:
+          - "0"
+        node:
+          - "1"
+      relabelings:
+        - targetLabel: instance
+          replacement: hyper2
+    - port: metrics
+      path: /pve
+      interval: 60s
+      scrapeTimeout: 30s
+      params:
+        target:
+          - hyper3.local.bigd.no
+        module:
+          - default
+        cluster:
+          - "0"
+        node:
+          - "1"
+      relabelings:
+        - targetLabel: instance
+          replacement: hyper3
