@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - volsync.yaml
   - pia-secret.yaml
   - gluetun-config.yaml
   - pvcs.yaml

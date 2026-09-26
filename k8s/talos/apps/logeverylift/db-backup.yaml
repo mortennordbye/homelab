@@ -1,0 +1,109 @@
+# Nightly pg_dump to the NAS, 30 days kept (docs/backup-plan.md). The postgres
+# CiliumNetworkPolicy admits these pods by the app: postgres-backup label.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: logeverylift-db-backup
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  # Retain: deleting the claim must never take the dumps with it.
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: logeverylift
+    name: logeverylift-db-backup
+  nfs:
+    server: nas.local.bigd.no
+    path: /volume1/k8s-backups/postgres/logeverylift
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logeverylift-db-backup
+  namespace: logeverylift
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: logeverylift-db-backup
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: logeverylift-db-backup
+  namespace: logeverylift
+spec:
+  schedule: "45 0 * * *"
+  timeZone: Europe/Oslo
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          labels:
+            app: postgres-backup
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          automountServiceAccountToken: false
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: dump
+              # Same major as the server: pg_dump refuses a newer server.
+              image: postgres:18-alpine
+              env:
+                - name: PGHOST
+                  value: postgres
+                - name: PGUSER
+                  value: postgres
+                - name: PGDATABASE
+                  value: logeverylift_db
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: logeverylift-secret
+                      key: POSTGRES_PASSWORD
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  name="$PGDATABASE-$(date -u +%Y%m%dT%H%M%SZ).dump"
+                  pg_dump --format=custom --file="/backup/.$name.tmp"
+                  mv "/backup/.$name.tmp" "/backup/$name"
+                  find /backup -name "$PGDATABASE-*.dump" -mtime +30 -delete
+                  ls -lh "/backup/$name"
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                  add:
+                    - DAC_OVERRIDE
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+          volumes:
+            - name: backup
+              persistentVolumeClaim:
+                claimName: logeverylift-db-backup

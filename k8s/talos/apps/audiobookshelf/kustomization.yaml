@@ -10,6 +10,7 @@ resources:
   - httproute.yaml
   - metadata-pvc.yaml
   - namespace.yaml
+  - volsync.yaml
   - service.yaml
   - ciliumnetworkpolicy.yaml
   - interceptorroute.yaml

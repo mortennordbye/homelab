@@ -39,6 +39,9 @@ torrent is still in qBittorrent.
 - "Remove Failed Downloads" off in both. Almost every torrent is from a private
   tracker, and removing them from qBittorrent risks hit-and-run strikes.
 - Seerr default folders: `/data/series` and `/data/movies`.
+- General > Backups (also in Prowlarr): interval 1 day, retention 14 days, folder
+  `Backups`. The nightly VolSync copy of `/config` carries these zips, and a restore
+  starts from the newest zip rather than the live database (`docs/backup-plan.md`).
 
 ## Cleanuparr
 

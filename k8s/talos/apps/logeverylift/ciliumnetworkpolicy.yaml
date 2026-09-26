@@ -38,6 +38,14 @@ spec:
         - ports:
             - port: "5432"
               protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": logeverylift
+            app: postgres-backup
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
     - fromEntities:
         - host
         - health

@@ -230,21 +230,33 @@ spec:
 
     - name: homelab.backup
       rules:
-        # The second branch catches a job that has been scheduled but never succeeded,
-        # for which last_successful_time does not exist yet.
-        - alert: EtcdBackupStale
+        # Covers etcd-backup and every *-db-backup CronJob. The second branch catches a
+        # job that has been scheduled but never succeeded, which has no
+        # last_successful_time yet.
+        - alert: BackupJobStale
           expr: |
-            (time() - kube_cronjob_status_last_successful_time{namespace="etcd-backup"}) > 26 * 3600
+            (time() - kube_cronjob_status_last_successful_time{cronjob=~"etcd-backup|.+-db-backup"}) > 26 * 3600
             or
             (
-              kube_cronjob_status_last_schedule_time{namespace="etcd-backup"}
+              kube_cronjob_status_last_schedule_time{cronjob=~"etcd-backup|.+-db-backup"}
               unless on (namespace, cronjob) kube_cronjob_status_last_successful_time
             )
           for: 1h
           labels:
             severity: critical
           annotations:
-            summary: 'No successful etcd snapshot in over a day'
+            summary: 'Backup job {{ $labels.namespace }}/{{ $labels.cronjob }} has not succeeded in over a day'
             description: |
-              CronJob `{{ $labels.namespace }}/{{ $labels.cronjob }}` has not completed a snapshot in over 26 hours.
-              Check: kubectl -n etcd-backup get jobs,pods and the logs of the snapshot and store containers.
+              CronJob `{{ $labels.namespace }}/{{ $labels.cronjob }}` has not completed a backup in over 26 hours.
+              Check: kubectl -n {{ $labels.namespace }} get jobs,pods and the failed pod's logs.
+
+        - alert: VolSyncBackupStale
+          expr: max by (obj_namespace, obj_name) (volsync_volume_out_of_sync{role="source"}) == 1
+          for: 6h
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Volume backup {{ $labels.obj_namespace }}/{{ $labels.obj_name }} is behind schedule'
+            description: |
+              ReplicationSource `{{ $labels.obj_namespace }}/{{ $labels.obj_name }}` has missed its nightly restic backup for over 6 hours.
+              Check: kubectl -n {{ $labels.obj_namespace }} describe replicationsource {{ $labels.obj_name }} and the volsync-src-{{ $labels.obj_name }} pod logs.

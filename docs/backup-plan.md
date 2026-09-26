@@ -288,25 +288,46 @@ one repository per app avoids lock contention.
 
 ## 5. Architecture
 
-A new share, `k8s-backups`, holds everything below. Rollout order:
+A new share, `k8s-backups`, holds everything below, one folder per layer:
+`home-assistant/`, `etcd/`, `postgres/<database>/`, `volsync/<namespace>/<pvc>/`.
 
-0. Home Assistant: HA OS automatic backups to a subfolder of the share. Done, see 3.5.
-1. etcd: `talosctl etcd snapshot` CronJob, `k8s/talos/infra/etcd-backup/`, plus the
-   `kubernetesTalosAPIAccess` patch in `talos-cluster.tf` and the `EtcdBackupStale` alert.
-2. Postgres: `pg_dump` CronJobs for logeverylift and Authentik.
-3. App-native backups set to daily in Sonarr, Radarr, Prowlarr, Bazarr, Plex, Tautulli, Tdarr.
-4. VolSync restic, `copyMethod: Direct`, one repository per PVC, piloted on one small
-   `proxmox-local` volume before the rest. The `syno-nfs-csi` volumes already have
-   6-hourly NAS snapshots, so they come last.
-5. Alerts to Discord (4.7).
-6. Restore test into a scratch namespace, and a runbook in `docs/`.
+| # | Layer | Where | Schedule (Europe/Oslo) | Status |
+|---|---|---|---|---|
+| 0 | Home Assistant automatic backups | HA UI, see 3.5 | 01:30 | running |
+| 1 | etcd snapshot CronJob via a Talos API ServiceAccount (`os:etcd:backup`) | `k8s/talos/infra/etcd-backup/`, patch in `talos-cluster.tf` | 00:30 | Talos side applied, manifests in PR |
+| 2 | `pg_dump --format=custom` CronJobs | `k8s/talos/apps/logeverylift/db-backup.yaml`, `k8s/talos/infra/authentik/db-backup.yaml` | 00:45, 00:50 | in PR |
+| 3 | App-native backup zips, daily, 14 kept | Sonarr, Radarr, Prowlarr settings (`docs/media-stack/README.md`) | app-internal | set |
+| 4 | VolSync restic, `copyMethod: Direct`, one repository per PVC | controller `k8s/talos/infra/volsync/`, `volsync.yaml` in each app | 01:00 to 01:45, staggered per namespace | in PR |
+| 5 | Alerts `BackupJobStale`, `VolSyncBackupStale` | `homelab-alerts.yaml` | | in PR |
+| 6 | Restore test and runbook | `docs/` | | open, see BACKLOG.md |
+
+VolSync covers, per namespace: arr-stack (sonarr, radarr, bazarr, cleanuparr, tdarr
+config), gluetun-vpn (prowlarr, qbittorrent config), plex-media-stack (plex, tautulli,
+seerr config), audiobookshelf (config, metadata), trek (data, uploads), mealie,
+open-webui, headroom, verksted, monitoring (grafana). Left out on purpose: flaresolverr
+(no state), reelsmith (restricted namespace, and it already copies its own state
+off-volume), the databases (dumped instead), Loki, Tempo, Prometheus, Alertmanager,
+the Ollama model cache.
+
+VolSync details that matter:
+
+- Each namespace carries `volsync.backube/privileged-movers: "true"`, so the mover runs
+  as root: it has to read files owned by each app's uid, and write the NFS repository
+  as root (the export has no uid mapping).
+- The repository is `/mnt/repo/<namespace>/<pvc>` on an NFS `moverVolume` of
+  `/volume1/k8s-backups/volsync`. Its Secret `<pvc>-restic` comes from an
+  ExternalSecret; every repository shares the password `volsync-restic-password` in
+  Bitwarden.
+- The restic cache volumes are on `syno-nfs-csi`, not `proxmox-local`, to keep
+  Proxmox-CSI disk churn (and its orphaned-volume problem) out of it.
+- The ReplicationSources carry `SkipDryRunOnMissingResource`, so the apps sync before
+  the VolSync CRDs exist.
 
 The nightly Proxmox to PBS job stays as the whole-VM fallback.
 
-Offsite: `k8s-backups` is added to the existing Hyper Backup task to Google Drive
-(daily 03:20, client-side encrypted), next to `documents` and `personal-media`. The
-cluster jobs therefore run between 00:30 and 02:30 so the upload sees finished files.
-Expected size is about 35 GB; the Google Drive quota is to be checked before adding it.
+Offsite: the Hyper Backup task to Google Drive (daily 03:20, client-side encrypted)
+currently holds only `documents` and `personal-media`, 160 MB. Adding `k8s-backups`
+waits on knowing the Google Drive quota and the task's version rotation (BACKLOG.md).
 
 ### 5.1 Retention
 
@@ -319,7 +340,7 @@ so extra restic points cost only the changed data.
 |---|---|---|---|
 | Home Assistant | daily 01:30 | 14 | about 21 GB (1.47 GB each, apps included) |
 | etcd | daily | 30 | under 2.5 GB |
-| Postgres dumps | daily | 14 daily, 8 weekly | well under 1 GB |
+| Postgres dumps | daily | 30 days | well under 1 GB |
 | VolSync restic | daily | 14 daily, 8 weekly, 6 monthly | about 25 GB after dedupe |
 | `k8s-backups` share snapshots | daily | 30, each immutable for 7 days | changed blocks only |
 

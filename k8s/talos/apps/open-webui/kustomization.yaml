@@ -6,6 +6,7 @@ commonAnnotations:
 
 resources:
   - namespace.yaml
+  - volsync.yaml
   - data-pvc.yaml
   - deployment.yaml
   - service.yaml

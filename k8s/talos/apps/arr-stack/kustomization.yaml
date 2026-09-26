@@ -4,6 +4,7 @@ namespace: arr-stack
 
 resources:
   - namespace.yaml
+  - volsync.yaml
   - sonarr.yaml
   - tdarr.yaml
   - radarr.yaml
