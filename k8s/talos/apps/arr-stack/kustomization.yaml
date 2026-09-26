@@ -5,6 +5,7 @@ namespace: arr-stack
 resources:
   - namespace.yaml
   - sonarr.yaml
+  - tdarr.yaml
   - radarr.yaml
   - bazarr.yaml
   - cleanuparr.yaml
