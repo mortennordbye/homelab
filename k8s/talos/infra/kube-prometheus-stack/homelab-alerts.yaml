@@ -277,6 +277,20 @@ spec:
               Every internet probe (Google, Cloudflare) has failed for over a minute. The UniFi gateway's system log shows whether the WAN dropped.
               Latency history: probe_duration_seconds{job="internet"} in Grafana.
 
+        # Silent while the whole internet is down; InternetDown covers that case.
+        - alert: PublicSiteDown
+          expr: |
+            probe_success{job="public-sites"} == 0
+            and on () max(probe_success{job="internet"}) == 1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: '{{ $labels.instance }} is down from outside'
+            description: |
+              {{ $labels.instance }} has failed through public DNS and Cloudflare for 5 minutes while the internet itself is up.
+              Check the app, its HTTPRoute, and Traefik's public gateway.
+
     - name: homelab.nas
       rules:
         # diskStatus and diskHealthStatus are 1 when normal; anything else is a

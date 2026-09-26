@@ -13,7 +13,7 @@ SPOG rows added for the infrastructure around the cluster:
 
 | Row | Shows |
 |---|---|
-| Internet & Backups | internet up/down, availability, downtime and outages over the range, up/down timeline, probe latency; backup job ages, VolSync sources behind |
+| Internet & Backups | public sites up/down and response time, internet up/down, availability, downtime and outages over the range, up/down timeline, probe latency; backup job ages, VolSync sources behind |
 | Network (UniFi) | WAN latency, internet session uptime, WAN drops, gateway CPU, traffic to and from each switch port, port errors and drops |
 | NAS (Synology) | system status, Volume 1 used and free, RAID status, unhealthy disks, temperature, eth0 traffic, disk temperatures |
 
@@ -36,6 +36,7 @@ line is back.
 |---|---|---|---|
 | kube-prometheus-stack | cluster, nodes, kube-state-metrics | none | `k8s/talos/infra/kube-prometheus-stack/` |
 | blackbox-exporter, Probe `internet` | HTTPS to google.com/generate_204 and cloudflare.com/cdn-cgi/trace every 15 s | none | `k8s/talos/infra/blackbox-exporter/` |
+| blackbox-exporter, Probe `public-sites` | nordbye.it, blog.nordbye.it, logeverylift.com, auth.bigd.no, hub.bigd.no through public DNS and Cloudflare, every 60 s | none | `k8s/talos/infra/blackbox-exporter/probe.yaml` |
 | unpoller | UniFi gateway `https://10.3.10.1` every 30 s; the gateway's system log to Loki | UniFi API key, Bitwarden `unpoller-unifi-api-key` | `k8s/talos/infra/unpoller/` |
 | snmp-exporter | NAS `10.3.10.10`, modules `if_mib` + `synology`, every 60 s | SNMPv3 `snmp-exporter`, SHA/AES, Bitwarden `synology-snmp-auth-password`, `synology-snmp-priv-password` | `k8s/talos/infra/snmp-exporter/` |
 | VolSync metrics | ReplicationSource sync state | none | `k8s/talos/infra/volsync/` |
@@ -50,6 +51,7 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 | Alert | Fires when | Severity |
 |---|---|---|
 | `InternetDown` | both internet probes fail for 1 min | critical |
+| `PublicSiteDown` | a public site fails for 5 min while the internet is up | critical |
 | `BackupJobStale` | etcd or a `*-db-backup` CronJob not successful for 26 h, or scheduled and never succeeded | critical |
 | `VolSyncBackupStale` | a ReplicationSource out of sync for 6 h | critical |
 | `NasDiskUnhealthy` | `diskStatus` or `diskHealthStatus` not 1 for 10 min | critical |
@@ -74,6 +76,6 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 ## Known gaps
 
 - unpoller uses the admin-scoped UniFi API key; a key from a view-only admin would be narrower.
-- No outside-in probe of the public sites (BACKLOG.md), and no Proxmox host exporter.
+- The public-site probes run from inside the LAN (out and back through Cloudflare), so they cannot see an outage of the line itself; `InternetDown` covers that. No Proxmox host exporter yet.
 - Cluster DNS forwards to the gateway `10.3.10.1`, so ISP trouble also degrades in-cluster
   name resolution.
