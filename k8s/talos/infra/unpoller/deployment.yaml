@@ -30,8 +30,6 @@ spec:
           env:
             - name: UP_UNIFI_DEFAULT_URL
               value: https://10.3.10.1
-            - name: UP_UNIFI_DEFAULT_USER
-              value: unpoller
             # The gateway serves a self-signed certificate on its LAN address.
             - name: UP_UNIFI_DEFAULT_VERIFY_SSL
               value: "false"
