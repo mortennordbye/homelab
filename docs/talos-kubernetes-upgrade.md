@@ -164,6 +164,10 @@ way through. Use one:
 --endpoints ${values(local.control_plane_nodes)[0].ip}
 ```
 
+The health gate that runs right after `upgrade-k8s` needs a fixed control plane too. In round 2 the
+VIP was still hopping between control planes after talosctl printed `done`, and a gate on the VIP
+failed with `read: connection reset by peer` even though the upgrade had fully succeeded.
+
 The health gates in `upgrade-talos.tf` are the opposite case and do want the VIP, because there the
 nodes genuinely reboot and a fixed address would go unreachable. Same cluster, opposite answer,
 because one step reboots nodes and the other does not.

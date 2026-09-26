@@ -31,8 +31,13 @@ resource "null_resource" "upgrade_kubernetes" {
         --nodes ${values(local.control_plane_nodes)[0].ip} \
         --to ${var.kubernetes_version}
 
+      # Fixed node for the same reason: the VIP is still re-electing after the last patch, and
+      # a gate on the VIP gets its connection reset.
       echo "Kubernetes upgraded to ${var.kubernetes_version}, waiting for cluster health..."
-      ${local.talos_health_gate}
+      talosctl --talosconfig=./talosconfig health \
+        --endpoints ${values(local.control_plane_nodes)[0].ip} \
+        --nodes ${values(local.control_plane_nodes)[0].ip} \
+        --wait-timeout 15m
     EOT
   }
 
