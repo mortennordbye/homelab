@@ -64,18 +64,10 @@ spec:
             - name: UN_SONARR_0_URL
               value: "http://sonarr:8989"
             - name: UN_SONARR_0_PATHS_0
-              value: "/torrents"
-            - name: UN_SONARR_0_PATHS_1
-              value: "/downloads"
-            - name: UN_SONARR_0_PATHS_2
               value: "/data/torrents"
             - name: UN_RADARR_0_URL
               value: "http://radarr:7878"
             - name: UN_RADARR_0_PATHS_0
-              value: "/torrents"
-            - name: UN_RADARR_0_PATHS_1
-              value: "/downloads"
-            - name: UN_RADARR_0_PATHS_2
               value: "/data/torrents"
           envFrom:
             - secretRef:
@@ -83,10 +75,6 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
-            - name: torrents
-              mountPath: /torrents
-            - name: downloads
-              mountPath: /downloads
           resources:
             requests:
               cpu: 25m
@@ -99,11 +87,3 @@ spec:
           nfs:
             server: nas.local.bigd.no
             path: /volume1/shared-data/media
-        - name: torrents
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/torrents
-        - name: downloads
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/torrents/completed

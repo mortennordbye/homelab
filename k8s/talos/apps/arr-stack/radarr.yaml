@@ -68,16 +68,6 @@ spec:
               mountPath: /config
             - name: data
               mountPath: /data
-            - name: movies
-              mountPath: /movies
-            - name: torrents
-              mountPath: /torrents
-              readOnly: true
-            - name: torrents-download
-              mountPath: /torrents/download
-            - name: downloads
-              mountPath: /downloads
-              readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -116,19 +106,3 @@ spec:
           nfs:
             server: nas.local.bigd.no
             path: /volume1/shared-data/media
-        - name: movies
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/movies
-        - name: torrents
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/torrents
-        - name: torrents-download
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/torrents/download
-        - name: downloads
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/torrents/completed
