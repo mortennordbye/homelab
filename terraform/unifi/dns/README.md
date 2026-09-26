@@ -1,6 +1,6 @@
 # UniFi: local.bigd.no
 
-The 27 user-defined records in the internal split-horizon zone served by the
+The 28 user-defined records in the internal split-horizon zone served by the
 UniFi gateway's resolver, shown in the console under Settings > Policy Table >
 DNS Records. State lives in the shared azurerm backend.
 

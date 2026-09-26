@@ -30,6 +30,7 @@ locals {
     "auth",
     "bazarr",
     "blog-stage",
+    "cleanuparr",
     "flaresolverr",
     "grafana",
     "ha",
