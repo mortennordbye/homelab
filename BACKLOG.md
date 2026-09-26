@@ -239,12 +239,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Phase 2 of round 2 done and the cluster clean for a while. Confirm the Cilium release in `k8s/talos/infra/cilium/` supports Kubernetes 1.37 and read the Talos 1.14 upgrade notes. Then follow `docs/talos-kubernetes-upgrade.md`: backups, baseline plan, raise the targets, dry run a worker and a control plane, apply. Likely the point where the `talos_config_contract` entry above can no longer wait.
 - **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/{terraform.tfvars,upgrade-talos.tf,upgrade-k8s.tf}`, `docs/talos-kubernetes-upgrade.md`.
 
-### Extend Loki PVC after kube-events validated
-- **What:** Bump the Loki single-binary PVC from 20Gi (`singleBinary.persistence.size`). Deferred until the new Kubernetes-events ingestion (Alloy `loki.source.kubernetes_events`, 7d per-stream retention) is confirmed working and we can measure real storage growth.
-- **Why deferred:** Events are low-volume, so 20Gi is expected to suffice; sizing should be driven by observed usage, not guessed. Also, the PVC is a StatefulSet `volumeClaimTemplate` — immutable after creation — so a resize is non-trivial.
-- **Unblock:** Confirm events flow (`{job="kubernetes-events"}` in Grafana) and watch Loki disk usage for a few days. To resize: ensure the `proxmox-local` StorageClass has `allowVolumeExpansion: true`, set the new `size:` in `values.yaml`, then `kubectl delete sts loki --cascade=orphan` and `kubectl patch pvc` on each Loki PVC (or recreate the StatefulSet) so the larger claim takes effect.
-- **Where:** `k8s/talos/infra/loki/values.yaml` (`singleBinary.persistence.size`).
-
 ### Close the Cilium policy audit and move to enforcement
 - **What:** The cluster runs `policyAuditMode: true` (`k8s/talos/infra/cilium/values.yaml`), so the 46 CiliumNetworkPolicies log but never drop. The 2026-09-26 query returned 44 flows. The explained ones are covered by allow rules, and every `toFQDNs` policy now carries a DNS L7 rule. Without that rule Cilium never learns the IPs behind a name, so Discord, GitHub, Bitwarden, Cloudflare and Instagram were all audited despite being allowlisted. In the metric, `source` is the peer and `destination` the audited pod for both directions: `seerr -> traefik` is seerr calling Traefik, not the reverse.
 - **Still unexplained, low volume (per 7d):** egress to `reserved:world` from grafana (~1k), authentik server and worker (~300), prometheus, alloy and gluetun (under 10 each; gluetun on ports outside its tunnel list). Ingress from `reserved:world` to traefik on a port outside its list (10), to gluetun (2) and reelsmith-gateway (1). `monitoring/<no workload>` to prometheus (9). `remote-node` to `argocd-application-controller` (1, likely the upgrade reboots). Grafana, authentik, prometheus and alloy now have DNS visibility, so `hubble observe --verdict AUDIT` shows the names they resolve.
@@ -279,11 +273,3 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** The manifest was written for secrets, and it is not obvious which of these are worth keeping versus genuinely disposable.
 - **Unblock:** Decide which are worth keeping and add them to `.backup-manifest`. The persona markdown files are ~28K and clearly worth it; the 234M `slackdump_20260602_122707.zip` next to them probably is not, and may not belong on the laptop at all given it is a Slack export.
 - **Where:** `.backup-manifest`, `ai/projects/jarvis/`, `ai/prompts/erlendgpt/`.
-
-## Media stack observability (arr-stack)
-
-### Discord alert rules for the media stack
-- **What:** PrometheusRules that page Discord on actionable media-stack conditions — e.g. an *arr queue item stuck (no progress) for >2h, a root folder under a free-space threshold, or an exporter/target down.
-- **Why deferred:** Scope of this change was graphs, not alerting. The metrics now exist, so the rules are a clean follow-up; thresholds want a little live baseline first.
-- **Unblock:** Add a rule group to `homelab-alerts.yaml` (label `release: kube-prometheus-stack`, `severity: critical` routes to Discord per the existing Alertmanager config). Base the stuck-queue expr on `sonarr_queue_total` / `radarr_queue_total` once a normal range is observed.
-- **Where:** `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`.
