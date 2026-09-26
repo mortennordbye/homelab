@@ -35,6 +35,9 @@ spec:
             - name: config
               mountPath: /etc/pve-exporter
               readOnly: true
+            # The exporter needs a writable temp dir; the root filesystem is read-only.
+            - name: tmp
+              mountPath: /tmp
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
@@ -51,3 +54,7 @@ spec:
         - name: config
           secret:
             secretName: pve-exporter
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi
