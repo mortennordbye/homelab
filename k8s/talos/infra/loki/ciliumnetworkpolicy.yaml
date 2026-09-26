@@ -15,6 +15,13 @@ spec:
             "k8s:app.kubernetes.io/name": alloy
       toPorts:
         - ports: [{ port: "3100", protocol: TCP }]
+    # unpoller pushes the UniFi gateway's system log (WAN failures and the like).
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": unpoller
+      toPorts:
+        - ports: [{ port: "3100", protocol: TCP }]
     # Grafana queries.
     - fromEndpoints:
         - matchLabels:

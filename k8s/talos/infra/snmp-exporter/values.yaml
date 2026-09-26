@@ -1,0 +1,28 @@
+fullnameOverride: snmp-exporter
+
+# The image's built-in snmp.yml (modules incl. synology) plus the SNMPv3 auth,
+# which lives in a Secret so the credentials stay out of Git.
+extraArgs:
+  - --config.file=/etc/snmp_exporter/snmp.yml
+  - --config.file=/run/secrets/snmp-exporter/auth.yml
+extraSecretMounts:
+  - name: auth
+    mountPath: /run/secrets/snmp-exporter
+    secretName: snmp-exporter-auth
+    readOnly: true
+    defaultMode: 0440
+
+serviceMonitor:
+  enabled: true
+  interval: 60s
+  scrapeTimeout: 30s
+  selector:
+    release: kube-prometheus-stack
+  params:
+    - name: nas
+      target: 10.3.10.10
+      module:
+        - if_mib
+        - synology
+      auth:
+        - synology_v3

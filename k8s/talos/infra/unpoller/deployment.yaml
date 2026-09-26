@@ -1,0 +1,69 @@
+# Polls the UniFi gateway: WAN latency and drops, switch port traffic and errors,
+# client counts. The gateway's system log goes to Loki.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unpoller
+  labels:
+    app.kubernetes.io/name: unpoller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unpoller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: unpoller
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: unpoller
+          image: ghcr.io/unpoller/unpoller:v5.2.8
+          env:
+            - name: UP_UNIFI_DEFAULT_URL
+              value: https://10.3.10.1
+            - name: UP_UNIFI_DEFAULT_USER
+              value: unpoller
+            # The gateway serves a self-signed certificate on its LAN address.
+            - name: UP_UNIFI_DEFAULT_VERIFY_SSL
+              value: "false"
+            - name: UP_UNIFI_DEFAULT_SAVE_SITES
+              value: "true"
+            - name: UP_UNIFI_DEFAULT_SAVE_DPI
+              value: "false"
+            - name: UP_UNIFI_DEFAULT_SAVE_SYSLOG
+              value: "true"
+            - name: UP_INFLUXDB_DISABLE
+              value: "true"
+            - name: UP_PROMETHEUS_HTTP_LISTEN
+              value: 0.0.0.0:9130
+            - name: UP_LOKI_URL
+              value: http://loki.monitoring.svc:3100
+            - name: UP_POLLER_QUIET
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: unpoller
+          ports:
+            - name: metrics
+              containerPort: 9130
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 20m
+              memory: 48Mi
+            limits:
+              memory: 128Mi
