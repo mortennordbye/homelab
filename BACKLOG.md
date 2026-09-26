@@ -239,12 +239,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Phase 2 of round 2 done and the cluster clean for a while. Confirm the Cilium release in `k8s/talos/infra/cilium/` supports Kubernetes 1.37 and read the Talos 1.14 upgrade notes. Then follow `docs/talos-kubernetes-upgrade.md`: backups, baseline plan, raise the targets, dry run a worker and a control plane, apply. Likely the point where the `talos_config_contract` entry above can no longer wait.
 - **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/{terraform.tfvars,upgrade-talos.tf,upgrade-k8s.tf}`, `docs/talos-kubernetes-upgrade.md`.
 
-### Renovate proposes Kubernetes minors the running Talos cannot run
-- **What:** The `# renovate:` annotations in `terraform.tfvars.example` bump `talos_version` and `kubernetes_version` independently. PR #1039 pairs Talos v1.13.9 with Kubernetes v1.37.0, which Talos 1.13 does not support. It only touches the example file, but it records a combination that cannot be installed.
-- **Why deferred:** Out of scope for the round 2 upgrade itself.
-- **Unblock:** Close #1039 or edit it to v1.13.10 / v1.36.5. Add a `renovate.json` package rule that allows only patch updates for `kubernetes/kubernetes` in that file, so Kubernetes minors are raised by hand together with Talos.
-- **Where:** `renovate.json`, `terraform/proxmox/hyper-cluster/k8s/talos/terraform.tfvars.example`.
-
 ### Extend Loki PVC after kube-events validated
 - **What:** Bump the Loki single-binary PVC from 20Gi (`singleBinary.persistence.size`). Deferred until the new Kubernetes-events ingestion (Alloy `loki.source.kubernetes_events`, 7d per-stream retention) is confirmed working and we can measure real storage growth.
 - **Why deferred:** Events are low-volume, so 20Gi is expected to suffice; sizing should be driven by observed usage, not guessed. Also, the PVC is a StatefulSet `volumeClaimTemplate` — immutable after creation — so a resize is non-trivial.

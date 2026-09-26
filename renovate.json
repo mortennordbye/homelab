@@ -279,6 +279,13 @@
       "addLabels": ["cluster", "major-update"]
     },
     {
+      "description": "Kubernetes minors are capped by the running Talos minor and raised by hand in an upgrade round. Renovate bumps only the patch.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["kubernetes/kubernetes"],
+      "matchUpdateTypes": ["minor", "major"],
+      "enabled": false
+    },
+    {
       "description": "Major updates always require manual review",
       "matchUpdateTypes": ["major"],
       "automerge": false,
