@@ -1,0 +1,19 @@
+# Checks the internet from inside the LAN every 15s; feeds InternetDown in
+# homelab-alerts.yaml and keeps a latency history to show the ISP.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: internet
+  labels:
+    release: kube-prometheus-stack
+spec:
+  jobName: internet
+  interval: 15s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter.monitoring.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - https://www.google.com/generate_204
+        - https://cloudflare.com/cdn-cgi/trace

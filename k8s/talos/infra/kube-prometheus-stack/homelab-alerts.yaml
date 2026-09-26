@@ -260,3 +260,19 @@ spec:
             description: |
               ReplicationSource `{{ $labels.obj_namespace }}/{{ $labels.obj_name }}` has missed its nightly restic backup for over 6 hours.
               Check: kubectl -n {{ $labels.obj_namespace }} describe replicationsource {{ $labels.obj_name }} and the volsync-src-{{ $labels.obj_name }} pod logs.
+
+    - name: homelab.network
+      rules:
+        # Fires only when every internet target fails, so one site being down is not an
+        # outage. Discord is unreachable during the outage itself; Alertmanager retries
+        # and the message lands once the line is back, carrying the start time.
+        - alert: InternetDown
+          expr: max(probe_success{job="internet"}) == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Internet unreachable from the homelab'
+            description: |
+              Every internet probe (Google, Cloudflare) has failed for over a minute. The UniFi gateway log under Telia Norge AS shows whether the WAN dropped.
+              Latency history: probe_duration_seconds{job="internet"} in Grafana.
