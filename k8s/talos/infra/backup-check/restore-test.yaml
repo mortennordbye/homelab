@@ -9,19 +9,13 @@ metadata:
 data:
   pg-restore.sh: |
     set -eu
-    f=$(ls -t "/backup/postgres/$DB"/*.dump | head -1)
-    echo "restoring $f"
-    mkdir -p "/work/$DB"
-    cp "$f" "/work/$DB/latest.dump"
-    chown -R postgres:postgres "/work/$DB"
-    pg() { su-exec postgres "$@"; }
-    pg initdb -D "/work/$DB/data" -A trust >/dev/null
-    pg pg_ctl -D "/work/$DB/data" -o "-k /work/$DB -c listen_addresses=''" -w start >/dev/null
-    pg createdb -h "/work/$DB" restored
-    pg pg_restore -h "/work/$DB" --no-owner --no-acl -d restored "/work/$DB/latest.dump"
-    tables=$(pg psql -h "/work/$DB" -d restored -Atc "select count(*) from information_schema.tables where table_schema = 'public'")
-    rows=$(pg psql -h "/work/$DB" -d restored -Atc "select count(*) from $TABLE")
-    pg pg_ctl -D "/work/$DB/data" -w stop >/dev/null
+    initdb -D "/work/$DB/data" -A trust >/dev/null
+    pg_ctl -D "/work/$DB/data" -o "-k /work/$DB -c listen_addresses=''" -w start >/dev/null
+    createdb -h "/work/$DB" restored
+    pg_restore -h "/work/$DB" --no-owner --no-acl -d restored "/work/$DB/latest.dump"
+    tables=$(psql -h "/work/$DB" -d restored -Atc "select count(*) from information_schema.tables where table_schema = 'public'")
+    rows=$(psql -h "/work/$DB" -d restored -Atc "select count(*) from $TABLE")
+    pg_ctl -D "/work/$DB/data" -w stop >/dev/null
     echo "$DB: $tables tables, $rows rows in $TABLE"
     [ "$tables" -gt 0 ] && [ "$rows" -gt 0 ]
 ---
@@ -93,6 +87,41 @@ spec:
                   memory: 256Mi
                 limits:
                   memory: 1Gi
+            # The dumps are root-only on the NAS; hand copies to the postgres uid (70).
+            - name: stage-dumps
+              image: docker.io/library/alpine:3.24
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  for db in logeverylift authentik; do
+                    f=$(ls -t "/backup/postgres/$db"/*.dump | head -1)
+                    echo "$db: $f"
+                    mkdir -p "/work/$db"
+                    cp "$f" "/work/$db/latest.dump"
+                    chown -R 70:70 "/work/$db"
+                  done
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                  add:
+                    - CHOWN
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+                  readOnly: true
+                - name: work
+                  mountPath: /work
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  memory: 64Mi
             - name: logeverylift
               image: docker.io/library/postgres:18-alpine
               command:
@@ -104,15 +133,14 @@ spec:
                 - name: TABLE
                   value: workout_sets
               securityContext: &pg-security
+                runAsNonRoot: true
+                runAsUser: 70
+                runAsGroup: 70
                 readOnlyRootFilesystem: true
                 allowPrivilegeEscalation: false
                 capabilities:
                   drop:
                     - ALL
-                  add:
-                    - CHOWN
-                    - SETUID
-                    - SETGID
               volumeMounts: &pg-mounts
                 - name: backup
                   mountPath: /backup
