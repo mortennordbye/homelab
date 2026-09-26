@@ -38,6 +38,10 @@ server:
         secretKeyRef:
           name: authentik-secrets
           key: postgres-password
+    - name: AUTHENTIK_DISABLE_UPDATE_CHECK
+      value: "true"
+    - name: AUTHENTIK_DISABLE_STARTUP_ANALYTICS
+      value: "true"
   route:
     main:
       enabled: true
@@ -87,6 +91,10 @@ worker:
         secretKeyRef:
           name: authentik-secrets
           key: postgres-password
+    - name: AUTHENTIK_DISABLE_UPDATE_CHECK
+      value: "true"
+    - name: AUTHENTIK_DISABLE_STARTUP_ANALYTICS
+      value: "true"
 
 postgresql:
   enabled: true
