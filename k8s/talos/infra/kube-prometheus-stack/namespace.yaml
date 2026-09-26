@@ -7,4 +7,5 @@ metadata:
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged
   annotations:
+    volsync.backube/privileged-movers: "true"
     argocd.argoproj.io/sync-wave: "2"

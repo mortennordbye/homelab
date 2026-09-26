@@ -5,6 +5,7 @@ namespace: monitoring
 
 resources:
   - namespace.yaml
+  - volsync.yaml
   - httproutes.yaml
   - grafana-admin-credentials-secret.yaml
   - grafana-oidc-secret.yaml

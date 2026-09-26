@@ -1,0 +1,57 @@
+# Nightly restic backup of this namespace's app volumes to the NAS
+# (docs/backup-plan.md). Every repository shares one password, volsync-restic-password
+# in Bitwarden; without it none of them can be restored.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: verksted-data-restic
+  namespace: verksted
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: verksted-data-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        RESTIC_REPOSITORY: /mnt/repo/verksted/verksted-data
+        RESTIC_PASSWORD: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: "9facc77a-55f0-4901-a05c-b4d101256b09"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: verksted-data
+  namespace: verksted
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  sourcePVC: verksted-data
+  trigger:
+    schedule: "40 1 * * *"
+  restic:
+    repository: verksted-data-restic
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 14
+      weekly: 8
+      monthly: 6
+    cacheStorageClassName: syno-nfs-csi
+    cacheCapacity: 2Gi
+    moverVolumes:
+      - mountPath: repo
+        volumeSource:
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/k8s-backups/volsync

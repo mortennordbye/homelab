@@ -1,0 +1,277 @@
+# Nightly restic backup of this namespace's app volumes to the NAS
+# (docs/backup-plan.md). Every repository shares one password, volsync-restic-password
+# in Bitwarden; without it none of them can be restored.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: sonarr-config-restic
+  namespace: arr-stack
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: sonarr-config-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        RESTIC_REPOSITORY: /mnt/repo/arr-stack/sonarr-config
+        RESTIC_PASSWORD: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: "9facc77a-55f0-4901-a05c-b4d101256b09"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: sonarr-config
+  namespace: arr-stack
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  sourcePVC: sonarr-config
+  trigger:
+    schedule: "0 1 * * *"
+  restic:
+    repository: sonarr-config-restic
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 14
+      weekly: 8
+      monthly: 6
+    cacheStorageClassName: syno-nfs-csi
+    cacheCapacity: 2Gi
+    moverVolumes:
+      - mountPath: repo
+        volumeSource:
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/k8s-backups/volsync
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: radarr-config-restic
+  namespace: arr-stack
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: radarr-config-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        RESTIC_REPOSITORY: /mnt/repo/arr-stack/radarr-config
+        RESTIC_PASSWORD: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: "9facc77a-55f0-4901-a05c-b4d101256b09"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: radarr-config
+  namespace: arr-stack
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  sourcePVC: radarr-config
+  trigger:
+    schedule: "0 1 * * *"
+  restic:
+    repository: radarr-config-restic
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 14
+      weekly: 8
+      monthly: 6
+    cacheStorageClassName: syno-nfs-csi
+    cacheCapacity: 2Gi
+    moverVolumes:
+      - mountPath: repo
+        volumeSource:
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/k8s-backups/volsync
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: bazarr-config-restic
+  namespace: arr-stack
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: bazarr-config-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        RESTIC_REPOSITORY: /mnt/repo/arr-stack/bazarr-config
+        RESTIC_PASSWORD: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: "9facc77a-55f0-4901-a05c-b4d101256b09"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: bazarr-config
+  namespace: arr-stack
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  sourcePVC: bazarr-config
+  trigger:
+    schedule: "0 1 * * *"
+  restic:
+    repository: bazarr-config-restic
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 14
+      weekly: 8
+      monthly: 6
+    cacheStorageClassName: syno-nfs-csi
+    cacheCapacity: 2Gi
+    moverVolumes:
+      - mountPath: repo
+        volumeSource:
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/k8s-backups/volsync
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: cleanuparr-config-restic
+  namespace: arr-stack
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: cleanuparr-config-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        RESTIC_REPOSITORY: /mnt/repo/arr-stack/cleanuparr-config
+        RESTIC_PASSWORD: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: "9facc77a-55f0-4901-a05c-b4d101256b09"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: cleanuparr-config
+  namespace: arr-stack
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  sourcePVC: cleanuparr-config
+  trigger:
+    schedule: "0 1 * * *"
+  restic:
+    repository: cleanuparr-config-restic
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 14
+      weekly: 8
+      monthly: 6
+    cacheStorageClassName: syno-nfs-csi
+    cacheCapacity: 2Gi
+    moverVolumes:
+      - mountPath: repo
+        volumeSource:
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/k8s-backups/volsync
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: tdarr-config-restic
+  namespace: arr-stack
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: tdarr-config-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        RESTIC_REPOSITORY: /mnt/repo/arr-stack/tdarr-config
+        RESTIC_PASSWORD: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: "9facc77a-55f0-4901-a05c-b4d101256b09"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: tdarr-config
+  namespace: arr-stack
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  sourcePVC: tdarr-config
+  trigger:
+    schedule: "0 1 * * *"
+  restic:
+    repository: tdarr-config-restic
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 14
+      weekly: 8
+      monthly: 6
+    cacheStorageClassName: syno-nfs-csi
+    cacheCapacity: 2Gi
+    moverVolumes:
+      - mountPath: repo
+        volumeSource:
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/k8s-backups/volsync

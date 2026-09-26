@@ -6,6 +6,7 @@ resources:
 - namespace.yaml
 - externalsecret.yaml
 - postgres.yaml
+- db-backup.yaml
 - app.yaml
 - httproute.yaml
 - cloudflare-only-middleware.yaml

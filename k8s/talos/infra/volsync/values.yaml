@@ -1,0 +1,3 @@
+# Prometheus scrapes without a bearer token; the endpoint only exposes sync status.
+metrics:
+  disableAuth: true

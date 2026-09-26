@@ -12,7 +12,7 @@
 # Deliberately NOT proxied, unlike ddns.nordbye.it: proxying this record would
 # route every hostname that points at it through the edge, dragging
 # audiobookshelf's audio through the CDN, which Cloudflare's terms prohibit.
-# Cost: the record publishes the residential address (see BACKLOG.md).
+# Cost: the record publishes the residential address, an accepted trade-off.
 resource "cloudflare_dns_record" "ddns" {
   zone_id = data.cloudflare_zone.this.zone_id
   name    = "ddns.${var.zone_name}"
