@@ -24,6 +24,11 @@ spec:
           extensionRef:
             group: traefik.io
             kind: Middleware
+            name: portfolio-cloudflare-only
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
             name: portfolio-ratelimit
         - type: ExtensionRef
           extensionRef:

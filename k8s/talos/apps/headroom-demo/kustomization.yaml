@@ -6,6 +6,7 @@ resources:
 - namespace.yaml
 - deployment.yaml
 - httproute.yaml
+- cloudflare-only-middleware.yaml
 - compress-middleware.yaml
 - service.yaml
 - ciliumnetworkpolicy.yaml

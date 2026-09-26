@@ -24,6 +24,12 @@ spec:
         - path:
             type: PathPrefix
             value: /outpost.goauthentik.io/
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: homepage-cloudflare-only
       backendRefs:
         # Cross-namespace: permitted by a ReferenceGrant in identity.
         - group: ""
@@ -38,6 +44,11 @@ spec:
             type: PathPrefix
             value: /
       filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: homepage-cloudflare-only
         - type: ExtensionRef
           extensionRef:
             group: traefik.io

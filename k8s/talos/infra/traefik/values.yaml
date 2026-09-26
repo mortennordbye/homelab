@@ -60,6 +60,7 @@ ports:
     # edge address. Without trustedIPs the entrypoint strips X-Forwarded-For and
     # the per-client limits downstream key on the edge IP, not the visitor.
     # Ranges from cloudflare.com/ips-v4 and /ips-v6, fetched 2026-08-21.
+    # Also copied into every */cloudflare-only-middleware.yaml.
     forwardedHeaders:
       trustedIPs: &cloudflareIPs
         - 173.245.48.0/20
@@ -143,14 +144,8 @@ service:
 
 log:
   level: INFO
-# JSON so each line carries ClientAddr, the TCP peer, next to ClientHost, the
-# address resolved from X-Forwarded-For. The default common format logs only
-# the resolved one, which makes a Cloudflare-fronted request indistinguishable
-# from one that reached the origin directly. Temporary: this is here to size an
-# IPAllowList on the proxied hostnames, and reverts once the ranges are known.
 accessLog:
   enabled: true
-  format: json
 
 metrics:
   prometheus:

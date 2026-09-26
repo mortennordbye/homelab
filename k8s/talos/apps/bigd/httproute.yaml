@@ -18,7 +18,13 @@ spec:
     - bigd.no
     - www.bigd.no
   rules:
-    - backendRefs:
+    - filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: bigd-cloudflare-only
+      backendRefs:
         - group: ""
           kind: Service
           name: bigd-service

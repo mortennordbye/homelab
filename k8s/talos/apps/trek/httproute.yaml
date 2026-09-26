@@ -16,7 +16,13 @@ spec:
   hostnames:
     - trek.bigd.no
   rules:
-    - backendRefs:
+    - filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: trek-cloudflare-only
+      backendRefs:
         # Route through the KEDA HTTP interceptor so trek wakes from zero.
         - group: ""
           kind: Service

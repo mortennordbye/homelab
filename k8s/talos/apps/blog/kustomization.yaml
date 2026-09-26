@@ -7,6 +7,7 @@ resources:
 - poddisruptionbudget.yaml
 - service.yaml
 - httproute.yaml
+- cloudflare-only-middleware.yaml
 - compress-middleware.yaml
 - ratelimit-middleware.yaml
 - inflight-middleware.yaml

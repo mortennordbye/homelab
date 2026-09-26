@@ -6,6 +6,7 @@ namespace: identity
 resources:
   - namespace.yaml
   - ciliumnetworkpolicy.yaml
+  - cloudflare-only-middleware.yaml
   - authentik-secrets.yaml
   - argocd-blueprint.yaml
   - kargo-blueprint.yaml

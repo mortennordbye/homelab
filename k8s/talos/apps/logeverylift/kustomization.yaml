@@ -8,6 +8,7 @@ resources:
 - postgres.yaml
 - app.yaml
 - httproute.yaml
+- cloudflare-only-middleware.yaml
 - ciliumnetworkpolicy.yaml
 # newTag via the kustomize-set-image promotion step (Kargo). Overrides the inline
 # tag in app.yaml; the logeverylift-cd Warehouse/promotion rewrites it to 0.0.N.

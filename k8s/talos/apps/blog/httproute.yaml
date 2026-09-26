@@ -23,6 +23,11 @@ spec:
           extensionRef:
             group: traefik.io
             kind: Middleware
+            name: blog-cloudflare-only
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
             name: blog-ratelimit
         - type: ExtensionRef
           extensionRef:

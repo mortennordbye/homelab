@@ -41,7 +41,13 @@ spec:
   hostnames:
     - seerr.bigd.no
   rules:
-    - backendRefs:
+    - filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: plex-media-stack-cloudflare-only
+      backendRefs:
         - group: ""
           kind: Service
           name: seerr

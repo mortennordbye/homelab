@@ -24,6 +24,11 @@ spec:
           extensionRef:
             group: traefik.io
             kind: Middleware
+            name: headroom-demo-cloudflare-only
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
             name: headroom-demo-compress
       backendRefs:
         # Straight to the service — no KEDA interceptor, because this app never

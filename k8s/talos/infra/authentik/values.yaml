@@ -61,6 +61,12 @@ server:
         - path:
             type: PathPrefix
             value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: authentik-cloudflare-only
       parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway

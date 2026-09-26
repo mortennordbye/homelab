@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - httproute.yaml
+  - cloudflare-only-middleware.yaml
   - secrets.yaml
   - middleware-authentik.yaml
   - ciliumnetworkpolicy.yaml

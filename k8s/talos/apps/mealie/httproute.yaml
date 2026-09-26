@@ -16,7 +16,13 @@ spec:
   hostnames:
     - mealie.bigd.no
   rules:
-    - backendRefs:
+    - filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: mealie-cloudflare-only
+      backendRefs:
         - group: ""
           kind: Service
           name: mealie-service
