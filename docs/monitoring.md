@@ -38,7 +38,7 @@ line is back.
 | kube-prometheus-stack | cluster, nodes, kube-state-metrics | none | `k8s/talos/infra/kube-prometheus-stack/` |
 | blackbox-exporter, Probe `internet` | HTTPS to google.com/generate_204 and cloudflare.com/cdn-cgi/trace every 15 s | none | `k8s/talos/infra/blackbox-exporter/` |
 | blackbox-exporter, Probe `public-sites` | nordbye.it, blog.nordbye.it, logeverylift.com, auth.bigd.no, hub.bigd.no through public DNS and Cloudflare, every 60 s | none | `k8s/talos/infra/blackbox-exporter/probe.yaml` |
-| unpoller | UniFi gateway `https://10.3.10.1` every 30 s; the gateway's system log to Loki | UniFi API key, Bitwarden `unpoller-unifi-api-key` | `k8s/talos/infra/unpoller/` |
+| unpoller | UniFi gateway `https://10.3.10.1` every 30 s; the gateway's system log to Loki as `{application="unifi_system_log"}` | local UniFi user `unpoller`, Network View Only, other apps None, Bitwarden `unpoller-unifi-password` | `k8s/talos/infra/unpoller/` |
 | snmp-exporter | NAS `10.3.10.10`, modules `if_mib` + `synology`, every 60 s | SNMPv3 `snmp-exporter`, SHA/AES, Bitwarden `synology-snmp-auth-password`, `synology-snmp-priv-password` | `k8s/talos/infra/snmp-exporter/` |
 | pve-exporter | Proxmox API on hyper1-3 (`/pve`, hyper1 also cluster-wide) every 60 s | token of `prometheus@pve` (PVEAuditor), Bitwarden `proxmox-exporter-token` | `k8s/talos/infra/pve-exporter/`, identity in `terraform/proxmox/hyper-cluster/datacenter/access.tf` |
 | VolSync metrics | ReplicationSource sync state | none | `k8s/talos/infra/volsync/` |
@@ -76,11 +76,11 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 | DSM Terminal & SNMP | SNMP on, v1/v2c off, SNMPv3 user `snmp-exporter`, SHA, privacy AES |
 | DSM Notification > Webhooks | Custom "Alertmanager", rule Warning, POST `https://alertmanager.local.bigd.no/api/v2/alerts`, `Content-Type: application/json`, body `[{"labels":{"alertname":"SynologyNotification","severity":"critical","namespace":"synology","node":"nas"},"annotations":{"summary":"@@TEXT@@",...}}]` |
 | DSM Notification > Email | Synology Account, rule All |
+| UniFi Admins & Users | local user `unpoller`, restricted to local access, custom role: Network View Only, everything else None |
 | DSM Shared Folder `shared-data` | quota 31 TiB (NasVolumeAlmostFull watches the volume, not share quotas) |
 
 ## Known gaps
 
-- unpoller uses the admin-scoped UniFi API key; a key from a view-only admin would be narrower.
 - The public-site probes run from inside the LAN (out and back through Cloudflare), so they cannot see an outage of the line itself; `InternetDown` covers that. 
 - Cluster DNS forwards to the gateway `10.3.10.1`, so ISP trouble also degrades in-cluster
   name resolution.

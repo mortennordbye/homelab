@@ -17,6 +17,7 @@ data:
       interval = "1m"
     [unifi.defaults]
       url = "https://10.3.10.1"
+      user = "unpoller"
       # The gateway serves a self-signed certificate on its LAN address.
       verify_ssl = false
       sites = ["all"]
