@@ -17,3 +17,26 @@ spec:
       static:
         - https://www.google.com/generate_204
         - https://cloudflare.com/cdn-cgi/trace
+---
+# The public entry points, requested through public DNS and Cloudflare, so a site that is
+# up in the cluster but unreachable from outside still fails.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: public-sites
+  labels:
+    release: kube-prometheus-stack
+spec:
+  jobName: public-sites
+  interval: 60s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter.monitoring.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - https://nordbye.it
+        - https://blog.nordbye.it
+        - https://logeverylift.com
+        - https://auth.bigd.no
+        - https://hub.bigd.no
