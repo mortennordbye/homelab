@@ -29,6 +29,9 @@ spec:
         - name: intel-gpu-plugin
           image: intel/intel-gpu-plugin:0.37.0
           imagePullPolicy: IfNotPresent
+          # Plex and Tdarr each claim the iGPU; the default of 1 lets only one schedule.
+          args:
+            - "-shared-dev-num=2"
           env:
             - name: NODE_NAME
               valueFrom:

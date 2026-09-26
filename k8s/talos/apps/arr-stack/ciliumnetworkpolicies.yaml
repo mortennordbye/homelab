@@ -144,3 +144,26 @@ spec:
     - fromEntities:
         - host
         - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: tdarr-policy
+  namespace: arr-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: tdarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "8265"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+

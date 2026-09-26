@@ -48,6 +48,7 @@ locals {
     "reelsmith",
     "sonarr",
     "tautulli",
+    "tdarr",
     "traefik",
     "verksted",
     "workout",
