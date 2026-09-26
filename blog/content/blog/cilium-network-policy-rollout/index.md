@@ -6,8 +6,6 @@ draft: false
 tags: ["kubernetes", "cilium", "network-policy", "ebpf", "hubble", "platform-engineering", "intermediate"]
 ---
 
-# Locking Down Your Cluster: Rolling Out Cilium Network Policies Without Breaking Everything
-
 <img src="/images/cilium-logo.svg" alt="Cilium" title="Cilium" style="width:30%;" />
 
 Here is an uncomfortable truth about your Kubernetes cluster.

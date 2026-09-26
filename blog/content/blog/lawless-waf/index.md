@@ -6,8 +6,6 @@ draft: false
 tags: ["azure", "waf", "application-gateway", "terraform", "duckdb", "mcp", "cost-optimization", "intermediate"]
 ---
 
-# Tuning Azure WAF Without Paying Log Analytics Prices
-
 Your Azure WAF just blocked a real customer. Not an attacker, a customer, whose perfectly valid request happened to trip a managed rule. Now you have to prove it was a false positive and write an exclusion that lets them through without punching a hole in the policy.
 
 To do that you need the WAF logs. And the moment you go looking for them, you find out what they cost to read.

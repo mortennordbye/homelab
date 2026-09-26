@@ -6,8 +6,6 @@ draft: false
 tags: ["kubernetes", "tutorial", "beginner", "homelab"]
 ---
 
-# Getting Started with Kubernetes: A Quick Start Guide
-
 <img src="/images/kubernetes-logo.png" alt="Kubernetes" title="Kubernetes Logo" style="width:30%;" />
 
 People keep asking me, "How do I get started with Kubernetes?" And honestly, I never had a good answer to send them. So I wrote this post.
