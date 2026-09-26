@@ -15,7 +15,7 @@ Volume 1). Restores: [`backup-restore.md`](backup-restore.md). Design history an
 | Home Assistant | HA OS automatic backup (encrypted) | 01:30 | 14 | `home-assistant/` | HA UI, Settings > System > Backups |
 | *arr databases | App-native zips inside `/config/Backups` (Sonarr, Radarr, Prowlarr) | daily | 14 days | inside the VolSync copy | app UI, see `media-stack/README.md` |
 | Whole share | Btrfs snapshot, immutable 7 days | 02:45 | 30 | `k8s-backups` | DSM Snapshot Replication |
-| Offsite | Hyper Backup task "Google Workspace", client-side encrypted, Smart Recycle 30 versions | 03:20 | 30 versions | Google Drive `Synology_Backups/Essential_Data` | DSM Hyper Backup |
+| Offsite | Hyper Backup task to Google Drive, client-side encrypted, Smart Recycle 30 versions | 03:20 | 30 versions | Google Drive | DSM Hyper Backup |
 | Whole VMs | Proxmox backup job to PBS | 03:00 | 1 daily, 1 weekly, 1 monthly | PBS datastore on `pve-backup` | `terraform/proxmox/hyper-cluster/datacenter/backup.tf` |
 
 VolSync covers: arr-stack (sonarr, radarr, bazarr, cleanuparr, tdarr), gluetun-vpn (prowlarr,
@@ -57,7 +57,7 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
 | DSM Shared Folder `k8s-backups` | Volume 1, hidden, recycle bin off, data checksum on, compression off, quota 200 GB |
 | DSM NFS rule on `k8s-backups` | `10.3.10.0/24`, read/write, No mapping, sys, async, non-privileged ports, mounted subfolders |
 | DSM Snapshot Replication | `k8s-backups`: daily 02:45, keep 30, immutable 7 days |
-| DSM Hyper Backup | task "Google Workspace" includes `k8s-backups` |
+| DSM Hyper Backup | the Google Drive task includes `k8s-backups` |
 | NAS folders | `home-assistant/`, `etcd/`, `postgres/{logeverylift,authentik}/`, `volsync/` must exist; static NFS PVs need their path |
 | Home Assistant | network storage `k8s_backups` (NFS `10.3.10.10:/volume1/k8s-backups/home-assistant`), daily 01:30, keep 14 |
 | Sonarr, Radarr, Prowlarr | backup interval 1 day, retention 14 days |

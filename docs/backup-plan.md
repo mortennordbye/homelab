@@ -127,7 +127,7 @@ running: Snapshot Replication, Hyper Backup, Container Manager, Replication Serv
 - The `syno-nfs-csi` volumes are therefore already protected by 6-hourly, crash-consistent
   snapshots for about 11 days. They can be recovered from the NAS, though only as whole
   directories and only by someone with DSM access.
-- One Hyper Backup task exists: "Google Workspace", daily 03:20, client-side encrypted,
+- One Hyper Backup task exists: daily 03:20, client-side encrypted,
   to Google Drive (152 GB stored). Before this plan it covered only
   `shared-data/documents` and `shared-data/media/personal-media`.
 - No Snapshot Replication plans, no immutable snapshots, no snapshots on `pve-backup`.
@@ -336,7 +336,7 @@ VolSync details that matter:
 
 The nightly Proxmox to PBS job stays as the whole-VM fallback.
 
-Offsite: `k8s-backups` is in the Hyper Backup task "Google Workspace" to Google Drive
+Offsite: `k8s-backups` is in the Hyper Backup task to Google Drive
 since 2026-09-26, next to `shared-data/documents` and `shared-data/media/personal-media`:
 daily 03:20, client-side encrypted, Smart Recycle rotation with at most 30 versions. The
 account has 2 TB (153 GB used before this). Each nightly HA archive is new data to Hyper
