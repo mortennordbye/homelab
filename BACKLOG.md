@@ -4,6 +4,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Backups & monitoring
 
+### Watchdog: test the missing-heartbeat alert live
+- **What:** prove the watchdog reports a silent homelab: stop Alertmanager's heartbeat for 15+ minutes and confirm `[WATCHDOG] DOWN: Alertmanager heartbeat missing` reaches Discord, then `[WATCHDOG] UP` once it resumes. The site-down path was tested live on 2026-09-26 (a 404 test site posted DOWN after three checks); the heartbeat path shares the same Discord post but has only been tested in the local harness.
+- **Why deferred:** the simplest test stops Alertmanager, which silences every other alert for the duration; it needs a window when that is acceptable.
+- **Unblock:** a quiet window. Scale the Alertmanager StatefulSet to 0 through ArgoCD (or pause the `heartbeat` route), wait 16 minutes, watch Discord, then restore it. The Worker's state is readable in KV key `heartbeat`.
+- **Where:** `terraform/cloudflare/watchdog/worker.js` (`checkHeartbeat`), `k8s/talos/infra/kube-prometheus-stack/values.yaml` (route `Watchdog` → `heartbeat`).
+
 ### Nightly Proxmox backup job ends with errors
 - **What:** the 03:00 vzdump job has finished with "job errors" on some host most nights. On 2026-09-26: VM 134 (genesis-worker-01) failed with `Device 'drive-scsi6' not found`, which is the Proxmox-CSI silent hot-plug (disk in the VM config, missing in QEMU); VM 133 (genesis-ctrl-03) failed with `error during syncfs: Input/output error` writing to the PBS datastore on NFS. Manual reruns of both succeeded, so `pbs-backup-check` passes today, but the next night can fail again.
 - **Why deferred:** the scsi6 fix is a reboot of VM 134 from Proxmox, which restarts Plex and the worker's pods; the syncfs error needs a look at the PBS host's NFS mount and the Synology logs around 03:00.
