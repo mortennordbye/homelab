@@ -9,13 +9,13 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const { live, data } = await readClusterStatus();
 
-  if (!live) {
-    return json({ ...data, source: "snapshot" }, { cache: "no-store" });
-  }
+  const res = live
+    ? // The publisher writes every 5 min; SWR paints the last answer on a
+      // revisit instead of waiting for a new one.
+      json(data, { cache: "public, max-age=30, stale-while-revalidate=300" })
+    : json({ ...data, source: "snapshot" }, { cache: "no-store" });
 
-  // The publisher writes every 5 min; SWR paints the last answer on a
-  // revisit instead of waiting for a new one.
-  return json(data, {
-    cache: "public, max-age=30, stale-while-revalidate=300",
-  });
+  // The pod's spec.nodeName via the downward API; FooterStamp reads it.
+  if (process.env.NODE_NAME) res.headers.set("x-served-by", process.env.NODE_NAME);
+  return res;
 }
