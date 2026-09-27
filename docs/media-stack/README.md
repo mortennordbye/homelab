@@ -53,6 +53,30 @@ those with a remote path mapping.
 Check that an import was hardlinked: `stat -c %h <library file>` shows `2` while the
 torrent is still in qBittorrent.
 
+## Seeding
+
+Almost every torrent is from a private tracker, and stopping one before the tracker's
+minimum earns a hit-and-run strike. Every layer is set so nothing stops or removes a
+torrent early:
+
+| Layer | Setting |
+| ----- | ------- |
+| Prowlarr, per indexer (synced to Sonarr, Radarr, Radarr 4K) | IPTorrents, IPTorrents-Freeleech, TorrentDay, TorrentLeech: seed ratio 5, no seed time. NorBits: no limit. YTS (public): no limit |
+| qBittorrent, global | no ratio, seeding time or inactivity limit; queueing off, so every torrent seeds |
+| Sonarr | "Remove Completed" on: removes a torrent only after qBittorrent stopped it at ratio 5 |
+| Radarr, Radarr 4K | "Remove Completed" off |
+| All arrs | "Remove Failed" off |
+| Cleanuparr | "Delete Private" off, Download Cleaner off |
+| Tdarr | skips hardlinked files (library filter and flow), so a seeding file is never split |
+| Moves inside `/data` | renames on one share keep the inode, so the torrent keeps its data |
+
+qBittorrent stops a torrent at the ratio or the time limit, whichever comes first. A
+ratio limit is only safe for a tracker whose rule is "ratio or time". A tracker that
+demands a minimum seed time regardless of ratio needs its ratio limit removed in
+Prowlarr, as for NorBits.
+
+Check: `stoppedUP` or `missingFiles` in qBittorrent's torrent list should be empty.
+
 ## Sonarr and Radarr
 
 - Root folders: `/data/series`, `/data/movies`.
