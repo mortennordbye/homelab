@@ -146,12 +146,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** A `make hero-posters` target running Playwright against a local dev server. The recipe, now used three times: activate the scene with a synthetic `pointermove`, wait ~4s so textures resolve but the globe has barely rotated from its Atlantic-facing start, set `visibility: hidden` on every sibling of the globe layer plus the header and footer, then screenshot. For an off-centre crop, insert a transparent fixed-position div at the wanted rect and screenshot that element: `sips` only crops from the centre. Three traps found on the 2026-09-01 re-cut: capture at the same aspect the box displays at, or `object-cover` crops the still away from the render it has to match; the fade wrapper is the backdrop's own child containing the canvas, not `canvas.closest('div').parentElement`, because r3f inserts a div of its own and forcing opacity on the wrong node captures a half-faded frame; and CDP `Emulation.setDeviceMetricsOverride` makes the WebGL layer drop out of screenshots entirely, so set the viewport rather than the device metrics. `cwebp -q 91 -m 6 -sharp_yuv` beats JPEG by roughly 3x on these dark plates.
 - **Where:** `portfolio/public/images/{room-poster,globe-poster-mobile}.jpg`, `portfolio/public/images/globe-poster.webp`, `portfolio/src/components/InlineGlobe.tsx`, `portfolio/src/components/sections/Hero.tsx`, `portfolio/src/components/fun/Room.tsx`.
 
-### The hero's stack logos have nowhere to live
-- **What:** The hero used to float nineteen product logos and three shell-command jokes around the globe (`InlineGlobeDecor.ts`, deleted 2026-08-23). The still-life hero cannot carry them: a photographed object on a table with SVG logos orbiting it stops being a photograph. So the only place the site names its stack is now prose. The nineteen SVGs are still committed under `portfolio/public/icons/` and nothing imports them; only `public/icons/social/` is still used, by the fun room.
-- **Why deferred:** Where the stack belongs is a content decision, not a layout one. It could be an honest strip further down the home page, a line in About, or nothing at all if the work case studies already carry it. Picking one silently would be inventing scope.
-- **Unblock:** Decide whether the stack gets its own block on `/`. If yes, build it from the same `public/icons/*.svg` and delete nothing. If no, delete those nineteen files (they are recoverable from git) and the hero loses no signal it still had.
-- **Where:** `portfolio/public/icons/*.svg`, `portfolio/src/components/sections/Hero.tsx`, deleted `portfolio/src/components/InlineGlobeDecor.ts`.
-
 ### Warn and copper are the same hex
 - **What:** `--warn` and `--copper` are both `#c09955` in `tokens.css`, so a `Callout` with `tone="warn"` ("Watch") and any copper mark carry the same colour, separated only by their label. Now that copper is documented as the ink end of the wood/brass/copper material ramp, the overlap is spelled out in two places rather than hidden, but it is not fixed.
 - **Why deferred:** Moving warning off hue 38 does not actually separate them. At equal luminance a hue rotation is invisible to a colour-blind reader: measured, warn at hue 46 against copper is 1.00:1. A real fix means moving warning to a different lightness, which changes how every warning state reads and is a spec decision rather than a code change.
@@ -169,12 +163,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** Inventing content to justify a variant is backwards. They are correct and waiting for a real use.
 - **Unblock:** First case study that needs a Result callout, or first tag that should read as material rather than brand. Check both against the ramp's two rules: brass takes `--fg` only, and `--fg-3` never sits on wood.
 - **Where:** `portfolio/src/components/primitives/{Tag,Callout}.tsx`.
-
-### Captions on raised surfaces fall just under AA
-- **What:** `--fg-3` (`#708373`) is solved to 4.60:1 against the page ground `--bg` (`#0f1410`), but on `--surface` (`#191f1a`) it measures 4.14:1, under the 4.5:1 AA threshold for small text. Cards and panels use both.
-- **Why deferred:** Fixing it means either lightening `--fg-3` for every ground (which loosens the ratio the spec was solved for) or adding a surface-specific caption token, and that is a brand-spec decision rather than a code change.
-- **Unblock:** Pick one: lift `--fg-3` to roughly `#778a7a` so it clears 4.5:1 on `--surface` too, or add `--fg-3-on-surface` and use it inside cards. Update `content/brand.ts` and the `/brand` page either way.
-- **Where:** `portfolio/src/styles/tokens.css`, `portfolio/src/content/brand.ts`, `portfolio/src/app/brand/`.
 
 ### Playwright smoke test suite for portfolio
 - **What:** A small containerized Playwright suite that builds the prod image, runs the container, and asserts key routes return 200 with expected content plus `/healthz`. Wire into `.github/workflows/ci-portfolio.yaml` as a job after lint/typecheck/build.
