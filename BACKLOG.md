@@ -25,9 +25,9 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** DSM Snapshot Replication and Shared Folder settings; record the result in `docs/backups.md` under "Configured outside Git".
 
 ### Radarr 4K follow-ups
-- **What:** four open items from the 4K library setup. Share the `Movies 4K` Plex library with users whose devices play 4K HDR. Decide whether the six 4K remuxes (Frozen II, Jaws 2, Ralph Breaks the Internet, Requiem for a Dream, Spider-Man, The Predator) are set to unmonitored in Radarr 4K, since remux is not in the `2160p` profile and an upgrade check may replace them with WEB releases. Decide whether to run a second Bazarr for Radarr 4K, since Bazarr connects to one Radarr and the 4K films get no subtitles. Confirm the first nightly `radarr-4k-config` VolSync backup succeeded.
-- **Why deferred:** Plex sharing is a per-user choice made in the Plex UI; the remux and Bazarr questions need a decision; the backup first runs at 01:00 after setup.
-- **Unblock:** the sharing and the two decisions from the owner; `kubectl -n arr-stack get replicationsource radarr-4k-config` showing a successful `lastSyncTime`.
+- **What:** open items from the 4K library setup. Point Tautulli at `plex.plex-media-stack:32400` (Settings > Plex Media Server); it still uses an old Plex pod IP and cannot read activity. Share the `Movies 4K` Plex library with users whose devices play 4K HDR. Decide whether the six 4K remuxes (Frozen II, Jaws 2, Ralph Breaks the Internet, Requiem for a Dream, Spider-Man, The Predator) are set to unmonitored in Radarr 4K, since remux is not in the `2160p` profile and an upgrade check may replace them with WEB releases. Decide whether to run a second Bazarr for Radarr 4K, since Bazarr connects to one Radarr and the 4K films get no subtitles.
+- **Why deferred:** Plex sharing is a per-user choice made in the Plex UI; the remux and Bazarr questions need a decision.
+- **Unblock:** a Tautulli login for the address change, the Plex sharing, and the two decisions from the owner.
 - **Where:** Plex Settings > Users & Sharing, Radarr 4K at `https://radarr-4k.local.bigd.no`, `k8s/talos/apps/arr-stack/` (a second Bazarr would go next to `bazarr.yaml`), `docs/media-stack/README.md`.
 
 ### Tdarr: check the first 24/7 runs
