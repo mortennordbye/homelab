@@ -45,6 +45,7 @@ locals {
     "prowlarr",
     "qbittorrent",
     "radarr",
+    "radarr-4k",
     "reelsmith",
     "sonarr",
     "tautulli",
