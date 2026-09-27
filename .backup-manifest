@@ -35,3 +35,20 @@ terraform/unifi/network/terraform.tfvars
 
 # Local device API access (key itself lives in the macOS Keychain, not here)
 hue.env
+
+# Local AI work and design studies. One line per depth: globs match files only
+# and do not recurse. The Slack export and promptfoo cache are left out.
+ai/prompts/*.md
+ai/prompts/erlendgpt/*.md
+ai/projects/jarvis/*
+ai/projects/jarvis/*/*
+ai/projects/jarvis/*/*/*
+ai/projects/jarvis/.state/state.db
+ai/projects/prompt-eval/*
+ai/projects/*/.[!.]*
+ai/projects/prompt-eval/targets/*/*
+ai/projects/prompt-eval/targets/*/*/*
+ai/projects/prompt-eval/targets/*/*/*/*
+.inspiration/*
+.inspiration/*/*
+.notes/*
