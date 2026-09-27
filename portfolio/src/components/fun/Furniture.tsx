@@ -1888,7 +1888,9 @@ function Water({
   const ripple = useRef<THREE.Mesh>(null);
   useEffect(() => () => map.dispose(), [map]);
 
+  // eslint-disable-next-line react-hooks/immutability -- the frame loop scrolls the texture in place by design
   useFrame(({ clock }, dt) => {
+    // eslint-disable-next-line react-hooks/immutability -- see the useFrame above
     map.offset.y -= Math.min(dt, 0.05) * 3.4;
     const r = ripple.current;
     if (r) {

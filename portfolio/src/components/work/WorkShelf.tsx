@@ -60,7 +60,9 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
   const [mode, setMode] = useState<Mode>("loading");
   const [near, setNear] = useState(false);
   const [touched, setTouched] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(
+    () => (items.find((w) => w.kind !== "homelab") ?? items[0])?.slug ?? null,
+  );
   const [opening, setOpening] = useState(false);
   // Set by the scene once it has a frame on screen; until then the poster is
   // what the section shows.
@@ -68,6 +70,7 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
   const onPainted = useCallback(() => setPainted(true), []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- matchMedia is client-only; reading it during render would break hydration
     if (window.matchMedia("(max-width: 1023px)").matches) return setMode("skip");
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setMode("skip");
     setMode("static");
@@ -117,9 +120,7 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
     });
   }, [mode, touched, near]);
 
-  useEffect(() => {
-    if (mode === "static" && near && touched) setMode("webgl");
-  }, [mode, near, touched]);
+  if (mode === "static" && near && touched) setMode("webgl");
 
   useEffect(() => {
     if (!selected) return;
@@ -157,13 +158,6 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
       })),
     [items],
   );
-
-  useEffect(() => {
-    if (!selected && volumes.length) {
-      const first = volumes.find((v) => v.kind !== "homelab") ?? volumes[0];
-      setSelected(first.slug);
-    }
-  }, [selected, volumes]);
 
   if (mode === "skip") return null;
 
@@ -246,6 +240,7 @@ export function WorkShelf({ items }: { items: WorkMeta[] }) {
             Lazy: below lg the whole shelf is display:none and the list is the
             section, so a hidden image never intersects and phones never fetch
             a picture they are not shown. */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- images are unoptimized site-wide, so next/image would add nothing to this still */}
         <img
           src={POSTER}
           alt=""

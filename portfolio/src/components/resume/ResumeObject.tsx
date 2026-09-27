@@ -70,6 +70,7 @@ export function ResumeObject({ counts }: { counts: SheetCounts }) {
   // sits well below the fold, so it loads only on a wide viewport, only with
   // full motion, only once the section is near, and only after a real input.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- matchMedia is client-only; reading it during render would break hydration
     if (window.matchMedia("(max-width: 1023px)").matches) return setMode("skip");
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setMode("skip");
     setMode("static");
@@ -109,9 +110,7 @@ export function ResumeObject({ counts }: { counts: SheetCounts }) {
     });
   }, [mode, touched, near]);
 
-  useEffect(() => {
-    if (mode === "static" && near && touched) setMode("webgl");
-  }, [mode, near, touched]);
+  if (mode === "static" && near && touched) setMode("webgl");
 
   // The manifest is ~3 KB and the controls are visible from the start, so it
   // is fetched once the section is anywhere near rather than on a click.
@@ -241,6 +240,7 @@ export function ResumeObject({ counts }: { counts: SheetCounts }) {
               a cropped still sits at a different scale from it. The sheet in
               the picture prints the default set of sections; the live one
               answers the toggles. */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- images are unoptimized site-wide, so next/image would add nothing to this still */}
           <img
             src={POSTER}
             alt=""

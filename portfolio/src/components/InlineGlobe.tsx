@@ -78,6 +78,7 @@ export function InlineGlobe() {
   useEffect(() => {
     const isNarrow = window.matchMedia("(max-width: 768px)").matches;
     if (isNarrow) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- matchMedia is client-only; reading it during render would break hydration
       setMode("skip");
       return;
     }

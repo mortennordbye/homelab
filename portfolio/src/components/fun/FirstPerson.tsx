@@ -173,6 +173,7 @@ export function FirstPerson({
     };
   }, []);
 
+  // eslint-disable-next-line react-hooks/immutability -- the frame loop moves the camera and its scratch vectors in place by design
   useFrame((_, rawDelta) => {
     const delta = Math.min(rawDelta, 0.05); // never let a stalled tab teleport the camera
     if (!enabled) {
@@ -189,6 +190,7 @@ export function FirstPerson({
     const speed = crouching ? CROUCH_WALK : k.ShiftLeft || k.ShiftRight ? RUN : WALK;
 
     camera.getWorldDirection(fwd);
+    // eslint-disable-next-line react-hooks/immutability -- see the useFrame above
     fwd.y = 0;
     fwd.normalize();
     right.crossVectors(fwd, camera.up).normalize();
@@ -212,6 +214,7 @@ export function FirstPerson({
       px,
       pz,
     );
+    // eslint-disable-next-line react-hooks/immutability -- see the useFrame above
     camera.position.x = nx;
     camera.position.z = nz;
 
