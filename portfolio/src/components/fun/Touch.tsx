@@ -164,7 +164,7 @@ const KNOB_R = 26;
  * nicer once you know it exists and invisible until then, and this room has to
  * explain itself to someone who has never seen it.
  */
-export function TouchStick({ move }: { move: React.RefObject<MoveInput> }) {
+export function TouchStick({ move: moveRef }: { move: React.RefObject<MoveInput> }) {
   const [knob, setKnob] = useState<{ x: number; y: number } | null>(null);
   const id = useRef<number | null>(null);
   const origin = useRef({ x: 0, y: 0 });
@@ -177,16 +177,16 @@ export function TouchStick({ move }: { move: React.RefObject<MoveInput> }) {
       const ky = dy * clamped;
       setKnob({ x: kx, y: ky });
       // Screen y grows downward and forward is -y, hence the flip.
-      move.current = { x: kx / STICK_R, y: -ky / STICK_R };
+      moveRef.current = { x: kx / STICK_R, y: -ky / STICK_R };
     },
-    [move],
+    [moveRef],
   );
 
   const release = useCallback(() => {
     id.current = null;
     setKnob(null);
-    move.current = { x: 0, y: 0 };
-  }, [move]);
+    moveRef.current = { x: 0, y: 0 };
+  }, [moveRef]);
 
   return (
     <div

@@ -32,6 +32,12 @@ type Mode = "loading" | "skip" | "static" | "webgl";
 /** Publisher runs every 5 min; three missed runs means the feed can't be trusted. */
 const STALE_AFTER_MS = 15 * 60_000;
 
+function isStale(feed: ClusterFeed): boolean {
+  if (!feed.generatedAt) return true;
+  const ageMs = Date.now() - new Date(feed.generatedAt).getTime();
+  return Number.isNaN(ageMs) || ageMs > STALE_AFTER_MS;
+}
+
 /**
  * The homelab section's object: the cabinet the whole estate actually lives in,
  * with the set on top carrying the node status.
@@ -54,12 +60,17 @@ export function InfraBench() {
   const [touched, setTouched] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<ClusterFeed | null>(null);
+  // Staleness is settled when the payload lands rather than during render:
+  // Date.now() in a render is impure and the answer would change under React
+  // without the feed having changed at all.
+  const [stale, setStale] = useState(true);
   // Set by the scene once it has a frame on screen. Until then the poster is
   // what the section shows, and on a phone it stays for good.
   const [painted, setPainted] = useState(false);
   const onPainted = useCallback(() => setPainted(true), []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- matchMedia is client-only; reading it during render would break hydration
     if (window.matchMedia("(max-width: 1023px)").matches) return setMode("skip");
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setMode("skip");
     setMode("static");
@@ -99,7 +110,9 @@ export function InfraBench() {
     fetch("/api/v1/infra")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((data: ClusterFeed) => {
-        if (!cancelled) setStatus(data);
+        if (cancelled) return;
+        setStatus(data);
+        setStale(isStale(data));
       })
       .catch(() => {
         /* The baked snapshot below covers this. The section never breaks
@@ -109,16 +122,6 @@ export function InfraBench() {
       cancelled = true;
     };
   }, [mode]);
-
-  // Staleness is settled when the payload lands rather than during render:
-  // Date.now() in a render is impure and the answer would change under React
-  // without the feed having changed at all.
-  const [stale, setStale] = useState(true);
-  useEffect(() => {
-    if (!status?.generatedAt) return setStale(true);
-    const ageMs = Date.now() - new Date(status.generatedAt).getTime();
-    setStale(Number.isNaN(ageMs) || ageMs > STALE_AFTER_MS);
-  }, [status]);
 
   const feed = useMemo(
     () => ({
@@ -138,9 +141,7 @@ export function InfraBench() {
   const device = deviceById(selected);
   const showScene = mode === "webgl" || (mode === "static" && near && touched);
 
-  useEffect(() => {
-    if (showScene && mode === "static") setMode("webgl");
-  }, [showScene, mode]);
+  if (showScene && mode === "static") setMode("webgl");
 
   // The cabinet sits near the bottom of the page, so there is usually plenty of
   // idle time before anyone reaches it. Spend it on the chunk and the veneer

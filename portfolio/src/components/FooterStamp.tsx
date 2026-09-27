@@ -1,6 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+
+const noSubscribe = () => () => {};
+
+// responseStart, not responseEnd: the wait for the first byte is the part of
+// the number the cluster is answerable for. Absent on a client-side route
+// change into this page, which is why it renders conditionally.
+function readTtfb(): number | null {
+  const nav = performance.getEntriesByType("navigation")[0] as
+    | PerformanceNavigationTiming
+    | undefined;
+  return nav?.responseStart ? Math.max(1, Math.round(nav.responseStart)) : null;
+}
 
 /**
  * What the page can measure about its own delivery: the commit it was built
@@ -8,18 +20,10 @@ import { useEffect, useState } from "react";
  * measurements the site actually takes (docs/apps/portfolio/brand/decisions.md §12).
  */
 export function FooterStamp({ buildSha, repo }: { buildSha: string; repo: string }) {
-  const [ttfb, setTtfb] = useState<number | null>(null);
+  const ttfb = useSyncExternalStore(noSubscribe, readTtfb, () => null);
   const [node, setNode] = useState<string | null>(null);
 
   useEffect(() => {
-    const nav = performance.getEntriesByType("navigation")[0] as
-      | PerformanceNavigationTiming
-      | undefined;
-    // responseStart, not responseEnd: the wait for the first byte is the part
-    // of the number the cluster is answerable for. Absent on a client-side
-    // route change into this page, which is why it renders conditionally.
-    if (nav?.responseStart) setTtfb(Math.max(1, Math.round(nav.responseStart)));
-
     // The page itself is prerendered, so this names the pod that answered the
     // API call, which with several replicas need not be the one that served the
     // HTML. Label it as such. no-store: a cached response names a stale pod.

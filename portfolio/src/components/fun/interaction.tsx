@@ -139,7 +139,7 @@ export function InteractionProvider({
    *  the same object with a different label, so tracking the object alone
    *  leaves the HUD showing stale text until you look away and back. */
   const lastPrompt = useRef<string | null>(null);
-  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const raycaster = useMemo(() => new THREE.Raycaster(undefined, undefined, 0, REACH), []);
   const centre = useMemo(() => new THREE.Vector2(0, 0), []);
   const { camera } = useThree();
 
@@ -177,7 +177,6 @@ export function InteractionProvider({
     }
 
     raycaster.setFromCamera(centre, camera);
-    raycaster.far = REACH;
 
     /* Raycasting every registered target every frame looks like it should be
        the expensive part here, and it is not. With ~30 targets it measured as
@@ -242,7 +241,6 @@ export function InteractionProvider({
     (ndc: THREE.Vector2) => {
       if (!enabled) return false;
       raycaster.setFromCamera(ndc, camera);
-      raycaster.far = REACH;
       const wall = wallDistance(raycaster.ray);
       let best: { root: THREE.Object3D; dist: number } | null = null;
       for (const [root] of targets.current) {

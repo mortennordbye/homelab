@@ -139,8 +139,10 @@ function Globe({
   // The loader hands back textures configured for linear data, which is right
   // for the normal map and wrong for the colour map.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- loaded textures are configured in place, the three.js way
     day.colorSpace = THREE.SRGBColorSpace;
     day.anisotropy = 8;
+    // eslint-disable-next-line react-hooks/immutability -- see above
     normal.anisotropy = 8;
     day.needsUpdate = true;
   }, [day, normal]);
@@ -209,6 +211,7 @@ function Globe({
   const hitRef = useRef({ cx: 0, cy: 0, r: 0 });
   const dragRef = useRef({ active: false, lastX: 0, lastT: 0, vel: SPIN_SPEED, hover: false });
 
+  // eslint-disable-next-line react-hooks/immutability -- the frame loop keys the pin material in place by design
   useFrame((_, dt) => {
     const spin = spinRef.current;
     if (!spin) return;
@@ -233,6 +236,7 @@ function Globe({
     // The Morse schedule keys the pin itself rather than a CSS glow, so the
     // easter egg is now something happening on the object.
     const k = keyRef.current;
+    // eslint-disable-next-line react-hooks/immutability -- see the useFrame above
     pinHead.emissiveIntensity = 0.45 + 1.5 * k;
     if (glowRef.current) glowRef.current.intensity = 0.2 + 0.5 * k;
 

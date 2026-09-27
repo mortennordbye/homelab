@@ -131,6 +131,7 @@ export function ArchitectureDiagram({
 
   useEffect(() => {
     if (reduce) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- must land after hydration, or React keeps the server-rendered class and dash offsets
       setHasPlayed(true);
       return;
     }

@@ -768,7 +768,7 @@ function Scene({
   visitor: boolean;
   dragging: boolean;
 }) {
-  const [poweredCount, setPoweredCount] = useState(0);
+  const [stepsOn, setStepsOn] = useState(0);
   /* True only while the camera is easing back out of the chair. `seated` has
      already gone false by then, and it is the flag that was keeping FirstPerson
      off, so without this the walk controller grabs the camera mid-move and
@@ -806,19 +806,13 @@ function Scene({
 
   // Screens come on once the room is up.
   useEffect(() => {
-    if (phase !== "exploring") {
-      setPoweredCount(0);
-      return;
-    }
-    if (reduced) {
-      setPoweredCount(POWER_STEPS);
-      return;
-    }
+    if (phase !== "exploring" || reduced) return;
     const timers = Array.from({ length: POWER_STEPS }, (_, i) =>
-      setTimeout(() => setPoweredCount((c) => Math.max(c, i + 1)), 500 + i * 320),
+      setTimeout(() => setStepsOn((c) => Math.max(c, i + 1)), 500 + i * 320),
     );
     return () => timers.forEach(clearTimeout);
   }, [phase, reduced]);
+  const poweredCount = phase !== "exploring" ? 0 : reduced ? POWER_STEPS : stepsOn;
 
   /* Stand the visitor up just inside the door, looking down the flat.
      This runs once, behind the loading screen, so the first frame anyone sees
@@ -995,15 +989,17 @@ export default function FunRoom({
   const [floorDone, setFloorDone] = useState(false);
   const { progress } = useProgress();
   const [locked, setLocked] = useState(false);
-  const [reduced, setReduced] = useState(false);
+  const [reduced] = useState(
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
   const [prompt, setPrompt] = useState<Prompt>(null);
   const [printerStatus, setPrinterStatus] = useState<string | null>(null);
   const [showBinds, setShowBinds] = useState(true);
-  /* Read during the first render rather than in an effect, unlike `reduced`
-     below. It gates whether the Canvas mounts at all, and a Canvas that mounts
-     for one frame before the gate appears has already started pulling the
-     megabytes of textures the gate exists to ask about. Safe to touch `window`
-     here: this component is dynamic-imported with ssr:false. */
+  /* Read during the first render rather than in an effect. It gates whether
+     the Canvas mounts at all, and a Canvas that mounts for one frame before the
+     gate appears has already started pulling the megabytes of textures the
+     gate exists to ask about. Safe to touch `window` here: this component is
+     dynamic-imported with ssr:false. */
   const [coarse] = useState(() =>
     window.matchMedia("(pointer: coarse)").matches,
   );
@@ -1103,10 +1099,6 @@ export default function FunRoom({
      the same, and the next click re-locks. */
   const closeCard = useCallback(() => {
     setCard(null);
-  }, []);
-
-  useEffect(() => {
-    setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }, []);
 
   /* A floor on how briefly the loading screen can exist. On a warm cache the

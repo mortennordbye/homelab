@@ -364,6 +364,7 @@ function Shelf({
   }, [placed, shared, clothImgs]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- renderer state is mutable by design; on-demand shadows are driven this way
     gl.shadowMap.autoUpdate = false;
     gl.shadowMap.needsUpdate = true;
   }, [gl]);
@@ -481,6 +482,7 @@ function Shelf({
     camera.lookAt(scratch.t);
 
     if (moving) {
+      // eslint-disable-next-line react-hooks/immutability -- renderer state is mutable by design; on-demand shadows are driven this way
       gl.shadowMap.needsUpdate = true;
       invalidate();
     }

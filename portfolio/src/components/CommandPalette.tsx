@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { site } from "@/content/site";
-import { cn } from "@/lib/cn";
 import {
   PHOS_DIM,
   PHOS_LIT,
@@ -38,12 +37,14 @@ type Infra = {
   cert?: { notAfter: string };
 };
 
+const noSubscribe = () => () => {};
 
 export function CommandPalette({ work, services }: Props) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [mounted, setMounted] = useState(false);
+  // False while hydrating, so the server and first client render agree.
+  const mounted = useSyncExternalStore(noSubscribe, () => true, () => false);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
@@ -53,8 +54,6 @@ export function CommandPalette({ work, services }: Props) {
   const [certDays, setCertDays] = useState<number | null>(null);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => setMounted(true), []);
 
   // Close on route change.
   const [lastPath, setLastPath] = useState(pathname);
@@ -243,7 +242,8 @@ export function CommandPalette({ work, services }: Props) {
 
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        open ? close() : openPalette();
+        if (open) close();
+        else openPalette();
         return;
       }
       if (e.key === "/" && !inEditable && !open) {
@@ -266,9 +266,8 @@ export function CommandPalette({ work, services }: Props) {
   }, [mounted, open]);
 
   // Reset selection when filter narrows past it.
-  useEffect(() => {
-    setSelected((s) => Math.min(s, Math.max(0, filtered.length - 1)));
-  }, [filtered]);
+  const lastIndex = Math.max(0, filtered.length - 1);
+  if (selected > lastIndex) setSelected(lastIndex);
 
   if (!mounted) return null;
 

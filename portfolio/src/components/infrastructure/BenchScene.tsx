@@ -386,6 +386,7 @@ function Television({ feed }: { feed: Feed }) {
     const paint = () => {
       if (cancelled) return;
       drawScreen(ctx, feed);
+      // eslint-disable-next-line react-hooks/immutability -- a repainted canvas texture has to be flagged for re-upload
       texture.needsUpdate = true;
       invalidate();
     };
@@ -1096,6 +1097,7 @@ function Framing() {
     const top = BENCH_H + 0.61 + TV_H;
     const height = top - bottom;
     const centre = new THREE.Vector3(0, (top + bottom) / 2, 0);
+    // eslint-disable-next-line react-hooks/immutability -- the default camera is framed imperatively, as R3F expects
     cam.aspect = size.width / Math.max(size.height, 1);
 
     const vFov = (cam.fov * Math.PI) / 180;
