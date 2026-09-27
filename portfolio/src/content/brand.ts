@@ -278,7 +278,7 @@ export const dataSeries = [
   { name: "series 2", label: "plum", light: "#af2c7f", dark: "#c26191" },
   { name: "series 3", label: "blue", light: "#266bba", dark: "#3f8fd0" },
   { name: "series 4", label: "rust", light: "#d15a1f", dark: "#c9713f" },
-  { name: "series 5", label: "indigo", light: "#734eca", dark: "#9077d4" },
+  { name: "series 5", label: "indigo", light: "#5137b8", dark: "#7463c7" },
 ];
 
 export const typeScale = [
