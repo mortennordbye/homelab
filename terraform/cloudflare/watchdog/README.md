@@ -1,18 +1,13 @@
 # Cloudflare: watchdog
 
-A Worker that watches the homelab from outside it. Every minute it:
-
-- alerts when Alertmanager's always-firing `Watchdog` alert has not reached it for
-  15 minutes, which covers the cluster, Prometheus, Alertmanager and the home line
-  being down;
-- requests each public site through Cloudflare and alerts after three failures in a row.
-
-It is served at `watchdog.bigd.no`. It posts to the same Discord channel as Alertmanager, directly, so it works while
-the homelab is down. Terraform reads that webhook from Bitwarden and writes the
-heartbeat URL back to Bitwarden as `alertmanager-heartbeat-url`. Messages start with `[WATCHDOG]`, one on DOWN and one on UP.
-State is one KV key per check, written only on change.
+A Worker on `watchdog.bigd.no` that watches the homelab from outside: it alerts
+Discord when Alertmanager's heartbeat stops and when a public site fails from the
+internet. Terraform writes the heartbeat URL to Bitwarden as
+`alertmanager-heartbeat-url`.
 
 ## Use
+
+State is in the shared azurerm backend under `cloudflare/watchdog.tfstate`.
 
 ```bash
 cp terraform.tfvars.example terraform.tfvars   # token and account id
@@ -23,15 +18,15 @@ terraform plan
 terraform apply
 ```
 
+`terraform.tfvars` needs `account_id` and `cloudflare_api_token` with
+account-level Workers Scripts:Edit and Workers KV Storage:Edit, plus Zone:Read
+and Workers Routes:Edit on bigd.no. The Worker code is `worker.js`; the checked
+sites are `var.sites`.
+
 `terraform output heartbeat_secret_id` is the id the Alertmanager ExternalSecret
 reads (`k8s/talos/infra/kube-prometheus-stack/alertmanager-heartbeat-secret.yaml`).
 
-## Notes
-
-- Cron triggers need the account to have a workers.dev subdomain (`bigd-no`), set by
-  `terraform_data.workers_subdomain`. The Worker itself is not served on it.
-- Replacing `random_password` changes the heartbeat URL. Terraform updates the
-  Bitwarden secret; Alertmanager picks it up within the ExternalSecret's refresh.
-- The site list mirrors the `public-sites` Probe. The in-cluster probe sees the
-  sites from the LAN, this one from the internet.
-- A site served from Cloudflare's cache counts as up, as it is for visitors.
+Docs: [`docs/platform/observability/README.md`](../../../docs/platform/observability/README.md#alert-path)
+for what it alerts on,
+[`docs/platform/network/cloudflare.md`](../../../docs/platform/network/cloudflare.md#watchdog-worker)
+for operating notes.

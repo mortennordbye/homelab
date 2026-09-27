@@ -69,6 +69,12 @@ On a fresh tailnet, before the first `terraform apply`:
   replace it alongside the VM with
   `terraform apply -replace=tailscale_tailnet_key.router`. Tagged devices
   themselves never key-expire.
+- First boot takes a few minutes (apt update, Tailscale install, then
+  `tailscale up`). The machine then shows in the admin console as
+  `tailscale-router` with its route already approved.
+- The join key sits in the Terraform state and in the cloud-init snippet on
+  Proxmox storage. It is single-use, tag-scoped and short-lived, and the state
+  already holds more sensitive material (the Talos PKI).
 - The cloud image and snippet live on the shared `nfs-vmstore`; the VM disk is
   on hyper1's `local-lvm`.
 - Break-glass: keep a WireGuard profile installed on the phone and test it

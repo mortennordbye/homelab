@@ -10,7 +10,7 @@ import { makeSheetTexture, type SheetSpec } from "./sheet-art";
 
 /**
  * The resume as an object: an A4 sheet under a brass clip. Composed like the
- * hero globe (DECISIONS.md §4, rig from §6); the desk is the hero's oak,
+ * hero globe (docs/apps/portfolio/brand/decisions.md §4, rig from §6); the desk is the hero's oak,
  * dimmed so it does not take the sheet's light. Clicking only takes the PDF
  * away — §4: a visitor never has to interact to see something.
  */

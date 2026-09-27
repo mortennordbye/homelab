@@ -17,7 +17,7 @@ import type { CareerData } from "./shelf";
  * Two rules for all of them. Anything meant to be looked at presents a face to
  * the room, big enough to put a crosshair on. And it is a thing somebody would
  * own: none of these hangs on a wall any more, because six portfolio panels
- * screwed to a flat is the failure `branding/ART-DIRECTION.md` names — a UI
+ * screwed to a flat is the failure `docs/apps/portfolio/brand/art-direction.md` names — a UI
  * pasted over a photograph — committed in three dimensions.
  */
 

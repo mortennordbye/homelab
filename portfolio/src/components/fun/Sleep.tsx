@@ -48,7 +48,7 @@ const VISIT_AT = EYES_AT + 2000;
 /** He speaks once he is at the bedside; Visitor.tsx takes 1.3s to walk him in. */
 const VOICE_AT = VISIT_AT + 1300;
 /** The order to get up: a stock synthetic voice, not a clone of anyone.
- *  Provenance in branding/ASSETS.md. */
+ *  Provenance in docs/apps/portfolio/brand/assets.md. */
 const ORDER = "/fun/order.mp3";
 /** Seconds into ORDER at which each line starts, read off its silences. Any
  *  re-cut of the file has to re-time these. */

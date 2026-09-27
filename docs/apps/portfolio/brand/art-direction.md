@@ -1,7 +1,7 @@
 # Art direction: the portfolio as an office
 
-The rule book for how `nordbye.it` looks and moves. `branding/README.md` covers
-assets that live off-site; `src/content/brand.ts` holds the tokens. This file
+The rule book for how `nordbye.it` looks and moves. `portfolio/branding/README.md` covers
+assets that live off-site; `portfolio/src/content/brand.ts` holds the tokens. This file
 holds the intent both of those have to serve, and it wins when they disagree.
 
 Status: direction locked, nothing built against it yet. Written before the work
@@ -261,7 +261,7 @@ Below that, the plain view.
 
 ## 11. The conflict with the current tokens
 
-`src/content/brand.ts` currently bans what this document requires. Its `imagery`
+`portfolio/src/content/brand.ts` currently bans what this document requires. Its `imagery`
 block says no photorealism, geometry over illustration, no 3D-rendered blobs, and
 prescribes flat vector compositions.
 
@@ -270,10 +270,6 @@ because a flat card survives feed re-compression and a render does not. So the
 rule splits rather than gets replaced. On-site the direction is hyperreal and
 material. Off-site, in anything that will be re-compressed by LinkedIn, Reddit or
 an OG preview, it stays flat and geometric.
-
-`branding/README.md` also still documents a "fjord at midnight" arctic-blue
-palette the site no longer uses. It needs updating to Eucalyptus, separately from
-this.
 
 ## 12. How this fails
 

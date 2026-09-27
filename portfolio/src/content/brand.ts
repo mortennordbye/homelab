@@ -373,7 +373,7 @@ export const motion = [
  * and a render turns to mud where a flat card survives.
  *
  * Applying either rule to the other surface is what makes a brand look
- * borrowed. See `branding/ART-DIRECTION.md` for the on-site half in full.
+ * borrowed. See `docs/apps/portfolio/brand/art-direction.md` for the on-site half in full.
  */
 export const imagery = {
   intro:

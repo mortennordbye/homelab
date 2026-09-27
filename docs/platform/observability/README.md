@@ -55,6 +55,9 @@ on Cloudflare and posts to the same Discord channel directly, as `[WATCHDOG] DOW
 - no heartbeat for 15 min: the cluster, Prometheus, Alertmanager or the home line is down;
 - a public site failing three one-minute checks in a row, seen from the internet.
 
+Operating notes for the Worker (heartbeat URL rotation, the site list) are in
+[`../network/cloudflare.md`](../network/cloudflare.md#watchdog-worker).
+
 ## Sources
 
 | Source | Scrapes | Auth | Defined in |

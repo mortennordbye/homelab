@@ -115,7 +115,7 @@ export default function ApiPage() {
         className="border-t border-line"
       >
         {/* The reference is a specification, so it is printed as one:
-            a single sheet, one ruled entry per route (DECISIONS.md §13). */}
+            a single sheet, one ruled entry per route (docs/apps/portfolio/brand/decisions.md §13). */}
         <Reveal>
           <article className="sheet mx-auto max-w-4xl px-6 py-10 sm:px-12 sm:py-14">
             <header className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-[color:var(--paper-ink)] pb-3">

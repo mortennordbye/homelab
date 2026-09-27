@@ -14,7 +14,7 @@ import { HOSTS } from "@/content/hardware";
 /**
  * The homelab as it actually stands: a BESTÅ at its real 180 x 42 x 38 with
  * three bays, and the set on top carrying the node status. One liberty: the
- * real cabinet is white-stained oak, a register DECISIONS.md rules out, so it
+ * real cabinet is white-stained oak, a register docs/apps/portfolio/brand/decisions.md rules out, so it
  * is cut from the site's dark oak. Power buttons say the *box* is powered;
  * the screen says which *node* is Ready — different facts. Clicking is depth,
  * never a toll gate, and the keyboard path lives in the panel outside the
@@ -205,7 +205,7 @@ type Pick = {
 
 /**
  * Wraps one device so it can be pointed at. Selection is shown by putting the
- * room's light on it (ART-DIRECTION.md §4: contrast comes from falloff) — a
+ * room's light on it (docs/apps/portfolio/brand/art-direction.md §4: contrast comes from falloff) — a
  * tint or outline would be the one thing in frame not obeying the key, and
  * the nudge alone is invisible at cabinet distance.
  */
@@ -1027,7 +1027,7 @@ function Estate({ feed, pick }: { feed: Feed; pick: Pick }) {
 /**
  * `dim` is what selecting a device does to the room. The rig loses about half
  * its output and the picking lamp in `Estate` makes up the difference over one
- * object, which is `branding/ART-DIRECTION.md` §4 applied literally: contrast
+ * object, which is `docs/apps/portfolio/brand/art-direction.md` §4 applied literally: contrast
  * comes from falloff, so telling two things apart means moving one of them into
  * shadow rather than drawing something on the other.
  */

@@ -46,7 +46,9 @@ terraform {
 State file paths:
 
 - `critical/do-not-delete-state-backend.tfstate` - This backend (DO NOT DELETE)
-- `proxmox/*` - Proxmox resources
+- `proxmox/*` - Proxmox, Talos, Tailscale and PBS stacks
+- `unifi/*` - UniFi network and DNS
+- `cloudflare/*` - Cloudflare zones and the watchdog Worker
 
 ## Resources Created
 
@@ -61,3 +63,5 @@ State file paths:
 az storage blob list --account-name sttfstatemvnhomelab --container-name tfstate --output table
 terraform state pull
 ```
+
+Docs: every stack's README links its docs; the layout is in [`../../../docs/architecture/README.md`](../../../docs/architecture/README.md).

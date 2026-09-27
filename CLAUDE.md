@@ -100,6 +100,10 @@ docs/
   assets/                  diagrams, logo, social preview
 ```
 
+- A README next to code (`terraform/**`, `portfolio/branding/`, a test folder) is a short
+  entry point: what the folder manages, how to run it (commands, backend, variables and
+  where their values come from, imports), and a link to its docs. Explanation, design,
+  procedures and traps go in `docs/`, so each topic is written in one place.
 - Every area folder has a `README.md` with its current state; runbooks sit beside it
   (`backups/restore.md`). New capability: `platform/<name>/`. New app: `apps/<name>/`.
 - Area docs describe the present and how to operate or rebuild it. No plans, status
@@ -231,10 +235,10 @@ Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes c
 - **Image tags are pinned.** Don't change a tag to `latest`; bump to a specific version. Kargo rewrites the tags of the apps it promotes; the inline tag in their Deployment is only a fallback.
 - **Home Assistant is configured via the HA MCP server**, not via files in this repo. Only add HA-related Kubernetes manifests (the HA pod itself, networking) here — the automation/dashboard config lives in HA.
 - **The portfolio redesign has an agreed decision record.** Before proposing anything about how
-  `nordbye.it` looks, moves, or presents content, read `portfolio/branding/DECISIONS.md`. It records
+  `nordbye.it` looks, moves, or presents content, read `docs/apps/portfolio/brand/decisions.md`. It records
   what is locked (the theme, the materials and light, the typography, the plain view, the performance
-  budget), what was explicitly rejected and why, and what is still open. `portfolio/branding/ART-DIRECTION.md`
-  is the long-form rule book behind it and `portfolio/branding/ASSETS.md` is the asset shopping list with
+  budget), what was explicitly rejected and why, and what is still open. `docs/apps/portfolio/brand/art-direction.md`
+  is the long-form rule book behind it and `docs/apps/portfolio/brand/assets.md` is the asset shopping list with
   verified licences. The shipped spec is `portfolio/src/content/brand.ts`, rendered at `/brand`; where the
   documents and the code disagree, the code is what the site does. These are committed, not gitignored.
 

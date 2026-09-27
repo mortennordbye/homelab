@@ -3,7 +3,7 @@ import { certs, education, experience, summary } from "@/content/resume";
 import { site } from "@/content/site";
 
 /**
- * The resume, set as a sheet of paper (branding/DECISIONS.md §12: everything
+ * The resume, set as a sheet of paper (docs/apps/portfolio/brand/decisions.md §12: everything
  * is an object or a document). Reading happens here with no click; the object
  * on the desk is how you take the PDF away (§4). The broadsheet layout is
  * load-bearing: every word of every role stays on the sheet, height paid for

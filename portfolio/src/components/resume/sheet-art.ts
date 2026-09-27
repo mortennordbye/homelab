@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 /**
  * The printed face of the sheet in the clip. Ruled measure, not body copy —
- * A4 at this camera distance is unreadable type (branding/DECISIONS.md §4).
+ * A4 at this camera distance is unreadable type (docs/apps/portfolio/brand/decisions.md §4).
  * One bar per real entry, so the sheet tells the truth about which PDF it is.
  */
 

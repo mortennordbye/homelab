@@ -106,7 +106,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 /**
- * The live readout as one instrument (DECISIONS.md §12 / remnants 8B): every
+ * The live readout as one instrument (docs/apps/portfolio/brand/decisions.md §12 / remnants 8B): every
  * live number the page shows is inside this glass, and nothing outside it on
  * the page carries green. The bezel is the palette's fixture.
  */

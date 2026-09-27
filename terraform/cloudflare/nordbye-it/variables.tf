@@ -23,7 +23,7 @@ variable "proxied_hostnames" {
 }
 
 variable "edge_cache_ttl_seconds" {
-  description = "Edge TTL for HTML. Cloudflare caches per POP, so at this traffic level a short TTL expires before the next visitor from that POP arrives and almost everything misses. Four hours matches the zone's browser TTL. Purge from the dashboard after publishing."
+  description = "Edge TTL for HTML. Cloudflare caches per POP, so at this traffic level a short TTL expires before the next visitor from that POP arrives and almost everything misses. Four hours matches the zone's browser TTL. Kargo purges the cache when it promotes to prod."
   type        = number
   default     = 14400
 }
