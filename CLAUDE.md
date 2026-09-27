@@ -185,7 +185,9 @@ Run the relevant subset for what you changed — not everything every time:
 - **Terraform** (`terraform/**`) — `terraform fmt -check`, `terraform validate`, and `terraform plan`. Never `apply` without explicit user approval.
 - **GitHub Actions** (`.github/workflows/**`) — `actionlint` if available; otherwise read the workflow end-to-end.
 
-Doc-only edits (`README.md`, `docs/**`, this file) skip the above.
+Doc-only edits (`README.md`, `docs/**`, this file) skip the above. For `docs/**`, the Docs site
+workflow builds the site with `--strict` on the PR, so a broken link between pages fails it;
+`make docs` previews it locally.
 
 ## Architecture
 
