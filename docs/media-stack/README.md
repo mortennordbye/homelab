@@ -62,7 +62,7 @@ torrent early:
 
 | Layer | Setting |
 | ----- | ------- |
-| Prowlarr, per indexer (synced to Sonarr, Radarr, Radarr 4K) | IPTorrents, IPTorrents-Freeleech, TorrentDay, TorrentLeech: seed ratio 5, no seed time. NorBits: no limit. YTS (public): no limit |
+| Prowlarr, per indexer (synced to Sonarr, Radarr, Radarr 4K) | seed ratio and time set per indexer; ratio limits are 5 or none, never a time limit |
 | qBittorrent, global | no ratio, seeding time or inactivity limit; queueing off, so every torrent seeds |
 | Sonarr | "Remove Completed" on: removes a torrent only after qBittorrent stopped it at ratio 5 |
 | Radarr, Radarr 4K | "Remove Completed" off |
@@ -71,21 +71,10 @@ torrent early:
 | Tdarr | skips hardlinked files (library filter and flow), so a seeding file is never split |
 | Moves inside `/data` | renames on one share keep the inode, so the torrent keeps its data |
 
-Tracker hit-and-run rules, all "ratio or time", so a ratio 5 stop is past every one:
-
-| Tracker | Rule |
-| ------- | ---- |
-| TorrentLeech | 1:1, or the class minimum (10 days Registered, down to none for VIP) |
-| IPTorrents | 1:1, or 14 days; overall ratio above 0.3 |
-| TorrentDay | 1:1, or 72 hours |
-
-TorrentLeech is from its wiki (`wiki.torrentleech.org/doku.php/hnr`); the other two
-from public guides, since their rules pages need a login.
-
 qBittorrent stops a torrent at the ratio or the time limit, whichever comes first. A
-ratio limit is only safe for a tracker whose rule is "ratio or time". A tracker that
-demands a minimum seed time regardless of ratio needs its ratio limit removed in
-Prowlarr, as for NorBits.
+ratio limit is only safe for a tracker whose hit-and-run rule is "ratio or time". A
+tracker that demands a minimum seed time regardless of ratio needs its ratio limit
+removed in Prowlarr.
 
 Check: `stoppedUP` or `missingFiles` in qBittorrent's torrent list should be empty.
 
@@ -101,8 +90,8 @@ Check: `stoppedUP` or `missingFiles` in qBittorrent's torrent list should be emp
   tracker, and removing them from qBittorrent risks hit-and-run strikes.
 - "Remove Completed Downloads": on in Sonarr, off in Radarr and Radarr 4K. The arr app
   only removes a torrent once qBittorrent has stopped it at its seeding limit.
-- qBittorrent categories: `tv-sonarr`, `radarr`, `radarr-4k`, plus the manual ones
-  (`PC`, `iptorrent`, `norbits`). Each arr creates its own on the first connection test.
+- qBittorrent categories: `tv-sonarr`, `radarr`, `radarr-4k`, plus manual ones. Each arr
+  creates its own on the first connection test.
 - Seerr default folders: `/data/series` and `/data/movies`; 4K requests go to
   Radarr 4K (below).
 - General > Backups (also in Radarr 4K and Prowlarr): interval 1 day, retention 14 days, folder
@@ -178,7 +167,7 @@ settings page.
 Bazarr connects to one Sonarr and one Radarr, so Radarr 4K has its own instance,
 `bazarr-4k`, built from the same settings.
 
-- Both: providers OpenSubtitles.com, YIFY Subtitles and Gestdown; language profile
+- Both: the same subtitle providers (Settings > Providers); language profile
   "English + Norwegian" (`no`, `en`), the default for new titles; embedded subtitles
   count; upgrades for 7 days. No login page of their own, reachable on the private
   gateway only.
