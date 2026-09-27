@@ -4,6 +4,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Backups & monitoring
 
+### Verify nordbye.it for GitHub Pages
+- **What:** verify `nordbye.it` as a Pages domain on the `mortennordbye` account, so no other GitHub account can serve a `*.nordbye.it` name that points at Pages. GitHub (Settings > Pages > Add a domain) gives a TXT record `_github-pages-challenge-mortennordbye.nordbye.it` with a one-time value; add it as a `cloudflare_dns_record` in the nordbye-it stack, apply, then press Verify and leave the record in place.
+- **Why deferred:** there is no API for account domain verification; it needs a signed-in GitHub session to read the challenge value and press Verify.
+- **Unblock:** the challenge value from the GitHub settings page.
+- **Where:** `terraform/cloudflare/nordbye-it/dns.tf`, GitHub account Settings > Pages.
+
 ### In-cluster DNS has one upstream
 - **What:** every node resolves through the UniFi gateway (`10.3.10.1`) alone, and CoreDNS forwards to the node's resolver, so gateway DNS trouble breaks external name resolution inside the cluster.
 - **Why deferred:** it only bites during outages that already take the internet down, and the fix needs a choice between a public fallback in CoreDNS and a second nameserver in the Talos machine config.
