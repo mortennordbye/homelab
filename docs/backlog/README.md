@@ -98,12 +98,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Put `public/models/fun/`, `public/textures/` and the JS chunks behind a CDN or an object store with long cache headers, and re-measure a cold `/fun` against `make run-prod`. Required before any large asset is added to the room.
 - **Where:** `portfolio/public/models/fun/`, `portfolio/public/textures/`, `portfolio/next.config.ts`, `k8s/talos/apps/portfolio/httproute.yaml`.
 
-### Fun room: reduced motion never verified
-- **What:** `FunRoom.tsx` reads `prefers-reduced-motion` and uses it to skip the screens' staggered power-on and to soften the sleep sequence, and `Marker.tsx` reads it too. None of these paths has been checked with the preference actually set.
-- **Why deferred:** Not part of any pass so far; nothing reported it broken.
-- **Unblock:** Open `/fun` with reduced motion enabled (OS setting, or Playwright `emulateMedia({ reducedMotion: 'reduce' })`), enter the room, lie down on the bed, and confirm nothing animates that should not.
-- **Where:** `portfolio/src/components/fun/FunRoom.tsx` (`reduced`), `portfolio/src/components/fun/Sleep.tsx`, `portfolio/src/components/fun/Marker.tsx`.
-
 ### React 19.3 and three 0.186 are blocked by the 3D stack's peer ranges
 - **What:** Renovate PR #938 bundles `next`, `react`/`react-dom` and `three`. Only the `next` half is installable. `@react-three/fiber@9.7.0` declares `peer react@">=19 <19.3"` and `postprocessing@6.39.3` declares `peer three@">= 0.168.0 < 0.186.0"`, so `react@19.3.0` and `three@0.186.0` both fail to resolve. `next` and `eslint-config-next` 16.3.5 were taken on their own; `react`/`react-dom` stay at 19.2.8 and `three` at 0.185.x.
 - **Why deferred:** The bounds are upstream declarations, not preferences. Forcing them with `--legacy-peer-deps` would install a combination neither library claims to support, on the globe and the whole `/fun` room.
