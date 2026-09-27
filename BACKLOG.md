@@ -24,6 +24,18 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** a decision on whether live volumes need point-in-time protection beyond the nightly VolSync copies, and a maintenance window if it means migrating to a new share.
 - **Where:** DSM Snapshot Replication and Shared Folder settings; record the result in `docs/backups.md` under "Configured outside Git".
 
+### Radarr 4K follow-ups
+- **What:** four open items from the 4K library setup. Share the `Movies 4K` Plex library with users whose devices play 4K HDR. Decide whether the six 4K remuxes (Frozen II, Jaws 2, Ralph Breaks the Internet, Requiem for a Dream, Spider-Man, The Predator) are set to unmonitored in Radarr 4K, since remux is not in the `2160p` profile and an upgrade check may replace them with WEB releases. Decide whether to run a second Bazarr for Radarr 4K, since Bazarr connects to one Radarr and the 4K films get no subtitles. Confirm the first nightly `radarr-4k-config` VolSync backup succeeded.
+- **Why deferred:** Plex sharing is a per-user choice made in the Plex UI; the remux and Bazarr questions need a decision; the backup first runs at 01:00 after setup.
+- **Unblock:** the sharing and the two decisions from the owner; `kubectl -n arr-stack get replicationsource radarr-4k-config` showing a successful `lastSyncTime`.
+- **Where:** Plex Settings > Users & Sharing, Radarr 4K at `https://radarr-4k.local.bigd.no`, `k8s/talos/apps/arr-stack/` (a second Bazarr would go next to `bazarr.yaml`), `docs/media-stack/README.md`.
+
+### Tdarr: check the first 24/7 runs
+- **What:** after the first full night with two GPU workers, check the Tdarr error count and a few replaced files. A "Transcode error" where the job report says "New file size not within limits" is the size guard keeping the original, not a failure.
+- **Why deferred:** the run had only just started when the setup was finished.
+- **Unblock:** a night of transcoding has passed.
+- **Where:** Tdarr at `https://tdarr.local.bigd.no` (Home, error table), job reports under `/app/server/Tdarr/DB2/JobReports` in the tdarr pod.
+
 ### Tdarr: back to the night-only window and one GPU worker
 - **What:** both Tdarr libraries (`TV`, `Movies`) currently transcode 24/7, and the node runs 2 GPU transcode workers, to work through the H.264 backlog. Set the library schedule back to 00:00 to 07:00 every day and the node back to 1 GPU worker (Nodes page), as recorded in the media-stack docs.
 - **Why deferred:** running around the clock clears the backlog faster; the night window exists because Plex shares the Quick Sync iGPU.
