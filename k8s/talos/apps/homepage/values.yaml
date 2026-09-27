@@ -192,6 +192,14 @@ config:
               type: radarr
               url: https://radarr.local.bigd.no
               key: "{{HOMEPAGE_VAR_RADARR_API_KEY}}"
+        - Radarr 4K:
+            icon: radarr.png
+            href: https://radarr-4k.local.bigd.no
+            description: 4K movie management
+            widget:
+              type: radarr
+              url: https://radarr-4k.local.bigd.no
+              key: "{{HOMEPAGE_VAR_RADARR_4K_API_KEY}}"
         - Sonarr:
             icon: sonarr.png
             href: https://sonarr.local.bigd.no
@@ -244,9 +252,12 @@ config:
             href: https://cleanuparr.local.bigd.no
             description: Download queue cleanup
         - Tdarr:
-            icon: mdi-transcode
+            icon: tdarr.png
             href: https://tdarr.local.bigd.no
             description: Transcode automation
+            widget:
+              type: tdarr
+              url: https://tdarr.local.bigd.no
 
     - Infrastructure:
         - Proxmox Hyper1:
