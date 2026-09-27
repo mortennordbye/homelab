@@ -15,7 +15,7 @@ export const ACCENT = {
   violet: "#9077d4",
   info: "#5ca9c3",
   copper: "#c9713f",
-  amber: "#c09955",
+  amber: "#d8b477",
   red: "#d18e83",
 } as const;
 

@@ -7,7 +7,7 @@
 export const PHOS_DIM = "#3e5b42";
 export const PHOS_LIT = "#79b381";
 export const PHOS_BRIGHT = "#a9d3ae";
-export const PHOS_AMBER = "#c09955";
+export const PHOS_AMBER = "#d8b477";
 export const GLOW = "0 0 6px rgba(101,161,110,0.35)";
 export const GLOW_BRIGHT = "0 0 7px rgba(101,161,110,0.45)";
 

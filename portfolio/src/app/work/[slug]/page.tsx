@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { MDXRemote } from "next-mdx-remote/rsc";
@@ -60,7 +61,12 @@ export default async function WorkDetailPage({
     headline: w.title,
     description: w.summary,
     image: `${site.url}${w.cover}`,
-    author: { "@id": `${site.url}/#person` },
+    author: {
+      "@type": "Person",
+      "@id": `${site.url}/#person`,
+      name: `${site.firstName} ${site.lastName}`,
+      url: site.url,
+    },
     publisher: { "@id": `${site.url}/#person` },
     isPartOf: { "@id": `${site.url}/#website` },
     inLanguage: "en-GB",
@@ -115,6 +121,12 @@ export default async function WorkDetailPage({
             </p>
             <h1 className="mt-4 text-h1 text-fg">{w.title}</h1>
             <p className="mt-5 max-w-xl text-fg-2">{w.summary}</p>
+            <p className="eyebrow mt-5">
+              By{" "}
+              <Link href="/" rel="author" className="text-fg-2 hover:text-fg">
+                {site.firstName} {site.lastName}
+              </Link>
+            </p>
             <div className="mt-8">
               <Button
                 href="/#portfolio"
