@@ -4,7 +4,7 @@ An explorable 3D room at `/fun`, reached from a nav entry beside the others. The
 portfolio: the objects in it are the site's sections, and you interact with them instead of
 clicking links.
 
-> **Working on this? Read [`fun-room-guide.md`](fun-room-guide.md) first.** That is the
+> **Working on this? Read [`guide.md`](guide.md) first.** That is the
 > practical guide: how to run it, the file map, how to add things, the rules, and how to verify.
 > This file is the record of how the design got here and why, kept for the reasoning rather than
 > the instructions.

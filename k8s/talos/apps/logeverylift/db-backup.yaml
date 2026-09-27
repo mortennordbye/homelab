@@ -1,4 +1,4 @@
-# Nightly pg_dump to the NAS, 30 days kept (docs/backups.md). The postgres
+# Nightly pg_dump to the NAS, 30 days kept (docs/platform/backups/README.md). The postgres
 # CiliumNetworkPolicy admits these pods by the app: postgres-backup label.
 apiVersion: v1
 kind: PersistentVolume

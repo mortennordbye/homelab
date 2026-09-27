@@ -96,7 +96,7 @@ Check: `stoppedUP` or `missingFiles` in qBittorrent's torrent list should be emp
   Radarr 4K (below).
 - General > Backups (also in Radarr 4K and Prowlarr): interval 1 day, retention 14 days, folder
   `Backups`. The nightly VolSync copy of `/config` carries these zips, and a restore
-  starts from the newest zip rather than the live database (`docs/backups.md`).
+  starts from the newest zip rather than the live database (`docs/platform/backups/README.md`).
 
 ## Radarr 4K
 
@@ -208,7 +208,7 @@ only removes the item from the arr queue and leaves the torrent in qBittorrent.
 using the iGPU through Quick Sync (shared with Plex, see
 `k8s/talos/infra/intel-gpu-plugin/daemonset.yaml`).
 
-Flow `h264ToHevcQsv`, stored in `tdarr-flow-h264ToHevcQsv.json` next to this file:
+Flow `h264ToHevcQsv`, stored in `tdarr-flow-h264-to-hevc-qsv.json` next to this file:
 
 1. Only H.264 video continues.
 2. Skip files with more than one link (still seeding) and anything with `remux` in
@@ -219,7 +219,7 @@ Flow `h264ToHevcQsv`, stored in `tdarr-flow-h264ToHevcQsv.json` next to this fil
 Restore it with:
 
 ```bash
-jq -c '{data:{collection:"FlowsJSONDB", mode:"insert", docID:._id, obj:.}}' docs/media-stack/tdarr-flow-h264ToHevcQsv.json \
+jq -c '{data:{collection:"FlowsJSONDB", mode:"insert", docID:._id, obj:.}}' docs/apps/media-stack/tdarr-flow-h264-to-hevc-qsv.json \
   | curl -s -H 'Content-Type: application/json' https://tdarr.local.bigd.no/api/v2/cruddb -d @-
 ```
 

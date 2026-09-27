@@ -32,7 +32,7 @@ spec:
       # A fresh Synology NFS volume is root-only for non-root uids, so the
       # postgres entrypoint cannot mkdir $PGDATA. One non-recursive chown of the
       # mount root fixes it; same image as the main container so there is no
-      # second tag to track. See docs/postgres-18-migration.md.
+      # second tag to track. See docs/platform/data/postgres.md.
       initContainers:
         - name: fix-nfs-ownership
           image: postgres:18-alpine

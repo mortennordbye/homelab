@@ -1,6 +1,6 @@
 # Restoring from backup
 
-How to get each layer in [`backups.md`](backups.md) back. Every procedure here was run once
+How to get each layer in [`README.md`](README.md) back. Every procedure here was run once
 against real backups on 2026-09-26 (see "Restore tests" at the end), except the two that
 would have replaced a running system: a full etcd recovery and a Home Assistant restore.
 

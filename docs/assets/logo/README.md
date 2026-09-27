@@ -7,7 +7,7 @@ The mark at the top of the README: the tree of the garden, one ripe fruit hangin
 | Source of truth | `source.jpg` (1024x1024, the full orchard frame) |
 | Shipped artifact | `logo.png`, cropped and masked from that photo |
 | Canvas | 512x512, transparent outside the circle |
-| Render | `make logo` locally, or push the source and let [`render-logo.yaml`](../../.github/workflows/render-logo.yaml) do it |
+| Render | `make logo` locally, or push the source and let [`render-logo.yaml`](../../../.github/workflows/render-logo.yaml) do it |
 
 The workflow re-renders on any change to `source.jpg` and commits the PNG back to `main`,
 the same pattern the D2 diagrams use. Never hand edit the PNG, it is generated.

@@ -18,10 +18,10 @@ builds and pushes the image; Kargo owns the git write and the promotion. Live fo
 Every Stage runs a shared cluster-scoped ClusterPromotionTask and only supplies
 per-app vars (`appName`, `appPath`, `imageRepo`, `argocdApp`).
 
-- **Direct push — `promote-to-argocd`** ([`clusterpromotiontask.yaml`](../k8s/talos/infra/kargo-projects/clusterpromotiontask.yaml)):
+- **Direct push — `promote-to-argocd`** ([`../../../k8s/talos/infra/kargo-projects/clusterpromotiontask.yaml`](../../../k8s/talos/infra/kargo-projects/clusterpromotiontask.yaml)):
   `git-clone → kustomize-set-image → git-commit → git-push (main) → argocd-update → argocd-wait`.
   Used by every `stage` Stage and by `blog` prod.
-- **PR-gated — `promote-via-pr`** ([`clusterpromotiontask-pr.yaml`](../k8s/talos/infra/kargo-projects/clusterpromotiontask-pr.yaml)):
+- **PR-gated — `promote-via-pr`** ([`../../../k8s/talos/infra/kargo-projects/clusterpromotiontask-pr.yaml`](../../../k8s/talos/infra/kargo-projects/clusterpromotiontask-pr.yaml)):
   pushes the bump to a generated branch, opens a homelab PR, and **blocks on the
   merge** before syncing:
   `… git-commit → git-push (generateTargetBranch) → git-open-pr → git-wait-for-pr → argocd-update → argocd-wait`.
@@ -131,7 +131,7 @@ Merge order is safe either way: the Warehouse has no Freight until the first
 `0.0.<run>` build, and the deploy job is removed in the same CI PR, so there is no
 double-write. Merging the CI PR is itself a push that triggers the first build.
 
-> This supersedes `bump-image.yml` / [`gitops-external-app-deploys.md`](gitops-external-app-deploys.md)
+> This supersedes `bump-image.yml` / [`external-apps.md`](external-apps.md)
 > for Kargo-managed external apps. `bump-image.yml` stays only for any external app
 > not yet on Kargo.
 

@@ -85,19 +85,32 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-### Keep docs/SPEC.md current
+### Docs structure
 
-`docs/SPEC.md` is the technical spec: the present shape of the homelab and how the parts
-relate, with a map to the area docs. When a change adds, removes or rewires something at
-that level (a new app group, a new network path, a new storage class, a new dependency
-between components), update SPEC.md in the same PR.
+`docs/` holds folders only, never loose files. Names are lowercase kebab-case with no
+versions, dates or camelCase.
 
-- Area docs (`docs/*.md`, `docs/media-stack/`) describe the current state and how to
-  operate or rebuild it. No plans, no status diaries.
-- Plans and records of in-flight work go in `docs/projects/`. When a project ships,
-  move anything lasting into SPEC.md or an area doc and delete the project doc; git
-  history keeps the record.
+```
+docs/
+  architecture/README.md   the spec: present shape of the homelab, how parts relate, folder map
+  platform/<area>/         shared infrastructure (backups, cluster, data, delivery, network, ...)
+  apps/<app>/              one folder per workload that needs more than its manifests
+  projects/<name>/         plans and in-flight work; deleted when the project ships
+  assets/                  diagrams, logo, social preview
+```
+
+- Every area folder has a `README.md` with its current state; runbooks sit beside it
+  (`backups/restore.md`). New capability: `platform/<name>/`. New app: `apps/<name>/`.
+- Area docs describe the present and how to operate or rebuild it. No plans, status
+  diaries, dates or "was X until Y"; git history keeps that.
+- When a change adds, removes or rewires something at the architecture level (a new app
+  group, network path, storage class, or dependency between components), update
+  `docs/architecture/README.md` in the same PR.
+- When a project ships, move anything lasting into the spec or an area doc and delete its
+  `docs/projects/<name>/` folder.
 - Link from code comments to area docs, never to a project doc, since those get deleted.
+- No torrent tracker or subtitle provider names anywhere in the repo; they live only in
+  the apps' own config.
 
 ### Track unfinished work in BACKLOG.md
 
@@ -166,14 +179,14 @@ Doc-only edits (`README.md`, `BACKLOG.md`, `docs/**`, this file) skip the above.
 
 ## Architecture
 
-Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes cluster ("Genesis", 6 VMs), provisioned by Terraform and reconciled by ArgoCD. `docs/SPEC.md` is the maintained version of this section and wins where they differ.
+Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes cluster ("Genesis", 6 VMs), provisioned by Terraform and reconciled by ArgoCD. `docs/architecture/README.md` is the maintained version of this section and wins where they differ.
 
 - **Compute:** Proxmox VE on three Lenovo ThinkCentre nodes; three control plane and three worker Talos VMs form the K8s cluster.
 - **Networking:** Cilium (CNI + L2 announcements / LB IPAM for LoadBalancer VIPs), Traefik via Gateway API.
 - **Security:** cert-manager, External Secrets Operator, Falco, Authentik.
 - **Observability:** kube-prometheus-stack, Grafana, Loki, OpenTelemetry collector.
 - **Storage:** Proxmox CSI for block, Synology NFS for shared volumes.
-- **Databases:** in-cluster Postgres 18 (`postgres:18-alpine`) backing logeverylift. Its PVC mounts at `/var/lib/postgresql`, not at `/var/lib/postgresql/data` — 18 keeps the cluster in a version-named subdirectory, and an initContainer chowns the NFS mount root so the non-root process can create it. See `docs/postgres-18-migration.md`.
+- **Databases:** in-cluster Postgres 18 (`postgres:18-alpine`) backing logeverylift. Its PVC mounts at `/var/lib/postgresql`, not at `/var/lib/postgresql/data` — 18 keeps the cluster in a version-named subdirectory, and an initContainer chowns the NFS mount root so the non-root process can create it. See `docs/platform/data/postgres.md`.
 - **GitOps:** ArgoCD app-of-apps; root applications live in `k8s/talos/infra/argocd/{apps.yaml,infra.yaml}`.
 - **Apps shipped from this repo:** portfolio and blog (each stage + prod), headroom (+ headroom-demo), logeverylift, reelsmith, verksted, bigd, plex-media-stack, arr-stack, gluetun-vpn, audiobookshelf, mealie, home-assistant, homepage, it-tools, omni-tools, open-webui, ollama, trek. That is 22 ArgoCD `Application`s, one per directory under `k8s/talos/apps/`.
 
@@ -212,7 +225,7 @@ Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes c
   notes stay empty) and put the returned `id` in the ExternalSecret's `remoteRef.key`.
   NEVER run `bws secret list` or `bws secret get` unfiltered — the JSON includes plaintext
   values; always pipe through a filter that keeps only `id`, `key`, and `projectId`.
-  Full pattern: `docs/secrets-management.md`.
+  Full pattern: `docs/platform/secrets/README.md`.
 - **Match the manifest style of the surrounding app.** App directories use kustomize or plain manifests inconsistently — copy the pattern of the directory you're editing rather than introducing a new one.
 - **Image tags are pinned.** Don't change a tag to `latest`; bump to a specific version. The CI pipelines rewrite tags for portfolio/blog only.
 - **Home Assistant is configured via the HA MCP server**, not via files in this repo. Only add HA-related Kubernetes manifests (the HA pod itself, networking) here — the automation/dashboard config lives in HA.

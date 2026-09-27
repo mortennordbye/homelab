@@ -1,13 +1,13 @@
 name: Render Diagrams
 
-# Re-renders every docs/diagrams/*.d2 to SVG + PNG whenever a source changes,
+# Re-renders every docs/assets/diagrams/*.d2 to SVG + PNG whenever a source changes,
 # and commits the result back — so the committed images never drift from source.
 
 on:
   push:
     branches: [main]
     paths:
-      - "docs/diagrams/*.d2"
+      - "docs/assets/diagrams/*.d2"
       - ".github/workflows/render-diagram.yaml"
   workflow_dispatch:
 
@@ -31,16 +31,16 @@ jobs:
 
       - name: Render every D2 diagram to SVG
         run: |
-          for f in docs/diagrams/*.d2; do
+          for f in docs/assets/diagrams/*.d2; do
             name=$(basename "$f" .d2)
-            docker run --rm -v "${PWD}/docs/diagrams:/work" \
+            docker run --rm -v "${PWD}/docs/assets/diagrams:/work" \
               terrastruct/d2:v0.7.1 \
               --layout elk \
               --elk-nodeNodeBetweenLayers=35 \
               --elk-padding="[top=25,left=25,bottom=25,right=25]" \
               --pad 40 "/work/$name.d2" "/work/$name.svg"
           done
-          sudo chown -R "$(id -u):$(id -g)" docs/diagrams
+          sudo chown -R "$(id -u):$(id -g)" docs/assets/diagrams
 
       - name: Rasterize each SVG to PNG
         # GitHub serves raw SVGs with a default-src 'none' CSP that blocks the
@@ -48,17 +48,17 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y librsvg2-bin
-          for f in docs/diagrams/*.svg; do
+          for f in docs/assets/diagrams/*.svg; do
             name=$(basename "$f" .svg)
-            rsvg-convert -z 2 "$f" -o "docs/diagrams/$name.png"
+            rsvg-convert -z 2 "$f" -o "docs/assets/diagrams/$name.png"
           done
 
       - name: Commit re-rendered diagrams if changed
         run: |
-          if [ -n "$(git status --porcelain docs/diagrams)" ]; then
+          if [ -n "$(git status --porcelain docs/assets/diagrams)" ]; then
             git config --global user.name "GitHub Actions"
             git config --global user.email "actions@github.com"
-            git add docs/diagrams/*.svg docs/diagrams/*.png
+            git add docs/assets/diagrams/*.svg docs/assets/diagrams/*.png
             git commit -m "chore(diagram): re-render diagrams from d2"
             git push origin HEAD:main
           else

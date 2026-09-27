@@ -292,7 +292,7 @@
       "addLabels": ["major-update"]
     },
     {
-      "description": "Postgres majors move with the server's data directory, by hand (docs/postgres-18-migration.md). The dump and restore-test images must stay on the server's major, so a tag bump alone is always wrong.",
+      "description": "Postgres majors move with the server's data directory, by hand (docs/platform/data/postgres.md). The dump and restore-test images must stay on the server's major, so a tag bump alone is always wrong.",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["postgres", "docker.io/library/postgres"],
       "matchUpdateTypes": ["major"],

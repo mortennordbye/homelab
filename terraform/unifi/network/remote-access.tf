@@ -1,5 +1,5 @@
 # Break-glass VPN. Day-to-day remote access is the Tailscale subnet router,
-# see docs/remote-access.md.
+# see docs/platform/network/remote-access.md.
 resource "unifi_vpn_server" "wireguard" {
   name    = "WireGuard"
   enabled = true
