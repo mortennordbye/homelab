@@ -1,4 +1,5 @@
-# Playwright smoke tests against the production image. Run with `make smoke`.
+# Playwright against the production image: the smoke tests (`make smoke`) and
+# the hero poster capture (`make hero-posters`).
 services:
   web:
     image: ${IMAGE:-portfolio:dev}
@@ -17,3 +18,10 @@ services:
       - /app/node_modules
     depends_on:
       - web
+
+  posters:
+    extends:
+      service: smoke
+    command: sh -c "npm ci --no-audit --no-fund && node scripts/hero-posters.mts"
+    profiles:
+      - posters
