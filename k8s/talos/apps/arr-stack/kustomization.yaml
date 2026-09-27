@@ -10,6 +10,7 @@ resources:
   - radarr.yaml
   - radarr-4k.yaml
   - bazarr.yaml
+  - bazarr-4k.yaml
   - cleanuparr.yaml
   - flaresolverr.yaml
   - unpackerr.yaml
