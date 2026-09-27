@@ -54,6 +54,12 @@ on Cloudflare and posts to the same Discord channel directly, as `[WATCHDOG] DOW
 - no heartbeat for 15 min: the cluster, Prometheus, Alertmanager or the home line is down;
 - a public site failing three one-minute checks in a row, seen from the internet.
 
+To test the heartbeat path without silencing other alerts, add an Alertmanager silence
+on `alertname=Watchdog` for 25 minutes (`amtool silence add alertname=Watchdog
+--duration=25m` in the alertmanager container): the Worker posts DOWN about 15 minutes
+after the last heartbeat and UP within minutes of the silence expiring. The Worker's
+state is in its KV namespace, keys `heartbeat` and `state:heartbeat`.
+
 Operating notes for the Worker (heartbeat URL rotation, the site list) are in
 [`../network/cloudflare.md`](../network/cloudflare.md#watchdog-worker).
 

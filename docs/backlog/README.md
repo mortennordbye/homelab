@@ -16,12 +16,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** pick the upstream: a CoreDNS `forward . 10.3.10.1 1.1.1.1` style fallback, or Talos `machine.network.nameservers` with a second entry.
 - **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/talos-cluster.tf` (machine network patch), CoreDNS config, `docs/platform/observability/README.md`.
 
-### Watchdog: test the missing-heartbeat alert live
-- **What:** prove the watchdog reports a silent homelab: stop Alertmanager's heartbeat for 15+ minutes and confirm `[WATCHDOG] DOWN: Alertmanager heartbeat missing` reaches Discord, then `[WATCHDOG] UP` once it resumes. The site-down path was tested live on 2026-09-26 (a 404 test site posted DOWN after three checks); the heartbeat path shares the same Discord post but has only been tested in the local harness.
-- **Why deferred:** the simplest test stops Alertmanager, which silences every other alert for the duration; it needs a window when that is acceptable.
-- **Unblock:** a quiet window. Scale the Alertmanager StatefulSet to 0 through ArgoCD (or pause the `heartbeat` route), wait 16 minutes, watch Discord, then restore it. The Worker's state is readable in KV key `heartbeat`.
-- **Where:** `terraform/cloudflare/watchdog/worker.js` (`checkHeartbeat`), `k8s/talos/infra/kube-prometheus-stack/values.yaml` (route `Watchdog` → `heartbeat`).
-
 ### Immutable snapshots for the k8s-volumes share
 - **What:** decide whether `k8s-volumes` gets immutable Btrfs snapshots like `k8s-backups`, and data checksumming, which Synology only allows on a new share.
 - **Why deferred:** left open when the backup work shipped; the backups themselves are protected on `k8s-backups`.
