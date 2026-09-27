@@ -1,13 +1,37 @@
-# Media stack: storage, cleanup and re-encoding
+# Media stack: requests, storage, 4K, cleanup and re-encoding
 
 The arr apps, Cleanuparr and Tdarr keep their settings in their own databases on
 their config PVCs, not in this repo. This page records the settings that matter so
 they can be rebuilt after a lost volume.
 
+## Overview
+
+| App | URL | Namespace | Role |
+| --- | --- | --------- | ---- |
+| Seerr | `https://seerr.bigd.no` | `plex-media-stack` | Requests, with a separate "Request in 4K" button |
+| Radarr | `https://radarr.local.bigd.no` | `arr-stack` | 1080p movies in `/data/movies` |
+| Radarr 4K | `https://radarr-4k.local.bigd.no` | `arr-stack` | 4K movies in `/data/movies-4k` |
+| Sonarr | `https://sonarr.local.bigd.no` | `arr-stack` | TV in `/data/series` |
+| Prowlarr | `https://prowlarr.local.bigd.no` | `gluetun-vpn` | Indexers, sidecar in the VPN pod |
+| qBittorrent | `https://qbittorrent.local.bigd.no` | `gluetun-vpn` | Downloads, sidecar in the VPN pod |
+| Tdarr | `https://tdarr.local.bigd.no` | `arr-stack` | Re-encodes H.264 to HEVC |
+| Plex | `http://10.3.10.103:32400/web` | `plex-media-stack` | Playback, libraries below |
+
+A request goes from Seerr to Radarr, Radarr 4K or Sonarr, which search the Prowlarr
+indexers and send the torrent to qBittorrent. When it finishes, the arr app hardlinks
+the file into its root folder, Plex picks it up, and Tdarr later re-encodes it if it
+is H.264 and no longer seeding. All of them have tiles on the hub (`hub.bigd.no`,
+`k8s/talos/apps/homepage/values.yaml`).
+
+Plex libraries: `Movies` (`/movies`), `Movies 4K` (`/movies-4k`), `TV Shows` (`/tv`),
+`Courses`, `Youtube`. Each is a read-only NFS mount of the matching folder on the
+share, declared in `k8s/talos/apps/plex-media-stack/plex.yaml`. A new library folder
+must exist on the share before it is added there, or Plex fails to start.
+
 ## Storage layout and hardlinks
 
 Everything lives on one Synology share, `/volume1/shared-data/media`, mounted at
-`/data` in Sonarr, Radarr, Bazarr, Unpackerr and Tdarr.
+`/data` in Sonarr, Radarr, Radarr 4K, Bazarr, Unpackerr and Tdarr.
 
 | Path | Contents |
 | ---- | -------- |
@@ -39,28 +63,45 @@ torrent is still in qBittorrent.
   `/data/torrents/`. The host must match the download client host exactly.
 - "Remove Failed Downloads" off in both. Almost every torrent is from a private
   tracker, and removing them from qBittorrent risks hit-and-run strikes.
-- Seerr default folders: `/data/series` and `/data/movies`.
+- Seerr default folders: `/data/series` and `/data/movies`; 4K requests go to
+  Radarr 4K (below).
 - General > Backups (also in Prowlarr): interval 1 day, retention 14 days, folder
   `Backups`. The nightly VolSync copy of `/config` carries these zips, and a restore
   starts from the newest zip rather than the live database (`docs/backup-plan.md`).
 
 ## Radarr 4K
 
-`https://radarr-4k.local.bigd.no`, a second Radarr for the handful of films kept in
-4K next to their 1080p copy. Radarr tracks one file per movie, so a 4K copy needs
-its own instance and root folder; sharing `/data/movies` would let each instance
-delete the other's file on upgrade.
+`https://radarr-4k.local.bigd.no`, a second Radarr for films kept in 4K. A 4K film
+lives only here: it is not also tracked by the main Radarr, so there is no 1080p
+copy unless someone requests one in Seerr. Radarr tracks one file per movie, so 4K
+needs its own instance and root folder; two instances sharing `/data/movies` would
+delete each other's files on upgrade.
 
 - Root folder `/data/movies-4k`, owned by the Synology share user with mode 777.
-  It must exist before Plex starts, since Plex mounts it read-only as `/movies-4k`.
-- Same download client and remote path mapping as Radarr, category `radarr-4k`.
-- Quality profile `2160p`: WEB 2160p and Bluray-2160p, no remux, cutoff WEB 2160p.
-  Custom format "DV (w/o HDR fallback)" from TRaSH scored -10000.
+- Media Management and file naming copied from Radarr (hardlinks on).
+- Download client qBittorrent, same host, user and remote path mapping as Radarr,
+  category `radarr-4k`, "Remove Completed" and "Remove Failed" off.
+- Quality profile `2160p`: WEB 2160p and Bluray-2160p, no remux, cutoff WEB 2160p,
+  upgrades on. Custom format "DV (w/o HDR fallback)" from TRaSH
+  (`docs/json/radarr/cf/dv-wo-hdr-fallback.json`) scored -10000, since those files
+  play with purple and green colours on screens without Dolby Vision.
 - Indexers: the six Prowlarr Torznab indexers, copied from Radarr with the Prowlarr
-  API key. Prowlarr cannot sync them itself while its app sync is broken (see BACKLOG).
-- Seerr: Radarr server "Radarr 4K" with "4K Server" and "Default Server" on, profile
-  `2160p`, root `/data/movies-4k`. That gives each film a separate "Request in 4K" button.
-- Plex: separate "Movies 4K" library on `/movies-4k`.
+  API key. Prowlarr cannot sync them itself while its app sync is broken (see
+  BACKLOG), so an indexer added in Prowlarr has to be added here by hand too.
+- Seerr: Radarr server "Radarr 4K", hostname `radarr-4k.local.bigd.no` port 443 SSL,
+  "4K Server" and "Default Server" on, profile `2160p`, root `/data/movies-4k`.
+- Plex: `Movies 4K` library, shared only with users whose devices play 4K HDR, so
+  nobody else forces a 4K HDR transcode on the iGPU.
+- Tdarr has no library for this folder. 4K releases are HEVC, which the flow skips,
+  and re-encoding 4K HDR on Quick Sync risks losing the HDR and Dolby Vision metadata.
+- Bazarr only connects to the main Radarr, so it does not fetch subtitles for 4K films.
+- Hub tile with a widget; its API key is Bitwarden secret `homepage-radarr-4k-api`.
+
+Moving an existing 1080p-library film to 4K only: move its folder from
+`/data/movies` to `/data/movies-4k` (same share, so a rename that keeps hardlinks),
+add it in Radarr 4K with that path and profile `2160p` without searching, then
+delete it from Radarr with "Delete files" off. Check first that its collection is
+not monitored in Radarr, or Radarr adds it back and downloads a 1080p copy.
 
 ## Cleanuparr
 
@@ -108,6 +149,9 @@ Libraries `TV` (`/data/series`) and `Movies` (`/data/movies`): flow
 "skip hardlinked files" on, folder watching on, `@eaDir` ignored, schedule
 00:00 to 07:00 every day. Scanner: 4 threads, ExifTool and MediaInfo scans off, since
 the flow only reads ffprobe data and each extra scanner reads every file again over NFS.
+
+These are the target settings. While the H.264 backlog is worked through, both
+libraries run all day and the node has 2 GPU workers; BACKLOG tracks switching back.
 
 Node: 1 GPU transcode worker, no CPU workers. The worker limit is set on the live
 node (Nodes page, or `POST /api/v2/alter-worker-limit`); writing it to the database
