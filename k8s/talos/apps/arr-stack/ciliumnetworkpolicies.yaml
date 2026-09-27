@@ -92,12 +92,16 @@ spec:
     matchLabels:
       app: flaresolverr
   ingress:
-    # Reached by *arr apps inside this namespace and by Prowlarr in gluetun-vpn.
+    # Reached by *arr apps inside this namespace, and by Prowlarr through the private
+    # gateway (flaresolverr.local.bigd.no), so Traefik is the peer it sees.
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": arr-stack
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": gluetun-vpn
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
       toPorts:
         - ports:
             - port: "8191"

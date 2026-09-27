@@ -43,6 +43,16 @@ spec:
         - ports:
             - port: "53"
               protocol: ANY
+    # Prowlarr reaches the arr apps and FlareSolverr on the private gateway through the
+    # hostAliases in gluetun.yaml; 8444 is the container port behind 10.3.10.102:443.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "8444"
+              protocol: TCP
     # VPN tunnel egress to PIA. OpenVPN on UDP 1194/1198; WireGuard on UDP 51820.
     # All inner traffic (qbittorrent peers, torrent indexers, etc.) is encapsulated
     # in this tunnel and not visible to Cilium as separate flows.
