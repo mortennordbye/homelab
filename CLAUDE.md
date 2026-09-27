@@ -182,14 +182,15 @@ terraform -chdir=terraform/proxmox/hyper-cluster/k8s plan
 terraform -chdir=terraform/azure/state plan
 ```
 
-There is no test suite. Validation is type-checking the YAML / HCL via the tools above.
+The only test suite is the portfolio's Playwright smoke tests (`make -C portfolio smoke`, also run
+in CI). Everything else is validated by type-checking the YAML / HCL via the tools above.
 
 ## Before reporting a task complete
 
 Run the relevant subset for what you changed — not everything every time:
 
 - **Kubernetes manifests** (`k8s/**`) — `kubectl diff -f <path>` against the cluster, or `kustomize build <dir>` to confirm rendering. Confirm the ArgoCD `Application` still points at the correct path.
-- **Portfolio / blog** (`portfolio/**`, `blog/**`) — build the Docker image and load the page in a browser. Check the affected route(s) and one unrelated route for regressions. State explicitly when a UI change has not been browser-verified.
+- **Portfolio / blog** (`portfolio/**`, `blog/**`) — build the Docker image and load the page in a browser. Check the affected route(s) and one unrelated route for regressions. State explicitly when a UI change has not been browser-verified. For `portfolio/**`, also run `make smoke` from `portfolio/`.
 - **Terraform** (`terraform/**`) — `terraform fmt -check`, `terraform validate`, and `terraform plan`. Never `apply` without explicit user approval.
 - **GitHub Actions** (`.github/workflows/**`) — `actionlint` if available; otherwise read the workflow end-to-end.
 
