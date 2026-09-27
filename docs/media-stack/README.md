@@ -154,6 +154,8 @@ Seerr (`https://seerr.bigd.no`):
   old 1080p status is cleared and the film can be requested in 1080p again.
 
 Tautulli (`https://tautulli.local.bigd.no`): Settings > Plex Media Server, same address.
+If its websocket logs "401 Unauthorized", the stored Plex token was revoked: use
+"Fetch New Token" on the same page and sign in with the Plex account.
 
 ## Cleanuparr
 
