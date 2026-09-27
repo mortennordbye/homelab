@@ -94,7 +94,12 @@ delete each other's files on upgrade.
 - Tdarr has no library for this folder. 4K releases are HEVC, which the flow skips,
   and re-encoding 4K HDR on Quick Sync risks losing the HDR and Dolby Vision metadata.
 - Bazarr only connects to the main Radarr, so it does not fetch subtitles for 4K films.
-- Hub tile with a widget; its API key is Bitwarden secret `homepage-radarr-4k-api`.
+- Cleanuparr: its own Radarr instance, `http://radarr-4k:7878`.
+- Unpackerr: `UN_RADARR_1_*` in `k8s/talos/apps/arr-stack/unpackerr.yaml`.
+- Metrics: `exportarr-radarr-4k`, so the Radarr alerts in
+  `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml` cover it too.
+- Hub tile with a widget. Its API key, used by all of the above in Git, is Bitwarden
+  secret `homepage-radarr-4k-api`.
 
 Moving an existing 1080p-library film to 4K only: move its folder from
 `/data/movies` to `/data/movies-4k` (same share, so a rename that keeps hardlinks),
@@ -108,7 +113,8 @@ not monitored in Radarr, or Radarr adds it back and downloads a 1080p copy.
 
 - Download client qBittorrent at `http://qbittorrent.gluetun-vpn:8080`, with the
   qBittorrent exporter credentials.
-- Sonarr `http://sonarr:8989` (v4), Radarr `http://radarr:7878` (v6).
+- Sonarr `http://sonarr:8989` (v4), Radarr `http://radarr:7878` (v6), Radarr 4K
+  `http://radarr-4k:7878` (v6).
 - Queue Cleaner, every 5 min, failed imports at 3 strikes:
   Ignore Private off, Delete Private off, Skip if not found in client on,
   Force Import on (3 tries), pattern mode Exclude with `matched to series by ID`
@@ -146,8 +152,9 @@ jq -c '{data:{collection:"FlowsJSONDB", mode:"insert", docID:._id, obj:.}}' docs
 Libraries `TV` (`/data/series`) and `Movies` (`/data/movies`): flow
 `h264ToHevcQsv`, cache `/data/transcode_cache/tdarr`, health checks off,
 "skip hardlinked files" on, folder watching on, `@eaDir` ignored, schedule
-00:00 to 07:00 every day. Scanner: 4 threads, ExifTool and MediaInfo scans off, since
-the flow only reads ffprobe data and each extra scanner reads every file again over NFS.
+00:00 to 07:00 every day. Scanner: 4 threads, MediaInfo scan off, since the flow only
+reads ffprobe data and each extra scanner reads every file again over NFS. FFprobe and
+ExifTool always run; the UI shows them as fixed ON.
 
 These are the target settings. While the H.264 backlog is worked through, both
 libraries run all day and the node has 2 GPU workers; BACKLOG tracks switching back.
