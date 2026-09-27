@@ -1,263 +1,118 @@
-# Postgres 16 to 18: logeverylift
+# Postgres for logeverylift
 
-> **Status: done.** Executed 2026-08-09. `logeverylift` runs
-> `postgres:18-alpine` (server 18.4) on `postgres-pvc-18`. All 27 tables
-> restored; row counts verified identical to the pre-migration baseline and to
-> the dump file itself, table by table. No data lost.
->
-> Kept as the record of how it was done, what the trade-offs were, and as the
-> procedure to reuse for the next major or for the dormant `workout` database.
+logeverylift keeps its data in a single in-cluster Postgres in the `logeverylift`
+namespace. Authentik runs its own Postgres (`authentik-postgresql` in `identity`,
+deployed and managed by the Authentik Helm chart), which this doc does not cover.
 
-Expect roughly 10 minutes of app downtime if you run this again.
+## Current setup
 
-The manifest change lives in its own PR so it can be merged at step 5, not
-before. Merging it early takes the app down until the restore finishes.
+All of it is in `k8s/talos/apps/logeverylift/postgres.yaml`:
 
-## Rollback still available
+- Deployment `postgres` (label `app=postgres`), image `postgres:18-alpine`, fronted by
+  a ClusterIP Service `postgres`. The app is the Deployment `logeverylift-app`.
+- `POSTGRES_DB` is `logeverylift_db` and `POSTGRES_USER` is `postgres`; the password
+  comes from `logeverylift-secret`.
+- Data lives on the PVC `postgres-pvc-18` (`syno-nfs-csi`), mounted at
+  `/var/lib/postgresql`. The image keeps the cluster in a version-named subdirectory,
+  so `PGDATA` is `/var/lib/postgresql/18/docker`.
 
-Both are deliberately still in place and should stay until the app has been
-used for a while:
-
-- `postgres-pvc` — the untouched Postgres 16 volume, declared in
-  `postgres.yaml` but mounted by nothing. Rolling back is reverting the
-  manifest, not restoring a backup.
-- `~/logeverylift-pg16-20260809.sql` — the 341K `pg_dumpall` output, on the
-  operator's machine only. Copy it somewhere durable; `BACKLOG.md` records an
-  earlier dump that survives only in a session scratchpad.
-
-Step 8 below covers retiring the old PVC when you are ready.
-
-## Why this is not just an image bump
-
-Two things changed between 16 and 18, and both matter here.
-
-Postgres 18 cannot read a Postgres 16 data directory. The on-disk format is
-major-version specific, so the data has to be dumped out of 16 and loaded into
-a freshly initialised 18 cluster.
-
-The Docker image also moved its data directory. On 16, `PGDATA` is
-`/var/lib/postgresql/data`, which is exactly where this Deployment mounts its
-PVC. On 18 it is `/var/lib/postgresql/18/docker`, and the recommended layout is
-to mount a single volume at the parent `/var/lib/postgresql` so future major
-versions land in sibling directories and `pg_upgrade --link` stays possible.
-
-Leaving the mount path alone and only bumping the tag does not silently lose
-data — the 18 image detects the 16 cluster at the old path and refuses to
-start, exiting 1 with an explanation. It is a loud failure, not a quiet one,
-but it is still an outage, so the mount path moves as part of this change.
+Backups are a nightly `pg_dump` CronJob in `k8s/talos/apps/logeverylift/db-backup.yaml`
+writing to the NAS, and the monthly restore test loads the newest dump into a scratch
+Postgres. Schedule, retention and restores: [`../backups/README.md`](../backups/README.md).
 
 ## The NFS ownership trap
 
-Hit for real during the 2026-08-09 run. Moving the mount to the parent
-directory means Postgres has to *create* `18/docker` inside the volume, and on
-a freshly provisioned `syno-nfs-csi` volume it cannot:
+A freshly provisioned `syno-nfs-csi` volume grants root everything and uid 70
+(postgres) nothing. Since the volume is mounted at the parent of `PGDATA`, the
+entrypoint has to create `18/docker` itself, and it does that after dropping to
+uid 70, so it fails with:
 
 ```
 mkdir: can't create directory '/var/lib/postgresql/18/': Permission denied
 ```
 
-The mount root is readable as `drwxrwxrwx` by root but `d---------` by uid 70 —
-the Synology export grants root everything and postgres nothing. The entrypoint
-`gosu`s to postgres before creating any directory, so it is uid 70 that fails.
-`mkdir -p` on an already existing path does not error, so if you see this
-message the directory genuinely is not there yet.
+The `fix-nfs-ownership` initContainer runs `chown 70:70` and `chmod 700` on the mount
+root before Postgres starts, so a recreated PVC recovers on its own.
 
-This never happened on 16 because the volume was mounted directly at `$PGDATA`,
-and that PVC's root had ended up owned by 70.
+`fsGroup: 70` is not used because it recursively adds group write, and Postgres
+refuses to start unless `PGDATA` is exactly `0700` or `0750`. The entrypoint happens
+to chmod it back, but the initContainer does not depend on that.
 
-`postgres.yaml` now carries a `fix-nfs-ownership` initContainer that chowns the
-mount root to `70:70` before Postgres starts, so a recreated PVC recovers on its
-own. If you are debugging this by hand, one root pod with the claim mounted is
-enough:
+## Why a major is not a tag bump
 
-```bash
-chown 70:70 /var/lib/postgresql && chmod 700 /var/lib/postgresql
-```
+A Postgres major cannot read the previous major's data directory. The data has to be
+dumped out of the old server and loaded into a freshly initialised new one. Bumping
+only the tag makes the new image find the old cluster and exit 1.
 
-`fsGroup: 70` looks like the tidier fix — `fsGroupPolicy` on the driver is
-`File`, so kubelet would apply it — but it recursively adds group write, and
-Postgres refuses to start unless `$PGDATA` is exactly `0700` or `0750`. The
-entrypoint chmods it back on every start, so it would probably work; the
-initContainer does not depend on "probably".
+`renovate.json` therefore disables Postgres major updates repo-wide and points here.
+The backup CronJob (`db-backup.yaml`) and the logeverylift container in
+`k8s/talos/infra/backup-check/restore-test.yaml` must move to the same major as the
+server in the same change: `pg_dump` refuses a newer server.
 
-## What the database looks like
+## Major upgrade procedure (N to N+1)
 
-Checked against the live cluster on 2026-08-09:
-
-- 10 MB total, 26 tables in `public`
-- one login role, `postgres`
-- one extension, `plpgsql` 1.0
-- largest tables: `workout_sets` (1685 rows), `exercise_prs` (521),
-  `program_sets` (431)
-
-Small enough that `pg_dumpall` piped through `kubectl exec` is the right tool.
-There are no migration Jobs or a backup PVC here on purpose: for 10 MB they
-would be more moving parts than the thing they automate, and streaming the dump
-to your own machine gives an off-cluster copy, which a PVC-based Job would not.
-Keep that file — `BACKLOG.md` already records one previous dump that survives
-only in a session scratchpad.
-
-## Rollback position
-
-The existing `postgres-pvc` is left untouched and still declared in
-`postgres.yaml`. The 18 cluster initialises onto a new `postgres-pvc-18`. If
-anything goes wrong, revert the manifest PR: the pod comes back on 16 against
-the original PVC with the original data. Nothing in this procedure writes to
-the 16 volume.
-
-## Procedure
-
-Set the context once. The default kubeconfig points at work AKS, not this
-cluster:
+Expect around 10 minutes of app downtime. Prepare the manifest change as its own PR:
+the new image in `postgres.yaml` (initContainer and main container), a new PVC
+`postgres-pvc-<N+1>` as the claim while the old PVC stays declared and untouched,
+and the backup and restore-test images. Do not
+merge it before step 5; merging early takes the app down until the restore finishes.
 
 ```bash
 export KUBECONFIG=~/Documents/github/Homelab/terraform/proxmox/hyper-cluster/k8s/talos/kubeconfig
 ```
 
-### 1. Stop writes
+1. Stop writes. The `apps` ApplicationSet sets `ignoreDifferences` on
+   `/spec/replicas` for Deployments with `RespectIgnoreDifferences=true`, so scaling
+   sticks without suspending auto-sync. The same rule means ArgoCD never scales
+   anything back up; every scale-up below is manual.
 
-```bash
-kubectl scale deploy/logeverylift-app -n logeverylift --replicas=0
-kubectl rollout status deploy/logeverylift-app -n logeverylift --timeout=60s
-```
+   ```bash
+   kubectl scale deploy/logeverylift-app -n logeverylift --replicas=0
+   ```
 
-ArgoCD has `selfHeal: true`, but the Application also carries
-`ignoreDifferences` on `/spec/replicas` for Deployments, with
-`RespectIgnoreDifferences=true` in `syncOptions`. Scaling therefore sticks and
-does not need auto-sync suspended.
+2. Dump and check it. A truncated dump nobody looked at is the only way this loses data.
 
-The same rule cuts the other way at step 5: a synced Deployment will *not* be
-scaled back up for you. Both scale-ups below are manual on purpose.
+   ```bash
+   POD=$(kubectl get pod -n logeverylift -l app=postgres -o jsonpath='{.items[0].metadata.name}')
+   DUMP=~/logeverylift-pg<N>.sql
+   kubectl exec -n logeverylift "$POD" -- pg_dumpall -U postgres > "$DUMP"
+   grep -c "^CREATE TABLE" "$DUMP"   # matches the table count
+   tail -1 "$DUMP"                   # PostgreSQL database dump complete
+   ```
 
-### 2. Take the dump
+   Keep a copy somewhere durable before going on.
 
-```bash
-POD=$(kubectl get pod -n logeverylift -l app=postgres -o jsonpath='{.items[0].metadata.name}')
-kubectl exec -n logeverylift "$POD" -- pg_dumpall -U postgres \
-  > ~/logeverylift-pg16-$(date +%Y%m%d).sql
-```
+3. Record per-table row counts.
 
-Check it before going any further. A truncated dump that nobody looked at is
-the only way this procedure loses data:
+   ```bash
+   kubectl exec -n logeverylift "$POD" -- psql -U postgres -d logeverylift_db \
+     -tAc "select relname, n_live_tup from pg_stat_user_tables order by relname;" \
+     > ~/rowcounts-before.txt
+   ```
 
-```bash
-DUMP=~/logeverylift-pg16-$(date +%Y%m%d).sql
-wc -l "$DUMP"                      # expect a few thousand lines
-grep -c "^CREATE TABLE" "$DUMP"    # expect 27
-tail -1 "$DUMP"                    # expect: PostgreSQL database dump complete
-```
+4. Scale Postgres down: `kubectl scale deploy/postgres -n logeverylift --replicas=0`.
 
-Put a copy somewhere durable now, not later.
+5. Merge the manifest PR, wait for the `logeverylift` Application to report `Synced`,
+   then scale Postgres up and wait until it accepts connections (the image briefly
+   runs a temporary server while initialising):
 
-### 3. Record what the data should look like afterwards
+   ```bash
+   kubectl scale deploy/postgres -n logeverylift --replicas=1
+   NEW=$(kubectl get pod -n logeverylift -l app=postgres -o jsonpath='{.items[0].metadata.name}')
+   until kubectl exec -n logeverylift "$NEW" -- pg_isready -U postgres | grep -q accepting; do sleep 2; done
+   ```
 
-```bash
-kubectl exec -n logeverylift "$POD" -- psql -U postgres -d logeverylift_db \
-  -tAc "select relname, n_live_tup from pg_stat_user_tables order by relname;" \
-  | tee ~/logeverylift-rowcounts-before.txt
-```
+6. Restore: `kubectl exec -i -n logeverylift "$NEW" -- psql -U postgres < "$DUMP"`.
+   Two errors are expected, because `POSTGRES_DB` and `POSTGRES_USER` already created
+   both objects: `database "logeverylift_db" already exists` and
+   `role "postgres" already exists`. Any other error means stop.
 
-### 4. Scale Postgres down
+7. Verify. Run `analyze;` first, since `n_live_tup` starts at 0 on a fresh restore,
+   then take the same row-count query into `~/rowcounts-after.txt` and diff it against
+   the before counts. Only then bring the app back with
+   `kubectl scale deploy/logeverylift-app -n logeverylift --replicas=1` and check that
+   real workout history renders on logeverylift.com.
 
-```bash
-kubectl scale deploy/postgres -n logeverylift --replicas=0
-kubectl rollout status deploy/postgres -n logeverylift --timeout=60s
-```
-
-### 5. Merge the manifest PR
-
-Merge the PR that switches `k8s/talos/apps/logeverylift/postgres.yaml` to
-`postgres:18-alpine`, adds `postgres-pvc-18`, and moves the mount to
-`/var/lib/postgresql`. Then let ArgoCD sync, or force it:
-
-```bash
-kubectl -n argocd annotate application logeverylift \
-  argocd.argoproj.io/refresh=hard --overwrite
-```
-
-Wait for the Application to report `Synced`, then scale Postgres back up —
-ArgoCD ignores `/spec/replicas`, so the sync alone leaves it at 0:
-
-```bash
-kubectl get application logeverylift -n argocd \
-  -o jsonpath='{.status.sync.status}{"\n"}'
-kubectl scale deploy/postgres -n logeverylift --replicas=1
-kubectl rollout status deploy/postgres -n logeverylift --timeout=180s
-```
-
-Wait for the new pod to be genuinely ready before restoring — the image starts
-a temporary server during initialisation and briefly rejects connections:
-
-```bash
-POD18=$(kubectl get pod -n logeverylift -l app=postgres -o jsonpath='{.items[0].metadata.name}')
-until kubectl exec -n logeverylift "$POD18" -- pg_isready -U postgres 2>/dev/null | grep -q accepting; do sleep 2; done
-kubectl exec -n logeverylift "$POD18" -- psql -U postgres -tAc "show data_directory;"
-# expect /var/lib/postgresql/18/docker
-```
-
-### 6. Restore
-
-```bash
-kubectl exec -i -n logeverylift "$POD18" -- psql -U postgres < "$DUMP"
-```
-
-Two errors are expected and harmless:
-
-```
-ERROR:  database "logeverylift_db" already exists
-ERROR:  role "postgres" already exists
-```
-
-Both objects are created by `POSTGRES_DB` and `POSTGRES_USER` before the dump
-runs. Any other error is not expected — stop and roll back.
-
-Verified ahead of time by restoring this database's actual schema into a real
-18.4 server: all 26 tables came across with only those two errors.
-
-### 7. Verify, then bring the app back
-
-```bash
-kubectl exec -n logeverylift "$POD18" -- psql -U postgres -d logeverylift_db \
-  -tAc "select relname, n_live_tup from pg_stat_user_tables order by relname;" \
-  > ~/logeverylift-rowcounts-after.txt
-diff ~/logeverylift-rowcounts-before.txt ~/logeverylift-rowcounts-after.txt
-```
-
-`n_live_tup` comes from the statistics collector and starts at 0 on a fresh
-restore until autovacuum runs, so a diff here is not proof of loss. If it looks
-empty, force the counts:
-
-```bash
-kubectl exec -n logeverylift "$POD18" -- psql -U postgres -d logeverylift_db -tAc "analyze;"
-kubectl exec -n logeverylift "$POD18" -- psql -U postgres -d logeverylift_db \
-  -tAc "select count(*) from workout_sets;"   # expect 1685
-```
-
-Then bring the app back:
-
-```bash
-kubectl scale deploy/logeverylift-app -n logeverylift --replicas=1
-kubectl rollout status deploy/logeverylift-app -n logeverylift --timeout=120s
-```
-
-Log in to logeverylift.com and confirm real workout history renders.
-
-### 8. Afterwards
-
-Leave `postgres-pvc` in place until you have used the app for a while. When you
-are satisfied, delete the PVC declaration from `postgres.yaml` and let ArgoCD
-prune it. Add a line to `BACKLOG.md` if you are not doing that immediately.
-Done 2026-09-26, once nightly `pg_dump` backups of the 18 database existed.
-
-## The other Postgres 16 in this repo
-
-`k8s/talos/apps/workout/postgres.yaml` is also on `16-alpine` and is
-deliberately **not** part of this migration. Both `workout-app` and its
-`postgres` are scaled to 0 and have been since the logeverylift cutover; the
-namespace exists only as a rollback snapshot, and `BACKLOG.md` already tracks
-deleting it.
-
-Upgrading it would mean scaling a dormant database up, rewriting its data into
-a format the thing it is a rollback *for* cannot read, and scaling it back
-down. That destroys the only reason it still exists. It stays on 16 until it is
-deleted, and `renovate.json` pins it so no bot proposes 18 in the meantime.
+8. Keep the old PVC until the new server has been used for a while and at least one
+   nightly backup of it exists, then remove its declaration from `postgres.yaml` and
+   let ArgoCD prune it.

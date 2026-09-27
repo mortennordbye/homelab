@@ -190,7 +190,7 @@ A few quick sanity checks against the four committed fixtures:
 5. **Refusal.** `What is the capital of Madagascar?` → the exact refusal string `I do not have enough information in the provided documents to answer this.` If you get "Antananarivo", the prompt is leaking.
 6. **Persistence + rebuild.** Re-run with the same fixtures: startup line says `Reusing existing Chroma store at ./local_poc_db (fingerprint match)` and skips embedding. Add or remove a document, re-run: startup line changes to `Document set changed — rebuilding Chroma store at ./local_poc_db` and re-embeds.
 
-## What's deliberately out of scope (see `BACKLOG.md`)
+## What's deliberately out of scope (see `docs/backlog/README.md`)
 
 - Eval harness with a labelled QA set and a `make eval` target.
 - Multi-document corpus loader (walks a directory instead of one file).

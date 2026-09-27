@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: logeverylift-app
-          # Pinned SHA, rewritten by CI (bump-image.yml). Never :latest.
+          # Kargo sets the tag through kustomization.yaml `images:`; this inline value is only a kubectl-apply fallback.
           image: ghcr.io/mortennordbye/logeverylift:sha-43378df
           imagePullPolicy: IfNotPresent
           ports:

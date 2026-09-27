@@ -97,7 +97,7 @@
   --cast-tight: 2px 3px 5px -2px rgba(0, 0, 0, 0.85);
 
   /* Shares copper's hex, so a Result mark and a Watch mark are currently one
-     colour told apart only by their label. Pre-existing; see BACKLOG.md. */
+     colour told apart only by their label. Pre-existing; see docs/backlog/README.md. */
   --warn: #c09955;
 
   /* Atmospheric gradient. One hue at low opacity: the old blue/violet/teal

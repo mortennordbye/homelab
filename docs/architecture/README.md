@@ -2,7 +2,7 @@
 
 The current shape of the homelab: what runs where, and how the parts depend on each
 other. It describes the present only. Plans and in-flight work live in
-[`docs/projects`](../projects), detail for each area lives in the folders in the map at the end, and the manifests and Terraform are what actually runs. Where this file
+`docs/projects/<name>/`, detail for each area lives in the folders in the map at the end, and the manifests and Terraform are what actually runs. Where this file
 and the code disagree, the code wins and this file gets fixed.
 
 ## Layers
@@ -36,34 +36,31 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
 
 ## Network
 
-- Cilium is the CNI and announces LoadBalancer VIPs on L2: `10.3.10.101` public
-  Traefik gateway, `10.3.10.102` private Traefik gateway, `10.3.10.103` Plex.
-- Traefik serves HTTP through Gateway API. Public hostnames resolve through Cloudflare,
-  managed by external-dns and `terraform/cloudflare/*`. Internal hostnames under
-  `local.bigd.no` are CNAMEs to the private gateway in `terraform/unifi/dns/records.tf`,
-  never through external-dns, so a new internal app needs an alias added there.
+- Cilium is the CNI and announces the LoadBalancer VIPs on L2 (Argo CD, the public and
+  private Traefik gateways, Plex); the addresses are in
+  [`../platform/network/README.md`](../platform/network/README.md).
+- Traefik serves HTTP through Gateway API. Public hostnames live in Cloudflare; internal
+  `local.bigd.no` names are aliases in `terraform/unifi/dns/records.tf`, never
+  external-dns, so a new internal app needs an alias there.
 - cert-manager issues the certificates. Authentik sits in front of apps that need a login.
-- App namespaces carry CiliumNetworkPolicies (all but `home-assistant`, which only
-  routes to the external HA box); a new caller of an app needs its ingress rule.
-- In-cluster clients reach Plex by its Service name, `plex.plex-media-stack:32400`; the
-  pod IP changes on every restart.
-- The gluetun pod (qBittorrent, Prowlarr) sends its DNS through the VPN, so it reaches
-  `local.bigd.no` apps through `hostAliases` on the private gateway VIP.
+- App namespaces carry CiliumNetworkPolicies (all but `home-assistant`, which only routes
+  to the external HA box). Cilium runs them in audit mode for now (`policyAuditMode` in
+  `k8s/talos/infra/cilium/values.yaml`): drops are logged, not enforced, so a missing
+  rule does not break anything yet but will once enforcement is on.
 - Remote access is Tailscale, with UniFi WireGuard as break-glass
   ([`../platform/network/remote-access.md`](../platform/network/remote-access.md)).
-
 ## Delivery
 
-- Argo CD runs app-of-apps from `k8s/talos/infra/argocd/{apps.yaml,infra.yaml}`. Each
-  directory under `k8s/talos/apps/` and `k8s/talos/infra/` is one Application, synced
-  from `main`. Direct `kubectl apply` is reverted.
-- Images built in this repo (portfolio, blog) and some external repos are promoted from
-  stage to prod by Kargo through pull requests ([`../platform/delivery/kargo.md`](../platform/delivery/kargo.md)). External repos
-  outside Kargo use `bump-image.yml` ([`../platform/delivery/external-apps.md`](../platform/delivery/external-apps.md)).
+- Argo CD runs two ApplicationSets, `apps` and `infra` in `k8s/talos/infra/argocd/`,
+  which generate one Application per directory under `k8s/talos/apps/` and
+  `k8s/talos/infra/`, synced from `main`. A direct `kubectl apply` is reverted.
+- Kargo promotes every image built here or in an app repo: portfolio and blog go stage to
+  prod, headroom demo to prod, logeverylift, verksted and reelsmith straight to prod, and
+  every prod promotion is a pull request
+  ([`../platform/delivery/kargo.md`](../platform/delivery/kargo.md)). CI only builds and pushes tags.
 - KEDA with the HTTP add-on scales idle apps to zero; the interceptor wakes them.
 - Renovate proposes chart, image and provider bumps; Postgres majors are excluded and
   done by hand ([`../platform/data/postgres.md`](../platform/data/postgres.md)).
-
 ## Secrets
 
 No secret is committed. Values live in Bitwarden Secrets Manager (Homelab project) and
@@ -85,23 +82,24 @@ Kubernetes Secret ([`../platform/secrets/README.md`](../platform/secrets/README.
 
 ## Observability
 
-kube-prometheus-stack, Grafana, Loki, Tempo and the OpenTelemetry collector. Alertmanager
+kube-prometheus-stack, Grafana, Loki with Alloy shipping logs, and Tempo fed by Traefik over
+OTLP. Alertmanager
 sends only actionable, critical alerts to Discord, and a Cloudflare Worker reports a
-missing Alertmanager heartbeat. Falco watches syscalls on every node
+missing Alertmanager heartbeat. Falco watches syscalls on every node and posts to Discord
+itself through falcosidekick
 ([`../platform/observability/README.md`](../platform/observability/README.md), past incidents in [`../platform/observability/incidents.md`](../platform/observability/incidents.md)).
-
 ## Workloads
 
 22 Argo CD Applications under `k8s/talos/apps/`, one per directory. The groups that
 depend on each other:
 
-- Media: Seerr, Radarr, Radarr 4K, Sonarr, Prowlarr, qBittorrent behind gluetun, Plex,
-  Bazarr and Bazarr 4K,
-  Tdarr, Bazarr, Cleanuparr ([`../apps/media-stack/README.md`](../apps/media-stack/README.md)).
-- Sites: portfolio and blog, each with a stage and prod, promoted by Kargo.
-- Own apps: logeverylift (with Postgres), headroom, reelsmith, verksted, bigd.
+- Media: requests, downloads behind a VPN, Plex, subtitles and re-encoding, with a
+  separate 4K film library ([`../apps/media-stack/README.md`](../apps/media-stack/README.md)).
+- Sites: portfolio and blog, each with a stage and prod, promoted by Kargo
+  ([`../apps/portfolio/README.md`](../apps/portfolio/README.md)).
+- Own apps: logeverylift (with Postgres), headroom and headroom-demo, reelsmith,
+  verksted, bigd.
 - Hub: `hub.bigd.no` (Homepage) links every app, `k8s/talos/apps/homepage/values.yaml`.
-
 ## Doc map
 
 `docs/` has one folder per kind of work and one subfolder per area. Each area's
@@ -112,10 +110,12 @@ depend on each other:
 | [`platform/backups`](../platform/backups/README.md) | backup layers, watching them, [restores](../platform/backups/restore.md) |
 | [`platform/cluster`](../platform/cluster/README.md) | Proxmox and Talos, upgrades, GPU passthrough |
 | [`platform/data`](../platform/data/README.md) | in-cluster Postgres, major upgrades |
-| [`platform/delivery`](../platform/delivery/README.md) | Argo CD, Kargo promotion, external app deploys |
+| [`platform/delivery`](../platform/delivery/README.md) | Argo CD, Kargo promotion |
 | [`platform/network`](../platform/network/README.md) | VIPs, gateways, DNS, remote access |
 | [`platform/observability`](../platform/observability/README.md) | monitoring, alerting, [incidents](../platform/observability/incidents.md) |
 | [`platform/secrets`](../platform/secrets/README.md) | Bitwarden to cluster secrets |
 | [`apps/media-stack`](../apps/media-stack/README.md) | requests, storage, 4K, seeding, subtitles, re-encoding |
-| [`projects`](../projects) | work in progress, deleted when it ships |
+| [`apps/portfolio`](../apps/portfolio/README.md) | the portfolio site, brand decisions, the fun room |
+| `projects/<name>` | work in progress, created when needed and deleted when it ships |
+| [`backlog`](../backlog/README.md) | known gaps agreed to leave for later |
 | [`assets`](../assets) | diagrams, logo, social preview |
