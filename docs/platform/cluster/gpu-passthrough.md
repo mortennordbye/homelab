@@ -1,64 +1,44 @@
-# Plex hardware transcoding: hyper1 iGPU passthrough
+# hyper1 iGPU for Plex and Tdarr
 
-The hyper1 integrated GPU passed through to `genesis-worker-01` so Plex can use Intel QuickSync
-instead of software transcoding.
+The hyper1 integrated GPU is passed through to `genesis-worker-01` (VM 134). Plex and Tdarr use it
+for Intel Quick Sync hardware transcoding through the Intel GPU device plugin.
 
-Every command is a **single line**. Heredocs and backslash continuations get mangled pasting into a
-tmux session, so nothing here uses them. Paste one at a time.
+Every command is a single line, because heredocs and backslash continuations get mangled when
+pasted into a tmux session.
 
-## Status
-
-Working. The GPU is bound to `vfio-pci` on the host, attached to VM 134, and
-`/dev/dri/renderD128` is present inside Talos on `genesis-worker-01`.
-
-- [x] Host vfio config and initramfs
-- [x] PCI mapping `igpu-hyper1` with `iommugroup` and `subsystem-id`
-- [x] hyper1 rebooted, GPU on `vfio-pci`, host `/dev/dri` gone
-- [x] `hostpci0` attached to VM 134, GPU visible inside Talos as `0000:01:00.0`
-- [x] Talos `i915` extension via schematic `95d432d6…`, `/dev/dri/renderD128` present
-- [x] Node label `hardware.nordbye.it/gpu=intel-quicksync` on worker-01
-- [x] `plex.yaml` selects that label and requests `gpu.intel.com/i915`
-- [x] Merged to main, ArgoCD synced, Plex running on `gpu.intel.com/i915`
-- [x] Hardware acceleration enabled, transcodes run `final decoder: vaapi, final encoder: vaapi`
-- [ ] Boot kernel pin **failed**, host runs `7.0.6-2-pve`. See the open issue at the end
-
-## Established facts
-
-Checked on the running system, not assumed.
+## Facts
 
 | Fact | Value |
 | ---- | ----- |
 | Device | `00:02.0` Intel RocketLake-S GT1 [UHD Graphics 730], `8086:4c8b` |
 | Subsystem | Lenovo `17aa:31a7` |
-| Host CPU | i5-11400T, 11th gen. hyper2 is i5-8500T, hyper3 is i7-8700T, both 8th gen |
-| QuickSync | H.264, HEVC 8/10-bit, VP9, AV1 **decode**. hyper1 is the only host with AV1 |
-| IOMMU | Already enabled, no kernel cmdline change needed |
-| IOMMU group | Group 0, GPU is the only device in it |
+| Host CPU | i5-11400T, 11th gen. hyper2 and hyper3 are 8th gen |
+| Quick Sync | H.264, HEVC 8/10-bit, VP9, AV1 decode. hyper1 is the only host with AV1 |
+| IOMMU | Enabled by default, no kernel cmdline change needed |
+| IOMMU group | Group 0, the GPU is the only device in it |
 | SR-IOV | Not advertised |
-| VMs on hyper1 | 131 `genesis-ctrl-01`, 134 `genesis-worker-01`, 1000 `debian13-cloudinit` (stopped) |
 | Render node | `renderD128`, mode `crw-rw-rw-`, so no privileged container or extra groups needed |
 
-## The constraint
+## Constraints
 
-Rocket Lake is Gen12. Intel dropped GVT-g after Gen11 and this device does not advertise SR-IOV, so
-the GPU cannot be shared. It is full VFIO passthrough to exactly one VM, permanently, and hyper1
-gives it up entirely.
+Rocket Lake is Gen12. Intel dropped GVT-g after Gen11 and the device does not advertise SR-IOV, so
+the GPU cannot be shared between VMs. It is full VFIO passthrough to exactly one VM, and hyper1
+gives it up entirely. It goes to a worker rather than `genesis-ctrl-01`, which also lives on
+hyper1, so the control plane has no dependency on one physical machine.
 
-`genesis-worker-01` was chosen over `genesis-ctrl-01`, which also lives on hyper1: twice the vCPU,
-a worker suits a hardware-pinned role, and it keeps the control plane free of a dependency on one
-physical machine.
+Passthrough pins the guest's entire RAM. hyper1 has 31 GiB; `genesis-worker-01` (16 GiB) and
+`genesis-ctrl-01` (8 GiB) leave the host a thin margin, so raising either VM's `memory_mb` takes
+it from the host.
 
-## Order
+The host reboot must come before the Terraform attach. Adding `hostpci0` is not a staged config
+edit: the provider stops the VM, writes the config and starts it, and that start fails unless the
+device is already bound to `vfio-pci`.
 
-The host reboot must come **before** the Terraform apply. Attaching `hostpci0` is not a staged
-config edit: the provider stops the VM, writes the config and starts it, and that start fails unless
-the device is genuinely free at that moment.
+## Rebuild hyper1
 
----
+### Host preparation
 
-## 1. Host preparation, on hyper1
-
-Do not reboot after these.
+On hyper1. Do not reboot yet.
 
 ```bash
 echo 'options vfio-pci ids=8086:4c8b disable_vga=1' > /etc/modprobe.d/vfio.conf
@@ -76,368 +56,154 @@ printf 'vfio\nvfio_iommu_type1\nvfio_pci\n' >> /etc/modules
 update-initramfs -u -k all
 ```
 
-Read that output. It lists every installed kernel, which is how the extra `7.0.6-2-pve` was spotted.
+Read that output. It lists every installed kernel, and GRUB boots the newest by default on a
+machine with no IPMI.
 
-### PCI resource mapping
+### PCI mapping
 
-Create it with every property up front:
+The `igpu-hyper1` mapping is declared in `terraform/proxmox/hyper-cluster/datacenter/hardware.tf`
+and applied from that stack. Its name must match `pci_mapping` in the Talos `terraform.tfvars`. A
+mapping is used rather than a raw PCI id because the provider's `hostpci.id` does not work with API
+token auth.
 
-```bash
-pvesh create /cluster/mapping/pci --id igpu-hyper1 --map "node=hyper1,path=0000:00:02.0,id=8086:4c8b,iommugroup=0,subsystem-id=17aa:31a7"
-```
-
-Or repair an incomplete one:
-
-```bash
-pvesh set /cluster/mapping/pci/igpu-hyper1 --map "node=hyper1,path=0000:00:02.0,id=8086:4c8b,iommugroup=0,subsystem-id=17aa:31a7"
-```
+Both `iommu_group` and `subsystem_id` are required. Proxmox accepts a mapping without them, then
+rejects it at VM start with `missing expected property`, one property per failed start, and the VM
+does not boot. The values come from `ls /sys/kernel/iommu_groups/0/devices/` and the `Subsystem:`
+line of `lspci -nnk -s 00:02.0`. Check what Proxmox holds:
 
 ```bash
 pvesh get /cluster/mapping/pci --output-format json
 ```
 
-Both `iommugroup` and `subsystem-id` are required. `pvesh create` accepts a mapping without them and
-reports success, then Proxmox rejects it at VM start, one missing property at a time:
-
-```
-PCI device mapping invalid (hardware probably changed): missing expected property 'iommugroup' for device '0000:00:02.0'
-PCI device mapping invalid (hardware probably changed): missing expected property 'subsystem-id' for device '0000:00:02.0'
-```
-
-Each discovery costs a node outage, because a VM whose `hostpci0` cannot be validated will not boot.
-Values came from `ls /sys/kernel/iommu_groups/0/devices/` and the `Subsystem:` line of
-`lspci -nnk -s 00:02.0`.
-
-The mapping name must match `pci_mapping` in `terraform.tfvars`. A mapping is used rather than a raw
-PCI id because the provider's `hostpci.id` is incompatible with API token auth, which is how this
-module authenticates.
-
----
-
-## 2. Drain and reboot
-
-On your workstation:
-
-```bash
-export KUBECONFIG=~/Documents/github/Homelab/terraform/proxmox/hyper-cluster/k8s/talos/kubeconfig
-```
+### Drain and reboot
 
 ```bash
 kubectl drain genesis-worker-01 --ignore-daemonsets --delete-emptydir-data
 ```
 
-On hyper1:
+Then `reboot` on hyper1. That takes down `genesis-ctrl-01` and `genesis-worker-01` together; etcd
+keeps quorum on the other two control planes. Plex and Tdarr stay down until the node is back,
+since only that node offers the GPU.
 
-```bash
-reboot
-```
+### Verify the host
 
-This takes down `genesis-ctrl-01` and `genesis-worker-01` together. etcd keeps quorum on the other
-two control planes. Plex is unavailable for the duration and will not reschedule, since it is pinned
-to hardware on hyper1.
+On hyper1, `lspci -nnk -s 00:02.0` must show `Kernel driver in use: vfio-pci`, and `ls /dev/dri`
+must fail with "No such file or directory".
 
----
+### Terraform attach
 
-## 3. Verify the host
+`proxmox-vms.tf` in `terraform/proxmox/hyper-cluster/k8s/talos` has a `dynamic "hostpci"` block
+that only materialises for nodes that set `pci_mapping`, and `terraform.tfvars` sets
+`pci_mapping = "igpu-hyper1"` on `genesis-worker-01`. It uses `pcie = true`, which needs the q35
+machine type these VMs already have.
 
-On hyper1. Expect `Kernel driver in use: vfio-pci`:
-
-```bash
-lspci -nnk -s 00:02.0
-```
-
-Expect "No such file or directory", the host has given up the GPU:
-
-```bash
-ls /dev/dri
-```
-
-```bash
-qm status 134
-```
-
----
-
-## 4. Terraform: attach the device
-
-Only once step 3 passes. Already written: `variables.tf` has an optional `pci_mapping` on the node
-object, `proxmox-vms.tf` has a `dynamic "hostpci"` block that only materialises for nodes that set
-it, and `terraform.tfvars` sets `pci_mapping = "igpu-hyper1"` on `genesis-worker-01`.
-
-```hcl
-dynamic "hostpci" {
-  for_each = each.value.pci_mapping != null ? [each.value.pci_mapping] : []
-
-  content {
-    device  = "hostpci0"
-    mapping = hostpci.value
-    pcie    = true
-  }
-}
-```
-
-`pcie = true` requires q35, which these VMs already use.
-
-Confirm the plan says `updated in-place` and `0 to destroy` before applying. A replacement would
-wipe Talos and etcd on that node. The apply stops and starts VM 134.
-
-Verify the GPU reached the guest. Expect an Intel `RocketLake-S GT1` entry alongside the emulated
-`0000:00:01.0`:
+The plan must say `updated in-place` and `0 to destroy`; a replacement wipes Talos and etcd on that
+node. The apply stops and starts VM 134. Then check the GPU reached the guest, expecting an Intel
+`RocketLake-S GT1` entry:
 
 ```bash
 talosctl -e 10.3.10.30 -n 10.3.10.34 get pcidevices
 ```
 
-### If a VM will not start
+### If the VM will not start
 
-Detach the device so the node boots without it, then fix the real cause:
+The Proxmox start button keeps failing while an unusable `hostpci0` is in the config. Detach it so
+the node boots, then read the task viewer for the real cause:
 
 ```bash
 qm set 134 --delete hostpci0 && qm start 134 && qm status 134
 ```
 
-The Proxmox GUI start button keeps failing while an unusable `hostpci0` is in the config, so
-removing it is the way out. Check the task viewer for the actual reason.
+## Talos: the i915 extension
 
----
+`/dev/dri` does not exist inside Talos without `siderolabs/i915`. It is in the fleet-wide
+`talos_image_factory_schematic.this` in `talos-cluster.tf` and harmless on nodes without a GPU.
+Changing the extension list changes the schematic ID, which rewrites `machine.install.image` on all
+six nodes.
 
-## 5. Talos: the i915 extension
+Applying a schematic change hits a provider bug: Terraform plans the machine config with the old
+schematic ID, computes a new one during apply, and aborts with
+`Provider produced inconsistent final plan`. The schematic resource is updated anyway, so plan and
+apply a second time.
 
-`/dev/dri` does not exist inside Talos until `siderolabs/i915` is installed. It is added to
-`talos_image_factory_schematic.this` in `talos-cluster.tf`, which changes the schematic ID. Because
-`machine.install.image` is pinned to that schematic, the change rewrites `install.image` on all six
-nodes and each picks the extension up at its next install.
-
-Applying that change hits a provider bug. Terraform plans the machine config using the old schematic
-ID, then computes a new one during apply, and aborts:
-
-```
-Error: Provider produced inconsistent final plan
-... produced an invalid new value for .machine_configuration: inconsistent values for sensitive attribute
-```
-
-The schematic resource itself does get updated, so simply plan and apply **again**. The second run
-is consistent because the new ID is already in state.
-
-Then install it on the GPU node. Same Talos version, different image, so this is a reinstall and
-reboot of that node only:
+Then reinstall the GPU node on the new image. Same Talos version, different image, so only that
+node reboots. Take the image from `local.talos_installer_image` in `upgrade-talos.tf`, which is
+`factory.talos.dev/installer/<schematic id>:<talos_version>`:
 
 ```bash
-talosctl -e 10.3.10.30 -n 10.3.10.34 upgrade --image factory.talos.dev/installer/95d432d6bb450a67e801a6ae77c96a67e38820b62ba4159ae7e997e1695207f7:v1.12.11 --preserve --wait
-```
-
-```bash
-talosctl -e 10.3.10.30 -n 10.3.10.34 get extensions
+talosctl -e 10.3.10.30 -n 10.3.10.34 upgrade --image <installer image> --preserve --wait
 ```
 
 ```bash
 talosctl -e 10.3.10.30 -n 10.3.10.34 ls /dev/dri
 ```
 
-Expect `card0` and `renderD128`.
+Expect `card0` and `renderD128`. Never install a one-off image without changing the Terraform
+schematic; the fleet-wide `install.image` pin reverts it at the next install.
 
-Do not install a one-off image without also changing the Terraform schematic. Because
-`install.image` is pinned fleet-wide, such a node would be reverted to the fleet image at its next
-install.
+## Kubernetes
 
----
+Workloads reach the iGPU through the Intel GPU device plugin in
+`k8s/talos/infra/intel-gpu-plugin/`, not a `hostPath` mount. The DaemonSet runs on the GPU node,
+advertises `gpu.intel.com/i915`, and injects `/dev/dri` into any container that requests it. It
+runs with `-shared-dev-num=2` so Plex and Tdarr can each claim the device.
 
-## 6. Kubernetes: the GPU into Plex
+Talos enforces PodSecurity `baseline` cluster-wide, which forbids `hostPath`. Only
+`intel-gpu-plugin`, a namespace holding nothing but the DaemonSet, runs `enforce: privileged`, with
+audit and warn left at baseline. Do not raise `plex-media-stack` or `arr-stack` to privileged to
+mount `/dev/dri`: they hold other apps that need none of it, seerr among them, which answers from
+the internet. A pod rejected at admission shows in the ReplicaSet events, not the Deployment, and
+`kubectl diff` stays clean.
 
-Plex reaches the iGPU through Intel's GPU device plugin, not through a `hostPath` mount. The plugin
-runs as a DaemonSet on the GPU node, advertises `gpu.intel.com/i915` as an extended resource, and
-injects the `/dev/dri` device nodes into any container that requests it.
-
-### Why not hostPath
-
-Talos configures PodSecurity admission cluster-wide with `enforce: baseline`, exempting only
-`kube-system`. Baseline forbids `hostPath` volumes outright, so a pod mounting `/dev/dri` is
-rejected at admission:
-
-```
-Error creating: pods "plex-..." is forbidden: violates PodSecurity "baseline:latest": hostPath volumes (volume "dri")
-```
-
-The Deployment applies cleanly and `kubectl diff` shows nothing wrong, because admission runs on the
-**pod**, not the Deployment. With `strategy: Recreate` the old pod is already gone by then, so Plex
-goes down rather than failing over. Check the ReplicaSet events, not the Deployment.
-
-Raising the whole namespace to `enforce: privileged` clears the error, and that is what
-`plex-media-stack` did until the plugin landed. It is too broad: seerr and tautulli share the
-namespace and need none of it, and seerr answers from the internet. The plugin confines the
-`hostPath` privilege to `intel-gpu-plugin`, a namespace that holds nothing but the DaemonSet, and
-lets `plex-media-stack` sit at baseline with everything in it enforced.
-
-### The plugin
-
-`k8s/talos/infra/intel-gpu-plugin/daemonset.yaml` is vendored from upstream
-`deployments/gpu_plugin/base` — re-sync it when Renovate moves the image tag. The one local change
-is the `nodeSelector`: upstream ships `kubernetes.io/arch: amd64` alone, which would place the
-plugin on all six nodes and hostPath-create `/dev/dri` on the five without a GPU.
-
-The namespace runs `enforce: privileged` with audit and warn left at baseline, so the four
-`hostPath` mounts and the `seLinuxOptions` type are still reported, just not enforced.
+`daemonset.yaml` is vendored from upstream `deployments/gpu_plugin/base`; re-sync it when Renovate
+moves the image tag. The local change is the `nodeSelector`, which adds the GPU label to upstream's
+`kubernetes.io/arch: amd64` so the plugin does not hostPath-create `/dev/dri` on the five nodes
+without a GPU.
 
 ### Node selection
 
-Selection is by capability label, not hostname. `talos-cluster.tf` derives the label from
-`pci_mapping`, so it is declared with the hardware and only lands on nodes that have a GPU:
-
-```hcl
-nodeLabels = merge(
-  {
-    "topology.kubernetes.io/region" = var.proxmox_cluster_name
-    "topology.kubernetes.io/zone"   = each.value.proxmox_node
-  },
-  each.value.pci_mapping != null ? { "hardware.nordbye.it/gpu" = "intel-quicksync" } : {}
-)
-```
-
-Both the plugin and `plex.yaml` select on that label. The resource request pins Plex on its own
-anyway, since only a node running the plugin advertises `gpu.intel.com/i915`. The `plex-config` PV
-carries its own `nodeAffinity` for zone hyper1, which the scheduler enforces independently. All
-three are satisfied by `genesis-worker-01`.
+Selection is by capability label, not hostname. `talos-cluster.tf` sets
+`hardware.nordbye.it/gpu=intel-quicksync` on any node with a `pci_mapping`. The plugin selects on
+that label and so does Plex. The `gpu.intel.com/i915` request alone is enough to place a pod,
+since only the plugin's node advertises it; that is how Tdarr lands there.
 
 ```bash
 kubectl get nodes -L hardware.nordbye.it/gpu
 ```
 
-### Rollout
-
-Ship the plugin and the Plex change as two merges, not one. Plex uses `strategy: Recreate`, so if it
-is switched to a resource the node does not advertise yet, the old pod is already gone and Plex sits
-Pending until the plugin catches up.
-
-First merge `k8s/talos/infra/intel-gpu-plugin/`, then confirm the node advertises the resource:
-
 ```bash
-kubectl -n intel-gpu-plugin rollout status ds/intel-gpu-plugin
 kubectl get node genesis-worker-01 -o jsonpath='{.status.allocatable.gpu\.intel\.com/i915}'
 ```
 
-Then merge the `plex-media-stack` change, which drops the namespace to baseline and swaps the
-`hostPath` volume for the resource request:
+When changing the GPU resource, ship the plugin first and the workloads after. Plex and Tdarr are
+`strategy: Recreate`, so switching them to a resource the node does not advertise yet leaves them
+Pending with the old pod already gone.
 
-```bash
-kubectl diff -f k8s/talos/apps/plex-media-stack/plex.yaml --server-side --field-manager=argocd-controller
-```
+### Hardware transcoding in Plex
 
-Manifest changes only reach the cluster once merged to `main`, since ArgoCD reconciles from there.
-After it syncs, confirm Plex still sees the device:
-
-```bash
-kubectl exec -n plex-media-stack deploy/plex -- ls -l /dev/dri
-```
-
-Then in Plex: Settings, Transcoder, "Use hardware acceleration when available". That option requires an active
-Plex Pass, which this server has. It is stored as `HardwareAcceleratedCodecs` in `Preferences.xml` on the
-config PVC, not in this repo, so it survives a restart but is not declarative and is not restored by a
-rebuild from git.
-
-Confirm it is actually being used. A transcode logs its runtime decision, and both ends must say vaapi:
+Settings, Transcoder, "Use hardware acceleration when available" needs Plex Pass. It is stored as
+`HardwareAcceleratedCodecs` in `Preferences.xml` on the config PVC, not in this repo, so a rebuild
+from git does not restore it. Confirm a transcode actually uses the GPU:
 
 ```bash
 kubectl exec -n plex-media-stack deploy/plex -- sh -c 'grep "TPU: hardware transcoding" "/config/Library/Application Support/Plex Media Server/Logs/Plex Media Server.log" | tail -3'
 ```
 
-```
-TPU: hardware transcoding: zero-copy support present
-TPU: hardware transcoding: final decoder: vaapi, final encoder: vaapi
-```
-
-An empty `final decoder: , final encoder:` means it fell back to software.
-
----
-
-## Open issue: one unexplained VM failure
-
-On 2026-08-09, about 50 minutes after the GPU was attached, VM 134 went to
-`running (internal-error)` in Proxmox. `genesis-worker-01` went NotReady and unreachable, and Plex
-could not reschedule because it is pinned to that node. `qm stop 134 && qm start 134` recovered it,
-and it then ran over an hour without recurring.
-
-No cause established. `journalctl -u qemu-server@134` was empty, `dmesg` showed no OOM kill, and
-`internal-error` is QEMU giving up without saying why. The `Invalid PCI ROM header signature` line
-in `dmesg` is a red herring: `rombar=0` is set, so the option ROM is not used.
-
-The most likely explanation is memory pressure. hyper1 has 31 GiB total. PCI passthrough pins the
-guest's entire RAM permanently, so worker-01's 16 GiB can never be reclaimed, plus ctrl-01's 8 GiB,
-leaving roughly 1 GiB for the host.
-
-If it recurs, in order: drop `genesis-worker-01` to `memory_mb = 12288`, then if that fails remove
-the passthrough entirely. Tracked in `BACKLOG.md`.
-
-## Open issue: the boot kernel pin failed
-
-hyper1 runs `7.0.6-2-pve`. The intent was to pin `6.14.11-9-pve`. `GRUB_DEFAULT` was set,
-`update-grub` ran, and `grub.cfg` ended up with the right value:
-
-```
-set default="gnulinux-advanced-bb0c7f74…>gnulinux-6.14.11-9-pve-advanced-bb0c7f74…"
-```
-
-It still booted 7.0.6. The passthrough works on it and nothing is visibly broken, so chasing it was
-not worth another outage during this session.
-
-Ruled out already: GRUB is genuinely the bootloader (`bootctl status` reports `GRUB 2.12-9+pmx2` via
-`\EFI\PROXMOX\SHIMX64.EFI`), `/boot` is on the root filesystem rather than a separate unmounted
-partition, and the ESP config is only a pointer that runs
-`configfile ($root)/boot/grub/grub.cfg`. So the edited file is the one GRUB reads.
-
-Next things to try:
-
-```bash
-grub-editenv /boot/grub/grubenv list
-```
-
-A saved `next_entry` or `saved_entry` there would override the default. Also check that the submenu
-id in `set default` matches the actual `--id` on the menuentry:
-
-```bash
-grep -oE "\-\-id '[^']+'" /boot/grub/grub.cfg | head -8
-```
-
-If the id form is the problem, the fallbacks are numeric indices (`GRUB_DEFAULT="1>2"`) or
-`GRUB_DEFAULT=saved` with `grub-set-default`.
-
-The pin commands themselves, for reference. Delete and append rather than substitute, because a
-plain `sed 's|^GRUB_DEFAULT=.*|...|'` silently does nothing when the line is absent:
-
-```bash
-sed -i '/^GRUB_DEFAULT=/d' /etc/default/grub && echo 'GRUB_DEFAULT="Advanced options for Proxmox VE GNU/Linux>Proxmox VE GNU/Linux, with Linux 6.14.11-9-pve"' >> /etc/default/grub
-```
-
-```bash
-update-grub
-```
-
----
+Both ends must say `final decoder: vaapi, final encoder: vaapi`. Empty values mean it fell back to
+software. Tdarr's GPU worker settings are in [`../../apps/media-stack/README.md`](../../apps/media-stack/README.md).
 
 ## Rollback
 
-Remove `pci_mapping` from `terraform.tfvars` and apply, then on hyper1:
+Remove `pci_mapping` from the Talos `terraform.tfvars` and apply, then on hyper1:
 
 ```bash
 rm -f /etc/modprobe.d/blacklist-i915.conf /etc/modprobe.d/vfio.conf && update-initramfs -u -k all && reboot
 ```
 
-The host reclaims the GPU via `i915`. The Talos schematic change does not need reverting; the i915
-extension is harmless on nodes without a GPU.
+The host reclaims the GPU through `i915`. The Talos schematic can stay as it is. Plex and Tdarr
+must drop their `gpu.intel.com/i915` requests first, or they stay Pending.
 
----
+## Open items
 
-## Mistakes made, so they are not repeated
-
-**Applying Terraform before the host reboot.** Adding `hostpci` does not merely stage a pending
-config change. The provider stops the VM, writes the config and starts it, and that start failed
-because the GPU was still bound to `i915`. `genesis-worker-01` sat stopped until `hostpci0` was
-removed by hand. The cluster was never at risk, etcd kept quorum and the pods rescheduled, but the
-node was down for no reason.
-
-**Creating the PCI mapping incrementally.** Proxmox validates every property it recorded and reports
-only the first missing one, so an incomplete mapping costs one failed VM start per missing field.
-Include `iommugroup` and `subsystem-id` from the outset.
-
-**Nearly rebooting into an untested kernel.** `update-initramfs -u -k all` listed a newer kernel than
-the host was running, which GRUB would have booted by default on a machine with no IPMI. Read what
-it prints. Pinning was attempted and did not work, see the open issue above.
+Tracked in `docs/backlog/README.md`. A one-off QEMU `internal-error` on VM 134 is recorded in
+[`../observability/incidents.md`](../observability/incidents.md).

@@ -66,7 +66,7 @@ This is the BACKLOG item that has been pending since Iteration 0 and is now the 
 
 **Avoid scope creep.** Don't reach for LLM-as-judge or precision@k in the first cut. Substring/regex matching against `expected_contains` is enough to detect regressions and progress.
 
-**Where it lives.** `ai/projects/local-rag-poc/evals/`. Update BACKLOG.md when delivered.
+**Where it lives.** `ai/projects/local-rag-poc/evals/`. Update docs/backlog/README.md when delivered.
 
 ## BACKLOG snapshot (priority order)
 
@@ -116,7 +116,7 @@ This is the BACKLOG item that has been pending since Iteration 0 and is now the 
 
 - **`README.md`** — user-facing usage, model recommendations, run modes, example questions.
 - **`BUILD-JOURNAL.md`** — chronological narrative of every iteration with what-we-saw / why / what-we-did / takeaway. Blog material.
-- **`BACKLOG.md`** (repo root, not this folder) — cross-project deferred work; the `AI / RAG POC` section refers to the eval harness item.
+- **`docs/backlog/README.md`** (the repo-wide backlog, not this folder) — cross-project deferred work; the `AI / RAG POC` section refers to the eval harness item.
 - **`CLAUDE.md`** (repo root) — repo-wide guidelines: containerization, GitOps, manifest conventions, secrets via ExternalSecrets.
 - **`/Users/morten.victor.nordbye/.claude/projects/-Users-morten-victor-nordbye-Documents-github-Homelab/memory/`** — persistent memory across sessions. Includes preferences like "no native node tooling" and "screenshots → .screenshots/".
 

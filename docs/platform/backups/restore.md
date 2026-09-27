@@ -1,13 +1,10 @@
 # Restoring from backup
 
-How to get each layer in [`README.md`](README.md) back. Every procedure here was run once
-against real backups on 2026-09-26 (see "Restore tests" at the end), except the two that
-would have replaced a running system: a full etcd recovery and a Home Assistant restore.
+How to get each layer in [`README.md`](README.md) back.
 
-Everything lives on the Synology share `k8s-backups` (`nas.local.bigd.no:/volume1/k8s-backups`),
-which also keeps 30 daily immutable snapshots and goes to Google Drive nightly through
-Hyper Backup. If a backup file itself is damaged or deleted, restore it from a share
-snapshot first (Snapshot Replication > Snapshots > `k8s-backups` > Browse).
+Everything lives on the Synology share `k8s-backups` (`nas.local.bigd.no:/volume1/k8s-backups`).
+If a backup file itself is damaged or deleted, restore it from a share snapshot first
+(Snapshot Replication > Snapshots > `k8s-backups` > Browse), or from the Hyper Backup copy.
 
 | Layer | Folder | Secret needed |
 |---|---|---|
@@ -53,7 +50,7 @@ Restores a PVC in place from its restic repository. The repository Secret
 
 3. Wait for `kubectl -n <ns> get replicationdestination <pvc>-restore` to show a
    `lastSyncTime`, then delete the ReplicationDestination and scale the app back up.
-4. Sonarr, Radarr and Prowlarr: if the restored database misbehaves, restore the
+4. Sonarr, Radarr, Radarr 4K and Prowlarr: if the restored database misbehaves, restore the
    newest zip from `/config/Backups/scheduled` through System > Backup in the app.
 
 Direct restore overwrites files but does not delete ones that are not in the backup.
@@ -62,7 +59,8 @@ For a clean restore, restore into a new PVC and point the Deployment at it inste
 ## Postgres
 
 Dumps are `pg_dump --format=custom`. Restore with `pg_restore` from a pod that mounts the
-dump volume and is admitted by the database's network policy.
+dump volume and carries the label the database's network policy admits. Cilium runs in
+policy audit mode, so the label is what keeps the pod working once enforcement is on.
 
 | Database | Namespace | Dump PVC | Image | Host / user / db | Label the policy admits |
 |---|---|---|---|---|---|
@@ -84,7 +82,7 @@ dump volume and is admitted by the database's network policy.
 4. Delete the pod and scale the app back up.
 
 To inspect a dump without touching the live database, restore it into a throwaway
-Postgres of the same major version instead (this is what the restore test did).
+Postgres of the same major version instead.
 
 ## etcd
 
@@ -111,16 +109,7 @@ fresh HA OS install, choose "Restore from backup" during onboarding and upload t
 from `k8s-backups/home-assistant/`. Both ask for the backup encryption key from
 Bitwarden.
 
-## Restore tests
+## Testing
 
-| Date | Layer | What was done | Result |
-|---|---|---|---|
-| 2026-09-26 | Postgres logeverylift | Newest dump restored into a scratch `postgres:18-alpine` | 27 tables, 2441 `workout_sets`, same as live |
-| 2026-09-26 | Postgres Authentik | Newest dump restored into a scratch `postgres:17-alpine` | 231 tables, 3 users, 6 applications |
-| 2026-09-26 | etcd | Newest snapshot gunzipped, `etcdutl snapshot status` (3.6.14) | valid, 4029 keys, hash matches the snapshot taken |
-| 2026-09-26 | VolSync | `mealie/data-pvc` restored into a new PVC in a scratch namespace | 17 files, 5.1 MB, `mealie.db` md5 identical to live |
-| 2026-09-26 | Home Assistant | Archive on the NAS listed | complete: core, 8 add-ons, `protected: true` |
-| 2026-09-26 | VolSync, Postgres | First `backup-check/restore-test` run | 19 repositories checked (5 % read), mealie restored and verified (17 files); logeverylift 26 tables, 2441 `workout_sets`; Authentik 230 tables, 3 users |
-
-VolSync and Postgres are retested every month by `backup-check/restore-test` (see
-`backups.md`). Test etcd and Home Assistant by hand once a year and add a row.
+`restore-test` in `k8s/talos/infra/backup-check/` tests VolSync and Postgres every month.
+etcd recovery and the Home Assistant restore are tested by hand, about once a year.

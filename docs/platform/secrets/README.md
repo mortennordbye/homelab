@@ -1,10 +1,10 @@
 # Secrets: Bitwarden to cluster
 
-No secret value is ever committed to this repo. What git holds is *references*:
-each app declares an `ExternalSecret` that names a Bitwarden Secrets Manager
-item by UUID, and External Secrets Operator (ESO) turns that into a real
-Kubernetes `Secret` inside the cluster. The values live in exactly two places —
-Bitwarden, and the running cluster.
+No secret value is committed to this repo. Git holds references: each app
+declares an `ExternalSecret` that names a Bitwarden Secrets Manager item by
+UUID, and External Secrets Operator (ESO) turns that into a Kubernetes `Secret`
+inside the cluster. The values live in two places only, Bitwarden and the
+running cluster.
 
 ```
 Bitwarden Secrets Manager            git (this repo)
@@ -20,56 +20,41 @@ Bitwarden Secrets Manager            git (this repo)
 ## The in-cluster half
 
 `k8s/talos/infra/external-secrets-operator/` deploys ESO plus the
-`bitwarden-sdk-server` sidecar chart (the Bitwarden provider does its crypto in
-a separate service, reached over TLS with a cert-manager-issued cert — that is
-what `bitwarden-certificate.yaml` and `cluster_issuer.yaml` are for).
+`bitwarden-sdk-server` chart. The Bitwarden provider does its crypto in that
+separate service, reached over TLS with a cert-manager-issued cert, which is
+what `bitwarden-certificate.yaml` and `cluster_issuer.yaml` are for.
 
 `clustersecretstore-bitwarden.yaml` defines the single store all apps use:
 
 - name `bitwarden-secretsmanager`, scoped to org
-  `1a1f473f-c6a3-47af-a106-b29800f5ca1f`, project
+  `1a1f473f-c6a3-47af-a106-b29800f5ca1f` and project
   `1ea61322-5f4a-44a4-b4d0-b29b00ba1134` (the `Homelab` project).
 - It authenticates with a machine account access token read from the
   `bw-auth-token` Secret in the `external-secrets` namespace. That token is the
-  one secret this pattern cannot manage for itself: it is applied by hand once
+  one secret this pattern cannot manage for itself. It is applied by hand once
   (`kubectl create secret generic bw-auth-token -n external-secrets
-  --from-literal=token=...`) and never lands in git. If the cluster is ever
-  rebuilt, recreating it is part of bootstrap.
-
-Every app-side `ExternalSecret` points at this store and syncs on a 1 hour
-`refreshInterval`. Rotating a value in Bitwarden therefore reaches the cluster
-within the hour; delete the ExternalSecret's target Secret (or annotate the
-ExternalSecret with `force-sync`) to hurry it along. Pods only pick up the new
-value on restart when the secret is consumed as env vars.
+  --from-literal=token=...`) and never lands in git, so recreating it is part
+  of a cluster rebuild.
 
 ## Access model: two machine accounts
 
-Two machine accounts exist in the org, with deliberately different blast radii:
+The `Homelab` account is used by ESO. It has read-only access, and its token
+lives in the cluster as `bw-auth-token`. The `claude-code` account is used from
+the laptop, with read and write on the Homelab project. Its token lives in the
+macOS Keychain under service name `bws-homelab`, never in a dotfile:
 
-- `Homelab` — the ESO account. Read-only, token lives in the cluster
-  (`bw-auth-token`). It only ever needs to read.
-- `claude-code` — the operator/agent account used from the laptop. Read+write
-  on the Homelab project. Its token lives in the macOS Keychain under service
-  name `bws-homelab`, never in a dotfile:
+```bash
+security add-generic-password -s bws-homelab -a claude -w   # prompts, stays out of history
+```
 
-  ```bash
-  security add-generic-password -s bws-homelab -a claude -w   # prompts, stays out of history
-  ```
-
-A project-level grant covers every secret in the project, including ones
-created before the grant existed (verified 2026-09-01: `claude-code` reads all
-pre-existing secrets with zero per-secret grants). The per-secret grant ritual
-this repo used historically — opening each new secret's Machine accounts tab
-and adding `Homelab` = Can read — was only ever necessary because the ESO
-account had no project-level grant. Give it project-level Can read once and
-the ritual is gone.
+Both accounts have project-level grants covering every secret in the project,
+so a new secret needs no per-secret grant.
 
 ## Creating a secret
 
-Use the Bitwarden Secrets Manager CLI, `bws` (installed at
-`/opt/homebrew/bin/bws` from the official GitHub release binary; there is no
-Homebrew formula, and brew's `bitwarden-cli` is the unrelated Password Manager
-tool).
+Use the Bitwarden Secrets Manager CLI, `bws`, installed at
+`/opt/homebrew/bin/bws` from the GitHub release binary (brew's `bitwarden-cli`
+is the unrelated Password Manager tool).
 
 ```bash
 export BWS_ACCESS_TOKEN=$(security find-generic-password -s bws-homelab -w)
@@ -88,13 +73,10 @@ Conventions, matching the existing items:
 - Generate values in a subshell as above so they never touch the terminal
   scrollback, shell history, or a chat transcript.
 
-The printed `id` is the UUID the ExternalSecret references. UUIDs are safe to
-commit — this repo is public and full of them — because they are useless
-without a token.
-
-**Never run `bws secret list` or `bws secret get` unfiltered.** The JSON
-includes every plaintext value. Always pipe through a filter that keeps only
-the harmless fields:
+The printed `id` is the UUID the ExternalSecret references; UUIDs are safe to
+commit because they are useless without a token. Never run `bws secret list`
+or `bws secret get` unfiltered, since the JSON includes every plaintext value.
+Filter down to the harmless fields:
 
 ```bash
 bws secret list | python3 -c "
@@ -126,44 +108,55 @@ spec:
         key: "9c266643-4f45-4aca-8586-b4b8006e6d3b"   # the bws-returned UUID
 ```
 
-and the Deployment consumes the resulting Secret the normal way
+The Deployment consumes the resulting Secret the normal way
 (`valueFrom.secretKeyRef`). ArgoCD applies both; nothing is done by hand in
 the cluster.
 
+## Rotation and refresh
+
+Rotate with `bws secret edit <uuid> --value ...`. The UUID is stable across
+edits, so no manifest change is needed. Only deleting and recreating the item
+changes the UUID.
+
+App ExternalSecrets sync on a 1 hour `refreshInterval`, so a new value reaches
+the cluster Secret within the hour. To hurry it along, run
+`kubectl annotate externalsecret <name> -n <ns> force-sync=$(date +%s) --overwrite`.
+
+Pods read the new value on their next restart. Reloader
+(`k8s/talos/infra/reloader/`, watching all namespaces) restarts a workload
+automatically when it carries `reloader.stakater.com/auto: "true"`, as
+gluetun-vpn, logeverylift and reelsmith do. Anything without the annotation
+needs a `kubectl rollout restart`.
+
 ## Gotchas
 
-- Bitwarden's API answers **404, not 403**, when a machine account writes to a
+- Bitwarden's API answers 404, not 403, when a machine account writes to a
   project it can only read. A `bws secret create` failing with "Resource not
   found" almost always means the project grant is read-only, not that the
   project id is wrong.
 - An ExternalSecret stuck in `SecretSyncedError` with no obvious cause usually
-  means the ESO machine account cannot see that one item — the legacy
-  per-secret grant problem above.
+  means the ESO machine account cannot see the item. Check that the `Homelab`
+  account still has its project-level read grant.
 - `bws project list` returning `[]` does not mean the token is broken; secret
   reads can still work. Judge access by `bws secret list` (filtered) instead.
-- Rotation is `bws secret edit <uuid> --value ...`. The UUID is stable across
-  edits, so no manifest change is needed — only deletion and recreation changes
-  the UUID.
 
 ## Local device credentials (not in Bitwarden)
 
-Some credentials are for LAN devices driven from the laptop, never from the
-cluster. Those do not belong in Bitwarden: nothing in-cluster consumes them, and
-an ExternalSecret for them would be dead weight. They live in the macOS login
-Keychain, the same way the `bws-homelab` token does, and a gitignored `*.env`
-file at the repo root exports them by reference.
+Credentials for LAN devices driven from the laptop, and never from the cluster,
+do not belong in Bitwarden: nothing in-cluster consumes them. They live in the
+macOS login Keychain, the same way the `bws-homelab` token does, and a
+gitignored `*.env` file at the repo root exports them by reference.
 
-The Hue bridge is the current example. `hue.env` holds the bridge address and
+The Hue bridge is the worked example. `hue.env` holds the bridge address and
 resolves the key at source time:
 
 ```bash
 export HUE_APPLICATION_KEY="$(security find-generic-password -s hue-bridge -w)"
 ```
 
-so the key itself is never written to disk, never committed, and never appears
-in an agent transcript. `**/*.env` is already gitignored; a new file must match
-that glob, so name it `<thing>.env` rather than `.env.<thing>`, which the
-pattern does not catch.
+The key is never written to disk, committed, or shown in an agent transcript.
+`**/*.env` is gitignored, so a new file must be named `<thing>.env`; the
+pattern does not catch `.env.<thing>`.
 
 To recreate the Hue key, press the round link button on top of the bridge and
 run this within 30 seconds:
@@ -177,10 +170,4 @@ key=$(curl -sk -X POST https://10.3.10.16/api -H 'Content-Type: application/json
 
 Revoke it with `DELETE /api/<key>/config/whitelist/<key>`. Pressing the link
 button does not invalidate existing keys, so re-pairing never breaks the Home
-Assistant integration's own separate key.
-
-A `behavior_instance` PUT rejects a partial patch with "The instance doesn't
-support triggers". Send `enabled`, `configuration` and `metadata` together,
-read back from the collection endpoint, and confirm the field actually changed:
-the bridge returns the object's rid on a rejected write, so a 200 with an rid in
-it is not proof that anything happened.
+Assistant integration's own key.

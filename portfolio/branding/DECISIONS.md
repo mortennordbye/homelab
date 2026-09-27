@@ -23,7 +23,7 @@ objects are built and shipped in the real site, the portfolio shelf (§8) and th
 resume (§13). §12 covers the flat sections, and the pass is now shipped for
 every section of the front page: the hero, About, Services, the resume, the case
 study pages, contact and the blog. The one card grid left anywhere is
-`FeaturedWork`'s no-WebGL fallback list, tracked in `BACKLOG.md`.
+`FeaturedWork`'s no-WebGL fallback list, tracked in `docs/backlog/README.md`.
 
 ---
 
@@ -354,7 +354,7 @@ live state, and the availability lamp is the one thing still allowed to emit.
 on the site because it is a measurement the site takes of itself and cannot
 fake, and that device should recur rather than sit once at the bottom. It is
 the honest version of a stats row and the only decorative element here that
-gets better the more real the site becomes. Not built; see `BACKLOG.md`.
+gets better the more real the site becomes. Not built; see `docs/backlog/README.md`.
 
 ### The section label, and the plate that failed
 
@@ -482,7 +482,7 @@ cascade order rather than specificity and no component has to carry a surface
 it does not otherwise care about. The bullet loses its green there: §2 spends
 green once per view as a lit point, and a dot printed on paper is neither.
 
-Everything else still uses the old card language. See `BACKLOG.md`.
+Everything else still uses the old card language. See `docs/backlog/README.md`.
 
 ## 13. The resume: the object and the page
 

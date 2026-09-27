@@ -63,7 +63,7 @@ function RoomLights({ stage }: { stage: LoadStage }) {
 /**
  * The screen between the hero and the room: the hero's poster, drifting
  * inward until the scene resolves behind it. Only works while the poster's
- * framing and the room's opening camera pose agree — see BACKLOG.md on
+ * framing and the room's opening camera pose agree — see docs/backlog/README.md on
  * regenerating it. Two callers: the dynamic-import fallback has no progress
  * yet and gets an indeterminate bar; the mounted room takes over with real
  * byte progress on the identical screen.

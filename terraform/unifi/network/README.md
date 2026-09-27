@@ -81,5 +81,5 @@ MAC. Confirm the plan reports imports and no adds or destroys before applying.
 ## Not managed here
 
 Site settings (country, NTP, IGMP, DPI, IPS, speedtest; `unifi_setting` imports
-empty, see `BACKLOG.md`), the mDNS reflector, Teleport, the predefined zones and
+empty, see `docs/backlog/README.md`), the mDNS reflector, Teleport, the predefined zones and
 their default policies, admin accounts and backups.

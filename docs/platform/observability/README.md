@@ -9,7 +9,7 @@
 | Prometheus | https://prometheus.local.bigd.no |
 | Discord | `#homelab-alerts` |
 
-SPOG rows added for the infrastructure around the cluster:
+SPOG rows for the infrastructure around the cluster:
 
 | Row | Shows |
 |---|---|
@@ -17,6 +17,18 @@ SPOG rows added for the infrastructure around the cluster:
 | Network (UniFi) | WAN latency, internet session uptime, WAN drops, gateway CPU, traffic to and from each switch port, port errors and drops |
 | Proxmox | host up/down, VMs running and stopped (templates excluded), host CPU and memory, storage used per host (local, local-lvm) and shared (pbs, nfs-vmstore) |
 | NAS (Synology) | system status, Volume 1 used and free, RAID status, unhealthy disks, temperature, eth0 traffic, disk temperatures |
+
+## Stack
+
+| Component | Role | Retention | Defined in |
+|---|---|---|---|
+| Prometheus | metrics, alert rules | 7 days | `k8s/talos/infra/kube-prometheus-stack/values.yaml` |
+| Alertmanager | routing to Discord, 2 replicas | 5 days of silences and notification state | `k8s/talos/infra/kube-prometheus-stack/values.yaml` |
+| Loki | logs, single binary | 7 days, Kubernetes events 30 days | `k8s/talos/infra/loki/values.yaml` |
+| Alloy | DaemonSet shipping pod logs and Kubernetes events to Loki | none | `k8s/talos/infra/loki/alloy-values.yaml` |
+| Tempo | traces, pushed over OTLP by Traefik | 24 h | `k8s/talos/infra/tempo/values.yaml` |
+| OTel collector | disabled: the chart is commented out, the Application deploys nothing | none | `k8s/talos/infra/otel-collector/` |
+| Falco | runtime security events, modern eBPF driver | none | `k8s/talos/infra/falco/values.yaml` |
 
 ## Alert path
 
@@ -29,6 +41,9 @@ Prometheus rules → Alertmanager → Discord. Routing (`k8s/talos/infra/kube-pr
   DSM, no resolved message (they expire, they do not resolve).
 - namespace `reelsmith` → `discord` at every severity.
 - everything else is dropped.
+
+Falco does not go through Alertmanager: falcosidekick posts to Discord directly at priority
+`notice` and above.
 
 During an internet outage Discord is unreachable; Alertmanager retries and delivers once the
 line is back.
@@ -47,7 +62,7 @@ on Cloudflare and posts to the same Discord channel directly, as `[WATCHDOG] DOW
 | kube-prometheus-stack | cluster, nodes, kube-state-metrics | none | `k8s/talos/infra/kube-prometheus-stack/` |
 | blackbox-exporter, Probe `internet` | HTTPS to google.com/generate_204 and cloudflare.com/cdn-cgi/trace every 15 s | none | `k8s/talos/infra/blackbox-exporter/` |
 | blackbox-exporter, Probe `public-sites` | nordbye.it, blog.nordbye.it, logeverylift.com, auth.bigd.no, hub.bigd.no through public DNS and Cloudflare, every 60 s | none | `k8s/talos/infra/blackbox-exporter/probe.yaml` |
-| unpoller | UniFi gateway `https://10.3.10.1` every 30 s; the gateway's system log to Loki as `{application="unifi_system_log"}` | local UniFi user `unpoller`, Network View Only, other apps None, Bitwarden `unpoller-unifi-password` | `k8s/talos/infra/unpoller/` |
+| unpoller | UniFi gateway `https://10.3.10.1`, scraped every 30 s; the gateway's system log pushed to Loki every minute as `{application="unifi_system_log"}` | local UniFi user `unpoller`, Network View Only, other apps None, Bitwarden `unpoller-unifi-password` | `k8s/talos/infra/unpoller/` |
 | snmp-exporter | NAS `10.3.10.10`, modules `if_mib` + `synology`, every 60 s | SNMPv3 `snmp-exporter`, SHA/AES, Bitwarden `synology-snmp-auth-password`, `synology-snmp-priv-password` | `k8s/talos/infra/snmp-exporter/` |
 | pve-exporter | Proxmox API on hyper1-3 (`/pve`, hyper1 also cluster-wide) every 60 s | token of `prometheus@pve` (PVEAuditor), Bitwarden `proxmox-exporter-token` | `k8s/talos/infra/pve-exporter/`, identity in `terraform/proxmox/hyper-cluster/datacenter/access.tf` |
 | VolSync metrics | ReplicationSource sync state | none | `k8s/talos/infra/volsync/` |
@@ -57,7 +72,9 @@ on Cloudflare and posts to the same Discord channel directly, as `[WATCHDOG] DOW
 
 ## Alerts
 
-All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical reaches Discord.
+Rules live in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`, except reelsmith's,
+which live in `k8s/talos/apps/reelsmith/monitoring.yaml` and reach Discord at every severity.
+Everywhere else only critical reaches Discord.
 
 | Alert | Fires when | Severity |
 |---|---|---|
@@ -79,6 +96,7 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 | `ContainerRestartingFrequently`, `ContainerOOMKilled`, `ArgoCDAppDegraded`, `ArgoCDAppSyncStuck`, `ExternalSecretNotReady`, `KubeHpaMaxedOut` | platform | warning (not sent) |
 | `SynologyNotification` | DSM pushed a Warning or Critical event | critical, `discord-event` |
 | `ProxmoxNotification` | Proxmox or PBS pushed an error | critical, `discord-event` |
+| `Reelsmith*` | the reelsmith gateway stalls, its token expires, a post or backup goes stale | critical and warning, all sent |
 
 ## Configured outside Git
 
@@ -90,7 +108,7 @@ All in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. Critical rea
 | UniFi Admins & Users | local user `unpoller`, restricted to local access, custom role: Network View Only, everything else None |
 | DSM Shared Folder `shared-data` | quota 31 TiB (NasVolumeAlmostFull watches the volume, not share quotas) |
 
-## Known gaps
+## Constraints
 
-- Cluster DNS forwards to the gateway `10.3.10.1`, so ISP trouble also degrades in-cluster
-  name resolution.
+- CoreDNS forwards to the node resolver, which is the gateway `10.3.10.1`, so trouble on the
+  gateway or ISP DNS also breaks in-cluster name resolution for external names.

@@ -372,11 +372,11 @@ Deliberately stopped before implementing the chunk-prepending fix. Two reasons:
 9. **Fingerprint the inputs once you accept more than one.** Otherwise users adding/removing documents silently retrieve from a stale store and don't know they're querying yesterday's corpus.
 10. **When work is already in flight, the cheapest reconciliation wins.** During the gpt-oss-20b vs. Llama 3.1 8B detour, the right move was to reconcile config to what was already loaded — not to throw away the work paid for.
 11. **Chunks lose document-level context.** Anything stated once at the top of a document and not repeated (customer name, jurisdiction, currency, effective date) is effectively unfindable by retrievers that look at chunks in isolation. Iteration 14 shows the symptom: asking "X for customer Y" fails not because the answer isn't in the corpus, but because the chunk with the answer doesn't contain Y's name.
-12. **Fixing one failure mode can introduce another.** Iterations 12–13 made inventory questions work; Iteration 14 shows targeted cross-document questions regressed. Without an eval harness you don't know whether your "fix" was net positive or net neutral. This is the strongest single argument for the eval harness sitting in BACKLOG.md — anecdotal testing finds the cases the next change happens to fix, never the cases it broke.
+12. **Fixing one failure mode can introduce another.** Iterations 12–13 made inventory questions work; Iteration 14 shows targeted cross-document questions regressed. Without an eval harness you don't know whether your "fix" was net positive or net neutral. This is the strongest single argument for the eval harness sitting in docs/backlog/README.md — anecdotal testing finds the cases the next change happens to fix, never the cases it broke.
 
 ---
 
-## What's left in BACKLOG.md (and why it isn't in the POC)
+## What's left in docs/backlog/README.md (and why it isn't in the POC)
 
 - **Eval harness.** Without a labelled QA set you can't tell whether prompt changes (Iterations 12 + 13) actually improved quality on average vs. anecdotally on one question. Adding a `make eval` target with 15–25 labelled QA pairs is the next obvious move and the one that would let you tune `TOP_K`, ensemble weights, and prompt wording with data instead of vibes.
 - **Real-document corpus.** The four fixtures are deliberately distinct on every field; a real corpus is much more uniform, which makes retrieval harder. The eval harness above would surface this difference immediately.

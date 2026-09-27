@@ -43,14 +43,13 @@ Terraform builds the Talos VMs on Proxmox. Everything after that arrives through
 push to main
    ├─ GitHub Actions builds portfolio and blog, pushes to GHCR
    │     └─ Kargo promotes stage to prod as a pull request you merge
-   ├─ external app repos call bump-image.yml, which opens a PR pinning an immutable sha tag
    └─ Argo CD reconciles k8s/talos/** onto the cluster
          ├─ External Secrets fetches credentials at runtime, so none are committed
          ├─ Traefik publishes routes through Gateway API, cert-manager and external-dns handle TLS and DNS
          └─ KEDA lets idle apps drop to zero; the HTTP interceptor wakes them on the first request
 ```
 
-Argo CD runs an app-of-apps. The two root Applications in `k8s/talos/infra/argocd/` own every other Application, so a new workload is a new directory.
+Argo CD runs two ApplicationSets in `k8s/talos/infra/argocd/` that generate one Application per directory, so a new workload is a new directory.
 
 ---
 
@@ -115,10 +114,10 @@ homelab
 
 | Category | Components |
 | --- | --- |
-| GitOps | [Argo CD](https://argoproj.github.io/cd/) (app-of-apps), [Kargo](https://kargo.io/) (stage to prod promotion for blog, headroom, logeverylift, portfolio, reelsmith and verksted), [Argo Rollouts](https://argoproj.github.io/rollouts/) (installed, no workload uses it yet) |
+| GitOps | [Argo CD](https://argoproj.github.io/cd/) (ApplicationSets), [Kargo](https://kargo.io/) (stage to prod promotion for blog, headroom, logeverylift, portfolio, reelsmith and verksted), [Argo Rollouts](https://argoproj.github.io/rollouts/) (installed, no workload uses it yet) |
 | Networking | [Cilium](https://cilium.io/) (CNI, eBPF, L2 announcements and LB IPAM), [Traefik](https://traefik.io/) via [Gateway API](https://gateway-api.sigs.k8s.io/), [external-dns](https://github.com/kubernetes-sigs/external-dns) (Cloudflare) |
 | Security | [Falco](https://falco.org/) (runtime, modern eBPF probe), [Authentik](https://goauthentik.io/) (SSO), [cert-manager](https://cert-manager.io/), [External Secrets Operator](https://external-secrets.io/) (Bitwarden Secrets Manager, [pattern](docs/platform/secrets/README.md)) |
-| Observability | [Prometheus and Alertmanager](https://prometheus.io/), [Grafana](https://grafana.com/), [Loki](https://grafana.com/oss/loki/) (logs), [Tempo](https://grafana.com/oss/tempo/) (traces), [OpenTelemetry Collector](https://opentelemetry.io/), [metrics-server](https://github.com/kubernetes-sigs/metrics-server) |
+| Observability | [Prometheus and Alertmanager](https://prometheus.io/), [Grafana](https://grafana.com/), [Loki](https://grafana.com/oss/loki/) (logs), [Tempo](https://grafana.com/oss/tempo/) (traces), [metrics-server](https://github.com/kubernetes-sigs/metrics-server) |
 | Scaling | [KEDA](https://keda.sh/) with the [HTTP add-on](https://github.com/kedacore/http-add-on): nine apps drop to zero replicas and the interceptor wakes them on the first request |
 | Automation | [Reloader](https://github.com/stakater/Reloader) (config and secret triggered rollouts) |
 | Storage | [Proxmox CSI](https://github.com/sergelogvinov/proxmox-csi-plugin) (block), [csi-driver-nfs](https://github.com/kubernetes-csi/csi-driver-nfs) (Synology NFS) |
@@ -145,7 +144,6 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 | --------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------ |
 | [**Build and Deploy Blog**](.github/workflows/build-blog.yaml)                          | Push to `main` (blog changes)                  | Builds Hugo blog, pushes to GHCR, updates k8s manifest |
 | [**Build and Deploy Portfolio**](.github/workflows/build-portfolio.yaml)                | Push to `main`                                 | Builds portfolio image and pushes to GHCR ([Kargo](https://kargo.io/) promotes stage → prod) |
-| [**Bump Image Tag**](.github/workflows/bump-image.yml)                                  | Called by external app repos (`workflow_call`) | Opens a PR pinning an app to a new immutable `sha-` image tag ([pattern](docs/platform/delivery/external-apps.md)) |
 | [**Container Vulnerability Scan**](.github/workflows/container-vulnerability-scan.yaml) | Sundays, Dockerfile changes, pull request, manual | Scans the blog and portfolio images with Trivy, CRITICAL and HIGH with a fix available |
 | [**Render Diagrams**](.github/workflows/render-diagram.yaml)                            | Push to `main` (`docs/assets/diagrams/*.d2`), manual  | Renders D2 sources to SVG + PNG, commits the result    |
 | [**Reminders**](.github/workflows/reminders.yml)                                        | Monthly (1st, 8th, 15th), manual | Discord reminders for Kubernetes upkeep, backups, and server updates |

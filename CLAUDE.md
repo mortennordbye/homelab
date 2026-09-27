@@ -96,6 +96,7 @@ docs/
   platform/<area>/         shared infrastructure (backups, cluster, data, delivery, network, ...)
   apps/<app>/              one folder per workload that needs more than its manifests
   projects/<name>/         plans and in-flight work; deleted when the project ships
+  backlog/README.md        known gaps agreed to leave for later (see below)
   assets/                  diagrams, logo, social preview
 ```
 
@@ -112,13 +113,13 @@ docs/
 - No torrent tracker or subtitle provider names anywhere in the repo; they live only in
   the apps' own config.
 
-### Track unfinished work in BACKLOG.md
+### Track unfinished work in docs/backlog/README.md
 
-If you leave anything unfinished, partially implemented, or explicitly defer it, add an entry to `BACKLOG.md` in the repo root before reporting the task done. Don't bury deferrals in chat — they vanish next session.
+If you leave anything unfinished, partially implemented, or explicitly defer it, add an entry to `docs/backlog/README.md` before reporting the task done. Don't bury deferrals in chat — they vanish next session.
 
 Each entry needs four things: **what** the work is, **why** it was deferred, **what would unblock it**, and **where** the relevant code lives (file paths). Read existing entries for the format.
 
-Don't put work-in-progress on `BACKLOG.md` — WIP belongs on a branch. The backlog is for *known gaps the team has agreed to leave for later*. If you finish an item, delete it.
+Don't put work-in-progress on the backlog — WIP belongs on a branch. The backlog is for *known gaps the team has agreed to leave for later*. If you finish an item, delete it.
 
 What counts as "unfinished":
 - Tier 1 / Tier 2 splits where you only shipped Tier 1.
@@ -175,7 +176,7 @@ Run the relevant subset for what you changed — not everything every time:
 - **Terraform** (`terraform/**`) — `terraform fmt -check`, `terraform validate`, and `terraform plan`. Never `apply` without explicit user approval.
 - **GitHub Actions** (`.github/workflows/**`) — `actionlint` if available; otherwise read the workflow end-to-end.
 
-Doc-only edits (`README.md`, `BACKLOG.md`, `docs/**`, this file) skip the above.
+Doc-only edits (`README.md`, `docs/**`, this file) skip the above.
 
 ## Architecture
 
@@ -184,10 +185,10 @@ Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes c
 - **Compute:** Proxmox VE on three Lenovo ThinkCentre nodes; three control plane and three worker Talos VMs form the K8s cluster.
 - **Networking:** Cilium (CNI + L2 announcements / LB IPAM for LoadBalancer VIPs), Traefik via Gateway API.
 - **Security:** cert-manager, External Secrets Operator, Falco, Authentik.
-- **Observability:** kube-prometheus-stack, Grafana, Loki, OpenTelemetry collector.
+- **Observability:** kube-prometheus-stack, Grafana, Loki (Alloy ships the logs), Tempo. The OpenTelemetry collector Application is present but its chart is disabled.
 - **Storage:** Proxmox CSI for block, Synology NFS for shared volumes.
 - **Databases:** in-cluster Postgres 18 (`postgres:18-alpine`) backing logeverylift. Its PVC mounts at `/var/lib/postgresql`, not at `/var/lib/postgresql/data` — 18 keeps the cluster in a version-named subdirectory, and an initContainer chowns the NFS mount root so the non-root process can create it. See `docs/platform/data/postgres.md`.
-- **GitOps:** ArgoCD app-of-apps; root applications live in `k8s/talos/infra/argocd/{apps.yaml,infra.yaml}`.
+- **GitOps:** Argo CD ApplicationSets `apps` and `infra` in `k8s/talos/infra/argocd/{apps.yaml,infra.yaml}` generate one Application per directory under `k8s/talos/apps/` and `k8s/talos/infra/`.
 - **Apps shipped from this repo:** portfolio and blog (each stage + prod), headroom (+ headroom-demo), logeverylift, reelsmith, verksted, bigd, plex-media-stack, arr-stack, gluetun-vpn, audiobookshelf, mealie, home-assistant, homepage, it-tools, omni-tools, open-webui, ollama, trek. That is 22 ArgoCD `Application`s, one per directory under `k8s/talos/apps/`.
 
 ### Directory layout
@@ -210,7 +211,7 @@ Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes c
 ### GitOps flow
 
 1. Push to `main` → ArgoCD detects manifest change → syncs to cluster.
-2. For portfolio/blog, `.github/workflows/build-{portfolio,blog}.yaml` builds the container, pushes to GHCR, and updates the image tag in the corresponding manifest in the same commit. ArgoCD then syncs the new tag.
+2. CI builds and pushes image tags only (`.github/workflows/build-{portfolio,blog}.yaml`, and the app repos for the others). Kargo promotes a tag by writing it into the app's `kustomization.yaml` `images:`, through a pull request for prod. See `docs/platform/delivery/kargo.md`.
 3. Never bypass GitOps with a direct `kubectl apply` outside of debugging — drift will be reverted.
 
 ### Safety rules for AI-assisted changes
@@ -227,7 +228,7 @@ Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes c
   values; always pipe through a filter that keeps only `id`, `key`, and `projectId`.
   Full pattern: `docs/platform/secrets/README.md`.
 - **Match the manifest style of the surrounding app.** App directories use kustomize or plain manifests inconsistently — copy the pattern of the directory you're editing rather than introducing a new one.
-- **Image tags are pinned.** Don't change a tag to `latest`; bump to a specific version. The CI pipelines rewrite tags for portfolio/blog only.
+- **Image tags are pinned.** Don't change a tag to `latest`; bump to a specific version. Kargo rewrites the tags of the apps it promotes; the inline tag in their Deployment is only a fallback.
 - **Home Assistant is configured via the HA MCP server**, not via files in this repo. Only add HA-related Kubernetes manifests (the HA pod itself, networking) here — the automation/dashboard config lives in HA.
 - **The portfolio redesign has an agreed decision record.** Before proposing anything about how
   `nordbye.it` looks, moves, or presents content, read `portfolio/branding/DECISIONS.md`. It records
