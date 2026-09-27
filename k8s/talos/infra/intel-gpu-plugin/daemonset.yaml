@@ -1,4 +1,4 @@
-# Vendored from intel/intel-device-plugins-for-kubernetes v0.36.0,
+# Vendored from intel/intel-device-plugins-for-kubernetes v0.37.0,
 # deployments/gpu_plugin/base. Re-sync this file when the image tag moves.
 apiVersion: apps/v1
 kind: DaemonSet
@@ -56,7 +56,7 @@ spec:
               memory: "45Mi"
               cpu: 40m
             limits:
-              memory: "90Mi"
+              memory: "115Mi"
               cpu: 100m
           volumeMounts:
             - name: devfs
