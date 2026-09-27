@@ -289,12 +289,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** check `grub-editenv /boot/grub/grubenv list` for a `saved_entry` or `next_entry` override, compare the submenu id in `set default` with the `--id` values in `grub.cfg`, then fall back to a numeric `GRUB_DEFAULT="1>2"` or `GRUB_DEFAULT=saved` plus `grub-set-default`. Append the `GRUB_DEFAULT` line rather than `sed`-replacing it, since a missing line makes the `sed` a no-op.
 - **Where:** hyper1 `/etc/default/grub` (host config outside Git), `docs/platform/cluster/gpu-passthrough.md`.
 
-### Re-sync the vendored Intel GPU plugin DaemonSet
-- **What:** the header of `k8s/talos/infra/intel-gpu-plugin/daemonset.yaml` says it is vendored from v0.36.0, while Renovate has moved the image to `0.37.0`. Diff the manifest against upstream v0.37.0 and update the header, or re-vendor.
-- **Why deferred:** found during the docs cleanup; the plugin runs and serves the GPU to Plex and Tdarr.
-- **Unblock:** the upstream v0.37.0 `deployments/gpu_plugin` manifest.
-- **Where:** `k8s/talos/infra/intel-gpu-plugin/daemonset.yaml`.
-
 ### Round 3 of the cluster upgrade: Talos 1.14 + Kubernetes 1.37
 - **What:** Take Genesis from Talos v1.13.10 / Kubernetes v1.36.5 to the latest Talos 1.14.x and Kubernetes 1.37.x by the same two-phase flow. Talos 1.14.0 shipped 2026-09-03 and v1.14.1 on 2026-09-15; `talosctl` on the laptop is already v1.14.1.
 - **Why deferred:** Round 2 went out on 2026-09-26 and its phase 2 is still pending. Adjacent minors only, one round per window.
