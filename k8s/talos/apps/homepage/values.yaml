@@ -224,6 +224,14 @@ config:
               type: bazarr
               url: https://bazarr.local.bigd.no
               key: "{{HOMEPAGE_VAR_BAZARR_API_KEY}}"
+        - Bazarr 4K:
+            icon: bazarr.png
+            href: https://bazarr-4k.local.bigd.no
+            description: Subtitles for Radarr 4K
+            widget:
+              type: bazarr
+              url: https://bazarr-4k.local.bigd.no
+              key: "{{HOMEPAGE_VAR_BAZARR_4K_API_KEY}}"
         - Plex:
             icon: plex.png
             href: http://10.3.10.101:32400/web
