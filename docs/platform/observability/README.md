@@ -191,3 +191,5 @@ Falco will flag it, and no exemption targets it. See
 
 - CoreDNS forwards to the node resolver, which is the gateway `10.3.10.1`, so trouble on the
   gateway or ISP DNS also breaks in-cluster name resolution for external names.
+  This is deliberate: a public fallback would answer `local.bigd.no` with NXDOMAIN and skip the
+  gateway's filtering, and CoreDNS spreads queries across upstreams unless told otherwise.
