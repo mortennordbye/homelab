@@ -2,8 +2,9 @@
 
 The current shape of the homelab: what runs where, and how the parts depend on each
 other. It describes the present only. Plans and in-flight work live in
-`docs/projects/<name>/`, detail for each area lives in the folders in the map at the end, and the manifests and Terraform are what actually runs. Where this file
-and the code disagree, the code wins and this file gets fixed.
+`docs/projects/<name>/`, detail for each area lives in the folders in the map at the
+end, and the manifests and Terraform are what actually runs. Where this file and the
+code disagree, the code wins and this file gets fixed.
 
 ## Layers
 
@@ -49,6 +50,7 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
   rule does not break anything yet but will once enforcement is on.
 - Remote access is Tailscale, with UniFi WireGuard as break-glass
   ([`../platform/network/remote-access.md`](../platform/network/remote-access.md)).
+
 ## Delivery
 
 - Argo CD runs two ApplicationSets, `apps` and `infra` in `k8s/talos/infra/argocd/`,
@@ -63,6 +65,7 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
   (`.github/workflows/docs.yaml`); the backlog stays in the repo only.
 - Renovate proposes chart, image and provider bumps; Postgres majors are excluded and
   done by hand ([`../platform/data/postgres.md`](../platform/data/postgres.md)).
+
 ## Secrets
 
 No secret is committed. Values live in Bitwarden Secrets Manager (Homelab project) and
@@ -79,8 +82,9 @@ Kubernetes Secret ([`../platform/secrets/README.md`](../platform/secrets/README.
 - The media share `/volume1/shared-data/media` is one mount so imports can hardlink
   ([`../apps/media-stack/README.md`](../apps/media-stack/README.md)).
 - Backups: etcd snapshots, Postgres dumps, VolSync restic per PVC, Home Assistant, NAS
-  snapshots, offsite copy, and PBS for whole VMs ([`../platform/backups/README.md`](../platform/backups/README.md),
-  restores in [`../platform/backups/restore.md`](../platform/backups/restore.md)).
+  snapshots, offsite copy, and PBS for whole VMs
+  ([`../platform/backups/README.md`](../platform/backups/README.md), restores in
+  [`../platform/backups/restore.md`](../platform/backups/restore.md)).
 
 ## Observability
 
@@ -89,7 +93,9 @@ OTLP. Alertmanager
 sends only actionable, critical alerts to Discord, and a Cloudflare Worker reports a
 missing Alertmanager heartbeat. Falco watches syscalls on every node and posts to Discord
 itself through falcosidekick
-([`../platform/observability/README.md`](../platform/observability/README.md), past incidents in [`../platform/observability/incidents.md`](../platform/observability/incidents.md)).
+([`../platform/observability/README.md`](../platform/observability/README.md), past
+incidents in [`../platform/observability/incidents.md`](../platform/observability/incidents.md)).
+
 ## Workloads
 
 22 Argo CD Applications under `k8s/talos/apps/`, one per directory. The groups that
@@ -102,6 +108,7 @@ depend on each other:
 - Own apps: logeverylift (with Postgres), headroom and headroom-demo, reelsmith,
   verksted, bigd.
 - Hub: `hub.bigd.no` (Homepage) links every app, `k8s/talos/apps/homepage/values.yaml`.
+
 ## Doc map
 
 `docs/` has one folder per kind of work and one subfolder per area. Each area's
