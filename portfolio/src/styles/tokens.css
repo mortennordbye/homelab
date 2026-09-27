@@ -30,10 +30,10 @@
   --line: #2a382c;        /* 1.51:1 — hairline */
   --line-2: #3e5542;      /* 2.29:1 — divider, input border */
 
-  /* Foreground — the snow ramp. fg-2 >= 7:1, fg-3 >= 4.5:1 on --bg. */
+  /* Foreground — the snow ramp. fg-2 >= 7:1 on --bg, fg-3 >= 4.5:1 on --bg and --surface. */
   --fg: #e9ebe9;          /* 15.54:1 — headings */
   --fg-2: #a1ada3;        /*  8.00:1 — body prose */
-  --fg-3: #708373;        /*  4.60:1 — labels, captions */
+  --fg-3: #778a7a;        /*  5.05:1 — labels, captions; 4.55:1 on --surface */
 
   /* Accents — one hue, three steps. Green is the primary: links, focus, live
      state and the one action that matters on any given screen.
@@ -54,7 +54,7 @@
      the non-text threshold so a button's shape is perceivable without a
      border, and it still carries --fg at 5.15:1. Two rules follow from the
      arithmetic: brass takes --fg only (--fg-2 on it is 2.65:1), and --fg-3
-     never sits on wood (2.85:1). */
+     never sits on wood (3.13:1). */
   --wood: #4a3520;        /*  1.61:1 — panels, wells, table headers */
   --brass: #7f5a2f;       /*  3.02:1 — solid fills, card edges, rules */
   --brass-hi: #8a6133;    /*  3.40:1 — hover; the lightest brass that still

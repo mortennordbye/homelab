@@ -189,7 +189,7 @@ export const colorGroups: SwatchGroup[] = [
     swatches: [
       { name: "snow", hex: "#e9ebe9", cr: "15.49:1", use: "headings" },
       { name: "snow-2", hex: "#a1ada3", cr: "7.98:1", use: "body prose" },
-      { name: "snow-3", hex: "#708373", cr: "4.58:1", use: "labels, captions" },
+      { name: "snow-3", hex: "#778a7a", cr: "5.03:1", use: "labels, captions" },
       { name: "d-line", hex: "#2a382c", cr: "1.50:1", use: "hairline" },
       { name: "d-line-2", hex: "#3e5542", cr: "2.28:1", use: "input border" },
     ],
@@ -209,7 +209,7 @@ export const colorGroups: SwatchGroup[] = [
   {
     title: "Material",
     intro:
-      "One material at three depths, not three colours. Brass is the only step that works as a standalone solid: 3.02:1 clears the non-text threshold, so a button's shape is perceivable without a border, and it still carries snow at 5.15:1. Two rules follow from the arithmetic. Brass takes snow only — snow-2 on it measures 2.65:1. And snow-3 never sits on wood, where it measures 2.85:1.",
+      "One material at three depths, not three colours. Brass is the only step that works as a standalone solid: 3.02:1 clears the non-text threshold, so a button's shape is perceivable without a border, and it still carries snow at 5.15:1. Two rules follow from the arithmetic. Brass takes snow only — snow-2 on it measures 2.65:1. And snow-3 never sits on wood, where it measures 3.12:1.",
     ground: "dark",
     swatches: [
       { name: "wood", hex: "#4a3520", cr: "1.61:1 on anchor", use: "panels, wells, table headers" },
