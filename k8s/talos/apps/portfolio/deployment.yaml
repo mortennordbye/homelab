@@ -65,6 +65,11 @@ spec:
                   name: portfolio-api
                   key: PORTFOLIO_API_KEY
                   optional: true
+            # Sent as x-served-by on /api/v1/infra, shown by the footer stamp.
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           volumeMounts:
             # Next's ISR/fetch cache — the only path the server writes at runtime.
             - name: next-cache
