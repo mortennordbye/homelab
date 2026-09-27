@@ -317,9 +317,11 @@ const TERMINAL_VIEW_DIST = 0.72;
 function TerminalFocus({
   active,
   onSettling,
+  reduced,
 }: {
   active: boolean;
   onSettling: (busy: boolean) => void;
+  reduced: boolean;
 }) {
   const { camera } = useThree();
   const saved = useRef<{ pos: THREE.Vector3; quat: THREE.Quaternion } | null>(null);
@@ -351,8 +353,8 @@ function TerminalFocus({
     if (mode.current === "idle") return;
     const delta = Math.min(rawDelta, 0.05);
     // Frame-rate independent ease, so the move takes the same time at 60fps as
-    // at 120 rather than running twice as fast.
-    const k = 1 - Math.pow(0.0004, delta);
+    // at 120 rather than running twice as fast. Reduced motion cuts instead.
+    const k = reduced ? 1 : 1 - Math.pow(0.0004, delta);
 
     if (mode.current === "in") {
       if (!saved.current) {
@@ -397,9 +399,11 @@ const SEAT_ARRIVE = 0.02;
 function SeatedFocus({
   seat,
   onStandingUp,
+  reduced,
 }: {
   seat: Seat | null;
   onStandingUp: (busy: boolean) => void;
+  reduced: boolean;
 }) {
   const { camera } = useThree();
   const saved = useRef<{ pos: THREE.Vector3; quat: THREE.Quaternion } | null>(null);
@@ -426,7 +430,7 @@ function SeatedFocus({
   useFrame((_, rawDelta) => {
     if (mode.current === "idle" || mode.current === "held") return;
     const delta = Math.min(rawDelta, 0.05);
-    const k = 1 - Math.pow(0.0004, delta);
+    const k = reduced ? 1 : 1 - Math.pow(0.0004, delta);
 
     if (mode.current === "in") {
       if (!saved.current) {
@@ -481,10 +485,13 @@ function SeatedFocus({
  */
 function FireLight({ on }: { on: boolean }) {
   const ref = useRef<THREE.PointLight>(null);
+  const [reduced] = useState(
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
   useFrame(({ clock }) => {
     const l = ref.current;
     if (!l) return;
-    const t = clock.elapsedTime;
+    const t = reduced ? 0 : clock.elapsedTime;
     l.intensity = on
       ? 7.2 + Math.sin(t * 7.1) * 0.8 + Math.sin(t * 2.7 + 1.7) * 1.2
       : 0;
@@ -895,8 +902,8 @@ function Scene({
         }
       />
       </InteractionProvider>
-      <TerminalFocus active={terminalActive} onSettling={setSettling} />
-      <SeatedFocus seat={seated ? SEATS[seated] : null} onStandingUp={setStandingUp} />
+      <TerminalFocus active={terminalActive} onSettling={setSettling} reduced={reduced} />
+      <SeatedFocus seat={seated ? SEATS[seated] : null} onStandingUp={setStandingUp} reduced={reduced} />
       <Visitor active={visitor} dragging={dragging} onDragged={onStand} />
       {/* `seated` covers the move in and the whole time in the chair;
           `standingUp` covers the move back out, after seated has gone false. */}
