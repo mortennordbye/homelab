@@ -29,6 +29,7 @@ locals {
     "argocd",
     "auth",
     "bazarr",
+    "bazarr-4k",
     "blog-stage",
     "cleanuparr",
     "flaresolverr",
