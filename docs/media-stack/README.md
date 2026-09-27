@@ -11,6 +11,7 @@ they can be rebuilt after a lost volume.
 | Seerr | `https://seerr.bigd.no` | `plex-media-stack` | Requests, with a separate "Request in 4K" button |
 | Radarr | `https://radarr.local.bigd.no` | `arr-stack` | 1080p movies in `/data/movies` |
 | Radarr 4K | `https://radarr-4k.local.bigd.no` | `arr-stack` | 4K movies in `/data/movies-4k` |
+| Bazarr, Bazarr 4K | `https://bazarr.local.bigd.no`, `https://bazarr-4k.local.bigd.no` | `arr-stack` | Subtitles for Sonarr and Radarr, and for Radarr 4K |
 | Sonarr | `https://sonarr.local.bigd.no` | `arr-stack` | TV in `/data/series` |
 | Prowlarr | `https://prowlarr.local.bigd.no` | `gluetun-vpn` | Indexers, sidecar in the VPN pod; reaches the arr apps through `hostAliases` since its DNS goes through the VPN |
 | qBittorrent | `https://qbittorrent.local.bigd.no` | `gluetun-vpn` | Downloads, sidecar in the VPN pod |
@@ -121,7 +122,7 @@ delete each other's files on upgrade.
   nobody else forces a 4K HDR transcode on the iGPU.
 - Tdarr: library `Movies 4K` with the same flow. Today every file is HEVC and is skipped;
   it is there to catch a 2160p H.264 release, which is SDR, so re-encoding loses no HDR.
-- Bazarr only connects to the main Radarr, so it does not fetch subtitles for 4K films.
+- Bazarr 4K: subtitles, see below.
 - Cleanuparr: its own Radarr instance, `http://radarr-4k:7878`.
 - Unpackerr: `UN_RADARR_1_*` in `k8s/talos/apps/arr-stack/unpackerr.yaml`.
 - Metrics: `exportarr-radarr-4k`, so the Radarr alerts in
@@ -156,6 +157,25 @@ Seerr (`https://seerr.bigd.no`):
 Tautulli (`https://tautulli.local.bigd.no`): Settings > Plex Media Server, same address.
 If its websocket logs "401 Unauthorized", the stored Plex token was revoked: use
 "Fetch New Token" on the same page and sign in with the Plex account.
+
+## Bazarr and Bazarr 4K
+
+Bazarr connects to one Sonarr and one Radarr, so Radarr 4K has its own instance,
+`bazarr-4k`, built from the same settings.
+
+- Both: providers OpenSubtitles.com, YIFY Subtitles and Gestdown; language profile
+  "English + Norwegian" (`no`, `en`), the default for new titles; embedded subtitles
+  count; upgrades for 7 days. No login page of their own, reachable on the private
+  gateway only.
+- Bazarr: Sonarr `sonarr.arr-stack.svc.cluster.local:8989`, Radarr
+  `radarr.arr-stack.svc.cluster.local:7878`.
+- Bazarr 4K: Sonarr off, Radarr `radarr-4k.arr-stack.svc.cluster.local:7878`.
+- Rebuilding Bazarr 4K: copy `/config/config/config.yaml` from Bazarr (it carries the
+  provider logins), keep the new instance's own `auth.apikey`, set `use_sonarr: false`
+  and the Radarr 4K address and key, restart. The language profile lives in the
+  database, so create it again (Settings > Languages) and assign it to the films.
+- Each has an exporter (`exportarr-bazarr`, `exportarr-bazarr-4k`) and a hub tile; the
+  4K key is Bitwarden secret `homepage-bazarr-4k-api`.
 
 ## Cleanuparr
 

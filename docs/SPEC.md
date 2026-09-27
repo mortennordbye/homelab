@@ -97,6 +97,7 @@ missing Alertmanager heartbeat. Falco watches syscalls on every node
 depend on each other:
 
 - Media: Seerr, Radarr, Radarr 4K, Sonarr, Prowlarr, qBittorrent behind gluetun, Plex,
+  Bazarr and Bazarr 4K,
   Tdarr, Bazarr, Cleanuparr ([`media-stack/README.md`](media-stack/README.md)).
 - Sites: portfolio and blog, each with a stage and prod, promoted by Kargo.
 - Own apps: logeverylift (with Postgres), headroom, reelsmith, verksted, bigd.

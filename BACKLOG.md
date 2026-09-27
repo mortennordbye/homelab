@@ -25,10 +25,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** DSM Snapshot Replication and Shared Folder settings; record the result in `docs/backups.md` under "Configured outside Git".
 
 ### Radarr 4K follow-ups
-- **What:** open items from the 4K library setup. Fetch a new Plex token in Tautulli (Settings > Plex Media Server > Fetch New Token, Plex account login); its address is fixed but the stored token is revoked, so Plex answers 401 and Tautulli records no activity. Share the `Movies 4K` Plex library with users whose devices play 4K HDR. Decide whether the six 4K remuxes (Frozen II, Jaws 2, Ralph Breaks the Internet, Requiem for a Dream, Spider-Man, The Predator) are set to unmonitored in Radarr 4K, since remux is not in the `2160p` profile and an upgrade check may replace them with WEB releases. Decide whether to run a second Bazarr for Radarr 4K, since Bazarr connects to one Radarr and the 4K films get no subtitles.
-- **Why deferred:** Plex sharing is a per-user choice made in the Plex UI; the remux and Bazarr questions need a decision.
-- **Unblock:** a Plex account login for the Tautulli token, the Plex sharing, and the two decisions from the owner.
-- **Where:** Plex Settings > Users & Sharing, Radarr 4K at `https://radarr-4k.local.bigd.no`, `k8s/talos/apps/arr-stack/` (a second Bazarr would go next to `bazarr.yaml`), `docs/media-stack/README.md`.
+- **What:** open items from the 4K library setup. Fetch a new Plex token in Tautulli (Settings > Plex Media Server > Fetch New Token, Plex account login); its address is fixed but the stored token is revoked, so Plex answers 401 and Tautulli records no activity. Share the `Movies 4K` Plex library with users whose devices play 4K HDR. Decide whether the six 4K remuxes (Frozen II, Jaws 2, Ralph Breaks the Internet, Requiem for a Dream, Spider-Man, The Predator) are set to unmonitored in Radarr 4K, since remux is not in the `2160p` profile and an upgrade check may replace them with WEB releases.
+- **Why deferred:** Plex sharing is a per-user choice made in the Plex UI; the remux question needs a decision.
+- **Unblock:** a Plex account login for the Tautulli token, the Plex sharing, and the remux decision from the owner.
+- **Where:** Plex Settings > Users & Sharing, Radarr 4K at `https://radarr-4k.local.bigd.no`, `docs/media-stack/README.md`.
 
 ### Tdarr: check the first 24/7 runs
 - **What:** after the first full night with two GPU workers, check the Tdarr error count and a few replaced files. A "Transcode error" where the job report says "New file size not within limits" is the size guard keeping the original, not a failure.
