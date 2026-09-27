@@ -10,3 +10,5 @@ node config is `terraform/proxmox/hyper-cluster/datacenter`, the VMs are
   used by Plex and Tdarr through Quick Sync.
 - [`proxmox.md`](proxmox.md): what the datacenter stack manages on Proxmox VE, what it leaves out, and its traps.
 - [`talos.md`](talos.md): node layout, access, adding, moving and resizing nodes, and certificates.
+- [`terraform.md`](terraform.md): every Terraform stack, the Azure state backend, the
+  gitignored files each needs and how they are backed up, and the CI check.

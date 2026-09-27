@@ -1,5 +1,9 @@
 # Media stack: requests, storage, 4K, cleanup and re-encoding
 
+> This stack is here for learning: how the apps are wired, stored and run on
+> Kubernetes. The only things downloaded with it are Linux ISOs and other openly
+> licensed content.
+
 The arr apps, Cleanuparr and Tdarr keep their settings in their own databases on
 their config PVCs, not in this repo. This page records the settings that matter so
 they can be rebuilt after a lost volume.

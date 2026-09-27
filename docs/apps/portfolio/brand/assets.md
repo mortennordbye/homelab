@@ -13,10 +13,10 @@ shipped; the rest of the room is still a shopping list.
 This is the most useful thing on the page. `/fun` already loads CC0 PBR surfaces
 and glTF models through a working helper, so none of this needs building:
 
-`portfolio/src/components/fun/textures.ts` holds `useSurface(name, repeat)`, which loads a
+`portfolio/src/components/materials/surface.ts` holds `useSurface(slug, repeat)`, which loads a
 three-map set and returns cloned, tiled textures. `portfolio/src/components/fun/props.tsx`
 holds `useGLTF`-based prop loading with per-instance cloning. Assets live at
-`portfolio/public/textures/fun/<name>_{diff,nor,arm}.webp` and
+`portfolio/public/textures/{shelf,fun}/<name>_{diff,nor,arm}.webp` and
 `portfolio/public/models/fun/<name>/<name>.gltf`.
 
 The ARM convention is already handled: ambient occlusion, roughness and metalness
@@ -26,7 +26,7 @@ skipped because three.js samples `aoMap` from a second UV set that plane geometr
 does not carry.
 
 Adding a surface is: fetch, convert, drop in the folder, add the name to the
-`SurfaceName` union. That is the whole job.
+`SurfaceSlug` union and its folder to `SOURCES`. That is the whole job.
 
 ## 2. Licence
 

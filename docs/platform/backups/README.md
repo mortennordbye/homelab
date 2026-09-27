@@ -1,8 +1,9 @@
 # Backups
 
-Everything lands on the Synology share `k8s-backups` (`nas.local.bigd.no:/volume1/k8s-backups`,
-Volume 1). Restores are in [`restore.md`](restore.md); the Proxmox Backup Server itself
-(datastore, identities, notifications) is in [`pbs.md`](pbs.md).
+Everything except the laptop-only files lands on the Synology share `k8s-backups`
+(`nas.local.bigd.no:/volume1/k8s-backups`, Volume 1). Restores are in
+[`restore.md`](restore.md); the Proxmox Backup Server itself (datastore, identities,
+notifications) is in [`pbs.md`](pbs.md).
 
 ## Layers
 
@@ -17,6 +18,14 @@ Volume 1). Restores are in [`restore.md`](restore.md); the Proxmox Backup Server
 | Whole share | Btrfs snapshot, immutable 7 days | 02:45 | 30 | `k8s-backups` | DSM Snapshot Replication |
 | Offsite | Hyper Backup task to Google Drive, client-side encrypted, Smart Recycle 30 versions | 03:20 | 30 versions | Google Drive | DSM Hyper Backup |
 | Whole VMs | Proxmox backup job to PBS | 03:00 | 1 daily, 1 weekly, 1 monthly | PBS datastore on `pve-backup` | `terraform/proxmox/hyper-cluster/datacenter/backup.tf` |
+| Laptop-only files | zip of the gitignored paths in `.backup-manifest` and the `.gitignore` backup block, over SMB | by hand | 14 | `shared-data` share, `documents/IT/Repo-Hidden-Files-Backups/Homelab/` | `scripts/backup-secrets.sh` |
+
+The laptop-only files are what Git never holds: the Terraform stacks' `terraform.tfvars`
+(all but `cloudflare/watchdog`, which the list leaves out), the Talos `kubeconfig`,
+`talosconfig` and `controlplane.yaml`, and a few gitignored working docs
+([`../cluster/terraform.md`](../cluster/terraform.md)). The script prompts for the NAS
+login, reads the zip back to verify it, and keeps the newest 14; restore is `unzip` at the
+repo root. Nothing checks how old the newest zip is.
 
 ## Coverage
 

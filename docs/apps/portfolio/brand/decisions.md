@@ -139,8 +139,8 @@ This is the most useful technical result of the whole exploration.
 
 Surfaces painted procedurally onto a canvas at runtime — colour only, no normal
 map, no roughness map — read as flat-shaded boxes. Every point on a plane takes
-light identically and the eye stops believing it is a material. `textures.ts` in
-the real repository already says this and is correct.
+light identically and the eye stops believing it is a material. `portfolio/src/components/materials/oak.ts`
+already says this and is correct.
 
 Two things fix it, in this order of importance:
 

@@ -7,4 +7,5 @@ Databases that run inside the cluster. Their backups are in
   NFS ownership trap, and the procedure for a major version upgrade.
 
 Authentik runs its own Postgres 17 (`authentik-postgresql` in `identity`), managed by
-its Helm chart and dumped nightly like logeverylift's.
+its Helm chart and dumped nightly like logeverylift's. Restoring either dump is in
+[`../backups/restore.md`](../backups/restore.md#postgres).

@@ -57,11 +57,13 @@
     <ul class="home-areas">
       <li><a href="{{ 'architecture/' | url }}"><span class="twemoji">{% include ".icons/material/sitemap.svg" %}</span><strong>Architecture</strong><span>what runs where and how the parts depend on each other</span></a></li>
       <li><a href="{{ 'platform/cluster/' | url }}"><span class="twemoji">{% include ".icons/material/server-network.svg" %}</span><strong>Cluster</strong><span>Proxmox and Talos, upgrades, GPU passthrough</span></a></li>
-      <li><a href="{{ 'platform/network/' | url }}"><span class="twemoji">{% include ".icons/material/lan.svg" %}</span><strong>Network</strong><span>VIPs, gateways, DNS, remote access</span></a></li>
-      <li><a href="{{ 'platform/delivery/' | url }}"><span class="twemoji">{% include ".icons/material/rocket-launch.svg" %}</span><strong>Delivery</strong><span>Argo CD and Kargo promotion</span></a></li>
+      <li><a href="{{ 'platform/network/' | url }}"><span class="twemoji">{% include ".icons/material/lan.svg" %}</span><strong>Network</strong><span>Traefik, Cilium, certificates, DNS, remote access</span></a></li>
+      <li><a href="{{ 'platform/delivery/' | url }}"><span class="twemoji">{% include ".icons/material/rocket-launch.svg" %}</span><strong>Delivery</strong><span>Argo CD, Kargo, CI, scale to zero</span></a></li>
       <li><a href="{{ 'platform/backups/' | url }}"><span class="twemoji">{% include ".icons/material/backup-restore.svg" %}</span><strong>Backups</strong><span>backup layers, watching them, restores</span></a></li>
       <li><a href="{{ 'platform/data/' | url }}"><span class="twemoji">{% include ".icons/material/database.svg" %}</span><strong>Data</strong><span>in-cluster Postgres, major upgrades</span></a></li>
       <li><a href="{{ 'platform/observability/' | url }}"><span class="twemoji">{% include ".icons/material/chart-line.svg" %}</span><strong>Observability</strong><span>monitoring, alerting, incidents</span></a></li>
+      <li><a href="{{ 'platform/identity/' | url }}"><span class="twemoji">{% include ".icons/simple/authentik.svg" %}</span><strong>Identity</strong><span>Authentik SSO, putting an app behind login</span></a></li>
+      <li><a href="{{ 'platform/storage/' | url }}"><span class="twemoji">{% include ".icons/material/harddisk.svg" %}</span><strong>Storage</strong><span>storage classes, Proxmox CSI and Synology NFS</span></a></li>
       <li><a href="{{ 'platform/secrets/' | url }}"><span class="twemoji">{% include ".icons/simple/bitwarden.svg" %}</span><strong>Secrets</strong><span>Bitwarden to cluster secrets</span></a></li>
       <li><a href="{{ 'apps/media-stack/' | url }}"><span class="twemoji">{% include ".icons/material/television-play.svg" %}</span><strong>Media stack</strong><span>requests, storage, 4K, re-encoding</span></a></li>
       <li><a href="{{ 'apps/portfolio/' | url }}"><span class="twemoji">{% include ".icons/material/briefcase.svg" %}</span><strong>Portfolio</strong><span>the site, brand decisions, the fun room</span></a></li>

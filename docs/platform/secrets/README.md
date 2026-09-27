@@ -139,6 +139,15 @@ needs a `kubectl rollout restart`.
   account still has its project-level read grant.
 - `bws project list` returning `[]` does not mean the token is broken; secret
   reads can still work. Judge access by `bws secret list` (filtered) instead.
+- `bitwarden-sdk-server` reads its TLS cert into memory at startup and never
+  reloads it. It serves the cert from the `bitwarden-tls-certs` Secret, which is
+  also the CA the ClusterSecretStore trusts (`caProvider`). When cert-manager
+  renews that Secret, a pod that kept the old cert fails every ExternalSecret in
+  the cluster with x509 errors. Reloader restarts the Deployment on a change to
+  that Secret (`secret.reloader.stakater.com/reload` in
+  `k8s/talos/infra/external-secrets-operator/values.yaml`). If x509 errors show
+  up after a renewal anyway, check the annotation is still on the Deployment and
+  run `kubectl rollout restart deploy/bitwarden-sdk-server -n external-secrets`.
 
 ## Local device credentials (not in Bitwarden)
 
