@@ -18,11 +18,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### Media dedupe run: finish and clean up
-- **What:** the one-off `rdfind-dedupe` pod in `arr-stack` is hardlinking duplicate media between `/data/series`, `/data/movies` and `/data/torrents/completed` (about 1850 candidate files, 5 TB of reads). When its log shows `done`: note the before and after `df` it prints, delete the pod, and unpause the Tdarr node (`genesis-worker-01`) in the Tdarr UI, which is paused so it cannot re-encode a file rdfind is about to link.
-- **Why deferred:** the read is still running; a session watcher unpauses Tdarr on completion, but only while that session stays open.
-- **Unblock:** `kubectl -n arr-stack logs rdfind-dedupe | tail` shows `done`.
-- **Where:** pod `arr-stack/rdfind-dedupe` (not in Git), Tdarr Nodes page at `https://tdarr.local.bigd.no`.
+### Tdarr: back to the night-only transcode window
+- **What:** both Tdarr libraries (`TV`, `Movies`) currently transcode 24/7 to work through the H.264 backlog. Set the library schedule back to 00:00 to 07:00 every day, as recorded in the media-stack docs.
+- **Why deferred:** running around the clock clears the backlog faster; the night window exists because Plex shares the Quick Sync iGPU.
+- **Unblock:** the H.264 queue is mostly done, or Plex playback starts stuttering during the day.
+- **Where:** Tdarr library settings at `https://tdarr.local.bigd.no` (schedule lives in the Tdarr DB, not Git), target settings in `docs/media-stack/README.md`.
 
 ### Mealie still hard-logs-out every 48h (upstream)
 - **What:** Mealie's frontend never refreshes its access token (`mealie-recipes/mealie#7835`) — only one `/api/auth/refresh` call appears across the whole app log. At `TOKEN_TIME` (default 48h) the token expires and the axios 401 interceptor wipes the cookie and redirects to `/login`. The replica pin fixes cold-start logouts but not this.
