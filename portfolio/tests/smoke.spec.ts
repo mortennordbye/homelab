@@ -14,6 +14,12 @@ function collectErrors(page: Page) {
   return errors;
 }
 
+// Third-party requests hang on some runners and would make the suite depend on
+// the internet; only the server under test is reachable.
+test.beforeEach(async ({ page, baseURL }) => {
+  await page.route((url) => !url.href.startsWith(baseURL!), (route) => route.abort());
+});
+
 const pages = [
   { path: "/", heading: /Morten/ },
   { path: "/infrastructure/", heading: /The machinery behind the page/ },
@@ -27,7 +33,7 @@ for (const { path, heading } of pages) {
     const res = await page.goto(path);
     expect(res?.status()).toBe(200);
     await expect(page.getByRole("heading", { name: heading }).first()).toBeVisible();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
     expect(errors).toEqual([]);
   });
 }
@@ -38,7 +44,7 @@ test("/fun/ shell loads without errors", async ({ page }) => {
   const res = await page.goto("/fun/");
   expect(res?.status()).toBe(200);
   await expect(page.getByRole("heading", { name: "The room" })).toBeAttached();
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
   expect(errors).toEqual([]);
 });
 
