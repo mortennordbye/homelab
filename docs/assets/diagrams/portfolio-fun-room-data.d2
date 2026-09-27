@@ -1,0 +1,35 @@
+# How content reaches the /fun room. See apps/portfolio/fun-room.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+work: "src/content/work/*.mdx\nread by getAllWork()" {class: card; icon: ${ify}/logos/mdx.svg}
+resume: "src/content/resume.ts\ncerts, experience, education" {class: card; icon: ${di}/typescript.svg}
+page: "app/fun/page.tsx\nServer Component" {class: card; icon: ${di}/nextjs-light.svg}
+client: "FunRoomClient.tsx\nclient, dynamic import" {class: card; icon: ${ify}/logos/react.svg}
+funroom: FunRoom.tsx {class: card; icon: ${ify}/logos/react.svg}
+room: Room.tsx {class: card; icon: ${ify}/simple-icons/threedotjs.svg?color=%23e9ebe9&height=64}
+parts: "Bookshelf / Objects / Devices" {class: card; icon: ${ify}/simple-icons/threedotjs.svg?color=%23e9ebe9&height=64}
+
+work -> page
+resume -> page
+page -> client: "shelf: ShelfData\ncareer: CareerData"
+client -> funroom -> room -> parts

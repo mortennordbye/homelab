@@ -1,0 +1,55 @@
+# Metrics, logs and traces into Grafana. See platform/observability/README.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+classes.group: {
+  label.near: top-left
+  style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}
+}
+
+metrics: Scraped by Prometheus {
+  class: group
+  grid-columns: 2
+  grid-gap: 20
+  k8s: "kube-state-metrics\nnodes and workloads" {class: card; icon: ${di}/kubernetes.svg; width: 210; height: 140}
+  blackbox: "blackbox-exporter\nprobes public sites" {class: card; icon: ${di}/prometheus.svg; width: 210; height: 140}
+  unpoller: "unpoller, UniFi 10.3.10.1\nmetrics, and log to Loki" {class: card; icon: ${di}/unifi.svg; width: 210; height: 140}
+  snmp: "snmp-exporter\nNAS 10.3.10.10, SNMPv3" {class: card; icon: ${di}/synology.svg; width: 210; height: 140}
+  pvex: "pve-exporter\nProxmox API, hyper1-3" {class: card; icon: ${di}/proxmox-light.svg; width: 210; height: 140}
+}
+
+pods: "pod logs, k8s events" {class: card; icon: ${k8s}/pod.svg}
+alloy: "Alloy\nDaemonSet" {class: card; icon: ${di}/alloy.svg}
+traefik: Traefik {class: card; icon: ${di}/traefik.svg}
+
+prometheus: "Prometheus\n7 days" {class: card; icon: ${di}/prometheus.svg}
+loki: "Loki\n7 days, events 30" {class: card; icon: ${di}/loki.svg}
+tempo: "Tempo\n24 h" {class: card; icon: ${di}/tempo.svg}
+grafana: "Grafana\nHomelab-SPOG" {class: card; icon: ${di}/grafana.svg}
+
+metrics -> prometheus
+pods -> alloy -> loki
+traefik -> tempo: OTLP
+
+prometheus -> grafana
+loki -> grafana
+tempo -> grafana

@@ -1,0 +1,44 @@
+# How an alert reaches Discord. See platform/observability/README.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+classes.group: {
+  label.near: top-left
+  style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}
+}
+
+prometheus: "Prometheus\nhomelab-alerts.yaml" {class: card; icon: ${di}/prometheus.svg}
+hooks: "Proxmox VE, PBS, DSM\nwebhooks on errors" {class: card; icon: ${di}/proxmox-light.svg}
+alertmanager: "Alertmanager\n2 replicas" {class: card; icon: ${di}/alertmanager.svg}
+watchdog: "Cloudflare watchdog Worker\nwatchdog.bigd.no" {class: card; icon: ${di}/cloudflare.svg}
+sites: "public sites\nchecked every minute" {class: aside; icon: ${ify}/tabler/world.svg?color=%23a1ada3&height=64}
+falco: "Falco\nDaemonSet, modern eBPF" {class: card; icon: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg}
+sidekick: "falcosidekick\nnotice and above" {class: card; icon: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg}
+discord: "Discord\n#homelab-alerts" {class: card; icon: ${di}/discord.svg}
+
+prometheus -> alertmanager
+hooks -> alertmanager
+alertmanager -> discord: "critical, events, reelsmith"
+alertmanager -> watchdog: "Watchdog heartbeat, 5 min"
+watchdog -> sites: {style.stroke-dash: 4}
+watchdog -> discord: "DOWN / UP"
+falco -> sidekick -> discord

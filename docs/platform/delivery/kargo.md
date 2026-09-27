@@ -5,6 +5,8 @@ and pushes the image; Kargo notices the new tag, rewrites `newTag` in the app's
 kustomization, commits it to this repo and syncs the Argo CD Application. Every
 app that ships its own image runs through it.
 
+[![A push builds an image to GHCR, the Kargo Warehouse picks it up, stage commits to main, prod opens a pull request, and Argo CD syncs after the merge](../../assets/diagrams/delivery-kargo.svg)](../../assets/diagrams/delivery-kargo.svg)
+
 ## Pipelines
 
 Each app has a Warehouse that watches one GHCR repo and auto-promotes new Freight

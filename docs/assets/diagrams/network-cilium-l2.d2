@@ -1,0 +1,56 @@
+# Which nodes answer ARP for each LoadBalancer VIP. See platform/network/cilium.md.
+direction: down
+grid-columns: 1
+grid-gap: 40
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+pool: "default-pool 10.3.10.100/29\nevery LoadBalancer VIP comes from here" {class: card; icon: ${di}/cilium.svg; height: 150}
+
+all: "default-l2-policy, announced by all 6 nodes" {
+  class: aside
+  style.stroke: "#2a382c"
+  label.near: top-center
+  grid-columns: 2
+  grid-gap: 24
+  argocd: "Argo CD\n10.3.10.100" {class: card; icon: ${di}/argo-cd.svg; height: 150}
+  plex: "Plex\n10.3.10.103" {class: card; icon: ${di}/plex.svg; height: 150}
+}
+
+workers: "traefik-public-l2-policy, announced by the 3 workers" {
+  class: aside
+  style.stroke: "#2a382c"
+  label.near: top-center
+  grid-columns: 2
+  grid-gap: 24
+  public: "traefik-public\n10.3.10.101" {class: card; icon: ${di}/traefik.svg; height: 150}
+  talos: "genesis-worker-01, 02, 03" {class: card; icon: ${di}/talos.svg; height: 150}
+}
+
+controlplanes: "traefik-private-l2-policy, announced by the 3 control planes" {
+  class: aside
+  style.stroke: "#2a382c"
+  label.near: top-center
+  grid-columns: 2
+  grid-gap: 24
+  private: "traefik-private\n10.3.10.102" {class: card; icon: ${di}/traefik.svg; height: 150}
+  talos: "genesis-ctrl-01, 02, 03" {class: card; icon: ${di}/talos.svg; height: 150}
+}

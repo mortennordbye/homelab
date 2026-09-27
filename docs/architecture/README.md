@@ -8,19 +8,7 @@ code disagree, the code wins and this file gets fixed.
 
 ## Layers
 
-```
-Internet ── Cloudflare (DNS, public zones, watchdog Worker)
-   │
-UniFi Cloud Gateway ── local.bigd.no DNS, VLANs, WireGuard break-glass
-   │
-Proxmox VE: hyper1, hyper2, hyper3 ── Tailscale subnet router VM
-   │
-Talos VMs: cluster "Genesis", 3 control plane + 3 workers
-   │
-Argo CD ── everything under k8s/talos/**
-   │
-Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backups
-```
+[![Layers of the homelab, from the internet down to the Synology NAS](../assets/diagrams/architecture-layers.svg)](../assets/diagrams/architecture-layers.svg)
 
 ## Physical and virtual
 
@@ -29,7 +17,7 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
 - The Talos VMs are `terraform/proxmox/hyper-cluster/k8s/talos`. `genesis-worker-01`
   on `hyper1` has the iGPU passed through for Quick Sync, used by Plex and Tdarr
   ([`../platform/cluster/gpu-passthrough.md`](../platform/cluster/gpu-passthrough.md)).
-- The Synology NAS holds all persistent data and runs the Proxmox Backup Server VM
+- The Synology DS1522+ NAS holds all persistent data and runs the Proxmox Backup Server VM
   (`terraform/proxmox/pbs`).
 - Home Assistant runs on its own mini PC, outside the cluster. Only its ingress lives in
   this repo; its configuration is managed in Home Assistant itself.

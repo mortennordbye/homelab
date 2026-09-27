@@ -5,6 +5,8 @@ The Kubernetes cluster "genesis" runs on six Talos VMs, two per Proxmox node, al
 config, bootstraps etcd, installs Cilium and Argo CD, and applies the root Argo CD
 applications. From there Argo CD owns everything in the cluster.
 
+[![Six Talos VMs, one control plane and one worker on each of hyper1, hyper2 and hyper3, behind the API VIP](../../assets/diagrams/cluster-layout.svg)](../../assets/diagrams/cluster-layout.svg)
+
 | Node | Host | IP | VMID | CPU | Memory |
 |---|---|---|---|---|---|
 | `genesis-ctrl-01` | hyper1 | 10.3.10.31 | 131 | 4 | 8 GiB |

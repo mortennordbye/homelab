@@ -1,0 +1,40 @@
+# hyper1 iGPU to Plex and Tdarr. See platform/cluster/gpu-passthrough.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+hyper1: hyper1 {
+  class: aside
+  style.stroke: "#2a382c"
+  label.near: top-center
+  icon: ${di}/proxmox-light.svg
+  igpu: "Intel UHD Graphics 730\n00:02.0, bound to vfio-pci" {class: card; icon: ${ify}/simple-icons/intel.svg?color=%2300c7fd&height=64}
+  vm: "genesis-worker-01, VM 134\nPCI mapping igpu-hyper1\ni915 extension, /dev/dri" {class: card; icon: ${di}/talos.svg}
+  igpu -> vm: VFIO passthrough
+}
+
+plugin: "intel-gpu-plugin DaemonSet\nadvertises gpu.intel.com/i915\n-shared-dev-num=2" {class: card; icon: ${k8s}/ds.svg}
+plex: "Plex\nplex-media-stack" {class: card; icon: ${di}/plex.svg}
+tdarr: "Tdarr\narr-stack" {class: card; icon: ${di}/tdarr.svg}
+
+hyper1.vm -> plugin: "node label hardware.nordbye.it/gpu=intel-quicksync"
+plugin -> plex
+plugin -> tdarr

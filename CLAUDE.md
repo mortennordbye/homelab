@@ -114,6 +114,14 @@ docs/
 - When a project ships, move anything lasting into the spec or an area doc and delete its
   `docs/projects/<name>/` folder.
 - Link from code comments to area docs, never to a project doc, since those get deleted.
+- Diagrams are D2: a source in `docs/assets/diagrams/<name>.d2`, embedded in the page as
+  the rendered `.svg`, styled with the site palette like `secrets-flow.d2`. Every node
+  carries an icon: the software's own logo from dashboard-icons (the `-light` variant when
+  the logo is dark), Kubernetes resource icons for k8s objects, Iconify for the rest. Keep
+  the rendered width at 1000px or less (the `width` on the outer `<svg>`); the docs column
+  is 688px and anything wider shrinks past readable. No
+  ASCII box-drawing flows; directory trees stay as text. `make diagram` renders locally
+  and `render-diagram.yaml` re-renders on `main`.
 - No torrent tracker or subtitle provider names anywhere in the repo; they live only in
   the apps' own config.
 - `docs/` is published to https://docs.nordbye.it by `.github/workflows/docs.yaml`

@@ -5,6 +5,8 @@ cert-manager issues one Let's Encrypt wildcard certificate per zone. All of them
 hold certificates of their own. The chart and its values are in
 [`k8s/talos/infra/cert-manager/`](../../../k8s/talos/infra/cert-manager/kustomization.yaml).
 
+[![cert-manager solves DNS-01 in Cloudflare, stores the wildcard secrets in cert-manager, and the Traefik gateways read them](../../assets/diagrams/network-certificates.svg)](../../assets/diagrams/network-certificates.svg)
+
 ## Issuer
 
 `letsencrypt-prod` is a ClusterIssuer on the Let's Encrypt production ACME endpoint

@@ -1,0 +1,37 @@
+# Homelab layers, top to bottom. Colours are the docs site palette (assets/stylesheets/theme.css).
+# Generic icons come from Iconify with the colour set in the URL, since D2 cannot recolour them.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+internet: Internet {class: card; icon: ${ify}/tabler/world.svg?color=%23a1ada3&height=64}
+cloudflare: "Cloudflare\nDNS, public zones, watchdog Worker" {class: card; icon: ${di}/cloudflare.svg}
+unifi: "UniFi Cloud Gateway\nlocal.bigd.no DNS, VLANs, WireGuard break-glass" {class: card; icon: ${di}/unifi.svg}
+proxmox: "Proxmox VE\nhyper1, hyper2, hyper3" {class: card; icon: ${di}/proxmox-light.svg}
+tailscale: Tailscale subnet router VM {class: aside; icon: ${di}/tailscale-light.svg}
+talos: "Talos VMs, cluster Genesis\n3 control plane + 3 workers" {class: card; icon: ${di}/talos.svg}
+argocd: "Argo CD\neverything under k8s/talos/**" {class: card; icon: ${di}/argo-cd.svg}
+synology: "Synology DS1522+\nNFS for volumes, media and backups" {class: card; icon: ${di}/synology.svg}
+pbs: "Proxmox Backup Server VM\nVM backups" {class: aside; icon: ${di}/proxmox-backup-server.svg}
+
+internet -> cloudflare -> unifi -> proxmox -> talos -> argocd -> synology
+proxmox -> tailscale
+synology -> pbs

@@ -7,6 +7,8 @@ hypervisor (required anti-affinity on `topology.kubernetes.io/zone`), from the H
 `HTTPRoute`s; the Kubernetes CRD provider is on for `Middleware` objects, with
 `allowCrossNamespace: true`.
 
+[![Public requests pass Cloudflare, the UniFi port forward, the public VIP, Traefik and the middlewares to the app; LAN requests use the private VIP](../../assets/diagrams/network-traefik.svg)](../../assets/diagrams/network-traefik.svg)
+
 ## Gateways
 
 Two Gateways share the same pods and are told apart by entrypoint port. Each has its own

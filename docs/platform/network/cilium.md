@@ -48,6 +48,8 @@ decide which nodes answer ARP for a VIP:
 | `traefik-private-l2-policy` | label `network.nordbye.it/vip: private` | control planes |
 | `default-l2-policy` | every Service without the label | all |
 
+[![Each VIP from default-pool and the nodes that announce it](../../assets/diagrams/network-cilium-l2.svg)](../../assets/diagrams/network-cilium-l2.svg)
+
 The Traefik VIPs get disjoint node sets so one bad node cannot take both gateways down. A
 new LoadBalancer Service with no label falls under the default policy.
 
@@ -77,6 +79,8 @@ enforcement is tracked in `docs/backlog/README.md`.
 
 Cilium default-denies a direction only once a policy has a rule for it. An ingress-only
 policy leaves egress open.
+
+[![Ingress and egress a typical app policy allows, logged by Hubble in audit mode](../../assets/diagrams/network-cilium-policy.svg)](../../assets/diagrams/network-cilium-policy.svg)
 
 A new app's policy, copied from the one closest to it:
 

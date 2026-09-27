@@ -1,0 +1,61 @@
+# Talos VMs per Proxmox host. See platform/cluster/talos.md.
+direction: down
+grid-columns: 1
+grid-gap: 60
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+vip: "API endpoint, VIP 10.3.10.30:6443\nfloats across genesis-ctrl-01, 02 and 03" {class: card; icon: ${di}/kubernetes.svg; height: 150}
+
+hyper1: hyper1 {
+  class: aside
+  grid-columns: 3
+  grid-gap: 30
+  style.stroke: "#2a382c"
+  label.near: top-center
+  icon: ${di}/proxmox-light.svg
+  ctrl: "genesis-ctrl-01\n10.3.10.31, VM 131\n4 CPU, 8 GiB" {class: card; icon: ${di}/talos.svg; height: 170}
+  worker: "genesis-worker-01\n10.3.10.34, VM 134\n8 CPU, 16 GiB, iGPU" {class: card; icon: ${di}/talos.svg; height: 170}
+  tailscale: "tailscale-router\n10.3.10.40, VM 140" {class: aside; icon: ${di}/tailscale-light.svg; height: 170}
+}
+
+hyper2: hyper2 {
+  class: aside
+  grid-columns: 2
+  grid-gap: 30
+  style.stroke: "#2a382c"
+  label.near: top-center
+  icon: ${di}/proxmox-light.svg
+  ctrl: "genesis-ctrl-02\n10.3.10.32, VM 132\n4 CPU, 8 GiB" {class: card; icon: ${di}/talos.svg; height: 170}
+  worker: "genesis-worker-02\n10.3.10.35, VM 135\n6 CPU, 16 GiB" {class: card; icon: ${di}/talos.svg; height: 170}
+}
+
+hyper3: hyper3 {
+  class: aside
+  grid-columns: 2
+  grid-gap: 30
+  style.stroke: "#2a382c"
+  label.near: top-center
+  icon: ${di}/proxmox-light.svg
+  ctrl: "genesis-ctrl-03\n10.3.10.33, VM 133\n4 CPU, 8 GiB" {class: card; icon: ${di}/talos.svg; height: 170}
+  worker: "genesis-worker-03\n10.3.10.36, VM 136\n8 CPU, 16 GiB" {class: card; icon: ${di}/talos.svg; height: 170}
+}
+
