@@ -5,7 +5,7 @@ DEV_PORT   ?= 3000
 SMOKE_PROJECT ?= portfolio-smoke
 SHA        := $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
 
-.PHONY: help up build down logs sh lint typecheck image run-prod smoke smoke-run clean
+.PHONY: help up build down logs sh lint typecheck images image run-prod smoke smoke-run clean
 
 help:  ## Show this help
 	@awk 'BEGIN{FS=":.*##"; printf "Targets:\n"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -36,6 +36,9 @@ lint:  ## Run ESLint in Docker (same check as CI)
 
 typecheck:  ## Run tsc --noEmit in Docker (same check as CI)
 	docker run --rm -v $(PWD):/app -w /app node:24-alpine sh -c "npm ci --no-audit --no-fund && npm run typecheck"
+
+images:  ## Re-encode public/images/ in place with sharp (names, formats and sizes unchanged)
+	docker run --rm -v $(PWD):/app -w /app node:24-alpine sh -c "npm ci --no-audit --no-fund && node scripts/optimize-images.mts"
 
 image:  ## Build the production Docker image (multi-stage node build → distroless Node runtime; same path as CI)
 	docker build --build-arg BUILD_SHA=$(SHA) -t $(IMAGE) .
