@@ -57,6 +57,9 @@ depends on it) and an Azure App Service custom domain (`asuid`).
 `docs` is an unproxied CNAME to `mortennordbye.github.io` for the GitHub Pages docs
 site; GitHub issues its certificate, which it can only do while the record is not proxied.
 
+`_github-pages-challenge-mortennordbye` is the TXT record that verifies `nordbye.it` for
+GitHub Pages on the account; removing it un-verifies the domain.
+
 `_acme-challenge` is not managed: cert-manager creates and deletes it on every
 DNS-01 issuance.
 

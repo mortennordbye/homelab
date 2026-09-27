@@ -166,3 +166,14 @@ resource "cloudflare_dns_record" "docs" {
   proxied = false
   ttl     = 1
 }
+
+# Verifies nordbye.it for GitHub Pages on the mortennordbye account, so no other
+# account can serve a *.nordbye.it name on Pages. Removing it un-verifies the domain.
+resource "cloudflare_dns_record" "github_pages_verification" {
+  zone_id = data.cloudflare_zone.this.zone_id
+  name    = "_github-pages-challenge-mortennordbye.${var.zone_name}"
+  type    = "TXT"
+  content = "\"57e4e277172b2db683f0aef8196e09\""
+  proxied = false
+  ttl     = 1
+}
