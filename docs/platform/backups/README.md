@@ -46,7 +46,10 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
   `k8s/talos/infra/backup-check/` look for the newest one at 09:00 and fail past 26 h;
   `BackupJobStale` covers them. `pbs-backup-check` reads the Proxmox vzdump task logs
   and fails for any guest the job includes that no task finished in the last 26 h
-  (the monitoring token may not list PBS backups directly); `ha-backup-check` looks for a
+  (the monitoring token may not list PBS backups directly). It also fails when a VM disk
+  is stuck as a pending delete, the state a Proxmox-CSI detach leaves when it loses the VM
+  config lock, and prints the `qm set <vmid> --delete <disk>` that clears it once QEMU no
+  longer has the device. `ha-backup-check` looks for a
   fresh `.tar` in `home-assistant/`. Hyper Backup and the DSM snapshots have no staleness check.
 - `restore-test` runs on the 1st of each month at 10:00: `restic check` with 5 % of the
   data read on every VolSync repository, a full restore of `mealie/data-pvc`, and the
