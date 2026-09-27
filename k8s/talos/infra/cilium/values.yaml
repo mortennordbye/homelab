@@ -53,6 +53,14 @@ cgroup:
 
 hubble:
   enabled: true
+  # helm (the default) mints a new CA on every render, so each ArgoCD sync rotated it
+  # under running agents and the relay lost them. certgen issues them in-cluster.
+  tls:
+    auto:
+      enabled: true
+      method: cronJob
+      certValidityDuration: 1095
+      schedule: "0 0 1 */4 *"
   metrics:
     enabled:
       - dns:query;answer
