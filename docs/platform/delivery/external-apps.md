@@ -44,7 +44,7 @@ push to main (app repo)
 
 ## Moving parts
 
-### 1. The reusable workflow — [`.github/workflows/bump-image.yml`](../.github/workflows/bump-image.yml)
+### 1. The reusable workflow — [`.github/workflows/bump-image.yml`](../../../.github/workflows/bump-image.yml)
 
 Lives here once; every app repo calls it via `workflow_call`. Inputs:
 
@@ -160,7 +160,7 @@ That's it — the next push to the app repo's `main` opens a bump PR here.
 ## Notes
 
 - **ArgoCD auto-sync is on.** The `apps` ApplicationSet
-  ([infra/argocd/apps.yaml](../k8s/talos/infra/argocd/apps.yaml)) sets
+  ([infra/argocd/apps.yaml](../../../k8s/talos/infra/argocd/apps.yaml)) sets
   `syncPolicy.automated` (prune + selfHeal), so merging a bump PR deploys with
   no manual sync. The same ApplicationSet auto-registers any `apps/*` directory,
   so a new app needs no separate `Application` manifest.

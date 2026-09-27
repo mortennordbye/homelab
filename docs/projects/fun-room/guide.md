@@ -1,6 +1,6 @@
 # Working on the fun room
 
-Everything needed to pick this up cold. `docs/projects/fun-room-plan.md` is the history and the
+Everything needed to pick this up cold. `docs/projects/fun-room/plan.md` is the history and the
 reasoning; this file is the practical guide. Read this one first.
 
 ---

@@ -1,7 +1,7 @@
 # Backups
 
 Everything lands on the Synology share `k8s-backups` (`nas.local.bigd.no:/volume1/k8s-backups`,
-Volume 1). Restores: [`backup-restore.md`](backup-restore.md).
+Volume 1). Restores: [`restore.md`](restore.md).
 
 ## Layers
 
@@ -50,7 +50,7 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
   newest logeverylift and Authentik dumps loaded into a scratch Postgres. It reads the
   NAS only. `RestoreTestFailed` alerts when a run does not pass.
 - If the whole homelab goes quiet, the Cloudflare watchdog reports the missing
-  Alertmanager heartbeat to Discord (`docs/monitoring.md`).
+  Alertmanager heartbeat to Discord (`docs/platform/observability/README.md`).
 - By hand:
 
   ```sh

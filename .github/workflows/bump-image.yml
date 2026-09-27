@@ -1,5 +1,5 @@
 # Reusable: an app repo's CI calls this to rewrite its image tag in a manifest
-# here and open a PR. Merging deploys (ArgoCD). See docs/gitops-external-app-deploys.md.
+# here and open a PR. Merging deploys (ArgoCD). See docs/platform/delivery/external-apps.md.
 name: Bump image tag
 
 on:

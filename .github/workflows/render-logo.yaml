@@ -1,13 +1,13 @@
 name: Render Logo
 
-# Re-crops docs/logo/source.jpg to the shipped PNG whenever the source changes, and
+# Re-crops docs/assets/logo/source.jpg to the shipped PNG whenever the source changes, and
 # commits the result back — so the logo in the README never drifts from its source.
 
 on:
   push:
     branches: [main]
     paths:
-      - "docs/logo/source.jpg"
+      - "docs/assets/logo/source.jpg"
       - ".github/workflows/render-logo.yaml"
   workflow_dispatch:
 
@@ -36,17 +36,17 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick pngquant
-          convert docs/logo/source.jpg -crop 460x460+280+300 +repage -resize 512x512 \
+          convert docs/assets/logo/source.jpg -crop 460x460+280+300 +repage -resize 512x512 \
             \( +clone -alpha transparent -fill white -draw "circle 256,256 256,4" \) \
             -compose copyopacity -composite png32:/tmp/logo-raw.png
-          pngquant --quality 70-95 --force --output docs/logo/logo.png /tmp/logo-raw.png
+          pngquant --quality 70-95 --force --output docs/assets/logo/logo.png /tmp/logo-raw.png
 
       - name: Commit re-rendered logo if changed
         run: |
-          if [ -n "$(git status --porcelain docs/logo)" ]; then
+          if [ -n "$(git status --porcelain docs/assets/logo)" ]; then
             git config --global user.name "GitHub Actions"
             git config --global user.email "actions@github.com"
-            git add docs/logo/logo.png
+            git add docs/assets/logo/logo.png
             git commit -m "chore(logo): re-render logo from source"
             git push origin HEAD:main
           else

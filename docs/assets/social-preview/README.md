@@ -30,7 +30,7 @@ and a motif that carries the lower two thirds with big legible icon tiles.
 
 Logos sit on light `#eef2f7` rounded tiles because several brand marks are dark or rely on
 white negative space and vanish against the background. Icons come from
-`homarr-labs/dashboard-icons`, the same source the D2 diagrams in `docs/diagrams` use, and
+`homarr-labs/dashboard-icons`, the same source the D2 diagrams in `docs/assets/diagrams` use, and
 are inlined as base64 data URIs so the SVG stays self contained and never breaks if the CDN
 moves.
 

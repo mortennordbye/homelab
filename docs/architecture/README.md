@@ -2,8 +2,7 @@
 
 The current shape of the homelab: what runs where, and how the parts depend on each
 other. It describes the present only. Plans and in-flight work live in
-[`projects/`](projects/), detail for each area lives in the docs linked from the map
-at the end, and the manifests and Terraform are what actually runs. Where this file
+[`docs/projects`](../projects), detail for each area lives in the folders in the map at the end, and the manifests and Terraform are what actually runs. Where this file
 and the code disagree, the code wins and this file gets fixed.
 
 ## Layers
@@ -28,12 +27,12 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
   node config is `terraform/proxmox/hyper-cluster/datacenter`.
 - The Talos VMs are `terraform/proxmox/hyper-cluster/k8s/talos`. `genesis-worker-01`
   on `hyper1` has the iGPU passed through for Quick Sync, used by Plex and Tdarr
-  ([`plex-hw-transcode.md`](plex-hw-transcode.md)).
+  ([`../platform/cluster/gpu-passthrough.md`](../platform/cluster/gpu-passthrough.md)).
 - The Synology NAS holds all persistent data and runs the Proxmox Backup Server VM
   (`terraform/proxmox/pbs`).
 - Home Assistant runs on its own mini PC, outside the cluster. Only its ingress lives in
   this repo; its configuration is managed in Home Assistant itself.
-- Upgrades: [`talos-kubernetes-upgrade.md`](talos-kubernetes-upgrade.md).
+- Upgrades: [`../platform/cluster/talos-upgrade.md`](../platform/cluster/talos-upgrade.md).
 
 ## Network
 
@@ -51,7 +50,7 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
 - The gluetun pod (qBittorrent, Prowlarr) sends its DNS through the VPN, so it reaches
   `local.bigd.no` apps through `hostAliases` on the private gateway VIP.
 - Remote access is Tailscale, with UniFi WireGuard as break-glass
-  ([`remote-access.md`](remote-access.md)).
+  ([`../platform/network/remote-access.md`](../platform/network/remote-access.md)).
 
 ## Delivery
 
@@ -59,17 +58,17 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
   directory under `k8s/talos/apps/` and `k8s/talos/infra/` is one Application, synced
   from `main`. Direct `kubectl apply` is reverted.
 - Images built in this repo (portfolio, blog) and some external repos are promoted from
-  stage to prod by Kargo through pull requests ([`kargo.md`](kargo.md)). External repos
-  outside Kargo use `bump-image.yml` ([`gitops-external-app-deploys.md`](gitops-external-app-deploys.md)).
+  stage to prod by Kargo through pull requests ([`../platform/delivery/kargo.md`](../platform/delivery/kargo.md)). External repos
+  outside Kargo use `bump-image.yml` ([`../platform/delivery/external-apps.md`](../platform/delivery/external-apps.md)).
 - KEDA with the HTTP add-on scales idle apps to zero; the interceptor wakes them.
 - Renovate proposes chart, image and provider bumps; Postgres majors are excluded and
-  done by hand ([`postgres-18-migration.md`](postgres-18-migration.md)).
+  done by hand ([`../platform/data/postgres.md`](../platform/data/postgres.md)).
 
 ## Secrets
 
 No secret is committed. Values live in Bitwarden Secrets Manager (Homelab project) and
 External Secrets Operator turns an `ExternalSecret` that names the item's UUID into a
-Kubernetes Secret ([`secrets-management.md`](secrets-management.md)).
+Kubernetes Secret ([`../platform/secrets/README.md`](../platform/secrets/README.md)).
 
 ## Storage and data
 
@@ -79,17 +78,17 @@ Kubernetes Secret ([`secrets-management.md`](secrets-management.md)).
 - Postgres 18 for logeverylift runs in-cluster on NFS, PVC mounted at
   `/var/lib/postgresql`.
 - The media share `/volume1/shared-data/media` is one mount so imports can hardlink
-  ([`media-stack/README.md`](media-stack/README.md)).
+  ([`../apps/media-stack/README.md`](../apps/media-stack/README.md)).
 - Backups: etcd snapshots, Postgres dumps, VolSync restic per PVC, Home Assistant, NAS
-  snapshots, offsite copy, and PBS for whole VMs ([`backups.md`](backups.md),
-  restores in [`backup-restore.md`](backup-restore.md)).
+  snapshots, offsite copy, and PBS for whole VMs ([`../platform/backups/README.md`](../platform/backups/README.md),
+  restores in [`../platform/backups/restore.md`](../platform/backups/restore.md)).
 
 ## Observability
 
 kube-prometheus-stack, Grafana, Loki, Tempo and the OpenTelemetry collector. Alertmanager
 sends only actionable, critical alerts to Discord, and a Cloudflare Worker reports a
 missing Alertmanager heartbeat. Falco watches syscalls on every node
-([`monitoring.md`](monitoring.md), past incidents in [`incidents.md`](incidents.md)).
+([`../platform/observability/README.md`](../platform/observability/README.md), past incidents in [`../platform/observability/incidents.md`](../platform/observability/incidents.md)).
 
 ## Workloads
 
@@ -98,23 +97,25 @@ depend on each other:
 
 - Media: Seerr, Radarr, Radarr 4K, Sonarr, Prowlarr, qBittorrent behind gluetun, Plex,
   Bazarr and Bazarr 4K,
-  Tdarr, Bazarr, Cleanuparr ([`media-stack/README.md`](media-stack/README.md)).
+  Tdarr, Bazarr, Cleanuparr ([`../apps/media-stack/README.md`](../apps/media-stack/README.md)).
 - Sites: portfolio and blog, each with a stage and prod, promoted by Kargo.
 - Own apps: logeverylift (with Postgres), headroom, reelsmith, verksted, bigd.
 - Hub: `hub.bigd.no` (Homepage) links every app, `k8s/talos/apps/homepage/values.yaml`.
 
 ## Doc map
 
-| Area | Doc |
-| ---- | --- |
-| Backups, restores | [`backups.md`](backups.md), [`backup-restore.md`](backup-restore.md) |
-| Secrets | [`secrets-management.md`](secrets-management.md) |
-| Monitoring, incidents | [`monitoring.md`](monitoring.md), [`incidents.md`](incidents.md) |
-| Promotion | [`kargo.md`](kargo.md), [`gitops-external-app-deploys.md`](gitops-external-app-deploys.md) |
-| Cluster upgrades | [`talos-kubernetes-upgrade.md`](talos-kubernetes-upgrade.md) |
-| Postgres majors | [`postgres-18-migration.md`](postgres-18-migration.md) |
-| GPU passthrough | [`plex-hw-transcode.md`](plex-hw-transcode.md) |
-| Remote access | [`remote-access.md`](remote-access.md) |
-| Media stack | [`media-stack/README.md`](media-stack/README.md) |
-| Diagrams | [`diagrams/`](diagrams/) |
-| Work in progress | [`projects/`](projects/) |
+`docs/` has one folder per kind of work and one subfolder per area. Each area's
+`README.md` is its current state; runbooks sit beside it.
+
+| Folder | Contents |
+| ------ | -------- |
+| [`platform/backups`](../platform/backups/README.md) | backup layers, watching them, [restores](../platform/backups/restore.md) |
+| [`platform/cluster`](../platform/cluster/README.md) | Proxmox and Talos, upgrades, GPU passthrough |
+| [`platform/data`](../platform/data/README.md) | in-cluster Postgres, major upgrades |
+| [`platform/delivery`](../platform/delivery/README.md) | Argo CD, Kargo promotion, external app deploys |
+| [`platform/network`](../platform/network/README.md) | VIPs, gateways, DNS, remote access |
+| [`platform/observability`](../platform/observability/README.md) | monitoring, alerting, [incidents](../platform/observability/incidents.md) |
+| [`platform/secrets`](../platform/secrets/README.md) | Bitwarden to cluster secrets |
+| [`apps/media-stack`](../apps/media-stack/README.md) | requests, storage, 4K, seeding, subtitles, re-encoding |
+| [`projects`](../projects) | work in progress, deleted when it ships |
+| [`assets`](../assets) | diagrams, logo, social preview |
