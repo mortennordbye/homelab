@@ -13,6 +13,7 @@ Everything lives on one Synology share, `/volume1/shared-data/media`, mounted at
 | ---- | -------- |
 | `/data/series` | Sonarr root folder |
 | `/data/movies` | Radarr root folder (also the root for all Radarr collections) |
+| `/data/movies-4k` | Radarr 4K root folder |
 | `/data/torrents/download` | qBittorrent incomplete downloads |
 | `/data/torrents/completed` | qBittorrent completed torrents, still seeding |
 | `/data/transcode_cache/tdarr` | Tdarr work files |
@@ -42,6 +43,23 @@ torrent is still in qBittorrent.
 - General > Backups (also in Prowlarr): interval 1 day, retention 14 days, folder
   `Backups`. The nightly VolSync copy of `/config` carries these zips, and a restore
   starts from the newest zip rather than the live database (`docs/backup-plan.md`).
+
+## Radarr 4K
+
+`https://radarr-4k.local.bigd.no`, a second Radarr for the handful of films kept in
+4K next to their 1080p copy. Radarr tracks one file per movie, so a 4K copy needs
+its own instance and root folder; sharing `/data/movies` would let each instance
+delete the other's file on upgrade.
+
+- Root folder `/data/movies-4k`, owned by the Synology share user with mode 777.
+  It must exist before Plex starts, since Plex mounts it read-only as `/movies-4k`.
+- Same download client and remote path mapping as Radarr, category `radarr-4k`.
+- Quality profile: 2160p WEB-DL (TRaSH), with Dolby Vision releases that lack an
+  HDR fallback blocked.
+- Prowlarr: added as its own Radarr app so indexers sync.
+- Seerr: added as a Radarr server with "4K Server" on and "Default Server" on,
+  root `/data/movies-4k`. That gives each film a separate "Request in 4K" button.
+- Plex: separate "Movies 4K" library on `/movies-4k`.
 
 ## Cleanuparr
 

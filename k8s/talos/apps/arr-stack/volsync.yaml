@@ -114,6 +114,61 @@ spec:
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
+  name: radarr-4k-config-restic
+  namespace: arr-stack
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: radarr-4k-config-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        RESTIC_REPOSITORY: /mnt/repo/arr-stack/radarr-4k-config
+        RESTIC_PASSWORD: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: "9facc77a-55f0-4901-a05c-b4d101256b09"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: radarr-4k-config
+  namespace: arr-stack
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  sourcePVC: radarr-4k-config
+  trigger:
+    schedule: "0 1 * * *"
+  restic:
+    repository: radarr-4k-config-restic
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 14
+      weekly: 8
+      monthly: 6
+    cacheStorageClassName: syno-nfs-csi
+    cacheCapacity: 2Gi
+    moverVolumes:
+      - mountPath: repo
+        volumeSource:
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/k8s-backups/volsync
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
   name: bazarr-config-restic
   namespace: arr-stack
 spec:

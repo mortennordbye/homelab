@@ -113,6 +113,40 @@ spec:
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
+  name: radarr-4k-policy
+  namespace: arr-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: radarr-4k
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "7878"
+              protocol: TCP
+    # Seerr (plex-media-stack) + Prowlarr "Sync App" (gluetun-vpn) call the API.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": arr-stack
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": plex-media-stack
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": gluetun-vpn
+      toPorts:
+        - ports:
+            - port: "7878"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
   name: sonarr-policy
   namespace: arr-stack
 spec:
