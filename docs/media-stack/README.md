@@ -111,7 +111,8 @@ delete each other's files on upgrade.
 - Download client qBittorrent, same host, user and remote path mapping as Radarr,
   category `radarr-4k`, "Remove Completed" and "Remove Failed" off.
 - Quality profile `2160p`: WEB 2160p and Bluray-2160p, no remux, cutoff WEB 2160p,
-  upgrades on. Custom format "DV (w/o HDR fallback)" from TRaSH
+  upgrades on. Existing remuxes rank above the cutoff, so Radarr 4K keeps them rather
+  than swapping in a smaller WEB release. Custom format "DV (w/o HDR fallback)" from TRaSH
   (`docs/json/radarr/cf/dv-wo-hdr-fallback.json`) scored -10000, since those files
   play with purple and green colours on screens without Dolby Vision.
 - Indexers: synced by Prowlarr, where Radarr 4K is its own app
@@ -155,8 +156,11 @@ Seerr (`https://seerr.bigd.no`):
   old 1080p status is cleared and the film can be requested in 1080p again.
 
 Tautulli (`https://tautulli.local.bigd.no`): Settings > Plex Media Server, same address.
-If its websocket logs "401 Unauthorized", the stored Plex token was revoked: use
-"Fetch New Token" on the same page and sign in with the Plex account.
+If its websocket logs "401 Unauthorized", the stored Plex token was revoked. Either use
+"Fetch New Token" on the same page and sign in with the Plex account, or give it the
+server owner's token, `PlexOnlineToken` in Plex's `Preferences.xml`, by running
+`$.post('save_pms_token', {token: '<token>'})` in the browser console on Tautulli's
+settings page.
 
 ## Bazarr and Bazarr 4K
 
