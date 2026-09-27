@@ -63,9 +63,13 @@ torrent is still in qBittorrent.
   `/data/torrents/`. The host must match the download client host exactly.
 - "Remove Failed Downloads" off in both. Almost every torrent is from a private
   tracker, and removing them from qBittorrent risks hit-and-run strikes.
+- "Remove Completed Downloads": on in Sonarr, off in Radarr and Radarr 4K. The arr app
+  only removes a torrent once qBittorrent has stopped it at its seeding limit.
+- qBittorrent categories: `tv-sonarr`, `radarr`, `radarr-4k`, plus the manual ones
+  (`PC`, `iptorrent`, `norbits`). Each arr creates its own on the first connection test.
 - Seerr default folders: `/data/series` and `/data/movies`; 4K requests go to
   Radarr 4K (below).
-- General > Backups (also in Prowlarr): interval 1 day, retention 14 days, folder
+- General > Backups (also in Radarr 4K and Prowlarr): interval 1 day, retention 14 days, folder
   `Backups`. The nightly VolSync copy of `/config` carries these zips, and a restore
   starts from the newest zip rather than the live database (`docs/backups.md`).
 
@@ -106,6 +110,26 @@ Moving an existing 1080p-library film to 4K only: move its folder from
 add it in Radarr 4K with that path and profile `2160p` without searching, then
 delete it from Radarr with "Delete files" off. Check first that its collection is
 not monitored in Radarr, or Radarr adds it back and downloads a 1080p copy.
+
+## Seerr and Tautulli
+
+Both reach Plex at `plex.plex-media-stack`, port `32400`, no SSL: the Service name,
+never the Plex pod IP or the `*.plex.direct` name Plex offers during setup, which
+encodes the pod IP. The pod IP changes on every Plex restart, and then scans,
+availability and activity silently time out.
+
+Seerr (`https://seerr.bigd.no`):
+
+- Plex libraries enabled: `Movies`, `Movies 4K`, `TV Shows`, `Courses`, `Youtube`. A new
+  Plex library only shows up after Settings > Plex > Sync Libraries, and stays disabled
+  until it is ticked.
+- Servers: Radarr (1080p, default, profile `HD - 720p/1080p`, `/data/movies`),
+  Radarr 4K (4K, default, profile `2160p`, `/data/movies-4k`), Sonarr (default,
+  `/data/series`). There is no 4K Sonarr.
+- After moving films between libraries, run the "Media Availability Sync" job so the
+  old 1080p status is cleared and the film can be requested in 1080p again.
+
+Tautulli (`https://tautulli.local.bigd.no`): Settings > Plex Media Server, same address.
 
 ## Cleanuparr
 

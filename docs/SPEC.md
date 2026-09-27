@@ -46,6 +46,8 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
 - cert-manager issues the certificates. Authentik sits in front of apps that need a login.
 - App namespaces carry CiliumNetworkPolicies (all but `home-assistant`, which only
   routes to the external HA box); a new caller of an app needs its ingress rule.
+- In-cluster clients reach Plex by its Service name, `plex.plex-media-stack:32400`; the
+  pod IP changes on every restart.
 - The gluetun pod (qBittorrent, Prowlarr) sends its DNS through the VPN, so it reaches
   `local.bigd.no` apps through `hostAliases` on the private gateway VIP.
 - Remote access is Tailscale, with UniFi WireGuard as break-glass

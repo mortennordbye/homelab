@@ -12,7 +12,7 @@ Volume 1). Restores: [`backup-restore.md`](backup-restore.md).
 | Authentik DB | `pg_dump --format=custom`, Postgres 17 | 00:50 | 30 days | `postgres/authentik/` | `k8s/talos/infra/authentik/db-backup.yaml` |
 | App volumes (19) | VolSync restic, `copyMethod: Direct`, one repository per PVC | 01:00 to 01:45 by namespace | 14 daily, 8 weekly, 6 monthly | `volsync/<namespace>/<pvc>/` | `volsync.yaml` in each app, controller `k8s/talos/infra/volsync/` |
 | Home Assistant | HA OS automatic backup (encrypted) | 01:30 | 14 | `home-assistant/` | HA UI, Settings > System > Backups |
-| *arr databases | App-native zips inside `/config/Backups` (Sonarr, Radarr, Prowlarr) | daily | 14 days | inside the VolSync copy | app UI, see `media-stack/README.md` |
+| *arr databases | App-native zips inside `/config/Backups` (Sonarr, Radarr, Radarr 4K, Prowlarr) | daily | 14 days | inside the VolSync copy | app UI, see `media-stack/README.md` |
 | Whole share | Btrfs snapshot, immutable 7 days | 02:45 | 30 | `k8s-backups` | DSM Snapshot Replication |
 | Offsite | Hyper Backup task to Google Drive, client-side encrypted, Smart Recycle 30 versions | 03:20 | 30 versions | Google Drive | DSM Hyper Backup |
 | Whole VMs | Proxmox backup job to PBS | 03:00 | 1 daily, 1 weekly, 1 monthly | PBS datastore on `pve-backup` | `terraform/proxmox/hyper-cluster/datacenter/backup.tf` |
@@ -75,7 +75,7 @@ rules, snapshots or Hyper Backup, so these are set by hand in DSM and recorded h
 | DSM Hyper Backup | the Google Drive task includes `k8s-backups` |
 | NAS folders | `home-assistant/`, `etcd/`, `postgres/{logeverylift,authentik}/`, `volsync/` must exist; static NFS PVs need their path |
 | Home Assistant | network storage `k8s_backups` (NFS `10.3.10.10:/volume1/k8s-backups/home-assistant`), daily 01:30, keep 14 |
-| Sonarr, Radarr, Prowlarr | backup interval 1 day, retention 14 days |
+| Sonarr, Radarr, Radarr 4K, Prowlarr | backup interval 1 day, retention 14 days |
 
 ## Constraints
 
