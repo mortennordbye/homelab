@@ -1,4 +1,4 @@
-"""ProperDocs hooks: nav icons, and links that leave the site pointed at GitHub.
+"""ProperDocs hooks: the home page, nav icons, and links that leave the site pointed at GitHub.
 
 The docs link freely to code (`../../../terraform/...`), to folders, and to the
 backlog, none of which are pages on the site. Rewriting them keeps them working
@@ -8,6 +8,8 @@ between pages.
 
 import os
 import re
+
+from properdocs.structure.files import File
 
 REPO = "https://github.com/mortennordbye/homelab"
 LINK = re.compile(r"(\]\()([^)\s#]+)(#[^)\s]*)?(\))")
@@ -22,6 +24,8 @@ ICONS = {
     "apps/portfolio/brand/art-direction.md": "material/image",
     "apps/portfolio/brand/assets.md": "material/package-variant",
     "apps/portfolio/brand/decisions.md": "material/book-open-variant",
+    "apps/reelsmith/README.md": "material/movie-open-cog",
+    "apps/verksted/README.md": "material/hammer-wrench",
     "architecture/README.md": "material/sitemap",
     "assets/logo/README.md": "material/image",
     "assets/social-preview/README.md": "material/folder-multiple-image",
@@ -33,19 +37,44 @@ ICONS = {
     "platform/cluster/proxmox.md": "simple/proxmox",
     "platform/cluster/talos-upgrade.md": "material/arrow-up-bold-circle",
     "platform/cluster/talos.md": "simple/talos",
+    "platform/cluster/terraform.md": "simple/terraform",
     "platform/data/README.md": "material/database",
     "platform/data/postgres.md": "simple/postgresql",
     "platform/delivery/README.md": "material/rocket-launch",
     "platform/delivery/kargo.md": "material/truck-delivery",
+    "platform/delivery/argocd.md": "simple/argo",
+    "platform/delivery/ci.md": "material/source-branch-check",
+    "platform/delivery/keda.md": "material/arrow-expand-vertical",
+    "platform/identity/README.md": "simple/authentik",
     "platform/network/README.md": "material/lan",
     "platform/network/cloudflare.md": "simple/cloudflare",
     "platform/network/dns.md": "material/dns",
     "platform/network/remote-access.md": "simple/tailscale",
     "platform/network/unifi.md": "simple/ubiquiti",
+    "platform/network/traefik.md": "simple/traefikproxy",
+    "platform/network/cilium.md": "simple/cilium",
+    "platform/network/certificates.md": "material/certificate",
     "platform/observability/README.md": "material/chart-line",
     "platform/observability/incidents.md": "material/alert-octagon",
     "platform/secrets/README.md": "simple/bitwarden",
+    "platform/storage/README.md": "material/harddisk",
 }
+
+
+# docs/ holds folders only, so the root page is generated; its body is overrides/home.html.
+HOME = """---
+title: Homelab docs
+template: home.html
+hide:
+  - navigation
+  - toc
+---
+"""
+
+
+def on_files(files, config):
+    files.append(File.generated(config, "index.md", content=HOME))
+    return files
 
 
 def on_page_markdown(markdown, page, config, files):

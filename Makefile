@@ -11,8 +11,9 @@ diagram: ## Render every D2 diagram in docs/assets/diagrams (→ SVG + PNG)
 .PHONY: social-preview
 social-preview: ## Render the GitHub social preview card (→ docs/assets/social-preview/social-preview.png)
 	@echo ">> rendering social preview card"
-	@docker run --rm -v "$(CURDIR)/docs/assets/social-preview:/work" ubuntu:24.04 bash -c '\
-		apt-get update >/dev/null 2>&1 && apt-get install -y librsvg2-bin >/dev/null 2>&1; \
+	@docker run --rm -v "$(CURDIR)/docs/assets/social-preview:/work" \
+		-v "$(CURDIR)/portfolio/src/app/og-fonts:/usr/local/share/fonts/og:ro" ubuntu:24.04 bash -c '\
+		apt-get update >/dev/null 2>&1 && apt-get install -y librsvg2-bin fontconfig >/dev/null 2>&1; fc-cache -f >/dev/null; \
 		rsvg-convert -w 1280 -h 640 /work/source.svg -o /work/social-preview.png'
 	@echo ">> upload it at Settings > General > Social preview"
 
@@ -29,9 +30,7 @@ logo: ## Render the repo logo (→ docs/assets/logo/logo.png)
 .PHONY: docs
 docs: ## Preview the docs site at http://localhost:8000 (same versions as .github/workflows/docs.yaml)
 	@docker run --rm -it -p 8000:8000 -v "$(CURDIR):/repo" -w /repo python:3.14-slim sh -c '\
-		v() { sed -n "s/^  $$1: \\([^ ]*\\).*/\\1/p" .github/workflows/docs.yaml; }; \
-		pip install -q --root-user-action=ignore "properdocs==$$(v PROPERDOCS_VERSION)" \
-			"mkdocs-material==$$(v MATERIAL_VERSION)" "mkdocs-redirects==$$(v REDIRECTS_VERSION)" && \
+		pip install -q --root-user-action=ignore --require-hashes -r scripts/docs-requirements.txt && \
 		properdocs serve --strict -a 0.0.0.0:8000'
 
 .PHONY: help

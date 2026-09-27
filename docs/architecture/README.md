@@ -34,16 +34,24 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
 - Home Assistant runs on its own mini PC, outside the cluster. Only its ingress lives in
   this repo; its configuration is managed in Home Assistant itself.
 - Upgrades: [`../platform/cluster/talos-upgrade.md`](../platform/cluster/talos-upgrade.md).
+- Every Terraform stack, its Azure state and the laptop-only files it needs:
+  [`../platform/cluster/terraform.md`](../platform/cluster/terraform.md).
 
 ## Network
 
 - Cilium is the CNI and announces the LoadBalancer VIPs on L2 (Argo CD, the public and
   private Traefik gateways, Plex); the addresses are in
-  [`../platform/network/README.md`](../platform/network/README.md).
-- Traefik serves HTTP through Gateway API. Public hostnames live in Cloudflare; internal
-  `local.bigd.no` names are aliases in `terraform/unifi/dns/records.tf`, never
-  external-dns, so a new internal app needs an alias there.
-- cert-manager issues the certificates. Authentik sits in front of apps that need a login.
+  [`../platform/network/README.md`](../platform/network/README.md), Cilium itself in
+  [`../platform/network/cilium.md`](../platform/network/cilium.md).
+- Traefik serves HTTP through Gateway API
+  ([`../platform/network/traefik.md`](../platform/network/traefik.md)). Public hostnames
+  live in Cloudflare; internal `local.bigd.no` names are aliases in
+  `terraform/unifi/dns/records.tf`, never external-dns, so a new internal app needs an
+  alias there.
+- cert-manager issues the certificates
+  ([`../platform/network/certificates.md`](../platform/network/certificates.md)). Authentik
+  sits in front of apps that need a login
+  ([`../platform/identity/README.md`](../platform/identity/README.md)).
 - App namespaces carry CiliumNetworkPolicies (all but `home-assistant`, which only routes
   to the external HA box). Cilium runs them in audit mode for now (`policyAuditMode` in
   `k8s/talos/infra/cilium/values.yaml`): drops are logged, not enforced, so a missing
@@ -55,12 +63,18 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
 
 - Argo CD runs two ApplicationSets, `apps` and `infra` in `k8s/talos/infra/argocd/`,
   which generate one Application per directory under `k8s/talos/apps/` and
-  `k8s/talos/infra/`, synced from `main`. A direct `kubectl apply` is reverted.
+  `k8s/talos/infra/`, synced from `main`. A direct `kubectl apply` is reverted
+  ([`../platform/delivery/argocd.md`](../platform/delivery/argocd.md)).
+- `k8s/talos/infra/crds` installs the CRDs no other Application ships: the
+  prometheus-operator CRDs, the VolumeSnapshot CRDs VolSync needs, and Traefik's (its own
+  chart renders with `includeCRDs: false`).
 - Kargo promotes every image built here or in an app repo: portfolio and blog go stage to
   prod, headroom demo to prod, logeverylift, verksted and reelsmith straight to prod, and
   every prod promotion is a pull request
-  ([`../platform/delivery/kargo.md`](../platform/delivery/kargo.md)). CI only builds and pushes tags.
-- KEDA with the HTTP add-on scales idle apps to zero; the interceptor wakes them.
+  ([`../platform/delivery/kargo.md`](../platform/delivery/kargo.md)). CI only builds and
+  pushes tags ([`../platform/delivery/ci.md`](../platform/delivery/ci.md)).
+- KEDA with the HTTP add-on scales idle apps to zero; the interceptor wakes them
+  ([`../platform/delivery/keda.md`](../platform/delivery/keda.md)).
 - The docs in `docs/` are published to https://docs.nordbye.it by GitHub Pages
   (`.github/workflows/docs.yaml`); the backlog stays in the repo only.
 - Renovate proposes chart, image and provider bumps; Postgres majors are excluded and
@@ -71,8 +85,12 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
 No secret is committed. Values live in Bitwarden Secrets Manager (Homelab project) and
 External Secrets Operator turns an `ExternalSecret` that names the item's UUID into a
 Kubernetes Secret ([`../platform/secrets/README.md`](../platform/secrets/README.md)).
+Reloader (`k8s/talos/infra/reloader`) restarts any workload annotated
+`reloader.stakater.com/auto: "true"` when a ConfigMap or Secret it uses changes.
 
 ## Storage and data
+
+Storage classes and CSI drivers: [`../platform/storage/README.md`](../platform/storage/README.md).
 
 - `proxmox-local` (Proxmox CSI) for block volumes such as app config.
 - `syno-nfs-csi` for shared volumes. A fresh NFS volume is root-only for non-root uids,
@@ -95,6 +113,8 @@ missing Alertmanager heartbeat. Falco watches syscalls on every node and posts t
 itself through falcosidekick
 ([`../platform/observability/README.md`](../platform/observability/README.md), past
 incidents in [`../platform/observability/incidents.md`](../platform/observability/incidents.md)).
+metrics-server (`k8s/talos/infra/metrics-server`) serves the resource metrics API for
+`kubectl top`.
 
 ## Workloads
 
@@ -105,9 +125,32 @@ depend on each other:
   separate 4K film library ([`../apps/media-stack/README.md`](../apps/media-stack/README.md)).
 - Sites: portfolio and blog, each with a stage and prod, promoted by Kargo
   ([`../apps/portfolio/README.md`](../apps/portfolio/README.md)).
-- Own apps: logeverylift (with Postgres), headroom and headroom-demo, reelsmith,
-  verksted, bigd.
+- Own apps: logeverylift (with Postgres), headroom and headroom-demo, reelsmith
+  ([`../apps/reelsmith/README.md`](../apps/reelsmith/README.md)), verksted
+  ([`../apps/verksted/README.md`](../apps/verksted/README.md)), bigd.
 - Hub: `hub.bigd.no` (Homepage) links every app, `k8s/talos/apps/homepage/values.yaml`.
+
+Other apps, one directory each under `k8s/talos/apps/`:
+
+- headroom: `headroom.local.bigd.no`, SQLite on NFS. Do not add `runAsUser`: the image
+  starts as root and falls back to root when its chown fails on NFS, and a non-root start
+  breaks SQLite. `ALLOWED_HOSTS` must list every hostname it is served on or it answers 403.
+  headroom-demo is the same image on `headroom.nordbye.it` with fictional data.
+- trek: travel planner on `trek.bigd.no`. The admin in `trek-secret` is only created on a
+  boot with no users, and `ENCRYPTION_KEY` must never change or stored secrets become
+  unreadable.
+- home-assistant: no pod. A Service with hand-written Endpoints points at the HA mini PC,
+  `10.3.10.15:8123`, behind `ha.local.bigd.no`.
+- audiobookshelf: `audiobookshelf.bigd.no` must stay unproxied in Cloudflare, since it
+  streams audio ([`../platform/network/cloudflare.md`](../platform/network/cloudflare.md)).
+- ollama and open-webui: local LLM chat on `open-webui.local.bigd.no`. ollama is pinned to
+  the `hyper3` zone and reached through the `ollama-wake` Service, so open-webui's requests wake it
+  from zero; its model cache is not backed up.
+- mealie: recipe manager on `mealie.bigd.no`, SQLite, sign-up off.
+- homepage: the hub on `hub.bigd.no`, behind Authentik forward-auth.
+- bigd: the static `bigd.no` landing page, nginx serving `index.html` from a ConfigMap.
+- it-tools and omni-tools: stateless browser tool collections on `it-tools.bigd.no` and
+  `omni-tools.bigd.no`.
 
 ## Doc map
 
@@ -117,14 +160,18 @@ depend on each other:
 | Folder | Contents |
 | ------ | -------- |
 | [`platform/backups`](../platform/backups/README.md) | backup layers, watching them, [restores](../platform/backups/restore.md) |
-| [`platform/cluster`](../platform/cluster/README.md) | Proxmox and Talos, upgrades, GPU passthrough |
+| [`platform/cluster`](../platform/cluster/README.md) | Proxmox and Talos, upgrades, GPU passthrough, [Terraform stacks](../platform/cluster/terraform.md) |
 | [`platform/data`](../platform/data/README.md) | in-cluster Postgres, major upgrades |
-| [`platform/delivery`](../platform/delivery/README.md) | Argo CD, Kargo promotion |
-| [`platform/network`](../platform/network/README.md) | VIPs, gateways, DNS, remote access |
+| [`platform/delivery`](../platform/delivery/README.md) | [Argo CD](../platform/delivery/argocd.md), Kargo promotion, [KEDA scale to zero](../platform/delivery/keda.md), [CI](../platform/delivery/ci.md) |
+| [`platform/identity`](../platform/identity/README.md) | Authentik SSO |
+| [`platform/network`](../platform/network/README.md) | VIPs, [Traefik](../platform/network/traefik.md), [Cilium](../platform/network/cilium.md), [certificates](../platform/network/certificates.md), DNS, Cloudflare, UniFi, remote access |
 | [`platform/observability`](../platform/observability/README.md) | monitoring, alerting, [incidents](../platform/observability/incidents.md) |
 | [`platform/secrets`](../platform/secrets/README.md) | Bitwarden to cluster secrets |
+| [`platform/storage`](../platform/storage/README.md) | storage classes, CSI drivers |
 | [`apps/media-stack`](../apps/media-stack/README.md) | requests, storage, 4K, seeding, subtitles, re-encoding |
 | [`apps/portfolio`](../apps/portfolio/README.md) | the portfolio site, brand decisions, the fun room |
+| [`apps/reelsmith`](../apps/reelsmith/README.md) | the reelsmith publishing gateway |
+| [`apps/verksted`](../apps/verksted/README.md) | the agent session sandbox |
 | `projects/<name>` | work in progress, created when needed and deleted when it ships |
 | [`backlog`](../backlog/README.md) | known gaps agreed to leave for later |
 | [`assets`](../assets) | diagrams, logo, social preview |

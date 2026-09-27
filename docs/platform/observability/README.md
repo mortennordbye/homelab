@@ -106,6 +106,71 @@ Everywhere else only critical reaches Discord.
 | `ProxmoxNotification` | Proxmox or PBS pushed an error | critical, `discord-event` |
 | `Reelsmith*` | the reelsmith gateway stalls, its token expires, a post or backup goes stale | critical and warning, all sent |
 
+## Falco
+
+Falco runs as a DaemonSet on all six nodes with the `modern_ebpf` driver, the only one
+that works on Talos since it needs no kernel headers
+([`values.yaml`](../../../k8s/talos/infra/falco/values.yaml), chart `falco` 9.1.0 in
+[`kustomization.yaml`](../../../k8s/talos/infra/falco/kustomization.yaml)). The only event
+source is syscalls; no plugins are loaded, so there is no Kubernetes audit log source.
+
+Rules come from two places:
+
+- the upstream stable ruleset, `falco-rules:5`, which falcoctl pulls from ghcr.io in an
+  init container and a sidecar re-checks every 168 h (chart defaults). Falco does not start
+  without it, which is why its CiliumNetworkPolicy allows egress to the world on 443;
+- `customRules.tuning.yaml` in `values.yaml`, rendered into a ConfigMap. Reloader restarts
+  the DaemonSet when it changes.
+
+Events go to falcosidekick (two replicas), which posts to Discord at priority `notice` and
+above. The webhook URL comes from the ExternalSecret `falco-falcosidekick-discord`
+([`falcosidekick-discord-secret.yaml`](../../../k8s/talos/infra/falco/falcosidekick-discord-secret.yaml)),
+and a kustomize patch puts the Reloader annotation on the falcosidekick Deployment so a new
+URL is picked up. The web UI is off. Falco emits its own metrics on a 15 min stats
+interval and exposes them to Prometheus through a ServiceMonitor.
+
+### Writing an exemption
+
+Tune through the hooks the upstream rules already consume, never by copying and editing an
+upstream rule, so a ruleset update keeps the change:
+
+- a macro the rule references (`known_drop_and_execute_activities`,
+  `user_known_stand_streams_redirect_activities`, `allowed_clear_log_files`), overridden
+  with `condition: replace`;
+- a list the rule references (`known_drop_and_execute_containers`,
+  `read_sensitive_file_images`), extended with `items: append`;
+- the rule itself with `condition: append` and an `and not (...)` clause, when the only
+  hook is a list matched on something too broad, such as a bare process name.
+
+Scope every exemption to the process, image and path that cause it, so the same behaviour
+elsewhere still alerts. `replace` on a macro drops whatever upstream put in it, so the new
+condition has to carry the full intent.
+
+Some containers show up as a generic upstream image. The verksted dind sidecar is seen as
+`docker.io/library/docker`, so its exemptions go through the `verksted_dind` macro, which
+also pins `k8s.ns.name=verksted`. An exemption on that image without the namespace would
+exempt every `docker` container in the cluster.
+
+### Expected noise
+
+The current exemptions cover:
+
+| Signal | Exempted for |
+|---|---|
+| drop and execute | the Cilium CNI plugin from `/opt/cni/bin`; the verksted image |
+| symlink over sensitive files | links created under `/tmp/vk-repos-*` (verksted test suites inside dind, where Falco has no container metadata) |
+| stdio redirected to a socket | `kubelet`; `authentik` in the Authentik server image |
+| read of a sensitive file | the verksted image (`systemd-sysusers` reading `/etc/shadow` on `apt install`) |
+| clear log files | `containerd` in the verksted dind sidecar, under its own snapshot root only |
+| packet socket in a container | `cilium-agent` in the Cilium image; `dockerd` in the verksted dind sidecar |
+
+verksted is exempted at the image level because its sessions run arbitrary code as root;
+the rules that watch the container boundary (escape, kernel module load, `release_agent`,
+debugfs) stay armed for it. The verksted namespace runs a privileged dind container; the
+comment in its [`namespace.yaml`](../../../k8s/talos/apps/verksted/namespace.yaml) says
+Falco will flag it, and no exemption targets it. See
+[`../../apps/verksted/README.md`](../../apps/verksted/README.md).
+
 ## Configured outside Git
 
 | Where | Setting |

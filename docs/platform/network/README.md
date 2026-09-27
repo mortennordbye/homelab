@@ -12,6 +12,9 @@ mode (`policyAuditMode: true` in `k8s/talos/infra/cilium/values.yaml`): drops ar
 to Hubble and Prometheus, not enforced. The gluetun pod sends its DNS through the VPN,
 so it reaches `local.bigd.no` apps through `hostAliases` on `10.3.10.102`.
 
+- [`traefik.md`](traefik.md): the public and private gateways, HTTP/3, middlewares, the Cloudflare range copies, and how to expose an app.
+- [`cilium.md`](cilium.md): CNI settings tied to Talos, L2 announcements, Hubble, and writing a CiliumNetworkPolicy.
+- [`certificates.md`](certificates.md): the Let's Encrypt issuer, the wildcard certificates per gateway listener, and renewal.
 - [`remote-access.md`](remote-access.md): Tailscale, with UniFi WireGuard as break-glass.
 - [`unifi.md`](unifi.md): the UniFi site in `terraform/unifi/network`: VLANs, Wi-Fi, reservations, firewall holes, port forwards.
 - [`dns.md`](dns.md): internal `local.bigd.no` split-horizon records on the UniFi gateway (`terraform/unifi/dns`).

@@ -15,6 +15,7 @@ hooks:
 
 theme:
   name: material
+  custom_dir: overrides
   # Dark only, like nordbye.it; the colours live in the stylesheet.
   palette:
     scheme: slate
@@ -37,10 +38,6 @@ extra_css:
 
 plugins:
   - search
-  # docs/ holds no loose files, so the site root redirects to the spec.
-  - redirects:
-      redirect_maps:
-        index.md: architecture/README.md
 
 markdown_extensions:
   - admonition

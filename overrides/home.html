@@ -1,0 +1,73 @@
+{% extends "main.html" %}
+
+{% block content %}
+<div class="home">
+  <section class="home-hero">
+    <img class="home-logo" src="{{ 'assets/logo/logo.png' | url }}" alt="" width="72" height="72">
+    <p class="home-kicker">Eden &middot; homelab</p>
+    <h1>How the homelab is built and run</h1>
+    <p class="home-lede">
+      Three Proxmox nodes run Genesis, a Talos Kubernetes cluster of six VMs. Terraform
+      builds the machines and Argo CD reconciles everything else from the main branch of
+      <a href="{{ config.repo_url }}">{{ config.repo_name }}</a>. These pages explain how
+      the parts fit together, and how to operate or rebuild each one.
+    </p>
+    <div class="home-actions">
+      <a class="home-button" href="{{ 'architecture/' | url }}">Read the spec</a>
+      <a class="home-link" href="{{ config.repo_url }}">Browse the repo</a>
+    </div>
+    <p class="home-facts">3 Proxmox nodes / 6 Talos VMs / GitOps from main</p>
+  </section>
+
+  <figure class="home-sheet">
+    <a href="{{ 'assets/diagrams/homelab-overview.svg' | url }}">
+      <img src="{{ 'assets/diagrams/homelab-overview.svg' | url }}" alt="Map of the homelab: network edge, Proxmox hosts, the Genesis cluster with its platform services and apps, smart home and storage">
+    </a>
+    <figcaption>
+      The whole homelab on one sheet, re-rendered from
+      <code>homelab-overview.d2</code> whenever it changes. Select it for full size.
+    </figcaption>
+  </figure>
+
+  <section class="home-split">
+    <div>
+      <h2>What this is</h2>
+      <p>
+        A personal lab for self-hosted services and for trying infrastructure patterns
+        that don't fit a day job: a portfolio and blog with stage and prod, a media
+        stack, a few of my own apps, and the platform under them. The repository is
+        public, and this is its documentation.
+      </p>
+    </div>
+    <div>
+      <h2>How it relates to the repo</h2>
+      <p>
+        Every page is a file in the repo's <code>docs/</code> folder, published on each
+        push to main. <code>platform/</code> covers the shared infrastructure in
+        <code>k8s/talos/infra/</code> and <code>terraform/</code>, and <code>apps/</code>
+        covers workloads in <code>k8s/talos/apps/</code> that need more than their
+        manifests. Links to code open the file on GitHub. Where a page and the code
+        disagree, the code is what runs and the page gets fixed.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Areas</h2>
+    <ul class="home-areas">
+      <li><a href="{{ 'architecture/' | url }}"><span class="twemoji">{% include ".icons/material/sitemap.svg" %}</span><strong>Architecture</strong><span>what runs where and how the parts depend on each other</span></a></li>
+      <li><a href="{{ 'platform/cluster/' | url }}"><span class="twemoji">{% include ".icons/material/server-network.svg" %}</span><strong>Cluster</strong><span>Proxmox and Talos, upgrades, GPU passthrough</span></a></li>
+      <li><a href="{{ 'platform/network/' | url }}"><span class="twemoji">{% include ".icons/material/lan.svg" %}</span><strong>Network</strong><span>Traefik, Cilium, certificates, DNS, remote access</span></a></li>
+      <li><a href="{{ 'platform/delivery/' | url }}"><span class="twemoji">{% include ".icons/material/rocket-launch.svg" %}</span><strong>Delivery</strong><span>Argo CD, Kargo, CI, scale to zero</span></a></li>
+      <li><a href="{{ 'platform/backups/' | url }}"><span class="twemoji">{% include ".icons/material/backup-restore.svg" %}</span><strong>Backups</strong><span>backup layers, watching them, restores</span></a></li>
+      <li><a href="{{ 'platform/data/' | url }}"><span class="twemoji">{% include ".icons/material/database.svg" %}</span><strong>Data</strong><span>in-cluster Postgres, major upgrades</span></a></li>
+      <li><a href="{{ 'platform/observability/' | url }}"><span class="twemoji">{% include ".icons/material/chart-line.svg" %}</span><strong>Observability</strong><span>monitoring, alerting, incidents</span></a></li>
+      <li><a href="{{ 'platform/identity/' | url }}"><span class="twemoji">{% include ".icons/simple/authentik.svg" %}</span><strong>Identity</strong><span>Authentik SSO, putting an app behind login</span></a></li>
+      <li><a href="{{ 'platform/storage/' | url }}"><span class="twemoji">{% include ".icons/material/harddisk.svg" %}</span><strong>Storage</strong><span>storage classes, Proxmox CSI and Synology NFS</span></a></li>
+      <li><a href="{{ 'platform/secrets/' | url }}"><span class="twemoji">{% include ".icons/simple/bitwarden.svg" %}</span><strong>Secrets</strong><span>Bitwarden to cluster secrets</span></a></li>
+      <li><a href="{{ 'apps/media-stack/' | url }}"><span class="twemoji">{% include ".icons/material/television-play.svg" %}</span><strong>Media stack</strong><span>requests, storage, 4K, re-encoding</span></a></li>
+      <li><a href="{{ 'apps/portfolio/' | url }}"><span class="twemoji">{% include ".icons/material/briefcase.svg" %}</span><strong>Portfolio</strong><span>the site, brand decisions, the fun room</span></a></li>
+    </ul>
+  </section>
+</div>
+{% endblock %}

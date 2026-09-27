@@ -1,6 +1,6 @@
-# Ingress from Traefik only, egress pinned to graph.instagram.com: this pod is
-# internet-reachable and holds Instagram tokens with publish and DM rights, so
-# a compromised process must not be able to point them anywhere else.
+# Ingress from Traefik only, egress pinned to the publishing APIs: this pod is
+# internet-reachable and holds tokens with publish and DM rights, so a
+# compromised process must not be able to point them anywhere else.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
@@ -44,8 +44,15 @@ spec:
           rules:
             dns:
               - matchPattern: "*"
-    # The Meta Graph API — every outbound call this service makes.
+    # Every host the gateway calls. TikTok returns its upload host per request,
+    # hence the pattern.
     - toFQDNs:
         - matchName: "graph.instagram.com"
+        - matchName: "graph.facebook.com"
+        - matchName: "rupload.facebook.com"
+        - matchName: "www.googleapis.com"
+        - matchName: "oauth2.googleapis.com"
+        - matchName: "youtubeanalytics.googleapis.com"
+        - matchPattern: "*.tiktokapis.com"
       toPorts:
         - ports: [{ port: "443", protocol: TCP }]

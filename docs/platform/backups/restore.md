@@ -12,6 +12,7 @@ If a backup file itself is damaged or deleted, restore it from a share snapshot 
 | etcd | `etcd/etcd-<UTC time>.db.gz` | none |
 | Postgres | `postgres/<database>/<db>-<UTC time>.dump` | none (the app's own DB password) |
 | App volumes | `volsync/<namespace>/<pvc>/` (restic) | `volsync-restic-password` (Bitwarden) |
+| Reelsmith | not on `k8s-backups`, see [Reelsmith](#reelsmith) | none |
 
 ## App volume (VolSync)
 
@@ -108,6 +109,73 @@ In HA: Settings > System > Backups, pick a backup stored on `k8s_backups`, Resto
 fresh HA OS install, choose "Restore from backup" during onboarding and upload the `.tar`
 from `k8s-backups/home-assistant/`. Both ask for the backup encryption key from
 Bitwarden.
+
+## Reelsmith
+
+Reelsmith is not in VolSync. The gateway writes SQLite `VACUUM INTO` copies of its database to
+`/state/backups` on the state PVC (newest 14 kept) and to the retained offsite volume, which is on
+the `shared-data` share rather than `k8s-backups`: on the NAS at
+`/volume1/shared-data/media/reelsmith/gateway-backups` (PVC `reelsmith-offsite-backups`, mounted
+at `/offsite`). Use `/state/backups` if the state volume still exists, the offsite copy if it does
+not. The cover images in `/state/covers` are not in these copies; if the claim was deleted, the
+driver's `archived-` directory under `/volume1/k8s-volumes/talos` still holds them
+(see [storage](../storage/README.md#deleting-a-pvc)). See the
+[reelsmith page](../../apps/reelsmith/README.md).
+
+1. Scale the gateway to zero: `kubectl -n reelsmith scale deploy/reelsmith-gateway --replicas=0`.
+   ArgoCD ignores `replicas`, so this holds. If the state PVC was lost, let ArgoCD recreate it
+   first; it comes back empty.
+2. Start a pod that mounts both claims. The namespace enforces Pod Security `restricted`:
+
+   ```yaml
+   apiVersion: v1
+   kind: Pod
+   metadata:
+     name: reelsmith-restore
+     namespace: reelsmith
+   spec:
+     securityContext:
+       runAsNonRoot: true
+       runAsUser: 10001
+       runAsGroup: 10001
+       fsGroup: 10001
+       seccompProfile:
+         type: RuntimeDefault
+     containers:
+       - name: restore
+         image: busybox:1.37.0
+         command: ["sleep", "3600"]
+         securityContext:
+           allowPrivilegeEscalation: false
+           capabilities:
+             drop: ["ALL"]
+         volumeMounts:
+           - name: state
+             mountPath: /state
+           - name: offsite
+             mountPath: /offsite
+             subPath: gateway-backups
+     volumes:
+       - name: state
+         persistentVolumeClaim:
+           claimName: reelsmith-state
+       - name: offsite
+         persistentVolumeClaim:
+           claimName: reelsmith-offsite-backups
+   ```
+
+3. In that pod, move the live database aside with its WAL files and copy a backup in its place:
+
+   ```sh
+   ls -lt /state/backups /offsite | head          # pick one
+   mkdir -p /state/pre-restore
+   mv /state/gateway.sqlite3* /state/pre-restore/
+   cp /offsite/<file> /state/gateway.sqlite3      # or /state/backups/<file>
+   ```
+
+4. Delete the pod and scale the gateway back to 1. Check `/healthz` and the queue at
+   `https://reelsmith.local.bigd.no/admin/` before the next slot: rows the backup shows as
+   `claimed` or queued may already have been published after it was taken.
 
 ## Testing
 

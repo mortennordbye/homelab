@@ -25,9 +25,11 @@ terraform/proxmox/hyper-cluster/datacenter/terraform.tfvars
 terraform/proxmox/hyper-cluster/tailscale/terraform.tfvars
 terraform/proxmox/pbs/terraform.tfvars
 terraform/azure/state/terraform.tfvars
+terraform/azure/state/backend.conf
 terraform/cloudflare/bigd-no/terraform.tfvars
 terraform/cloudflare/nordbye-it/terraform.tfvars
 terraform/cloudflare/logeverylift-com/terraform.tfvars
+terraform/cloudflare/watchdog/terraform.tfvars
 terraform/unifi/dns/terraform.tfvars
 terraform/unifi/network/terraform.tfvars
 

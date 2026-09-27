@@ -3,6 +3,7 @@
 logeverylift keeps its data in a single in-cluster Postgres in the `logeverylift`
 namespace. Authentik runs its own Postgres (`authentik-postgresql` in `identity`,
 deployed and managed by the Authentik Helm chart), which this doc does not cover.
+Restoring its nightly dump is in [`../backups/restore.md`](../backups/restore.md#postgres).
 
 ## Current setup
 
