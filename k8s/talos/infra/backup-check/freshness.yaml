@@ -1,6 +1,7 @@
 # Backups made outside the cluster only report failures, so a job that stops running
-# stays silent. These checks fail when the newest backup is older than 26 h, and
-# BackupJobStale alerts on any *-backup-check that has not succeeded.
+# stays silent. These checks fail when the newest backup is older than 26 h (and the PBS
+# check also on a VM disk stuck as a pending delete), and BackupJobStale alerts on any
+# *-backup-check that has not succeeded.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -76,7 +77,16 @@ spec:
                   stale = [g for g in guests if g["vmid"] not in done]
                   for g in sorted(guests, key=lambda g: g["vmid"]):
                       print(f"{'STALE' if g in stale else 'ok   '} {g['vmid']} {g.get('name', '')}")
-                  sys.exit(1 if stale else 0)
+
+                  # A Proxmox-CSI detach that loses the config lock leaves the disk as a pending
+                  # delete; every vzdump of that VM then fails with "drive-scsiN not found".
+                  pending = [(g, x["key"]) for g in guests if g["type"] == "qemu"
+                             for x in get(f"/nodes/{g['node']}/qemu/{g['vmid']}/pending")
+                             if x.get("delete") and re.match(r"(scsi|virtio|sata)\d+$", x["key"])]
+                  for g, key in pending:
+                      print(f"PENDING {g['vmid']} {g.get('name', '')}: {key} is a pending delete; "
+                            f"once QEMU no longer has it, run 'qm set {g['vmid']} --delete {key}' on {g['node']}")
+                  sys.exit(1 if stale or pending else 0)
               envFrom:
                 - secretRef:
                     name: pve-token

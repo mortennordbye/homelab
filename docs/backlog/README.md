@@ -22,14 +22,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** a quiet window. Scale the Alertmanager StatefulSet to 0 through ArgoCD (or pause the `heartbeat` route), wait 16 minutes, watch Discord, then restore it. The Worker's state is readable in KV key `heartbeat`.
 - **Where:** `terraform/cloudflare/watchdog/worker.js` (`checkHeartbeat`), `k8s/talos/infra/kube-prometheus-stack/values.yaml` (route `Watchdog` → `heartbeat`).
 
-### Nightly Proxmox backup job ends with errors
-- **What:** the 03:00 vzdump job has finished with "job errors" on some host most nights. On 2026-09-26: VM 134 (genesis-worker-01) failed with `Device 'drive-scsi6' not found`, which is the Proxmox-CSI silent hot-plug (disk in the VM config, missing in QEMU); VM 133 (genesis-ctrl-03) failed with `error during syncfs: Input/output error` writing to the PBS datastore on NFS. Manual reruns of both succeeded, so `pbs-backup-check` passes today, but the next night can fail again.
-- **Why deferred:** the scsi6 fix is a reboot of VM 134 from Proxmox, which restarts Plex and the worker's pods; the syncfs error needs a look at the PBS host's NFS mount and the Synology logs around 03:00.
-- **Unblock:** a window to reboot VM 134; the PBS syslog for the 03:00 run.
-- **Where:** `terraform/proxmox/hyper-cluster/datacenter/backup.tf`, `terraform/proxmox/pbs/`, task logs under Datacenter > hyper1/hyper3 > Task History.
-
-## Apps
-
 ### Immutable snapshots for the k8s-volumes share
 - **What:** decide whether `k8s-volumes` gets immutable Btrfs snapshots like `k8s-backups`, and data checksumming, which Synology only allows on a new share.
 - **Why deferred:** left open when the backup work shipped; the backups themselves are protected on `k8s-backups`.
@@ -304,11 +296,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** read each section from `/proxy/network/api/s/default/get/setting`, declare one section at a time in a `settings.tf`, and apply only when `plan` shows no change for it. Start with `country` (code 578), the one with the widest blast radius.
 - **Where:** `terraform/unifi/network/` (new `settings.tf`), resource `unifi_setting`, import ID `default`.
 
-### VM backups fail after a Proxmox-CSI detach loses the VM lock
-- **What:** when a PVC moves off a VM while that VM's config is locked (reboot, backup), the CSI unplug succeeds in QEMU but the config write times out (`can't lock file '/var/lock/qemu-server/lock-<vmid>.conf'`). The disk stays in the config as a pending delete, and every vzdump of that VM then fails with `Device 'drive-scsiN' not found`. Hit on VM 134 (genesis-worker-01) twice: scsi6 (Loki) after the 2026-09-25 reboot, scsi2 (trek) after the 2026-09-26 reboot. The datastore-side failures (GC permissions, quota) were fixed on 2026-09-25; the 2026-09-26 VM 133 `syncfs` I/O error did not recur on a manual re-run.
-- **Why deferred:** the one-off fix (re-issue `delete=scsiN` on the VM config once QEMU no longer has the device) is manual; nothing detects or prevents the next one.
-- **Unblock:** decide between an alert on vzdump failures per VM (the PVE notification already reaches Discord, so maybe enough), a scheduled check that flags pending `delete` entries on `vm-9999-pvc-*` disks, or raising it upstream with sergelogvinov/proxmox-csi-plugin (retry the config write on lock timeout).
-- **Where:** `terraform/proxmox/hyper-cluster/datacenter/backup.tf`, `k8s/talos/infra/proxmox-csi-plugin/`.
+### Proxmox-CSI detach can leave a VM disk as a pending delete
+- **What:** when a PVC moves off a VM while that VM's config is locked (reboot, backup), the CSI unplug succeeds in QEMU but the config write times out (`can't lock file '/var/lock/qemu-server/lock-<vmid>.conf'`). The disk stays in the config as a pending delete and every vzdump of that VM fails with `Device 'drive-scsiN' not found` until `qm set <vmid> --delete scsiN` is run. `pbs-backup-check` now fails on it and prints that command; the root cause is still in the plugin.
+- **Why deferred:** the fix belongs upstream (retry the config write on lock timeout), and the manual clear takes a minute once flagged.
+- **Unblock:** raise it with sergelogvinov/proxmox-csi-plugin with the lock-timeout log line, or adopt a release that retries.
+- **Where:** `k8s/talos/infra/proxmox-csi-plugin/`, `k8s/talos/infra/backup-check/freshness.yaml`.
 
 ### UniFi follow-ups from the IoT onboarding prep
 - **What:** loose ends after moving the site into `terraform/unifi/network`: (1) an unidentified Wi-Fi client `WINC-00-00` (Microchip module in some appliance) needs the new Eden-IoT password and then a reservation and name in `clients.tf`; (2) the Voice PE, once onboarded on Eden-IoT, should get a reservation there too, like the Bluetooth proxy; (3) the old state blob `unifi/firewall.tfstate` is still in the azurerm container after the move to `unifi/network.tfstate`; (4) the wireless mesh key (`x_mesh_psk`) was printed during a session and could be regenerated, although nothing uses wireless uplinks.
