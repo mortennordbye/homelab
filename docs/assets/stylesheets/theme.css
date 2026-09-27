@@ -257,3 +257,8 @@
 .md-typeset .home-areas a:hover .twemoji {
   color: #65a16e;
 }
+
+.md-header__home,
+.md-header__home:hover {
+  color: inherit;
+}

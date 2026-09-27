@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    // Material renders the site name as plain text; link it home like the logo.
+    (function () {
+      var logo = document.querySelector(".md-header__button.md-logo");
+      var name = document.querySelector(".md-header__topic:first-child .md-ellipsis");
+      if (!logo || !name) return;
+      var link = document.createElement("a");
+      link.href = logo.getAttribute("href");
+      link.className = "md-header__home";
+      link.textContent = name.textContent.trim();
+      name.replaceChildren(link);
+    })();
+  </script>
+{% endblock %}
