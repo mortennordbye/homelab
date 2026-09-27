@@ -71,6 +71,17 @@ torrent early:
 | Tdarr | skips hardlinked files (library filter and flow), so a seeding file is never split |
 | Moves inside `/data` | renames on one share keep the inode, so the torrent keeps its data |
 
+Tracker hit-and-run rules, all "ratio or time", so a ratio 5 stop is past every one:
+
+| Tracker | Rule |
+| ------- | ---- |
+| TorrentLeech | 1:1, or the class minimum (10 days Registered, down to none for VIP) |
+| IPTorrents | 1:1, or 14 days; overall ratio above 0.3 |
+| TorrentDay | 1:1, or 72 hours |
+
+TorrentLeech is from its wiki (`wiki.torrentleech.org/doku.php/hnr`); the other two
+from public guides, since their rules pages need a login.
+
 qBittorrent stops a torrent at the ratio or the time limit, whichever comes first. A
 ratio limit is only safe for a tracker whose rule is "ratio or time". A tracker that
 demands a minimum seed time regardless of ratio needs its ratio limit removed in
