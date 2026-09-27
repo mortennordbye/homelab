@@ -1,10 +1,10 @@
 """Rebuild the LinkedIn banner: eucalyptus palette, links only, no identity block.
 
-Keeps every rule from portfolio/branding/README.md that still applies — 1584x396,
+Keeps every rule from README.md (next to this script) that still applies — 1584x396,
 avatar-safe bottom-left, edit-pencil-safe top-right, icons on light tiles, fonts
 named so librsvg can find them in the render container.
 
-Two deliberate departures, both documented in the README update:
+Two deliberate departures, both documented in README.md:
   * The identity block (kicker, name, role) is gone. The banner now carries the
     two destinations and the stack, nothing else.
   * The faint grid is replaced by concentric arcs, the same motif the blog covers

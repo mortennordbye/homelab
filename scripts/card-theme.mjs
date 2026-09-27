@@ -1,5 +1,5 @@
 // The shared material system for the README's two cards, taken from the
-// portfolio's own rule book (portfolio/branding/ART-DIRECTION.md, DECISIONS.md)
+// portfolio's own rule book (docs/apps/portfolio/brand/art-direction.md, decisions.md)
 // and its shipped tokens (portfolio/src/styles/tokens.css).
 //
 // Four rules generate everything below, and breaking any one of them is what

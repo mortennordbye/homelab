@@ -5,16 +5,16 @@ about how `nordbye.it` looks, moves, or presents content. It exists so that a
 decision settled once does not get re-argued from scratch by the next person or
 the next agent.
 
-Three companion documents, all in this directory:
+Three companion documents:
 
-`ART-DIRECTION.md` is the long-form rule book: the register, the materials, the
+`art-direction.md` is the long-form rule book: the register, the materials, the
 camera route, the failure modes.
-`ASSETS.md` is the shopping list: real Poly Haven slugs, verified licences,
+`assets.md` is the shopping list: real Poly Haven slugs, verified licences,
 measured byte costs.
-`README.md` is the LinkedIn banner rule book and logbook, unrelated to the
+`portfolio/branding/README.md` is the LinkedIn banner rule book, unrelated to the
 rebuild except that it shares the palette.
 
-The spec that ships is `src/content/brand.ts`, rendered at `/brand`. Where this
+The spec that ships is `portfolio/src/content/brand.ts`, rendered at `/brand`. Where this
 file and that file disagree, the code is what the site does and this file is what
 we meant.
 
@@ -105,7 +105,7 @@ the right treatment for it. The portfolio list stays a list.
 ### What was rejected, and why
 
 **A floating DOM card over the render.** Reads as a UI panel pasted onto a
-photograph, which is the exact failure `ART-DIRECTION.md` warns about. Restyling
+photograph, which is the exact failure `art-direction.md` warns about. Restyling
 the card does not fix it; the problem is that it is a card.
 
 **Text mapped onto the object's surface in perspective (CSS3D).** Technically
@@ -200,7 +200,7 @@ Stop the easing where the camera would move less than a pixel.
 
 ## 8. Shipped: the portfolio shelf
 
-**Built and in the real site.** `src/components/work/WorkShelf.tsx` (the facade)
+**Built and in the real site.** `portfolio/src/components/work/WorkShelf.tsx` (the facade)
 and `WorkShelfScene.tsx` (the scene), mounted by `FeaturedWork` above the list.
 
 Thirteen case studies as thirteen bound volumes on two shelves, client
@@ -281,7 +281,7 @@ all remain open from before.
 
 ## 9. Assets
 
-See `ASSETS.md`. The finding that matters: `/fun` already has a working CC0
+See `assets.md`. The finding that matters: `/fun` already has a working CC0
 pipeline, and it looks modern because the assets currently loaded are
 `laminate_floor_02`, `plastered_wall_04`, `dirty_carpet` and a photography-studio
 HDRI. Swapping slugs changes the register without touching loading code.
@@ -686,5 +686,5 @@ game, however good the composition is.
 site, closing a long-standing gap where `brand.ts` claimed IBM Plex Sans was in
 use and that Inter was deliberately absent, while `layout.tsx` had been importing
 Inter the whole time. Imagery rules split into on-site (hyperreal) and off-site
-(flat, survives feed re-compression). `branding/README.md` caught up with the
+(flat, survives feed re-compression). `portfolio/branding/README.md` caught up with the
 banner it describes. Camera and content prototyped. Assets researched.

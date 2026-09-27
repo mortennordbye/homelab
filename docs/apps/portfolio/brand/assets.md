@@ -1,7 +1,7 @@
 # Assets for the room
 
 What to fetch, from where, at what cost, and what not to bother with. Companion
-to `ART-DIRECTION.md`, which says what the room is; this says what it is made of.
+to `art-direction.md`, which says what the room is; this says what it is made of.
 
 Status: researched. The shelf's three surfaces are fetched, converted and
 shipped; the rest of the room is still a shopping list.
@@ -13,11 +13,11 @@ shipped; the rest of the room is still a shopping list.
 This is the most useful thing on the page. `/fun` already loads CC0 PBR surfaces
 and glTF models through a working helper, so none of this needs building:
 
-`src/components/fun/textures.ts` holds `useSurface(name, repeat)`, which loads a
-three-map set and returns cloned, tiled textures. `src/components/fun/props.tsx`
+`portfolio/src/components/fun/textures.ts` holds `useSurface(name, repeat)`, which loads a
+three-map set and returns cloned, tiled textures. `portfolio/src/components/fun/props.tsx`
 holds `useGLTF`-based prop loading with per-instance cloning. Assets live at
-`public/textures/fun/<name>_{diff,nor,arm}.webp` and
-`public/models/fun/<name>/<name>.gltf`.
+`portfolio/public/textures/fun/<name>_{diff,nor,arm}.webp` and
+`portfolio/public/models/fun/<name>/<name>.gltf`.
 
 The ARM convention is already handled: ambient occlusion, roughness and metalness
 packed into R/G/B of one file, with three.js reading roughness from green and
@@ -56,7 +56,7 @@ this the cheapest large improvement available anywhere in the project.
 
 ## 3b. Shipped: the portfolio shelf
 
-Live under `public/textures/shelf/`, 456 KB for the whole object.
+Live under `portfolio/public/textures/shelf/`, 456 KB for the whole object.
 
 | Slug | Role | Files | Size |
 |---|---|---|---|
@@ -182,7 +182,7 @@ to the theme.
 
 ## 10. Rules for anything fetched
 
-Convert to WebP at 1K before it enters `public/`. The raw PNG is never committed.
+Convert to WebP at 1K before it enters `portfolio/public/`. The raw PNG is never committed.
 
 Take diffuse, normal (GL, not DX, since three.js expects OpenGL convention) and
 ARM. Skip AO as a separate file; it is in the ARM red channel and unusable on
@@ -192,13 +192,13 @@ Nothing loads before interaction. The room is already gated behind a real user
 gesture and every asset here inherits that gate.
 
 Any asset that makes the room read as rustic goes back, however good it looks on
-its own. The failure mode named in `ART-DIRECTION.md` is drift toward the cabin,
+its own. The failure mode named in `art-direction.md` is drift toward the cabin,
 and it will arrive one defensible texture at a time.
 
 
 ## 11. The bedroom easter egg
 
-The two files under `public/fun/` are not Poly Haven.
+The two files under `portfolio/public/fun/` are not Poly Haven.
 
 `goggins.webp` is a US Navy photo, `US Navy 070723-N-6138R-001` on Wikimedia
 Commons (Badwater Ultra Marathon, 2007, Mass Communication Specialist Seaman

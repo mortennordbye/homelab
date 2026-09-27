@@ -1,54 +1,36 @@
 # Tailscale subnet router
 
-A minimal Debian VM on Proxmox that joins the tailnet and advertises the LAN
-(`10.3.10.0/24`), so phones and laptops on Tailscale reach Proxmox, the UniFi
-console and every cluster VIP without anything installed on those targets.
+The `tailscale-router` VM on hyper1 that advertises the LAN to the tailnet, and the
+tailnet-side config: the policy file, split DNS for `local.bigd.no`, and the auth key the VM
+joins with. The policy is owned here; console edits are drift and get overwritten.
 
-Deliberately a VM outside the Kubernetes cluster: remote access must survive
-cluster upgrades and outages. The UniFi WireGuard server stays as break-glass
-for when Proxmox itself is down.
+## Run
 
-This root also owns tailnet-side config declaratively:
+State is in the azurerm backend (`rg-tfstate-homelab`, key
+`proxmox/hyper-cluster/tailscale.tfstate`).
 
-- the policy file (`tailscale_acl`): tag definitions, route auto-approval, and
-  the access rules. Console edits drift and get overwritten - change it here.
-- split DNS: `local.bigd.no` resolves via the LAN nameserver for tailnet clients.
-- the single-use auth key the VM consumes on first boot.
+`terraform.tfvars` (gitignored, copy from `terraform.tfvars.example`) holds:
 
-## One-time bootstrap
+- `proxmox_api_token`: the `terraform-prov@pve` token from [`../../BOOTSTRAP.md`](../../BOOTSTRAP.md).
+- `proxmox_ssh_password`: the node's root password, since the cloud-init snippet uploads over
+  SSH; empty means the SSH agent is used.
+- `tailscale_oauth_client_id` and `tailscale_oauth_client_secret`: an OAuth client with write
+  scope on Auth Keys (`tag:subnet-router`), Policy File and DNS.
 
-1. In the Tailscale admin console (Access controls), add the tag owner so an
-   OAuth client can be scoped to it:
-
-   ```json
-   "tagOwners": { "tag:subnet-router": ["autogroup:admin"] }
-   ```
-
-2. Create an OAuth client (Settings > Keys) with write scope on
-   Keys: Auth Keys (select `tag:subnet-router`), Policy File, and DNS.
-   Put the id and secret in `terraform.tfvars`.
-
-The cloud image and cloud-init snippet land on `nfs-vmstore`, which already
-serves the ISO image and Snippets content types.
-
-## Apply
+On a fresh tailnet, add `tag:subnet-router` to `tagOwners` in the console policy before
+creating the OAuth client, then import the policy, since the provider will not overwrite a
+non-default one:
 
 ```bash
 terraform -chdir=terraform/proxmox/hyper-cluster/tailscale init
+terraform -chdir=terraform/proxmox/hyper-cluster/tailscale import tailscale_acl.tailnet acl
 terraform -chdir=terraform/proxmox/hyper-cluster/tailscale plan
-terraform -chdir=terraform/proxmox/hyper-cluster/tailscale apply   # requires explicit approval
+terraform -chdir=terraform/proxmox/hyper-cluster/tailscale apply
 ```
 
-First boot takes a few minutes: apt update, Tailscale install, then
-`tailscale up`. The machine appears in the admin console as `tailscale-router`
-with its route already approved.
+Rebuilding the VM after its single-use key is consumed or expired needs a new key in the
+same apply: `terraform apply -replace=tailscale_tailnet_key.router`.
 
-## Caveats
+## Docs
 
-- The auth key lands in the tfstate and in the cloud-init snippet on Proxmox
-  storage. It is single-use, tag-scoped and expires after 90 days; the state
-  backend already holds far more sensitive material (Talos PKI).
-- Recreating the VM after the key is consumed or expired needs a fresh key:
-  `terraform apply -replace=tailscale_tailnet_key.router` together with the VM.
-- Key expiry for the router's node is disabled by Tailscale automatically for
-  tagged devices, so the device itself never expires.
+[`docs/platform/network/remote-access.md`](../../../../docs/platform/network/remote-access.md)

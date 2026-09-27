@@ -4,7 +4,7 @@ import { Reveal } from "@/components/primitives/Reveal";
 import { getLatestBlogPosts } from "@/lib/blog";
 
 /**
- * The three newest posts, as prints lying on the desk (DECISIONS.md §12).
+ * The three newest posts, as prints lying on the desk (docs/apps/portfolio/brand/decisions.md §12).
  * No bounding box — the covers carry their own black, and a second ground a
  * hairline from `--bg` reads as a pasted rectangle. The frame declares the
  * covers' native 1200x630 OG ratio; cropping to 16/9 cuts their straplines

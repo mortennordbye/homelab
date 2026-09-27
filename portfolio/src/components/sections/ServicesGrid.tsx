@@ -5,7 +5,7 @@ import { services } from "@/content/services";
 
 /**
  * The three engagement shapes, as lit sheets — the same sheet About uses
- * (DECISIONS.md §12: everything is an object or a document, a card is
+ * (docs/apps/portfolio/brand/decisions.md §12: everything is an object or a document, a card is
  * neither). Proof links are copper, not green: §2 allows green once per view.
  */
 export function ServicesGrid() {

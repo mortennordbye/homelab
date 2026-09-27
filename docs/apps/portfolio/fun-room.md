@@ -7,7 +7,7 @@ The plan is the real apartment, 6.3 x 6.1m, with all four spaces walkable: stue/
 soverom, bad and entré. `flat.ts` holds the plan, and both the wall meshes and the collision
 boxes are built from that one list, so a wall you can walk through cannot happen by editing one
 and forgetting the other. The flat is rebuilt on the site's palette rather than its real colours
-(`portfolio/branding/DECISIONS.md`: the ground is warm near-black, the joinery dark oak, green
+(`docs/apps/portfolio/brand/decisions.md`: the ground is warm near-black, the joinery dark oak, green
 only ever a lit point).
 
 It lives in `portfolio/`, is dynamic-imported with `ssr: false`, and never becomes the only path
@@ -250,7 +250,7 @@ Anything meant to be looked at presents a face to the room, big enough to put a 
 and is a thing somebody would own. A horizontal surface is only targetable from directly above,
 which no standing visitor is; books work at ankle height because they stand upright. And a
 legibility rule alone will approve a UI panel screwed to a living room wall, which is the failure
-`portfolio/branding/ART-DIRECTION.md` names.
+`docs/apps/portfolio/brand/art-direction.md` names.
 
 Content shrinks with its carrier. Small objects carry a label, and the card behind `E` carries
 the full content.

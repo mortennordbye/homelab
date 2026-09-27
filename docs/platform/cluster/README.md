@@ -8,3 +8,5 @@ node config is `terraform/proxmox/hyper-cluster/datacenter`, the VMs are
 - [`talos-upgrade.md`](talos-upgrade.md): upgrading Talos and Kubernetes, and the traps.
 - [`gpu-passthrough.md`](gpu-passthrough.md): the `hyper1` iGPU on `genesis-worker-01`,
   used by Plex and Tdarr through Quick Sync.
+- [`proxmox.md`](proxmox.md): what the datacenter stack manages on Proxmox VE, what it leaves out, and its traps.
+- [`talos.md`](talos.md): node layout, access, adding, moving and resizing nodes, and certificates.

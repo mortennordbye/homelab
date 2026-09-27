@@ -8,7 +8,7 @@ import type { Architecture, ArchNode } from "@/content/schemas";
  * frontmatter, the mark from the `nodes` and `edges` in its `*.arch.ts` — the
  * same source the case study's own diagram renders from, so a cover cannot
  * drift. The `cover` frontmatter field is deliberately unread (see
- * DECISIONS.md §8: landscape images lose their topology cropped to a board).
+ * docs/apps/portfolio/brand/decisions.md §8: landscape images lose their topology cropped to a board).
  *
  * The artwork is drawn white on transparent and then turned into brass foil
  * pressed into linen by `foilMaterial`, which needs four maps rather than one:

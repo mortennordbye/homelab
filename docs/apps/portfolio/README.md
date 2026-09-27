@@ -5,12 +5,8 @@ stage and a prod namespace. Kargo promotes it from stage to prod; see
 [../../platform/delivery/kargo.md](../../platform/delivery/kargo.md). The manifests live in
 `k8s/talos/apps/portfolio/` (prod) and `k8s/talos/apps/portfolio-stage/`.
 
-Brand and design decisions:
-
-- `portfolio/branding/DECISIONS.md`: what is locked, rejected and still open. Read it before
-  proposing anything about how the site looks.
-- `portfolio/branding/ART-DIRECTION.md`: the long-form rule book behind those decisions.
-- `portfolio/src/content/brand.ts`: the shipped spec, rendered at `/brand`. Where the documents
-  and the code disagree, the code is what the site does.
+Brand and design decisions live in [brand/](brand/README.md): what is locked, rejected and still
+open, the art direction behind it, and the asset list. Read them before proposing anything about
+how the site looks. The LinkedIn banner and its build script live in `portfolio/branding/`.
 
 The 3D flat at `/fun` has its own guide: [fun-room.md](fun-room.md).

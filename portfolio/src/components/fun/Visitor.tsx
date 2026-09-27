@@ -16,7 +16,7 @@ import { at, pz } from "./flat";
  * photoreal room, and lighting it correctly would spoil that.
  */
 
-/** US Navy photo, public domain. Provenance in branding/ASSETS.md. */
+/** US Navy photo, public domain. Provenance in docs/apps/portfolio/brand/assets.md. */
 const PHOTO = "/fun/goggins.webp";
 
 const H = 1.85;

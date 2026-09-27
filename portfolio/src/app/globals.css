@@ -157,7 +157,7 @@ body {
    corners rather than the 12px radius of a UI card; and a contact shadow
    wherever something sits on the desk, because the hero render now bleeds down
    behind the copy and an element with no shadow floats over a photograph
-   instead of resting on it. See branding/DECISIONS.md.
+   instead of resting on it. See docs/apps/portfolio/brand/decisions.md.
    --------------------------------------------------------------------------- */
 
 /* The resume fold's arrow nods until the record is opened. Findability has to

@@ -6,7 +6,7 @@ import { skills } from "@/content/skills";
 import { getAllWork } from "@/lib/work";
 
 /**
- * The resume, in the two states branding/DECISIONS.md §4 separates: the
+ * The resume, in the two states docs/apps/portfolio/brand/decisions.md §4 separates: the
  * object you take a copy from, and the sheet you read.
  *
  * The counts are measured here rather than in the client component, because

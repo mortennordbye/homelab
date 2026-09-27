@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
  * The two things the page can measure about its own delivery: the commit it
  * was built from, and time to first byte. No node name until the pod's own
  * `spec.nodeName` reaches the page — the stamp only shows measurements the
- * site actually takes (branding/DECISIONS.md §12; see docs/backlog/README.md).
+ * site actually takes (docs/apps/portfolio/brand/decisions.md §12; see docs/backlog/README.md).
  */
 export function FooterStamp({ buildSha, repo }: { buildSha: string; repo: string }) {
   const [ttfb, setTtfb] = useState<number | null>(null);

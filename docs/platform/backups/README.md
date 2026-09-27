@@ -1,7 +1,8 @@
 # Backups
 
 Everything lands on the Synology share `k8s-backups` (`nas.local.bigd.no:/volume1/k8s-backups`,
-Volume 1). Restores: [`restore.md`](restore.md).
+Volume 1). Restores are in [`restore.md`](restore.md); the Proxmox Backup Server itself
+(datastore, identities, notifications) is in [`pbs.md`](pbs.md).
 
 ## Layers
 

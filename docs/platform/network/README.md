@@ -13,3 +13,6 @@ to Hubble and Prometheus, not enforced. The gluetun pod sends its DNS through th
 so it reaches `local.bigd.no` apps through `hostAliases` on `10.3.10.102`.
 
 - [`remote-access.md`](remote-access.md): Tailscale, with UniFi WireGuard as break-glass.
+- [`unifi.md`](unifi.md): the UniFi site in `terraform/unifi/network`: VLANs, Wi-Fi, reservations, firewall holes, port forwards.
+- [`dns.md`](dns.md): internal `local.bigd.no` split-horizon records on the UniFi gateway (`terraform/unifi/dns`).
+- [`cloudflare.md`](cloudflare.md): the public zones nordbye.it, logeverylift.com and bigd.no, origin records, caching, and the watchdog Worker.
