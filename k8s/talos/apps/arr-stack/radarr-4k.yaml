@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-4k-config
+  namespace: arr-stack
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: proxmox-local
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: radarr-4k
+  namespace: arr-stack
+spec:
+  selector:
+    app: radarr-4k
+  ports:
+    - name: http
+      port: 7878
+      targetPort: 7878
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr-4k
+  namespace: arr-stack
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: radarr-4k
+  template:
+    metadata:
+      labels:
+        app: radarr-4k
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - hyper1
+      containers:
+        - name: radarr-4k
+          image: ghcr.io/linuxserver/radarr:6.2.1
+          ports:
+            - containerPort: 7878
+              name: http
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "Europe/Oslo"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /ping
+              port: 7878
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 30
+            failureThreshold: 60
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 7878
+            periodSeconds: 60
+            timeoutSeconds: 30
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 7878
+            periodSeconds: 20
+            timeoutSeconds: 30
+            successThreshold: 1
+            failureThreshold: 5
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: radarr-4k-config
+        - name: data
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/shared-data/media

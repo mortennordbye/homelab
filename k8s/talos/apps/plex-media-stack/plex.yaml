@@ -163,6 +163,8 @@ spec:
               mountPath: /tv
             - name: media-movies
               mountPath: /movies
+            - name: media-movies-4k
+              mountPath: /movies-4k
             - name: media-courses
               mountPath: /courses
             - name: media-youtube
@@ -204,6 +206,11 @@ spec:
           nfs:
             server: nas.local.bigd.no
             path: /volume1/shared-data/media/movies
+            readOnly: true
+        - name: media-movies-4k
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/shared-data/media/movies-4k
             readOnly: true
         - name: media-courses
           nfs:

@@ -53,6 +53,32 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
+  name: radarr-4k
+  namespace: arr-stack
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: traefik-gateway-private
+      namespace: traefik
+      sectionName: local-bigd-no
+  hostnames:
+    - "radarr-4k.local.bigd.no"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: radarr-4k
+          port: 7878
+          weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
   name: bazarr
   namespace: arr-stack
 spec:
