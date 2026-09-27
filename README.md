@@ -51,6 +51,8 @@ push to main
 
 Argo CD runs two ApplicationSets in `k8s/talos/infra/argocd/` that generate one Application per directory, so a new workload is a new directory.
 
+**Documentation:** [docs.nordbye.it](https://docs.nordbye.it) is the technical documentation for all of this: architecture, platform areas (backups, cluster, network, delivery, observability, secrets) and the apps. It is built from [`docs/`](docs/architecture/README.md) on every push to `main`.
+
 ---
 
 ## Homelab Overview
@@ -99,6 +101,11 @@ homelab
 │   ├── Dockerfile
 │   ├── nginx/
 │   └── src/
+├── docs/                                # Technical docs, published to docs.nordbye.it
+│   ├── architecture/
+│   ├── platform/
+│   ├── apps/
+│   └── backlog/
 └── ai/                                  # AI agents, skills, projects, local LLM
     ├── agents/
     ├── skills/
@@ -155,6 +162,7 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 | [**Kargo Automerge**](.github/workflows/kargo-automerge.yaml)                           | Kargo promotion PR                             | Merges promotion PRs for the apps listed in `KARGO_AUTOMERGE_APPS`, where the canary is the real gate |
 | [**Lighthouse**](.github/workflows/lighthouse.yaml)                                     | Mondays 06:00 UTC, manual | Audits the live public sites, median of 3 runs, gating SEO, accessibility and best practices |
 | [**Render Logo**](.github/workflows/render-logo.yaml)                                   | Push to `main` (`docs/assets/logo/source.jpg`)        | Re-crops the logo from its source and commits the result, so the image can't drift |
+| [**Docs Site**](.github/workflows/docs.yaml)                                           | Push to `main` (`docs/**`), pull request, manual | Builds `docs/` with ProperDocs in strict mode and publishes it to [docs.nordbye.it](https://docs.nordbye.it) |
 
 ---
 
