@@ -128,7 +128,6 @@ obs: Observability {
   tempo: Tempo {shape: image; icon: ${di}/tempo.svg}
   grafana: Grafana {shape: image; icon: ${di}/grafana.svg}
   metrics: metrics-server {shape: image; icon: ${di}/kubernetes.svg}
-  otel: "OTel Collector"
 }
 
 # ───────────── Security ─────────────
@@ -264,8 +263,7 @@ ops.argocd -> ai: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
 ai -> store.nfscsi: models + data {style: {stroke: "#d97706"}}
 
 # ── Observability (teal) ──
-net.traefik -> obs.otel: OTLP traces {style: {stroke: "#0d9488"}}
-obs.otel -> obs.tempo: export {style: {stroke: "#0d9488"; stroke-dash: 2}}
+net.traefik -> obs.tempo: OTLP traces {style: {stroke: "#0d9488"}}
 obs.prometheus -> net.traefik: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
 obs.prometheus -> sec.falco: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
 obs.prometheus -> obs.loki: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
