@@ -54,6 +54,9 @@ MX, SPF, DMARC `p=quarantine`). TXT records also verify two Search Console
 properties (removing one un-verifies it), TikTok on `gate` (reelsmith publishing
 depends on it) and an Azure App Service custom domain (`asuid`).
 
+`docs` is an unproxied CNAME to `mortennordbye.github.io` for the GitHub Pages docs
+site; GitHub issues its certificate, which it can only do while the record is not proxied.
+
 `_acme-challenge` is not managed: cert-manager creates and deletes it on every
 DNS-01 issuance.
 

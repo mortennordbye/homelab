@@ -29,7 +29,7 @@ The repository is public by design. Transparency keeps me honest about following
 
 ## Quick Links
 
-[![Portfolio](https://img.shields.io/badge/Portfolio-nordbye.it-378144?style=flat-square&logo=googlechrome&logoColor=white&labelColor=0f1410)](https://nordbye.it) [![Blog](https://img.shields.io/badge/Blog-blog.nordbye.it-378144?style=flat-square&logo=hugo&logoColor=white&labelColor=0f1410)](https://blog.nordbye.it) [![LinkedIn](https://img.shields.io/badge/LinkedIn-morten--victor--nordbye-378144?style=flat-square&logo=linkedin&logoColor=white&labelColor=0f1410)](https://www.linkedin.com/in/morten-victor-nordbye/) [![GitHub](https://img.shields.io/badge/GitHub-mortennordbye-378144?style=flat-square&logo=github&logoColor=white&labelColor=0f1410)](https://github.com/mortennordbye)
+[![Portfolio](https://img.shields.io/badge/Portfolio-nordbye.it-378144?style=flat-square&logo=googlechrome&logoColor=white&labelColor=0f1410)](https://nordbye.it) [![Blog](https://img.shields.io/badge/Blog-blog.nordbye.it-378144?style=flat-square&logo=hugo&logoColor=white&labelColor=0f1410)](https://blog.nordbye.it) [![Docs](https://img.shields.io/badge/Docs-docs.nordbye.it-378144?style=flat-square&logo=materialformkdocs&logoColor=white&labelColor=0f1410)](https://docs.nordbye.it) [![LinkedIn](https://img.shields.io/badge/LinkedIn-morten--victor--nordbye-378144?style=flat-square&logo=linkedin&logoColor=white&labelColor=0f1410)](https://www.linkedin.com/in/morten-victor-nordbye/) [![GitHub](https://img.shields.io/badge/GitHub-mortennordbye-378144?style=flat-square&logo=github&logoColor=white&labelColor=0f1410)](https://github.com/mortennordbye)
 
 Feel free to send me a DM, open a pull request, or steal code from here. The goal is to learn and make connections.
 

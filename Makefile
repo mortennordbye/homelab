@@ -26,6 +26,14 @@ logo: ## Render the repo logo (→ docs/assets/logo/logo.png)
 			-compose copyopacity -composite png32:/tmp/logo-raw.png; \
 		pngquant --quality 70-95 --force --output /work/logo.png /tmp/logo-raw.png'
 
+.PHONY: docs
+docs: ## Preview the docs site at http://localhost:8000 (same versions as .github/workflows/docs.yaml)
+	@docker run --rm -it -p 8000:8000 -v "$(CURDIR):/repo" -w /repo python:3.14-slim sh -c '\
+		v() { sed -n "s/^  $$1: \\([^ ]*\\).*/\\1/p" .github/workflows/docs.yaml; }; \
+		pip install -q --root-user-action=ignore "properdocs==$$(v PROPERDOCS_VERSION)" \
+			"mkdocs-material==$$(v MATERIAL_VERSION)" "mkdocs-redirects==$$(v REDIRECTS_VERSION)" && \
+		properdocs serve --strict -a 0.0.0.0:8000'
+
 .PHONY: help
 help: ## List available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
