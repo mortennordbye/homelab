@@ -59,7 +59,8 @@ hubble:
     auto:
       enabled: true
       method: cronJob
-      certValidityDuration: 1095
+      # Leaves must end before the CA (tls.ca, 3 years) or certgen refuses to issue them.
+      certValidityDuration: 365
       schedule: "0 0 1 */4 *"
   metrics:
     enabled:
