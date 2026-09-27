@@ -21,7 +21,7 @@ notifications) is in [`pbs.md`](pbs.md).
 | Laptop-only files | zip of the gitignored paths in `.backup-manifest` and the `.gitignore` backup block, over SMB | by hand | 14 | `shared-data` share, `documents/IT/Repo-Hidden-Files-Backups/Homelab/` | `scripts/backup-secrets.sh` |
 
 The laptop-only files are what Git never holds: the Terraform stacks' `terraform.tfvars`
-(all but `cloudflare/watchdog`, which the list leaves out), the Talos `kubeconfig`,
+and the state `backend.conf`, the Talos `kubeconfig`,
 `talosconfig` and `controlplane.yaml`, and a few gitignored working docs
 ([`../cluster/terraform.md`](../cluster/terraform.md)). The script prompts for the NAS
 login, reads the zip back to verify it, and keeps the newest 14; restore is `unzip` at the

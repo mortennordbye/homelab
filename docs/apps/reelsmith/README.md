@@ -67,7 +67,10 @@ declared in the blueprint, because reconciliation resets the list.
 
 [`ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/reelsmith/ciliumnetworkpolicy.yaml) admits
 port 8000 only from Traefik and Prometheus, plus the `host` and `health` entities for probes, and allows egress only to
-CoreDNS and `graph.instagram.com:443`.
+CoreDNS and, on port 443, the publishing APIs: the Instagram and Facebook Graph
+hosts, `rupload.facebook.com`, the Google API and OAuth hosts, and `*.tiktokapis.com`
+(TikTok hands out its upload host per request). A new platform in the gateway needs
+its host added there.
 
 ## Configuration
 

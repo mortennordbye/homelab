@@ -66,8 +66,8 @@ turns the stack's `talos_secrets` output into a talosctl secrets bundle.
 `# backup:end` markers in `.gitignore`, and copies the zip over SMB to the NAS share
 `shared-data` under `documents/IT/Repo-Hidden-Files-Backups/Homelab/`, keeping the newest
 14. Only paths are in the repo, never contents. The manifest lists the Talos `kubeconfig`,
-`talosconfig` and `controlplane.yaml` and every stack's `terraform.tfvars` except
-`cloudflare/watchdog`'s; `azure/state/backend.conf` is not listed either.
+`talosconfig` and `controlplane.yaml`, every stack's `terraform.tfvars`, and
+`azure/state/backend.conf`. A new stack's gitignored files need a line there.
 
 ```sh
 scripts/backup-secrets.sh --list      # what would be backed up, and what is missing

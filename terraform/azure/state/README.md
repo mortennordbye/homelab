@@ -55,7 +55,7 @@ State file paths:
 - Resource Group: `rg-tfstate-homelab` (Sweden Central)
 - Storage Account: `sttfstatemvnhomelab` (LRS, versioning enabled)
 - Container: `tfstate` (private)
-- Lifecycle: Delete versions after 7 days
+- Lifecycle: old versions deleted after 30 days, deleted blobs kept for 7 days
 
 ## Verify
 
