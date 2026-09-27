@@ -12,7 +12,7 @@ they can be rebuilt after a lost volume.
 | Radarr | `https://radarr.local.bigd.no` | `arr-stack` | 1080p movies in `/data/movies` |
 | Radarr 4K | `https://radarr-4k.local.bigd.no` | `arr-stack` | 4K movies in `/data/movies-4k` |
 | Sonarr | `https://sonarr.local.bigd.no` | `arr-stack` | TV in `/data/series` |
-| Prowlarr | `https://prowlarr.local.bigd.no` | `gluetun-vpn` | Indexers, sidecar in the VPN pod |
+| Prowlarr | `https://prowlarr.local.bigd.no` | `gluetun-vpn` | Indexers, sidecar in the VPN pod; reaches the arr apps through `hostAliases` since its DNS goes through the VPN |
 | qBittorrent | `https://qbittorrent.local.bigd.no` | `gluetun-vpn` | Downloads, sidecar in the VPN pod |
 | Tdarr | `https://tdarr.local.bigd.no` | `arr-stack` | Re-encodes H.264 to HEVC |
 | Plex | `http://10.3.10.103:32400/web` | `plex-media-stack` | Playback, libraries below |
@@ -85,9 +85,8 @@ delete each other's files on upgrade.
   upgrades on. Custom format "DV (w/o HDR fallback)" from TRaSH
   (`docs/json/radarr/cf/dv-wo-hdr-fallback.json`) scored -10000, since those files
   play with purple and green colours on screens without Dolby Vision.
-- Indexers: the six Prowlarr Torznab indexers, copied from Radarr with the Prowlarr
-  API key. Prowlarr cannot sync them itself while its app sync is broken (see
-  BACKLOG), so an indexer added in Prowlarr has to be added here by hand too.
+- Indexers: synced by Prowlarr, where Radarr 4K is its own app
+  (`https://radarr-4k.local.bigd.no`, full sync, movie categories).
 - Seerr: Radarr server "Radarr 4K", hostname `radarr-4k.local.bigd.no` port 443 SSL,
   "4K Server" and "Default Server" on, profile `2160p`, root `/data/movies-4k`.
 - Plex: `Movies 4K` library, shared only with users whose devices play 4K HDR, so
