@@ -7,12 +7,14 @@ on:
     paths:
       - "docs/**"
       - "properdocs.yml"
+      - "overrides/**"
       - "scripts/docs_site_hooks.py"
       - ".github/workflows/docs.yaml"
   pull_request:
     paths:
       - "docs/**"
       - "properdocs.yml"
+      - "overrides/**"
       - "scripts/docs_site_hooks.py"
       - ".github/workflows/docs.yaml"
   workflow_dispatch:
@@ -28,7 +30,6 @@ env:
   PYTHON_VERSION: 3.14.7 # renovate: python-version=python
   PROPERDOCS_VERSION: 1.6.7 # renovate: pypi=properdocs
   MATERIAL_VERSION: 9.7.7 # renovate: pypi=mkdocs-material
-  REDIRECTS_VERSION: 1.2.3 # renovate: pypi=mkdocs-redirects
 
 jobs:
   build:
@@ -47,7 +48,6 @@ jobs:
           pip install
           "properdocs==${PROPERDOCS_VERSION}"
           "mkdocs-material==${MATERIAL_VERSION}"
-          "mkdocs-redirects==${REDIRECTS_VERSION}"
 
       # Strict: a broken link between pages fails the build.
       - name: Build

@@ -97,3 +97,163 @@
 .md-typeset .headerlink {
   color: #708373;
 }
+
+/* Home page (overrides/home.html). The lamp keys from the upper left, as on
+   the portfolio: lit top and left edges, shadow cast down and to the right. */
+
+.home {
+  --lit-edge: rgba(255, 212, 154, 0.11);
+  --dark-edge: rgba(0, 0, 0, 0.55);
+  --cast: 6px 16px 28px -18px rgba(0, 0, 0, 0.95);
+}
+
+.md-typeset .home h1 {
+  margin: 0 0 1rem;
+  font-size: 2.4rem;
+  line-height: 1.15;
+  max-width: 18ch;
+}
+
+.md-typeset .home h2 {
+  margin-top: 0;
+}
+
+.home-hero {
+  padding: 2rem 0 3rem;
+}
+
+.home-logo {
+  display: block;
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+}
+
+.md-typeset .home-kicker,
+.md-typeset .home-facts {
+  font-family: var(--md-code-font-family);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c09955;
+}
+
+.md-typeset .home-kicker {
+  margin: 0 0 0.75rem;
+}
+
+.md-typeset .home-lede {
+  font-size: 1rem;
+  max-width: 38rem;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 1.75rem 0 1.5rem;
+}
+
+/* Brass takes --fg only; --fg-2 on it falls below AA. */
+.md-typeset .home-button {
+  background: #7f5a2f;
+  color: #e9ebe9;
+  padding: 0.55rem 1.1rem;
+  border-radius: 6px;
+  box-shadow: inset 1px 1px 0 var(--lit-edge), var(--cast);
+}
+
+.md-typeset .home-button:hover,
+.md-typeset .home-button:focus {
+  background: #8a6133;
+  color: #e9ebe9;
+}
+
+.md-typeset .home-sheet {
+  display: block;
+  width: auto;
+  margin: 0 0 3.5rem;
+  padding: 1rem;
+  background: #e8ddc9;
+  border-radius: 6px;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.5),
+    inset -1px -1px 0 #cabb9f,
+    var(--cast);
+}
+
+.home-sheet img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+}
+
+.md-typeset .home-sheet figcaption {
+  max-width: none;
+  margin: 0.75rem 0 0;
+  font-style: normal;
+  font-size: 0.7rem;
+  color: #574733;
+}
+
+.md-typeset .home-sheet figcaption code {
+  background: transparent;
+  color: #3a2e1d;
+  padding: 0;
+}
+
+.home-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 2rem 3rem;
+  margin-bottom: 3rem;
+}
+
+.md-typeset .home ul.home-areas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  column-gap: 2.5rem;
+}
+
+.md-typeset .home ul.home-areas li {
+  margin: 0;
+  border-top: 1px solid #2a382c;
+}
+
+.md-typeset .home-areas a {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  column-gap: 0.75rem;
+  padding: 0.8rem 0;
+  color: #a1ada3;
+}
+
+.md-typeset .home-areas .twemoji {
+  grid-row: span 2;
+  color: #708373;
+  padding-top: 0.1rem;
+}
+
+.md-typeset .home-areas .twemoji svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  max-height: none;
+}
+
+.md-typeset .home-areas strong {
+  color: #e9ebe9;
+  font-weight: 600;
+}
+
+.md-typeset .home-areas a > span:last-child {
+  font-size: 0.7rem;
+}
+
+.md-typeset .home-areas a:hover strong,
+.md-typeset .home-areas a:hover .twemoji {
+  color: #65a16e;
+}

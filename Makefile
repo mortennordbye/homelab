@@ -31,7 +31,7 @@ docs: ## Preview the docs site at http://localhost:8000 (same versions as .githu
 	@docker run --rm -it -p 8000:8000 -v "$(CURDIR):/repo" -w /repo python:3.14-slim sh -c '\
 		v() { sed -n "s/^  $$1: \\([^ ]*\\).*/\\1/p" .github/workflows/docs.yaml; }; \
 		pip install -q --root-user-action=ignore "properdocs==$$(v PROPERDOCS_VERSION)" \
-			"mkdocs-material==$$(v MATERIAL_VERSION)" "mkdocs-redirects==$$(v REDIRECTS_VERSION)" && \
+			"mkdocs-material==$$(v MATERIAL_VERSION)" && \
 		properdocs serve --strict -a 0.0.0.0:8000'
 
 .PHONY: help

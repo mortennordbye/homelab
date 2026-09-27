@@ -1,4 +1,4 @@
-"""ProperDocs hooks: nav icons, and links that leave the site pointed at GitHub.
+"""ProperDocs hooks: the home page, nav icons, and links that leave the site pointed at GitHub.
 
 The docs link freely to code (`../../../terraform/...`), to folders, and to the
 backlog, none of which are pages on the site. Rewriting them keeps them working
@@ -8,6 +8,8 @@ between pages.
 
 import os
 import re
+
+from properdocs.structure.files import File
 
 REPO = "https://github.com/mortennordbye/homelab"
 LINK = re.compile(r"(\]\()([^)\s#]+)(#[^)\s]*)?(\))")
@@ -46,6 +48,22 @@ ICONS = {
     "platform/observability/incidents.md": "material/alert-octagon",
     "platform/secrets/README.md": "simple/bitwarden",
 }
+
+
+# docs/ holds folders only, so the root page is generated; its body is overrides/home.html.
+HOME = """---
+title: Homelab docs
+template: home.html
+hide:
+  - navigation
+  - toc
+---
+"""
+
+
+def on_files(files, config):
+    files.append(File.generated(config, "index.md", content=HOME))
+    return files
 
 
 def on_page_markdown(markdown, page, config, files):
