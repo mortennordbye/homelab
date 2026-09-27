@@ -27,6 +27,15 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      # DNS goes through the VPN, which cannot resolve local.bigd.no. Prowlarr reaches
+      # the arr apps and FlareSolverr through these; follow the gateway VIP if it moves.
+      hostAliases:
+        - ip: "10.3.10.102"
+          hostnames:
+            - radarr.local.bigd.no
+            - radarr-4k.local.bigd.no
+            - sonarr.local.bigd.no
+            - flaresolverr.local.bigd.no
       initContainers:
         # Gluetun VPN - runs as sidecar with restartPolicy: Always (K8s 1.29+)
         - name: gluetun
