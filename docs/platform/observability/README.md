@@ -27,7 +27,6 @@ SPOG rows for the infrastructure around the cluster:
 | Loki | logs, single binary | 7 days, Kubernetes events 30 days | `k8s/talos/infra/loki/values.yaml` |
 | Alloy | DaemonSet shipping pod logs and Kubernetes events to Loki | none | `k8s/talos/infra/loki/alloy-values.yaml` |
 | Tempo | traces, pushed over OTLP by Traefik | 24 h | `k8s/talos/infra/tempo/values.yaml` |
-| OTel collector | disabled: the chart is commented out, the Application deploys nothing | none | `k8s/talos/infra/otel-collector/` |
 | Falco | runtime security events, modern eBPF driver | none | `k8s/talos/infra/falco/values.yaml` |
 
 ## Alert path

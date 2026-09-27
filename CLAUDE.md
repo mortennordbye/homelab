@@ -194,7 +194,7 @@ Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes c
 - **Compute:** Proxmox VE on three Lenovo ThinkCentre nodes; three control plane and three worker Talos VMs form the K8s cluster.
 - **Networking:** Cilium (CNI + L2 announcements / LB IPAM for LoadBalancer VIPs), Traefik via Gateway API.
 - **Security:** cert-manager, External Secrets Operator, Falco, Authentik.
-- **Observability:** kube-prometheus-stack, Grafana, Loki (Alloy ships the logs), Tempo. The OpenTelemetry collector Application is present but its chart is disabled.
+- **Observability:** kube-prometheus-stack, Grafana, Loki (Alloy ships the logs), Tempo.
 - **Storage:** Proxmox CSI for block, Synology NFS for shared volumes.
 - **Databases:** in-cluster Postgres 18 (`postgres:18-alpine`) backing logeverylift. Its PVC mounts at `/var/lib/postgresql`, not at `/var/lib/postgresql/data` — 18 keeps the cluster in a version-named subdirectory, and an initContainer chowns the NFS mount root so the non-root process can create it. See `docs/platform/data/postgres.md`.
 - **GitOps:** Argo CD ApplicationSets `apps` and `infra` in `k8s/talos/infra/argocd/{apps.yaml,infra.yaml}` generate one Application per directory under `k8s/talos/apps/` and `k8s/talos/infra/`.

@@ -16,12 +16,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** pick the upstream: a CoreDNS `forward . 10.3.10.1 1.1.1.1` style fallback, or Talos `machine.network.nameservers` with a second entry.
 - **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/talos-cluster.tf` (machine network patch), CoreDNS config, `docs/platform/observability/README.md`.
 
-### The otel-collector Application deploys nothing
-- **What:** `k8s/talos/infra/otel-collector/kustomization.yaml` has its `helmCharts` block commented out, so the ApplicationSet creates a synced Application with no workload. Either re-enable the collector or delete the directory.
-- **Why deferred:** found during the docs cleanup; nothing depends on it, since Traefik sends traces to Tempo over OTLP directly.
-- **Unblock:** a decision on whether a collector is wanted in front of Tempo and Loki.
-- **Where:** `k8s/talos/infra/otel-collector/`.
-
 ### Watchdog: test the missing-heartbeat alert live
 - **What:** prove the watchdog reports a silent homelab: stop Alertmanager's heartbeat for 15+ minutes and confirm `[WATCHDOG] DOWN: Alertmanager heartbeat missing` reaches Discord, then `[WATCHDOG] UP` once it resumes. The site-down path was tested live on 2026-09-26 (a 404 test site posted DOWN after three checks); the heartbeat path shares the same Discord post but has only been tested in the local harness.
 - **Why deferred:** the simplest test stops Alertmanager, which silences every other alert for the duration; it needs a window when that is acceptable.

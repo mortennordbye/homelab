@@ -119,7 +119,7 @@ export const platform: readonly PlatformComponent[] = [
     role: "kube-prometheus-stack, with dashboards versioned as code.",
   },
   {
-    name: "Loki + OTel",
-    role: "Log aggregation and traces via the OpenTelemetry collector.",
+    name: "Loki + Tempo",
+    role: "Log aggregation, and traces from Traefik over OTLP.",
   },
 ];
