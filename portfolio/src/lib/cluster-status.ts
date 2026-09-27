@@ -26,7 +26,8 @@ export async function readClusterStatus(): Promise<{
   data: ClusterStatus;
 }> {
   try {
-    return { live: true, data: JSON.parse(await readFile(STATUS_FILE, "utf8")) };
+    // A runtime mount, not a build input: traced, it drags the whole project into standalone.
+    return { live: true, data: JSON.parse(await readFile(/* turbopackIgnore: true */ STATUS_FILE, "utf8")) };
   } catch {
     return { live: false, data: statusSnapshot as ClusterStatus };
   }
