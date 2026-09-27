@@ -27,6 +27,20 @@ The repository is public by design. Transparency keeps me honest about following
 
 ---
 
+## Documentation
+
+[![Read the docs at docs.nordbye.it](https://img.shields.io/badge/Read_the_docs-docs.nordbye.it-378144?style=for-the-badge&logo=materialformkdocs&logoColor=white&labelColor=0f1410)](https://docs.nordbye.it)
+
+Everything in this repo is documented at [docs.nordbye.it](https://docs.nordbye.it): how the parts fit together, and how to operate or rebuild each one.
+
+- [Architecture](https://docs.nordbye.it/architecture/): what runs where and how the parts depend on each other
+- Platform: [cluster](https://docs.nordbye.it/platform/cluster/), [network](https://docs.nordbye.it/platform/network/), [storage](https://docs.nordbye.it/platform/storage/), [identity](https://docs.nordbye.it/platform/identity/), [delivery](https://docs.nordbye.it/platform/delivery/), [backups](https://docs.nordbye.it/platform/backups/), [data](https://docs.nordbye.it/platform/data/), [observability](https://docs.nordbye.it/platform/observability/), [secrets](https://docs.nordbye.it/platform/secrets/)
+- Apps that need more than their manifests: [media stack](https://docs.nordbye.it/apps/media-stack/), [portfolio](https://docs.nordbye.it/apps/portfolio/), [reelsmith](https://docs.nordbye.it/apps/reelsmith/), [verksted](https://docs.nordbye.it/apps/verksted/)
+
+The site is built from [`docs/`](docs/architecture/README.md) on every push to `main`, so it always matches this repo.
+
+---
+
 ## Quick Links
 
 [![Portfolio](https://img.shields.io/badge/Portfolio-nordbye.it-378144?style=flat-square&logo=googlechrome&logoColor=white&labelColor=0f1410)](https://nordbye.it) [![Blog](https://img.shields.io/badge/Blog-blog.nordbye.it-378144?style=flat-square&logo=hugo&logoColor=white&labelColor=0f1410)](https://blog.nordbye.it) [![Docs](https://img.shields.io/badge/Docs-docs.nordbye.it-378144?style=flat-square&logo=materialformkdocs&logoColor=white&labelColor=0f1410)](https://docs.nordbye.it) [![LinkedIn](https://img.shields.io/badge/LinkedIn-morten--victor--nordbye-378144?style=flat-square&logo=linkedin&logoColor=white&labelColor=0f1410)](https://www.linkedin.com/in/morten-victor-nordbye/) [![GitHub](https://img.shields.io/badge/GitHub-mortennordbye-378144?style=flat-square&logo=github&logoColor=white&labelColor=0f1410)](https://github.com/mortennordbye)
@@ -50,8 +64,6 @@ push to main
 ```
 
 Argo CD runs two ApplicationSets in `k8s/talos/infra/argocd/` that generate one Application per directory, so a new workload is a new directory.
-
-**Documentation:** [docs.nordbye.it](https://docs.nordbye.it) is the technical documentation for all of this: architecture, platform areas (backups, cluster, network, delivery, observability, secrets) and the apps. It is built from [`docs/`](docs/architecture/README.md) on every push to `main`.
 
 ---
 
@@ -162,7 +174,7 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 | [**Kargo Automerge**](.github/workflows/kargo-automerge.yaml)                           | Kargo promotion PR                             | Merges promotion PRs for the apps listed in `KARGO_AUTOMERGE_APPS`, where the canary is the real gate |
 | [**Lighthouse**](.github/workflows/lighthouse.yaml)                                     | Mondays 06:00 UTC, manual | Audits the live public sites, median of 3 runs, gating SEO, accessibility and best practices |
 | [**Render Logo**](.github/workflows/render-logo.yaml)                                   | Push to `main` (`docs/assets/logo/source.jpg`)        | Re-crops the logo from its source and commits the result, so the image can't drift |
-| [**Docs Site**](.github/workflows/docs.yaml)                                           | Push to `main` (`docs/**`), pull request, manual | Builds `docs/` with ProperDocs in strict mode and publishes it to [docs.nordbye.it](https://docs.nordbye.it) |
+| [**Docs Site**](.github/workflows/docs.yaml)                                           | Push to `main` (`docs/**` and the site config), pull request, manual | Builds `docs/` with ProperDocs in strict mode and publishes it to [docs.nordbye.it](https://docs.nordbye.it) |
 
 ---
 
