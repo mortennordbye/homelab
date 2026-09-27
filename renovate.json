@@ -318,6 +318,12 @@
       "enabled": false
     },
     {
+      "description": "Playwright: the npm package and the smoke-test image must move in one PR, or the tests cannot find their browsers.",
+      "matchPackageNames": ["@playwright/test", "mcr.microsoft.com/playwright"],
+      "groupName": "Playwright",
+      "groupSlug": "playwright"
+    },
+    {
       "description": "Disable: texlive pinned intentionally",
       "matchDepNames": ["texlive/texlive"],
       "enabled": false

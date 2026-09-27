@@ -5,6 +5,7 @@
 /.next/
 /out/
 /coverage
+/test-results/
 
 # Tooling caches & logs
 *.tsbuildinfo

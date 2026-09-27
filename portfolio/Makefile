@@ -2,9 +2,10 @@ IMAGE      ?= portfolio:dev
 PROD_PORT  ?= 8080
 PROD_NAME  ?= portfolio-prod
 DEV_PORT   ?= 3000
+SMOKE_PROJECT ?= portfolio-smoke
 SHA        := $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
 
-.PHONY: help up build down logs sh lint typecheck image run-prod clean
+.PHONY: help up build down logs sh lint typecheck image run-prod smoke smoke-run clean
 
 help:  ## Show this help
 	@awk 'BEGIN{FS=":.*##"; printf "Targets:\n"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -43,6 +44,12 @@ run-prod: image  ## Build the prod image and run the server on http://localhost:
 	docker rm -f $(PROD_NAME) 2>/dev/null || true
 	docker run -d --name $(PROD_NAME) -p $(PROD_PORT):3000 $(IMAGE)
 	@echo "→ http://localhost:$(PROD_PORT)"
+
+smoke: image smoke-run  ## Build the prod image and run the Playwright smoke tests against it
+
+smoke-run:  ## Run the Playwright smoke tests against an already built $(IMAGE)
+	IMAGE=$(IMAGE) docker compose -p $(SMOKE_PROJECT) -f compose.smoke.yaml up --abort-on-container-exit --exit-code-from smoke; \
+	  rc=$$?; docker compose -p $(SMOKE_PROJECT) -f compose.smoke.yaml down -v; exit $$rc
 
 clean: down  ## Stop dev stack and drop its volumes (cv-bundle + Turbopack cache + node_modules)
 	rm -rf out

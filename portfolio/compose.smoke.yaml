@@ -1,0 +1,19 @@
+# Playwright smoke tests against the production image. Run with `make smoke`.
+services:
+  web:
+    image: ${IMAGE:-portfolio:dev}
+
+  smoke:
+    # Keep the tag equal to @playwright/test in package.json, or the bundled browsers go missing.
+    image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+    working_dir: /app
+    command: sh -c "npm ci --no-audit --no-fund && npx playwright test"
+    environment:
+      BASE_URL: http://web:3000
+      CI: ${CI:-}
+    volumes:
+      - .:/app
+      # Keeps the container's glibc node_modules off the host checkout.
+      - /app/node_modules
+    depends_on:
+      - web
