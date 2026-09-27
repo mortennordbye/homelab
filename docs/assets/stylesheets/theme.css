@@ -1,0 +1,99 @@
+/* Values from portfolio/src/styles/tokens.css. Green is ink only (links,
+   focus, the active nav item) and never a fill; surfaces are wood and brass. */
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 130;
+
+  --md-default-bg-color: #0f1410;
+  --md-default-fg-color: #e9ebe9;
+  --md-default-fg-color--light: #a1ada3;
+  --md-default-fg-color--lighter: #708373;
+  --md-default-fg-color--lightest: #2a382c;
+
+  --md-primary-fg-color: #0f1410;
+  --md-primary-fg-color--light: #191f1a;
+  --md-primary-fg-color--dark: #090c0a;
+  --md-primary-bg-color: #e9ebe9;
+  --md-primary-bg-color--light: #a1ada3;
+
+  --md-accent-fg-color: #81b288;
+  --md-accent-fg-color--transparent: rgba(101, 161, 110, 0.1);
+  --md-accent-bg-color: #0f1410;
+
+  --md-typeset-color: #a1ada3;
+  --md-typeset-a-color: #65a16e;
+  --md-typeset-mark-color: rgba(192, 153, 85, 0.3);
+  --md-typeset-table-color: #2a382c;
+  --md-typeset-table-color--light: #191f1a;
+
+  --md-code-bg-color: #191f1a;
+  --md-code-fg-color: #e9ebe9;
+
+  --md-footer-bg-color: #090c0a;
+  --md-footer-bg-color--dark: #090c0a;
+  --md-footer-fg-color: #a1ada3;
+  --md-footer-fg-color--light: #708373;
+  --md-footer-fg-color--lighter: #708373;
+}
+
+::selection {
+  background: #65a16e;
+  color: #0f1410;
+}
+
+.md-header,
+.md-tabs {
+  border-bottom: 1px solid #2a382c;
+  box-shadow: none;
+}
+
+.md-header[data-md-state="shadow"],
+.md-header--shadow {
+  box-shadow: none;
+}
+
+.md-search__input {
+  background-color: #191f1a;
+}
+
+.md-search__input:hover {
+  background-color: #222a23;
+}
+
+/* Source Serif carries headings and body alike; weight does the ranking. */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4 {
+  color: #e9ebe9;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset h1 {
+  font-weight: 700;
+}
+
+.md-typeset code {
+  border-radius: 6px;
+}
+
+/* Wood is the table header, per the portfolio's material layer. */
+.md-typeset table:not([class]) {
+  border: 1px solid #2a382c;
+  border-radius: 6px;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: #4a3520;
+  color: #e9ebe9;
+}
+
+.md-nav__link--active,
+.md-nav__item .md-nav__link--active {
+  color: #65a16e;
+}
+
+.md-typeset .headerlink {
+  color: #708373;
+}
