@@ -37,7 +37,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** Tdarr at `https://tdarr.local.bigd.no` (Home, error table), job reports under `/app/server/Tdarr/DB2/JobReports` in the tdarr pod.
 
 ### Tdarr: back to the night-only window and one GPU worker
-- **What:** both Tdarr libraries (`TV`, `Movies`) currently transcode 24/7, and the node runs 2 GPU transcode workers, to work through the H.264 backlog. Set the library schedule back to 00:00 to 07:00 every day and the node back to 1 GPU worker (Nodes page), as recorded in the media-stack docs.
+- **What:** all Tdarr libraries (`TV`, `Movies`, `Movies 4K`) currently transcode 24/7, and the node runs 2 GPU transcode workers, to work through the H.264 backlog. Set the library schedule back to 00:00 to 07:00 every day and the node back to 1 GPU worker (Nodes page), as recorded in the media-stack docs.
 - **Why deferred:** running around the clock clears the backlog faster; the night window exists because Plex shares the Quick Sync iGPU.
 - **Unblock:** the H.264 queue is mostly done, or Plex playback starts stuttering during the day.
 - **Where:** Tdarr library settings at `https://tdarr.local.bigd.no` (schedule lives in the Tdarr DB, not Git), target settings in `docs/media-stack/README.md`.

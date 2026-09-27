@@ -91,8 +91,8 @@ delete each other's files on upgrade.
   "4K Server" and "Default Server" on, profile `2160p`, root `/data/movies-4k`.
 - Plex: `Movies 4K` library, shared only with users whose devices play 4K HDR, so
   nobody else forces a 4K HDR transcode on the iGPU.
-- Tdarr has no library for this folder. 4K releases are HEVC, which the flow skips,
-  and re-encoding 4K HDR on Quick Sync risks losing the HDR and Dolby Vision metadata.
+- Tdarr: library `Movies 4K` with the same flow. Today every file is HEVC and is skipped;
+  it is there to catch a 2160p H.264 release, which is SDR, so re-encoding loses no HDR.
 - Bazarr only connects to the main Radarr, so it does not fetch subtitles for 4K films.
 - Cleanuparr: its own Radarr instance, `http://radarr-4k:7878`.
 - Unpackerr: `UN_RADARR_1_*` in `k8s/talos/apps/arr-stack/unpackerr.yaml`.
@@ -149,7 +149,8 @@ jq -c '{data:{collection:"FlowsJSONDB", mode:"insert", docID:._id, obj:.}}' docs
   | curl -s -H 'Content-Type: application/json' https://tdarr.local.bigd.no/api/v2/cruddb -d @-
 ```
 
-Libraries `TV` (`/data/series`) and `Movies` (`/data/movies`): flow
+Libraries `TV` (`/data/series`), `Movies` (`/data/movies`) and `Movies 4K`
+(`/data/movies-4k`): flow
 `h264ToHevcQsv`, cache `/data/transcode_cache/tdarr`, health checks off,
 "skip hardlinked files" on, folder watching on, `@eaDir` ignored, schedule
 00:00 to 07:00 every day. Scanner: 4 threads, MediaInfo scan off, since the flow only
