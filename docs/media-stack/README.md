@@ -87,7 +87,8 @@ jq -c '{data:{collection:"FlowsJSONDB", mode:"insert", docID:._id, obj:.}}' docs
 Libraries `TV` (`/data/series`) and `Movies` (`/data/movies`): flow
 `h264ToHevcQsv`, cache `/data/transcode_cache/tdarr`, health checks off,
 "skip hardlinked files" on, folder watching on, `@eaDir` ignored, schedule
-00:00 to 07:00 every day.
+00:00 to 07:00 every day. Scanner: 4 threads, ExifTool and MediaInfo scans off, since
+the flow only reads ffprobe data and each extra scanner reads every file again over NFS.
 
 Node: 1 GPU transcode worker, no CPU workers. The worker limit is set on the live
 node (Nodes page, or `POST /api/v2/alter-worker-limit`); writing it to the database

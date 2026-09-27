@@ -18,11 +18,17 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
-### Tdarr: back to the night-only transcode window
-- **What:** both Tdarr libraries (`TV`, `Movies`) currently transcode 24/7 to work through the H.264 backlog. Set the library schedule back to 00:00 to 07:00 every day, as recorded in the media-stack docs.
+### Tdarr: back to the night-only window and one GPU worker
+- **What:** both Tdarr libraries (`TV`, `Movies`) currently transcode 24/7, and the node runs 2 GPU transcode workers, to work through the H.264 backlog. Set the library schedule back to 00:00 to 07:00 every day and the node back to 1 GPU worker (Nodes page), as recorded in the media-stack docs.
 - **Why deferred:** running around the clock clears the backlog faster; the night window exists because Plex shares the Quick Sync iGPU.
 - **Unblock:** the H.264 queue is mostly done, or Plex playback starts stuttering during the day.
 - **Where:** Tdarr library settings at `https://tdarr.local.bigd.no` (schedule lives in the Tdarr DB, not Git), target settings in `docs/media-stack/README.md`.
+
+### 4K media library
+- **What:** add a separate 4K library: a Radarr/Sonarr 2160p quality profile or instance, its own folder under `/data`, and a matching Plex library. Tdarr needs no library for it, since 4K releases are HEVC and the flow only re-encodes H.264.
+- **Why deferred:** waiting until Tdarr has worked through the H.264 backlog and freed disk space; 4K titles are 40 to 80 GB each against about 7.8 TB free.
+- **Unblock:** the Tdarr H.264 queue is mostly done and free space on `/data` is known.
+- **Where:** `k8s/talos/apps/arr-stack/` (Radarr, Sonarr), `k8s/talos/apps/plex-media-stack/`, layout in `docs/media-stack/README.md`.
 
 ### Mealie still hard-logs-out every 48h (upstream)
 - **What:** Mealie's frontend never refreshes its access token (`mealie-recipes/mealie#7835`) — only one `/api/auth/refresh` call appears across the whole app log. At `TOKEN_TIME` (default 48h) the token expires and the axios 401 interceptor wipes the cookie and redirects to `/login`. The replica pin fixes cold-start logouts but not this.
