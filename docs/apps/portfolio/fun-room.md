@@ -396,7 +396,8 @@ On phones the loading screen lights one of the room's fittings over the poster p
 (`LoadStage` in `RoomLoading.tsx`): the lantern when the code arrives, the desk lamp when the
 assets are in, the stove while the scene builds. The stove flicker is an opacity animation
 because only the compositor keeps running through the build. The glows are placed in the
-poster's own pixels, so a re-cut `public/images/room-poster.jpg` has to move `LIGHTS` with it.
+poster's own pixels, so a re-cut `public/images/room-poster.jpg` (`make hero-posters`) has to
+move `LIGHTS` with it if the framing changed.
 
 A lost WebGL context must unmount the Canvas, never re-render it. `postprocessing`'s
 `EffectComposer` throws out of `addPass` when it renders against a dead context, and that throw
