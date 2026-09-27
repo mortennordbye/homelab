@@ -63,7 +63,8 @@ ai/local-llm/**/*.safetensors
 ai/local-llm/**/*.pt
 ai/local-llm/**/*.onnx
 ai/**/.venv/
-ai/**/__pycache__/
+__pycache__/
+*.pyc
 # Jarvis runtime artefacts (state DB, voice clone samples)
 ai/projects/jarvis
 ai/projects/jarvis/.state/
