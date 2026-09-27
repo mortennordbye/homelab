@@ -216,12 +216,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Pick a store (SQLite on a PVC for a single-writer app, or a plain `postgres:18-alpine` StatefulSet like logeverylift's), add a route under `src/app/api/v1/` guarded by `requireApiKey`, and wire storage + any needed CiliumNetworkPolicy egress. Add an Authentik provider + Traefik forward-auth middleware on the `/api/v1` POST paths, and relax `requireApiKey` to accept the forwarded identity.
 - **Where:** `portfolio/src/app/api/v1/`, `portfolio/src/lib/api.ts`; `portfolio/src/lib/api.ts`, `k8s/talos/apps/portfolio/httproute.yaml`, Authentik config.
 
-### Silence the Turbopack NFT over-trace on /api/v1/infra
-- **What:** `next build` warns that the `fs.readFile` in the infra route causes Node File Tracing to sweep the whole project into `.next/standalone` (locally this pulled in `latex/`, `out/`, CV markdown). The shipped Docker image is unaffected because the build stage only `COPY`s `src`/`public`/config, but the warning is noise and the local standalone is bloated.
-- **Why deferred:** Cosmetic; build is green and the runtime image is lean.
-- **Unblock:** Scope the read (constant path, or `outputFileTracingRoot`/`outputFileTracingExcludes` in `next.config.ts`) until the warning clears without pulling in extra files.
-- **Where:** `portfolio/src/app/api/v1/infra/route.ts`, `portfolio/next.config.ts`.
-
 ## Cluster / infra
 
 ### Run a Terraform apply before 2026-12-29 or the cluster credentials lapse
