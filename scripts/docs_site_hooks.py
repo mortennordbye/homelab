@@ -1,4 +1,4 @@
-"""ProperDocs hook: point links that leave the site at the file on GitHub.
+"""ProperDocs hooks: nav icons, and links that leave the site pointed at GitHub.
 
 The docs link freely to code (`../../../terraform/...`), to folders, and to the
 backlog, none of which are pages on the site. Rewriting them keeps them working
@@ -12,8 +12,44 @@ import re
 REPO = "https://github.com/mortennordbye/homelab"
 LINK = re.compile(r"(\]\()([^)\s#]+)(#[^)\s]*)?(\))")
 
+# Set here, not in front matter, because GitHub renders front matter as a table.
+# A new page without an entry just shows without an icon.
+ICONS = {
+    "apps/media-stack/README.md": "material/television-play",
+    "apps/portfolio/README.md": "material/briefcase",
+    "apps/portfolio/fun-room.md": "material/gamepad-variant",
+    "apps/portfolio/brand/README.md": "material/palette",
+    "apps/portfolio/brand/art-direction.md": "material/image",
+    "apps/portfolio/brand/assets.md": "material/package-variant",
+    "apps/portfolio/brand/decisions.md": "material/book-open-variant",
+    "architecture/README.md": "material/sitemap",
+    "assets/logo/README.md": "material/image",
+    "assets/social-preview/README.md": "material/folder-multiple-image",
+    "platform/backups/README.md": "material/backup-restore",
+    "platform/backups/pbs.md": "simple/proxmox",
+    "platform/backups/restore.md": "material/restore",
+    "platform/cluster/README.md": "material/server-network",
+    "platform/cluster/gpu-passthrough.md": "material/expansion-card",
+    "platform/cluster/proxmox.md": "simple/proxmox",
+    "platform/cluster/talos-upgrade.md": "material/arrow-up-bold-circle",
+    "platform/cluster/talos.md": "simple/talos",
+    "platform/data/README.md": "material/database",
+    "platform/data/postgres.md": "simple/postgresql",
+    "platform/delivery/README.md": "material/rocket-launch",
+    "platform/delivery/kargo.md": "material/truck-delivery",
+    "platform/network/README.md": "material/lan",
+    "platform/network/cloudflare.md": "simple/cloudflare",
+    "platform/network/dns.md": "material/dns",
+    "platform/network/remote-access.md": "simple/tailscale",
+    "platform/network/unifi.md": "simple/ubiquiti",
+    "platform/observability/README.md": "material/chart-line",
+    "platform/observability/incidents.md": "material/alert-octagon",
+    "platform/secrets/README.md": "simple/bitwarden",
+}
+
 
 def on_page_markdown(markdown, page, config, files):
+    page.meta.setdefault("icon", ICONS.get(page.file.src_path))
     docs_dir = config["docs_dir"]
     repo_root = os.path.dirname(config["config_file_path"])
     page_dir = os.path.dirname(os.path.join(docs_dir, page.file.src_path))
