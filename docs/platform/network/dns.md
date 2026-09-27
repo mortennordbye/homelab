@@ -5,6 +5,8 @@ resolver (`10.3.10.1`) serves it, shown in the console under Settings > Policy
 Table > DNS Records. The public half is the `bigd.no` zone in Cloudflare, see
 [`cloudflare.md`](cloudflare.md).
 
+[![Terraform and UniFi serve local.bigd.no to LAN clients, external-dns writes the public bigd.no records in Cloudflare](../../assets/diagrams/network-dns.svg)](../../assets/diagrams/network-dns.svg)
+
 ## Who writes what
 
 | Records | Written by |

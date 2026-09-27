@@ -112,19 +112,9 @@ and never a port that served an older build.
 ## How data reaches the room
 
 The page is a Server Component so it can read content off disk, then hands plain data to the
-client. There is no API route for room content and there should not be one.
+client: `ShelfData` built from `getAllWork()` and `CareerData` from `resume.ts`. There is no API route for room content and there should not be one.
 
-```
-app/fun/page.tsx  (server)
-  getAllWork()          → src/content/work/*.mdx
-  certs, experience,
-  education             → src/content/resume.ts
-        │  shelf: ShelfData, career: CareerData
-        ▼
-FunRoomClient.tsx  (client, dynamic import)
-        ▼
-FunRoom.tsx → Room.tsx → Bookshelf / Objects / Devices
-```
+[![Content flowing from the server page through FunRoomClient into the room components](../../assets/diagrams/portfolio-fun-room-data.svg)](../../assets/diagrams/portfolio-fun-room-data.svg)
 
 Live data is different. `feed.ts` polls `/api/v1/infra` every 60s with the same snapshot and
 staleness rules as `LiveStatus` on `/infrastructure`, and holds `useRepos`, which `CodeScreen`

@@ -8,6 +8,8 @@ query the cluster. Its image, `ghcr.io/mortennordbye/verksted`, is built in the 
 reelsmith's nightly render also runs on this pod, from the clone under
 `/data/repos/reelsmith` ([`../reelsmith/README.md`](../reelsmith/README.md)).
 
+[![The verksted pod behind the private gateway, its dind sidecar, its storage, and what agent sessions can reach](../../assets/diagrams/verksted-pod.svg)](../../assets/diagrams/verksted-pod.svg)
+
 | | |
 |---|---|
 | URL | `https://verksted.local.bigd.no` |

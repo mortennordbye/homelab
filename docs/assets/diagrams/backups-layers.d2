@@ -1,0 +1,54 @@
+# What is backed up, by what, and where it lands. See platform/backups/README.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+classes.group: {
+  label.near: top-left
+  style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}
+}
+
+cluster: Nightly into k8s-backups {
+  class: group
+  grid-columns: 2
+  grid-gap: 24
+  etcd: "etcd-backup\n00:30, keep 30" {class: card; icon: ${di}/etcd.svg; width: 260; height: 150}
+  dumps: "pg_dump, 00:45 and 00:50\nlogeverylift, Authentik" {class: card; icon: ${di}/postgresql.svg; width: 260; height: 150}
+  volsync: "VolSync restic\n21 app PVCs, 01:00 to 01:45" {class: card; icon: https://raw.githubusercontent.com/backube/volsync/main/docs/media/volsync.svg; width: 260; height: 150}
+  ha: "Home Assistant box\nHA OS backup, 01:30" {class: card; icon: ${di}/home-assistant.svg; width: 260; height: 150}
+}
+
+pve: "Proxmox VE backup job\nwhole VMs, 03:00" {class: card; icon: ${di}/proxmox-light.svg}
+pbs: "Proxmox Backup Server\ndatastore Synology" {class: card; icon: ${di}/proxmox-backup-server.svg}
+
+nas: Synology NAS {
+  class: group
+  k8sb: "k8s-backups\netcd/, postgres/\nvolsync/, home-assistant/\nBtrfs snapshot 02:45, 7 days" {class: card; icon: ${di}/synology.svg}
+  pveb: "pve-backup\n2 TiB" {class: card; icon: ${di}/synology.svg}
+}
+
+checks: "backup-check daily, restore-test monthly\nin-cluster CronJobs" {class: aside; icon: ${k8s}/cronjob.svg}
+gdrive: "Google Drive\nHyper Backup 03:20, encrypted" {class: card; icon: ${di}/google-drive.svg}
+
+cluster -> nas.k8sb
+nas.k8sb -> gdrive
+nas.k8sb -> checks: {style.stroke-dash: 4}
+pve -> pbs -> nas.pveb

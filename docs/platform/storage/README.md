@@ -5,6 +5,8 @@ Two CSI drivers provide dynamic volumes: Proxmox CSI for block disks on each hos
 static NFS PersistentVolumes point at fixed folders on the NAS. What gets backed up, and
 how, is in [`../backups/README.md`](../backups/README.md).
 
+[![A claim routed through proxmox-local, syno-nfs-csi or a static PV to a Proxmox local-lvm disk or a folder on the NAS](../../assets/diagrams/storage-classes.svg)](../../assets/diagrams/storage-classes.svg)
+
 ## Storage classes
 
 | Class | Driver | Backing store | Binding | Reclaim | Default |

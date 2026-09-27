@@ -1,0 +1,77 @@
+# Media stack: request to playback, across the three namespaces. See apps/media-stack/README.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+classes: {
+  ns: {
+    style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 16}
+  }
+}
+
+users: users {class: card; icon: ${ify}/tabler/users.svg?color=%23a1ada3&height=64}
+
+pms: plex-media-stack {
+  class: ns
+  seerr: "Seerr\nseerr.bigd.no" {class: card; icon: ${di}/seerr.svg}
+  tautulli: Tautulli {class: card; icon: ${di}/tautulli.svg}
+  plex: "Plex\nreads the libraries" {class: card; icon: ${di}/plex.svg}
+}
+
+arr: arr-stack {
+  class: ns
+  apps: "Sonarr, Radarr, Radarr 4K" {
+    class: ns
+      sonarr: Sonarr {class: card; icon: ${di}/sonarr.svg}
+    radarr: Radarr {class: card; icon: ${di}/radarr.svg}
+    radarr4k: Radarr 4K {class: card; icon: ${di}/radarr-4k.svg}
+  }
+  helpers: helpers {
+    class: ns
+    grid-columns: 3
+    grid-gap: 20
+    bazarr: "Bazarr, Bazarr 4K\nsubtitles" {class: card; icon.near: top-center; width: 190; height: 140; icon: ${di}/bazarr.svg}
+    unpackerr: "Unpackerr\nextracts archives" {class: card; icon.near: top-center; width: 190; height: 140; icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/unpackerr.png}
+    cleanuparr: "Cleanuparr\nqueue cleanup" {class: card; icon.near: top-center; width: 190; height: 140; icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/cleanuparr.png}
+    tdarr: "Tdarr\nHEVC on the iGPU" {class: card; icon.near: top-center; width: 190; height: 140; icon: ${di}/tdarr.svg}
+    flaresolverr: "FlareSolverr\nfor Prowlarr" {class: card; icon.near: top-center; width: 190; height: 140; icon: ${di}/flaresolverr.svg}
+  }
+}
+
+vpn: "gluetun-vpn, one pod" {
+  class: ns
+  prowlarr: "Prowlarr\nindexers" {class: card; icon: ${di}/prowlarr.svg}
+  qbit: qBittorrent {class: card; icon: ${di}/qbittorrent.svg}
+  gluetun: "Gluetun\nall pod egress" {class: card; icon: ${di}/gluetun.svg}
+}
+
+pia: PIA VPN {class: aside; icon: ${di}/private-internet-access.svg}
+
+share: "Synology share\n/volume1/shared-data/media" {class: card; icon: ${di}/synology.svg}
+
+users -> pms: "request, watch"
+pms -> arr.apps: requests
+arr.apps -> vpn: "search, send torrent"
+arr.helpers -> vpn: Cleanuparr clears the queue
+arr.apps -> arr.helpers: {style.opacity: 0}
+vpn -> pia
+vpn -> share: downloads
+arr -> share: "hardlink import,\nsubtitles, transcodes"

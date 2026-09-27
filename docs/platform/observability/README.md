@@ -20,6 +20,10 @@ SPOG rows for the infrastructure around the cluster:
 
 ## Stack
 
+[![Exporters, Alloy and Traefik feeding Prometheus, Loki and Tempo, all read by Grafana](../../assets/diagrams/observability-signals.svg)](../../assets/diagrams/observability-signals.svg)
+
+Grafana reads Prometheus, Loki and Tempo as data sources.
+
 | Component | Role | Retention | Defined in |
 |---|---|---|---|
 | Prometheus | metrics, alert rules | 7 days | `k8s/talos/infra/kube-prometheus-stack/values.yaml` |
@@ -30,6 +34,8 @@ SPOG rows for the infrastructure around the cluster:
 | Falco | runtime security events, modern eBPF driver | none | `k8s/talos/infra/falco/values.yaml` |
 
 ## Alert path
+
+[![Prometheus and webhooks to Alertmanager, then Discord; the Cloudflare watchdog and Falco post to Discord directly](../../assets/diagrams/observability-alerts.svg)](../../assets/diagrams/observability-alerts.svg)
 
 Prometheus rules → Alertmanager → Discord. Routing (`k8s/talos/infra/kube-prometheus-stack/values.yaml`):
 

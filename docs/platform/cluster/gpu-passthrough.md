@@ -3,6 +3,8 @@
 The hyper1 integrated GPU is passed through to `genesis-worker-01` (VM 134). Plex and Tdarr use it
 for Intel Quick Sync hardware transcoding through the Intel GPU device plugin.
 
+[![hyper1 iGPU passed through to genesis-worker-01, advertised by the Intel GPU plugin to Plex and Tdarr](../../assets/diagrams/cluster-gpu-passthrough.svg)](../../assets/diagrams/cluster-gpu-passthrough.svg)
+
 Every command is a single line, because heredocs and backslash continuations get mangled when
 pasted into a tmux session.
 

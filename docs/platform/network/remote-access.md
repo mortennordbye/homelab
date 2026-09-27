@@ -6,18 +6,7 @@ subnet-router VM on Proxmox advertises the LAN. The UniFi gateway's built-in
 WireGuard server is the break-glass path for when Proxmox itself is down. It is
 the only inbound port, and it is used for nothing else.
 
-```
-phone / laptop (anywhere)
-      │  outbound WireGuard, NAT-traversed
-      ▼
-  tailnet nordbye.it ────────────────────▶ tailscale-router VM (10.3.10.40)
-      │                                      Proxmox hyper1, vmid 140
-      │ advertises 10.3.10.0/24              outside the k8s cluster
-      ▼
-  UniFi gw .1 · NAS .10 · Proxmox hyper1-3 · Talos .31-.36 · VIPs .30 / .100/29
-
-break-glass: WireGuard server on the UniFi gateway (WAN UDP 51820)
-```
+[![Remote access through the tailnet and subnet router, with UniFi WireGuard as break-glass](../../assets/diagrams/remote-access.svg)](../../assets/diagrams/remote-access.svg)
 
 The router is a VM outside the Kubernetes cluster so remote access keeps
 working while the cluster is mid-upgrade or broken. It is a VM rather than an

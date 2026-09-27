@@ -1,0 +1,48 @@
+# How Argo CD turns repo directories into Applications. See platform/delivery/argocd.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+terraform: "Terraform bootstrap\nk8s-argocd.tf: chart, AppProjects, infra set" {class: card; icon: ${di}/terraform.svg}
+repo: "homelab repo\nmain HEAD" {class: card; icon: ${di}/github-light.svg}
+
+argo: "Argo CD, namespace argocd" {
+  label.near: top-left
+  style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}
+  infraset: "ApplicationSet infra\nk8s/talos/infra/*" {class: card; icon: ${di}/argo-cd.svg}
+  infraapps: "one Application per directory\nproject infra, wave 0" {class: card; icon: ${di}/argo-cd.svg}
+  self: "Application argocd\nmanages Argo CD itself" {class: card; icon: ${di}/argo-cd.svg}
+  appsset: "ApplicationSet apps\nk8s/talos/apps/*" {class: card; icon: ${di}/argo-cd.svg}
+  appapps: "one Application per directory\nproject apps, wave 10\nnamespace = directory name" {class: card; icon: ${di}/argo-cd.svg}
+  infraset -> infraapps
+  infraapps -> self
+  self -> appsset: brings in
+  appsset -> appapps
+}
+
+cluster: "cluster resources\nkustomize build --enable-helm\nprune, self-heal" {class: card; icon: ${di}/kubernetes.svg}
+kargo: "Kargo\nauthorized-stage via templatePatch" {class: aside; icon: https://raw.githubusercontent.com/akuity/kargo/main/ui/public/kargo-logo-head-only.png}
+
+terraform -> argo.infraset: installs
+repo -> argo.infraset: git directory generator
+argo.infraapps -> cluster
+argo.appapps -> cluster
+kargo -> argo.appapps: {style.stroke-dash: 4}

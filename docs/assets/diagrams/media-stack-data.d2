@@ -1,0 +1,45 @@
+# Who mounts which part of the media share. See apps/media-stack/README.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+classes: {
+  ns: {
+    style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 16}
+  }
+}
+
+arrs: "Sonarr, Radarr, Radarr 4K\nBazarr, Unpackerr, Tdarr\nmount /data" {class: card; icon: ${di}/sonarr.svg}
+qbit: "qBittorrent\nmounts /torrents only" {class: card; icon: ${di}/qbittorrent.svg}
+plex: "Plex\n/tv, /movies, /movies-4k, read-only" {class: card; icon: ${di}/plex.svg}
+
+share: "/volume1/shared-data/media, one share" {
+  class: ns
+  icon: ${di}/synology.svg
+  torrents: "torrents/\ndownload, completed" {class: card; icon: ${ify}/tabler/folder-down.svg?color=%23a1ada3&height=64}
+  library: "series/, movies/, movies-4k/" {class: card; icon: ${ify}/tabler/folders.svg?color=%23a1ada3&height=64}
+  cache: "transcode_cache/tdarr" {class: aside; icon: ${ify}/tabler/folder-cog.svg?color=%23a1ada3&height=64}
+  torrents -> library: "hardlink, same inode"
+}
+
+qbit -> share.torrents: seeds from
+arrs -> share: whole share
+plex -> share.library

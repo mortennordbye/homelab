@@ -1,0 +1,32 @@
+# In-cluster wake: open-webui reaches a scaled-to-zero ollama through the interceptor. See platform/delivery/keda.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+webui: "open-webui\nOLLAMA_BASE_URL=http://ollama-wake:8080" {class: card; icon: ${di}/open-webui.svg}
+alias: "ollama-wake\nExternalName Service in open-webui" {class: card; icon: ${k8s}/svc.svg}
+interceptor: "interceptor proxy\nkeda namespace" {class: card; icon: ${di}/keda.svg}
+route: "InterceptorRoute\nhost ollama-wake" {class: card; icon: ${k8s}/crd.svg}
+ollama: "ollama-service:11434\nscaled 0 to 1" {class: card; icon: ${ify}/simple-icons/ollama.svg?color=%23e9ebe9&height=64}
+
+webui -> alias -> interceptor
+interceptor -> route
+route -> ollama

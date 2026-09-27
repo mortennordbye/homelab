@@ -1,0 +1,34 @@
+# Remote access paths into the LAN. See platform/network/remote-access.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+client: "phone / laptop\nanywhere" {class: card; icon: ${ify}/tabler/devices.svg?color=%23a1ada3&height=64}
+tailnet: tailnet nordbye.it {class: card; icon: ${di}/tailscale-light.svg}
+router: "tailscale-router VM, 10.3.10.40\nProxmox hyper1, vmid 140\noutside the k8s cluster" {class: card; icon: ${di}/proxmox-light.svg}
+lan: "LAN 10.3.10.0/24\nUniFi gw .1, NAS .10, Proxmox hyper1-3\nTalos .31-.36, VIPs .30 and .100/29" {class: card; icon: ${di}/unifi.svg}
+wireguard: "break-glass\nUniFi WireGuard server, WAN UDP 51820" {class: aside; icon: ${di}/wireguard.svg}
+
+client -> tailnet: "outbound WireGuard, NAT-traversed"
+tailnet -> router
+router -> lan: advertises 10.3.10.0/24
+client -> wireguard: {style.stroke-dash: 4}
+wireguard -> lan: {style.stroke-dash: 4}

@@ -38,6 +38,7 @@ jobs:
               --layout elk \
               --elk-nodeNodeBetweenLayers=35 \
               --elk-padding="[top=25,left=25,bottom=25,right=25]" \
+              --scale 1 \
               --pad 40 "/work/$name.d2" "/work/$name.svg"
           done
           sudo chown -R "$(id -u):$(id -g)" docs/assets/diagrams

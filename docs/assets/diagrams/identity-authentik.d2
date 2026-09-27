@@ -1,0 +1,66 @@
+# Authentik: forward-auth apps behind Traefik and OIDC apps. See platform/identity/README.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+browser: browser {class: card; icon: ${ify}/tabler/devices.svg?color=%23a1ada3&height=64}
+cloudflare: "Cloudflare\nauth.bigd.no, hub.bigd.no" {class: card; icon: ${di}/cloudflare.svg}
+public: "Traefik public gateway\nCloudflare-only Middleware" {class: card; icon: ${di}/traefik.svg}
+private: "Traefik private gateway\n*.local.bigd.no" {class: card; icon: ${di}/traefik.svg}
+
+forward: "forward-auth, proxy providers" {
+  class: aside
+  style.stroke: "#2a382c"
+  label.near: top-center
+  homepage: "homepage\nhub.bigd.no\nhomepage-users" {class: card; icon: https://raw.githubusercontent.com/selfhst/icons/main/svg/homepage.svg}
+  reelsmith: "reelsmith panel\nreelsmith.local.bigd.no\nreelsmith-admins" {class: card; icon: ${ify}/tabler/movie.svg?color=%23a1ada3&height=64}
+}
+
+oidc: "OIDC clients" {
+  class: aside
+  grid-columns: 3
+  grid-gap: 20
+  style.stroke: "#2a382c"
+  label.near: top-center
+  argocd: "Argo CD\nargocd-admins" {class: card; icon: ${di}/argo-cd.svg; height: 150}
+  kargo: "Kargo, PKCE\nkargo-admins" {class: card; icon: https://raw.githubusercontent.com/akuity/kargo/main/docs/static/img/kargo.png; height: 150}
+  grafana: "Grafana\ngrafana-admins" {class: card; icon: ${di}/grafana.svg; height: 150}
+}
+
+identity: "namespace identity" {
+  class: aside
+  style.stroke: "#2a382c"
+  label.near: top-center
+  server: "authentik-server\nUI, OIDC, embedded outpost" {class: card; icon: ${di}/authentik.svg}
+  worker: "authentik-worker\napplies the blueprints" {class: card; icon: ${di}/authentik.svg}
+  postgres: "authentik-postgresql\nPostgres 17" {class: card; icon: ${di}/postgres.svg}
+  server -> postgres
+  worker -> postgres
+}
+
+browser -> cloudflare -> public
+browser -> private
+public -> forward.homepage
+private -> forward.reelsmith
+private -> oidc
+forward -> identity.server: forwardAuth on every request
+oidc -> identity.server: OIDC login {style.stroke-dash: 4}
+forward -> oidc: {style.opacity: 0}

@@ -35,6 +35,8 @@ Two kinds of client. Apps that speak OIDC get an OAuth2 provider and do the logi
 themselves. Apps that do not get a proxy provider in `forward_single` mode, and Traefik
 asks Authentik's embedded outpost before each request reaches them.
 
+[![Browsers reach forward-auth apps through the Traefik gateways and OIDC apps sign in against authentik-server](../../assets/diagrams/identity-authentik.svg)](../../assets/diagrams/identity-authentik.svg)
+
 | App | Kind | Host | Group that grants access | Client side |
 | --- | --- | --- | --- | --- |
 | Argo CD | OIDC, confidential | `argocd.local.bigd.no` | `argocd-admins` (mapped to `role:admin`) | [`argocd/values.yaml`](../../../k8s/talos/infra/argocd/values.yaml), [`argocd-oidc-secret.yaml`](../../../k8s/talos/infra/argocd/argocd-oidc-secret.yaml) |

@@ -7,6 +7,8 @@ A render pipeline on [verksted](../verksted/README.md) produces the videos each 
 `mortennordbye/reelsmith` repo. The manifests are in
 [`k8s/talos/apps/reelsmith/`](../../../k8s/talos/apps/reelsmith/kustomization.yaml).
 
+[![Meta and the render pipeline reach the gateway through Cloudflare and the public gateway, admins through the private gateway and Authentik; the gateway publishes to four platforms and keeps state on NFS](../../assets/diagrams/reelsmith-flow.svg)](../../assets/diagrams/reelsmith-flow.svg)
+
 | Part | Where |
 |---|---|
 | Namespace | `reelsmith`, Pod Security `restricted` |

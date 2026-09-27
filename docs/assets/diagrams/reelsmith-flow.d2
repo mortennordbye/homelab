@@ -1,0 +1,69 @@
+# Reelsmith gateway: who reaches it, what it calls, where it keeps state. See apps/reelsmith/README.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+classes: {
+  ns: {
+    style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 16}
+  }
+}
+
+meta: "Meta\nwebhooks, media fetch" {class: card; icon: ${di}/meta.svg}
+render: "verksted\nnightly render" {class: card; icon: ${ify}/tabler/movie.svg?color=%23a1ada3&height=64}
+admin: "admin\nLAN or Tailscale" {class: card; icon: ${di}/tailscale-light.svg}
+
+cloudflare: "Cloudflare\ngate.nordbye.it" {class: card; icon: ${di}/cloudflare.svg}
+public: "Traefik public gateway\nallowlisted paths\nCloudflare IPs only" {class: card; icon: ${di}/traefik.svg}
+private: "Traefik private gateway\nreelsmith.local.bigd.no" {class: card; icon: ${di}/traefik.svg}
+authentik: "Authentik forward auth\nreelsmith-admins" {class: card; icon: ${di}/authentik.svg}
+
+gateway: "reelsmith-gateway\none replica, Recreate" {class: card; icon: ${k8s}/pod.svg}
+
+platforms: publishing APIs {
+  class: ns
+  grid-columns: 2
+  instagram: Instagram {class: card; icon: ${di}/instagram.svg}
+  facebook: Facebook {class: card; icon: ${di}/facebook.svg}
+  youtube: YouTube {class: card; icon: ${di}/youtube.svg}
+  tiktok: TikTok {class: card; icon: ${di}/tiktok-light.svg}
+}
+
+store: storage {
+  class: ns
+  state: "reelsmith-state PVC\nSQLite, covers\n/state/backups" {class: card; icon: ${ify}/logos/sqlite.svg}
+  offsite: "reelsmith-offsite-backups PV\n/offsite on the NAS" {class: aside; icon: ${di}/synology.svg}
+  state -> offsite: VACUUM INTO copy
+}
+prometheus: "Prometheus\nscrapes /metrics" {class: card; icon: ${di}/prometheus.svg}
+discord: "Discord\nevery severity" {class: aside; icon: ${di}/discord.svg}
+
+meta -> cloudflare
+render -> cloudflare: "/api, bearer token"
+cloudflare -> public
+public -> gateway
+admin -> private
+private -> authentik
+private -> gateway: /admin
+gateway -> platforms: publish, DMs
+gateway -> store.state
+gateway -> prometheus: /metrics scraped
+prometheus -> discord: alerts

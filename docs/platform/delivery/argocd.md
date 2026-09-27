@@ -6,6 +6,8 @@ and manages itself: the `argocd` directory is one of the Applications it syncs. 
 Application tracks `HEAD` of `main`, so a merge is a deploy and a direct `kubectl apply`
 is reverted by self-heal.
 
+[![Terraform bootstraps the infra ApplicationSet, which brings in Argo CD itself and the apps ApplicationSet, each generating one Application per directory](../../assets/diagrams/delivery-argocd.svg)](../../assets/diagrams/delivery-argocd.svg)
+
 ## Applications from directories
 
 Two ApplicationSets use the git directory generator on this repo. Each directory one

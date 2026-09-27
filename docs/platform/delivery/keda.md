@@ -31,11 +31,7 @@ in `keda`) between the min and max in the values file.
 
 ## Request path
 
-```
-client -> Traefik Gateway -> HTTPRoute backendRef
-       -> keda-add-ons-http-interceptor-proxy.keda:8080
-       -> InterceptorRoute (matched on Host) -> app Service -> pod
-```
+[![A request goes through Traefik to the KEDA interceptor, which matches the Host, has KEDA scale the Deployment from zero, then forwards to the app Service](../../assets/diagrams/delivery-keda-request.svg)](../../assets/diagrams/delivery-keda-request.svg)
 
 - The app's HTTPRoute keeps its hostname and filters, but its `backendRef` is the
   Service `keda-add-ons-http-interceptor-proxy` in namespace `keda`, port `8080`.
@@ -112,6 +108,8 @@ The stage apps and ollama have only the HTTP trigger and sit at zero until used.
 
 ollama has no HTTPRoute. open-webui calls it in-cluster, and a direct call to
 `ollama-service` would not wake a pod that is at zero. Instead:
+
+[![open-webui calls the ollama-wake ExternalName Service, which resolves to the interceptor, whose InterceptorRoute targets ollama](../../assets/diagrams/delivery-keda-ollama.svg)](../../assets/diagrams/delivery-keda-ollama.svg)
 
 - [`open-webui/ollama-wake.yaml`](../../../k8s/talos/apps/open-webui/ollama-wake.yaml)
   is an `ExternalName` Service named `ollama-wake` in `open-webui` that resolves to

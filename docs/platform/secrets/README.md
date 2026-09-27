@@ -3,19 +3,10 @@
 No secret value is committed to this repo. Git holds references: each app
 declares an `ExternalSecret` that names a Bitwarden Secrets Manager item by
 UUID, and External Secrets Operator (ESO) turns that into a Kubernetes `Secret`
-inside the cluster. The values live in two places only, Bitwarden and the
+inside the cluster, refreshed hourly. The values live in two places only, Bitwarden and the
 running cluster.
 
-```
-Bitwarden Secrets Manager            git (this repo)
-  org  morten-nordbye-lab              k8s/talos/apps/<app>/externalsecret.yaml
-  project Homelab                        remoteRef.key: <secret UUID>
-        │                                        │
-        │ machine account token                  │ ArgoCD applies
-        ▼                                        ▼
-  ClusterSecretStore ─────────────────▶  ExternalSecret ──▶ Secret ──▶ pod env
-  bitwarden-secretsmanager               (refreshed hourly)
-```
+[![Bitwarden secret flowing through ClusterSecretStore and ExternalSecret into a pod](../../assets/diagrams/secrets-flow.svg)](../../assets/diagrams/secrets-flow.svg)
 
 ## The in-cluster half
 
@@ -27,7 +18,7 @@ what `bitwarden-certificate.yaml` and `cluster_issuer.yaml` are for.
 `clustersecretstore-bitwarden.yaml` defines the single store all apps use:
 
 - name `bitwarden-secretsmanager`, scoped to org
-  `1a1f473f-c6a3-47af-a106-b29800f5ca1f` and project
+  `1a1f473f-c6a3-47af-a106-b29800f5ca1f` (`morten-nordbye-lab`) and project
   `1ea61322-5f4a-44a4-b4d0-b29b00ba1134` (the `Homelab` project).
 - It authenticates with a machine account access token read from the
   `bw-auth-token` Secret in the `external-secrets` namespace. That token is the

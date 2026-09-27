@@ -1,0 +1,54 @@
+# Scale-to-zero request path through the KEDA HTTP interceptor. See platform/delivery/keda.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+client: client {class: card; icon: ${ify}/tabler/devices.svg?color=%23a1ada3&height=64}
+traefik: "Traefik Gateway\nHTTPRoute, middlewares run first" {class: card; icon: ${di}/traefik.svg}
+
+keda: "namespace keda" {
+  label.near: top-left
+  style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}
+  interceptor: "interceptor proxy :8080\nholds the request, 2 to 5 replicas" {class: card; icon: ${di}/keda.svg}
+  scaler: "external scaler :9090\npending and in-flight requests" {class: card; icon: ${di}/keda.svg}
+  operator: KEDA operator {class: card; icon: ${di}/keda.svg}
+  interceptor -> scaler
+  scaler -> operator
+}
+
+app: "app namespace" {
+  label.near: top-left
+  style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}
+  route: "InterceptorRoute\nHost to Service and port" {class: card; icon: ${k8s}/crd.svg}
+  so: "ScaledObject\ncron + external-push" {class: card; icon: ${di}/keda.svg}
+  deploy: "Deployment\n0 or 1 replicas" {class: card; icon: ${k8s}/deploy.svg}
+  svc: app Service {class: card; icon: ${k8s}/svc.svg}
+  pod: pod {class: card; icon: ${k8s}/pod.svg}
+  so -> deploy
+  deploy -> pod
+  svc -> pod
+}
+
+client -> traefik
+traefik -> keda.interceptor: "backendRef, allowed by ReferenceGrant"
+keda.interceptor -> app.route: match Host
+keda.operator -> app.so
+keda.interceptor -> app.svc: forward once ready

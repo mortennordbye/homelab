@@ -7,6 +7,8 @@ notifications) is in [`pbs.md`](pbs.md).
 
 ## Layers
 
+[![Cluster jobs and Home Assistant writing to k8s-backups on the NAS, snapshotted and copied to Google Drive; Proxmox VMs through PBS to pve-backup](../../assets/diagrams/backups-layers.svg)](../../assets/diagrams/backups-layers.svg)
+
 | Layer | Source | Schedule (Europe/Oslo) | Kept | NAS path | Defined in |
 |---|---|---|---|---|---|
 | etcd | `talosctl etcd snapshot` via a Talos API ServiceAccount (`os:etcd:backup`) | 00:30 | 30 | `etcd/etcd-<UTC>.db.gz` | `k8s/talos/infra/etcd-backup/`, patch in `terraform/proxmox/hyper-cluster/k8s/talos/talos-cluster.tf` |

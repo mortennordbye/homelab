@@ -28,6 +28,12 @@ the file into its root folder, Plex picks it up, and Tdarr later re-encodes it i
 is H.264 and no longer seeding. All of them have tiles on the hub (`hub.bigd.no`,
 `k8s/talos/apps/homepage/values.yaml`).
 
+Prowlarr, qBittorrent and Gluetun share one pod, so all their traffic leaves through
+the PIA VPN. Prowlarr reaches FlareSolverr in `arr-stack` for indexers behind a browser
+challenge.
+
+[![Request flow from Seerr through the arr apps and the VPN pod to the media share and Plex](../../assets/diagrams/media-stack-flow.svg)](../../assets/diagrams/media-stack-flow.svg)
+
 Plex libraries: `Movies` (`/movies`), `Movies 4K` (`/movies-4k`), `TV Shows` (`/tv`),
 `Courses`, `Youtube`. Each is a read-only NFS mount of the matching folder on the
 share, declared in `k8s/talos/apps/plex-media-stack/plex.yaml`. A new library folder
@@ -37,6 +43,8 @@ must exist on the share before it is added there, or Plex fails to start.
 
 Everything lives on one Synology share, `/volume1/shared-data/media`, mounted at
 `/data` in Sonarr, Radarr, Radarr 4K, Bazarr, Unpackerr and Tdarr.
+
+[![Which apps mount which folders of the media share, and the hardlink from torrents to the library](../../assets/diagrams/media-stack-data.svg)](../../assets/diagrams/media-stack-data.svg)
 
 | Path | Contents |
 | ---- | -------- |
