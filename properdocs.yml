@@ -1,0 +1,61 @@
+site_name: Homelab docs
+site_description: How the Genesis homelab is built and run
+site_url: https://docs.nordbye.it/
+repo_url: https://github.com/mortennordbye/homelab
+repo_name: mortennordbye/homelab
+edit_uri: edit/main/docs/
+docs_dir: docs
+
+# The backlog stays in the repo only; links to it are rewritten to GitHub by the hook.
+exclude_docs: |
+  backlog/
+
+hooks:
+  - scripts/docs_site_hooks.py
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: green
+      accent: green
+      toggle:
+        icon: material/brightness-7
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: green
+      accent: green
+      toggle:
+        icon: material/brightness-4
+        name: Light mode
+  features:
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+  logo: assets/logo/logo.png
+  favicon: assets/logo/logo.png
+
+plugins:
+  - search
+  # docs/ holds no loose files, so the site root redirects to the spec.
+  - redirects:
+      redirect_maps:
+        index.md: architecture/README.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn

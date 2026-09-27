@@ -59,6 +59,8 @@ Synology DS1522+ ── NFS for volumes, media and backups; PBS VM for VM backup
   every prod promotion is a pull request
   ([`../platform/delivery/kargo.md`](../platform/delivery/kargo.md)). CI only builds and pushes tags.
 - KEDA with the HTTP add-on scales idle apps to zero; the interceptor wakes them.
+- The docs in `docs/` are published to https://docs.nordbye.it by GitHub Pages
+  (`.github/workflows/docs.yaml`); the backlog stays in the repo only.
 - Renovate proposes chart, image and provider bumps; Postgres majors are excluded and
   done by hand ([`../platform/data/postgres.md`](../platform/data/postgres.md)).
 ## Secrets

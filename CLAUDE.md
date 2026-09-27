@@ -116,6 +116,11 @@ docs/
 - Link from code comments to area docs, never to a project doc, since those get deleted.
 - No torrent tracker or subtitle provider names anywhere in the repo; they live only in
   the apps' own config.
+- `docs/` is published to https://docs.nordbye.it by `.github/workflows/docs.yaml`
+  (ProperDocs + Material, config `properdocs.yml`). The build is `--strict`, so a broken
+  link between pages fails the PR; links to code outside `docs/` are rewritten to GitHub
+  by `scripts/docs_site_hooks.py`. `docs/backlog/` is excluded from the site. Preview with
+  `make docs`.
 
 ### Track unfinished work in docs/backlog/README.md
 

@@ -153,3 +153,16 @@ resource "cloudflare_dns_record" "asuid" {
   content = "\"17D18F37325E41EA89D80F0E2BB5977B800AC2DCBA06E506C4049F68A11EC9BC\""
   ttl     = 1
 }
+
+# --- GitHub Pages -----------------------------------------------------------
+
+# Unproxied: GitHub has to see its own IPs to issue the Let's Encrypt cert for the
+# custom domain. .github/workflows/docs.yaml publishes the site.
+resource "cloudflare_dns_record" "docs" {
+  zone_id = data.cloudflare_zone.this.zone_id
+  name    = "docs.${var.zone_name}"
+  type    = "CNAME"
+  content = "mortennordbye.github.io"
+  proxied = false
+  ttl     = 1
+}
