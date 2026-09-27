@@ -15,21 +15,14 @@ hooks:
 
 theme:
   name: material
+  # Dark only, like nordbye.it; the colours live in the stylesheet.
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: green
-      accent: green
-      toggle:
-        icon: material/brightness-7
-        name: Dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: green
-      accent: green
-      toggle:
-        icon: material/brightness-4
-        name: Light mode
+    scheme: slate
+    primary: custom
+    accent: custom
+  font:
+    text: Source Serif 4
+    code: Fragment Mono
   features:
     - navigation.indexes
     - navigation.sections
@@ -38,6 +31,9 @@ theme:
     - content.code.copy
   logo: assets/logo/logo.png
   favicon: assets/logo/logo.png
+
+extra_css:
+  - assets/stylesheets/theme.css
 
 plugins:
   - search
