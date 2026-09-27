@@ -67,7 +67,7 @@ torrent is still in qBittorrent.
   Radarr 4K (below).
 - General > Backups (also in Prowlarr): interval 1 day, retention 14 days, folder
   `Backups`. The nightly VolSync copy of `/config` carries these zips, and a restore
-  starts from the newest zip rather than the live database (`docs/backup-plan.md`).
+  starts from the newest zip rather than the live database (`docs/backups.md`).
 
 ## Radarr 4K
 

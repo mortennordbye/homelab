@@ -1,8 +1,7 @@
 # Backups
 
 Everything lands on the Synology share `k8s-backups` (`nas.local.bigd.no:/volume1/k8s-backups`,
-Volume 1). Restores: [`backup-restore.md`](backup-restore.md). Design history and research:
-[`backup-plan.md`](backup-plan.md).
+Volume 1). Restores: [`backup-restore.md`](backup-restore.md).
 
 ## Layers
 
@@ -64,6 +63,9 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
   ```
 
 ## Configured outside Git
+
+The `synology-community/synology` Terraform provider has no resources for shares, NFS
+rules, snapshots or Hyper Backup, so these are set by hand in DSM and recorded here.
 
 | Where | Setting |
 |---|---|
