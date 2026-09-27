@@ -3,8 +3,6 @@
 Kargo promotes container images into the cluster on top of Argo CD. CI only
 builds and pushes the image; Kargo owns the git write and the promotion. Live for
 **portfolio, blog, logeverylift, and headroom**.
-Design/rollout history (superseded where it disagrees with this file):
-[`docs/kargo-pilot-plan.md`](kargo-pilot-plan.md).
 
 ## Two app shapes
 

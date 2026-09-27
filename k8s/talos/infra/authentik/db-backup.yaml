@@ -1,4 +1,4 @@
-# Nightly pg_dump to the NAS, 30 days kept (docs/backup-plan.md). The instance label
+# Nightly pg_dump to the NAS, 30 days kept (docs/backups.md). The instance label
 # is what the authentik CiliumNetworkPolicy admits to postgres; without it the dump
 # cannot connect.
 apiVersion: v1

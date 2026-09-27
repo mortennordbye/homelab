@@ -85,6 +85,20 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+### Keep docs/SPEC.md current
+
+`docs/SPEC.md` is the technical spec: the present shape of the homelab and how the parts
+relate, with a map to the area docs. When a change adds, removes or rewires something at
+that level (a new app group, a new network path, a new storage class, a new dependency
+between components), update SPEC.md in the same PR.
+
+- Area docs (`docs/*.md`, `docs/media-stack/`) describe the current state and how to
+  operate or rebuild it. No plans, no status diaries.
+- Plans and records of in-flight work go in `docs/projects/`. When a project ships,
+  move anything lasting into SPEC.md or an area doc and delete the project doc; git
+  history keeps the record.
+- Link from code comments to area docs, never to a project doc, since those get deleted.
+
 ### Track unfinished work in BACKLOG.md
 
 If you leave anything unfinished, partially implemented, or explicitly defer it, add an entry to `BACKLOG.md` in the repo root before reporting the task done. Don't bury deferrals in chat — they vanish next session.
@@ -148,13 +162,13 @@ Run the relevant subset for what you changed — not everything every time:
 - **Terraform** (`terraform/**`) — `terraform fmt -check`, `terraform validate`, and `terraform plan`. Never `apply` without explicit user approval.
 - **GitHub Actions** (`.github/workflows/**`) — `actionlint` if available; otherwise read the workflow end-to-end.
 
-Doc-only edits (`README.md`, `BACKLOG.md`, this file) skip the above.
+Doc-only edits (`README.md`, `BACKLOG.md`, `docs/**`, this file) skip the above.
 
 ## Architecture
 
-Homelab infrastructure for a 6-node Proxmox cluster running a Talos Kubernetes cluster ("Genesis"), provisioned by Terraform and reconciled by ArgoCD.
+Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes cluster ("Genesis", 6 VMs), provisioned by Terraform and reconciled by ArgoCD. `docs/SPEC.md` is the maintained version of this section and wins where they differ.
 
-- **Compute:** Proxmox VE on two Lenovo ThinkCentre nodes; Talos Linux VMs form the K8s cluster.
+- **Compute:** Proxmox VE on three Lenovo ThinkCentre nodes; three control plane and three worker Talos VMs form the K8s cluster.
 - **Networking:** Cilium (CNI + L2 announcements / LB IPAM for LoadBalancer VIPs), Traefik via Gateway API.
 - **Security:** cert-manager, External Secrets Operator, Falco, Authentik.
 - **Observability:** kube-prometheus-stack, Grafana, Loki, OpenTelemetry collector.

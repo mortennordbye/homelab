@@ -18,6 +18,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Apps
 
+### Immutable snapshots for the k8s-volumes share
+- **What:** decide whether `k8s-volumes` gets immutable Btrfs snapshots like `k8s-backups`, and data checksumming, which Synology only allows on a new share.
+- **Why deferred:** left open when the backup work shipped; the backups themselves are protected on `k8s-backups`.
+- **Unblock:** a decision on whether live volumes need point-in-time protection beyond the nightly VolSync copies, and a maintenance window if it means migrating to a new share.
+- **Where:** DSM Snapshot Replication and Shared Folder settings; record the result in `docs/backups.md` under "Configured outside Git".
+
 ### Tdarr: back to the night-only window and one GPU worker
 - **What:** both Tdarr libraries (`TV`, `Movies`) currently transcode 24/7, and the node runs 2 GPU transcode workers, to work through the H.264 backlog. Set the library schedule back to 00:00 to 07:00 every day and the node back to 1 GPU worker (Nodes page), as recorded in the media-stack docs.
 - **Why deferred:** running around the clock clears the backlog faster; the night window exists because Plex shares the Quick Sync iGPU.
@@ -74,7 +80,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
   Two further loose ends in `/fun`. The synthesised rickroll's third line ("never gonna run around and desert you") is the least confident transcription and has never been listened to by anyone. And nothing here has been driven on real hardware: mouse-look and the cold-load loading bar have never run in a browser with working pointer lock, and the touch controls added 2026-07-20 (drag-to-look, tap-to-activate, walk stick, entry gate) were verified only by dispatching synthetic `TouchEvent`s in headless Chromium. That proves the wiring and says nothing about feel — look sensitivity, stick size and placement, and the tap slop threshold are all guesses at this point. Two newer pieces are in the same position: the wardrobe mirrors swapping between the live reflector and their dark stand-in half a metre outside the bedroom door, and the phone loading screen lighting the lantern, desk lamp and stove over the poster stage by stage. Both were checked in emulated headless Chromium only.
 - **Why deferred:** Both need a human: one at a real browser with sound, one on an actual phone. Neither is checkable from headless Chromium.
 - **Unblock:** Open `/fun` in a real browser, look at a printer switch, press `E`, and watch the pill. If it does not flip, instrument `onActivate` in `Interactive` — the registry hands activation the ref payload, so the suspect is either hover resolution or the keydown listener's `enabled` gate. Open `/fun` on a desktop, listen to the melody, hard-reload with cache disabled to see the loading bar. Then open it on a phone and tune `LOOK_SENS`, `TAP_SLOP_PX` and `STICK_R` in `Touch.tsx` against how it actually feels.
-- **Where:** `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`; `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Touch.tsx`, `docs/fun-room-guide.md` (known gaps).
+- **Where:** `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`; `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Touch.tsx`, `docs/projects/fun-room-guide.md` (known gaps).
 
 ### Fun flat: the parts of the plan not yet modelled
 - **What:** `/fun` is the real apartment with all four spaces walkable, the north wall glazed and the entré's two built-ins modelled, but two things on the floor plan are still not built: the **P** marked in the living room (a post, or a flue), and **door leaves** for the bedroom and bathroom — those openings are cased and lined but carry no door, so neither room can be shut.

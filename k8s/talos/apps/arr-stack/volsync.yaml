@@ -1,5 +1,5 @@
 # Nightly restic backup of this namespace's app volumes to the NAS
-# (docs/backup-plan.md). Every repository shares one password, volsync-restic-password
+# (docs/backups.md). Every repository shares one password, volsync-restic-password
 # in Bitwarden; without it none of them can be restored.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
