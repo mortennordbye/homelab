@@ -159,7 +159,8 @@ changes take a few minutes to propagate, and API calls fail intermittently until
 they do, so wait rather than changing the config.
 
 In-cluster, external-dns, cert-manager and the Kargo purge step all read one
-token from Bitwarden (`621a3a65-abe5-4c24-9a32-b29e010850f5`).
+token from Bitwarden (`621a3a65-abe5-4c24-9a32-b29e010850f5`). It is
+deliberately broad and shared rather than scoped per consumer.
 
 A record created in the dashboard must be imported before Terraform can manage
 it, or apply fails with "record already exists":
