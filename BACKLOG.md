@@ -24,6 +24,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** the H.264 queue is mostly done, or Plex playback starts stuttering during the day.
 - **Where:** Tdarr library settings at `https://tdarr.local.bigd.no` (schedule lives in the Tdarr DB, not Git), target settings in `docs/media-stack/README.md`.
 
+### Prowlarr cannot reach Sonarr or Radarr
+- **What:** Prowlarr's app sync fails ("All applications are unavailable"). It runs as a sidecar in the gluetun pod with `DNS_KEEP_NAMESERVER: off`, so every lookup goes through the VPN resolver and `*.local.bigd.no` does not resolve. Indexer changes in Prowlarr no longer reach the arr apps; radarr-4k got its indexers copied by hand.
+- **Why deferred:** found while setting up radarr-4k; changing the VPN DNS setup is its own change with leak risk to weigh.
+- **Unblock:** pick a fix that keeps torrent DNS in the tunnel, likely `hostAliases` on the gluetun pod mapping the arr hostnames to the private gateway VIP `10.3.10.102`. Then add Radarr 4K as a Prowlarr app.
+- **Where:** `k8s/talos/apps/gluetun-vpn/gluetun-config.yaml`, `k8s/talos/apps/gluetun-vpn/gluetun.yaml`, Prowlarr Settings > Apps.
+
 ### Mealie still hard-logs-out every 48h (upstream)
 - **What:** Mealie's frontend never refreshes its access token (`mealie-recipes/mealie#7835`) — only one `/api/auth/refresh` call appears across the whole app log. At `TOKEN_TIME` (default 48h) the token expires and the axios 401 interceptor wipes the cookie and redirects to `/login`. The replica pin fixes cold-start logouts but not this.
 - **Why deferred:** The only local lever is raising `TOKEN_TIME`, which delays the logout rather than fixing it; the real fix is upstream implementing a refresh loop. Not worth changing config until we know whether a 48h re-login actually bothers anyone.

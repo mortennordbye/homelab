@@ -54,11 +54,12 @@ delete the other's file on upgrade.
 - Root folder `/data/movies-4k`, owned by the Synology share user with mode 777.
   It must exist before Plex starts, since Plex mounts it read-only as `/movies-4k`.
 - Same download client and remote path mapping as Radarr, category `radarr-4k`.
-- Quality profile: 2160p WEB-DL (TRaSH), with Dolby Vision releases that lack an
-  HDR fallback blocked.
-- Prowlarr: added as its own Radarr app so indexers sync.
-- Seerr: added as a Radarr server with "4K Server" on and "Default Server" on,
-  root `/data/movies-4k`. That gives each film a separate "Request in 4K" button.
+- Quality profile `2160p`: WEB 2160p and Bluray-2160p, no remux, cutoff WEB 2160p.
+  Custom format "DV (w/o HDR fallback)" from TRaSH scored -10000.
+- Indexers: the six Prowlarr Torznab indexers, copied from Radarr with the Prowlarr
+  API key. Prowlarr cannot sync them itself while its app sync is broken (see BACKLOG).
+- Seerr: Radarr server "Radarr 4K" with "4K Server" and "Default Server" on, profile
+  `2160p`, root `/data/movies-4k`. That gives each film a separate "Request in 4K" button.
 - Plex: separate "Movies 4K" library on `/movies-4k`.
 
 ## Cleanuparr
