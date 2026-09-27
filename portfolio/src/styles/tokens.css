@@ -96,9 +96,9 @@
   --cast: 6px 16px 28px -18px rgba(0, 0, 0, 0.95);
   --cast-tight: 2px 3px 5px -2px rgba(0, 0, 0, 0.85);
 
-  /* Shares copper's hex, so a Result mark and a Watch mark are currently one
-     colour told apart only by their label. Pre-existing; see docs/backlog/README.md. */
-  --warn: #c09955;
+  /* Amber held a luminance step above copper and danger (both near 7:1): at
+     equal luminance a hue shift alone is invisible to a colour-blind reader. */
+  --warn: #d8b477;        /*  9.50:1 */
 
   /* Atmospheric gradient. One hue at low opacity: the old blue/violet/teal
      stack was the clearest generic tell on the page. */

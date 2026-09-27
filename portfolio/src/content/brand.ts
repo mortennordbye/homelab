@@ -243,12 +243,12 @@ export const semantic = [
   {
     name: "warning",
     light: "#956b23",
-    dark: "#c09955",
+    dark: "#d8b477",
     bgLight: "#f6efe4",
     bgDark: "#332a17",
     crLight: "4.59:1",
-    crDark: "7.01:1",
-    note: "Amber at hue 38, far enough from the brand to never be mistaken for it. It does share a hex with copper, the ink end of the material ramp, so a Result mark and a Watch mark are currently one colour told apart only by their label. Known, tracked, not yet fixed.",
+    crDark: "9.50:1",
+    note: "Amber at hue 38, far enough from the brand to never be mistaken for it. It sits a luminance step above copper, the ink end of the material ramp, and above danger, both near 7:1, because at equal luminance a hue shift alone is invisible to a colour-blind reader.",
   },
   {
     name: "danger",
