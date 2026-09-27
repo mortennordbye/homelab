@@ -4,12 +4,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Backups & monitoring
 
-### In-cluster DNS has one upstream
-- **What:** every node resolves through the UniFi gateway (`10.3.10.1`) alone, and CoreDNS forwards to the node's resolver, so gateway DNS trouble breaks external name resolution inside the cluster.
-- **Why deferred:** it only bites during outages that already take the internet down, and the fix needs a choice between a public fallback in CoreDNS and a second nameserver in the Talos machine config.
-- **Unblock:** pick the upstream: a CoreDNS `forward . 10.3.10.1 1.1.1.1` style fallback, or Talos `machine.network.nameservers` with a second entry.
-- **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/talos-cluster.tf` (machine network patch), CoreDNS config, `docs/platform/observability/README.md`.
-
 ### Immutable snapshots for the k8s-volumes share
 - **What:** decide whether `k8s-volumes` gets immutable Btrfs snapshots like `k8s-backups`, and data checksumming, which Synology only allows on a new share.
 - **Why deferred:** left open when the backup work shipped; the backups themselves are protected on `k8s-backups`.
