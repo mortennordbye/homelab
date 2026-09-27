@@ -25,10 +25,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** Tdarr library settings at `https://tdarr.local.bigd.no` (schedule lives in the Tdarr DB, not Git), target settings in `docs/media-stack/README.md`.
 
 ### 4K media library
-- **What:** add a separate 4K library: a Radarr/Sonarr 2160p quality profile or instance, its own folder under `/data`, and a matching Plex library. Tdarr needs no library for it, since 4K releases are HEVC and the flow only re-encodes H.264.
-- **Why deferred:** waiting until Tdarr has worked through the H.264 backlog and freed disk space; 4K titles are 40 to 80 GB each against about 7.8 TB free.
-- **Unblock:** the Tdarr H.264 queue is mostly done and free space on `/data` is known.
-- **Where:** `k8s/talos/apps/arr-stack/` (Radarr, Sonarr), `k8s/talos/apps/plex-media-stack/`, layout in `docs/media-stack/README.md`.
+- **What:** 4K for selected big films only, everything else stays 1080p. One Radarr instance: add a 2160p quality profile (TRaSH, WEB-DL 2160p, block Dolby Vision without HDR fallback) and assign it per movie. The 4K file replaces the 1080p one in `/data/movies`; no second instance or folder. Tdarr skips these, since 4K releases are HEVC and the flow only re-encodes H.264.
+- **Why deferred:** waiting until Tdarr has worked through the H.264 backlog and freed disk space; 2160p WEB-DL runs about 15 to 25 GB per film.
+- **Unblock:** the Tdarr H.264 queue is mostly done. Switch to a second `radarr-4k` instance with `/data/movies-4k` only if other viewers start forcing 4K HDR transcodes in Plex.
+- **Where:** Radarr profiles (Radarr DB, not Git), `k8s/talos/apps/arr-stack/radarr.yaml`, settings to record in `docs/media-stack/README.md`.
 
 ### Mealie still hard-logs-out every 48h (upstream)
 - **What:** Mealie's frontend never refreshes its access token (`mealie-recipes/mealie#7835`) — only one `/api/auth/refresh` call appears across the whole app log. At `TOKEN_TIME` (default 48h) the token expires and the axios 401 interceptor wipes the cookie and redirects to `/login`. The replica pin fixes cold-start logouts but not this.
