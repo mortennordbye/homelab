@@ -16,6 +16,7 @@ always Talos, then Kubernetes, one minor at a time.
 | 1.11  | 1.34               |
 | 1.12  | 1.35               |
 | 1.13  | 1.36               |
+| 1.14  | 1.37               |
 
 `talosctl` must be at least as new as the version it installs. Check with
 `talosctl version --client` and run `brew upgrade talosctl` before starting.
