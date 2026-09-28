@@ -98,12 +98,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Put `public/models/fun/`, `public/textures/` and the JS chunks behind a CDN or an object store with long cache headers, and re-measure a cold `/fun` against `make run-prod`. Required before any large asset is added to the room.
 - **Where:** `portfolio/public/models/fun/`, `portfolio/public/textures/`, `portfolio/next.config.ts`, `k8s/talos/apps/portfolio/httproute.yaml`.
 
-### React 19.3 and three 0.186 are blocked by the 3D stack's peer ranges
-- **What:** Renovate PR #938 bundles `next`, `react`/`react-dom` and `three`. Only the `next` half is installable. `@react-three/fiber@9.7.0` declares `peer react@">=19 <19.3"` and `postprocessing@6.39.3` declares `peer three@">= 0.168.0 < 0.186.0"`, so `react@19.3.0` and `three@0.186.0` both fail to resolve. `next` and `eslint-config-next` 16.3.5 were taken on their own; `react`/`react-dom` stay at 19.2.8 and `three` at 0.185.x.
-- **Why deferred:** The bounds are upstream declarations, not preferences. Forcing them with `--legacy-peer-deps` would install a combination neither library claims to support, on the globe and the whole `/fun` room.
-- **Unblock:** Wait for `@react-three/fiber` to widen its react peer past 19.3 and for `postprocessing` to admit three 0.186, then take both bumps together and re-run `make lint`, `make typecheck` and a browser pass over `/` and `/fun/`. Renovate will keep #938 open and rebase it.
-- **Where:** `portfolio/package.json` (`react`, `react-dom`, `three`, `@types/three`), `portfolio/package-lock.json`.
-
 ### TypeScript 7 is blocked by typescript-eslint's peer range
 - **What:** Renovate PR #603 bumps `typescript` ^6 → ^7. Lint then dies with `TypeError: Cannot read properties of undefined (reading 'Cjs')`. Every published `typescript-eslint`, including `latest` (8.70.0) and `canary` (8.70.1-alpha.21), declares `peer typescript: ">=4.8.4 <6.1.0"`, so nothing on npm admits TS 7 yet. The repo sits at typescript 6.0.3, inside the supported range.
 - **Why deferred:** no amount of local configuration bridges a peer range no release satisfies. TS 7 is the native port, so this is a rewrite of the toolchain's TS integration rather than a version bump.
