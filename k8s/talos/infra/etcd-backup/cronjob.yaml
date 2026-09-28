@@ -42,7 +42,7 @@ spec:
             # The image is only the talosctl binary, no shell; the naming and pruning
             # happen in the next container.
             - name: snapshot
-              image: ghcr.io/siderolabs/talosctl:v1.13.10
+              image: ghcr.io/siderolabs/talosctl:v1.14.1
               env:
                 - name: NODE_IP
                   valueFrom:
