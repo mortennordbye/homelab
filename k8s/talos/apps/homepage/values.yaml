@@ -298,7 +298,7 @@ config:
             description: GitOps controller (via Traefik)
         - ArgoCD (Direct):
             icon: argocd.png
-            href: https://10.3.10.100
+            href: http://10.3.10.100
             description: Direct LB IP fallback (bypasses Traefik)
         - Kargo:
             icon: https://raw.githubusercontent.com/akuity/kargo/main/ui/public/kargo-logo.png

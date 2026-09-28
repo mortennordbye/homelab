@@ -32,5 +32,5 @@ resource "null_resource" "argocd_manifests" {
 }
 
 output "argocd_url" {
-  value = "https://10.3.10.100"
+  value = "http://10.3.10.100"
 }
