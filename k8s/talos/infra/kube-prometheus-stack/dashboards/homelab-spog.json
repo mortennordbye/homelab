@@ -1357,7 +1357,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Rate of policy AUDIT verdicts \u2014 traffic that WOULD be denied once policyAuditMode is turned off. Grouped by source\u2192destination namespace. Drive this to zero (by adding allow rules) before enforcing.",
+          "description": "Rate of flows dropped by CiliumNetworkPolicy, grouped by source\u2192destination namespace.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1439,12 +1439,12 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (source_namespace, destination_namespace) (rate(hubble_policy_verdicts_total{action=\"audit\"}[5m]))",
+              "expr": "sum by (source_namespace, destination_namespace) (rate(hubble_policy_verdicts_total{action=\"dropped\"}[5m]))",
               "legendFormat": "{{source_namespace}} -> {{destination_namespace}}",
               "refId": "A"
             }
           ],
-          "title": "Policy AUDIT verdicts (would be denied) over time",
+          "title": "Policy drops over time",
           "type": "timeseries"
         },
         {
@@ -1452,7 +1452,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Number of distinct source\u2192destination flows that would be denied. This is the enforcement-readiness gauge: when it reaches 0 (every gap whitelisted), the cluster is safe to take out of policyAuditMode.",
+          "description": "Number of distinct source\u2192destination flows the policies have dropped. A non-zero value is a missing allow rule or unwanted traffic.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1513,12 +1513,12 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "count(count by (source, destination, source_namespace, destination_namespace) (hubble_policy_verdicts_total{action=\"audit\"})) or vector(0)",
+              "expr": "count(count by (source, destination, source_namespace, destination_namespace) (hubble_policy_verdicts_total{action=\"dropped\"})) or vector(0)",
               "legendFormat": "",
               "refId": "A"
             }
           ],
-          "title": "Distinct would-be-denied flows",
+          "title": "Distinct dropped flows",
           "type": "stat"
         },
         {
@@ -1526,7 +1526,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Total rate of would-be-denied verdicts across the cluster.",
+          "description": "Total rate of policy drops across the cluster.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1583,12 +1583,12 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(rate(hubble_policy_verdicts_total{action=\"audit\"}[5m])) or vector(0)",
+              "expr": "sum(rate(hubble_policy_verdicts_total{action=\"dropped\"}[5m])) or vector(0)",
               "legendFormat": "",
               "refId": "A"
             }
           ],
-          "title": "AUDIT verdict rate",
+          "title": "Policy drop rate",
           "type": "stat"
         },
         {
@@ -1596,7 +1596,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Every flow that would be denied when enforcing, over the selected range. This is the whitelist worklist: add a CiliumNetworkPolicy allow rule for each row, then it disappears. Reserved destinations (kube-apiserver, world) show with an empty destination namespace.",
+          "description": "Every flow dropped by policy over the selected range. A row that should be allowed needs a CiliumNetworkPolicy rule. Reserved destinations (kube-apiserver, world) show without a namespace.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1671,14 +1671,14 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "topk(50, sum by (direction, source_namespace, source, destination_namespace, destination) (increase(hubble_policy_verdicts_total{action=\"audit\"}[$__range])))",
+              "expr": "topk(50, sum by (direction, source_namespace, source, destination_namespace, destination) (increase(hubble_policy_verdicts_total{action=\"dropped\"}[$__range])))",
               "legendFormat": "",
               "refId": "A",
               "instant": true,
               "format": "table"
             }
           ],
-          "title": "Whitelist worklist \u2014 would-be-denied flows (range)",
+          "title": "Dropped flows (range)",
           "transformations": [
             {
               "id": "organize",
@@ -1709,7 +1709,7 @@
           "type": "table"
         }
       ],
-      "title": "Network Policy Audit (Cilium / Hubble)",
+      "title": "Network Policy Drops (Cilium / Hubble)",
       "type": "row"
     },
     {

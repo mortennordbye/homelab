@@ -30,7 +30,7 @@ app: "app pod\ncontainer port" {class: card; icon: ${k8s}/pod.svg}
 
 kubedns: "kube-dns\nL7 dns rule" {class: card; icon: ${di}/coredns.svg}
 fqdns: "toFQDNs\nexternal names" {class: card; icon: ${ify}/tabler/world.svg?color=%23a1ada3&height=64}
-hubble: "Hubble\naudit mode: drops logged,\nnot enforced" {class: aside; icon: ${di}/cilium.svg}
+hubble: "Hubble\nverdicts and drops\nto Prometheus" {class: aside; icon: ${di}/cilium.svg}
 
 traefik -> app
 interceptor -> app

@@ -1,7 +1,7 @@
 # Cilium
 
 Cilium is the CNI, replaces kube-proxy, announces the LoadBalancer VIPs on L2 and applies
-the CiliumNetworkPolicies, in audit mode. It runs in `kube-system` from the Helm chart
+the CiliumNetworkPolicies. It runs in `kube-system` from the Helm chart
 in [`kustomization.yaml`](../../../k8s/talos/infra/cilium/kustomization.yaml) with
 [`values.yaml`](../../../k8s/talos/infra/cilium/values.yaml). Cilium's own Gateway API
 support is off; Traefik handles ingress ([`traefik.md`](traefik.md)).
@@ -73,14 +73,19 @@ reissued by the cron schedule `0 0 1 */4 *`. The leaf lifetime must end before t
 
 Every app namespace except `home-assistant`, and most infra namespaces, has a
 `ciliumnetworkpolicy.yaml`. List them with `kubectl get ciliumnetworkpolicy -A`.
-`policyAuditMode: true` is a single agent-wide setting: drops are logged as `AUDIT`
-verdicts in Hubble and counted in `hubble_policy_verdicts_total`, not enforced. The move to
-enforcement is tracked in `docs/backlog/README.md`.
+Policies are enforced (`policyAuditMode: false`). Drops show as `DROPPED` verdicts in Hubble
+and in `hubble_policy_verdicts_total{action="dropped"}`. `policyAuditMode` is a single
+agent-wide setting with no per-namespace toggle; turning it back on relaxes every policy at
+once.
+
+Right after a node reboots, a pod's first connection to a `toFQDNs` name can be dropped
+before Cilium has seen the DNS answer. The retry passes; an app that does not retry needs a
+restart.
 
 Cilium default-denies a direction only once a policy has a rule for it. An ingress-only
 policy leaves egress open.
 
-[![Ingress and egress a typical app policy allows, logged by Hubble in audit mode](../../assets/diagrams/network-cilium-policy.svg)](../../assets/diagrams/network-cilium-policy.svg)
+[![Ingress and egress a typical app policy allows, logged by Hubble](../../assets/diagrams/network-cilium-policy.svg)](../../assets/diagrams/network-cilium-policy.svg)
 
 A new app's policy, copied from the one closest to it:
 
@@ -111,11 +116,11 @@ A new app's policy, copied from the one closest to it:
 - Prometheus scrapes come from pods labelled `app.kubernetes.io/name: prometheus` in
   `monitoring`.
 
-Check a new policy by looking for audited flows involving the app, in Hubble or with this
-query in Prometheus:
+Check a new policy by looking for dropped flows involving the app, in Hubble
+(`hubble observe --verdict DROPPED` in a Cilium agent pod) or with this query in Prometheus:
 
 ```promql
-sum by (source, destination, direction) (increase(hubble_policy_verdicts_total{action="audit", destination_namespace="<ns>"}[1h]))
+sum by (source, destination, direction) (increase(hubble_policy_verdicts_total{action="dropped", destination_namespace="<ns>"}[1h]))
 ```
 
 In that metric `destination` is the pod the policy applies to and `source` is the peer, in

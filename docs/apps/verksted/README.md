@@ -66,8 +66,7 @@ The CiliumNetworkPolicy allows ingress to port 8080 from Traefik and from the ho
 declares no egress rule, so egress is open: sessions clone repos, reach package registries
 and LLM APIs, and dind pulls images
 ([`ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/verksted/ciliumnetworkpolicy.yaml)).
-The policy is what keeps other pods off the dind port 2375. Cilium runs in audit mode
-cluster-wide, so today it logs such traffic rather than dropping it.
+The policy is what keeps other pods off the dind port 2375.
 
 ## Cluster access
 
