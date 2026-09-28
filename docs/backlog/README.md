@@ -98,11 +98,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Put `public/models/fun/`, `public/textures/` and the JS chunks behind a CDN or an object store with long cache headers, and re-measure a cold `/fun` against `make run-prod`. Required before any large asset is added to the room.
 - **Where:** `portfolio/public/models/fun/`, `portfolio/public/textures/`, `portfolio/next.config.ts`, `k8s/talos/apps/portfolio/httproute.yaml`.
 
-### TypeScript 7 is blocked by typescript-eslint's peer range
-- **What:** Renovate PR #603 bumps `typescript` ^6 → ^7. Lint then dies with `TypeError: Cannot read properties of undefined (reading 'Cjs')`. Every published `typescript-eslint`, including `latest` (8.70.0) and `canary` (8.70.1-alpha.21), declares `peer typescript: ">=4.8.4 <6.1.0"`, so nothing on npm admits TS 7 yet. The repo sits at typescript 6.0.3, inside the supported range.
-- **Why deferred:** no amount of local configuration bridges a peer range no release satisfies. TS 7 is the native port, so this is a rewrite of the toolchain's TS integration rather than a version bump.
-- **Unblock:** Watch for a `typescript-eslint` release whose `peerDependencies.typescript` admits 7.x, then take #603 and re-run `make lint` and `make typecheck`.
-- **Where:** `portfolio/package.json` (`typescript`), `portfolio/eslint.config.mjs`.
+### Lint and the Next build still run on the TypeScript 6 API
+- **What:** The portfolio type-checks with TypeScript 7 (`tsc` from `@typescript/native`, an npm alias of `typescript@^7`), but `typescript` itself is aliased to `@typescript/typescript6`. TypeScript 7 ships no JS API, and typescript-eslint (via `eslint-config-next`) and `next build` import `typescript` programmatically, so they keep running on 6.x. typescript-eslint's peer range is still `>=4.8.4 <6.1.0`.
+- **Why deferred:** This is the side-by-side setup the TypeScript 7 release notes recommend until 7.1 ships a new API. Nothing on npm lets those tools use TS 7 yet.
+- **Unblock:** Once TypeScript 7.1 is out and both `typescript-eslint` and `next` accept it, drop both aliases for a plain `"typescript": "^7.x"`, then re-run `make lint`, `make typecheck` and `make smoke`.
+- **Where:** `portfolio/package.json` (`typescript`, `@typescript/native`), `portfolio/eslint.config.mjs`, `renovate.json` (the TypeScript major rule).
 
 ### The hero globe has no polar axle
 - **What:** The meridian ring is placed with `rotation={[0, Math.PI / 2, TILT]}`, and three.js's default `XYZ` Euler order composes that as `Rx·Ry·Rz`, so the tilt is applied before the quarter turn and lands inside the torus's own plane, where it spins the ring rather than leaning it. The ring's plane therefore does not contain the tilted polar axis. A polar axle drawn to the ring's own radius ended in mid-air beside it instead of seating into it, and because Oslo sits at 59.9°N the free end appeared right next to the Oslo pin and read as a second pin. The axle was removed on 2026-09-01 rather than fixing the assembly.
