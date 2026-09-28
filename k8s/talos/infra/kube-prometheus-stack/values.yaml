@@ -18,7 +18,10 @@ prometheus:
         memory: 1Gi
     scrapeInterval: 30s
     evaluationInterval: 30s
-    # Empty selectors: discover ServiceMonitors in every namespace.
+    # Empty selectors: discover monitors in every namespace. Without the
+    # NilUsesHelmValues flags the chart swaps {} for release: kube-prometheus-stack.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
     serviceMonitorNamespaceSelector: {}
     serviceMonitorSelector: {}
     podMonitorNamespaceSelector: {}
