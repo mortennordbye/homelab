@@ -1,9 +1,9 @@
 # UniFi: network
 
 The UniFi site as code: networks, WAN, Wi-Fi, devices, DHCP reservations,
-firewall policies, port forwards, the WireGuard server and dynamic DNS. The
-console is for reading; changes go through here. `local.bigd.no` records live in
-`../dns`.
+firewall policies, port forwards, the WireGuard server, dynamic DNS and the
+site settings. The console is for reading; changes go through here.
+`local.bigd.no` records live in `../dns`.
 
 ## Use
 
