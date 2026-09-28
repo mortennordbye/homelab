@@ -14,12 +14,3 @@ helmCharts:
     releaseName: reloader
     namespace: reloader
     valuesFile: values.yaml
-
-patches:
-  - target:
-      kind: PodMonitor
-      name: reloader-reloader
-    patch: |-
-      - op: replace
-        path: /metadata/labels/release
-        value: kube-prometheus-stack
