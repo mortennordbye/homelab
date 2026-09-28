@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { DEVICE } from "@/content/hardware";
 import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
+import { MERGE_STATIC } from "./StaticMerge";
 import { Sonos } from "./Sonos";
 import { Television } from "./Furniture";
 import { OAK } from "@/components/materials/oak";
@@ -356,7 +357,9 @@ function Inspectable({
       detail={hw.tag}
       onActivate={() => onInspect(hw)}
     >
-      {children}
+      {/* Devices are pure geometry; their blinking LEDs are basic materials,
+          which the merge never takes. */}
+      <group userData={MERGE_STATIC}>{children}</group>
     </Interactive>
   );
 }

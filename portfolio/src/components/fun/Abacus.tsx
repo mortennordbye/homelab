@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { skills } from "@/content/skills";
 import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
+import { MERGE_STATIC } from "./StaticMerge";
 import { OAK } from "@/components/materials/oak";
 
 /**
@@ -217,12 +218,14 @@ export function Abacus({
           </mesh>
 
           {/* rods */}
-          {skills.map((s, i) => (
-            <mesh key={s.label} position={[ROD_X0 + rodLen / 2, rodY(i), 0]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.0018, 0.0018, rodLen, 8]} />
-              <meshStandardMaterial color="#9c7b3f" roughness={0.4} metalness={0.6} />
-            </mesh>
-          ))}
+          <group userData={MERGE_STATIC}>
+            {skills.map((s, i) => (
+              <mesh key={s.label} position={[ROD_X0 + rodLen / 2, rodY(i), 0]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.0018, 0.0018, rodLen, 8]} />
+                <meshStandardMaterial color="#9c7b3f" roughness={0.4} metalness={0.6} />
+              </mesh>
+            ))}
+          </group>
 
           <instancedMesh ref={beads} args={[undefined, undefined, skills.length * BEADS]}>
             <sphereGeometry args={[1, 16, 10]} />

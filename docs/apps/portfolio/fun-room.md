@@ -356,6 +356,13 @@ or shader-patched materials, instanced meshes and anything mounted later are ski
 own. A new animated mesh outside an `Interactive` needs `userData={NO_MERGE}` on it or on a group
 above it, the way `Marker`, the printer's sheet and the running water have.
 
+The parts of an `Interactive` that never move or change material go back into the merge under
+`MERGE_STATIC`: a device's body, the lantern's frame, a certificate's print, the chair. They stay
+pickable because the hover raycast walks hidden meshes too; filtering it on `visible` would make
+every merged carcass unaimable. A part whose material follows `hovered` or a switch (the frame
+that lights up, the lantern's paper, the tap's lever) stays outside the group, and a `NO_MERGE`
+nested inside one excludes its subtree again.
+
 A reflector is a second copy of the flat. drei's `MeshReflectorMaterial` renders the whole scene
 from a mirrored camera every frame, so the floor is a plain standard material. The wardrobe
 mirrors are real but live only inside `MIRROR_LIVE` in `Furniture.tsx`; outside it they are

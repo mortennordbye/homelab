@@ -9,7 +9,7 @@ import type { Surface } from "@/components/materials/surface";
 import { Door, Drawer, OpenBox, useEase } from "./openable";
 import { Interactive } from "./interaction";
 import { ZONES, px, pz } from "./flat";
-import { NO_MERGE } from "./StaticMerge";
+import { MERGE_STATIC, NO_MERGE } from "./StaticMerge";
 import {
   COLUMN_STOCK,
   FRIDGE_DOOR,
@@ -323,19 +323,21 @@ export function TvRemote({
               emissiveIntensity={hovered ? 0.25 : 0}
             />
           </RoundedBox>
-          {/* power, then the pad */}
-          <mesh position={[0, T + 0.0005, -L / 2 + 0.025]} rotation={[-Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[0.0055, 12]} />
-            <meshStandardMaterial color="#7d2a24" roughness={0.5} metalness={0} />
-          </mesh>
-          {[-0.012, 0, 0.012].flatMap((x) =>
-            [-0.02, 0, 0.02, 0.04].map((z) => (
-              <mesh key={`${x},${z}`} position={[x, T + 0.0005, z]} rotation={[-Math.PI / 2, 0, 0]}>
-                <circleGeometry args={[0.0038, 10]} />
-                <meshStandardMaterial color="#3a3c40" roughness={0.6} metalness={0} />
-              </mesh>
-            )),
-          )}
+          <group userData={MERGE_STATIC}>
+            {/* power, then the pad */}
+            <mesh position={[0, T + 0.0005, -L / 2 + 0.025]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.0055, 12]} />
+              <meshStandardMaterial color="#7d2a24" roughness={0.5} metalness={0} />
+            </mesh>
+            {[-0.012, 0, 0.012].flatMap((x) =>
+              [-0.02, 0, 0.02, 0.04].map((z) => (
+                <mesh key={`${x},${z}`} position={[x, T + 0.0005, z]} rotation={[-Math.PI / 2, 0, 0]}>
+                  <circleGeometry args={[0.0038, 10]} />
+                  <meshStandardMaterial color="#3a3c40" roughness={0.6} metalness={0} />
+                </mesh>
+              )),
+            )}
+          </group>
         </group>
       )}
     </Interactive>
@@ -492,40 +494,42 @@ export function WoodStove({
       onActivate={onToggle}
     >
       <group position={position} rotation={rotation}>
-        {/* 20mm into the wall, like the kitchen run: coplanar faces flicker. */}
-        <mesh position={[0, ceiling / 2, BREAST_D / 2 - 0.02]} receiveShadow>
-          <boxGeometry args={[BREAST_W, ceiling, BREAST_D]} />
-          <meshStandardMaterial
-            {...plaster}
-            color="#241a12"
-            roughness={0.96}
-            metalness={0}
-            normalScale={[0.42, 0.42]}
-          />
-        </mesh>
-        {/* the skirting returning around the breast, as it does in the flat */}
-        <mesh position={[0, 0.05, BREAST_D / 2 - 0.014]}>
-          <boxGeometry args={[BREAST_W + 0.022, 0.1, BREAST_D + 0.012]} />
-          <meshStandardMaterial color={OAK.back} roughness={0.7} />
-        </mesh>
+        <group userData={MERGE_STATIC}>
+          {/* 20mm into the wall, like the kitchen run: coplanar faces flicker. */}
+          <mesh position={[0, ceiling / 2, BREAST_D / 2 - 0.02]} receiveShadow>
+            <boxGeometry args={[BREAST_W, ceiling, BREAST_D]} />
+            <meshStandardMaterial
+              {...plaster}
+              color="#241a12"
+              roughness={0.96}
+              metalness={0}
+              normalScale={[0.42, 0.42]}
+            />
+          </mesh>
+          {/* the skirting returning around the breast, as it does in the flat */}
+          <mesh position={[0, 0.05, BREAST_D / 2 - 0.014]}>
+            <boxGeometry args={[BREAST_W + 0.022, 0.1, BREAST_D + 0.012]} />
+            <meshStandardMaterial color={OAK.back} roughness={0.7} />
+          </mesh>
 
-        {/* the rendered pedestal the firebox stands on */}
-        <mesh position={[0, BOX_Y / 2, BODY_Z - 0.01]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.22, 0.25, BOX_Y, 24]} />
-          <meshStandardMaterial color={RENDER} roughness={0.93} metalness={0} />
-        </mesh>
+          {/* the rendered pedestal the firebox stands on */}
+          <mesh position={[0, BOX_Y / 2, BODY_Z - 0.01]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.22, 0.25, BOX_Y, 24]} />
+            <meshStandardMaterial color={RENDER} roughness={0.93} metalness={0} />
+          </mesh>
 
-        {/* firebox */}
-        <RoundedBox
-          position={[0, BOX_Y + BOX_H / 2, BODY_Z]}
-          args={[BOX_W, BOX_H, BOX_D]}
-          radius={0.012}
-          smoothness={3}
-          castShadow
-          receiveShadow
-        >
-          <meshStandardMaterial color="#15181a" roughness={0.44} metalness={0.4} />
-        </RoundedBox>
+          {/* firebox */}
+          <RoundedBox
+            position={[0, BOX_Y + BOX_H / 2, BODY_Z]}
+            args={[BOX_W, BOX_H, BOX_D]}
+            radius={0.012}
+            smoothness={3}
+            castShadow
+            receiveShadow
+          >
+            <meshStandardMaterial color="#15181a" roughness={0.44} metalness={0.4} />
+          </RoundedBox>
+        </group>
 
         {/* Glazed on the front and on the north return, which is where the
             set in the flat is glazed: from the sofa you see the fire side on
@@ -540,28 +544,30 @@ export function WoodStove({
           <FireDoor w={BOX_D - 0.12} h={BOX_H - 0.12} lit={lit} />
         </group>
 
-        {/* The concrete mass over the firebox — the part of the set that is
-            actually heavy, and what the flue runs up inside. */}
-        <RoundedBox
-          position={[0, BOX_Y + BOX_H + 0.28, BODY_Z - 0.01]}
-          args={[0.6, 0.56, 0.5]}
-          radius={0.018}
-          smoothness={3}
-          castShadow
-          receiveShadow
-        >
-          <meshStandardMaterial color={CONCRETE} roughness={0.92} metalness={0} />
-        </RoundedBox>
-        {/* the slab across the top, laid on rather than built in */}
-        <RoundedBox
-          position={[0, BOX_Y + BOX_H + 0.585, BODY_Z - 0.01]}
-          args={[0.66, 0.05, 0.56]}
-          radius={0.01}
-          smoothness={3}
-          castShadow
-        >
-          <meshStandardMaterial color={OAK.carcass} roughness={0.78} metalness={0} />
-        </RoundedBox>
+        <group userData={MERGE_STATIC}>
+          {/* The concrete mass over the firebox — the part of the set that is
+              actually heavy, and what the flue runs up inside. */}
+          <RoundedBox
+            position={[0, BOX_Y + BOX_H + 0.28, BODY_Z - 0.01]}
+            args={[0.6, 0.56, 0.5]}
+            radius={0.018}
+            smoothness={3}
+            castShadow
+            receiveShadow
+          >
+            <meshStandardMaterial color={CONCRETE} roughness={0.92} metalness={0} />
+          </RoundedBox>
+          {/* the slab across the top, laid on rather than built in */}
+          <RoundedBox
+            position={[0, BOX_Y + BOX_H + 0.585, BODY_Z - 0.01]}
+            args={[0.66, 0.05, 0.56]}
+            radius={0.01}
+            smoothness={3}
+            castShadow
+          >
+            <meshStandardMaterial color={OAK.carcass} roughness={0.78} metalness={0} />
+          </RoundedBox>
+        </group>
 
         {/* The glass hearth plate. Flat on the floor and not a blocker: the
             route past the stove is measured off the body above it.
@@ -1992,22 +1998,24 @@ export function Sink({ position }: { position: [number, number, number] }) {
         verb={on ? "turn it off" : "run the tap"}
         onActivate={() => setOn((o) => !o)}
       >
-        <mesh position={[0, 0.98, -0.24]} castShadow>
-          <cylinderGeometry args={[0.019, 0.022, 0.16, 14]} />
-          {tap}
-        </mesh>
-        <mesh position={[0, 1.06, -0.15]} rotation={[0, Math.PI / 2, 0]} castShadow>
-          <torusGeometry args={[0.09, 0.016, 10, 28, Math.PI]} />
-          {tap}
-        </mesh>
-        <mesh position={[0, 1.03, -0.06]}>
-          <cylinderGeometry args={[0.016, 0.016, 0.06, 12]} />
-          {tap}
-        </mesh>
-        <mesh position={[0, 0.996, -0.06]}>
-          <cylinderGeometry args={[0.019, 0.019, 0.012, 12]} />
-          <meshStandardMaterial color="#6f757a" roughness={0.5} metalness={0.7} />
-        </mesh>
+        <group userData={MERGE_STATIC}>
+          <mesh position={[0, 0.98, -0.24]} castShadow>
+            <cylinderGeometry args={[0.019, 0.022, 0.16, 14]} />
+            {tap}
+          </mesh>
+          <mesh position={[0, 1.06, -0.15]} rotation={[0, Math.PI / 2, 0]} castShadow>
+            <torusGeometry args={[0.09, 0.016, 10, 28, Math.PI]} />
+            {tap}
+          </mesh>
+          <mesh position={[0, 1.03, -0.06]}>
+            <cylinderGeometry args={[0.016, 0.016, 0.06, 12]} />
+            {tap}
+          </mesh>
+          <mesh position={[0, 0.996, -0.06]}>
+            <cylinderGeometry args={[0.019, 0.019, 0.012, 12]} />
+            <meshStandardMaterial color="#6f757a" roughness={0.5} metalness={0.7} />
+          </mesh>
+        </group>
         {/* The lever, off the side of the column. Turned down with the tap: it
             is the one part that says which way the mixer is set, and a lever
             that never moves gives the whole fitting away. */}
@@ -2371,26 +2379,28 @@ export function Vanity({
         verb={on ? "turn it off" : "run the tap"}
         onActivate={() => setOn((o) => !o)}
       >
-        <mesh position={[SPOUT.x, (TOP + SPOUT.y + 0.04) / 2, 0.045]} castShadow>
-          <cylinderGeometry args={[0.015, 0.018, SPOUT.y + 0.04 - TOP, 14]} />
-          {tap}
-        </mesh>
-        <mesh
-          position={[SPOUT.x, SPOUT.y + 0.04, (0.045 + SPOUT.z) / 2]}
-          rotation={[0, Math.PI / 2, 0]}
-          castShadow
-        >
-          <torusGeometry args={[(SPOUT.z - 0.045) / 2, 0.014, 10, 26, Math.PI]} />
-          {tap}
-        </mesh>
-        <mesh position={[SPOUT.x, SPOUT.y + 0.018, SPOUT.z]}>
-          <cylinderGeometry args={[0.014, 0.014, 0.05, 12]} />
-          {tap}
-        </mesh>
-        <mesh position={[SPOUT.x, SPOUT.y - 0.004, SPOUT.z]}>
-          <cylinderGeometry args={[0.016, 0.016, 0.01, 12]} />
-          <meshStandardMaterial color="#6f757a" roughness={0.5} metalness={0.7} />
-        </mesh>
+        <group userData={MERGE_STATIC}>
+          <mesh position={[SPOUT.x, (TOP + SPOUT.y + 0.04) / 2, 0.045]} castShadow>
+            <cylinderGeometry args={[0.015, 0.018, SPOUT.y + 0.04 - TOP, 14]} />
+            {tap}
+          </mesh>
+          <mesh
+            position={[SPOUT.x, SPOUT.y + 0.04, (0.045 + SPOUT.z) / 2]}
+            rotation={[0, Math.PI / 2, 0]}
+            castShadow
+          >
+            <torusGeometry args={[(SPOUT.z - 0.045) / 2, 0.014, 10, 26, Math.PI]} />
+            {tap}
+          </mesh>
+          <mesh position={[SPOUT.x, SPOUT.y + 0.018, SPOUT.z]}>
+            <cylinderGeometry args={[0.014, 0.014, 0.05, 12]} />
+            {tap}
+          </mesh>
+          <mesh position={[SPOUT.x, SPOUT.y - 0.004, SPOUT.z]}>
+            <cylinderGeometry args={[0.016, 0.016, 0.01, 12]} />
+            <meshStandardMaterial color="#6f757a" roughness={0.5} metalness={0.7} />
+          </mesh>
+        </group>
         <mesh
           position={[SPOUT.x + 0.04, SPOUT.y + 0.03, 0.045]}
           rotation={[0, 0, on ? 0.5 : -0.35]}

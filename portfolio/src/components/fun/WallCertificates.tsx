@@ -4,6 +4,7 @@ import { RoundedBox } from "@react-three/drei";
 import { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Interactive } from "./interaction";
+import { MERGE_STATIC } from "./StaticMerge";
 import type { ShelfCert } from "./shelf";
 import { useSurface } from "@/components/materials/surface";
 import { OAK } from "@/components/materials/oak";
@@ -122,35 +123,37 @@ function Certificate({
               emissiveIntensity={hovered ? 0.3 : 0}
             />
           </RoundedBox>
-          {/* mount */}
-          <mesh position={[0, 0, 0.0075]}>
-            <planeGeometry args={[CERT_W - 0.02, CERT_H - 0.02]} />
-            <meshStandardMaterial color="#e2dac8" roughness={0.9} />
-          </mesh>
-          {/* issuer band */}
-          <mesh position={[0, CERT_H / 2 - 0.032, 0.008]}>
-            <planeGeometry args={[CERT_W - 0.036, 0.03]} />
-            <meshStandardMaterial color={BAND[cert.issuer] ?? BAND_DEFAULT} roughness={0.7} />
-          </mesh>
-          {/* logo */}
-          {icon && (
-            <mesh position={[0, 0.016, 0.0085]}>
-              <planeGeometry args={[ICON_SIZE, ICON_SIZE]} />
-              <meshStandardMaterial map={icon} transparent alphaTest={0.05} roughness={0.8} />
+          <group userData={MERGE_STATIC}>
+            {/* mount */}
+            <mesh position={[0, 0, 0.0075]}>
+              <planeGeometry args={[CERT_W - 0.02, CERT_H - 0.02]} />
+              <meshStandardMaterial color="#e2dac8" roughness={0.9} />
             </mesh>
-          )}
-          {/* two printed lines, so the field is not blank */}
-          {[-0.024, -0.038].map((ly, i) => (
-            <mesh key={ly} position={[0, ly, 0.008]}>
-              <planeGeometry args={[CERT_W - (i === 0 ? 0.05 : 0.07), 0.006]} />
-              <meshStandardMaterial color="#9d9380" roughness={0.9} />
+            {/* issuer band */}
+            <mesh position={[0, CERT_H / 2 - 0.032, 0.008]}>
+              <planeGeometry args={[CERT_W - 0.036, 0.03]} />
+              <meshStandardMaterial color={BAND[cert.issuer] ?? BAND_DEFAULT} roughness={0.7} />
             </mesh>
-          ))}
-          {/* seal */}
-          <mesh position={[0, -CERT_H / 2 + 0.03, 0.0085]}>
-            <circleGeometry args={[0.013, 18]} />
-            <meshStandardMaterial color={BRASS} roughness={0.5} metalness={0.35} />
-          </mesh>
+            {/* logo */}
+            {icon && (
+              <mesh position={[0, 0.016, 0.0085]}>
+                <planeGeometry args={[ICON_SIZE, ICON_SIZE]} />
+                <meshStandardMaterial map={icon} transparent alphaTest={0.05} roughness={0.8} />
+              </mesh>
+            )}
+            {/* two printed lines, so the field is not blank */}
+            {[-0.024, -0.038].map((ly, i) => (
+              <mesh key={ly} position={[0, ly, 0.008]}>
+                <planeGeometry args={[CERT_W - (i === 0 ? 0.05 : 0.07), 0.006]} />
+                <meshStandardMaterial color="#9d9380" roughness={0.9} />
+              </mesh>
+            ))}
+            {/* seal */}
+            <mesh position={[0, -CERT_H / 2 + 0.03, 0.0085]}>
+              <circleGeometry args={[0.013, 18]} />
+              <meshStandardMaterial color={BRASS} roughness={0.5} metalness={0.35} />
+            </mesh>
+          </group>
         </group>
       )}
     </Interactive>
