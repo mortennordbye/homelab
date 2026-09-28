@@ -235,7 +235,7 @@
     {
       "description": "TypeScript majors on their own branch. Grouped with the rest, a TypeScript bump the toolchain cannot handle yet blocks every other major in the group — PR #583 sat failing because @typescript-eslint crashes on TypeScript 7's API, holding up eslint 10 and motion 13, which are unrelated to it.",
       "matchManagers": ["npm"],
-      "matchPackageNames": ["typescript"],
+      "matchPackageNames": ["typescript", "@typescript/typescript6"],
       "matchUpdateTypes": ["major"],
       "groupName": "TypeScript (major)",
       "groupSlug": "npm-typescript-major",

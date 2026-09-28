@@ -33,10 +33,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.186.0",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "eslint": "^10.0.0",
     "eslint-config-next": "16.3.6",
     "sharp": "^0.35.1",
     "tailwindcss": "^4.3.1",
-    "typescript": "^6.0.0"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }
