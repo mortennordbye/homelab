@@ -12,6 +12,14 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
  */
 export const NO_MERGE = { noMerge: true };
 
+/**
+ * userData that puts a subtree back into the merge under a NO_MERGE, for the
+ * parts of an `Interactive` that never move or change material: a carcass, a
+ * frame's print. They stay pickable because the hover raycast ignores
+ * `visible`. A NO_MERGE further down excludes its subtree again.
+ */
+export const MERGE_STATIC = { mergeStatic: true };
+
 const KEYED_MAPS = ["map", "normalMap", "roughnessMap", "metalnessMap"] as const;
 const UNSUPPORTED_MAPS = [
   "aoMap",
@@ -105,15 +113,18 @@ export function StaticMerge({ children }: { children: React.ReactNode }) {
     const toRoot = group.matrixWorld.clone().invert();
 
     const buckets = new Map<string, THREE.Mesh[]>();
-    const visit = (o: THREE.Object3D) => {
-      if (o.userData.noMerge || !o.visible) return;
-      if ((o as THREE.Mesh).isMesh) {
+    // A NO_MERGE subtree is still walked, since a MERGE_STATIC part may sit inside it.
+    const visit = (o: THREE.Object3D, blocked: boolean) => {
+      if (!o.visible) return;
+      if (o.userData.noMerge) blocked = true;
+      else if (o.userData.mergeStatic) blocked = false;
+      if (!blocked && (o as THREE.Mesh).isMesh) {
         const key = meshKey(o as THREE.Mesh);
         if (key) buckets.set(key, [...(buckets.get(key) ?? []), o as THREE.Mesh]);
       }
-      o.children.forEach(visit);
+      o.children.forEach((c) => visit(c, blocked));
     };
-    group.children.forEach(visit);
+    group.children.forEach((c) => visit(c, false));
 
     const made: THREE.Mesh[] = [];
     const hidden: THREE.Mesh[] = [];

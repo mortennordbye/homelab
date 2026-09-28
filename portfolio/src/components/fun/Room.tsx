@@ -28,7 +28,7 @@ import { useSurface, type Surface } from "@/components/materials/surface";
 import { OAK } from "@/components/materials/oak";
 import type { Box } from "./flat";
 import { FLAT, MARKS, at, centreOf, doorOpenings, px, pz, wallBoxes } from "./flat";
-import { StaticMerge } from "./StaticMerge";
+import { MERGE_STATIC, StaticMerge } from "./StaticMerge";
 import {
   BathMat,
   Bed,
@@ -687,45 +687,47 @@ function Lantern({
       onActivate={onToggle}
     >
       <group position={position}>
-        {/* Four corner posts, full height. Nothing on the frame casts — see the
-            rails below. The posts were left casting at first on the theory that
-            striping the floor pool would look good; what they actually did was
-            throw two hard diagonal streaks up the wall and across the ceiling,
-            because the light is level with them and they are thin. A fitting
-            should not shadow the room from a light it encloses, and that turns
-            out to apply to every part of it. */}
-        {corners.map(([x, z], i) => (
-          <mesh key={i} position={[x, H / 2, z]}>
-            <boxGeometry args={[POST, H, POST]} />
-            <meshStandardMaterial color={oakCol} roughness={0.6} />
+        <group userData={MERGE_STATIC}>
+          {/* Four corner posts, full height. Nothing on the frame casts — see the
+              rails below. The posts were left casting at first on the theory that
+              striping the floor pool would look good; what they actually did was
+              throw two hard diagonal streaks up the wall and across the ceiling,
+              because the light is level with them and they are thin. A fitting
+              should not shadow the room from a light it encloses, and that turns
+              out to apply to every part of it. */}
+          {corners.map(([x, z], i) => (
+            <mesh key={i} position={[x, H / 2, z]}>
+              <boxGeometry args={[POST, H, POST]} />
+              <meshStandardMaterial color={oakCol} roughness={0.6} />
+            </mesh>
+          ))}
+
+          {/* Rails: at the foot, under and over the shade, and at the top. A
+              casting top rail silhouettes itself onto the ceiling directly above
+              as a hard-edged floating box. */}
+          {[0.07, SHADE_Y, SHADE_Y + SHADE_H, H - POST / 2].map((y) => (
+            <group key={y} position={[0, y, 0]}>
+              {[-half, half].map((z) => (
+                <mesh key={`x${z}`} position={[0, 0, z]}>
+                  <boxGeometry args={[S - POST, POST, POST]} />
+                  <meshStandardMaterial color={oakCol} roughness={0.6} />
+                </mesh>
+              ))}
+              {[-half, half].map((x) => (
+                <mesh key={`z${x}`} position={[x, 0, 0]}>
+                  <boxGeometry args={[POST, POST, S - POST]} />
+                  <meshStandardMaterial color={oakCol} roughness={0.6} />
+                </mesh>
+              ))}
+            </group>
+          ))}
+
+          {/* a board across the foot rails, so it stands like furniture */}
+          <mesh position={[0, 0.086, 0]} receiveShadow>
+            <boxGeometry args={[S - POST, 0.014, S - POST]} />
+            <meshStandardMaterial color={oakCol} roughness={0.68} />
           </mesh>
-        ))}
-
-        {/* Rails: at the foot, under and over the shade, and at the top. A
-            casting top rail silhouettes itself onto the ceiling directly above
-            as a hard-edged floating box. */}
-        {[0.07, SHADE_Y, SHADE_Y + SHADE_H, H - POST / 2].map((y) => (
-          <group key={y} position={[0, y, 0]}>
-            {[-half, half].map((z) => (
-              <mesh key={`x${z}`} position={[0, 0, z]}>
-                <boxGeometry args={[S - POST, POST, POST]} />
-                <meshStandardMaterial color={oakCol} roughness={0.6} />
-              </mesh>
-            ))}
-            {[-half, half].map((x) => (
-              <mesh key={`z${x}`} position={[x, 0, 0]}>
-                <boxGeometry args={[POST, POST, S - POST]} />
-                <meshStandardMaterial color={oakCol} roughness={0.6} />
-              </mesh>
-            ))}
-          </group>
-        ))}
-
-        {/* a board across the foot rails, so it stands like furniture */}
-        <mesh position={[0, 0.086, 0]} receiveShadow>
-          <boxGeometry args={[S - POST, 0.014, S - POST]} />
-          <meshStandardMaterial color={oakCol} roughness={0.68} />
-        </mesh>
+        </group>
 
         {/* The four paper panels.
             The base colour is nearly black on purpose. These sit directly in
@@ -785,14 +787,16 @@ function MushroomLamp({
       onActivate={onToggle}
     >
       <group position={position}>
-        <mesh castShadow receiveShadow>
-          <cylinderGeometry args={[0.052, 0.062, 0.014, 24]} />
-          <meshStandardMaterial color="#cfc3ae" roughness={0.6} />
-        </mesh>
-        <mesh position={[0, 0.05, 0]} castShadow>
-          <cylinderGeometry args={[0.032, 0.04, 0.086, 20]} />
-          <meshStandardMaterial color="#e0d5c0" roughness={0.55} />
-        </mesh>
+        <group userData={MERGE_STATIC}>
+          <mesh castShadow receiveShadow>
+            <cylinderGeometry args={[0.052, 0.062, 0.014, 24]} />
+            <meshStandardMaterial color="#cfc3ae" roughness={0.6} />
+          </mesh>
+          <mesh position={[0, 0.05, 0]} castShadow>
+            <cylinderGeometry args={[0.032, 0.04, 0.086, 20]} />
+            <meshStandardMaterial color="#e0d5c0" roughness={0.55} />
+          </mesh>
+        </group>
         {/* the dome, lit from inside */}
         <mesh position={[0, 0.118, 0]} castShadow>
           <sphereGeometry args={[0.078, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.62]} />
@@ -1119,7 +1123,9 @@ export function Room({
         onActivate={() => onSit("sofa")}
         disabled={seated !== null}
       >
-        <Sofa position={centreOf(MARKS.sofa)} rotation={[0, -Math.PI / 2, 0]} />
+        <group userData={MERGE_STATIC}>
+          <Sofa position={centreOf(MARKS.sofa)} rotation={[0, -Math.PI / 2, 0]} />
+        </group>
       </Interactive>
       {/* The remote on the sofa's south arm, in the sofa's own frame. A sibling
           of the sofa's Interactive, not a child: nested, a look at the remote
@@ -1266,7 +1272,9 @@ export function Room({
         onActivate={() => onSit("desk")}
         disabled={seated !== null}
       >
-        <TaskChair position={[DESK_X, 0, CHAIR_Z]} />
+        <group userData={MERGE_STATIC}>
+          <TaskChair position={[DESK_X, 0, CHAIR_Z]} />
+        </group>
       </Interactive>
       <Marker position={[DESK_SCREEN.position[0], DESK_SCREEN.position[1] + 0.3, DESK_SCREEN.position[2]]} />
       <Marker position={[DESK_TERMINAL.position[0], DESK_TERMINAL.position[1] + 0.48, DESK_TERMINAL.position[2]]} />
@@ -1418,7 +1426,9 @@ export function Room({
         onActivate={() => onSit("bed")}
         disabled={seated !== null}
       >
-        <Bed position={at(5.3, 0, 2.0)} rotation={[0, -Math.PI / 2, 0]} />
+        <group userData={MERGE_STATIC}>
+          <Bed position={at(5.3, 0, 2.0)} rotation={[0, -Math.PI / 2, 0]} />
+        </group>
       </Interactive>
       <Poster position={at(5.55, 1.62, 2.68)} rotation={[0, Math.PI, 0]} />
       {/* Pulled to 0.78 of the opening, where it hangs in the photograph and
