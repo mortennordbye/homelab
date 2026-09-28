@@ -9,14 +9,27 @@
 | Prometheus | https://prometheus.local.bigd.no |
 | Discord | `#homelab-alerts` |
 
-SPOG rows for the infrastructure around the cluster:
+SPOG rows, outside in: the network and hosts first, then the cluster platform, then the apps.
+Every row starts collapsed.
 
 | Row | Shows |
 |---|---|
-| Internet & Backups | public sites up/down and response time, internet up/down, availability, downtime and outages over the range, up/down timeline, probe latency; backup job ages, VolSync sources behind |
-| Network (UniFi) | WAN latency, internet session uptime, WAN drops, gateway CPU, traffic to and from each switch port, port errors and drops |
+| Internet & network | internet up/down, availability, downtime and outages over the range, probe latency; UniFi WAN latency, session uptime, drops, gateway CPU, switch port traffic, errors and drops |
+| Public sites | public site probes and response time, traffic share per site, then request rate, 5xx rate, p95 and status codes per site (one repeated set of panels over the hidden `site` variable) |
+| Backups | age of the last etcd and dump jobs, VolSync sources behind schedule |
 | Proxmox | host up/down, VMs running and stopped (templates excluded), host CPU and memory, storage used per host (local, local-lvm) and shared (pbs, nfs-vmstore) |
 | NAS (Synology) | system status, Volume 1 used and free, RAID status, unhealthy disks, temperature, eth0 traffic, disk temperatures |
+| Nodes | per-node CPU, load, memory, disk I/O and space, network, Talos `/var` free space |
+| Workloads | CPU and memory usage and limits per namespace, PVC inventory, warning event rate by reason |
+| Ingress & DNS | Traefik request rate, 5xx rate, latency, top services; CoreDNS requests, response codes, cache hits, latency |
+| Cilium | drops by reason, policy import, endpoint regeneration, Hubble policy drops and the dropped flows |
+| Certificates | readiness, days to expiry per certificate, sync errors, ACME latency |
+| GitOps & secrets | Argo CD sync and health, ESO sync status and secrets not ready, Reloader reloads |
+| KEDA autoscaling | replica and scaler state, wake-from-zero, capacity and electricity reclaimed |
+| Falco | instances, rule matches, event drops, CPU and memory per node |
+| Media stack | service status, health issues, queues, free space, library, download client and indexers |
+
+Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard.
 
 ## Stack
 
