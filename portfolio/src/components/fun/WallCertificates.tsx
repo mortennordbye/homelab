@@ -1,6 +1,6 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@/components/scene/RoundedBox";
 import { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Interactive } from "./interaction";

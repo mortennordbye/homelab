@@ -1,6 +1,6 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@/components/scene/RoundedBox";
 import * as THREE from "three";
 import { ShelvedBooks } from "./Bookshelf";
 import { PrintedPosts } from "./PrintedPosts";
