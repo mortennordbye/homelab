@@ -48,7 +48,7 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
 
 ## Watching it
 
-- Grafana SPOG, row `Internet & Backups`: age of the last successful etcd and dump job,
+- Grafana SPOG, row `Backups`: age of the last successful etcd and dump job,
   VolSync sources behind schedule.
 - Alerts (critical, Discord): `BackupJobStale` (etcd or a dump not successful for 26 h),
   `VolSyncBackupStale` (a source behind schedule for 6 h). DSM failures (Hyper Backup,

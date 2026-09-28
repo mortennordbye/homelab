@@ -3,7 +3,8 @@ reloader:
   # reloader.stakater.com/auto: "true" when their ConfigMap/Secret changes.
   watchGlobally: true
 
-  # Prometheus uses podMonitorSelector: {} (discovers all), so no label needed.
+  # Prometheus only selects release: kube-prometheus-stack; the chart hardcodes
+  # release: reloader, so kustomization.yaml patches the label.
   podMonitor:
     enabled: true
 

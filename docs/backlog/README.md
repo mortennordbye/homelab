@@ -16,6 +16,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** the H.264 queue is mostly done, or Plex playback starts stuttering during the day.
 - **Where:** Tdarr library settings at `https://tdarr.local.bigd.no` (schedule lives in the Tdarr DB, not Git), target settings in `docs/apps/media-stack/README.md`.
 
+### Alloy's ServiceMonitor is never scraped
+- **What:** `monitoring/alloy` has no `release: kube-prometheus-stack` label, and Prometheus only selects monitors with that label, so Alloy's own metrics (log shipping throughput, errors) never reach Prometheus. Reloader's PodMonitor had the same gap and is now patched in `k8s/talos/infra/reloader/kustomization.yaml`. The `podMonitorSelector: {}` in the kube-prometheus-stack values does not take effect without `podMonitorSelectorNilUsesHelmValues: false`.
+- **Why deferred:** noticed while fixing the SPOG dashboard; no panel reads Alloy metrics yet.
+- **Unblock:** label Alloy's ServiceMonitor through its chart values, or set the `*SelectorNilUsesHelmValues: false` flags so the empty selectors match everything, then check the targets page.
+- **Where:** `k8s/talos/infra/loki/alloy-values.yaml`, `k8s/talos/infra/kube-prometheus-stack/values.yaml`.
+
 ## AI / RAG POC
 
 ### Eval harness

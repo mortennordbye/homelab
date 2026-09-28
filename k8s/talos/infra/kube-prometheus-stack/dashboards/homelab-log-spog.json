@@ -456,6 +456,42 @@
       }
     },
     {
+      "type": "logs",
+      "title": "All events",
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 12,
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "{cluster=\"genesis\", job=\"kubernetes-events\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
+    },
+    {
       "type": "row",
       "title": "Logs",
       "collapsed": false,
@@ -463,7 +499,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 34
       },
       "id": 9,
       "panels": []
@@ -479,7 +515,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 35
       },
       "id": 10,
       "targets": [
@@ -515,7 +551,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 38
+        "y": 48
       },
       "id": 11,
       "targets": [
