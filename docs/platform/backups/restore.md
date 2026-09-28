@@ -60,8 +60,8 @@ For a clean restore, restore into a new PVC and point the Deployment at it inste
 ## Postgres
 
 Dumps are `pg_dump --format=custom`. Restore with `pg_restore` from a pod that mounts the
-dump volume and carries the label the database's network policy admits. Cilium runs in
-policy audit mode, so the label is what keeps the pod working once enforcement is on.
+dump volume and carries the label the database's network policy admits; Cilium drops
+connections from any other pod.
 
 | Database | Namespace | Dump PVC | Image | Host / user / db | Label the policy admits |
 |---|---|---|---|---|---|

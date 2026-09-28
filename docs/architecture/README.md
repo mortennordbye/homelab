@@ -41,9 +41,7 @@ code disagree, the code wins and this file gets fixed.
   sits in front of apps that need a login
   ([`../platform/identity/README.md`](../platform/identity/README.md)).
 - App namespaces carry CiliumNetworkPolicies (all but `home-assistant`, which only routes
-  to the external HA box). Cilium runs them in audit mode for now (`policyAuditMode` in
-  `k8s/talos/infra/cilium/values.yaml`): drops are logged, not enforced, so a missing
-  rule does not break anything yet but will once enforcement is on.
+  to the external HA box). Cilium enforces them, so a missing rule drops the traffic.
 - Remote access is Tailscale, with UniFi WireGuard as break-glass
   ([`../platform/network/remote-access.md`](../platform/network/remote-access.md)).
 

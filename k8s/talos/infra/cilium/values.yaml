@@ -15,9 +15,9 @@ ipam:
 
 kubeProxyReplacement: true
 
-# TEMPORARY: drops are logged (Hubble verdict AUDIT), not enforced. Flip back
-# to false once Hubble shows zero AUDIT events for normal workflows.
-policyAuditMode: true
+# Changing this rolls the DaemonSet; check the BPF LB map afterwards
+# (docs/platform/observability/incidents.md).
+policyAuditMode: false
 
 bpf:
   masquerade: true
@@ -70,9 +70,8 @@ hubble:
       - flow
       - icmp
       - httpV2
-      # Policy verdicts (incl. AUDIT) to Prometheus, so would-be-denied traffic
-      # is recorded over the 7d retention rather than only the short Hubble ring
-      # buffer — needed to safely move off policyAuditMode into enforcement.
+      # Policy verdicts to Prometheus, so drops are kept for the 7d retention
+      # rather than only the short Hubble ring buffer.
       - policy:sourceContext=workload-name|reserved-identity;destinationContext=workload-name|reserved-identity;labelsContext=source_namespace,destination_namespace
     enableOpenMetrics: true
     port: 9965
