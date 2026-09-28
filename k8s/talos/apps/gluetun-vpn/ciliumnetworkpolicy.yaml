@@ -53,7 +53,7 @@ spec:
         - ports:
             - port: "8444"
               protocol: TCP
-    # VPN tunnel egress to PIA. OpenVPN on UDP 1194/1198; WireGuard on UDP 51820.
+    # VPN tunnel egress to PIA. OpenVPN on UDP 1194/1198/8080; WireGuard on UDP 51820.
     # All inner traffic (qbittorrent peers, torrent indexers, etc.) is encapsulated
     # in this tunnel and not visible to Cilium as separate flows.
     - toEntities:
@@ -63,6 +63,8 @@ spec:
             - port: "1194"
               protocol: UDP
             - port: "1198"
+              protocol: UDP
+            - port: "8080"
               protocol: UDP
             - port: "51820"
               protocol: UDP
