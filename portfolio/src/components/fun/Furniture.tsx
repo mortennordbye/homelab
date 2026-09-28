@@ -1,6 +1,7 @@
 "use client";
 
-import { MeshReflectorMaterial, RoundedBox } from "@react-three/drei";
+import { MeshReflectorMaterial } from "@react-three/drei";
+import { RoundedBox } from "@/components/scene/RoundedBox";
 import { useFrame } from "@react-three/fiber";
 import { Activity, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";

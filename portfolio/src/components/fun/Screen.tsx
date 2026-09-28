@@ -1,6 +1,7 @@
 "use client";
 
-import { Html, RoundedBox } from "@react-three/drei";
+import { Html } from "@react-three/drei";
+import { RoundedBox } from "@/components/scene/RoundedBox";
 import { TV_GLASS } from "./Furniture";
 import type { PanelDef, PanelProps } from "./Panels";
 

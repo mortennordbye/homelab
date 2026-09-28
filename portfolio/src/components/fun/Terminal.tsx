@@ -1,6 +1,7 @@
 "use client";
 
-import { Html, RoundedBox } from "@react-three/drei";
+import { Html } from "@react-three/drei";
+import { RoundedBox } from "@/components/scene/RoundedBox";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { site } from "@/content/site";
 import { certDaysLeft } from "./feed";

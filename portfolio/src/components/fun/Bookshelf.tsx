@@ -1,6 +1,6 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@/components/scene/RoundedBox";
 import { useMemo } from "react";
 import { Interactive } from "./interaction";
 import type { ShelfBook } from "./shelf";

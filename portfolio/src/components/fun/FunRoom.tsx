@@ -273,7 +273,23 @@ function SceneReady({
   useEffect(() => {
     onReady();
     let live = true;
-    gl.compileAsync(scene, camera).then(() => {
+    gl.compileAsync(scene, camera).then(async () => {
+      /* Upload every texture here, one per task, or the first frame uploads
+         them all in one blocking call. */
+      const textures = new Set<THREE.Texture>();
+      scene.traverse((o) => {
+        const m = (o as THREE.Mesh).material;
+        for (const mat of Array.isArray(m) ? m : m ? [m] : []) {
+          for (const v of Object.values(mat)) {
+            if ((v as THREE.Texture)?.isTexture) textures.add(v as THREE.Texture);
+          }
+        }
+      });
+      for (const t of textures) {
+        if (!live) return;
+        gl.initTexture(t);
+        await new Promise((r) => setTimeout(r, 0));
+      }
       if (live) onCompiled();
     });
     return () => {

@@ -341,6 +341,10 @@ pool, do.
 Set `castShadow={false}` on anything small inside furniture. The main light is a point light, so
 its shadow map is a cube and every caster renders six extra times.
 
+Rounded boxes come from `components/scene/RoundedBox.tsx`, never from drei. drei re-runs the crease
+pass on every instance as it mounts, and that was the bulk of the freeze while the room builds;
+the local one builds each size once and shares it.
+
 Profile before fixing, and bisect with the component actually removed (verify it is gone). N8AO
 is the dominant post cost and stays because it is what makes objects look like they rest on
 things; the dpr cap (`[1, 1.5]`) and `multisampling={2}` are the chosen trade-offs. Shadow caster
@@ -396,7 +400,9 @@ each program's info log, forcing compilation one program at a time on the main t
 Canvas turns it off in production and leaves it on in dev. Once the Suspense boundary resolves,
 `SceneReady` calls `gl.compileAsync` (`KHR_parallel_shader_compile`), and the Canvas holds
 `frameloop="never"` until it settles. The hold is load-bearing: any frame drawn while programs
-are still compiling makes three.js wait on them synchronously. Starting the room's chunk early
+are still compiling makes three.js wait on them synchronously. After the compile, `SceneReady`
+uploads every texture with `gl.initTexture`, one per task, so the first frame does not upload
+them all in one blocking call. Starting the room's chunk early
 from the nav link or the Hero's enter button measured no reliable gain, so it is not done.
 
 On phones the loading screen lights one of the room's fittings over the poster per real stage
