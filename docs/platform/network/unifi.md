@@ -2,9 +2,9 @@
 
 The UniFi site is declared in `terraform/unifi/network`: networks, WAN, Wi-Fi,
 adopted devices, DHCP reservations, firewall policies, port forwards, the
-WireGuard server and dynamic DNS. The console is for reading; changes go through
-Terraform. The user-defined `local.bigd.no` records are a separate stack, see
-[`dns.md`](dns.md).
+WireGuard server, dynamic DNS and most site settings. The console is for
+reading; changes go through Terraform. The user-defined `local.bigd.no` records
+are a separate stack, see [`dns.md`](dns.md).
 
 ## Networks and Wi-Fi
 
@@ -105,6 +105,26 @@ declaring it would put the key every peer trusts into tfvars and state.
 - Terraform sees only what it manages. Things created in the console stay
   invisible to `plan`.
 
+## Site settings
+
+`settings.tf` holds the site-level settings as one `unifi_setting`: country
+(578, Norway, which decides the legal Wi-Fi channels), NTP, DPI, IPS, DNS over
+HTTPS, syslog, IGMP snooping, the gateway touchscreen, network optimization,
+the daily speedtest and the management settings.
+
+- The provider writes only the sections declared, and the controller merges a
+  partial section into the stored one, so fields the provider does not model
+  keep their console values. That is how IPS ad blocking and DNS filtering, and
+  the SSH credentials under `mgmt`, stay out of the repo without being reset.
+- A declared section must spell out every field the provider models: fields
+  left unset are sent as `false` or empty rather than skipped. `mgmt`,
+  `igmp_snooping` and `radius` are the exception; the provider reads the live
+  section first and overlays only what is declared.
+- `usg` (conntrack timeouts, ALG modules, UPnP, mDNS) is not declared. The
+  provider rebuilds it from scratch and always sends fields it does not model,
+  including `mdns_enabled` and `lldp_enable_all`, so declaring it would switch
+  them off.
+
 ## Rebuilding state
 
 Everything here was created in the console first and adopted with import blocks.
@@ -116,6 +136,6 @@ file.
 
 ## Not managed here
 
-Site settings (country, NTP, IGMP, DPI, IPS, speedtest; `unifi_setting` imports
-empty, see `docs/backlog/README.md`), the mDNS reflector, Teleport, the
-predefined zones and their default policies, admin accounts and backups.
+The gateway settings in the `usg` section (see above), the mDNS reflector,
+Teleport, the predefined zones and their default policies, admin accounts and
+backups.

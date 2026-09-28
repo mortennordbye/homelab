@@ -179,11 +179,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** once Cilium 1.21 is GA and cert-manager and Argo CD list 1.37, bump those first, then raise `kubernetes_version`. That round likely also needs the `talos_config_contract` entry above and the talos provider at 0.12.0. Follow `docs/platform/cluster/talos-upgrade.md`.
 - **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/{terraform.tfvars,upgrade-k8s.tf}`, `k8s/talos/infra/{cilium,cert-manager,argocd,keda}/`, `docs/platform/cluster/talos-upgrade.md`.
 
-### UniFi site settings are still console-only
-- **What:** country, NTP, IGMP snooping, DPI, IPS, auto speedtest and the rest of the site-level settings are not in `terraform/unifi/network`. Everything else the provider can express is.
-- **Why deferred:** `unifi_setting` imports with every section empty, so the import gives no record of the live values. Declaring a section means writing it from the console by hand, and a wrong value applies site-wide (the country code alone decides which Wi-Fi channels are legal).
-- **Unblock:** read each section from `/proxy/network/api/s/default/get/setting`, declare one section at a time in a `settings.tf`, and apply only when `plan` shows no change for it. Start with `country` (code 578), the one with the widest blast radius.
-- **Where:** `terraform/unifi/network/` (new `settings.tf`), resource `unifi_setting`, import ID `default`.
+### UniFi gateway settings (`usg`) are still console-only
+- **What:** every `unifi_setting` section is in `terraform/unifi/network/settings.tf` except `usg`: conntrack timeouts, the ALG modules, UPnP, redirects and the DNS verification servers.
+- **Why deferred:** the provider (0.56.1) builds `usg` from its model alone and go-unifi always sends fields the provider does not model (`mdns_enabled`, `lldp_enable_all`, `dhcpd_use_dnsmasq`, the DHCP relay servers), so declaring the section would write `false` into them and could turn off mDNS across VLANs.
+- **Unblock:** a provider release that reads the live `usg` section before writing, as it already does for `mgmt` and `igmp_snooping`, or that models those fields. Then declare `usg` with the live values from `/proxy/network/api/s/default/get/setting` and diff the section before and after the first apply.
+- **Where:** `terraform/unifi/network/settings.tf`, provider `ubiquiti-community/unifi` (`unifi/setting_resource.go`, the `USG` branch of `Update`).
 
 ### Proxmox-CSI detach can leave a VM disk as a pending delete
 - **What:** when a PVC moves off a VM while that VM's config is locked (reboot, backup), the CSI unplug succeeds in QEMU but the config write times out (`can't lock file '/var/lock/qemu-server/lock-<vmid>.conf'`). The disk stays in the config as a pending delete and every vzdump of that VM fails with `Device 'drive-scsiN' not found` until `qm set <vmid> --delete scsiN` is run. `pbs-backup-check` now fails on it and prints that command; the root cause is still in the plugin.
