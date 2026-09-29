@@ -13,7 +13,7 @@ locals {
   plex = "10.3.10.103"
 
   # Cilium LB-IPAM VIP from k8s/talos/apps/innestemme/service.yaml.
-  innestemme = "10.3.10.104"
+  innestemme = "10.3.10.99"
 
   lg_tv_mac = "58:96:0a:9e:e9:e2"
 }

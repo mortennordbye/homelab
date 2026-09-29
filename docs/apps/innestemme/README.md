@@ -10,7 +10,7 @@ The manifests live in
 | | |
 |---|---|
 | Namespace | `innestemme` |
-| VIP | `10.3.10.104:9090`, spoken answers and `/metrics` |
+| VIP | `10.3.10.99:9090`, spoken answers and `/metrics` |
 | Device | Voice PE "Home Assistant Voice 0a1f4d", `10.3.20.67` on IoT, area Living Room |
 | Delivery | tag pinned in `kustomization.yaml`, bumped by hand |
 | Backup | none: the volume is a model cache that downloads again |
@@ -22,7 +22,7 @@ The manifests live in
 2. The device detects "Okay Nabu" on its own and streams the request.
 3. The engine answers from its rules, Home Assistant (`home-assistant` Service) or ollama
    through the `ollama-wake` alias, which wakes ollama from zero.
-4. The device downloads the spoken answer from `http://10.3.10.104:9090/speech/<id>.wav`. IoT
+4. The device downloads the spoken answer from `http://10.3.10.99:9090/speech/<id>.wav`. IoT
    may only reach that one address and port, from the Voice PE's MAC:
    `voice_pe_to_innestemme` in
    [`terraform/unifi/network/firewall.tf`](../../../terraform/unifi/network/firewall.tf).

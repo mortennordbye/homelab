@@ -28,4 +28,4 @@ data:
     satellite: 10.3.20.67:6053
     # The device fetches spoken answers here: the VIP in service.yaml, opened for it in
     # terraform/unifi/network/firewall.tf.
-    public-url: http://10.3.10.104:9090
+    public-url: http://10.3.10.99:9090
