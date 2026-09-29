@@ -21,9 +21,7 @@ data:
     whisper-size: base
     ha-url: http://home-assistant.home-assistant.svc.cluster.local:8123
     speaker: Living Room
-    # Through the KEDA interceptor so a question wakes ollama from zero.
-    llm-url: http://ollama-wake:8080/v1
-    llm-model: qwen3:4b-instruct
+    # No llm-url: rules only. Requests they do not understand get the short fallback at once.
     # The living room Voice PE; its Assist satellite entity is disabled in Home Assistant.
     satellite: 10.3.20.67:6053
     # The device fetches spoken answers here: the VIP in service.yaml, opened for it in

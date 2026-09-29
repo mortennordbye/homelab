@@ -1,5 +1,5 @@
-# Ingress only; egress stays open for Home Assistant, the Voice PE on IoT (6053), ollama and the
-# weather and model downloads.
+# Ingress only; egress stays open for Home Assistant, the Voice PE on IoT (6053) and the weather
+# and model downloads.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
