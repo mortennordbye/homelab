@@ -5,7 +5,7 @@ metadata:
   namespace: innestemme
   annotations:
     # Fixed: public-url in configmap.yaml and the UniFi firewall policy name this address.
-    lbipam.cilium.io/ips: "10.3.10.104"
+    lbipam.cilium.io/ips: "10.3.10.99"
 spec:
   type: LoadBalancer
   selector:

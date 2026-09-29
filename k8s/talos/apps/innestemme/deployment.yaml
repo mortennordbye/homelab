@@ -24,6 +24,9 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        # Numeric: the image names its user (nonroot), which runAsNonRoot cannot verify.
+        runAsUser: 65532
+        runAsGroup: 65532
         # The image runs as nonroot (65532); fsGroup makes the NFS model cache writable for it.
         fsGroup: 65532
         seccompProfile:

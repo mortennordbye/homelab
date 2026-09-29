@@ -133,7 +133,7 @@ Other apps, one directory each under `k8s/talos/apps/`:
   the `hyper3` zone and reached through the `ollama-wake` Service, so open-webui's requests wake it
   from zero; its model cache is not backed up.
 - innestemme: the voice assistant for the living room Voice PE, replacing Assist. It dials the
-  device on IoT and serves spoken answers on the VIP `10.3.10.104:9090`, which the device may
+  device on IoT and serves spoken answers on the VIP `10.3.10.99:9090`, which the device may
   reach through one UniFi firewall policy ([`../apps/innestemme/README.md`](../apps/innestemme/README.md)).
 - mealie: recipe manager on `mealie.bigd.no`, SQLite, sign-up off.
 - homepage: the hub on `hub.bigd.no`, behind Authentik forward-auth.
