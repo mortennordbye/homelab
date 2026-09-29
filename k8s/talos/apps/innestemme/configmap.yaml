@@ -1,0 +1,31 @@
+# voice-engine settings; every key is a `voice-engine --help` option. Secrets and the street address
+# come from innestemme-secret as environment variables, which win over this file.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: innestemme-config
+  namespace: innestemme
+data:
+  config.yaml: |
+    processor: assistant
+    # The satellite bridge opens its session on this port from inside the pod; nothing else uses it.
+    bind: 127.0.0.1:7000
+    metrics-bind: 0.0.0.0:9090
+    # Match the CPU limit in deployment.yaml.
+    threads: 4
+    wake-name: Homie
+    home: Oslo
+    norwegian: false
+    pocket-voice: cosette
+    pocket-precision: f32
+    whisper-size: base
+    ha-url: http://home-assistant.home-assistant.svc.cluster.local:8123
+    speaker: Living Room
+    # Through the KEDA interceptor so a question wakes ollama from zero.
+    llm-url: http://ollama-wake:8080/v1
+    llm-model: qwen3:4b-instruct
+    # The living room Voice PE; its Assist satellite entity is disabled in Home Assistant.
+    satellite: 10.3.20.67:6053
+    # The device fetches spoken answers here: the VIP in service.yaml, opened for it in
+    # terraform/unifi/network/firewall.tf.
+    public-url: http://10.3.10.104:9090

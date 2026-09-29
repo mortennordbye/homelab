@@ -28,7 +28,7 @@ code disagree, the code wins and this file gets fixed.
 ## Network
 
 - Cilium is the CNI and announces the LoadBalancer VIPs on L2 (Argo CD, the public and
-  private Traefik gateways, Plex); the addresses are in
+  private Traefik gateways, Plex, innestemme); the addresses are in
   [`../platform/network/README.md`](../platform/network/README.md), Cilium itself in
   [`../platform/network/cilium.md`](../platform/network/cilium.md).
 - Traefik serves HTTP through Gateway API
@@ -54,9 +54,9 @@ code disagree, the code wins and this file gets fixed.
 - `k8s/talos/infra/crds` installs the CRDs no other Application ships: the
   prometheus-operator CRDs, the VolumeSnapshot CRDs VolSync needs, and Traefik's (its own
   chart renders with `includeCRDs: false`).
-- Kargo promotes every image built here or in an app repo: portfolio and blog go stage to
-  prod, headroom demo to prod, logeverylift, verksted and reelsmith straight to prod, and
-  every prod promotion is a pull request
+- Kargo promotes every image built here or in an app repo except innestemme's, whose tag is
+  bumped by hand: portfolio and blog go stage to prod, headroom demo to prod, logeverylift,
+  verksted and reelsmith straight to prod, and every prod promotion is a pull request
   ([`../platform/delivery/kargo.md`](../platform/delivery/kargo.md)). CI only builds and
   pushes tags ([`../platform/delivery/ci.md`](../platform/delivery/ci.md)).
 - KEDA with the HTTP add-on scales idle apps to zero; the interceptor wakes them
@@ -104,7 +104,7 @@ metrics-server (`k8s/talos/infra/metrics-server`) serves the resource metrics AP
 
 ## Workloads
 
-22 Argo CD Applications under `k8s/talos/apps/`, one per directory. The groups that
+23 Argo CD Applications under `k8s/talos/apps/`, one per directory. The groups that
 depend on each other:
 
 - Media: requests, downloads behind a VPN, Plex, subtitles and re-encoding, with a
@@ -132,6 +132,9 @@ Other apps, one directory each under `k8s/talos/apps/`:
 - ollama and open-webui: local LLM chat on `open-webui.local.bigd.no`. ollama is pinned to
   the `hyper3` zone and reached through the `ollama-wake` Service, so open-webui's requests wake it
   from zero; its model cache is not backed up.
+- innestemme: the voice assistant for the living room Voice PE, replacing Assist. It dials the
+  device on IoT and serves spoken answers on the VIP `10.3.10.104:9090`, which the device may
+  reach through one UniFi firewall policy ([`../apps/innestemme/README.md`](../apps/innestemme/README.md)).
 - mealie: recipe manager on `mealie.bigd.no`, SQLite, sign-up off.
 - homepage: the hub on `hub.bigd.no`, behind Authentik forward-auth.
 - bigd: the static `bigd.no` landing page, nginx serving `index.html` from a ConfigMap.
@@ -154,6 +157,7 @@ Other apps, one directory each under `k8s/talos/apps/`:
 | [`platform/observability`](../platform/observability/README.md) | monitoring, alerting, [incidents](../platform/observability/incidents.md) |
 | [`platform/secrets`](../platform/secrets/README.md) | Bitwarden to cluster secrets |
 | [`platform/storage`](../platform/storage/README.md) | storage classes, CSI drivers |
+| [`apps/innestemme`](../apps/innestemme/README.md) | the voice assistant for the Voice PE |
 | [`apps/media-stack`](../apps/media-stack/README.md) | requests, storage, 4K, seeding, subtitles, re-encoding |
 | [`apps/portfolio`](../apps/portfolio/README.md) | the portfolio site, brand decisions, the fun room |
 | [`apps/reelsmith`](../apps/reelsmith/README.md) | the reelsmith publishing gateway |

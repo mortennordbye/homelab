@@ -1,0 +1,23 @@
+# Ingress only; egress stays open for Home Assistant, the Voice PE on IoT (6053), ollama and the
+# weather and model downloads.
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: innestemme-policy
+  namespace: innestemme
+spec:
+  endpointSelector:
+    matchLabels:
+      app: innestemme
+  ingress:
+    # The Voice PE fetching spoken answers through the VIP; the UniFi firewall limits who gets here.
+    - fromEntities:
+        - world
+        - cluster
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health

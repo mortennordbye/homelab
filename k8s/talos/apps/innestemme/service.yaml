@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: innestemme
+  namespace: innestemme
+  annotations:
+    # Fixed: public-url in configmap.yaml and the UniFi firewall policy name this address.
+    lbipam.cilium.io/ips: "10.3.10.104"
+spec:
+  type: LoadBalancer
+  selector:
+    app: innestemme
+  ports:
+    - name: http
+      port: 9090
+      targetPort: http
+      protocol: TCP

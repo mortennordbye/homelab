@@ -12,6 +12,9 @@ locals {
   # port forward for 32400 lands here too, so hairpinned traffic matches.
   plex = "10.3.10.103"
 
+  # Cilium LB-IPAM VIP from k8s/talos/apps/innestemme/service.yaml.
+  innestemme = "10.3.10.104"
+
   lg_tv_mac = "58:96:0a:9e:e9:e2"
 }
 
@@ -92,5 +95,28 @@ resource "unifi_firewall_policy" "tv_to_plex" {
     ips                = [local.plex]
     port_matching_type = "SPECIFIC"
     port               = "32400"
+  }
+}
+
+# The Voice PE fetches spoken answers from innestemme, the engine that replaces Assist for it.
+resource "unifi_firewall_policy" "voice_pe_to_innestemme" {
+  name                 = "Voice PE -> innestemme"
+  action               = "ALLOW"
+  protocol             = "tcp"
+  ip_version           = "BOTH"
+  create_allow_respond = true
+
+  source = {
+    zone_id         = data.unifi_firewall_zone.iot.id
+    matching_target = "CLIENT"
+    client_macs     = [local.reservations["voice-living-room"].mac]
+  }
+
+  destination = {
+    zone_id            = data.unifi_firewall_zone.internal.id
+    matching_target    = "IP"
+    ips                = [local.innestemme]
+    port_matching_type = "SPECIFIC"
+    port               = "9090"
   }
 }

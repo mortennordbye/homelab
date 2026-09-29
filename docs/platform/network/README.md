@@ -2,7 +2,7 @@
 
 Cilium is the CNI and announces the LoadBalancer VIPs on L2 from the pool
 `10.3.10.100/29`: `10.3.10.100` Argo CD, `10.3.10.101` public Traefik gateway,
-`10.3.10.102` private Traefik gateway, `10.3.10.103` Plex. Public
+`10.3.10.102` private Traefik gateway, `10.3.10.103` Plex, `10.3.10.104` innestemme. Public
 hostnames are in Cloudflare (`terraform/cloudflare/*`, external-dns); internal
 `local.bigd.no` names are aliases to the private gateway in
 `terraform/unifi/dns/records.tf`, so a new internal app needs an entry there.
