@@ -1,0 +1,13 @@
+# Hugging Face cache (Whisper, Pocket TTS). Downloaded again on an empty volume, so not backed up.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: models-pvc
+  namespace: innestemme
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: syno-nfs-csi
+  resources:
+    requests:
+      storage: 2Gi

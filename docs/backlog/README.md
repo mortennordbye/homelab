@@ -190,3 +190,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** (1) and (2) wait on physical devices, (3) needs the Azure login the user drives, (4) is low risk.
 - **Unblock:** (1) identify the appliance, reconnect it, add `{ mac, ip }` to `local.reservations`; (2) same for the Voice PE after setup; (3) delete the blob once `unifi/network.tfstate` has been in use for a while; (4) regenerate from the console if wanted.
 - **Where:** `terraform/unifi/network/clients.tf`, azurerm container `tfstate` in `sttfstatemvnhomelab`.
+
+## innestemme
+
+### Kargo promotion for innestemme
+- **What:** innestemme's image tag is pinned in `kustomization.yaml` and bumped by hand. Give it a Kargo project straight to prod through a promotion PR, like verksted and reelsmith.
+- **Why deferred:** the first deploy only had to get the Voice PE answering from the cluster; the image publishes on every push to innestemme's `main` and a hand bump is enough while it settles.
+- **Unblock:** add an `innestemme-cd` project (Warehouse on `ghcr.io/mortennordbye/innestemme` with SemVer `0.0.N`, a prod Stage writing `kustomization.yaml` `images:`), following `docs/platform/delivery/kargo.md`.
+- **Where:** `k8s/talos/infra/kargo-projects/`, `k8s/talos/apps/innestemme/kustomization.yaml`.

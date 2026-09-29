@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: innestemme
+  namespace: innestemme
+  labels:
+    app: innestemme
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  # One replica: a Voice PE streams to one voice assistant at a time.
+  replicas: 1
+  revisionHistoryLimit: 3
+  # Recreate: RWO PVC, and two pods would fight over the satellite connection.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: innestemme
+  template:
+    metadata:
+      labels:
+        app: innestemme
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        # The image runs as nonroot (65532); fsGroup makes the NFS model cache writable for it.
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: innestemme
+          # x86-64-v3 build: needs AVX2, which the host-passthrough Talos VMs have.
+          image: ghcr.io/mortennordbye/innestemme:0.0.1790427461
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9090
+          env:
+            - name: VOICE_CONFIG
+              value: /config/config.yaml
+            - name: TZ
+              value: Europe/Oslo
+          envFrom:
+            - secretRef:
+                name: innestemme-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          # HTTP only listens once the models are downloaded and warmed, which on an empty
+          # volume is minutes.
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 4
+          resources:
+            requests:
+              cpu: "1"
+              memory: 1536Mi
+            limits:
+              cpu: "4"
+              memory: 3Gi
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: models-pvc
+        - name: config
+          configMap:
+            name: innestemme-config

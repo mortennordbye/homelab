@@ -209,7 +209,7 @@ Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes c
 - **Storage:** Proxmox CSI for block, Synology NFS for shared volumes.
 - **Databases:** in-cluster Postgres 18 (`postgres:18-alpine`) backing logeverylift. Its PVC mounts at `/var/lib/postgresql`, not at `/var/lib/postgresql/data` — 18 keeps the cluster in a version-named subdirectory, and an initContainer chowns the NFS mount root so the non-root process can create it. See `docs/platform/data/postgres.md`.
 - **GitOps:** Argo CD ApplicationSets `apps` and `infra` in `k8s/talos/infra/argocd/{apps.yaml,infra.yaml}` generate one Application per directory under `k8s/talos/apps/` and `k8s/talos/infra/`.
-- **Apps shipped from this repo:** portfolio and blog (each stage + prod), headroom (+ headroom-demo), logeverylift, reelsmith, verksted, bigd, plex-media-stack, arr-stack, gluetun-vpn, audiobookshelf, mealie, home-assistant, homepage, it-tools, omni-tools, open-webui, ollama, trek. That is 22 ArgoCD `Application`s, one per directory under `k8s/talos/apps/`.
+- **Apps shipped from this repo:** portfolio and blog (each stage + prod), headroom (+ headroom-demo), logeverylift, reelsmith, verksted, bigd, plex-media-stack, arr-stack, gluetun-vpn, audiobookshelf, mealie, home-assistant, homepage, it-tools, omni-tools, open-webui, ollama, trek, innestemme. That is 23 ArgoCD `Application`s, one per directory under `k8s/talos/apps/`.
 
 ### Directory layout
 

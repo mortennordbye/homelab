@@ -19,6 +19,7 @@ locals {
     genesis-worker-02 = { mac = "bc:24:11:2e:c8:04", ip = "10.3.10.35" }
     genesis-worker-03 = { mac = "bc:24:11:2e:c8:05", ip = "10.3.10.36" }
     bluetooth-proxy   = { mac = "00:4b:12:a2:1a:24", ip = "10.3.20.39", name = "Bluetooth-Proxy", dns = false }
+    voice-living-room = { mac = "20:f8:3b:0a:1f:4d", ip = "10.3.20.67", name = "Voice PE Living Room", dns = false }
   }
 }
 
