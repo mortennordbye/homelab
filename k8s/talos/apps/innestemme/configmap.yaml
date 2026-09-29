@@ -27,3 +27,6 @@ data:
     # The device fetches spoken answers here: the VIP in service.yaml, opened for it in
     # terraform/unifi/network/firewall.tf.
     public-url: http://10.3.10.99:9090
+    # The living room Sonos speaks the answers; the Voice PE only listens.
+    answer-player: media_player.living_room
+    answer-volume: 0.65
