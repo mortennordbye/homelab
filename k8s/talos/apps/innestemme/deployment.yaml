@@ -8,8 +8,9 @@ metadata:
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
-  # One replica: a Voice PE streams to one voice assistant at a time.
-  replicas: 1
+  # Off until listening on the Voice PE works; see docs/backlog/README.md. At most one replica:
+  # a Voice PE streams to one voice assistant at a time.
+  replicas: 0
   revisionHistoryLimit: 3
   # Recreate: RWO PVC, and two pods would fight over the satellite connection.
   strategy:

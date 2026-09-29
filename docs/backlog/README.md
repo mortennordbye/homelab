@@ -198,3 +198,9 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** the first deploy only had to get the Voice PE answering from the cluster; the image publishes on every push to innestemme's `main` and a hand bump is enough while it settles.
 - **Unblock:** add an `innestemme-cd` project (Warehouse on `ghcr.io/mortennordbye/innestemme` with SemVer `0.0.N`, a prod Stage writing `kustomization.yaml` `images:`), following `docs/platform/delivery/kargo.md`.
 - **Where:** `k8s/talos/infra/kargo-projects/`, `k8s/talos/apps/innestemme/kustomization.yaml`.
+
+### Voice PE requests get lost before innestemme answers
+- **What:** innestemme is scaled to zero (`replicas: 0`) because requests on the Voice PE rarely get answered. After "Okay Nabu" it first transcribes a short fragment (likely the tail of the device's wake sound), then records the real request for 7 to 9 s before deciding speech ended, and Whisper base on 4 CPU takes about 2 s more. The satellite's 10 s `LISTEN_TIMEOUT` expires first, so the late transcript is dropped as "not addressed", and what arrives is often garbled ("Come here, joke."). Answers themselves work: rules answer in about 2 s, and the Sonos announcement path plays.
+- **Why deferred:** needs engine work in innestemme (end-of-speech detection on the device's audio, not treating the wake sound as the request, not dropping a transcript already in progress), then tests against the real device.
+- **Unblock:** fix those three in `crates/voice-engine/src/satellite.rs` and the listener, try `whisper-size: small` or the device's wake sound off, then set `replicas: 1`. Stop anything else holding the device first.
+- **Where:** `k8s/talos/apps/innestemme/deployment.yaml`, innestemme's `crates/voice-engine/src/satellite.rs` and `crates/voice-engine/src/assistant.rs`.

@@ -15,6 +15,7 @@ The manifests live in
 | Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.65 |
 | Delivery | tag pinned in `kustomization.yaml`, bumped by hand |
 | Backup | none: the volume is a model cache that downloads again |
+| State | scaled to zero until listening works, see the backlog |
 
 ## How a request flows
 
