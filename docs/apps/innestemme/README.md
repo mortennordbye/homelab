@@ -20,8 +20,8 @@ The manifests live in
 1. The pod dials the Voice PE on `10.3.20.67:6053` (Noise-encrypted) and takes its microphone.
    Trusted to IoT is open, so no firewall rule is needed for this direction.
 2. The device detects "Okay Nabu" on its own and streams the request.
-3. The engine answers from its rules, Home Assistant (`home-assistant` Service) or ollama
-   through the `ollama-wake` alias, which wakes ollama from zero.
+3. The engine answers from its rules and Home Assistant (`home-assistant` Service). No
+   language model is configured, so a request the rules do not understand gets a short fallback.
 4. The device downloads the spoken answer from `http://10.3.10.99:9090/speech/<id>.wav`. IoT
    may only reach that one address and port, from the Voice PE's MAC:
    `voice_pe_to_innestemme` in
@@ -56,9 +56,5 @@ in Home Assistant can generate a new key; update the Bitwarden secret when that 
 
 - Only one engine can hold the device. Stop any laptop instance before the pod starts, or the
   two take turns connecting.
-- The engine needs `qwen3:4b-instruct` in ollama's model cache. On an empty cache, pull it once
-  through the ollama pod: `kubectl -n ollama exec deploy/ollama -- ollama pull qwen3:4b-instruct`.
-- The first question after ollama has scaled to zero waits for it to start and load the model.
-  Rules (lights, timers, weather) answer without it.
 - Logs: `kubectl -n innestemme logs deploy/innestemme`. A working start logs
   `satellite connected` and `satellite room from home assistant`.
