@@ -199,8 +199,8 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** add an `innestemme-cd` project (Warehouse on `ghcr.io/mortennordbye/innestemme` with SemVer `0.0.N`, a prod Stage writing `kustomization.yaml` `images:`), following `docs/platform/delivery/kargo.md`.
 - **Where:** `k8s/talos/infra/kargo-projects/`, `k8s/talos/apps/innestemme/kustomization.yaml`.
 
-### Voice PE requests get lost before innestemme answers
-- **What:** innestemme is scaled to zero (`replicas: 0`) because requests on the Voice PE rarely get answered. After "Okay Nabu" it first transcribes a short fragment (likely the tail of the device's wake sound), then records the real request for 7 to 9 s before deciding speech ended, and Whisper base on 4 CPU takes about 2 s more. The satellite's 10 s `LISTEN_TIMEOUT` expires first, so the late transcript is dropped as "not addressed", and what arrives is often garbled ("Come here, joke."). Answers themselves work: rules answer in about 2 s, and the Sonos announcement path plays.
-- **Why deferred:** needs engine work in innestemme (end-of-speech detection on the device's audio, not treating the wake sound as the request, not dropping a transcript already in progress), then tests against the real device.
-- **Unblock:** fix those three in `crates/voice-engine/src/satellite.rs` and the listener, try `whisper-size: small` or the device's wake sound off, then set `replicas: 1`. Stop anything else holding the device first.
-- **Where:** `k8s/talos/apps/innestemme/deployment.yaml`, innestemme's `crates/voice-engine/src/satellite.rs` and `crates/voice-engine/src/assistant.rs`.
+### Voice PE requests in a noisy room end late
+- **What:** with background talk or a TV, innestemme's energy-based end-of-speech detection can take 7 to 9 s to decide a request ended, and the satellite's 10 s `LISTEN_TIMEOUT` then drops it. In a quiet room requests end about 1.3 s after the speaker stops. The first short utterance after the wake word (the device's wake sound or the tail of the wake word) is transcribed and ignored, which costs about 0.5 s of transcription.
+- **Why deferred:** needs listener work in innestemme, tuned on recordings of real runs rather than guessed.
+- **Unblock:** record runs in the noisy case (`dump-utterances`; the engine saves each satellite run's audio), then fix end-of-speech detection in `crates/voice-assistant/src/vad.rs` and keep the run open while speech or a transcription is in progress.
+- **Where:** innestemme's `crates/voice-assistant/src/vad.rs`, `crates/voice-engine/src/satellite.rs` and `crates/voice-engine/src/assistant.rs`.

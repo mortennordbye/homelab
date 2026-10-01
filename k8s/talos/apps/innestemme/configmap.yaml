@@ -24,6 +24,9 @@ data:
     # No llm-url: rules only. Requests they do not understand get the short fallback at once.
     # The living room Voice PE; its Assist satellite entity is disabled in Home Assistant.
     satellite: 10.3.20.67:6053
+    # The engine sets these on the device: Home Assistant's wake word selects go through the disabled
+    # Assist satellite entity and never reach it.
+    satellite-wake-words: [Okay Nabu, Hey Jarvis]
     # The device fetches spoken answers here: the VIP in service.yaml, opened for it in
     # terraform/unifi/network/firewall.tf.
     public-url: http://10.3.10.99:9090

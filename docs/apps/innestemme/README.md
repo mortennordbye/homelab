@@ -15,7 +15,7 @@ The manifests live in
 | Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.65 |
 | Delivery | tag pinned in `kustomization.yaml`, bumped by hand |
 | Backup | none: the volume is a model cache that downloads again |
-| State | scaled to zero until listening works, see the backlog |
+| Wake words | Okay Nabu, Hey Jarvis (`satellite-wake-words`) |
 
 ## How a request flows
 
@@ -52,6 +52,9 @@ in Home Assistant can generate a new key; update the Bitwarden secret when that 
 - The engine finds the room from the device's area in Home Assistant, looked up by the device
   name. Renaming the device in Home Assistant breaks that lookup; set `room` in the ConfigMap
   if it is renamed.
+- The engine sets the device's wake words (`satellite-wake-words`) each time it connects. The wake
+  word selects in Home Assistant go through the disabled satellite entity and do nothing; the
+  sensitivity select is the device's own and still works.
 - Firmware 26.9.0 offers only on-device wake words, so the engine's own name ("Homie") is not
   used on the device.
 
