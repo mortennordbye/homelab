@@ -15,4 +15,4 @@ resources:
 
 images:
   - name: ghcr.io/mortennordbye/innestemme
-    newTag: 0.0.1790705797
+    newTag: 0.0.1790877420
