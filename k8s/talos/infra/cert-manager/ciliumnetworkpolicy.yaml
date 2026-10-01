@@ -47,6 +47,10 @@ spec:
         - ports:
             - port: "53"
               protocol: ANY
+          # The pod resolves through these too (dnsConfig), so the proxy must see it or toFQDNs never matches.
+          rules:
+            dns:
+              - matchPattern: "*"
     # Kubernetes API server.
     - toEntities:
         - kube-apiserver
