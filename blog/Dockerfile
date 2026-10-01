@@ -1,7 +1,7 @@
 # --- Stage 1: Build the Site ---
 # Pinned to the version Northlight is tested against (HUGO_IMAGE in its
 # Makefile); the theme declares min_version = 0.164.0.
-FROM ghcr.io/gohugoio/hugo:v0.166.0@sha256:9f3cccb54b48e83a5468cd44f0372b10834b6d8418ef692d9821bb1314761829 AS builder
+FROM ghcr.io/gohugoio/hugo:v0.167.0@sha256:7bb99a126eddeea8fbfaacedc5ef6708805411bdeaa01e668405a137fd02d048 AS builder
 
 # The image runs as uid 1000; the build writes to /src and /target, both owned by
 # root after COPY.
@@ -16,7 +16,7 @@ RUN hugo --minify --gc -d /target
 # --- Stage 2: Serve with Nginx ---
 # nginx-unprivileged (uid 101, no root master) so the Deployment can assert
 # runAsNonRoot and drop every capability; minor tag so Renovate tracks it.
-FROM nginxinc/nginx-unprivileged:1.31-alpine-slim@sha256:123fb7283ffb4788e260d4e980005a978995fefedcdbb04d268077a19b84576d
+FROM nginxinc/nginx-unprivileged:1.31-alpine-slim@sha256:c81a27f28bc2d9c2da8998444e653c7b85b9bbbaa92e44ef18d8920784e06507
 
 # Drop the base image's default index.html/50x.html — serve only Hugo's output.
 USER root

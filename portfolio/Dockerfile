@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.27@sha256:bde3983e9c939224420ddaf6b784cc30e09b035a4dea01f581230c50809f372e
+# syntax=docker/dockerfile:1.27@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
 # Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
@@ -75,7 +75,7 @@ COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 # No shell, runs as nonroot (uid 65532). The only writable path the server
 # needs is .next/cache, mounted as an emptyDir in the Deployment so
 # readOnlyRootFilesystem still holds.
-FROM gcr.io/distroless/nodejs24-debian13@sha256:b1fc33242cc74151f50c62b4a03d48afd759dccf81279b5f8e401db4546479c1 AS runtime
+FROM gcr.io/distroless/nodejs24-debian13@sha256:96df910f65fdd8a21d00d14d4cc046adcfcf3ced2d5e96be4b39ebde9f4866c6 AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production \
