@@ -11,7 +11,7 @@ I am Morten Victor Nordbye, a cloud engineer in Oslo. This blog is where the thi
 
 ## The day job
 
-I work at Orange Business, placed onto customer engagements. Most of 2026 has gone into an Azure migration for a betting platform, where I took over architect responsibility in April, moved around 30 .NET microservices off Windows Server onto AKS, and built the observability stack and production alerting in Terraform. Traffic peaks above 33 million requests a day on betting days.
+I am a Senior Platform Engineer at Nimtech, working on platforms, architecture and operations for Nimtech's customers. Before that I spent several years at Basefarm and Orange Business. Most of 2026 there went into an Azure migration for a betting platform, where I took over architect responsibility in April, moved around 30 .NET microservices off Windows Server onto AKS, and built the observability stack and production alerting in Terraform. Traffic peaks above 33 million requests a day on betting days.
 
 Part of that migration was moving off ingress-nginx onto Traefik and the Gateway API. Serving several TLS certificates from one listener needed a workaround at the time, so I wrote the upstream patch that taught Gateway API to resolve multiple certificate secrets on a single listener. It shipped in Traefik v3.7.0.
 

@@ -13,8 +13,8 @@ export function GET() {
 
 > ${site.description}
 
-${site.role} based in ${site.location}. Available through Orange Business and for
-direct engagements. Contact: ${site.email}
+${site.role} based in ${site.location}. Available for engagements through
+Nimtech. Contact: ${site.email}
 
 ## Case studies
 

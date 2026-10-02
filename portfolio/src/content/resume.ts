@@ -89,11 +89,23 @@ const educationRaw: Education[] = [
 
 const experienceRaw: Experience[] = [
   {
+    role: "Senior Platform Engineer",
+    company: "Nimtech",
+    location: "Oslo",
+    period: "Oct 2026 — Present",
+    current: true,
+    description: [
+      "Platform work, architecture and operations of cloud infrastructure and Kubernetes for Nimtech's customers.",
+    ],
+    timeline: {
+      note: "Platform engineering for Nimtech's customers.",
+    },
+  },
+  {
     role: "Cloud Engineer",
     company: "Orange Business",
     location: "Oslo",
     period: "Jan 2026 — Sep 2026",
-    current: true,
     description: [
       "Cloud engineer in Orange's engagement team, placed onto customer accounts under a consultancy delivery model, across three engagements in the year: a betting-platform customer's Azure migration, an internal Orange department's Azure platform architected solo, and a review engagement on a public-sector customer's Azure operations.",
       "On the betting-platform engagement, took over architect responsibility on the Orange side in April 2026 when the previous architect exited, and every technical decision on the account went through me from then on. Did the bulk of the Terraform module work across the platform (AKS, vWAN, Front Door, ACR, Log Analytics, Managed Grafana, ArgoCD core services), rewriting large parts as the architecture evolved, and built the observability stack from scratch with production alerts in Terraform against the AMBA baseline. Executed the service-by-service migration of roughly 30 microservices from Orange-hosted Windows Server and .NET onto AKS, with peaks above 33 million requests per day on betting days.",
