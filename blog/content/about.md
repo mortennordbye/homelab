@@ -1,13 +1,13 @@
 ---
 title: "About"
-description: "Morten Victor Nordbye, cloud engineer in Oslo. Who writes this blog, the cluster the posts come from, and why any of it should be trusted."
+description: "Morten Victor Nordbye, platform engineer in Oslo. Who writes this blog, the cluster the posts come from, and why any of it should be trusted."
 # The theme only honours showTableOfContents and showHero per page. The rest of
 # the article toggles (author, word count, comments, sharing) are read from site
 # config, so setting them here would be dead front matter.
 showTableOfContents: false
 ---
 
-I am Morten Victor Nordbye, a cloud engineer in Oslo. This blog is where the things I have had to work out get written down properly, usually because I could not find a straight answer when I needed one.
+I am Morten Victor Nordbye, a platform engineer in Oslo. This blog is where the things I have had to work out get written down properly, usually because I could not find a straight answer when I needed one.
 
 ## The day job
 

@@ -14,7 +14,7 @@ export function PortraitCard() {
         */}
         <Image
           src="/images/profile.webp"
-          alt="Morten Nordbye, Cloud Engineer & Architect, Oslo"
+          alt="Morten Nordbye, Senior Platform Engineer, Oslo"
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
           className="object-cover saturate-[0.92] contrast-[1.05]"
