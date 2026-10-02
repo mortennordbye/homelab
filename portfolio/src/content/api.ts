@@ -157,10 +157,10 @@ export const endpoints: readonly Endpoint[] = [
     curl: "curl -s https://nordbye.it/api/v1/profile",
     sample: {
       name: "Morten Nordbye",
-      role: "Cloud Engineer & Architect",
+      role: "Senior Platform Engineer",
       location: "Oslo, Norway",
       url: "https://nordbye.it",
-      summary: "Cloud engineer working on automated, secure infrastructure…",
+      summary: "Platform engineer working on automated, secure infrastructure…",
       socials: [{ label: "GitHub", href: "https://github.com/mortennordbye" }],
       certifications: [
         {

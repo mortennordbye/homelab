@@ -33,8 +33,8 @@ export function AboutSection() {
           </p>
           <p className="text-fg-2 leading-relaxed">
             My work has been Azure platforms for customers across a range of
-            regulated sectors, most recently as a Cloud Engineer at Orange
-            Business. On the side I run a homelab cluster that doubles as my
+            regulated sectors at Basefarm and Orange Business, and now as a
+            Senior Platform Engineer at Nimtech. On the side I run a homelab cluster that doubles as my
             proving ground for anything I want to try before it touches
             production.
           </p>

@@ -122,8 +122,8 @@ const jsonLd = {
   },
   worksFor: {
     "@type": "Organization",
-    name: "Orange Business",
-    url: "https://www.orange-business.com",
+    name: "Nimtech",
+    url: "https://nimtech.no",
   },
   // Generated from `certs`, never hand-listed. The hand-maintained version
   // drifted: it carried 4 of 7 credentials and appended exam codes the page

@@ -229,7 +229,7 @@ export function ContactCard({
             { k: "Phone", v: site.phoneDisplay },
             { k: "Site", v: site.homepage },
           ],
-          body: "Available through Orange Business and for direct engagements.",
+          body: "Available for engagements through Nimtech.",
           href: `mailto:${site.email}`,
           hrefLabel: "send an email",
         })

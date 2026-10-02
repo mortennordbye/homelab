@@ -2,7 +2,7 @@ export const site = {
   name: "Morten Nordbye",
   firstName: "Morten Victor",
   lastName: "Nordbye",
-  role: "Cloud Engineer & Architect",
+  role: "Senior Platform Engineer",
   location: "Oslo, Norway",
   // CV-only: postal area shown on the printed CV. Never rendered on the website.
   cvAddress: "0882 Oslo",
@@ -15,8 +15,9 @@ export const site = {
   github: "mortennordbye",
   linkedin: "morten-victor-nordbye",
   description:
-    "Morten Victor Nordbye, Cloud Engineer and Architect in Oslo. Kubernetes, Azure, GitOps, and the platform work that keeps production running.",
+    "Morten Victor Nordbye, Senior Platform Engineer in Oslo. Kubernetes, Azure, GitOps, and the platform work that keeps production running.",
   keywords: [
+    "Platform Engineer",
     "Cloud Engineer",
     "Cloud Architect",
     "Azure",
@@ -32,8 +33,8 @@ export const site = {
     "Oslo",
   ],
   hero: {
-    rotating: ["Cloud Engineer", "IT Specialist", "Homelabber", "Platform Engineer"],
-    headline: "I am a Cloud Engineer.",
+    rotating: ["Platform Engineer", "Cloud Engineer", "IT Specialist", "Homelabber"],
+    headline: "I am a Platform Engineer.",
     sub: "Based in Oslo. I build and run Azure infrastructure for customer environments. Azure networking, AKS with GitOps, observability, and the platform pieces that keep a cluster running properly. Open to consulting and platform engagements.",
   },
   socials: [
