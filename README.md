@@ -209,6 +209,7 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 | ------------ | ------------------- | -------------- |
 | Router       | UniFi Cloud Gateway | Gateway/Router |
 | Switch       | UniFi Lite 8 PoE    | Managed Switch |
+| Switch       | UniFi Flex Mini     | Managed Switch |
 | Access Point | UniFi U6+           | WiFi 6 AP      |
 | Modem        | Telia               | Cable Modem    |
 
