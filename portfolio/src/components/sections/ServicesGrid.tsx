@@ -4,7 +4,7 @@ import { Reveal } from "@/components/primitives/Reveal";
 import { services } from "@/content/services";
 
 /**
- * The three engagement shapes, as lit sheets — the same sheet About uses
+ * The three service areas, as lit sheets — the same sheet About uses
  * (docs/apps/portfolio/brand/decisions.md §12: everything is an object or a document, a card is
  * neither). Proof links are copper, not green: §2 allows green once per view.
  */
@@ -13,7 +13,7 @@ export function ServicesGrid() {
     <Section
       id="services"
       heading="Services I provide."
-      description="Three engagement shapes. Each one is grounded in something that has already shipped, with the case study linked underneath it."
+      description="Three areas I work in. Each one is grounded in something that has already shipped, with the case study linked underneath it."
       className="section-rule bg-bg-2/40"
     >
       <div className="grid gap-6 md:grid-cols-3">
@@ -43,6 +43,15 @@ export function ServicesGrid() {
           </Reveal>
         ))}
       </div>
+
+      <p className="mt-10 max-w-2xl text-sm text-fg-2 leading-relaxed">
+        Engagements run through Nimtech, where I work as a Senior Platform Engineer. To ask about
+        one,{" "}
+        <Link href="/#contact" className="focus-ring text-copper underline-offset-4 hover:underline">
+          send me a message
+        </Link>
+        .
+      </p>
     </Section>
   );
 }

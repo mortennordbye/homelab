@@ -264,6 +264,23 @@ export function InfraBench() {
             style={{ opacity: painted ? 0 : 1 }}
           />
         </picture>
+        {/* The poster is a picture, not the scene: nothing in it answers a
+            click until the first frame paints. Desktop only, since skip never
+            mounts the scene and the poster is all those visitors get. */}
+        {(mode === "static" || mode === "webgl") && (
+          <div
+            aria-live="polite"
+            className="pointer-events-none absolute bottom-6 left-1/2 z-10 w-56 -translate-x-1/2 rounded-[2px] bg-black/60 px-4 py-3 transition-opacity duration-300"
+            style={{ opacity: painted ? 0 : 1 }}
+          >
+            <div className="h-[2px] w-full overflow-hidden rounded-full bg-line">
+              <div className="room-enter__bar h-full w-1/3 rounded-full bg-accent" />
+            </div>
+            <p className="mt-2 text-center font-mono text-[11px] text-fg-2">
+              {painted ? "ready" : "loading the 3D cabinet"}
+            </p>
+          </div>
+        )}
         {mode === "webgl" && (
           <div className="absolute inset-0">
             <BenchScene
