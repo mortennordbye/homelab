@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  PYTHON_VERSION: 3.14.7 # renovate: python-version=python
+  PYTHON_VERSION: 3.14.8 # renovate: python-version=python
 
 jobs:
   build:
