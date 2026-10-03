@@ -4,11 +4,11 @@ terraform {
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = "0.113.1"
+      version = "0.114.0"
     }
     talos = {
       source  = "siderolabs/talos"
-      version = "0.11.0"
+      version = "0.12.0"
     }
     helm = {
       source  = "hashicorp/helm"
