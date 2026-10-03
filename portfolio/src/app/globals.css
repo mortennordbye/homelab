@@ -760,6 +760,38 @@ body.fun-immersive > main {
   to   { opacity: 1; transform: none; }
 }
 
+/* The hero headline drifts up and dims over the first screen of scroll. Driven
+   by the scroll position, not a script: a browser without scroll timelines
+   keeps the headline still, which is the reduced-motion look anyway. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .hero-drift {
+      animation: hero-drift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+  }
+}
+
+@keyframes hero-drift {
+  to {
+    transform: translateY(-12%);
+    opacity: 0.4;
+  }
+}
+
+/* A new word in the hero's rotating role line. */
+.role-in {
+  animation: role-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes role-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.14em);
+  }
+}
+
 .reveal {
   animation: reveal 0.7s var(--ease-out) both;
   /* Per-element offset via inline --d (seconds) */

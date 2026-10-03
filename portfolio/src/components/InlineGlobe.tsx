@@ -156,9 +156,12 @@ export function InlineGlobe() {
       <div className="absolute inset-x-0 bottom-0 h-[50%] md:inset-0 md:h-full">
         <picture>
           <source media="(max-width: 767px)" srcSet="/images/globe-poster-mobile.jpg" />
+          {/* The page's LCP element on every viewport: fetched ahead of the
+              below-the-fold images that would otherwise share its bandwidth. */}
           <img
             src="/images/globe-poster.webp"
             alt=""
+            fetchPriority="high"
             className="absolute inset-0 h-full w-full object-cover object-[64%_50%] md:object-center"
           />
         </picture>
