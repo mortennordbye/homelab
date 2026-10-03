@@ -71,19 +71,20 @@ All under `portfolio/src/`.
 | `components/fun/Contents.tsx` | What stands inside cupboards, drawers and the fridge, as two instanced meshes. |
 | `components/fun/openable.tsx` | Shared motion for doors, drawers and fronts. |
 | `components/fun/Outside.tsx` | The view beyond the windows, built as real geometry for parallax and left unlit. |
-| `components/fun/Devices.tsx` | Homelab hardware models and the sideboard. |
-| `content/hardware.ts` | Hardware names and specs, transcribed from the repo README. Shared with `/infrastructure`, so every entry must have a README row. |
+| `components/fun/Devices.tsx` | Homelab hardware models, the sideboard, and `HouseDevices`: the smart-home kit placed around the flat. |
+| `components/fun/Cctv.tsx` | Looking through the security camera on the TV bench: the lens's render and the feed's overlay. |
+| `content/hardware.ts` | Hardware names and specs, transcribed from the repo README. `DEVICES` is shared with `/infrastructure`; `HOUSE` is the room's own. Every entry must have a README row. |
 | `components/fun/Bookshelf.tsx` | Case studies as books (`ShelvedBooks`), laid out into the hall cabinet's bays from array length. |
 | `components/fun/WallCertificates.tsx` | Certificates standing on wall boards by the desk. |
 | `components/fun/Objects.tsx` | The note on the fridge door, contact card, gym bag, career album, service leaflets. Nothing in here hangs on a wall; see the file header. |
 | `components/fun/Abacus.tsx` | The skills, counted on an abacus on the dining table. |
 | `components/fun/PrintedPosts.tsx` | The newest blog covers, framed together on the wall. Lays itself out from `/api/v1/blog`. |
-| `components/fun/Printer.tsx` | The CV printer: rocker switches map to the CV customizer's flags and download the matching PDF. |
+| `components/fun/Printer.tsx` | The CV printer: a screen on the lid toggles the CV customizer's flags, and printing downloads the matching PDF while a sheet carrying its page one (`preview` in `cv-manifest.json`, rendered by Ghostscript in the Dockerfile's `pdfbuild` stage) feeds out. |
 | `components/fun/Touch.tsx` | Phone controls. `TouchLook` (inside the Canvas and inside `InteractionProvider`) does drag-to-look and tap-to-activate; `TouchStick` is the DOM walk stick. |
 | `components/fun/Sonos.tsx` | The speaker on the sideboard and the Web Audio rickroll it plays. No audio files: melody and drum kit are synthesised. |
 | `components/fun/Sleep.tsx`, `components/fun/Visitor.tsx` | Lying down on the bed, and who turns up if you stay there after the alarm. |
 | `components/fun/Terminal.tsx` | The shell on the portrait desk monitor. |
-| `components/fun/CodeScreen.tsx` | The landscape desk monitor: real source from this repo, and the pinned repositories (`useRepos`). |
+| `components/fun/Desktop.tsx` | The landscape desk monitor as a GNOME-style desktop: Files, a browser with mock Argo CD and Grafana, Room controls, a text editor with real source from this repo, Mines and Snake. |
 | `components/fun/Screen.tsx` | Monitor mesh and DOM panel mount. `Screen` is one panel; `Dashboard` is the television carrying six at once; `PanelCard` is the chrome both share. |
 | `components/fun/Panels.tsx` | Content of the live infra panels. Authored at one size (640x376); the television scales them down, so there is no second "small" variant to keep in step. |
 | `components/fun/feed.ts` | `/api/v1/infra` polling and staleness rules, and `useRepos`. |
@@ -117,8 +118,8 @@ client: `ShelfData` built from `getAllWork()` and `CareerData` from `resume.ts`.
 [![Content flowing from the server page through FunRoomClient into the room components](../../assets/diagrams/portfolio-fun-room-data.svg)](../../assets/diagrams/portfolio-fun-room-data.svg)
 
 Live data is different. `feed.ts` polls `/api/v1/infra` every 60s with the same snapshot and
-staleness rules as `LiveStatus` on `/infrastructure`, and holds `useRepos`, which `CodeScreen`
-reads. `PrintedPosts` fetches `/api/v1/blog` once when the room loads, because the covers have to
+staleness rules as `LiveStatus` on `/infrastructure`, and holds `useRepos`, which the
+desktop's Files app reads. `PrintedPosts` fetches `/api/v1/blog` once when the room loads, because the covers have to
 be up before anybody walks up to the wall.
 
 Locally `compose.yaml` sets `STATUS_FILE=/app/dev/status.json` so `/api/v1/infra` takes the same
@@ -156,16 +157,22 @@ anything reachable with `E` is reachable with a finger. `verb` has to read corre
 `InfoCard.tags` renders 10px chips sized for stack labels. Sentences in them read as a layout
 accident; the services leaflets drop their bullets and link out to the section instead.
 
-### A new device in the sideboard
+### A new device
 
-Add the model to `Devices.tsx`, add its entry to `DEVICES` in `content/hardware.ts` copied from
-the README hardware tables, and wrap the placement in `<Inspectable hw={DEVICE.x}>`. The README
-is the source of truth: the room must never claim hardware the README does not.
+Every device in the README hardware tables is somewhere in the room, and the room must never
+claim hardware the README does not. Add the model to `Devices.tsx` and its entry to
+`content/hardware.ts`, copied from the README row, then wrap the placement in
+`<Inspectable hw={located(entry, "where it stands")}>`. The location becomes the card's last row.
 
-That file is shared with `/infrastructure`, which renders every entry as a chip and stakes its
-premise on the claims being checkable. A device with no README row therefore does not go in it:
-declare it local to `Devices.tsx` with `unlisted: true`, the way `FLEX_MINI` is, and the card
-says so instead of inventing numbers.
+Kit in the cabinet goes in `DEVICES`, which `/infrastructure` also renders as one chip per entry
+and models on its bench, so an entry there needs a model on that bench too. Kit elsewhere in the
+flat goes in `HOUSE` and is placed in `HouseDevices` in plan metres. Anything under about 5cm
+gets a `Spot` with an invisible `hit` box, or nobody can put a crosshair on it.
+
+The security camera is the exception to the card: pressing it looks through it. `CctvView`
+renders the scene from `CCTV_LENS` after the composer, so the room's own camera never moves and
+the body standing there is the visitor's. While it is up the body keeps its head (`whole`), and
+the screens' DOM layers are hidden by `.room-cctv`, since they are placed for the visitor's eye.
 
 ### A new terminal command
 
@@ -180,9 +187,23 @@ feed, or build-time snapshot), because a bare table is exactly the kind of green
 data the room's rules forbid. Keep output inside 60 characters; the portrait monitor wraps past
 that.
 
-The shell is the room's only desktop-like surface on purpose. A desktop environment would need a
-fullscreen overlay (pointer lock means no cursor), making a second website inside the website
-with a second copy of content the real pages already own.
+### The desk computer
+
+The landscape monitor is a small desktop (`Desktop.tsx`). It needs no overlay: E zooms onto it
+with `ScreenFocus` and releases the pointer, the way the shell and the printer screen work, and
+its `Html` takes clicks only while zoomed. From across the room it is a screen with a browser
+open on it.
+
+Its apps must not become a second website inside the website. They act on the room (Room
+switches the real lamps and the TV channel) or link out to the page that owns the content: Files
+opens case studies, blog posts and repositories in a new tab and lists certificates by name.
+Never copy a case study's or a post's body into a window. The browser's Argo CD and Grafana are
+mock interfaces drawn over the same `PanelProps` the television reads, and the status line says
+so.
+
+Desktop state lives in `DesktopScreen`, above the `Html`, for the same reason as the old monitor
+tab: drei renders `Html` children in their own root. Window dragging divides pointer deltas by
+the rendered scale, since a desktop pixel is not a screen pixel once it is laid into the room.
 
 ### A new blog post
 
@@ -255,6 +276,12 @@ away, it leaves the crosshair and cannot be closed again; target a fixed invisib
 Movement and picking stop whenever anything has focus. The key handlers are on `window`, so
 without that gate WASD keeps walking while a card or the shell has the keyboard.
 
+Leaving a card, the shell or the camera feed re-locks the pointer (`relock` in `FunRoom.tsx`),
+except by Esc. `requestPointerLock` needs transient user activation; a click, E or Enter carry
+it, and Esc never does, so after Esc the next click locks. Until it does, `FreeLook` in
+`FirstPerson.tsx` turns the view off plain mouse movement, and the card's button shows E as the
+way out that keeps the lock.
+
 Icons are vector, not geometry. Logos built from primitives are unreadable at any sensible
 distance. Use real SVG through drei `Html`, the same trick the monitors use for text.
 
@@ -267,9 +294,10 @@ cleanup clears the hover, so the prompt never settles), and targets register a r
 so inline `onActivate` closures do not re-register every render. Both are commented in
 `interaction.tsx`; do not "simplify" them.
 
-Two things must not drive the camera at once. `TerminalFocus` eases the view in when you sit down
-at the shell and back out when you leave. `paused` covers the way in, but on the way back
-`terminalActive` is already false, so `FirstPerson` would grab the camera mid-move and snap it to
+Two things must not drive the camera at once. `ScreenFocus` eases the view in to a screen and back
+out when you leave: the shell on the desk, and the printer's lid screen (aimed through
+`PRINTER_SCREEN`, since only the laid-out printer knows where it is). `paused` covers the way in,
+but on the way back the screen's flag is already false, so `FirstPerson` would grab the camera mid-move and snap it to
 eye height. The `settling` flag gives the focus a window nothing else may touch. The return pose
 is captured, not recomputed: sending the visitor to a "sensible" spot would quietly relocate them.
 
@@ -378,6 +406,17 @@ a news channel mixing jokes with the live feed, sakte-TV, a bouncing-logo screen
 Each one only animates while it is on. Snake is started with P while its channel is up and the
 remote is in hand; it pauses the room and takes every key until Esc, and the best score lives in
 the visitor's own localStorage.
+
+The washing machine has Maxwell the cat in it (`DancingCat` in `Cat.tsx`), dancing on the drum
+floor while the door is open; `Door` reports open and shut through `onToggle` for that. He is
+fetched the first time the door opens, never with the room. His group is `NO_MERGE`, or the
+static merge would bake him where he stood at mount. He is a black cat in an unlit drum, so his
+material is glossier than the export's with a faint emissive lift; a real drum light would add a
+light to every material in the room.
+
+The microwave's turntable carries a small Norwegian town (`MicroTown.tsx`): houses round a ring
+road, a church, spruces, lamps and a car doing laps, turning while the door is open. Hand-built,
+`NO_MERGE` for the same reason as the cat.
 
 The four paintings are `Painting` from `Paintings.tsx`, drawn on a canvas, each hiding an egg
 that E only hints at. The fjord's far ridge is notched by the live feed's uptime history, so it

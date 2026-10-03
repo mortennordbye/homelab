@@ -33,6 +33,14 @@ RUN mkdir -p output && \
       xelatex -interaction=nonstopmode -output-directory=output "$f" >/dev/null; \
     done
 
+# Page one of each CV as a JPEG, for the sheet the /fun printer feeds out.
+# 96 dpi is A4 at 794x1123: headings legible on a 0.21m sheet up close.
+RUN for f in output/cv-*.pdf; do \
+      gs -q -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -dJPEGQ=82 -r96 \
+        -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -dFirstPage=1 -dLastPage=1 \
+        -sOutputFile="${f%.pdf}.jpg" "$f"; \
+    done
+
 # ---- Stage 3: build the Next.js server bundle ----
 FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS build
 WORKDIR /app
@@ -52,6 +60,7 @@ COPY src ./src
 # as runtime assets under /.
 COPY --from=pdfbuild /work/latex/output/resume.pdf ./public/resume.pdf
 COPY --from=pdfbuild /work/latex/output/cv-*.pdf ./public/
+COPY --from=pdfbuild /work/latex/output/cv-*.jpg ./public/
 COPY --from=texgen /app/public/cv-manifest.json ./public/cv-manifest.json
 
 # Surface the commit SHA into the bundle so the footer can show it
@@ -71,6 +80,7 @@ WORKDIR /staging
 COPY public/ ./
 COPY --from=pdfbuild /work/latex/output/resume.pdf ./resume.pdf
 COPY --from=pdfbuild /work/latex/output/cv-*.pdf ./
+COPY --from=pdfbuild /work/latex/output/cv-*.jpg ./
 COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 
 # ---- Stage 4: serve the Next.js server on distroless Node ----

@@ -79,6 +79,9 @@ function writeManifest(variants: Variant[]) {
       // Non-null by construction (filtered above), assert for the JSON shape.
       flags: v.flags!,
       url: `/${v.id}.pdf`,
+      // Page one as an image, rendered next to the PDF in the Dockerfile's
+      // pdfbuild stage. The /fun printer prints it onto its sheet.
+      preview: `/${v.id}.jpg`,
     }));
 
   const manifest = {

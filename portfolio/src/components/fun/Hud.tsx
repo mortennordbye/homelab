@@ -98,9 +98,11 @@ function Glyph({ icon, size, color }: { icon: LucideIcon; size: number; color?: 
 export function InfoPanel({
   card,
   onClose,
+  touch = false,
 }: {
   card: InfoCard | null;
   onClose: () => void;
+  touch?: boolean;
 }) {
   if (!card) return null;
   const Kicker = kickerIcon(card.kicker);
@@ -222,7 +224,7 @@ export function InfoPanel({
             className="focus-ring px-4 py-2 font-mono text-xs transition-colors"
             style={{ border: "1px solid var(--brass)", color: "var(--paper-ink)" }}
           >
-            close
+            {touch ? "close" : "close · E"}
           </button>
           {card.href && (
             <a

@@ -2,6 +2,10 @@
 
 import { PointerLockControls, useProgress } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { CctvOverlay, CctvView } from "./Cctv";
+import { PRINTER_SCREEN } from "./Printer";
+import { HOUSE } from "@/content/hardware";
+import { cn } from "@/lib/cn";
 import {
   Bloom,
   EffectComposer,
@@ -17,7 +21,7 @@ import { RoomLoading, type LoadStage } from "@/components/fun/RoomLoading";
 import { RoomIntro } from "./RoomIntro";
 import * as THREE from "three";
 import type { PointerLockControls as PointerLockControlsImpl } from "three-stdlib";
-import { EYE, FirstPerson, isTyping, type MoveInput } from "./FirstPerson";
+import { EYE, FirstPerson, FreeLook, isTyping, type MoveInput } from "./FirstPerson";
 import { TouchLook, TouchStick } from "./Touch";
 import { ACCENT, PANELS, type PanelProps } from "./Panels";
 import {
@@ -36,7 +40,7 @@ import {
   type Seat,
   type SeatId,
 } from "./Room";
-import { CodeScreen, type Tab } from "./CodeScreen";
+import { DesktopScreen } from "./Desktop";
 import { Dashboard } from "./Screen";
 import {
   Crosshair,
@@ -141,25 +145,14 @@ const KONAMI = [
   "KeyB", "KeyA",
 ];
 
-/** The monitor's views, in the order it cycles them. One list, so the timer
- *  and the E press cannot disagree about what comes next. */
-const TABS: Tab[] = ["code", "argocd", "repos"];
-const nextTab = (v: Tab): Tab => TABS[(TABS.indexOf(v) + 1) % TABS.length];
-
 function ScreenWall({
   data,
-  source,
-  deskTab,
-  onSwitchTab,
   poweredCount,
   tvChannel,
   remote,
   snake,
 }: {
   data: PanelProps;
-  source: SourceExcerpt;
-  deskTab: Tab;
-  onSwitchTab: () => void;
   poweredCount: number;
   tvChannel: number;
   /** With the remote in hand the television is what you press. Without it the
@@ -169,27 +162,6 @@ function ScreenWall({
 }) {
   return (
     <>
-      {/* The monitor draws a tab bar, and a tab bar is a promise. It used to be
-          one the room could not keep: the two views alternated on a timer with
-          no input path to them at all, so the highlighted tab read as something
-          you could click and then ignored you. Pressing E switches it and pins
-          it — see the interval in Scene. */}
-      <Interactive
-        label="the desk monitor"
-        verb="switch view"
-        detail={DESK_TAB_DETAIL[nextTab(deskTab)]}
-        onActivate={onSwitchTab}
-      >
-        <CodeScreen
-          source={source}
-          data={data}
-          tab={deskTab}
-          position={DESK_SCREEN.position}
-          rotation={DESK_SCREEN.rotation}
-          width={DESK_SCREEN.width}
-          powered={poweredCount > 0}
-        />
-      </Interactive>
       <Interactive
         label="the TV"
         verb="next channel"
@@ -242,13 +214,6 @@ function Notice({
     </div>
   );
 }
-
-/** What the crosshair offers, named by the view it would switch to. */
-const DESK_TAB_DETAIL: Record<Tab, string> = {
-  code: "show deployment.yaml",
-  argocd: "show the ArgoCD view",
-  repos: "show the pinned repositories",
-};
 
 const NOTICE_BUTTON =
   "focus-ring border border-brass px-4 py-2.5 font-mono text-xs text-fg transition-colors hover:border-copper";
@@ -359,39 +324,58 @@ function LoadingScreen({
  */
 const TERMINAL_VIEW_DIST = 0.72;
 
+/** How far back from the printer's lid screen the zoomed view sits. */
+const PRINTER_VIEW_DIST = 0.22;
+
+/** Where a screen faces from: its centre and the normal out of its face. */
+type Aim = () => { screen: THREE.Vector3; normal: THREE.Vector3 };
+
+const terminalAim: Aim = () => ({
+  screen: new THREE.Vector3(...DESK_TERMINAL.position),
+  // The panel faces its local +z, so the seat is that far along the normal.
+  normal: new THREE.Vector3(0, 0, 1).applyEuler(new THREE.Euler(...DESK_TERMINAL.rotation)),
+});
+
+/** Close enough that the landscape monitor fills most of the view's width. */
+const DESKTOP_VIEW_DIST = DESK_SCREEN.width * 0.6;
+
+const desktopAim: Aim = () => ({
+  screen: new THREE.Vector3(...DESK_SCREEN.position),
+  normal: new THREE.Vector3(0, 0, 1).applyEuler(new THREE.Euler(...DESK_SCREEN.rotation)),
+});
+
+const printerAim: Aim = () => ({
+  screen: PRINTER_SCREEN.getWorldPosition(new THREE.Vector3()),
+  normal: PRINTER_SCREEN.getWorldDirection(new THREE.Vector3()),
+});
+
 /**
- * Leans the camera in at the terminal and puts it back exactly where it was.
+ * Leans the camera in at a screen and puts it back exactly where it was.
  * FirstPerson writes the camera every enabled frame (including y = EYE), so
  * it must stay off for the whole move — including the way back, after
  * `terminalActive` is already false; `onSettling` owns that window. The
  * return pose is captured, never recomputed: the visitor must end up where
  * they stood.
  */
-function TerminalFocus({
+function ScreenFocus({
   active,
+  aim,
+  dist,
   onSettling,
   reduced,
 }: {
   active: boolean;
+  aim: Aim;
+  dist: number;
   onSettling: (busy: boolean) => void;
   reduced: boolean;
 }) {
   const { camera } = useThree();
   const saved = useRef<{ pos: THREE.Vector3; quat: THREE.Quaternion } | null>(null);
   const mode = useRef<"idle" | "in" | "out">("idle");
-
-  const view = useMemo(() => {
-    const screen = new THREE.Vector3(...DESK_TERMINAL.position);
-    // The panel faces its local +z, so the seat is that far along the normal.
-    const normal = new THREE.Vector3(0, 0, 1).applyEuler(
-      new THREE.Euler(...DESK_TERMINAL.rotation),
-    );
-    const pos = screen.clone().addScaledVector(normal, TERMINAL_VIEW_DIST);
-    const quat = new THREE.Quaternion().setFromRotationMatrix(
-      new THREE.Matrix4().lookAt(pos, screen, new THREE.Vector3(0, 1, 0)),
-    );
-    return { pos, quat };
-  }, []);
+  // Taken when the move starts: the printer's screen is only known in world
+  // space once its furniture has been laid out.
+  const view = useRef<{ pos: THREE.Vector3; quat: THREE.Quaternion } | null>(null);
 
   useEffect(() => {
     if (active) {
@@ -410,14 +394,22 @@ function TerminalFocus({
     const k = reduced ? 1 : 1 - Math.pow(0.0004, delta);
 
     if (mode.current === "in") {
+      if (!view.current) {
+        const { screen, normal } = aim();
+        const pos = screen.clone().addScaledVector(normal, dist);
+        const quat = new THREE.Quaternion().setFromRotationMatrix(
+          new THREE.Matrix4().lookAt(pos, screen, new THREE.Vector3(0, 1, 0)),
+        );
+        view.current = { pos, quat };
+      }
       if (!saved.current) {
         saved.current = {
           pos: camera.position.clone(),
           quat: camera.quaternion.clone(),
         };
       }
-      camera.position.lerp(view.pos, k);
-      camera.quaternion.slerp(view.quat, k);
+      camera.position.lerp(view.current.pos, k);
+      camera.quaternion.slerp(view.current.quat, k);
       return;
     }
 
@@ -432,6 +424,7 @@ function TerminalFocus({
       camera.position.copy(back.pos);
       camera.quaternion.copy(back.quat);
       saved.current = null;
+      view.current = null;
       mode.current = "idle";
       onSettling(false);
     }
@@ -776,6 +769,15 @@ function Scene({
   onOpenCert,
   onOpenCard,
   onExitRoom,
+  watching,
+  onWatchCamera,
+  onOpenPrinter,
+  printerOpen,
+  onClosePrinter,
+  freeLook,
+  desktopActive,
+  onDesktopEnter,
+  onDesktopExit,
   terminalActive,
   onTerminalEnter,
   onTerminalExit,
@@ -812,6 +814,19 @@ function Scene({
   onOpenCert: (c: ShelfCert) => void;
   onOpenCard: (c: InfoCard) => void;
   onExitRoom: () => void;
+  /** Looking through the security camera on the TV bench. */
+  watching: boolean;
+  onWatchCamera: () => void;
+  onOpenPrinter: () => void;
+  /** Zoomed onto the printer's screen. */
+  printerOpen: boolean;
+  onClosePrinter: () => void;
+  /** Turning the view without the lock, after an Esc exit. */
+  freeLook: boolean;
+  /** Zoomed onto the desk computer's desktop. */
+  desktopActive: boolean;
+  onDesktopEnter: () => void;
+  onDesktopExit: () => void;
   terminalActive: boolean;
   onTerminalEnter: () => void;
   onTerminalExit: () => void;
@@ -853,24 +868,6 @@ function Scene({
      already gone false by then, so without this FirstPerson would grab the
      camera mid-move and snap it to eye height. */
   const [settling, setSettling] = useState(false);
-  /* The desk monitor cycles the manifest, the ArgoCD view and the pinned
-     repositories. Held here rather than inside CodeScreen — see the note on
-     its `tab` prop. */
-  const [deskTab, setDeskTab] = useState<Tab>("code");
-  /* Set the first time the visitor switches the monitor themselves. The
-     rotation exists so the second view is seen at all by someone who never
-     touches the monitor; once they have, a timer yanking the screen out from
-     under them is the room overriding a deliberate choice. */
-  const [deskTabPinned, setDeskTabPinned] = useState(false);
-  useEffect(() => {
-    if (phase !== "exploring" || deskTabPinned) return;
-    const t = setInterval(() => setDeskTab(nextTab), 9000);
-    return () => clearInterval(t);
-  }, [phase, deskTabPinned]);
-  const switchDeskTab = useCallback(() => {
-    setDeskTabPinned(true);
-    setDeskTab(nextTab);
-  }, []);
 
   const { holdingRemote, remotePlace, pickUpRemote, putDownRemote, thrown, throwRemote, landRemote } = remoteHand;
   const { channel: tvChannel, next: nextChannel, playingSnake, setPlayingSnake } = tv;
@@ -942,6 +939,10 @@ function Scene({
           onOpenCert={onOpenCert}
           onOpenCard={onOpenCard}
           onExitRoom={onExitRoom}
+          onWatchCamera={onWatchCamera}
+          onOpenPrinter={onOpenPrinter}
+          printerOpen={printerOpen}
+          onClosePrinter={onClosePrinter}
           lights={lights}
           onToggleLight={onToggleLight}
           seated={seated}
@@ -949,15 +950,19 @@ function Scene({
           remote={{ held: holdingRemote || thrown !== null, place: remotePlace, onPickUp: pickUpRemote }}
         />
         <Post />
+        <CctvView active={watching} />
         {/* Fires only once everything above has resolved, which is the honest
             "the room is ready" signal. Progress percentage alone is not: it
             hits 100 while the last texture is still being uploaded and the
             scene has yet to mount, so a bar driven purely by it finishes to a
             blank canvas. */}
         <Body
-          hidden={seated === "bed" || visitor || dragging}
+          // Zoomed onto a screen the eye sits low and close: the body drops into
+          // its sitting pose right under the camera and its arm fills the view.
+          hidden={seated === "bed" || visitor || dragging || desktopActive || printerOpen}
           sitting={seated !== null}
           holding={holdingRemote}
+          whole={watching}
         />
         {holdingRemote && <HeldRemote onPutDown={putDownRemote} onThrow={throwRemote} />}
         {thrown && <ThrownRemote from={thrown.from} velocity={thrown.velocity} onLand={landRemote} />}
@@ -977,11 +982,26 @@ function Scene({
       />
       {connected && (
         <>
-          <ScreenWall
+          <DesktopScreen
+            position={DESK_SCREEN.position}
+            rotation={DESK_SCREEN.rotation}
+            width={DESK_SCREEN.width}
+            powered={poweredCount > 0}
+            active={desktopActive}
+            onActivate={onDesktopEnter}
+            onExit={onDesktopExit}
             data={data}
             source={source}
-            deskTab={deskTab}
-            onSwitchTab={switchDeskTab}
+            shelf={shelf}
+            room={{
+              lights,
+              onToggleLight,
+              channel: `ch ${tvChannel + 1} · ${channelName(tvChannel)}`,
+              onNextChannel: nextChannel,
+            }}
+          />
+          <ScreenWall
+            data={data}
             poweredCount={poweredCount}
             tvChannel={tvChannel}
             remote={{ held: holdingRemote, detail: remoteDetail, onPress: nextChannel }}
@@ -1014,7 +1034,9 @@ function Scene({
       />
       </InteractionProvider>
       </SayProvider>
-      <TerminalFocus active={terminalActive} onSettling={setSettling} reduced={reduced} />
+      <ScreenFocus active={terminalActive} aim={terminalAim} dist={TERMINAL_VIEW_DIST} onSettling={setSettling} reduced={reduced} />
+      <ScreenFocus active={desktopActive} aim={desktopAim} dist={DESKTOP_VIEW_DIST} onSettling={setSettling} reduced={reduced} />
+      <ScreenFocus active={printerOpen} aim={printerAim} dist={PRINTER_VIEW_DIST} onSettling={setSettling} reduced={reduced} />
       <SeatedFocus seat={seated ? SEATS[seated] : null} onStandingUp={setStandingUp} reduced={reduced} />
       <Visitor active={visitor} dragging={dragging} onDragged={onStand} />
       {/* `seated` covers the move in and the whole time in the chair;
@@ -1025,6 +1047,7 @@ function Scene({
         }
         move={touchMove}
       />
+      <FreeLook active={freeLook && phase === "exploring" && !paused && !seated} />
       {/* The selector is swapped for one that matches nothing while something
           has focus, and that is load-bearing rather than cosmetic. drei binds
           a click -> lock() handler to every element matching `selector`, and
@@ -1048,6 +1071,9 @@ function Scene({
 
 type Phase = "loading" | "exploring";
 
+/** Keys on the remote's plate, brighter than the engraved default. */
+const KEY = "border-snow/40 text-snow/90";
+
 /* Card builders. Hardware, case studies and certificates all reduce to the same
    shape, so InfoPanel renders one layout rather than three that drift apart. */
 
@@ -1057,9 +1083,7 @@ function hardwareCard(hw: Inspected): InfoCard {
     title: hw.model,
     subtitle: hw.tag,
     rows: hw.facts.map(([k, v]) => ({ k, v })),
-    note: hw.unlisted
-      ? "Not in the README hardware tables, so no specification is quoted for it here."
-      : "Specifications from the hardware tables in the Homelab README.",
+    note: "Specifications from the hardware tables in the Homelab README.",
   };
 }
 
@@ -1107,6 +1131,8 @@ export default function FunRoom({
   const [floorDone, setFloorDone] = useState(false);
   const { progress } = useProgress();
   const [locked, setLocked] = useState(false);
+  /* Set by an Esc exit, which cannot re-lock; cleared by the next lock. */
+  const [freeLook, setFreeLook] = useState(false);
   const [reduced] = useState(
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -1151,6 +1177,9 @@ export default function FunRoom({
   const onContextLost = useCallback(() => setContextLost(true), []);
   const [card, setCard] = useState<InfoCard | null>(null);
   const [terminalActive, setTerminalActive] = useState(false);
+  const [watching, setWatching] = useState(false);
+  const [printerOpen, setPrinterOpen] = useState(false);
+  const [desktopActive, setDesktopActive] = useState(false);
   const [seated, setSeated] = useState<SeatId | null>(null);
   /* All on from the start, always. The room is a lamplit evening and that is
      what it should be the first time you see it — the switches are something to
@@ -1171,7 +1200,7 @@ export default function FunRoom({
      Without this, WASD still walks you across the room while a card is open
      or you are typing at the terminal — the pointer is released but the key
      handlers are on window and do not know that. */
-  const paused = card !== null || terminalActive || introOpen || playingSnake;
+  const paused = card !== null || terminalActive || introOpen || playingSnake || watching || printerOpen || desktopActive;
 
   /* Opening a card releases the pointer, because the card is a DOM panel and
      the visitor needs a cursor to click its link. Closing it hands the pointer
@@ -1188,15 +1217,48 @@ export default function FunRoom({
     setTerminalActive(true);
     controlsRef.current?.unlock();
   }, []);
-  /* Deliberately does not re-lock. requestPointerLock needs transient user
-     activation, and Esc does not grant it — the call was silently rejected on
-     the most common way out of the terminal, so the visitor landed back in the
-     room unlocked anyway. Leaving the lock to the visitor's next click makes
-     both exits behave the same, and that click is how they locked on the way
-     in. Movement is already restored by `paused` going false. */
+  /* Every way out but Esc re-locks, so the visitor is straight back in the
+     room. requestPointerLock needs transient user activation: a click, E or
+     Enter carry it, Esc never does, so the Esc paths leave the lock to the next
+     click. Touch has no pointer lock to ask for. */
+  const relock = useCallback(() => {
+    if (!coarse) controlsRef.current?.lock();
+  }, [coarse]);
   const exitTerminal = useCallback(() => {
     setTerminalActive(false);
+    relock();
+  }, [relock]);
+
+  /* Released on the way in like a card, so the feed's button can be clicked. */
+  const watchCamera = useCallback(() => {
+    setWatching(true);
+    controlsRef.current?.unlock();
   }, []);
+  const stopWatching = useCallback(() => {
+    setWatching(false);
+    relock();
+  }, [relock]);
+
+  /* Zoomed onto the printer's screen: released so its buttons take clicks,
+     re-locked on the way out like a card. */
+  const openPrinter = useCallback(() => {
+    setPrinterOpen(true);
+    controlsRef.current?.unlock();
+  }, []);
+  const closePrinter = useCallback(() => {
+    setPrinterOpen(false);
+    relock();
+  }, [relock]);
+
+  /* The desk computer: released like the printer so its desktop takes clicks. */
+  const enterDesktop = useCallback(() => {
+    setDesktopActive(true);
+    controlsRef.current?.unlock();
+  }, []);
+  const exitDesktop = useCallback(() => {
+    setDesktopActive(false);
+    relock();
+  }, [relock]);
 
   const sleep = useSleep(seated === "bed", reduced);
   const armSleep = sleep.arm;
@@ -1214,11 +1276,11 @@ export default function FunRoom({
      the chair. */
   const standUp = useCallback(() => setSeated(null), []);
 
-  // A click is a gesture the lock can ride on; a key leaves it to the next click.
-  const enterRoom = useCallback((byPointer: boolean) => {
+  /* The intro ignores Esc, so whatever enters can carry the lock. */
+  const enterRoom = useCallback(() => {
     setIntroOpen(false);
-    if (byPointer) controlsRef.current?.lock();
-  }, []);
+    relock();
+  }, [relock]);
 
   /* Walking out of the door leaves the room. Uses the router rather than
      window.location so it is a client navigation like any other nav link —
@@ -1230,14 +1292,11 @@ export default function FunRoom({
     router.push("/");
   }, [router]);
 
-  /* Does not re-lock, for the same reason exitTerminal does not — see there.
-     Closing with Esc carries no transient user activation, so the lock request
-     was rejected on that path anyway, and on a touch device it was asking a
-     browser with no pointer lock at all to grant one. Both exits now behave
-     the same, and the next click re-locks. */
+  /* Re-locks; see `relock`. */
   const closeCard = useCallback(() => {
     setCard(null);
-  }, []);
+    relock();
+  }, [relock]);
 
   /* A floor on how briefly the loading screen can exist. On a warm cache the
      room is ready in well under a second, and a bar that flashes to 100 and
@@ -1268,15 +1327,27 @@ export default function FunRoom({
   // releasing the cursor, but the cursor is deliberately released while a card
   // is up, so Esc has nothing else to do and closing is what you expect.
   useEffect(() => {
-    if (!card && !terminalActive) return;
+    if (!card && !terminalActive && !watching && !printerOpen && !desktopActive) return;
     const onKey = (e: KeyboardEvent) => {
+      // E closes too, and carries the activation to re-lock; Esc cannot.
+      if (e.code === "KeyE" && (watching || card || printerOpen || desktopActive)) {
+        if (watching) stopWatching();
+        else if (printerOpen) closePrinter();
+        else if (desktopActive) exitDesktop();
+        else closeCard();
+        return;
+      }
       if (e.code !== "Escape") return;
-      if (card) closeCard();
-      else exitTerminal();
+      if (!coarse) setFreeLook(true);
+      if (watching) setWatching(false);
+      else if (printerOpen) setPrinterOpen(false);
+      else if (desktopActive) setDesktopActive(false);
+      else if (card) setCard(null);
+      else setTerminalActive(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [card, terminalActive, closeCard, exitTerminal]);
+  }, [card, terminalActive, watching, printerOpen, desktopActive, coarse, closeCard, stopWatching, closePrinter, exitDesktop]);
 
   // H hides the keybind card, for people who want a clean look.
   useEffect(() => {
@@ -1336,7 +1407,10 @@ export default function FunRoom({
   useEffect(() => {
     const c = controlsRef.current;
     if (!c) return;
-    const onLock = () => setLocked(true);
+    const onLock = () => {
+      setLocked(true);
+      setFreeLook(false);
+    };
     const onUnlock = () => setLocked(false);
     c.addEventListener("lock", onLock);
     c.addEventListener("unlock", onUnlock);
@@ -1434,7 +1508,13 @@ export default function FunRoom({
 
   return (
     <div className="fixed inset-0 z-[200] bg-[#04070a]">
-      <div id="fun-lock-target" className="absolute inset-0 z-0" style={sleep.canvasStyle}>
+      {/* While watching, the screens' DOM layers are hidden: they are placed
+          for the visitor's eye, not the camera's. */}
+      <div
+        id="fun-lock-target"
+        className={cn("absolute inset-0 z-0", watching && "room-cctv")}
+        style={watching ? { ...sleep.canvasStyle, filter: "grayscale(1) contrast(1.15)" } : sleep.canvasStyle}
+      >
         <Canvas
           camera={{ fov: 72, near: 0.1, far: 60, position: at(4.4, 1.5, 5.2) }}
           /* PCF, set explicitly: "soft" asks for PCFSoftShadowMap, which three.js
@@ -1478,6 +1558,15 @@ export default function FunRoom({
             onOpenCert={(c) => openCard(certCard(c))}
             onOpenCard={openCard}
             onExitRoom={exitRoom}
+            watching={watching}
+            onWatchCamera={watchCamera}
+            onOpenPrinter={openPrinter}
+            printerOpen={printerOpen}
+            onClosePrinter={closePrinter}
+            freeLook={freeLook}
+            desktopActive={desktopActive}
+            onDesktopEnter={enterDesktop}
+            onDesktopExit={exitDesktop}
             terminalActive={terminalActive}
             onTerminalEnter={enterTerminal}
             onTerminalExit={exitTerminal}
@@ -1530,7 +1619,7 @@ export default function FunRoom({
           other people's work with no credit is not something to be casual
           about. */}
       <p className="pointer-events-none absolute bottom-6 right-6 z-20 font-mono text-[10px] text-snow/25">
-        surfaces &amp; models: Poly Haven (CC0)
+        surfaces &amp; models: Poly Haven (CC0) · Maxwell the cat: Zhuier (CC BY 4.0)
       </p>
 
       {/* exit */}
@@ -1541,6 +1630,10 @@ export default function FunRoom({
       >
         exit
       </Link>
+
+      {watching && (
+        <CctvOverlay model={HOUSE.camera.model} where="TV bench" touch={coarse} onExit={stopWatching} />
+      )}
 
       <SleepOverlay lid={sleep.lid} asleep={sleep.asleep} blast={sleep.blast} shout={sleep.shout} reduced={reduced} />
 
@@ -1559,7 +1652,7 @@ export default function FunRoom({
         </div>
       )}
 
-      <InfoPanel card={card} onClose={closeCard} />
+      <InfoPanel card={card} onClose={closeCard} touch={coarse} />
 
       {caption && (
         <div className="pointer-events-none absolute bottom-24 left-1/2 z-20 -translate-x-1/2 max-sm:bottom-[288px]">
@@ -1570,20 +1663,23 @@ export default function FunRoom({
       {/* Up for as long as the remote is in hand, apart from the caption slot,
           which every other passing line takes over. */}
       {holdingRemote && (
-        <div className="pointer-events-none absolute bottom-40 left-1/2 z-20 flex -translate-x-1/2 items-center gap-4 whitespace-nowrap font-mono text-[11px] text-fg-2 max-sm:bottom-[340px]">
-          <span className="text-fg-3">holding the remote</span>
+        /* On a dark plate: the line sits over whatever is in front of the
+           visitor, often the lit rug or the hand, and bare grey text vanishes
+           there. Solid, not blurred; see LeaderLabel. */
+        <div className="pointer-events-none absolute bottom-40 left-1/2 z-20 flex -translate-x-1/2 items-center gap-4 whitespace-nowrap rounded-[2px] bg-black/65 px-4 py-2 font-mono text-xs text-fg max-sm:bottom-[340px]">
+          <span className="text-fg-2">holding the remote</span>
           <span className="flex items-center gap-2">
-            <Kbd>E</Kbd> on the TV · next channel
+            <Kbd className={KEY}>E</Kbd> on the TV · next channel
           </span>
           <span className="flex items-center gap-2">
-            <Kbd>Q</Kbd> put it down where you look
+            <Kbd className={KEY}>Q</Kbd> put it down where you look
           </span>
           <span className="flex items-center gap-2">
-            <Kbd>T</Kbd> throw it
+            <Kbd className={KEY}>T</Kbd> throw it
           </span>
           {tvChannel === SNAKE_CHANNEL && (
             <span className="flex items-center gap-2">
-              <Kbd>P</Kbd> {playingSnake ? "playing · esc leaves" : "play snake"}
+              <Kbd className={KEY}>P</Kbd> {playingSnake ? "playing · esc leaves" : "play snake"}
             </span>
           )}
         </div>
@@ -1623,7 +1719,7 @@ export default function FunRoom({
             className="font-mono text-[11px] text-fg-3"
             style={{ textShadow: "0 0 8px rgba(0,0,0,0.95)" }}
           >
-            click to look around · WASD to move · brass markers show what to open
+            {freeLook ? "click to lock the mouse" : "click to look around"} · WASD to move · brass markers show what to open
           </p>
         </div>
       )}

@@ -35,7 +35,7 @@ export function RoomIntro({
   ready: boolean;
   entered: boolean;
   /** `byPointer` is true for a click, which is what may take the pointer lock. */
-  onEnter: (byPointer: boolean) => void;
+  onEnter: () => void;
 }) {
   /* Unmounted after the fade for the reason RoomLoading is: a full-viewport
      image at opacity 0 is still a compositing layer over the canvas. */
@@ -55,7 +55,7 @@ export function RoomIntro({
       // so the key that enters does not also walk, press E or toggle the HUD.
       e.stopImmediatePropagation();
       e.preventDefault();
-      onEnter(false);
+      onEnter();
     };
     window.addEventListener("keydown", onKey, { capture: true });
     return () => window.removeEventListener("keydown", onKey, { capture: true });
@@ -74,7 +74,7 @@ export function RoomIntro({
       style={{ opacity: entered ? 0 : 1 }}
       onClick={(e) => {
         if (!ready || entered || (e.target as Element).closest("a")) return;
-        onEnter(true);
+        onEnter();
       }}
     >
       {/* Fixed and clipped: the poster's drift scales it past the viewport, and

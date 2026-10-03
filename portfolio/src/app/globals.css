@@ -659,6 +659,12 @@ body.fun-immersive > main {
   z-index: 0 !important;
 }
 
+/* Looking through the room's security camera: everything in the canvas
+   wrapper but the canvas is a DOM layer placed for the visitor's eye. */
+.room-cctv :not(canvas):not(:has(canvas)) {
+  visibility: hidden !important;
+}
+
 /* Indeterminate bar for the moment before byte progress exists. */
 .room-enter__bar {
   animation: room-enter-bar 1.4s var(--ease-in-out) infinite;

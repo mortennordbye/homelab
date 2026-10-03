@@ -75,6 +75,7 @@ export function Door({
   axis = "y",
   angle,
   startOpen = false,
+  onToggle,
   children,
 }: {
   label: string;
@@ -85,9 +86,12 @@ export function Door({
    *  handed a hole where a doorway is and cannot know a leaf swung across it,
    *  so a door resting shut is one you walk straight through. */
   startOpen?: boolean;
+  /** Told whenever the leaf is set open or shut, for what is behind it. */
+  onToggle?: (open: boolean) => void;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(startOpen);
+  useEffect(() => onToggle?.(open), [open, onToggle]);
   const g = useRef<THREE.Group>(null);
   useEase(open, (t) => {
     if (g.current) g.current.rotation[axis] = t * angle;
