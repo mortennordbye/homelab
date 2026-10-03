@@ -1,7 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/cn";
+import { useReducedMotion } from "@/lib/reduced-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,7 +18,6 @@ const ENTER_MS = 620;
 export function Hero() {
   const reduce = useReducedMotion();
   const router = useRouter();
-  const ref = useRef<HTMLDivElement>(null);
   const screenRef = useRef<HTMLSpanElement>(null);
 
   /* Walking into the room. The monitor is promoted to a fixed clone at exactly
@@ -28,12 +28,6 @@ export function Hero() {
      transition ends, the page underneath may have scrolled. */
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [entering, setEntering] = useState(false);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"],
-  });
-  const yWord = useTransform(scrollYProgress, [0, 1], ["0%", "-12%"]);
-  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.4]);
 
   const enterRoom = (e: React.MouseEvent<HTMLAnchorElement>) => {
     // Never swallow a middle-click, a modified click or an already-running
@@ -62,7 +56,6 @@ export function Hero() {
 
   return (
     <section
-      ref={ref}
       className="relative isolate overflow-hidden pt-32 md:pt-40"
     >
       <InlineGlobe />
@@ -85,12 +78,11 @@ export function Hero() {
             {site.firstName} {site.lastName}
           </p>
 
-          <motion.h1
-            style={reduce ? undefined : { y: yWord, opacity }}
-            className="mt-2 text-display-lg text-fg"
-          >
-            I am a <RotatingRole words={site.hero.rotating} reduce={!!reduce} />
-          </motion.h1>
+          {/* Drifts up and dims as the hero scrolls away: `hero-drift` in
+              globals.css, a scroll-driven animation with no script. */}
+          <h1 className="hero-drift mt-2 text-display-lg text-fg">
+            I am a <RotatingRole words={site.hero.rotating} reduce={reduce} />
+          </h1>
 
           <p className="mt-8 max-w-2xl text-lg text-fg-2 md:text-xl">
             {site.hero.sub}
@@ -250,11 +242,14 @@ function RotatingRole({
   reduce: boolean;
 }) {
   const [idx, setIdx] = useState(0);
+  // The first word is in the server HTML and must not animate in.
+  const [ticked, setTicked] = useState(false);
 
   useEffect(() => {
     if (reduce || words.length < 2) return;
     const t = window.setInterval(() => {
       setIdx((i) => (i + 1) % words.length);
+      setTicked(true);
     }, 3800);
     return () => window.clearInterval(t);
   }, [reduce, words.length]);
@@ -272,19 +267,14 @@ function RotatingRole({
       >
         {longest}
       </span>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.span
-          key={words[idx]}
-          style={{ gridArea: "1 / 1", whiteSpace: "nowrap" }}
-          className="text-accent"
-          initial={reduce ? false : { opacity: 0, y: "0.14em" }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={reduce ? undefined : { opacity: 0, y: "-0.1em" }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {words[idx]}
-        </motion.span>
-      </AnimatePresence>
+      {/* Keyed, so each new word remounts and plays `role-in` once. */}
+      <span
+        key={words[idx]}
+        style={{ gridArea: "1 / 1", whiteSpace: "nowrap" }}
+        className={cn("text-accent", ticked && "role-in")}
+      >
+        {words[idx]}
+      </span>
     </span>
   );
 }

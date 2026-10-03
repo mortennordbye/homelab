@@ -260,6 +260,8 @@ export function InfraBench() {
           <img
             src="/images/cabinet-poster.webp"
             alt=""
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
             style={{ opacity: painted ? 0 : 1 }}
           />
