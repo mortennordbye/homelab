@@ -9,6 +9,7 @@ import { at, type Rect } from "./flat";
 import { LiveMirror } from "./Mirror";
 import { MyStuff } from "./Contents";
 import { OpenBox } from "./openable";
+import { Painting } from "./Paintings";
 import { MERGE_STATIC } from "./StaticMerge";
 
 /**
@@ -660,36 +661,6 @@ function Extinguisher({ position }: { position: [number, number, number] }) {
   );
 }
 
-/** The small framed print on the return panel, the way it hangs in the hall. */
-function FramedPrint({
-  position,
-  rotation = [0, 0, 0],
-}: {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-}) {
-  return (
-    <group position={position} rotation={rotation}>
-        <MyStuff>
-          <group userData={MERGE_STATIC}>
-      <mesh castShadow>
-        <boxGeometry args={[0.19, 0.25, 0.016]} />
-        <meshStandardMaterial color={OAK.case} roughness={0.5} metalness={0} />
-      </mesh>
-      <mesh position={[0, 0, 0.01]}>
-        <planeGeometry args={[0.15, 0.21]} />
-        <meshStandardMaterial color="#d9d2c4" roughness={0.9} />
-      </mesh>
-      <mesh position={[0, -0.02, 0.011]}>
-        <planeGeometry args={[0.07, 0.1]} />
-        <meshStandardMaterial color="#b9b3a2" roughness={0.9} />
-      </mesh>
-          </group>
-        </MyStuff>
-    </group>
-  );
-}
-
 /**
  * The wall the built-ins are cut into: the entré's north side, between the
  * living room's return and the bathroom door.
@@ -868,7 +839,8 @@ export function Hallway({ oak }: { oak: Surface }) {
 
       {/* On the return south of the alcove, which is the wall they hang on in
           the flat: the watercolour, and the extinguisher at the foot of it. */}
-      <FramedPrint position={at(6.28, 1.46, 5.78)} rotation={[0, -Math.PI / 2, 0]} />
+      {/* A little larger than a print usually hangs here, so the elk can be found. */}
+      <Painting art={{ kind: "birch" }} position={at(6.28, 1.46, 5.78)} rotation={[0, -Math.PI / 2, 0]} width={0.28} height={0.37} />
       <Extinguisher position={at(6.18, 0, 5.96)} />
 
       {/* The cabinet on the south wall beside the way out, and the mirror and

@@ -2,6 +2,9 @@
 
 import { Kbd } from "@/components/primitives/Kbd";
 import { LeaderLabel } from "./LeaderLabel";
+import { createElement } from "react";
+import { Tag, type LucideIcon } from "lucide-react";
+import { kickerIcon, rowIcon, techIcon } from "./cardIcons";
 import type { Prompt } from "./interaction";
 
 /**
@@ -82,6 +85,11 @@ export type InfoCard = {
   hrefLabel?: string;
 };
 
+/** A lucide icon picked at runtime, drawn without minting a component per render. */
+function Glyph({ icon, size, color }: { icon: LucideIcon; size: number; color?: string }) {
+  return createElement(icon, { "aria-hidden": true, size, strokeWidth: 1.75, color });
+}
+
 /**
  * The panel opened with E. One component for hardware, case studies and
  * certificates: they are all "a name, some fields, some prose", and three
@@ -95,6 +103,8 @@ export function InfoPanel({
   onClose: () => void;
 }) {
   if (!card) return null;
+  const Kicker = kickerIcon(card.kicker);
+  const lead = techIcon(`${card.title} ${card.subtitle ?? ""}`);
   return (
     <div className="absolute inset-0 z-30 grid place-content-center bg-black/55 px-6">
       {/* A sheet on the desk, not a card: paper is the only light field, it has
@@ -107,10 +117,25 @@ export function InfoPanel({
           boxShadow: "var(--cast)",
         }}
       >
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: "var(--paper-ink-3)" }}>
+        <p
+          className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em]"
+          style={{ color: "var(--paper-ink-3)" }}
+        >
+          <Glyph icon={Kicker} size={12} />
           {card.kicker}
         </p>
-        <h2 className="mt-2 text-xl leading-tight">{card.title}</h2>
+        <div className="mt-2 flex items-start justify-between gap-4">
+          <h2 className="text-xl leading-tight">{card.title}</h2>
+          {lead && (
+            <span
+              aria-hidden
+              className="grid size-9 shrink-0 place-content-center"
+              style={{ border: `1px solid ${lead.color}55`, color: lead.color }}
+            >
+              <Glyph icon={lead.Icon} size={18} />
+            </span>
+          )}
+        </div>
         {card.subtitle && (
           <p className="mt-1 font-mono text-xs" style={{ color: "var(--paper-ink-2)" }}>
             {card.subtitle}
@@ -125,17 +150,38 @@ export function InfoPanel({
 
         {card.rows.length > 0 && (
           <dl className="mt-4 space-y-2">
-            {card.rows.map((r) => (
-              <div key={r.k} className="flex gap-3">
-                <dt
-                  className="w-40 shrink-0 break-words font-mono text-[11px] uppercase tracking-wider"
-                  style={{ color: "var(--paper-ink-3)" }}
-                >
-                  {r.k}
-                </dt>
-                <dd className="font-mono text-[12px]">{r.v}</dd>
-              </div>
-            ))}
+            {card.rows.map((r) => {
+              /* A bare 0 to 100 is a level, and a level reads faster as a bar. */
+              const level = /^\d{1,3}$/.test(r.v) && Number(r.v) <= 100 ? Number(r.v) : null;
+              const brand = level !== null ? techIcon(r.k) : null;
+              const Icon = brand?.Icon ?? rowIcon(r.k);
+              return (
+                <div key={r.k} className="flex items-center gap-3">
+                  <dt
+                    className="flex w-40 shrink-0 items-center gap-2 break-words font-mono text-[11px] uppercase tracking-wider"
+                    style={{ color: "var(--paper-ink-3)" }}
+                  >
+                    <span aria-hidden className="w-3.5 shrink-0" style={{ color: brand?.color ?? "var(--brass)" }}>
+                      <Glyph icon={Icon} size={14} />
+                    </span>
+                    {r.k}
+                  </dt>
+                  {level !== null ? (
+                    <dd className="flex flex-1 items-center gap-3 font-mono text-[12px]">
+                      <span className="h-1.5 flex-1" style={{ background: "rgba(127,90,47,0.18)" }}>
+                        <span
+                          className="block h-full"
+                          style={{ width: `${level}%`, background: brand?.color ?? "var(--brass)" }}
+                        />
+                      </span>
+                      <span className="w-7 text-right">{r.v}</span>
+                    </dd>
+                  ) : (
+                    <dd className="font-mono text-[12px]">{r.v}</dd>
+                  )}
+                </div>
+              );
+            })}
           </dl>
         )}
 
@@ -144,15 +190,19 @@ export function InfoPanel({
 
         {card.tags && card.tags.length > 0 && (
           <ul className="mt-4 flex flex-wrap gap-1.5">
-            {card.tags.map((t) => (
-              <li
-                key={t}
-                className="px-2 py-1 font-mono text-[10px]"
-                style={{ border: "1px solid var(--brass)", color: "var(--paper-ink-2)" }}
-              >
-                {t}
-              </li>
-            ))}
+            {card.tags.map((t) => {
+              const brand = techIcon(t);
+              return (
+                <li
+                  key={t}
+                  className="flex items-center gap-1.5 px-2 py-1 font-mono text-[10px]"
+                  style={{ border: "1px solid var(--brass)", color: "var(--paper-ink-2)" }}
+                >
+                  <Glyph icon={brand?.Icon ?? Tag} size={12} color={brand?.color ?? "var(--brass)"} />
+                  {t}
+                </li>
+              );
+            })}
           </ul>
         )}
 

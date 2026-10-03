@@ -32,6 +32,7 @@ import { FLAT, MARKS, at, centreOf, doorOpenings, px, pz, wallBoxes } from "./fl
 import { MERGE_STATIC, StaticMerge } from "./StaticMerge";
 import { MyStuff } from "./Contents";
 import { Duck } from "./Duck";
+import { Painting } from "./Paintings";
 import type { RemotePlace } from "./HeldRemote";
 import {
   BathMat,
@@ -51,7 +52,6 @@ import {
   HallRunner,
   JuteRug,
   PleatedBlind,
-  Poster,
   SINK_HOLE,
   Shower,
   Sink,
@@ -1466,7 +1466,7 @@ export function Room({
           <Bed position={at(5.3, 0, 2.0)} rotation={[0, -Math.PI / 2, 0]} />
         </group>
       </Interactive>
-      <Poster position={at(5.55, 1.62, 2.68)} rotation={[0, Math.PI, 0]} />
+      <Painting art={{ kind: "hytte" }} position={at(5.55, 1.62, 2.68)} rotation={[0, Math.PI, 0]} />
       {/* Pulled to 0.78 of the opening, where it hangs in the photograph and
           low enough that the head still reads as glazing rather than as wall. */}
       <PleatedBlind position={at(5.1, 2.13, 0.08)} width={1.38} drop={0.86} />

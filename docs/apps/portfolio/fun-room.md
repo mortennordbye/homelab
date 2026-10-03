@@ -379,6 +379,14 @@ Each one only animates while it is on. Snake is started with P while its channel
 remote is in hand; it pauses the room and takes every key until Esc, and the best score lives in
 the visitor's own localStorage.
 
+The four paintings are `Painting` from `Paintings.tsx`, drawn on a canvas, each hiding an egg
+that E only hints at. The fjord's far ridge is notched by the live feed's uptime history, so it
+redraws when that changes; the aurora's moon is tonight's phase.
+
+Info cards take their icons from `cardIcons.ts`: brands through the site's own registry in
+`work/brand-icons.ts`, the room's web stack and the card's row keys on top. Every kicker, row and
+tag gets one, falling back to a neutral glyph, and a bare 0 to 100 value renders as a bar.
+
 Household things that are not portfolio content sit in `MyStuff` (from `Contents.tsx`, and every
 `Items` stock already does): pickable, and E gets told off. Static geometry the crosshair must not
 see through, every `OpenBox` carcass and the wardrobe's fixed leaf, is an `Occluder`: a disabled

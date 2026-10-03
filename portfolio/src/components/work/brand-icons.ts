@@ -133,6 +133,12 @@ function classify(label: string): BrandKey | null {
   return null;
 }
 
+/** The brand for one label, or null when the registry does not know it. */
+export function brandOf(label: string): Brand | null {
+  const key = classify(label);
+  return key ? BRANDS[key] : null;
+}
+
 export function pickBrand(stack: readonly string[]): {
   key: BrandKey;
   brand: Brand;

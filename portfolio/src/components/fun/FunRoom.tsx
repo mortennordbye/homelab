@@ -52,6 +52,7 @@ import type { SourceExcerpt } from "@/lib/source-excerpt";
 import { TerminalScreen } from "./Terminal";
 import { Interactive, InteractionProvider, SayProvider, type Prompt } from "./interaction";
 import { Body } from "./Body";
+import { Painting } from "./Paintings";
 import { HeldRemote, ThrownRemote, type RemotePlace } from "./HeldRemote";
 import { Kbd } from "@/components/primitives/Kbd";
 import { EXTRA_CHANNELS } from "./TvChannels";
@@ -60,7 +61,7 @@ import { LeaderLabel } from "./LeaderLabel";
 import { SleepOverlay, useSleep } from "./Sleep";
 import { Visitor } from "./Visitor";
 import { useInfraFeed } from "./feed";
-import { at } from "./flat";
+import { at, px } from "./flat";
 import { preloadProps } from "./props";
 import { preloadSurfaces, type SurfaceSlug } from "@/components/materials/surface";
 import { StudyEnvironment } from "@/components/materials/StudyEnvironment";
@@ -962,6 +963,18 @@ function Scene({
         {thrown && <ThrownRemote from={thrown.from} velocity={thrown.velocity} onLand={landRemote} />}
         <SceneReady onReady={onSceneReady} onCompiled={onSceneCompiled} />
       </Suspense>
+      {/* Over the television, centred on its screen. Here rather than in Room
+          because the fjord reads the live feed's uptime history. */}
+      <Painting
+        art={{ kind: "fjord", history: data.status?.history }}
+        position={[px(0.01), 1.85, TV_SCREEN.position[2] - 0.27]}
+        rotation={[0, Math.PI / 2, 0]}
+      />
+      <Painting
+        art={{ kind: "aurora" }}
+        position={[px(0.01), 1.85, TV_SCREEN.position[2] + 0.27]}
+        rotation={[0, Math.PI / 2, 0]}
+      />
       {connected && (
         <>
           <ScreenWall
