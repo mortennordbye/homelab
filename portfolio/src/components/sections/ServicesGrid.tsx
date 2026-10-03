@@ -47,7 +47,9 @@ export function ServicesGrid() {
       <p className="mt-10 max-w-2xl text-sm text-fg-2 leading-relaxed">
         Engagements run through Nimtech, where I work as a Senior Platform Engineer. To ask about
         one,{" "}
-        <Link href="/#contact" className="focus-ring text-copper underline-offset-4 hover:underline">
+        {/* Underlined, not colour alone: copper on this body text is 1.1:1, so
+            a link inside a sentence needs a second cue (WCAG 1.4.1). */}
+        <Link href="/#contact" className="focus-ring text-copper underline underline-offset-4">
           send me a message
         </Link>
         .
