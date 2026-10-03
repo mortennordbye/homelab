@@ -15,9 +15,9 @@ const arch: Architecture = {
       id: "users",
       kind: "external",
       label: "Customers · 33M req / peak day",
-      x: 40,
+      x: 12,
       y: 270,
-      width: 180,
+      width: 218,
       detail: {
         role: "Betting platform traffic",
         why: "Migration had to be service-by-service. A big-bang cutover wasn't acceptable risk at peak load.",

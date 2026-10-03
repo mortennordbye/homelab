@@ -6,7 +6,7 @@ const arch: Architecture = {
     {
       id: "aws",
       label: "AWS — Operations Centre tenancy",
-      bounds: { x: 260, y: 80, w: 580, h: 360 },
+      bounds: { x: 260, y: 50, w: 580, h: 390 },
       tone: "accent-dashed",
     },
   ],

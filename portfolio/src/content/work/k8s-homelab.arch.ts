@@ -51,9 +51,9 @@ const arch: Architecture = {
       id: "certmgr",
       kind: "security",
       label: "cert-manager",
-      x: 520,
+      x: 545,
       y: 90,
-      width: 150,
+      width: 135,
       detail: {
         role: "Automated TLS issuance",
         why: "All internal and public services get certificates without manual work, and they renew on their own.",

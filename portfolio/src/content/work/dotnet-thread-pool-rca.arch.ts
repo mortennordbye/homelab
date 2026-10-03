@@ -1,7 +1,7 @@
 import type { Architecture } from "@/content/schemas";
 
 const arch: Architecture = {
-  viewBox: { w: 1100, h: 520 },
+  viewBox: { w: 1100, h: 560 },
   groups: [
     {
       id: "harness",
@@ -88,7 +88,7 @@ const arch: Architecture = {
       kind: "gitops",
       label: "Async refactor (customer-led)",
       x: 660,
-      y: 410,
+      y: 470,
       width: 200,
       detail: {
         role: "Long-term fix",

@@ -1,113 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotion } from "@/lib/reduced-motion";
+import { brandOf } from "./brand-icons";
+import { logoFor } from "./logos";
+import { NODE_DEFAULT_WIDTH, NODE_HEIGHT, routeAll, type Rect } from "./route";
 import type {
   ArchEdge,
   ArchNode,
   Architecture,
 } from "@/content/schemas";
 
-const NODE_HEIGHT = 56;
-const NODE_DEFAULT_WIDTH = 150;
-
-type EdgeRoute = {
-  d: string;
-  length: number;
-  labelX: number;
-  labelY: number;
-};
-
-/**
- * Manhattan (right-angle) routing between two boxes.
- *
- * Picks a Z-shape with the bend running through the empty lane between
- * the two boxes. Endpoints sit on the box border (top/bottom/left/right
- * midpoint) so arrowheads land on the edge, never inside it. For axis-
- * aligned pairs we collapse to a straight line.
- */
-function orthogonalRoute(a: ArchNode, b: ArchNode): EdgeRoute {
-  const aw = a.width ?? NODE_DEFAULT_WIDTH;
-  const bw = b.width ?? NODE_DEFAULT_WIDTH;
-  const A = {
-    cx: a.x + aw / 2,
-    cy: a.y + NODE_HEIGHT / 2,
-    left: a.x,
-    right: a.x + aw,
-    top: a.y,
-    bottom: a.y + NODE_HEIGHT,
-  };
-  const B = {
-    cx: b.x + bw / 2,
-    cy: b.y + NODE_HEIGHT / 2,
-    left: b.x,
-    right: b.x + bw,
-    top: b.y,
-    bottom: b.y + NODE_HEIGHT,
-  };
-  const dx = B.cx - A.cx;
-  const dy = B.cy - A.cy;
-  const ax = Math.abs(dx);
-  const ay = Math.abs(dy);
-  const ALIGN = 16;
-
-  // Boxes overlap horizontally and are stacked vertically → straight line.
-  if (ay > ALIGN && ax < ALIGN) {
-    const sy = dy >= 0 ? A.bottom : A.top;
-    const ty = dy >= 0 ? B.top : B.bottom;
-    const x = (A.cx + B.cx) / 2;
-    const length = Math.abs(ty - sy);
-    return {
-      d: `M ${x} ${sy} L ${x} ${ty}`,
-      length,
-      labelX: x,
-      labelY: (sy + ty) / 2 - 6,
-    };
-  }
-  // Same-row pair → straight horizontal line.
-  if (ax > ALIGN && ay < ALIGN) {
-    const sx = dx >= 0 ? A.right : A.left;
-    const tx = dx >= 0 ? B.left : B.right;
-    const y = (A.cy + B.cy) / 2;
-    const length = Math.abs(tx - sx);
-    return {
-      d: `M ${sx} ${y} L ${tx} ${y}`,
-      length,
-      labelX: (sx + tx) / 2,
-      labelY: y - 6,
-    };
-  }
-
-  // Diagonal: pick a Z-shape with one orthogonal bend.
-  if (ay >= ax) {
-    // Vertical-dominant: exit top/bottom, jog horizontally at mid-Y, enter
-    // top/bottom of target. The jog sits in the empty gap between rows.
-    const sy = dy >= 0 ? A.bottom : A.top;
-    const ty = dy >= 0 ? B.top : B.bottom;
-    const midY = (sy + ty) / 2;
-    const length =
-      Math.abs(midY - sy) + Math.abs(B.cx - A.cx) + Math.abs(ty - midY);
-    return {
-      d: `M ${A.cx} ${sy} V ${midY} H ${B.cx} V ${ty}`,
-      length,
-      labelX: (A.cx + B.cx) / 2,
-      labelY: midY - 6,
-    };
-  } else {
-    // Horizontal-dominant: exit left/right, jog vertically at mid-X.
-    const sx = dx >= 0 ? A.right : A.left;
-    const tx = dx >= 0 ? B.left : B.right;
-    const midX = (sx + tx) / 2;
-    const length =
-      Math.abs(midX - sx) + Math.abs(B.cy - A.cy) + Math.abs(tx - midX);
-    return {
-      d: `M ${sx} ${A.cy} H ${midX} V ${B.cy} H ${tx}`,
-      length,
-      labelX: midX,
-      labelY: (A.cy + B.cy) / 2 - 6,
-    };
-  }
-}
 
 type Props = {
   arch: Architecture;
@@ -153,9 +56,25 @@ export function ArchitectureDiagram({
     return () => io.disconnect();
   }, [reduce]);
 
-  const { nodeById, adjacency } = useMemo(() => {
-    const map = new Map<string, ArchNode>();
-    arch.nodes.forEach((n) => map.set(n.id, n));
+  /* Routed once per diagram, around every box: see route.ts. */
+  const routes = useMemo(() => {
+    const boxes = new Map<string, Rect>();
+    arch.nodes.forEach((n) =>
+      boxes.set(n.id, { x: n.x, y: n.y, w: n.width ?? NODE_DEFAULT_WIDTH, h: NODE_HEIGHT }),
+    );
+    // Group titles, measured like the eyebrow (11px caps at 0.18em), so no
+    // line or edge label lands on one.
+    const titles = (arch.groups ?? []).map((g) => ({
+      x: g.bounds.x + 10,
+      y: g.bounds.y + 8,
+      w: g.label.length * 9.2 + 8,
+      h: 18,
+    }));
+    const borders = (arch.groups ?? []).map((g) => ({ x: g.bounds.x, y: g.bounds.y, w: g.bounds.w, h: g.bounds.h }));
+    return routeAll(boxes, arch.edges, arch.viewBox, titles, borders);
+  }, [arch]);
+
+  const { adjacency } = useMemo(() => {
     const adj = new Map<string, Set<string>>();
     arch.edges.forEach((e) => {
       if (!adj.has(e.from)) adj.set(e.from, new Set());
@@ -163,7 +82,7 @@ export function ArchitectureDiagram({
       adj.get(e.from)!.add(e.to);
       adj.get(e.to)!.add(e.from);
     });
-    return { nodeById: map, adjacency: adj };
+    return { adjacency: adj };
   }, [arch]);
 
   const isNodeDim = (id: string) => {
@@ -238,10 +157,8 @@ export function ArchitectureDiagram({
         ))}
 
         {arch.edges.map((e, i) => {
-          const a = nodeById.get(e.from);
-          const b = nodeById.get(e.to);
-          if (!a || !b) return null;
-          const route = orthogonalRoute(a, b);
+          const route = routes[i];
+          if (!route) return null;
           const style = e.style ?? "solid";
           const isMigration = style === "migration";
           const dasharray =
@@ -283,9 +200,9 @@ export function ArchitectureDiagram({
               />
               {e.label && (
                 <text
-                  x={route.labelX}
-                  y={route.labelY}
-                  textAnchor="middle"
+                  x={route.label.x}
+                  y={route.label.y}
+                  textAnchor={route.label.anchor}
                   className="font-display"
                   style={{
                     fontSize: 10,
@@ -344,6 +261,23 @@ function NodeShape({
   const tone = nodeTone(node.kind);
   const rx = node.kind === "ingress" || node.kind === "external" ? 28 : 8;
 
+  /* The product's own mark where we carry one, else the generic icon for its
+     category, else none. One tone, the label's: the palette allows one green
+     point, so brand colours stay out. Text centres on what the icon leaves. */
+  const ICON = 18;
+  const iconX = rx > 20 ? 20 : 14;
+  /* Widths estimated from the two faces (the eyebrow is 10px caps at 0.18em,
+     the label 13px serif), so narrow boxes can give something up rather than
+     overlap: first the eyebrow, then the icon. */
+  const room = w - (iconX + ICON + 6) - 8;
+  const kindFits = kindLabel(node.kind).length * 8.6 <= room;
+  const labelFits = node.label.length * 6.6 <= room;
+  const logo = labelFits ? logoFor(node.label) : null;
+  const Generic = labelFits && !logo ? brandOf(node.label)?.Icon : undefined;
+  const hasIcon = !!logo || !!Generic;
+  const showKind = !hasIcon || kindFits;
+  const textX = hasIcon ? (iconX + ICON + 6 + w - 8) / 2 : w / 2;
+
   const handleKey = (ev: React.KeyboardEvent) => {
     if (!hasDetail) return;
     if (ev.key === "Enter" || ev.key === " ") {
@@ -393,8 +327,25 @@ function NodeShape({
             transition: "stroke 200ms ease-out, filter 200ms ease-out",
           }}
         />
+        {logo && (
+          <svg x={iconX} y={(h - ICON) / 2} width={ICON} height={ICON} viewBox="0 0 24 24" aria-hidden>
+            <path d={logo.path} style={{ fill: tone.label, opacity: 0.85 }} />
+          </svg>
+        )}
+        {Generic && (
+          <Generic
+            x={iconX}
+            y={(h - ICON) / 2}
+            width={ICON}
+            height={ICON}
+            strokeWidth={1.75}
+            aria-hidden
+            style={{ color: tone.label, opacity: 0.85 }}
+          />
+        )}
+        {showKind && (
         <text
-          x={w / 2}
+          x={textX}
           y={h / 2 - 6}
           textAnchor="middle"
           className="font-display"
@@ -407,9 +358,10 @@ function NodeShape({
         >
           {kindLabel(node.kind)}
         </text>
+        )}
         <text
-          x={w / 2}
-          y={h / 2 + 12}
+          x={textX}
+          y={showKind ? h / 2 + 12 : h / 2 + 4}
           textAnchor="middle"
           className="font-display"
           style={{
