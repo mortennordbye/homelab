@@ -254,6 +254,9 @@ export function InfraBench() {
           Both crops are frames of the scene at 2590 and 1300 px, which is what
           it takes not to look upscaled: shown at a third of that on a retina
           panel, the 1100 px JPEG they replaced was visibly soft. */}
+      {mode === "skip" ? (
+        <PosterMap selected={selected} onSelect={setSelected} />
+      ) : (
       <div className="scene-bleed relative mt-10 aspect-[5/6] max-h-[70vh] w-full overflow-hidden sm:aspect-[4/3] lg:aspect-[16/9]">
         <picture>
           <source media="(max-width: 767px)" srcSet="/images/cabinet-poster-mobile.webp" />
@@ -294,7 +297,95 @@ export function InfraBench() {
           </div>
         )}
       </div>
+      )}
 
     </div>
   );
 }
+
+/**
+ * Where each device sits in /images/cabinet-poster.webp, in percent of the
+ * picture. Read off the 2590x1458 frame; move these if the poster is re-shot.
+ * Hue and the switch share a spot, so their markers sit above and beside.
+ */
+const SPOTS: Record<string, [number, number]> = {
+  sonos: [19.8, 40.6],
+  ap: [25.7, 48],
+  zigbee: [82.1, 50.1],
+  modem: [15, 78],
+  gateway: [22.9, 79.3],
+  ha: [28.9, 79.3],
+  nas: [43.2, 74.9],
+  hue: [56.4, 74.9],
+  switch: [60.4, 84.8],
+  hyper1: [73.4, 76.1],
+  hyper2: [81.3, 76.8],
+  hyper3: [89.3, 77.4],
+};
+
+/**
+ * The whole cabinet as a still, for phones and reduced motion, which never
+ * load the 3D scene: numbered markers on each device open its details below
+ * the picture, and zoom doubles the picture inside a sideways scroller.
+ */
+function PosterMap({ selected, onSelect }: { selected: string | null; onSelect: (id: string | null) => void }) {
+  const [zoom, setZoom] = useState(false);
+  const devices = ALL_DEVICES.filter((d) => SPOTS[d.id]);
+  const device = deviceById(selected);
+  return (
+    <div className="mx-auto mt-8 max-w-[var(--container-wide)] px-6">
+      <div className="mb-2 flex items-center justify-between font-mono text-[11px] text-fg-3">
+        <span>tap a number</span>
+        <button
+          type="button"
+          onClick={() => setZoom((z) => !z)}
+          className="focus-ring rounded-[2px] border border-line-2 px-2 py-1 text-fg-2"
+        >
+          {zoom ? "zoom out" : "zoom in"}
+        </button>
+      </div>
+      <div className="overflow-x-auto overscroll-x-contain">
+        <div className="relative" style={{ width: zoom ? "200%" : "100%", aspectRatio: "2590 / 1458" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- same pre-sized poster the desktop facade uses; next/image would serve a second copy */}
+          <img src="/images/cabinet-poster.webp" alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full" />
+          {devices.map((d, i) => {
+            const [x, y] = SPOTS[d.id];
+            const on = d.id === selected;
+            return (
+              <button
+                key={d.id}
+                type="button"
+                aria-label={d.model}
+                aria-pressed={on}
+                onClick={() => onSelect(on ? null : d.id)}
+                className={cn(
+                  "focus-ring absolute grid size-6 -translate-x-1/2 -translate-y-1/2 place-content-center rounded-full border font-mono text-[10px]",
+                  on ? "border-copper bg-copper text-bg" : "border-brass/70 bg-black/70 text-fg",
+                )}
+                style={{ left: `${x}%`, top: `${y}%` }}
+              >
+                {i + 1}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div className="mt-4 min-h-[5.5rem] border-t border-line pt-3" aria-live="polite">
+        {device ? (
+          <>
+            <p className="text-sm text-fg">
+              {devices.findIndex((d) => d.id === device.id) + 1}. {device.model}
+            </p>
+            <p className="mt-1 font-mono text-[11px] leading-relaxed text-fg-3">
+              {device.facts.map(([k, v]) => `${k} ${v}`).join(" · ")}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-fg-2">{device.role}</p>
+          </>
+        ) : (
+          <p className="text-sm text-fg-3">Tap a number on the cabinet to see what that device is.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+

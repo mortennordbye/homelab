@@ -116,11 +116,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** First case study that needs a Result callout, or first tag that should read as material rather than brand. Check both against the ramp's two rules: brass takes `--fg` only, and `--fg-3` never sits on wood.
 - **Where:** `portfolio/src/components/primitives/{Tag,Callout}.tsx`.
 
-### lucide-react survives in one file pending a brand-mark decision
-- **What:** The UI icon sweep (2026-09-01) replaced every chrome icon with the owned set in `src/components/icons.tsx` (arrow-left/right/up-right, menu, close, search), and the /infrastructure redesign removed Pipeline's icon chips. One file still imports `lucide-react`, so the dependency stays installed: `work/brand-icons.ts` (22 pictograms feeding `StackTiles` and the shelf/cover canvas art).
-- **Why deferred:** Redrawing 22 brand marks is its own job, not part of a six-icon UI set.
-- **Unblock:** Decide whether the brand pictograms get a monochrome redraw in `icons.tsx` style or stay lucide-fed. When the import is gone, drop `lucide-react` from `package.json`.
-- **Where:** `portfolio/src/components/icons.tsx`, `portfolio/src/components/work/brand-icons.ts`, `portfolio/package.json`.
+### lucide-react still feeds the stack tiles and the shelf art
+- **What:** Diagrams and card covers now use real product marks (`work/logos.ts`, simple-icons, one tone). `work/brand-icons.ts` still supplies lucide pictograms to `StackTiles`, the 3D shelf's canvas art, diagram boxes for products simple-icons lacks (Azure, AWS, cert-manager, Telegraf), and the fun room's card icons, so `lucide-react` stays installed.
+- **Why deferred:** Moving the tiles and shelf to `logos.ts` changes two other surfaces and the shelf's canvas renderer; out of scope for the diagram work.
+- **Unblock:** Point `StackTiles` and `shelf-art.ts` at `logoFor` with the lucide icon as fallback; drop `lucide-react` once nothing imports it.
+- **Where:** `portfolio/src/components/work/{brand-icons,logos,StackTiles,shelf-art}.ts*`, `portfolio/package.json`.
 
 ### `Callout` has no paper variant
 - **What:** The case study write-up now renders on a `.sheet`, and `.paper-prose` re-inks the elements `mdx-components.tsx` hard-codes dark: headings, prose, list bullets, links, `code`, `strong`, `blockquote`. `Callout` is not covered. Its four tones are tinted panels solved against the dark ground (`border-accent/40 bg-accent/[0.06]`, and a `bg-wood` block for `result`), and every one of them would sit on cream as a dark box with `text-fg-2` inside it.

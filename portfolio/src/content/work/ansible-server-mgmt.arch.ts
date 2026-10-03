@@ -39,7 +39,7 @@ const arch: Architecture = {
       id: "ansible",
       kind: "gitops",
       label: "Ansible",
-      x: 470,
+      x: 510,
       y: 200,
       width: 160,
       detail: {
