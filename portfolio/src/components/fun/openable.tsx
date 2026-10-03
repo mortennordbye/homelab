@@ -3,7 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { cloneElement, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Interactive } from "./interaction";
+import { Interactive, Occluder } from "./interaction";
 
 /** A front lands in about a third of a second. Slower reads as a cutscene,
  *  faster loses the mass. */
@@ -212,7 +212,7 @@ export function OpenBox({
   const rim = useRimGeometry(width, front ? height : depth, thickness);
 
   return (
-    <>
+    <Occluder>
       {/* The side is cloned onto the material rather than set through r3f's
           `material-side`, which lands on the default material and is then
           thrown away when the real one attaches — leaving every wall of the
@@ -227,6 +227,6 @@ export function OpenBox({
       >
         {material}
       </mesh>
-    </>
+    </Occluder>
   );
 }

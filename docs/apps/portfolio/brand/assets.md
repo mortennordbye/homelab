@@ -215,3 +215,12 @@ this file, so a re-cut has to re-time them.
 Public domain covers copyright only. A real person's likeness is a separate
 right, and this stays a joke inside `/fun`: it must never be used to suggest he
 endorses the site or anything on it.
+
+## 12. The visitor's body
+
+`portfolio/public/models/fun/man/man.glb` is "Man" by Quaternius, from the
+Animated Men pack, taken from Poly Pizza (`poly.pizza/m/HMnuH5geEG`). Licence
+CC0 1.0, checked on both the Poly Pizza page and quaternius.com rather than
+assumed. Cut down to the Idle, Walk, Run, Sitting and Jump clips with gltf-transform
+(`prune`, `dedup`, `resample`); the materials are untextured and recoloured in
+`Body.tsx`.

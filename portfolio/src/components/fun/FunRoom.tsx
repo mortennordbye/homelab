@@ -50,7 +50,12 @@ import type { Inspected } from "./Devices";
 import type { CareerData, ShelfBook, ShelfCert, ShelfData } from "./shelf";
 import type { SourceExcerpt } from "@/lib/source-excerpt";
 import { TerminalScreen } from "./Terminal";
-import { Interactive, InteractionProvider, type Prompt } from "./interaction";
+import { Interactive, InteractionProvider, SayProvider, type Prompt } from "./interaction";
+import { Body } from "./Body";
+import { HeldRemote, ThrownRemote, type RemotePlace } from "./HeldRemote";
+import { Kbd } from "@/components/primitives/Kbd";
+import { EXTRA_CHANNELS } from "./TvChannels";
+import { FakeCrash } from "./FakeCrash";
 import { LeaderLabel } from "./LeaderLabel";
 import { SleepOverlay, useSleep } from "./Sleep";
 import { Visitor } from "./Visitor";
@@ -115,10 +120,25 @@ if (WEBGL_OK && !window.matchMedia("(pointer: coarse)").matches) {
 // screen: the HUD chip already carries live/stale/snapshot everywhere.
 const WALL_PANELS = PANELS.filter((p) => p.id !== "feed");
 /** Every panel at once, then one channel per panel. */
-const TV_CHANNELS = WALL_PANELS.length + 1;
+const TV_CHANNELS = WALL_PANELS.length + 1 + EXTRA_CHANNELS.length;
+/** The Snake channel, the one the P key starts a game on. */
+const SNAKE_CHANNEL = WALL_PANELS.length + 1 + EXTRA_CHANNELS.findIndex((c) => c.id === "snake");
+
+/** What the remote would switch to, for its prompt. */
+function channelName(c: number) {
+  if (c === 0) return "all panels";
+  if (c <= WALL_PANELS.length) return WALL_PANELS[c - 1].title.toLowerCase();
+  return EXTRA_CHANNELS[c - WALL_PANELS.length - 1].title.toLowerCase();
+}
 
 /** How many things stagger on at boot: the desk monitor, then the television. */
 const POWER_STEPS = 2;
+
+const KONAMI = [
+  "ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown",
+  "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight",
+  "KeyB", "KeyA",
+];
 
 /** The monitor's views, in the order it cycles them. One list, so the timer
  *  and the E press cannot disagree about what comes next. */
@@ -132,6 +152,8 @@ function ScreenWall({
   onSwitchTab,
   poweredCount,
   tvChannel,
+  remote,
+  snake,
 }: {
   data: PanelProps;
   source: SourceExcerpt;
@@ -139,6 +161,10 @@ function ScreenWall({
   onSwitchTab: () => void;
   poweredCount: number;
   tvChannel: number;
+  /** With the remote in hand the television is what you press. Without it the
+   *  screen is still a target, disabled, so it blocks the crosshair silently. */
+  remote: { held: boolean; detail: string; onPress: () => void };
+  snake: { playing: boolean; exit: () => void };
 }) {
   return (
     <>
@@ -163,15 +189,25 @@ function ScreenWall({
           powered={poweredCount > 0}
         />
       </Interactive>
-      <Dashboard
-        panels={WALL_PANELS}
-        data={data}
-        position={TV_SCREEN.position}
-        rotation={TV_SCREEN.rotation}
-        width={TV_SCREEN.width}
-        powered={poweredCount > 1}
-        channel={tvChannel}
-      />
+      <Interactive
+        label="the TV"
+        verb="next channel"
+        detail={remote.detail}
+        onActivate={remote.onPress}
+        disabled={!remote.held}
+      >
+        <Dashboard
+          panels={WALL_PANELS}
+          data={data}
+          position={TV_SCREEN.position}
+          rotation={TV_SCREEN.rotation}
+          width={TV_SCREEN.width}
+          powered={poweredCount > 1}
+          channel={tvChannel}
+          playingSnake={snake.playing}
+          onSnakeExit={snake.exit}
+        />
+      </Interactive>
     </>
   );
 }
@@ -731,7 +767,7 @@ function Scene({
   controlsRef,
   interacting,
   onPrompt,
-  onPrinterStatus,
+  onCaption,
   shelf,
   career,
   onInspect,
@@ -742,6 +778,9 @@ function Scene({
   terminalActive,
   onTerminalEnter,
   onTerminalExit,
+  onCrash,
+  remoteHand,
+  tv,
   paused,
   coarse,
   touchMove,
@@ -764,7 +803,7 @@ function Scene({
   controlsRef: React.RefObject<PointerLockControlsImpl | null>;
   interacting: boolean;
   onPrompt: (p: Prompt) => void;
-  onPrinterStatus: (msg: string | null) => void;
+  onCaption: (msg: string | null) => void;
   shelf: ShelfData;
   career: CareerData;
   onInspect: (hw: Inspected) => void;
@@ -775,6 +814,25 @@ function Scene({
   terminalActive: boolean;
   onTerminalEnter: () => void;
   onTerminalExit: () => void;
+  onCrash: () => void;
+  /** The television: its channel, stepping it, and whether Snake has the keys. */
+  tv: {
+    channel: number;
+    next: () => void;
+    playingSnake: boolean;
+    setPlayingSnake: (v: boolean) => void;
+  };
+  /** The TV remote: in hand, where it was put down, and the two moves. */
+  remoteHand: {
+    holdingRemote: boolean;
+    remotePlace: RemotePlace | null;
+    pickUpRemote: () => void;
+    putDownRemote: (at: RemotePlace) => void;
+    /** In the air after a throw, until it lands somewhere. */
+    thrown: { from: THREE.Vector3; velocity: THREE.Vector3 } | null;
+    throwRemote: (from: THREE.Vector3, velocity: THREE.Vector3) => void;
+    landRemote: (at: RemotePlace) => void;
+  };
   paused: boolean;
   lights: Lights;
   onToggleLight: (k: LightKey) => void;
@@ -812,13 +870,28 @@ function Scene({
     setDeskTabPinned(true);
     setDeskTab(nextTab);
   }, []);
-  const [tvChannel, setTvChannel] = useState(0);
-  const nextChannel = useCallback(() => setTvChannel((c) => (c + 1) % TV_CHANNELS), []);
+
+  const { holdingRemote, remotePlace, pickUpRemote, putDownRemote, thrown, throwRemote, landRemote } = remoteHand;
+  const { channel: tvChannel, next: nextChannel, playingSnake, setPlayingSnake } = tv;
+
   const upNext = (tvChannel + 1) % TV_CHANNELS;
-  const remoteDetail = `to ch ${upNext + 1} · ${
-    upNext === 0 ? "all panels" : WALL_PANELS[upNext - 1].title.toLowerCase()
-  }`;
+  const remoteDetail = `to ch ${upNext + 1} · ${channelName(upNext)}`;
+  const stopSnake = useCallback(() => setPlayingSnake(false), [setPlayingSnake]);
+  /* P starts Snake while its channel is up and the remote is in hand. */
+  useEffect(() => {
+    if (!holdingRemote || tvChannel !== SNAKE_CHANNEL || playingSnake) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (isTyping(e.target) || e.code !== "KeyP") return;
+      setPlayingSnake(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [holdingRemote, tvChannel, playingSnake, setPlayingSnake]);
   const { camera } = useThree();
+  /* drei's Html portals into events.connected, which r3f sets only after the
+     first commit. A screen mounted before that re-roots mid-commit and can
+     lose its DOM layer, leaving a bare 1m occlusion hole on the desk. */
+  const connected = useThree((s) => !!s.events.connected);
 
   // Screens come on once the room is up.
   useEffect(() => {
@@ -848,6 +921,7 @@ function Scene({
       <color attach="background" args={["#241a12"]} />
       <fog attach="fog" args={["#241a13", 16, 42]} />
       <Lighting poweredCount={poweredCount} lights={lights} />
+      <SayProvider value={onCaption}>
       <InteractionProvider
         enabled={interacting && !paused}
         onPrompt={onPrompt}
@@ -859,7 +933,7 @@ function Scene({
             surface reads as flat paint. */}
         <StudyEnvironment scale={12} />
         <Room
-          onPrinterStatus={onPrinterStatus}
+          onCaption={onCaption}
           shelf={shelf}
           career={career}
           onInspect={onInspect}
@@ -871,7 +945,7 @@ function Scene({
           onToggleLight={onToggleLight}
           seated={seated}
           onSit={onSit}
-          remote={{ detail: remoteDetail, onPress: nextChannel }}
+          remote={{ held: holdingRemote || thrown !== null, place: remotePlace, onPickUp: pickUpRemote }}
         />
         <Post />
         {/* Fires only once everything above has resolved, which is the honest
@@ -879,27 +953,41 @@ function Scene({
             hits 100 while the last texture is still being uploaded and the
             scene has yet to mount, so a bar driven purely by it finishes to a
             blank canvas. */}
+        <Body
+          hidden={seated === "bed" || visitor || dragging}
+          sitting={seated !== null}
+          holding={holdingRemote}
+        />
+        {holdingRemote && <HeldRemote onPutDown={putDownRemote} onThrow={throwRemote} />}
+        {thrown && <ThrownRemote from={thrown.from} velocity={thrown.velocity} onLand={landRemote} />}
         <SceneReady onReady={onSceneReady} onCompiled={onSceneCompiled} />
       </Suspense>
-      <ScreenWall
-        data={data}
-        source={source}
-        deskTab={deskTab}
-        onSwitchTab={switchDeskTab}
-        poweredCount={poweredCount}
-        tvChannel={tvChannel}
-      />
-      <TerminalScreen
-        position={DESK_TERMINAL.position}
-        rotation={DESK_TERMINAL.rotation}
-        width={DESK_TERMINAL.width}
-        portrait
-        shelf={shelf}
-        data={data}
-        active={terminalActive}
-        onActivate={onTerminalEnter}
-        onExit={onTerminalExit}
-      />
+      {connected && (
+        <>
+          <ScreenWall
+            data={data}
+            source={source}
+            deskTab={deskTab}
+            onSwitchTab={switchDeskTab}
+            poweredCount={poweredCount}
+            tvChannel={tvChannel}
+            remote={{ held: holdingRemote, detail: remoteDetail, onPress: nextChannel }}
+            snake={{ playing: playingSnake, exit: stopSnake }}
+          />
+          <TerminalScreen
+            position={DESK_TERMINAL.position}
+            rotation={DESK_TERMINAL.rotation}
+            width={DESK_TERMINAL.width}
+            portrait
+            shelf={shelf}
+            data={data}
+            active={terminalActive}
+            onActivate={onTerminalEnter}
+            onExit={onTerminalExit}
+            onCrash={onCrash}
+          />
+        </>
+      )}
       {/* Must sit inside the provider, not merely inside the Canvas: a tap
           resolves through the same pick registry the crosshair uses, and
           outside this boundary that context reads null and every tap silently
@@ -912,6 +1000,7 @@ function Scene({
         }
       />
       </InteractionProvider>
+      </SayProvider>
       <TerminalFocus active={terminalActive} onSettling={setSettling} reduced={reduced} />
       <SeatedFocus seat={seated ? SEATS[seated] : null} onStandingUp={setStandingUp} reduced={reduced} />
       <Visitor active={visitor} dragging={dragging} onDragged={onStand} />
@@ -1009,7 +1098,27 @@ export default function FunRoom({
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
   const [prompt, setPrompt] = useState<Prompt>(null);
-  const [printerStatus, setPrinterStatus] = useState<string | null>(null);
+  const [caption, setCaption] = useState<string | null>(null);
+  const [tvChannel, setTvChannel] = useState(0);
+  const nextChannel = useCallback(() => setTvChannel((c) => (c + 1) % TV_CHANNELS), []);
+  const [playingSnake, setPlayingSnake] = useState(false);
+  const [holdingRemote, setHoldingRemote] = useState(false);
+  const [remotePlace, setRemotePlace] = useState<RemotePlace | null>(null);
+  const pickUpRemote = useCallback(() => setHoldingRemote(true), []);
+  const putDownRemote = useCallback((at: RemotePlace) => {
+    setRemotePlace(at);
+    setHoldingRemote(false);
+  }, []);
+  const [thrown, setThrown] = useState<{ from: THREE.Vector3; velocity: THREE.Vector3 } | null>(null);
+  const throwRemote = useCallback((from: THREE.Vector3, velocity: THREE.Vector3) => {
+    setHoldingRemote(false);
+    setThrown({ from, velocity });
+  }, []);
+  const landRemote = useCallback((at: RemotePlace) => {
+    setRemotePlace(at);
+    setThrown(null);
+  }, []);
+
   const [showBinds, setShowBinds] = useState(true);
   /* Read during the first render rather than in an effect. It gates whether
      the Canvas mounts at all, and a Canvas that mounts for one frame before the
@@ -1049,7 +1158,7 @@ export default function FunRoom({
      Without this, WASD still walks you across the room while a card is open
      or you are typing at the terminal — the pointer is released but the key
      handlers are on window and do not know that. */
-  const paused = card !== null || terminalActive || introOpen;
+  const paused = card !== null || terminalActive || introOpen || playingSnake;
 
   /* Opening a card releases the pointer, because the card is a DOM panel and
      the visitor needs a cursor to click its link. Closing it hands the pointer
@@ -1168,6 +1277,37 @@ export default function FunRoom({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [paused]);
+
+  /* Konami code: the room goes disco for a while. Reduced motion gets the
+     caption only; a flashing overlay is exactly what that setting refuses. */
+  const [disco, setDisco] = useState(false);
+  const [crashed, setCrashed] = useState(false);
+  const crash = useCallback(() => setCrashed(true), []);
+  const endCrash = useCallback(() => setCrashed(false), []);
+  useEffect(() => {
+    if (paused) return;
+    let at = 0;
+    let off: number | undefined;
+    let hush: number | undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (isTyping(e.target)) return;
+      at = e.code === KONAMI[at] ? at + 1 : e.code === KONAMI[0] ? 1 : 0;
+      if (at < KONAMI.length) return;
+      at = 0;
+      if (!reduced) setDisco(true);
+      setCaption("cheat enabled · 30 lives");
+      window.clearTimeout(off);
+      window.clearTimeout(hush);
+      off = window.setTimeout(() => setDisco(false), 20000);
+      hush = window.setTimeout(() => setCaption(null), 3000);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.clearTimeout(off);
+      window.clearTimeout(hush);
+    };
+  }, [paused, reduced]);
 
   // Hide the site chrome and lock scrolling while the room owns the viewport.
   useEffect(() => {
@@ -1317,7 +1457,7 @@ export default function FunRoom({
             controlsRef={controlsRef}
             interacting={phase === "exploring"}
             onPrompt={setPrompt}
-            onPrinterStatus={setPrinterStatus}
+            onCaption={setCaption}
             shelf={shelf}
             career={career}
             onInspect={(hw) => openCard(hardwareCard(hw))}
@@ -1328,6 +1468,9 @@ export default function FunRoom({
             terminalActive={terminalActive}
             onTerminalEnter={enterTerminal}
             onTerminalExit={exitTerminal}
+            onCrash={crash}
+            remoteHand={{ holdingRemote, remotePlace, pickUpRemote, putDownRemote, thrown, throwRemote, landRemote }}
+            tv={{ channel: tvChannel, next: nextChannel, playingSnake, setPlayingSnake }}
             paused={paused}
             lights={lights}
             onToggleLight={toggleLight}
@@ -1343,6 +1486,9 @@ export default function FunRoom({
           <ContextGuard onLost={onContextLost} />
         </Canvas>
       </div>
+
+      {disco && <div aria-hidden className="room-disco pointer-events-none absolute inset-0 z-[5]" />}
+      {crashed && <FakeCrash onDone={endCrash} />}
 
       {/* vignette + grade, sells the "camera in a dark room" look */}
       <div
@@ -1402,9 +1548,31 @@ export default function FunRoom({
 
       <InfoPanel card={card} onClose={closeCard} />
 
-      {printerStatus && (
+      {caption && (
         <div className="pointer-events-none absolute bottom-24 left-1/2 z-20 -translate-x-1/2 max-sm:bottom-[288px]">
-          <LeaderLabel caption={printerStatus} />
+          <LeaderLabel caption={caption} />
+        </div>
+      )}
+
+      {/* Up for as long as the remote is in hand, apart from the caption slot,
+          which every other passing line takes over. */}
+      {holdingRemote && (
+        <div className="pointer-events-none absolute bottom-40 left-1/2 z-20 flex -translate-x-1/2 items-center gap-4 whitespace-nowrap font-mono text-[11px] text-fg-2 max-sm:bottom-[340px]">
+          <span className="text-fg-3">holding the remote</span>
+          <span className="flex items-center gap-2">
+            <Kbd>E</Kbd> on the TV · next channel
+          </span>
+          <span className="flex items-center gap-2">
+            <Kbd>Q</Kbd> put it down where you look
+          </span>
+          <span className="flex items-center gap-2">
+            <Kbd>T</Kbd> throw it
+          </span>
+          {tvChannel === SNAKE_CHANNEL && (
+            <span className="flex items-center gap-2">
+              <Kbd>P</Kbd> {playingSnake ? "playing · esc leaves" : "play snake"}
+            </span>
+          )}
         </div>
       )}
 

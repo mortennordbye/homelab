@@ -58,7 +58,7 @@ const wallHit = new THREE.Vector3();
  * as being behind the wall it is screwed to. Well under WALL_T, so it cannot
  * reach something on the far side.
  */
-function wallDistance(ray: THREE.Ray): number {
+export function wallDistance(ray: THREE.Ray): number {
   let nearest = Infinity;
   for (const box of SIGHT) {
     if (box.containsPoint(ray.origin)) continue;
@@ -111,6 +111,43 @@ const RegistryCtx = createContext<Registry | null>(null);
 const HoverCtx = createContext<THREE.Object3D | null>(null);
 
 export type Prompt = { label: string; verb: string; detail?: string } | null;
+
+/**
+ * Nearest wins. On a tie the target nested inside the other wins: a drawer's
+ * hit includes everything in it, so without this what it holds could only be
+ * reached by luck of registration order.
+ */
+type Best = { root: THREE.Object3D; dist: number; disabled: boolean } | null;
+
+function beats(root: THREE.Object3D, dist: number, disabled: boolean, best: Best): boolean {
+  if (!best || dist < best.dist) return true;
+  if (dist > best.dist) return false;
+  // An occluder blocks what is behind it but never takes a tie from a target.
+  if (disabled) return false;
+  if (best.disabled) return true;
+  for (let p = root.parent; p; p = p.parent) if (p === best.root) return true;
+  return false;
+}
+
+const SayCtx = createContext<(msg: string | null) => void>(() => {});
+/** Where `useSay` lines land: the room's caption slot, set up by Scene. */
+export const SayProvider = SayCtx.Provider;
+
+/** Puts a line in the room's caption slot for `ms`, or until replaced when
+ *  `ms` is Infinity. `null` clears it. */
+export function useSay() {
+  const set = useContext(SayCtx);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  return useCallback(
+    (msg: string | null, ms = 3200) => {
+      set(msg);
+      window.clearTimeout(timer.current);
+      if (msg !== null && Number.isFinite(ms)) timer.current = window.setTimeout(() => set(null), ms);
+    },
+    [set],
+  );
+}
 
 export function InteractionProvider({
   enabled,
@@ -184,12 +221,13 @@ export function InteractionProvider({
        frame cost that did show up came from shadows, not picking — see the
        note in Bookshelf.tsx. Measure before optimising this loop. */
     const wall = wallDistance(raycaster.ray);
-    let best: { root: THREE.Object3D; dist: number } | null = null;
+    let best: Best = null;
     for (const [root] of targets.current) {
       const hits = raycaster.intersectObject(root, true);
       if (!hits.length || hits[0].distance > wall) continue;
-      if (!best || hits[0].distance < best.dist) {
-        best = { root, dist: hits[0].distance };
+      const disabled = !!targets.current.get(root)?.current?.disabled;
+      if (beats(root, hits[0].distance, disabled, best)) {
+        best = { root, dist: hits[0].distance, disabled };
       }
     }
 
@@ -242,12 +280,13 @@ export function InteractionProvider({
       if (!enabled) return false;
       raycaster.setFromCamera(ndc, camera);
       const wall = wallDistance(raycaster.ray);
-      let best: { root: THREE.Object3D; dist: number } | null = null;
+      let best: Best = null;
       for (const [root] of targets.current) {
         const hits = raycaster.intersectObject(root, true);
         if (!hits.length || hits[0].distance > wall) continue;
-        if (!best || hits[0].distance < best.dist) {
-          best = { root, dist: hits[0].distance };
+        const disabled = !!targets.current.get(root)?.current?.disabled;
+        if (beats(root, hits[0].distance, disabled, best)) {
+          best = { root, dist: hits[0].distance, disabled };
         }
       }
       const t = best ? targets.current.get(best.root)?.current : null;
@@ -331,4 +370,24 @@ export function Interactive({
 /** Lets the touch layer drive activation without reaching into the registry. */
 export function useActivateAt() {
   return useContext(RegistryCtx)?.activateAt ?? null;
+}
+
+const OCCLUDER: Target = { label: "", verb: "", disabled: true, onActivate: () => {} };
+
+/**
+ * Static geometry the crosshair must not see through: a carcass, a fixed
+ * mirror leaf. Registered as a disabled target, so it blocks what is behind it
+ * and shows no prompt. Unlike `Interactive` it stays in the static merge; the
+ * hover raycast ignores `visible`.
+ */
+export function Occluder({ children }: { children: React.ReactNode }) {
+  const [group, setGroup] = useState<THREE.Group | null>(null);
+  const registry = useContext(RegistryCtx);
+  const target = useRef<Target>(OCCLUDER);
+  useEffect(() => {
+    if (!group || !registry) return;
+    registry.register(group, target);
+    return () => registry.unregister(group);
+  }, [registry, group]);
+  return <group ref={setGroup}>{children}</group>;
 }

@@ -292,6 +292,20 @@ with `padEnd`, so it reads as aligned only while every line fits on one row. `PO
 derived from the mono face's advance (0.6em), the longest line and the padding. Measure it in the
 browser, and check it against the face in `layout.tsx` whenever the font changes.
 
+drei's `Html` is patched (`portfolio/patches/@react-three+drei+*.patch`, applied by
+`patch-package` on install). Upstream it unmounts its inner React root synchronously in a layout
+effect, which React warns about on every StrictMode mount, and a second root created on remount
+can null the refs the first one attached: a remounted layer then loses its DOM and the screen
+shows a bare occlusion hole. The patch defers the unmount past the commit and lets a remount that
+arrives first cancel it and keep the live root. A drei bump that changes `web/Html.js` fails the
+install until the patch is redone.
+
+`Html` attaches to `events.connected`, which r3f sets only after its first commit. Screens
+mounted outside the Suspense boundary wait for it (`connected` in `Scene`), or they mount against
+the canvas parent and move a frame later. Every screen also passes its own `geometry` for the
+blending hole; without one, drei sizes the hole from the DOM, and a layer that never lays out
+leaves a 1x1m black square.
+
 An `Html` layer laid flush with its own backing box tears. Put it exactly on a plate's front face
 and z-fighting produces a diagonal rip that looks like a shader bug. Everything drawn on a plate
 has to clear the plate.
@@ -335,6 +349,41 @@ and emitting sums past what ACES can hold. Emit from a near-black base (the lant
 A fitting must not shadow the room from a light it encloses. Frame members that surround a light
 source do not cast; the ones side-on to it, like the lantern's corner posts striping the floor
 pool, do.
+
+### Body, mirrors and household stuff
+
+The visitor has a body (`Body.tsx`), driven entirely off the camera: position, facing and speed
+pick the clip, and crouching or a seat uses Sitting. It casts no shadow, because the shadow map is
+drawn on demand and a caster that moves every frame would redraw it every frame. The neck bone is
+collapsed for the visitor's own view and restored for the mirrors, per render, with the neck
+subtree's matrices refreshed by hand since the scene's are updated once a frame.
+
+The three mirrors (wardrobe, hall arch, bathroom cabinet) are `LiveMirror`/`SharpReflector` from
+`Mirror.tsx`. Each live reflector is a full extra render of the flat, so a pane is only live
+while it can be seen (`useSeen`): in front of it, within 8m, in the frustum, and with a clear line
+from the eye to its centre or a corner through the interior walls. That keeps it live through a
+doorway and off behind a wall. The two small bathroom panes render at half resolution.
+
+The TV remote is picked up rather than pressed. In hand it is `HeldRemote`, placed off the camera
+at priority 0.4 so it does not trail a frame; the television is then the target that changes
+channel, and while the remote is not in hand that target is disabled. Q lays it on the first
+upward-facing surface the crosshair finds within reach (the body and the remote itself are skipped),
+turned the way the visitor faces; a wall or nothing keeps it in hand. T throws it
+(`ThrownRemote`): gravity and a ray along each frame's step, landing on the first upward face and
+bouncing off any other with most of its speed gone. The ray only runs while it is in the air. The keys stay on screen in
+their own line while it is held, apart from the caption slot that every passing line takes over.
+
+After the observability channels the television carries `EXTRA_CHANNELS` from `TvChannels.tsx`:
+a news channel mixing jokes with the live feed, sakte-TV, a bouncing-logo screensaver and Snake.
+Each one only animates while it is on. Snake is started with P while its channel is up and the
+remote is in hand; it pauses the room and takes every key until Esc, and the best score lives in
+the visitor's own localStorage.
+
+Household things that are not portfolio content sit in `MyStuff` (from `Contents.tsx`, and every
+`Items` stock already does): pickable, and E gets told off. Static geometry the crosshair must not
+see through, every `OpenBox` carcass and the wardrobe's fixed leaf, is an `Occluder`: a disabled
+target that blocks what is behind it, never wins a tie and stays in the static merge. Without it
+the contents of a closed cupboard are pickable through its side.
 
 ### Performance
 
@@ -380,8 +429,9 @@ against a dead GL context: `Cannot read properties of null (reading 'alpha')`.
 ### Loading and entry
 
 No fly-in. The room opens with the visitor standing in it; a camera move you cannot steer reads
-as a screensaver. On desktop `RoomIntro` explains the controls over the loading room and any key
-or click enters once it is ready. Only a click can take pointer lock (it needs a user gesture,
+as a screensaver. On desktop `RoomIntro` is a plain loading screen with a rotating joke
+(`LoadingJoke`, also on the phone loader) until the room is ready, then shows the controls and
+the brass-pin hint, and any key or click enters. Only a click can take pointer lock (it needs a user gesture,
 and the nav click that got the visitor here does not survive the navigation), so WASD works
 immediately and mouse-look may need one click. Touch visitors get an entry gate instead.
 

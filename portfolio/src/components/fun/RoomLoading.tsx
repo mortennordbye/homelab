@@ -30,6 +30,73 @@ export function RoomBackdrop() {
   );
 }
 
+const JOKES = [
+  "it's always DNS",
+  "terraform plan: 1 room to add, 0 to change, 0 to destroy",
+  "asking etcd for quorum on where the sofa goes",
+  "restarting the pod that was fine all along",
+  "hanging the certificates slightly crooked, for realism",
+  "convincing the GPU this was a good idea",
+  "untangling the cables behind the TV bench",
+  "lighting the stove. cold starts take a while",
+  "rolling the wallpaper back to the last known good version",
+  "teaching the printer to print instead of jam",
+  "the cache is cold, and so is the flat",
+  "kubectl apply -f furniture.yaml",
+  "vacuuming under the sofa. it is a stateful workload",
+  "renewing the doormat's TLS certificate",
+  "the coffee machine is in CrashLoopBackOff",
+  "hiding the laundry in a namespace you can't list",
+  "giving the houseplants a liveness probe",
+  "scaling the bookshelf to three replicas",
+  "fixing a typo in production. the front door is production",
+  "waiting for the ArgoCD sync. it says Progressing, it means vibes",
+  "explaining to the cat that this is not a load balancer",
+  "pinning the furniture to a specific version, never latest",
+  "running terraform apply on a Friday. what could go wrong",
+  "taking out the trash. garbage collection is manual here",
+  "tightening the network policy on the fridge",
+  "rebasing the rug onto the new floor",
+  "checking if the stove passed its security scan",
+  "this loading screen has a 99.9% uptime SLA",
+  "drawing the curtains. the neighbours can see the dashboards",
+];
+
+/* Module-level so the fallback screen and the intro that replaces it carry on
+   from the same joke instead of both starting at the first. */
+let jokeAt = -1;
+
+/** One joke at a time while the room loads, swapped every few seconds. */
+export function LoadingJoke() {
+  const [i, setI] = useState(jokeAt);
+  useEffect(() => {
+    /* The random start waits for the client: picked during render, the server
+       HTML and the first client render would disagree. */
+    const start = setTimeout(() => {
+      if (jokeAt < 0) jokeAt = Math.floor(Math.random() * JOKES.length);
+      setI(jokeAt);
+    }, 0);
+    const t = setInterval(() => {
+      jokeAt = (jokeAt + 1) % JOKES.length;
+      setI(jokeAt);
+    }, 3800);
+    return () => {
+      clearTimeout(start);
+      clearInterval(t);
+    };
+  }, []);
+  if (i < 0) return null;
+  return (
+    <p
+      key={i}
+      aria-live="polite"
+      className="room-joke mt-5 max-w-[40ch] text-center font-mono text-[12px] text-snow/55"
+    >
+      {JOKES[i]}
+    </p>
+  );
+}
+
 /** How far the room has really got: its code has arrived, its textures and
  *  model are in, or it is building the scene. Each lights one fitting. */
 export type LoadStage = "code" | "assets" | "building";
@@ -127,6 +194,7 @@ export function RoomLoading({
               ? "ready"
               : `loading the room · ${Math.round(progress)}%`}
         </p>
+        {!done && <LoadingJoke />}
       </div>
     </div>
   );

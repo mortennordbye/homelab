@@ -4,6 +4,13 @@ import { Html } from "@react-three/drei";
 import { RoundedBox } from "@/components/scene/RoundedBox";
 import { TV_GLASS } from "./Furniture";
 import type { PanelDef, PanelProps } from "./Panels";
+import {
+  EXTRA_CHANNELS,
+  NewsChannel,
+  ScreensaverChannel,
+  SlowTvChannel,
+  SnakeChannel,
+} from "./TvChannels";
 
 // The DOM panel is authored at a fixed pixel size and mapped onto the screen
 // plane. Keeps text crisp (it is real DOM, not a texture).
@@ -12,6 +19,10 @@ import type { PanelDef, PanelProps } from "./Panels";
 // per CSS pixel (see @react-three/drei/web/Html.js, the getObjectCSSMatrix call
 // and the occlusion-mesh ratio). So the factor is derived from the panel size
 // rather than guessed — and the `scale` prop must stay off, or it compounds.
+//
+// Every screen Html passes its own `geometry` for the blending hole. Without
+// it drei sizes the hole from the DOM, and a layer that never lays out leaves
+// a bare 1x1m black square in the room.
 export const PANEL_PX_W = 640;
 export const PANEL_PX_H = 376;
 
@@ -150,6 +161,7 @@ export function Screen({
         <Html
           transform
           occlude="blending"
+          geometry={<planeGeometry args={[w, h]} />}
           distanceFactor={distanceFactor(width, PANEL_PX_W)}
           position={[0, 0, 0.008]}
           zIndexRange={[10, 0]}
@@ -195,6 +207,8 @@ export function Dashboard({
   width,
   powered,
   channel,
+  playingSnake = false,
+  onSnakeExit = () => {},
 }: {
   panels: PanelDef[];
   data: PanelProps;
@@ -203,6 +217,9 @@ export function Dashboard({
   width: number;
   powered: boolean;
   channel: number;
+  /** Snake, when its channel is up, takes the keys while this is true. */
+  playingSnake?: boolean;
+  onSnakeExit?: () => void;
 }) {
   const h = width * (DASH_PX_H / DASH_PX_W);
 
@@ -215,6 +232,9 @@ export function Dashboard({
   const cellH = PANEL_PX_H * scale;
 
   const solo = channel > 0 ? (panels[channel - 1] ?? null) : null;
+  /* After the panels come the extra channels, in EXTRA_CHANNELS order. */
+  const extra = channel > panels.length ? (EXTRA_CHANNELS[channel - panels.length - 1] ?? null) : null;
+  const area = { w: DASH_PX_W - PAD * 2, h: DASH_PX_H - PAD * 2 - HEADER - 8 };
   const soloScale = Math.min(
     (DASH_PX_W - PAD * 2) / PANEL_PX_W,
     (DASH_PX_H - PAD * 2 - HEADER - GAP) / PANEL_PX_H,
@@ -231,6 +251,7 @@ export function Dashboard({
       <Html
         transform
         occlude="blending"
+        geometry={<planeGeometry args={[width, h]} />}
         distanceFactor={distanceFactor(width, DASH_PX_W)}
         position={[0, 0, 0.008]}
         zIndexRange={[10, 0]}
@@ -261,12 +282,21 @@ export function Dashboard({
               GENESIS · OBSERVABILITY
             </span>
             <span className="text-[15px] tracking-[0.18em] text-[#465548]">
-              CH {channel + 1} · {solo ? solo.title : "ALL PANELS"}
+              CH {channel + 1} · {extra ? extra.title : solo ? solo.title : "ALL PANELS"}
             </span>
           </div>
 
           <div className="flex flex-1 items-center justify-center">
-            {solo ? (
+            {extra ? (
+              <div className="mt-2" style={{ width: area.w, height: area.h }}>
+                {extra.id === "news" && <NewsChannel data={data} area={area} />}
+                {extra.id === "slowtv" && <SlowTvChannel area={area} />}
+                {extra.id === "dvd" && <ScreensaverChannel area={area} />}
+                {extra.id === "snake" && (
+                  <SnakeChannel area={area} playing={playingSnake} onExit={onSnakeExit} />
+                )}
+              </div>
+            ) : solo ? (
               <div
                 key={solo.id}
                 style={{
