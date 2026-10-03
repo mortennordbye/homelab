@@ -230,6 +230,7 @@ const BINDS: Bind[] = [
   },
   { keys: <Kbd>shift</Kbd>, action: "run" },
   { keys: <Kbd>C</Kbd>, action: "crouch" },
+  { keys: <Kbd>space</Kbd>, action: "jump" },
   { keys: <Kbd>E</Kbd>, action: "interact" },
   { keys: <Kbd>esc</Kbd>, action: "back / release cursor" },
   { keys: <Kbd>H</Kbd>, action: "hide these" },

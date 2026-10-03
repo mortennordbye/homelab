@@ -1,20 +1,20 @@
 "use client";
 
-import { MeshReflectorMaterial } from "@react-three/drei";
 import { RoundedBox } from "@/components/scene/RoundedBox";
 import { useFrame } from "@react-three/fiber";
-import { Activity, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OAK } from "@/components/materials/oak";
 import type { Surface } from "@/components/materials/surface";
 import { Door, Drawer, OpenBox, useEase } from "./openable";
-import { Interactive } from "./interaction";
-import { ZONES, px, pz } from "./flat";
+import { Interactive, Occluder } from "./interaction";
+import { LiveMirror } from "./Mirror";
 import { MERGE_STATIC, NO_MERGE } from "./StaticMerge";
 import {
   COLUMN_STOCK,
   FRIDGE_DOOR,
   Items,
+  MyStuff,
   MIRROR_CABINET,
   PANS,
   UNDER_SINK,
@@ -25,6 +25,10 @@ import {
   wallStock,
   wardrobeStock,
 } from "./Contents";
+
+/** How far a cupboard door in a run swings: just short of square. Past 90
+ *  degrees it leans back into the neighbouring door, or the wall at the end. */
+const DOOR_OPEN = 1.5;
 
 /**
  * The living room, from the three pieces marked on the floor plan: the TV
@@ -291,54 +295,63 @@ export function Television({ position }: { position: [number, number, number] })
   );
 }
 
+/** The remote's body and buttons, origin on the surface it lies on, long axis
+ *  along local z. Shared by the one on the sofa and the one in hand. */
+export function RemoteModel({ hovered = false }: { hovered?: boolean }) {
+  const W = 0.048;
+  const T = 0.018;
+  const L = 0.18;
+  return (
+    <>
+      <RoundedBox position={[0, T / 2, 0]} args={[W, T, L]} radius={0.008} smoothness={3}>
+        <meshStandardMaterial
+          color="#1b1c1f"
+          roughness={0.55}
+          metalness={0.1}
+          emissive={hovered ? "#ffd9a6" : "#000000"}
+          emissiveIntensity={hovered ? 0.25 : 0}
+        />
+      </RoundedBox>
+      {/* power, then the pad */}
+      <mesh position={[0, T + 0.0005, -L / 2 + 0.025]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.0055, 12]} />
+        <meshStandardMaterial color="#7d2a24" roughness={0.5} metalness={0} />
+      </mesh>
+      {[-0.012, 0, 0.012].flatMap((x) =>
+        [-0.02, 0, 0.02, 0.04].map((z) => (
+          <mesh key={`${x},${z}`} position={[x, T + 0.0005, z]} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[0.0038, 10]} />
+            <meshStandardMaterial color="#3a3c40" roughness={0.6} metalness={0} />
+          </mesh>
+        )),
+      )}
+    </>
+  );
+}
+
 /**
- * The TV remote, left on the sofa arm. Pressing it steps the television to its
- * next channel; the channel is FunRoom's, which owns the screen.
+ * The TV remote, left on the sofa arm. Picking it up hands it to `HeldRemote`;
+ * with it in hand, the television itself is what changes channel.
  *
  * Origin on the surface it lies on, long axis along local z.
  */
 export function TvRemote({
   position,
   rotation = [0, 0, 0],
-  detail,
-  onPress,
+  held,
+  onPickUp,
 }: {
   position: [number, number, number];
   rotation?: [number, number, number];
-  detail: string;
-  onPress: () => void;
+  held: boolean;
+  onPickUp: () => void;
 }) {
-  const W = 0.048;
-  const T = 0.018;
-  const L = 0.18;
+  if (held) return null;
   return (
-    <Interactive label="the remote" verb="change channel" detail={detail} onActivate={onPress}>
+    <Interactive label="the remote" verb="pick up" detail="and point it at the TV" onActivate={onPickUp}>
       {(hovered) => (
         <group position={position} rotation={rotation}>
-          <RoundedBox position={[0, T / 2, 0]} args={[W, T, L]} radius={0.008} smoothness={3}>
-            <meshStandardMaterial
-              color="#1b1c1f"
-              roughness={0.55}
-              metalness={0.1}
-              emissive={hovered ? "#ffd9a6" : "#000000"}
-              emissiveIntensity={hovered ? 0.25 : 0}
-            />
-          </RoundedBox>
-          <group userData={MERGE_STATIC}>
-            {/* power, then the pad */}
-            <mesh position={[0, T + 0.0005, -L / 2 + 0.025]} rotation={[-Math.PI / 2, 0, 0]}>
-              <circleGeometry args={[0.0055, 12]} />
-              <meshStandardMaterial color="#7d2a24" roughness={0.5} metalness={0} />
-            </mesh>
-            {[-0.012, 0, 0.012].flatMap((x) =>
-              [-0.02, 0, 0.02, 0.04].map((z) => (
-                <mesh key={`${x},${z}`} position={[x, T + 0.0005, z]} rotation={[-Math.PI / 2, 0, 0]}>
-                  <circleGeometry args={[0.0038, 10]} />
-                  <meshStandardMaterial color="#3a3c40" roughness={0.6} metalness={0} />
-                </mesh>
-              )),
-            )}
-          </group>
+          <RemoteModel hovered={hovered} />
         </group>
       )}
     </Interactive>
@@ -1218,7 +1231,7 @@ export function KitchenRun({
               <Door
                 label="the cupboard"
                 pivot={[x + (w - 0.016) / 2, PLINTH + bodyH / 2, D / 2]}
-                angle={1.8}
+                angle={DOOR_OPEN}
               >
                 {slab}
               </Door>
@@ -1338,7 +1351,7 @@ export function FridgeColumn({
           ))}
           <Items items={COLUMN_STOCK[label]} />
           {/* All three hinge the same side, as one appliance does. */}
-          <Door label={label} pivot={[-W / 2, h / 2, D / 2]} angle={-1.9}>
+          <Door label={label} pivot={[-W / 2, h / 2, D / 2]} angle={-DOOR_OPEN}>
             <mesh position={[0, h / 2, D / 2 + 0.005]} castShadow>
               <boxGeometry args={[W - 0.016, h - 0.014, 0.018]} />
               <meshStandardMaterial {...oak} color={OAK.carcass} roughness={0.6} metalness={0} />
@@ -1435,6 +1448,8 @@ export function TallBookcase({
         </mesh>
       ))}
 
+      <MyStuff>
+        <group userData={MERGE_STATIC}>
       {contents.map((c, i) =>
         c ? (
           <mesh key={i} position={[(i % 2 ? -1 : 1) * 0.02, boards[i] + c[1] / 2, D / 2]}>
@@ -1452,6 +1467,8 @@ export function TallBookcase({
           </mesh>
         );
       })}
+        </group>
+      </MyStuff>
     </group>
   );
 }
@@ -1485,6 +1502,8 @@ export function HighShelf({
         <boxGeometry args={[length, T, D]} />
         <meshStandardMaterial {...oak} color={OAK.case} roughness={0.55} metalness={0} />
       </mesh>
+        <MyStuff>
+          <group userData={MERGE_STATIC}>
       {([
         [0.12, 0.035, 0.7, 0.09, "#8f8aa3"],
         [0.22, 0.03, 0.55, 0.17, "#5d6b76"],
@@ -1504,6 +1523,8 @@ export function HighShelf({
           {silver}
         </mesh>
       </group>
+          </group>
+        </MyStuff>
     </group>
   );
 }
@@ -1573,7 +1594,7 @@ export function WallUnits({
             key={i}
             label="the cupboard"
             pivot={[cx + (right ? hw : -hw), BOTTOM + H / 2, D / 2]}
-            angle={right ? 1.8 : -1.8}
+            angle={right ? DOOR_OPEN : -DOOR_OPEN}
           >
             <mesh position={[cx, BOTTOM + H / 2, D / 2 + 0.005]} castShadow>
               <boxGeometry args={[w - 0.016, H - 0.016, 0.018]} />
@@ -1670,9 +1691,13 @@ export function Oven({ position }: { position: [number, number, number] }) {
           />
         </mesh>
       ))}
+        <MyStuff>
+          <group userData={MERGE_STATIC}>
       <RoundedBox position={[0, lower + 0.012, CZ]} args={[CW - 0.08, 0.02, CD - 0.1]} radius={0.004} smoothness={3}>
         <meshStandardMaterial color="#1f2023" roughness={0.4} metalness={0.4} />
       </RoundedBox>
+          </group>
+        </MyStuff>
 
       {/* the fan cover on the back wall, and the lamp in the top corner */}
       <mesh position={[0, cy, CZ - CD / 2 + 0.003]}>
@@ -2451,12 +2476,8 @@ export function WallCabinet({
   const GAP = 0.006;
   const LEAF = (W - GAP) / 2;
 
-  /* The same glass the vanity used to carry on the wall behind this. Kept a
-     dim grey rather than a true mirror: nothing in the room reflects, and at
-     this size a black rectangle reads as a hole in the wall. */
-  const mirror = (
-    <meshStandardMaterial color="#4a5057" roughness={0.05} metalness={0.55} envMapIntensity={2.4} />
-  );
+  const glass = useMemo(() => new THREE.PlaneGeometry(LEAF - 0.024, H - 0.038), [LEAF]);
+  useEffect(() => () => glass.dispose(), [glass]);
 
   return (
     <group position={position} rotation={rotation}>
@@ -2494,10 +2515,7 @@ export function WallCabinet({
               <meshStandardMaterial {...PORCELAIN} roughness={0.38} />
             </mesh>
             {/* the glass, laid on the front and inset so the leaf keeps an edge */}
-            <mesh position={[0, 0, D + 0.018]}>
-              <boxGeometry args={[LEAF - 0.024, H - 0.038, 0.004]} />
-              {mirror}
-            </mesh>
+            <LiveMirror geometry={glass} position={[0, 0, D + 0.0175]} resolution={512} />
           </group>
         </Door>
       ))}
@@ -2687,6 +2705,8 @@ export function Towels({
 
   return (
     <group position={position} rotation={rotation}>
+        <MyStuff>
+          <group userData={MERGE_STATIC}>
       {TOWELS.map(([x, len, tilt, step, colour]) => (
         <group key={x} position={[x, 0, 0]} rotation={[0, 0, tilt]}>
           {/* the rose flat to the wall, then the peg off it */}
@@ -2724,6 +2744,8 @@ export function Towels({
           </mesh>
         </group>
       ))}
+          </group>
+        </MyStuff>
     </group>
   );
 }
@@ -2741,6 +2763,223 @@ export function BathMat({
       <RoundedBox position={[0, 0.011, 0]} args={[0.5, 0.022, 0.9]} radius={0.008} smoothness={3} receiveShadow>
         <meshStandardMaterial color="#6d6252" roughness={0.98} metalness={0} />
       </RoundedBox>
+    </group>
+  );
+}
+
+/** The basket weave, drawn rather than fetched: golden nubs in staggered
+ *  rows over paler threads, three centimetres to a tile. */
+function weaveTexture() {
+  const c = document.createElement("canvas");
+  c.width = 32;
+  c.height = 32;
+  const x = c.getContext("2d")!;
+  x.fillStyle = "#4a3c2b";
+  x.fillRect(0, 0, 32, 32);
+  // the threads the nubs sit on
+  x.fillStyle = "#5c4c38";
+  for (let y = 0; y < 32; y += 8) x.fillRect(0, y + 3, 32, 2);
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 4; col++) {
+      const cx = col * 8 + (row % 2 ? 4 : 0) + 4;
+      const cy = row * 8 + 4;
+      x.fillStyle = "#735b33";
+      x.beginPath();
+      x.ellipse(cx % 32, cy, 3.4, 2.6, 0, 0, Math.PI * 2);
+      x.fill();
+      x.fillStyle = "#866b3e";
+      x.beginPath();
+      x.ellipse((cx % 32) - 0.6, cy - 0.7, 1.8, 1.2, 0, 0, Math.PI * 2);
+      x.fill();
+    }
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 4;
+  return t;
+}
+
+/** The binding: twisted cord, as diagonal strands, one per 1.2cm. */
+function cordTexture() {
+  const c = document.createElement("canvas");
+  c.width = 16;
+  c.height = 16;
+  const x = c.getContext("2d")!;
+  x.fillStyle = "#4f4132";
+  x.fillRect(0, 0, 16, 16);
+  x.strokeStyle = "#665542";
+  x.lineWidth = 4;
+  for (let k = -16; k < 32; k += 8) {
+    x.beginPath();
+    x.moveTo(k, 16);
+    x.lineTo(k + 16, 0);
+    x.stroke();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+/**
+ * The sisal rug under the sofa: a basket weave field in a wide, raised cord
+ * binding. Well under the value real sisal has, for the reason the bed linen
+ * is: a light floor area under the lamps reads as a lightbox.
+ *
+ * Origin at the centre, on the floor.
+ */
+export function JuteRug({
+  position,
+  width,
+  depth,
+}: {
+  position: [number, number, number];
+  width: number;
+  depth: number;
+}) {
+  const BORDER = 0.05;
+  const field = useMemo(() => {
+    const t = weaveTexture();
+    t.repeat.set(width / 0.03, depth / 0.03);
+    return t;
+  }, [width, depth]);
+  const cord = useMemo(() => {
+    const t = cordTexture();
+    t.repeat.set(width / 0.012, depth / 0.012);
+    return t;
+  }, [width, depth]);
+  useEffect(
+    () => () => {
+      field.dispose();
+      cord.dispose();
+    },
+    [field, cord],
+  );
+
+  return (
+    <group position={position}>
+      {/* the field, on a thin base */}
+      <mesh position={[0, 0.004, 0]} receiveShadow>
+        <boxGeometry args={[width - BORDER, 0.008, depth - BORDER]} />
+        <meshStandardMaterial color="#4a3c2b" roughness={0.97} metalness={0} />
+      </mesh>
+      <mesh position={[0, 0.0082, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[width - BORDER * 2, depth - BORDER * 2]} />
+        <meshStandardMaterial map={field} roughness={0.97} metalness={0} />
+      </mesh>
+      {/* the binding, four strips standing proud of the field the way a
+          whipped edge does */}
+      {(
+        [
+          [0, (depth - BORDER) / 2, width, BORDER],
+          [0, -(depth - BORDER) / 2, width, BORDER],
+          [(width - BORDER) / 2, 0, BORDER, depth - BORDER * 2],
+          [-(width - BORDER) / 2, 0, BORDER, depth - BORDER * 2],
+        ] as const
+      ).map(([x, z, w, d]) => (
+        <RoundedBox key={`${x},${z}`} position={[x, 0.007, z]} args={[w, 0.014, d]} radius={0.006} smoothness={3} receiveShadow>
+          <meshStandardMaterial map={cord} roughness={0.96} metalness={0} />
+        </RoundedBox>
+      ))}
+    </group>
+  );
+}
+
+/** The runner's whole face, painted once: an olive border, a cream band
+ *  and a pale field of small rosettes. Darker than the cotton, as the rugs are. */
+function runnerTexture() {
+  const W = 256;
+  const H = 732;
+  const c = document.createElement("canvas");
+  c.width = W;
+  c.height = H;
+  const x = c.getContext("2d")!;
+  const OLIVE = "#666a45";
+  const CREAM = "#a99f84";
+  const INK = "#6f6350";
+  x.fillStyle = OLIVE;
+  x.fillRect(0, 0, W, H);
+  // a dotted line just inside the olive edge
+  x.fillStyle = CREAM;
+  for (let y = 14; y < H - 14; y += 10) {
+    x.fillRect(10, y, 3, 3);
+    x.fillRect(W - 13, y, 3, 3);
+  }
+  for (let xx = 14; xx < W - 14; xx += 10) {
+    x.fillRect(xx, 10, 3, 3);
+    x.fillRect(xx, H - 13, 3, 3);
+  }
+  // the cream band, then a dark rule, then the field
+  x.fillStyle = CREAM;
+  x.fillRect(30, 30, W - 60, H - 60);
+  x.fillStyle = INK;
+  x.fillRect(38, 38, W - 76, H - 76);
+  x.fillStyle = "#b3a98d";
+  x.fillRect(46, 46, W - 92, H - 92);
+  // the rosettes: a ring with a dot, on a staggered grid
+  const step = 22;
+  for (let row = 0, y = 58; y < H - 58; row++, y += step) {
+    for (let xx = 58 + (row % 2 ? step / 2 : 0); xx < W - 58; xx += step) {
+      x.strokeStyle = INK;
+      x.lineWidth = 2;
+      x.beginPath();
+      x.arc(xx, y, 7, 0, Math.PI * 2);
+      x.stroke();
+      x.fillStyle = INK;
+      x.fillRect(xx - 1.5, y - 1.5, 3, 3);
+    }
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
+/**
+ * The hall runner: a printed cotton runner with tasselled fringes at both ends.
+ * Origin at the centre, on the floor; long side along local z.
+ */
+export function HallRunner({
+  position,
+  rotation = [0, 0, 0],
+  width,
+  length,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  width: number;
+  length: number;
+}) {
+  const map = useMemo(() => runnerTexture(), []);
+  useEffect(() => () => map.dispose(), [map]);
+  const TASSELS = 12;
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[0, 0.0025, 0]} receiveShadow>
+        <boxGeometry args={[width, 0.005, length]} />
+        <meshStandardMaterial color="#555838" roughness={0.97} metalness={0} />
+      </mesh>
+      <mesh position={[0, 0.0052, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[width, length]} />
+        <meshStandardMaterial map={map} roughness={0.96} metalness={0} />
+      </mesh>
+      {/* the fringes: a tassel every few centimetres across each end */}
+      {[-1, 1].flatMap((end) =>
+        Array.from({ length: TASSELS }, (_, k) => {
+          const tx = -width / 2 + (width / TASSELS) * (k + 0.5);
+          return (
+            <mesh
+              key={`${end},${k}`}
+              position={[tx, 0.004, end * (length / 2 + 0.03)]}
+              rotation={[Math.PI / 2, 0, (k % 3) * 0.08 - 0.08]}
+            >
+              <cylinderGeometry args={[0.004, 0.007, 0.06, 6]} />
+              <meshStandardMaterial color="#b1a68a" roughness={0.95} metalness={0} />
+            </mesh>
+          );
+        }),
+      )}
     </group>
   );
 }
@@ -2828,13 +3067,6 @@ const ANODISED = { color: "#8d9095", roughness: 0.32, metalness: 0.85 };
 
 /** Where the wardrobe mirrors reflect for real: the bedroom and the half metre
  *  in front of its door. */
-const MIRROR_LIVE = {
-  x0: px(ZONES.bedroom.x0 - 0.5),
-  x1: px(ZONES.bedroom.x1),
-  z0: pz(ZONES.bedroom.z0),
-  z1: pz(ZONES.bedroom.z1),
-};
-
 /**
  * The tall half: two mirrored sliding doors in an aluminium frame, facing the
  * bedroom door. One reflector plane spans both leaves and the centre stile is
@@ -2858,16 +3090,8 @@ export function MirrorWardrobe({
   const lw = width / 2;
   const stock = useMemo(() => wardrobeStock(width, H - 0.36, H - 0.22 + 0.009), [width, H]);
 
-  /* A reflector renders the whole flat again every frame, and seen through the
-     bedroom door that includes the living room. Hidden, never unmounted,
-     outside MIRROR_LIVE: drei does not dispose its render targets. */
-  const [live, setLive] = useState(false);
-  useFrame(({ camera }) => {
-    const { x, z } = camera.position;
-    const inside =
-      x > MIRROR_LIVE.x0 && x < MIRROR_LIVE.x1 && z > MIRROR_LIVE.z0 && z < MIRROR_LIVE.z1;
-    if (inside !== live) setLive(inside);
-  });
+  const pane = useMemo(() => new THREE.PlaneGeometry(lw - F * 2, H - F * 2), [lw]);
+  useEffect(() => () => pane.dispose(), [pane]);
 
   /** One leaf: an aluminium panel with a mirror laid on its face. */
   const leaf = (z: number) => (
@@ -2876,30 +3100,13 @@ export function MirrorWardrobe({
         <boxGeometry args={[lw, H, 0.018]} />
         <meshStandardMaterial {...ANODISED} />
       </mesh>
-      {/* Low resolution and heavily blurred: it exists to double the room's
-          depth and hand back the lamps, not to be looked into. */}
-      <Activity mode={live ? "visible" : "hidden"}>
-        <mesh position={[0, H / 2, z + 0.011]}>
-          <planeGeometry args={[lw - F * 2, H - F * 2]} />
-          <MeshReflectorMaterial
-            resolution={128}
-            mirror={0.82}
-            blur={[220, 90]}
-            mixBlur={1.1}
-            mixStrength={1.5}
-            depthScale={0.2}
-            color="#7d827e"
-            roughness={0.22}
-            metalness={0.7}
-          />
-        </mesh>
-      </Activity>
-      {/* Darker and fully metal, unlike the reflector: most of what that one
-          shows is the dim room, and its own colour here reads as a lit panel. */}
-      <mesh position={[0, H / 2, z + 0.011]} visible={!live}>
-        <planeGeometry args={[lw - F * 2, H - F * 2]} />
-        <meshStandardMaterial color="#5a5e5b" roughness={0.22} metalness={1} />
-      </mesh>
+      {/* Darker and fully metal when not live: most of what the reflector shows
+          is the dim room, and dim glass here reads as a lit panel. */}
+      <LiveMirror
+        geometry={pane}
+        position={[0, H / 2, z + 0.011]}
+        fallback={<meshStandardMaterial color="#5a5e5b" roughness={0.22} metalness={1} />}
+      />
     </>
   );
 
@@ -2930,7 +3137,11 @@ export function MirrorWardrobe({
           half open. The pair used to be one reflector plane with the meeting
           stile drawn over it, which cost one render target instead of two; a
           leaf that slides cannot share a plane with the one it slides over. */}
-      <group position={[lw / 2, 0, 0]}>{leaf(D / 2 + 0.01)}</group>
+      {/* The fixed leaf is not a target, but the crosshair must not see the
+          wardrobe's contents through it. */}
+      <Occluder>
+        <group position={[lw / 2, 0, 0]}>{leaf(D / 2 + 0.01)}</group>
+      </Occluder>
       <Drawer label="the wardrobe" to={[lw, 0, 0]}>
         <group position={[-lw / 2, 0, 0]}>{leaf(D / 2 + 0.032)}</group>
       </Drawer>
@@ -3011,7 +3222,7 @@ export function OverbedUnits({
             key={i}
             label="the cupboard"
             pivot={[cx + (right ? hw : -hw), cy, D / 2]}
-            angle={right ? 1.8 : -1.8}
+            angle={right ? DOOR_OPEN : -DOOR_OPEN}
           >
             <mesh position={[cx, cy, D / 2 + 0.005]} castShadow>
               <boxGeometry args={[w - 0.016, rowH - 0.016, 0.018]} />
@@ -3262,6 +3473,9 @@ export function Curtains({
   );
 }
 
+/** How much of the drop the pleats stack into when the blind is raised. */
+const BLIND_STACK = 0.09;
+
 export function PleatedBlind({
   position,
   rotation = [0, 0, 0],
@@ -3279,17 +3493,36 @@ export function PleatedBlind({
     return t;
   }, [drop]);
 
+  /* Raised, the same pleats squeeze into a stack under the head rail, which is
+     what scaling the plane does to its stripe. */
+  const [raised, setRaised] = useState(false);
+  const cloth = useRef<THREE.Mesh>(null);
+  const rail = useRef<THREE.Mesh>(null);
+  useEase(raised, (t) => {
+    const h = drop + (BLIND_STACK - drop) * t;
+    cloth.current?.scale.setY(h / drop);
+    cloth.current?.position.setY(-h / 2);
+    rail.current?.position.setY(-h - 0.012);
+  });
+
   return (
     <group position={position} rotation={rotation}>
-      <mesh position={[0, -drop / 2, 0]}>
-        <planeGeometry args={[width, drop]} />
-        <meshStandardMaterial map={map} roughness={0.95} metalness={0} side={THREE.DoubleSide} />
-      </mesh>
-      {/* bottom rail, the one hard edge in an otherwise soft object */}
-      <mesh position={[0, -drop - 0.012, 0]}>
-        <boxGeometry args={[width + 0.01, 0.024, 0.022]} />
-        <meshStandardMaterial color="#7d7768" roughness={0.7} metalness={0} />
-      </mesh>
+      <Interactive
+        label="the blind"
+        verb={raised ? "lower" : "raise"}
+        detail={raised ? undefined : "and look outside"}
+        onActivate={() => setRaised((v) => !v)}
+      >
+        <mesh ref={cloth} position={[0, -drop / 2, 0]} castShadow receiveShadow>
+          <planeGeometry args={[width, drop]} />
+          <meshStandardMaterial map={map} roughness={0.95} metalness={0} side={THREE.DoubleSide} />
+        </mesh>
+        {/* bottom rail, the one hard edge in an otherwise soft object */}
+        <mesh ref={rail} position={[0, -drop - 0.012, 0]} castShadow>
+          <boxGeometry args={[width + 0.01, 0.024, 0.022]} />
+          <meshStandardMaterial color="#7d7768" roughness={0.7} metalness={0} />
+        </mesh>
+      </Interactive>
     </group>
   );
 }

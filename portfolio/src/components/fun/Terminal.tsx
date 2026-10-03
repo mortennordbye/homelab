@@ -31,6 +31,16 @@ const APPS_SHOWN = 12;
 
 type Line = { kind: "in" | "out" | "err" | "note"; text: string };
 
+const FORTUNES: string[][] = [
+  ["There are two hard problems: cache invalidation,", "naming things, and off-by-one errors."],
+  ["The cloud is just someone else's computer.", "This one is mine."],
+  ["A YAML file is a promise. An indent is a lie."],
+  ["Every homelab is one more node away from being finished."],
+  ["The best time to write a runbook was during the outage."],
+  ["If it hurts, do it more often. Then automate it."],
+  ["Backups are a feeling. Restores are a fact."],
+];
+
 const BANNER: Line[] = [
   { kind: "note", text: "nordbye.it — shell" },
   { kind: "note", text: "type `help` for commands, `exit` to step back" },
@@ -40,6 +50,7 @@ function useCommands(
   shelf: ShelfData,
   data: PanelProps,
   onOpen: (url: string) => void,
+  onCrash: () => void,
 ) {
   return useCallback(
     async (raw: string): Promise<Line[]> => {
@@ -289,12 +300,113 @@ function useCommands(
           }
         }
 
+        /* Easter eggs, unlisted in `help` on purpose. Lines stay inside the
+           57-character budget of the help text above. */
+        case "sudo":
+          return [
+            ...err("you are not in the sudoers file."),
+            ...err("this incident will be reported."),
+          ];
+
+        case "rm":
+          if (!/-\w*r\w*f|-\w*f\w*r/.test(arg) || !arg.includes("/"))
+            return err("rm: refusing to remove things one at a time");
+          // Long enough for the removal lines to land before the screen dies.
+          window.setTimeout(onCrash, 450);
+          return [
+            ...err("rm: removing /etc ..."),
+            ...err("rm: removing /home ..."),
+            ...err("rm: removing /var/lib/etcd ..."),
+          ];
+
+        case "sl":
+          return out(
+            "      ====        ________                ___________",
+            "  _D _|  |_______/        \\__I_I_____===__|_________|",
+            "   |(_)---  |   H\\________/ |   |        =|___ ___|",
+            "   /     |  |   H  |  |     |   |         ||_| |_||",
+            "  |      |  |   H  |__--------------------| [___] |",
+            "  | ________|___H__/__|_____/[][]~\\_______|       |",
+            "  |/ |   |-----------I_____I [][] []  D   |=======|_",
+            "__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__",
+            " |/-=|___|=    ||    ||    ||    |_____/~\\___/",
+            "  \\_/      \\O=====O=====O=====O_/      \\_/",
+            "",
+            "you meant ls. the train does not care.",
+          );
+
+        case "fortune":
+          return out(...FORTUNES[Math.floor(Math.random() * FORTUNES.length)]);
+
+        case "coffee":
+          return out(
+            "    ( (",
+            "     ) )",
+            "  ........",
+            "  |      |]",
+            "  \\      /",
+            "   `----'",
+            "",
+            "HTTP 418 I'm a teapot. close enough.",
+          );
+
+        case "vi":
+        case "vim":
+        case "nano":
+          return [
+            ...out(`${cmd}: opening ${arg || "a new buffer"}`),
+            { kind: "note", text: "# you are now stuck. :q! will not help you here." },
+            { kind: "note", text: "# type `clear` and pretend this never happened" },
+          ];
+
+        case "ping":
+          return out(
+            `PING ${arg || "nordbye.it"}: 56 data bytes`,
+            "64 bytes: icmp_seq=0 ttl=64 time=0.4 ms",
+            "64 bytes: icmp_seq=1 ttl=64 time=0.3 ms",
+            "64 bytes: icmp_seq=2 ttl=64 time=9001 ms",
+            "",
+            "that last one was the microwave.",
+          );
+
+        case "git":
+          if (rest[0] === "blame")
+            return out("it was me. it is always me.");
+          return err("git: this shell only does `git blame`");
+
+        case "hack":
+          return out(
+            "accessing the mainframe...",
+            "bypassing the firewall...",
+            "",
+            "just kidding. try `curl /api/v1/profile`, it is public.",
+          );
+
         default:
           return err(`${cmd}: command not found — try \`help\``);
       }
     },
-    [shelf, data, onOpen],
+    [shelf, data, onOpen, onCrash],
   );
+}
+
+/**
+ * Focuses the shell input when the visitor sits down. Rendered inside the Html
+ * layer on purpose: that is its own React root, a commit behind this one, so
+ * an effect up in TerminalScreen fires while the input is still disabled and
+ * the focus call is dropped.
+ */
+function FocusWhen({
+  active,
+  target,
+}: {
+  active: boolean;
+  target: React.RefObject<HTMLInputElement | null>;
+}) {
+  useEffect(() => {
+    if (active) target.current?.focus();
+  }, [active, target]);
+  return null;
 }
 
 export function TerminalScreen({
@@ -306,6 +418,7 @@ export function TerminalScreen({
   active,
   onActivate,
   onExit,
+  onCrash,
   /** Stand the monitor on its end. The shell is the one thing in the room a
    *  tall narrow screen genuinely suits — output scrolls vertically. */
   portrait = false,
@@ -318,6 +431,8 @@ export function TerminalScreen({
   active: boolean;
   onActivate: () => void;
   onExit: () => void;
+  /** `rm -rf /` takes the whole viewport down with a fake kernel panic. */
+  onCrash: () => void;
   portrait?: boolean;
 }) {
   const [lines, setLines] = useState<Line[]>(BANNER);
@@ -329,12 +444,7 @@ export function TerminalScreen({
   const openUrl = useCallback((url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
   }, []);
-  const run = useCommands(shelf, data, openUrl);
-
-  // Focus the input when the visitor sits down, so they can just start typing.
-  useEffect(() => {
-    if (active) inputRef.current?.focus();
-  }, [active]);
+  const run = useCommands(shelf, data, openUrl, onCrash);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -400,6 +510,7 @@ export function TerminalScreen({
       <Html
         transform
         occlude="blending"
+        geometry={<planeGeometry args={[width, h]} />}
         distanceFactor={distanceFactor(width, pxW)}
         position={[0, 0, 0.008]}
         zIndexRange={[10, 0]}
@@ -463,7 +574,7 @@ export function TerminalScreen({
             {lines.map((l, i) => (
               <div
                 key={i}
-                className="whitespace-pre-wrap break-words"
+                className="whitespace-pre-wrap break-words [font-variant-ligatures:none]"
                 style={{
                   color:
                     l.kind === "in"
@@ -490,6 +601,7 @@ export function TerminalScreen({
             }}
           >
             <span style={{ color: ACCENT }}>$</span>
+            <FocusWhen active={active} target={inputRef} />
             <input
               ref={inputRef}
               value={value}

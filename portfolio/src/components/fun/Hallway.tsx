@@ -6,7 +6,10 @@ import * as THREE from "three";
 import { OAK } from "@/components/materials/oak";
 import type { Surface } from "@/components/materials/surface";
 import { at, type Rect } from "./flat";
+import { LiveMirror } from "./Mirror";
+import { MyStuff } from "./Contents";
 import { OpenBox } from "./openable";
+import { MERGE_STATIC } from "./StaticMerge";
 
 /**
  * The entré, off the photographs of the real one: a coat run down one side
@@ -161,6 +164,8 @@ function EntryCloset({
           <boxGeometry args={[hangW, 0.032, depth * 0.84]} />
           <meshStandardMaterial {...oak} color={OAK.case} roughness={0.55} metalness={0} />
         </mesh>
+        <MyStuff>
+          <group userData={MERGE_STATIC}>
         {[-0.19, 0.14].map((x, i) => (
           <RoundedBox
             key={x}
@@ -173,12 +178,16 @@ function EntryCloset({
             <meshStandardMaterial color="#1d1d1f" roughness={0.85} metalness={0.04} />
           </RoundedBox>
         ))}
+          </group>
+        </MyStuff>
 
         <mesh position={[0, RAIL_Y, mid + 0.02]} rotation={[0, 0, Math.PI / 2]} castShadow>
           <cylinderGeometry args={[0.013, 0.013, hangW - 0.03, 12]} />
           <meshStandardMaterial color="#9aa0a4" roughness={0.28} metalness={0.9} />
         </mesh>
 
+        <MyStuff>
+          <group userData={MERGE_STATIC}>
         {COATS.map(([t, len, colour], i) => (
           /* Stepped in depth as well as across: seven slabs sharing one plane
              and overlapping by half their width z-fight into stripes. */
@@ -198,6 +207,8 @@ function EntryCloset({
             </RoundedBox>
           </group>
         ))}
+          </group>
+        </MyStuff>
 
         {/* the plank shoe rack on the floor of the alcove */}
         <mesh position={[0, 0.16, mid]} castShadow receiveShadow>
@@ -210,6 +221,8 @@ function EntryCloset({
             <meshStandardMaterial color={OAK.carcass} roughness={0.7} />
           </mesh>
         ))}
+        <MyStuff>
+          <group userData={MERGE_STATIC}>
         {SHOES.map(([t, tier, colour], i) => (
           <RoundedBox
             key={i}
@@ -223,6 +236,8 @@ function EntryCloset({
             <meshStandardMaterial color={colour} roughness={0.8} metalness={0} />
           </RoundedBox>
         ))}
+          </group>
+        </MyStuff>
       </group>
     </group>
   );
@@ -287,6 +302,8 @@ function ShelfCloset({
         <cylinderGeometry args={[0.011, 0.011, bay - 0.04, 10]} />
         <meshStandardMaterial color="#9aa0a4" roughness={0.3} metalness={0.9} />
       </mesh>
+      <MyStuff>
+        <group userData={MERGE_STATIC}>
       {([
         [-0.09, 0.44, "#1d1c1a"],
         [0.06, 0.36, "#26241f"],
@@ -342,6 +359,8 @@ function ShelfCloset({
         );
       })}
       <Plant position={[lx + 0.02, LEFT[3] + 0.02, z]} />
+        </group>
+      </MyStuff>
     </group>
   );
 }
@@ -543,9 +562,7 @@ function ArchMirror({
       <mesh geometry={frame} castShadow>
         <meshStandardMaterial color={OAK.case} roughness={0.55} metalness={0} />
       </mesh>
-      <mesh geometry={glass} position={[0, 0, 0.012]}>
-        <meshStandardMaterial color="#4a5057" roughness={0.06} metalness={0.6} envMapIntensity={2.2} />
-      </mesh>
+      <LiveMirror geometry={glass} position={[0, 0, 0.012]} />
     </group>
   );
 }
@@ -584,6 +601,8 @@ function ShoeBench({
         </mesh>
       ))}
       {/* what lives in the cubbies */}
+        <MyStuff>
+          <group userData={MERGE_STATIC}>
       {([[-0.3, "#2b2520"], [-0.02, "#1d1c1a"], [0.3, "#cdc7bb"]] as const).map(([x, colour]) => (
         <RoundedBox
           key={x}
@@ -595,6 +614,8 @@ function ShoeBench({
           <meshStandardMaterial color={colour} roughness={0.82} metalness={0} />
         </RoundedBox>
       ))}
+          </group>
+        </MyStuff>
 
       {/* the cushion, overhanging the case the way a loose pad does */}
       <RoundedBox
@@ -649,6 +670,8 @@ function FramedPrint({
 }) {
   return (
     <group position={position} rotation={rotation}>
+        <MyStuff>
+          <group userData={MERGE_STATIC}>
       <mesh castShadow>
         <boxGeometry args={[0.19, 0.25, 0.016]} />
         <meshStandardMaterial color={OAK.case} roughness={0.5} metalness={0} />
@@ -661,6 +684,8 @@ function FramedPrint({
         <planeGeometry args={[0.07, 0.1]} />
         <meshStandardMaterial color="#b9b3a2" roughness={0.9} />
       </mesh>
+          </group>
+        </MyStuff>
     </group>
   );
 }

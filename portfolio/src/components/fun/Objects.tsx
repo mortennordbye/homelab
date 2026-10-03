@@ -699,3 +699,96 @@ export function PhotoAlbum({
     </Interactive>
   );
 }
+
+/** What the toolbox opens: how the room itself was made. */
+const BUILT_WITH: InfoCard = {
+  kicker: "how this room was built",
+  title: "Hand-built, in the browser",
+  subtitle: "Next.js, React Three Fiber and a lot of three.js",
+  rows: [
+    { k: "Framework", v: "Next.js 16 and React 19, in TypeScript" },
+    { k: "3D", v: "three.js through React Three Fiber" },
+    { k: "Helpers", v: "drei for the screens and mirrors, postprocessing for the grade" },
+    { k: "Models", v: "Mostly boxes and cylinders in code; Poly Haven and Quaternius (CC0) for the rest" },
+    { k: "Screens", v: "Real web pages on the glass, fed by the site's own /api/v1" },
+    { k: "Hosting", v: "A Docker image on the homelab's Talos cluster, shipped by Kargo and ArgoCD" },
+  ],
+  body:
+    "Almost everything here is drawn in code: furniture from boxes and cylinders, the rug and the blind from textures painted on a canvas. Only the floor and wall surfaces, the plant and your body are downloaded. The monitors and the television are ordinary web pages laid onto the glass, which is why the text stays sharp and the shell on the desk actually runs. It ships the same way as the rest of the site, onto the cluster sitting on the TV bench.",
+  tags: ["Next.js", "React", "three.js", "React Three Fiber", "drei", "Tailwind", "TypeScript"],
+  href: "https://github.com/mortennordbye/homelab/tree/main/portfolio/src/components/fun",
+  hrefLabel: "read the source",
+};
+
+/**
+ * A carpenter's tote on the dining table, a hammer and a screwdriver in it:
+ * the room's colophon. Origin on the table top, long side along local x.
+ */
+export function Toolbox({
+  position,
+  rotation = [0, 0, 0],
+  onOpen,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  onOpen: (card: InfoCard) => void;
+}) {
+  const L = 0.34;
+  const W = 0.16;
+  const H = 0.09;
+  const T = 0.012;
+  const wood = <meshStandardMaterial color="#8a6a45" roughness={0.7} metalness={0} />;
+  const steel = <meshStandardMaterial color="#7d8186" roughness={0.35} metalness={0.85} />;
+
+  return (
+    <Interactive label="the toolbox" verb="open" detail="how this room was built" onActivate={() => onOpen(BUILT_WITH)}>
+      <group position={position} rotation={rotation}>
+        {/* the tray: a floor and four sides */}
+        <mesh position={[0, T / 2, 0]} castShadow receiveShadow>
+          <boxGeometry args={[L, T, W]} />
+          {wood}
+        </mesh>
+        {[-1, 1].map((s) => (
+          <mesh key={`l${s}`} position={[0, H / 2, s * (W / 2 - T / 2)]} castShadow>
+            <boxGeometry args={[L, H, T]} />
+            {wood}
+          </mesh>
+        ))}
+        {[-1, 1].map((s) => (
+          <mesh key={`e${s}`} position={[s * (L / 2 - T / 2), H, 0]} castShadow>
+            <boxGeometry args={[T, H * 2, W]} />
+            {wood}
+          </mesh>
+        ))}
+        {/* the handle bar between the tall ends */}
+        <mesh position={[0, H * 1.75, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <cylinderGeometry args={[0.012, 0.012, L - T, 12]} />
+          <meshStandardMaterial color="#6e5236" roughness={0.6} metalness={0} />
+        </mesh>
+
+        {/* the hammer, laid across the open top: a handle and a head */}
+        <group position={[0.02, H + 0.012, 0.035]} rotation={[0, 0.35, 0]}>
+          <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
+            <cylinderGeometry args={[0.012, 0.014, 0.3, 12]} />
+            <meshStandardMaterial color="#a3794a" roughness={0.55} metalness={0} />
+          </mesh>
+          <mesh position={[0.15, 0, 0]} castShadow>
+            <boxGeometry args={[0.03, 0.03, 0.11]} />
+            {steel}
+          </mesh>
+        </group>
+        {/* a screwdriver beside it, in the tray */}
+        <group position={[-0.03, T + 0.012, -0.04]} rotation={[0, -0.2, 0]}>
+          <mesh rotation={[0, 0, Math.PI / 2]} position={[-0.05, 0, 0]}>
+            <cylinderGeometry args={[0.013, 0.013, 0.09, 10]} />
+            <meshStandardMaterial color="#b4472f" roughness={0.5} metalness={0} />
+          </mesh>
+          <mesh rotation={[0, 0, Math.PI / 2]} position={[0.04, 0, 0]}>
+            <cylinderGeometry args={[0.003, 0.003, 0.1, 8]} />
+            {steel}
+          </mesh>
+        </group>
+      </group>
+    </Interactive>
+  );
+}

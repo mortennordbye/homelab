@@ -669,6 +669,62 @@ body.fun-immersive > main {
   100% { transform: translateX(310%); }
 }
 
+/* The Konami easter egg in /fun. Only mounted when reduced motion is off. */
+.room-disco {
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+  animation: room-disco 2.4s linear infinite;
+}
+
+@keyframes room-disco {
+  0%   { background: radial-gradient(circle at 30% 40%, #ff4fa3, transparent 60%), #4f6bff; }
+  25%  { background: radial-gradient(circle at 70% 30%, #4fd1ff, transparent 60%), #b44fff; }
+  50%  { background: radial-gradient(circle at 60% 70%, #9dff4f, transparent 60%), #ff7a2f; }
+  75%  { background: radial-gradient(circle at 25% 65%, #ffd34f, transparent 60%), #2fffc1; }
+  100% { background: radial-gradient(circle at 30% 40%, #ff4fa3, transparent 60%), #4f6bff; }
+}
+
+/* Sakte-TV on the /fun television: mountain strips panning past, and snow. */
+@keyframes slowtv-pan {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.slowtv-snow {
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, #e8eef5 50%, transparent 51%),
+    radial-gradient(2px 2px at 80px 120px, #e8eef5 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 150px 60px, #e8eef5 50%, transparent 51%),
+    radial-gradient(2px 2px at 210px 170px, #e8eef5 50%, transparent 51%);
+  background-size: 240px 200px;
+  opacity: 0.55;
+  animation: slowtv-snow 9s linear infinite;
+}
+
+@keyframes slowtv-snow {
+  from { background-position: 0 0, 0 0, 0 0, 0 0; }
+  to   { background-position: -120px 200px, -80px 200px, -140px 200px, -60px 200px; }
+}
+
+/* The blinking cursor under the fake kernel panic in /fun. */
+.room-crash-cursor {
+  animation: room-crash-blink 1s steps(1) infinite;
+}
+
+@keyframes room-crash-blink {
+  50% { opacity: 0; }
+}
+
+/* Each loading joke fades in; keyed in React, so a new joke restarts it. */
+.room-joke {
+  animation: room-joke-in 600ms ease-out both;
+}
+
+@keyframes room-joke-in {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 /* Infrastructure page — packet dot travelling along a pipeline connector */
 @keyframes packet-flow {
   0%   { left: 4px; opacity: 0; }

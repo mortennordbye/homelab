@@ -189,9 +189,7 @@ export function Printer({
     // eslint-disable-next-line react-hooks/immutability -- see the useFrame above
     gl.shadowMap.needsUpdate = true;
     feed.current = THREE.MathUtils.damp(feed.current, target, printing ? 3.2 : 7, d);
-    paper.current.position.z = 0.16 + feed.current * 0.2;
-    paper.current.position.y = 0.052 - feed.current * 0.012;
-    paper.current.rotation.x = -0.06 - feed.current * 0.12;
+    paper.current.position.z = 0.16 + feed.current * 0.26;
     const m = (paper.current.children[0] as THREE.Mesh)
       .material as THREE.MeshStandardMaterial;
     m.opacity = Math.min(1, feed.current * 4);
@@ -241,9 +239,10 @@ export function Printer({
         <meshStandardMaterial color="#25282d" roughness={0.6} metalness={0.2} />
       </RoundedBox>
 
-      {/* the sheet */}
-      <group ref={paper} position={[0, 0.052, 0.16]} rotation={[-0.06, 0, 0]} userData={NO_MERGE}>
-        <mesh castShadow>
+      {/* Face up at slot height, leading edge on the group's origin. Full feed
+          leaves the trailing edge just inside the slot. */}
+      <group ref={paper} position={[0, 0.052, 0.16]} userData={NO_MERGE}>
+        <mesh castShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -0.297 / 2]}>
           <planeGeometry args={[0.21, 0.297]} />
           <meshStandardMaterial
             color="#f2f0ec"

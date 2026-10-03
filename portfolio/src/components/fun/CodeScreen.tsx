@@ -257,6 +257,7 @@ export function CodeScreen({
       <Html
         transform
         occlude="blending"
+        geometry={<planeGeometry args={[width, h]} />}
         distanceFactor={distanceFactor(width, PANEL_PX_W)}
         position={[0, 0, 0.008]}
         zIndexRange={[10, 0]}

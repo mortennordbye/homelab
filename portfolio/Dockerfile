@@ -6,6 +6,7 @@ FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b533
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY patches ./patches
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     npm ci --include=dev --prefer-offline --no-audit --no-fund
 
@@ -38,6 +39,7 @@ WORKDIR /app
 
 # Install deps with cache-friendly two-step copy
 COPY package.json package-lock.json ./
+COPY patches ./patches
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     npm ci --include=dev --prefer-offline --no-audit --no-fund
 

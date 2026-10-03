@@ -16,6 +16,7 @@ import {
   GymBag,
   PhotoAlbum,
   ServiceLeaflets,
+  Toolbox,
 } from "./Objects";
 import { Printer } from "./Printer";
 import { Marker } from "./Marker";
@@ -29,6 +30,9 @@ import { OAK } from "@/components/materials/oak";
 import type { Box } from "./flat";
 import { FLAT, MARKS, at, centreOf, doorOpenings, px, pz, wallBoxes } from "./flat";
 import { MERGE_STATIC, StaticMerge } from "./StaticMerge";
+import { MyStuff } from "./Contents";
+import { Duck } from "./Duck";
+import type { RemotePlace } from "./HeldRemote";
 import {
   BathMat,
   Bed,
@@ -44,6 +48,8 @@ import {
   MirrorWardrobe,
   Oven,
   OverbedUnits,
+  HallRunner,
+  JuteRug,
   PleatedBlind,
   Poster,
   SINK_HOLE,
@@ -819,7 +825,13 @@ function MushroomLamp({
    parenting a hand-built pot under scanned leaves and matching the scale by
    eye. */
 function Plant({ position }: { position: [number, number, number] }) {
-  return <Prop name="potted_plant_04" position={position} height={0.78} />;
+  return (
+    <MyStuff>
+      <group userData={MERGE_STATIC}>
+        <Prop name="potted_plant_04" position={position} height={0.78} />
+      </group>
+    </MyStuff>
+  );
 }
 
 /**
@@ -935,7 +947,7 @@ function FrontDoor({
 
 
 export function Room({
-  onPrinterStatus,
+  onCaption,
   shelf,
   career,
   onInspect,
@@ -949,7 +961,7 @@ export function Room({
   onSit,
   remote,
 }: {
-  onPrinterStatus: (msg: string | null) => void;
+  onCaption: (msg: string | null) => void;
   shelf: ShelfData;
   career: CareerData;
   onInspect: (hw: Inspected) => void;
@@ -961,8 +973,9 @@ export function Room({
   onToggleLight: (k: LightKey) => void;
   seated: SeatId | null;
   onSit: (seat: SeatId) => void;
-  /** The remote on the sofa: what pressing it would switch to, and the switch. */
-  remote: { detail: string; onPress: () => void };
+  /** The remote: in hand, put down somewhere (world space), or on the sofa
+   *  arm where it starts when `place` is null. */
+  remote: { held: boolean; place: RemotePlace | null; onPickUp: () => void };
 }) {
   // Tiling is in real units: roughly one texture tile per 1.3m of floor and
   // 1.7m of wall, so the grain reads at the right physical scale.
@@ -1116,6 +1129,11 @@ export function Room({
       <Curtains position={at(1.775, 0.02, 0.15)} width={2.85} height={2.42} />
 
       {/* Green on the plan: the sofa, facing west at the television. */}
+      {/* From the living room, down the hall between the built-in and the
+          bench, toward the front door. */}
+      <HallRunner position={at(4.0, 0, 5.2)} rotation={[0, Math.PI / 2, 0]} width={0.7} length={3.2} />
+      {/* Under the sofa's front legs and out toward the TV, clear of the bench. */}
+      <JuteRug position={at(1.475, 0, 1.45)} width={1.45} depth={1.9} />
       <Interactive
         label="the sofa"
         verb="sit down"
@@ -1130,14 +1148,23 @@ export function Room({
       {/* The remote on the sofa's south arm, in the sofa's own frame. A sibling
           of the sofa's Interactive, not a child: nested, a look at the remote
           would also be a look at the sofa. */}
-      <group position={centreOf(MARKS.sofa)} rotation={[0, -Math.PI / 2, 0]}>
+      {remote.place ? (
         <TvRemote
-          position={[SOFA.length / 2 - SOFA.arm / 2, SOFA.armTop, 0.12]}
-          rotation={[0, 0.15, 0]}
-          detail={remote.detail}
-          onPress={remote.onPress}
+          position={remote.place.position}
+          rotation={[0, remote.place.yaw, 0]}
+          held={remote.held}
+          onPickUp={remote.onPickUp}
         />
-      </group>
+      ) : (
+        <group position={centreOf(MARKS.sofa)} rotation={[0, -Math.PI / 2, 0]}>
+          <TvRemote
+            position={[SOFA.length / 2 - SOFA.arm / 2, SOFA.armTop, 0.12]}
+            rotation={[0, 0.15, 0]}
+            held={remote.held}
+            onPickUp={remote.onPickUp}
+          />
+        </group>
+      )}
 
       {/* ---------------------------------------------------------------
           The entré: the way out, and the objects that belong beside it.
@@ -1239,10 +1266,14 @@ export function Room({
         {/* 0.8025, not 0.795: the mug is 0.095 tall and the top is at 0.755, so
             the old height buried its base in the desk. Moved clear of the
             contact card's stand as well, which it was standing through. */}
+        <MyStuff>
+          <group userData={MERGE_STATIC}>
         <mesh position={[-0.44, 0.8025, 0.2]}>
           <cylinderGeometry args={[0.042, 0.038, 0.095, 16]} />
           <meshStandardMaterial color="#8d8378" roughness={0.85} />
         </mesh>
+          </group>
+        </MyStuff>
 
         {/* Stands read their x off the screen placements, so the pair cannot be
             nudged without the feet following. The desk is turned, so the world
@@ -1257,6 +1288,7 @@ export function Room({
           on={lights.desk}
           onToggle={() => onToggleLight("desk")}
         />
+        <Duck position={[0.5, 0.755, 0.2]} rotationY={-0.4} />
         <ContactCard position={[-0.66, 0.758, 0.2]} onOpen={onOpenCard} />
         <Marker position={[-0.66, 0.98, 0.2]} />
       </group>
@@ -1335,6 +1367,10 @@ export function Room({
           wall so it stands on the table rather than at its edge. */}
       <Abacus position={[TABLE.x - 0.12, 0.745, TABLE.z]} rotation={[0, Math.PI / 2, 0]} onOpen={onOpenCard} />
       <Marker position={[TABLE.x - 0.12, 1.32, TABLE.z]} />
+      {/* On the floor against the south wall, between the desk and the hall
+          cabinet: how the room was made. */}
+      <Toolbox position={at(2.4, 0, FLAT.d - 0.2)} onOpen={onOpenCard} />
+      <Marker position={at(2.4, 0.5, FLAT.d - 0.2)} />
       {/* The blog, framed on the south wall right of the screens, whose pair
           ends at plan x 1.47. */}
       <PrintedPosts position={at(1.745, 1.42, FLAT.d - 0.03)} rotation={[0, Math.PI, 0]} onOpen={onOpenCard} />
@@ -1498,7 +1534,7 @@ export function Room({
         />
         {/* Over the open half, clear of the lamp's shade, which reaches x 0.01
             from the other side. */}
-        <Printer position={[0.225, CABINET.top, CABINET.d / 2 - 0.02]} onStatus={onPrinterStatus} />
+        <Printer position={[0.225, CABINET.top, CABINET.d / 2 - 0.02]} onStatus={onCaption} />
         <Marker position={[0.225, CABINET.top + 0.35, CABINET.d / 2]} />
         <Marker position={[0.23, CABINET.bays[1] + 0.3, CABINET.d + 0.12]} />
       </group>

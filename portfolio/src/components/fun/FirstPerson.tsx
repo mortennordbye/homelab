@@ -16,6 +16,9 @@ const WALK = 1.9;
 const RUN = 3.2;
 const ACCEL = 11;
 const DAMP = 9;
+/** Take-off speed for a ~0.45m hop, and the pull that brings it back. */
+const JUMP_V = 3.0;
+const GRAVITY = 10;
 
 /**
  * Everything the camera cannot walk into: every solid piece of interior wall
@@ -149,6 +152,10 @@ export function FirstPerson({
   const vel = useRef(new THREE.Vector3());
   const bob = useRef(0);
   const eye = useRef(EYE);
+  /** Height above the standing eye, and how fast it is changing. */
+  const air = useRef(0);
+  const airVel = useRef(0);
+  const jump = useRef(false);
   const fwd = useMemo(() => new THREE.Vector3(), []);
   const right = useMemo(() => new THREE.Vector3(), []);
   const want = useMemo(() => new THREE.Vector3(), []);
@@ -157,6 +164,8 @@ export function FirstPerson({
     const down = (e: KeyboardEvent) => {
       if (isTyping(e.target)) return;
       keys.current[e.code] = true;
+      // One hop per press: a held key repeats keydown, and that is not a pogo stick.
+      if (e.code === "Space" && !e.repeat) jump.current = true;
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) {
         e.preventDefault();
       }
@@ -178,6 +187,9 @@ export function FirstPerson({
     const delta = Math.min(rawDelta, 0.05); // never let a stalled tab teleport the camera
     if (!enabled) {
       vel.current.multiplyScalar(0);
+      air.current = 0;
+      airVel.current = 0;
+      jump.current = false;
       return;
     }
     const k = keys.current;
@@ -187,6 +199,13 @@ export function FirstPerson({
     const f = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) + (m?.y ?? 0);
     const s = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + (m?.x ?? 0);
     const crouching = !!k.KeyC;
+    if (jump.current && air.current === 0 && !crouching) airVel.current = JUMP_V;
+    jump.current = false;
+    if (air.current > 0 || airVel.current > 0) {
+      airVel.current -= GRAVITY * delta;
+      air.current = Math.max(0, air.current + airVel.current * delta);
+      if (air.current === 0) airVel.current = 0;
+    }
     const speed = crouching ? CROUCH_WALK : k.ShiftLeft || k.ShiftRight ? RUN : WALK;
 
     camera.getWorldDirection(fwd);
@@ -223,7 +242,8 @@ export function FirstPerson({
     bob.current += delta * moving * 2.4;
     // Eased rather than snapped, so crouching is a movement and not a cut.
     eye.current = THREE.MathUtils.damp(eye.current, crouching ? CROUCH_EYE : EYE, 10, delta);
-    camera.position.y = eye.current + Math.sin(bob.current * 2) * 0.014 * Math.min(1, moving / WALK);
+    const bobbing = air.current > 0 ? 0 : Math.sin(bob.current * 2) * 0.014 * Math.min(1, moving / WALK);
+    camera.position.y = eye.current + air.current + bobbing;
   });
 
   return null;

@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { Interactive, useSay } from "./interaction";
 
 /**
  * What stands inside the flat's cupboards, drawers and fridge: boxes, cans and
@@ -26,6 +27,18 @@ const BOX = new THREE.BoxGeometry(1, 1, 1);
 const CYLINDER = new THREE.CylinderGeometry(0.5, 0.5, 1, 14);
 const UPRIGHT = new THREE.Quaternion();
 const ALONG_X = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2);
+
+const NOT_PORTFOLIO = "why are you trying to steal my stuff? this is not my portfolio";
+
+/** Household stuff, as opposed to portfolio content: pickable, and E gets told off. */
+export function MyStuff({ children }: { children: React.ReactNode }) {
+  const say = useSay();
+  return (
+    <Interactive label="my stuff" verb="take" onActivate={() => say(NOT_PORTFOLIO)}>
+      {children}
+    </Interactive>
+  );
+}
 
 export function Items({ items }: { items: Item[] }) {
   const boxes = useRef<THREE.InstancedMesh>(null);
@@ -88,7 +101,7 @@ export function Items({ items }: { items: Item[] }) {
   }, [items]);
 
   return (
-    <>
+    <MyStuff>
       {/* dispose off: the geometry is shared by every cupboard in the flat. */}
       {counts.b > 0 && (
         <instancedMesh key={`b${counts.b}`} ref={boxes} args={[BOX, undefined, counts.b]} dispose={null} receiveShadow>
@@ -100,7 +113,7 @@ export function Items({ items }: { items: Item[] }) {
           <meshStandardMaterial roughness={0.55} metalness={0.05} />
         </instancedMesh>
       )}
-    </>
+    </MyStuff>
   );
 }
 
