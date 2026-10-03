@@ -4,7 +4,8 @@ import { RoundedBox } from "@/components/scene/RoundedBox";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { DEVICE } from "@/content/hardware";
+import { DEVICE, HOUSE, type HouseDevice } from "@/content/hardware";
+import { at } from "./flat";
 import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
 import { MERGE_STATIC } from "./StaticMerge";
@@ -313,25 +314,188 @@ export function UnifiAccessPoint({ position }: { position: [number, number, numb
   );
 }
 
-/** The sideboard: an open-fronted oak unit with the homelab living in it. */
-/** What the room needs to name and card a device. `Device` satisfies it. */
-export type Inspected = {
-  model: string;
-  tag: string;
-  facts: [string, string][];
-  /** Set when the README has no row for it, so the card says so rather than inventing specs. */
-  unlisted?: boolean;
+type Placed = {
+  position: [number, number, number];
+  rotation?: [number, number, number];
 };
 
-/** On the shelf in the reference photos but absent from the README, so it is
- *  declared here rather than in the shared inventory, which /infrastructure
- *  renders as checkable claims. */
-const FLEX_MINI: Inspected = {
-  model: "UniFi Flex Mini",
-  tag: "Desktop switch",
-  facts: [],
-  unlisted: true,
-};
+/** Nabu Casa ZBT-2: a white upright stick on its USB lead, LED at the top. */
+export function ZigbeeStick({ position, rotation = [0, 0, 0] }: Placed) {
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox position={[0, 0.047, 0]} args={[0.03, 0.09, 0.018]} radius={0.007} smoothness={4} castShadow>
+        <meshStandardMaterial {...PLASTIC_WHITE} />
+      </RoundedBox>
+      <mesh position={[0, 0.004, 0]}>
+        <boxGeometry args={[0.04, 0.008, 0.03]} />
+        <meshStandardMaterial color="#cfd0d3" roughness={0.5} />
+      </mesh>
+      <mesh position={[0, 0.006, -0.035]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.0022, 0.0022, 0.05, 8]} />
+        <meshStandardMaterial color="#e2e2e2" roughness={0.6} />
+      </mesh>
+      <Led position={[0, 0.082, 0.0095]} color="#81bccf" steady size={0.004} />
+    </group>
+  );
+}
+
+/** M5Stack Atom Lite: a 24mm dark cube, its whole top a pale button. */
+export function AtomLite({ position, rotation = [0, 0, 0] }: Placed) {
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox position={[0, 0.012, 0]} args={[0.024, 0.024, 0.01]} radius={0.002} smoothness={3}>
+        <meshStandardMaterial color="#2a2d31" roughness={0.6} metalness={0.1} />
+      </RoundedBox>
+      <RoundedBox position={[0, 0.012, 0.005]} args={[0.019, 0.019, 0.002]} radius={0.0015} smoothness={3}>
+        <meshStandardMaterial color="#d6d8da" roughness={0.45} />
+      </RoundedBox>
+      <Led position={[0, 0.012, 0.0062]} color="#81bccf" seed={2.6} size={0.004} />
+      {/* USB-C lead, out of the bottom and back to the wall */}
+      <mesh position={[0, 0.0015, -0.03]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.0018, 0.0018, 0.06, 8]} />
+        <meshStandardMaterial color="#e2e2e2" roughness={0.6} />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * Where the security camera looks from: its local +z is the view direction.
+ * One camera in the flat, so one shared object that the camera view reads.
+ */
+export const CCTV_LENS = new THREE.Object3D();
+
+/** UniFi G6 Instant: a white cube with a black glass face round the lens, on a foot. */
+export function G6Instant({ position, rotation = [0, 0, 0], tilt = 0 }: Placed & {
+  /** Radians about x; positive tips the lens down. */
+  tilt?: number;
+}) {
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[0, 0.006, 0]} castShadow>
+        <cylinderGeometry args={[0.022, 0.024, 0.012, 24]} />
+        <meshStandardMaterial {...PLASTIC_WHITE} />
+      </mesh>
+      <mesh position={[0, 0.018, 0]}>
+        <cylinderGeometry args={[0.006, 0.006, 0.014, 12]} />
+        <meshStandardMaterial {...PLASTIC_WHITE} />
+      </mesh>
+      <group position={[0, 0.052, 0]} rotation={[tilt, 0, 0]}>
+        <RoundedBox args={[0.054, 0.054, 0.042]} radius={0.009} smoothness={4} castShadow>
+          <meshStandardMaterial {...PLASTIC_WHITE} />
+        </RoundedBox>
+        <RoundedBox position={[0, 0, 0.0195]} args={[0.046, 0.046, 0.004]} radius={0.007} smoothness={3}>
+          <meshStandardMaterial color="#0d0f12" roughness={0.12} metalness={0.4} />
+        </RoundedBox>
+        <mesh position={[0, 0.002, 0.0222]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.0085, 0.0085, 0.002, 24]} />
+          <meshStandardMaterial color="#1d2a33" roughness={0.05} metalness={0.8} />
+        </mesh>
+        <Led position={[0, -0.016, 0.0225]} color="#81bccf" steady size={0.003} />
+        <primitive object={CCTV_LENS} position={[0, 0.002, 0.03]} />
+      </group>
+    </group>
+  );
+}
+
+/** Home Assistant Voice PE: an 85mm grey square with a dial and an LED ring on top. */
+export function VoicePe({ position, rotation = [0, 0, 0] }: Placed) {
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox position={[0, 0.0115, 0]} args={[0.085, 0.023, 0.085]} radius={0.01} smoothness={4} castShadow receiveShadow>
+        <meshStandardMaterial color="#3a3d42" roughness={0.62} metalness={0.05} />
+      </RoundedBox>
+      <mesh position={[0, 0.024, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.026, 0.03, 40]} />
+        <meshBasicMaterial color="#81bccf" transparent opacity={0.55} />
+      </mesh>
+      <mesh position={[0, 0.025, 0]}>
+        <cylinderGeometry args={[0.024, 0.024, 0.004, 32]} />
+        <meshStandardMaterial color="#2b2e32" roughness={0.4} metalness={0.2} />
+      </mesh>
+      <mesh position={[0.03, 0.0235, 0.03]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.004, 16]} />
+        <meshStandardMaterial color="#1a1c1f" roughness={0.7} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Aqara T1 climate sensor: a 36mm white square, stuck to the wall. Front is +z. */
+export function AqaraClimate({ position, rotation = [0, 0, 0] }: Placed) {
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox args={[0.036, 0.036, 0.0095]} radius={0.004} smoothness={3}>
+        <meshStandardMaterial {...PLASTIC_WHITE} />
+      </RoundedBox>
+      <mesh position={[0, -0.011, 0.0049]}>
+        <planeGeometry args={[0.01, 0.0025]} />
+        <meshStandardMaterial color="#b9bcc0" roughness={0.6} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Aqara vibration sensor T1: a small white tablet, upright. Front is +z. */
+export function AqaraVibration({ position, rotation = [0, 0, 0] }: Placed) {
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox args={[0.03, 0.046, 0.012]} radius={0.005} smoothness={3}>
+        <meshStandardMaterial {...PLASTIC_WHITE} />
+      </RoundedBox>
+      <Led position={[0, 0.016, 0.0062]} color="#81bccf" seed={3.3} size={0.0025} />
+    </group>
+  );
+}
+
+/** Aqara T1 contact sensor: the sensor on the frame and its magnet on the leaf beside it. */
+export function AqaraContact({ position, rotation = [0, 0, 0], gap = 0.03, step = 0 }: Placed & {
+  /** Centre to centre, along local x, from the sensor to the magnet. */
+  gap?: number;
+  /** How far the magnet sits forward (+z) of the sensor, for a leaf proud of its frame. */
+  step?: number;
+}) {
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox args={[0.022, 0.041, 0.011]} radius={0.004} smoothness={3}>
+        <meshStandardMaterial {...PLASTIC_WHITE} />
+      </RoundedBox>
+      <RoundedBox position={[gap, 0, step]} args={[0.012, 0.03, 0.011]} radius={0.003} smoothness={3}>
+        <meshStandardMaterial {...PLASTIC_WHITE} />
+      </RoundedBox>
+    </group>
+  );
+}
+
+/** Aqara T1 leak sensor: a 50mm white puck on its probes, a drop on the lid. */
+export function AqaraLeak({ position, rotation = [0, 0, 0] }: Placed) {
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[0, 0.011, 0]}>
+        <cylinderGeometry args={[0.025, 0.026, 0.018, 32]} />
+        <meshStandardMaterial {...PLASTIC_WHITE} />
+      </mesh>
+      <mesh position={[0, 0.0202, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.005, 16]} />
+        <meshStandardMaterial color="#9aa3ad" roughness={0.6} />
+      </mesh>
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[Math.cos(i * 2.1) * 0.017, 0.001, Math.sin(i * 2.1) * 0.017]}>
+          <cylinderGeometry args={[0.002, 0.002, 0.002, 8]} />
+          <meshStandardMaterial color="#b9bcc0" roughness={0.3} metalness={0.9} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** What the room needs to name and card a device. */
+export type Inspected = HouseDevice;
+
+/** The device's card with where it stands in the flat as its last row. */
+function located(hw: Inspected, where: string): Inspected {
+  return { ...hw, facts: [...hw.facts, ["location", where]] };
+}
 
 /**
  * Wraps a device so looking at it names it.
@@ -372,16 +536,24 @@ function Inspectable({
 export const SIDEBOARD_H = 0.42;
 export const SIDEBOARD_TV: [number, number, number] = [-0.08, SIDEBOARD_H + 0.021, 0];
 
+const LEFT_BAY = "Living room, TV bench, left bay";
+const MIDDLE_BAY = "Living room, TV bench, middle bay";
+const RIGHT_BAY = "Living room, TV bench, right bay";
+
+/** The sideboard: an open-fronted oak unit with the homelab living in it. */
 export function Sideboard({
   position,
   rotation = [0, 0, 0],
   onInspect,
   onOpenCard,
+  onWatch,
 }: {
   position: [number, number, number];
   rotation?: [number, number, number];
   onInspect: (hw: Inspected) => void;
   onOpenCard: (card: InfoCard) => void;
+  /** Looking through the security camera. */
+  onWatch: () => void;
 }) {
 
   // The real cabinet, at the size /infrastructure models it: a BESTÅ at
@@ -457,33 +629,36 @@ export function Sideboard({
           from the README hardware tables via ./hardware — the three ThinkCentres
           are three different machines, so they are labelled individually rather
           than as "a ThinkCentre" three times. */}
-      <Inspectable hw={DEVICE.hyper1} onInspect={onInspect}>
+      <Inspectable hw={located(DEVICE.hyper1, LEFT_BAY)} onInspect={onInspect}>
         <ThinkCentre position={[-0.78, floorY + 0.0915, 0.02]} />
       </Inspectable>
-      <Inspectable hw={DEVICE.hyper2} onInspect={onInspect}>
+      <Inspectable hw={located(DEVICE.hyper2, LEFT_BAY)} onInspect={onInspect}>
         <ThinkCentre position={[-0.72, floorY + 0.0915, 0.02]} />
       </Inspectable>
-      <Inspectable hw={DEVICE.hyper3} onInspect={onInspect}>
+      <Inspectable hw={located(DEVICE.hyper3, LEFT_BAY)} onInspect={onInspect}>
         <ThinkCentre position={[-0.66, floorY + 0.0915, 0.02]} />
       </Inspectable>
-      <Inspectable hw={DEVICE.modem} onInspect={onInspect}>
+      <Inspectable hw={located(DEVICE.modem, LEFT_BAY)} onInspect={onInspect}>
         <IspRouter position={[-0.44, floorY + 0.1, 0.01]} />
       </Inspectable>
 
-      <Inspectable hw={DEVICE.gateway} onInspect={onInspect}>
+      <Inspectable hw={located(DEVICE.gateway, MIDDLE_BAY)} onInspect={onInspect}>
         <CloudGateway position={[-0.16, floorY + 0.015, 0.03]} />
       </Inspectable>
-      <Inspectable hw={DEVICE.ha} onInspect={onInspect}>
+      <Inspectable hw={located(DEVICE.ha, MIDDLE_BAY)} onInspect={onInspect}>
         <FanlessBox position={[0.09, floorY + 0.019, -0.02]} />
       </Inspectable>
-      <Inspectable hw={FLEX_MINI} onInspect={onInspect}>
+      <Inspectable hw={located(HOUSE.flexMini, MIDDLE_BAY)} onInspect={onInspect}>
         <UnifiFlexMini position={[0.16, floorY + 0.011, 0.12]} />
       </Inspectable>
+      <Inspectable hw={located(DEVICE.zigbee, MIDDLE_BAY)} onInspect={onInspect}>
+        <ZigbeeStick position={[-0.045, floorY, 0.1]} />
+      </Inspectable>
 
-      <Inspectable hw={DEVICE.nas} onInspect={onInspect}>
+      <Inspectable hw={located(DEVICE.nas, RIGHT_BAY)} onInspect={onInspect}>
         <SynologyNas position={[0.68, floorY + 0.083, -0.02]} />
       </Inspectable>
-      <Inspectable hw={DEVICE.switch} onInspect={onInspect}>
+      <Inspectable hw={located(DEVICE.switch, RIGHT_BAY)} onInspect={onInspect}>
         <UnifiSwitch8 position={[0.44, floorY + 0.013, 0.09]} />
       </Inspectable>
       {/* Clear of the 8-port switch rather than tucked in behind it. Sat at
@@ -491,14 +666,23 @@ export function Sideboard({
           crosshair could never land on it and it was the one device in the
           room you could not name. Anything given a label has to be lookable
           at from where a visitor can actually stand. */}
-      <Inspectable hw={DEVICE.hue} onInspect={onInspect}>
+      <Inspectable hw={located(DEVICE.hue, RIGHT_BAY)} onInspect={onInspect}>
         <HubPuck position={[0.26, floorY + 0.012, -0.09]} />
       </Inspectable>
 
       {/* access point on top, flat, where a TV would sit in front of it */}
-      <Inspectable hw={DEVICE.ap} onInspect={onInspect}>
+      <Inspectable hw={located(DEVICE.ap, "Living room, on top of the TV bench")} onInspect={onInspect}>
         <UnifiAccessPoint position={[0.62, H + 0.032, -0.1]} />
       </Inspectable>
+
+      {/* Between the access point and the Sonos, tipped up at whoever stands
+          in front of the bench. Pressing it looks through it rather than
+          opening a spec sheet. */}
+      <Interactive label={HOUSE.camera.model} verb="look through" detail={HOUSE.camera.tag} onActivate={onWatch}>
+        <group userData={MERGE_STATIC}>
+          <G6Instant position={[0.75, H + 0.021, 0.04]} rotation={[0, -0.45, 0]} tilt={-0.22} />
+        </group>
+      </Interactive>
 
       {/* The Sonos, on the free end of the top past the television.
           Not an <Inspectable>: it owns its own label and card because pressing
@@ -512,5 +696,85 @@ export function Sideboard({
           point and the speaker sit either side of it, under the panel. */}
       <Television position={SIDEBOARD_TV} />
     </group>
+  );
+}
+
+/** A device too small to aim at, given an invisible pick box around it. */
+function Spot({
+  position,
+  rotation = [0, 0, 0],
+  hit,
+  children,
+}: Placed & { hit: [number, number, number]; children: React.ReactNode }) {
+  return (
+    <group position={position} rotation={rotation}>
+      {children}
+      {/* The `visible` prop keeps it out of the merge; picking ignores it. */}
+      <mesh visible={false}>
+        <boxGeometry args={hit} />
+        <meshBasicMaterial />
+      </mesh>
+    </group>
+  );
+}
+
+const ORIGIN: [number, number, number] = [0, 0, 0];
+
+/**
+ * The README's smart-home kit, each where it stands in the flat. Placed in
+ * plan metres like the furniture, against surfaces Room.tsx builds: wall
+ * faces, the bedroom sill, the kitchen peninsula, the cupboard under the sink and the front door's casing.
+ */
+export function HouseDevices({ onInspect }: { onInspect: (hw: Inspected) => void }) {
+  const H = Math.PI / 2;
+  return (
+    <>
+      <Inspectable hw={located(HOUSE.voice, "Kitchen, on the peninsula")} onInspect={onInspect}>
+        <Spot position={at(2.6, 0.898, 4.3)} rotation={[0, 0.3, 0]} hit={[0.1, 0.06, 0.1]}>
+          <VoicePe position={ORIGIN} />
+        </Spot>
+      </Inspectable>
+      <Inspectable hw={located(HOUSE.bleProxy, "Bedroom, on the window sill")} onInspect={onInspect}>
+        <Spot position={at(4.55, 1.05, 0.05)} hit={[0.06, 0.06, 0.05]}>
+          <AtomLite position={ORIGIN} />
+        </Spot>
+      </Inspectable>
+
+      {/* Wall-mounted sensors: each faces into its room, its back on the wall face. */}
+      <Inspectable hw={located(HOUSE.climate, "Living room, by the bedroom door")} onInspect={onInspect}>
+        <Spot position={at(3.895, 1.5, 0.15)} rotation={[0, -H, 0]} hit={[0.07, 0.07, 0.03]}>
+          <AqaraClimate position={ORIGIN} />
+        </Spot>
+      </Inspectable>
+      <Inspectable hw={located(HOUSE.climate, "Bedroom, over the bed")} onInspect={onInspect}>
+        <Spot position={at(4.45, 1.5, 2.695)} rotation={[0, Math.PI, 0]} hit={[0.07, 0.07, 0.03]}>
+          <AqaraClimate position={ORIGIN} />
+        </Spot>
+      </Inspectable>
+      <Inspectable hw={located(HOUSE.climate, "Bathroom, on the north wall")} onInspect={onInspect}>
+        <Spot position={at(5.3, 1.5, 2.805)} hit={[0.07, 0.07, 0.03]}>
+          <AqaraClimate position={ORIGIN} />
+        </Spot>
+      </Inspectable>
+      <Inspectable hw={located(HOUSE.vibration, "Living room, on the window's glazing bar")} onInspect={onInspect}>
+        <Spot position={at(2.45, 1.2, 0.036)} hit={[0.05, 0.07, 0.03]}>
+          <AqaraVibration position={ORIGIN} />
+        </Spot>
+      </Inspectable>
+      {/* Sensor on the casing at the latch side, magnet on the leaf, which
+          stands 17.5mm proud of the casing. */}
+      <Inspectable hw={located(HOUSE.contact, "Entré, on the front door")} onInspect={onInspect}>
+        <Spot position={at(6.165, 1.85, 6.0465)} rotation={[0, Math.PI, 0]} hit={[0.08, 0.07, 0.04]}>
+          <AqaraContact position={ORIGIN} gap={0.085} step={0.0175} />
+        </Spot>
+      </Inspectable>
+      {/* On the floor of the sink cupboard, clear of the stock in it: only
+          seen with the door open. */}
+      <Inspectable hw={located(HOUSE.leak, "Kitchen, under the sink")} onInspect={onInspect}>
+        <Spot position={at(3.45, 0.1, 2.38)} hit={[0.08, 0.05, 0.08]}>
+          <AqaraLeak position={ORIGIN} />
+        </Spot>
+      </Inspectable>
+    </>
   );
 }

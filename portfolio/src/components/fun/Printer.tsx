@@ -14,12 +14,14 @@ import { NO_MERGE } from "./StaticMerge";
  * The CV printer.
  *
  * This is the physical form of the resume object's toggles: the same four flags over
- * the same sixteen pre-built PDFs, resolved through the same manifest. Flip the
- * switches on the lid, press the green button, a sheet feeds out and the
- * matching PDF downloads.
+ * the same sixteen pre-built PDFs, resolved through the same manifest. Its
+ * controls are a screen on the lid: E zooms the view onto it (`ScreenFocus` in
+ * FunRoom), the sections are toggled there, and printing zooms back out so the
+ * sheet is seen feeding out as the matching PDF downloads.
  */
 
-type ManifestEntry = { id: string; flags: ToggleFlags; url: string };
+/** `preview` is page one as an image; absent from manifests built before it. */
+type ManifestEntry = { id: string; flags: ToggleFlags; url: string; preview?: string };
 type Manifest = { resume: string; variants: ManifestEntry[] };
 
 const SWITCHES: { key: keyof ToggleFlags; label: string }[] = [
@@ -29,23 +31,22 @@ const SWITCHES: { key: keyof ToggleFlags; label: string }[] = [
   { key: "photo", label: "photo" },
 ];
 
-/** Where switch `i` sits on the lid. The printed legend reads this too, so a
- *  label can never end up over the wrong switch. */
-const switchX = (i: number) => -0.105 + i * 0.07;
+/** The lid screen: a plate tilted back off the lid's rear edge, facing up and
+ *  forward at a standing visitor. Physical size and its DOM size together set
+ *  the Html scale. */
+const SCREEN_W = 0.26;
+const SCREEN_H = 0.13;
+const SCREEN_PX_W = 520;
+const SCREEN_PX_H = 260;
+const SCREEN_TILT = -0.9;
 
 /**
- * The printed legend on the lid. `LEGEND_Y` must sit above the lid's top face
- * (the lid spans y 0.107–0.123) or the print is occluded by its own lid. It
- * sits behind the switch row so each label reads as its switch's, and clear
- * of the print button.
+ * Where the zoom looks from: the screen's face, local +z out of it. One
+ * printer in the flat, so one shared object FunRoom's focus reads.
  */
-const LEGEND_W = 0.4;
-const LEGEND_PX_W = 660;
-const LEGEND_PX_H = 148;
-const LEGEND_Y = 0.1235;
-const LEGEND_Z = -0.085;
+export const PRINTER_SCREEN = new THREE.Object3D();
 
-function resolveUrl(variants: ManifestEntry[] | null, flags: ToggleFlags) {
+function resolve(variants: ManifestEntry[] | null, flags: ToggleFlags) {
   if (!variants) return null;
   return (
     variants.find(
@@ -54,61 +55,7 @@ function resolveUrl(variants: ManifestEntry[] | null, flags: ToggleFlags) {
         v.flags.clientProjects === flags.clientProjects &&
         v.flags.homeLab === flags.homeLab &&
         v.flags.photo === flags.photo,
-    )?.url ?? null
-  );
-}
-
-/** A rocker switch on the lid. Tilts to show its state. */
-function Switch({
-  x,
-  on,
-  label,
-  onToggle,
-}: {
-  x: number;
-  on: boolean;
-  label: string;
-  onToggle: () => void;
-}) {
-  const rocker = useRef<THREE.Group>(null);
-  useFrame((_, d) => {
-    if (!rocker.current) return;
-    const target = on ? -0.42 : 0.42;
-    rocker.current.rotation.x = THREE.MathUtils.damp(
-      rocker.current.rotation.x,
-      target,
-      9,
-      d,
-    );
-  });
-
-  return (
-    <Interactive label={label} verb={on ? "switch off" : "switch on"} onActivate={onToggle}>
-      {(hovered) => (
-        <group position={[x, 0.113, -0.02]}>
-          {/* recessed housing */}
-          <mesh position={[0, -0.004, 0]}>
-            <boxGeometry args={[0.032, 0.006, 0.05]} />
-            <meshStandardMaterial color="#1b1d21" roughness={0.7} />
-          </mesh>
-          <group ref={rocker}>
-            <RoundedBox args={[0.026, 0.008, 0.042]} radius={0.002} smoothness={3} castShadow>
-              <meshStandardMaterial
-                color={hovered ? "#e8eaee" : "#c9ccd2"}
-                roughness={0.45}
-                emissive={hovered ? "#4a5a6a" : "#000000"}
-                emissiveIntensity={hovered ? 0.35 : 0}
-              />
-            </RoundedBox>
-          </group>
-          {/* state lamp beside the switch */}
-          <mesh position={[0, 0.002, 0.032]}>
-            <planeGeometry args={[0.006, 0.006]} />
-            <meshBasicMaterial color={on ? "#5ec96e" : "#3a3f45"} />
-          </mesh>
-        </group>
-      )}
-    </Interactive>
+    ) ?? null
   );
 }
 
@@ -116,15 +63,25 @@ export function Printer({
   position,
   rotation = [0, 0, 0],
   onStatus,
+  active,
+  onOpen,
+  onDone,
 }: {
   position: [number, number, number];
   rotation?: [number, number, number];
   /** Surfaces printer state to the HUD, since the room has no other UI. */
   onStatus: (msg: string | null) => void;
+  /** The view is zoomed onto the screen and the screen takes input. */
+  active: boolean;
+  onOpen: () => void;
+  /** A job was sent: zoom back out to watch it print. */
+  onDone: () => void;
 }) {
   const [flags, setFlags] = useState<ToggleFlags>(DEFAULT_FLAGS);
   const [variants, setVariants] = useState<ManifestEntry[] | null>(null);
   const [printing, setPrinting] = useState(false);
+  /** The sheet is out of the slot: longer than the job, so the page can be read. */
+  const [out, setOut] = useState(false);
   const paper = useRef<THREE.Group>(null);
   const feed = useRef(0);
   const gl = useThree((state) => state.gl);
@@ -145,7 +102,29 @@ export function Printer({
     };
   }, []);
 
-  const url = useMemo(() => resolveUrl(variants, flags), [variants, flags]);
+  const entry = useMemo(() => resolve(variants, flags), [variants, flags]);
+  const url = entry?.url ?? null;
+  const preview = entry?.preview ?? null;
+
+  /* Page one of the CV being chosen, for the sheet. Fetched only once the
+     visitor is at the screen, so the room's first load carries none of it. */
+  const [sheet, setSheet] = useState<THREE.Texture | null>(null);
+  useEffect(() => {
+    if (!active || !preview) return;
+    let cancelled = false;
+    new THREE.TextureLoader().load(preview, (t) => {
+      if (cancelled) return t.dispose();
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = gl.capabilities.getMaxAnisotropy();
+      setSheet((old) => {
+        old?.dispose();
+        return t;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [active, preview, gl]);
   const ready = variants !== null && variants.length > 0;
 
   const print = useCallback(() => {
@@ -156,6 +135,7 @@ export function Printer({
       return;
     }
     setPrinting(true);
+    setOut(true);
     feed.current = 0;
     onStatus("printing…");
 
@@ -164,7 +144,7 @@ export function Printer({
     window.setTimeout(() => {
       const a = document.createElement("a");
       a.href = url;
-      // Always a CV: `resolveUrl` only ever matches a variant, never the resume.
+      // Always a CV: `resolve` only ever matches a variant, never the resume.
       a.download = pdfFilename(false);
       document.body.appendChild(a);
       a.click();
@@ -176,20 +156,22 @@ export function Printer({
       setPrinting(false);
       onStatus(null);
     }, 3400);
+    window.setTimeout(() => setOut(false), 8000);
   }, [printing, ready, url, onStatus]);
 
-  // Sheet slides out of the front slot, then retracts once the job finishes.
+  // Sheet slides out of the front slot, then retracts a while after the job.
   // eslint-disable-next-line react-hooks/immutability -- renderer state is mutable by design; on-demand shadows are driven this way
   useFrame((_, d) => {
     if (!paper.current) return;
-    const target = printing ? 1 : 0;
+    const target = out ? 1 : 0;
     /* Settled: nothing to move, and nothing to redraw. The shadow map is off
        auto (see Lighting in FunRoom), so a caster that moves has to ask. */
     if (Math.abs(target - feed.current) < 0.0005) return;
     // eslint-disable-next-line react-hooks/immutability -- see the useFrame above
     gl.shadowMap.needsUpdate = true;
-    feed.current = THREE.MathUtils.damp(feed.current, target, printing ? 3.2 : 7, d);
-    paper.current.position.z = 0.16 + feed.current * 0.26;
+    feed.current = THREE.MathUtils.damp(feed.current, target, out ? 3.2 : 7, d);
+    // 0.33 clears the slot, so the page's head with the name is out too.
+    paper.current.position.z = 0.16 + feed.current * 0.33;
     const m = (paper.current.children[0] as THREE.Mesh)
       .material as THREE.MeshStandardMaterial;
     m.opacity = Math.min(1, feed.current * 4);
@@ -199,8 +181,33 @@ export function Printer({
     setFlags((p) => ({ ...p, [key]: !p[key] }));
   }, []);
 
+  const send = useCallback(() => {
+    print();
+    onDone();
+  }, [print, onDone]);
+
+  // Keys while zoomed in: 1 to 4 toggle, Enter prints.
+  useEffect(() => {
+    if (!active) return;
+    const onKey = (e: KeyboardEvent) => {
+      const i = ["Digit1", "Digit2", "Digit3", "Digit4"].indexOf(e.code);
+      if (i >= 0) toggle(SWITCHES[i].key);
+      else if (e.code === "Enter") {
+        // A focused button on the screen would take this Enter as a click too.
+        e.preventDefault();
+        send();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [active, toggle, send]);
+
   return (
     <group position={position} rotation={rotation}>
+      {/* The whole machine zooms onto its screen. Disabled while zoomed, so
+          the screen's own buttons are what a click lands on. */}
+      <Interactive label="CV printer" verb="use the screen" detail="pick the sections, then print" onActivate={onOpen} disabled={active}>
+      <group>
       {/* body */}
       <RoundedBox
         position={[0, 0.055, 0]}
@@ -238,14 +245,29 @@ export function Printer({
       >
         <meshStandardMaterial color="#25282d" roughness={0.6} metalness={0.2} />
       </RoundedBox>
+      <Screen
+        flags={flags}
+        ready={ready}
+        printing={printing}
+        active={active}
+        onToggle={toggle}
+        onPrint={send}
+      />
+      </group>
+      </Interactive>
 
       {/* Face up at slot height, leading edge on the group's origin. Full feed
-          leaves the trailing edge just inside the slot. */}
+          leaves the trailing edge just past the slot. */}
       <group ref={paper} position={[0, 0.052, 0.16]} userData={NO_MERGE}>
         <mesh castShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -0.297 / 2]}>
           <planeGeometry args={[0.21, 0.297]} />
+          {/* Keyed on the page: three only compiles a map in when the material
+              is built, so swapping one onto a bare sheet needs a new material. */}
           <meshStandardMaterial
-            color="#f2f0ec"
+            key={sheet?.uuid ?? "blank"}
+            map={sheet}
+            // Under the hall lamp a full-white sheet clips; this keeps the print.
+            color={sheet ? "#9e988e" : "#f2f0ec"}
             roughness={0.85}
             side={THREE.DoubleSide}
             transparent
@@ -254,139 +276,111 @@ export function Printer({
         </mesh>
       </group>
 
-      {/* The lid legend.
-          Four unlabelled rocker switches told a visitor nothing — you had to
-          put the crosshair on each one in turn to discover what it did, and
-          nothing at all announced that this machine builds a CV. The panel is
-          real DOM for the same reason the monitors are: lettering at this size
-          has to be text, not geometry.
-
-          It is laid out to sit directly above the physical switches, so the
-          label and the thing it labels are unambiguously paired. Both are
-          placed off the same `switchX`. */}
-      <Html
-        transform
-        occlude="blending"
-        distanceFactor={(LEGEND_W / LEGEND_PX_W) * 400}
-        position={[0, LEGEND_Y, LEGEND_Z]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        zIndexRange={[10, 0]}
-        style={{
-          width: `${LEGEND_PX_W}px`,
-          height: `${LEGEND_PX_H}px`,
-          pointerEvents: "none",
-          userSelect: "none",
-        }}
-      >
-        {/* A printed label, with its own stock. Dark text on a transparent
-            layer over a charcoal lid is invisible — which is exactly how the
-            first version of this panel shipped. */}
-        <div
-          className="flex h-full w-full flex-col font-mono"
-          style={{
-            color: "#0d1014",
-            padding: "8px 12px 6px",
-            background: "linear-gradient(150deg, #e8e6e1 0%, #d6d3cc 100%)",
-            borderRadius: "3px",
-          }}
-        >
-          <div className="flex items-baseline justify-between">
-            <span style={{ fontSize: "26px", letterSpacing: "0.22em", fontWeight: 700 }}>
-              CV BUILDER
-            </span>
-            <span style={{ fontSize: "17px", color: "#5c646d", letterSpacing: "0.1em" }}>
-              {ready ? "READY" : "OFFLINE"}
-            </span>
-          </div>
-          <div
-            style={{ height: "2px", background: "#8f959c", margin: "7px 0 10px" }}
-          />
-          {/* Columns are centred on `switchX(i)` converted back into legend
-              pixels, so each label sits directly behind its own switch however
-              the row is spaced. */}
-          <div className="relative flex-1">
-            {SWITCHES.map((s, i) => (
-              <div
-                key={s.key}
-                className="absolute flex flex-col items-center"
-                style={{
-                  width: "150px",
-                  left: `${LEGEND_PX_W / 2 + (switchX(i) / LEGEND_W) * LEGEND_PX_W - 75}px`,
-                  top: 0,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "18px",
-                    letterSpacing: "0.06em",
-                    textAlign: "center",
-                    lineHeight: 1.15,
-                    color: "#1b2027",
-                  }}
-                >
-                  {s.label.toUpperCase()}
-                </span>
-                <span
-                  style={{
-                    marginTop: "6px",
-                    fontSize: "16px",
-                    fontWeight: 700,
-                    letterSpacing: "0.1em",
-                    padding: "2px 9px",
-                    borderRadius: "9px",
-                    color: flags[s.key] ? "#07331f" : "#4a5058",
-                    background: flags[s.key] ? "#4dcb60" : "#c3c7cc",
-                  }}
-                >
-                  {flags[s.key] ? "ON" : "OFF"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Html>
-
-      {SWITCHES.map((s, i) => (
-        <Switch
-          key={s.key}
-          x={switchX(i)}
-          on={flags[s.key]}
-          label={`${s.label} — ${flags[s.key] ? "on" : "off"}`}
-          onToggle={() => toggle(s.key)}
-        />
-      ))}
-
-      {/* print button */}
-      <Interactive
-        label={printing ? "printing…" : "print CV"}
-        verb="press"
-        onActivate={print}
-        disabled={printing}
-      >
-        {(hovered) => (
-          <group position={[0.16, 0.121, 0.09]}>
-            <mesh position={[0, -0.004, 0]}>
-              <cylinderGeometry args={[0.019, 0.019, 0.006, 20]} />
-              <meshStandardMaterial color="#1b1d21" roughness={0.7} />
-            </mesh>
-            <mesh castShadow position={[0, printing ? -0.001 : 0.002, 0]}>
-              <cylinderGeometry args={[0.015, 0.015, 0.008, 20]} />
-              <meshStandardMaterial
-                color={printing ? "#34793e" : "#4dcb60"}
-                roughness={0.35}
-                emissive={printing ? "#1d5e3c" : hovered ? "#2aa876" : "#155c3f"}
-                emissiveIntensity={hovered || printing ? 1.4 : 0.55}
-              />
-            </mesh>
-          </group>
-        )}
-      </Interactive>
-
       {/* status lamp */}
       <mesh position={[-0.17, 0.124, 0.12]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[0.008, 0.008]} />
         <meshBasicMaterial color={ready ? (printing ? "#f5b544" : "#5ec96e") : "#8a3f3f"} />
       </mesh>
+    </group>
+  );
+}
+
+/** The lid screen: a dark plate tilted off the lid's back edge, carrying the
+ *  controls as real DOM, live to the pointer only while zoomed in. */
+function Screen({
+  flags,
+  ready,
+  printing,
+  active,
+  onToggle,
+  onPrint,
+}: {
+  flags: ToggleFlags;
+  ready: boolean;
+  printing: boolean;
+  active: boolean;
+  onToggle: (key: keyof ToggleFlags) => void;
+  onPrint: () => void;
+}) {
+  // Bottom edge on the lid top (0.123), centre lifted and set back from it.
+  const lift = (SCREEN_H / 2) * Math.cos(SCREEN_TILT);
+  const back = (SCREEN_H / 2) * Math.sin(-SCREEN_TILT);
+  const status = !ready ? "offline" : printing ? "printing" : "ready";
+  return (
+    <group position={[0, 0.123 + lift + 0.004, -0.08 - back]} rotation={[SCREEN_TILT, 0, 0]}>
+      <RoundedBox args={[SCREEN_W + 0.016, SCREEN_H + 0.016, 0.012]} radius={0.004} smoothness={3} castShadow>
+        <meshStandardMaterial color="#1b1d21" roughness={0.5} metalness={0.3} />
+      </RoundedBox>
+      <primitive object={PRINTER_SCREEN} position={[0, 0, 0.0065]} />
+      {/* Clears the plate's face: an Html layer flush with its backing tears. */}
+      <Html
+        transform
+        occlude="blending"
+        distanceFactor={(SCREEN_W / SCREEN_PX_W) * 400}
+        position={[0, 0, 0.0075]}
+        zIndexRange={[10, 0]}
+        style={{
+          width: `${SCREEN_PX_W}px`,
+          height: `${SCREEN_PX_H}px`,
+          pointerEvents: active ? "auto" : "none",
+          userSelect: "none",
+        }}
+      >
+        <div
+          className="flex h-full w-full flex-col font-mono"
+          style={{ background: "#0e1215", color: "#e6e1d6", padding: "14px 18px" }}
+        >
+          <div className="flex items-baseline justify-between">
+            <span style={{ fontSize: "22px", letterSpacing: "0.22em", fontWeight: 700 }}>CV BUILDER</span>
+            <span style={{ fontSize: "14px", letterSpacing: "0.14em" }}>
+              {active && <span style={{ color: "#7d858c", marginRight: "16px" }}>E TO STEP BACK</span>}
+              <span style={{ color: ready ? "#8fc79a" : "#c98a7a" }}>{status.toUpperCase()}</span>
+            </span>
+          </div>
+          <div className="mt-3 grid flex-1 grid-cols-2 gap-2">
+            {SWITCHES.map((s, i) => {
+              const on = flags[s.key];
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  role="switch"
+                  aria-checked={on}
+                  onClick={() => onToggle(s.key)}
+                  className="flex items-center justify-between rounded-[3px] px-3 text-left outline-none"
+                  style={{
+                    border: `1px solid ${on ? "#5e9a68" : "#3a4046"}`,
+                    background: on ? "rgba(94,154,104,0.16)" : "transparent",
+                  }}
+                >
+                  <span style={{ fontSize: "17px" }}>
+                    <span style={{ color: "#7d858c", marginRight: "10px" }}>{i + 1}</span>
+                    {s.label}
+                  </span>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: on ? "#8fc79a" : "#7d858c" }}>
+                    {on ? "ON" : "OFF"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={onPrint}
+            disabled={printing || !ready}
+            className="mt-2 rounded-[3px] py-2 outline-none"
+            style={{
+              fontSize: "17px",
+              letterSpacing: "0.16em",
+              background: printing || !ready ? "#2a2f34" : "#4f8a5a",
+              color: "#0e1215",
+              fontWeight: 700,
+            }}
+          >
+            {printing ? "PRINTING…" : "PRINT  ·  ENTER"}
+          </button>
+        </div>
+      </Html>
     </group>
   );
 }

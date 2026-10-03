@@ -248,3 +248,27 @@ export function FirstPerson({
 
   return null;
 }
+
+const look = new THREE.Euler(0, 0, 0, "YXZ");
+
+/**
+ * Mouse look without the pointer lock, for the stretch after Esc closes a card,
+ * the shell or the camera feed: the browser refuses a lock on Esc, so the view
+ * keeps turning with the visible cursor until the next click locks again.
+ * Same rate and pitch limit as drei's PointerLockControls at its defaults.
+ */
+export function FreeLook({ active }: { active: boolean }) {
+  const { camera } = useThree();
+  useEffect(() => {
+    if (!active) return;
+    const onMove = (e: MouseEvent) => {
+      look.setFromQuaternion(camera.quaternion);
+      look.y -= e.movementX * 0.002;
+      look.x = THREE.MathUtils.clamp(look.x - e.movementY * 0.002, -Math.PI / 2, Math.PI / 2);
+      camera.quaternion.setFromEuler(look);
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [active, camera]);
+  return null;
+}

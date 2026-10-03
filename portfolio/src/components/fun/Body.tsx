@@ -43,11 +43,15 @@ export function Body({
   hidden,
   sitting,
   holding,
+  whole = false,
 }: {
   hidden: boolean;
   sitting: boolean;
   /** The TV remote, in the right hand, for the mirrors to see. */
   holding: boolean;
+  /** Keeps the head on for the main view too, while something other than the
+   *  visitor's eye is drawing the frame. */
+  whole?: boolean;
 }) {
   const { scene, animations } = useGLTF(URL);
   const palm = useMemo(() => scene.getObjectByName("PalmR") ?? null, [scene]);
@@ -84,7 +88,7 @@ export function Body({
     n.updateMatrixWorld(true);
   };
   useFrame(() => neckScale(1), -1);
-  useFrame(() => neckScale(0.001), 0.5);
+  useFrame(() => neckScale(whole ? 1 : 0.001), 0.5);
 
   useEffect(() => {
     neck.current = scene.getObjectByName("Neck") ?? null;

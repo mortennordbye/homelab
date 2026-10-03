@@ -29,6 +29,7 @@ import {
   KeyRound,
   Layers3,
   Link,
+  MapPin,
   Mail,
   Monitor,
   Music,
@@ -114,6 +115,7 @@ const ROWS: [RegExp, LucideIcon][] = [
   [/phone/i, Phone],
   [/site|source|link|url/i, Link],
   [/stack|layer/i, Layers3],
+  [/location/i, MapPin],
 ];
 
 /** Every row gets one; an unmatched key falls back to a small dot. */

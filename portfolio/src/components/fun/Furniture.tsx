@@ -10,6 +10,8 @@ import { Door, Drawer, OpenBox, useEase } from "./openable";
 import { Interactive, Occluder } from "./interaction";
 import { LiveMirror } from "./Mirror";
 import { MERGE_STATIC, NO_MERGE } from "./StaticMerge";
+import { DancingCat } from "./Cat";
+import { MicroTown } from "./MicroTown";
 import {
   COLUMN_STOCK,
   FRIDGE_DOOR,
@@ -1777,6 +1779,7 @@ export function Microwave({
   /* Split at the fascia: the control section stays solid and the oven section
      is a box you can see into, which is also how the appliance is built. */
   const CAV = 0.31;
+  const [open, setOpen] = useState(false);
 
   return (
     <group position={position} rotation={rotation}>
@@ -1798,12 +1801,10 @@ export function Microwave({
           material={<meshStandardMaterial color="#7c7668" roughness={0.5} metalness={0.06} />}
         />
       </group>
-      <mesh position={[-W / 2 + CAV / 2, 0.012, 0]}>
-        <cylinderGeometry args={[0.12, 0.12, 0.008, 20]} />
-        <meshStandardMaterial color="#25262a" roughness={0.2} metalness={0.3} />
-      </mesh>
+      {/* The turntable carries a town, turning while the door is open. */}
+      <MicroTown position={[-W / 2 + CAV / 2, 0.012, 0]} running={open} />
 
-      <Door label="the microwave" pivot={[-W / 2, H / 2, D / 2]} angle={-1.9}>
+      <Door label="the microwave" pivot={[-W / 2, H / 2, D / 2]} angle={-1.9} onToggle={setOpen}>
         <mesh position={[-W / 2 + CAV / 2, H / 2, D / 2 + 0.008]} castShadow>
           <boxGeometry args={[CAV, H - 0.01, 0.016]} />
           <meshStandardMaterial color="#7c7668" roughness={0.5} metalness={0.06} />
@@ -1818,6 +1819,16 @@ export function Microwave({
           <meshStandardMaterial color="#5f5a4f" roughness={0.45} metalness={0.2} />
         </mesh>
       </Door>
+
+      {/* the feet it stands on, filling the gap down to the worktop */}
+      {[-1, 1].flatMap((sx) =>
+        [-1, 1].map((sz) => (
+          <mesh key={`${sx}${sz}`} position={[sx * (W / 2 - 0.03), -0.002, sz * (D / 2 - 0.03)]}>
+            <cylinderGeometry args={[0.008, 0.008, 0.004, 10]} />
+            <meshStandardMaterial color="#1d1e20" roughness={0.8} />
+          </mesh>
+        )),
+      )}
 
       {/* the control strip: a display over a pad of buttons */}
       <mesh position={[W / 2 - (W - CAV) / 2, H - 0.05, D / 2 + 0.001]}>
@@ -3003,6 +3014,7 @@ export function WashingMachine({
     outline.holes.push(new THREE.Path().absarc(0, 0.02, 0.19, 0, Math.PI * 2, true));
     return new THREE.ShapeGeometry(outline);
   }, []);
+  const [open, setOpen] = useState(false);
 
   return (
     <group position={position} rotation={rotation}>
@@ -3032,7 +3044,10 @@ export function WashingMachine({
           whose corner post stands 0.3m off the machine's other side, and
           stopped before the hall's built-in, which comes through the wall
           behind it — past 90 degrees the leaf reaches both. */}
-      <Door label="the washing machine" pivot={[-0.21, 0.44, 0.3]} angle={-1.5}>
+      {/* Only seen with the door open, and only then dancing. Just above the
+          drum's floor (0.44 - 0.185), so his feet clear its curve. */}
+      <DancingCat position={[0, 0.27, 0.13]} dancing={open} />
+      <Door label="the washing machine" pivot={[-0.21, 0.44, 0.3]} angle={-1.5} onToggle={setOpen}>
         <mesh position={[0, 0.44, 0.312]} rotation={[Math.PI / 2, 0, 0]} castShadow>
           <cylinderGeometry args={[0.21, 0.21, 0.02, 28]} />
           <meshStandardMaterial color="#b4b6b3" roughness={0.4} metalness={0.2} />

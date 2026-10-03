@@ -224,3 +224,16 @@ CC0 1.0, checked on both the Poly Pizza page and quaternius.com rather than
 assumed. Cut down to the Idle, Walk, Run, Sitting and Jump clips with gltf-transform
 (`prune`, `dedup`, `resample`); the materials are untextured and recoloured in
 `Body.tsx`.
+
+## 13. Maxwell, in the washing machine
+
+`portfolio/public/models/fun/maxwell/maxwell.glb` is "Maxwell The cat with bones animation" by
+Zhuier (sketchfab.com/Zhuier), from Sketchfab
+(`sketchfab.com/3d-models/maxwell-the-cat-with-bones-animation-4175776146ba4550a8dd643363b7b0aa`).
+Licence CC BY 4.0, read from the `license.txt` shipped in the download: commercial use allowed,
+the author must be credited. The credit is in the room's corner beside the Poly Haven line, and
+has to stay there for as long as he does.
+
+Converted with gltf-transform (`copy` to glb, `resize` to 512, `webp` at 85): 150 KB. The one
+clip is a slow head sway; the spin and bob are added in `Cat.tsx`.
+

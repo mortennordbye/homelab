@@ -210,3 +210,54 @@ export function deviceById(id: string | null): Device | undefined {
 export const DEVICE = Object.fromEntries(
   ALL_DEVICES.map((d) => [d.id, d]),
 ) as Record<DeviceId, Device>;
+
+/** What the /fun room needs to name and card a device. `Device` satisfies it. */
+export type HouseDevice = Pick<Device, "model" | "tag" | "facts">;
+
+/**
+ * README devices that live around the flat rather than in the cabinet. The
+ * /fun room places them; the /infrastructure bench models the cabinet only, so
+ * they stay out of ALL_DEVICES, which it renders one chip per entry.
+ */
+export const HOUSE = {
+  flexMini: {
+    model: "UniFi Flex Mini",
+    tag: "Managed switch",
+    facts: [["type", "Managed switch"], ["monitored", "No"]],
+  },
+  bleProxy: {
+    model: "M5Stack Atom Lite",
+    tag: "Bluetooth proxy",
+    facts: [["type", "Bluetooth proxy"], ["purpose", "Bluetooth range extension"]],
+  },
+  camera: {
+    model: "UniFi G6 Instant",
+    tag: "Security camera",
+    facts: [["type", "Security camera"], ["purpose", "Indoor surveillance"]],
+  },
+  voice: {
+    model: "Home Assistant Voice Preview Edition",
+    tag: "Voice satellite",
+    facts: [["type", "Voice satellite"], ["purpose", "Voice control (ESPHome, Wi-Fi)"]],
+  },
+  climate: {
+    model: "Aqara T1 Temperature and Humidity Sensor",
+    tag: "Zigbee climate sensor",
+    facts: [["type", "Zigbee climate sensor"], ["purpose", "Indoor temperature and humidity (ZHA)"]],
+  },
+  vibration: {
+    model: "Aqara Vibration Sensor T1",
+    tag: "Zigbee vibration sensor",
+    facts: [["type", "Zigbee vibration sensor"], ["purpose", "Vibration and tilt detection (ZHA)"]],
+  },
+  contact: {
+    model: "Aqara T1 Door and Window Sensor",
+    tag: "Zigbee contact sensor",
+    facts: [["type", "Zigbee contact sensor"], ["purpose", "Door and window open/closed (ZHA)"]],
+  },
+  leak: {
+    model: "Aqara T1 Water Leak Sensor",
+    tag: "Zigbee leak sensor",
+    facts: [["type", "Zigbee leak sensor"], ["purpose", "Water leak detection (ZHA)"]],
+  },
+} satisfies Record<string, HouseDevice>;

@@ -8,7 +8,7 @@ import { WallCertificates } from "./WallCertificates";
 import { Abacus } from "./Abacus";
 import { ALCOVE, BENCH_TOP, CABINET, CABINET_AT, Hallway } from "./Hallway";
 import { Outside } from "./Outside";
-import { SIDEBOARD_H, SIDEBOARD_TV, Sideboard, type Inspected } from "./Devices";
+import { HouseDevices, SIDEBOARD_H, SIDEBOARD_TV, Sideboard, type Inspected } from "./Devices";
 import type { InfoCard } from "./Hud";
 import {
   ContactCard,
@@ -575,7 +575,7 @@ export const TV_SCREEN: Placement = {
   width: TV_GLASS.w,
 };
 
-/** The landscape monitor. Shows real source from this repo — see CodeScreen.
+/** The landscape monitor: the desk computer's desktop. See Desktop.tsx.
  */
 
 export const DESK_SCREEN: Placement = {
@@ -648,7 +648,10 @@ function Stand({ position }: { position: [number, number, number] }) {
       <RoundedBox position={[0, 0.008, 0]} args={[0.2, 0.016, 0.14]} radius={0.005} smoothness={3} castShadow>
         <meshStandardMaterial color="#4a4d52" roughness={0.5} metalness={0.5} />
       </RoundedBox>
-      <RoundedBox position={[0, 0.11, 0]} args={[0.035, 0.2, 0.03]} radius={0.008} smoothness={3} castShadow>
+      {/* Behind the panel, not under its middle: the neck rises past the
+          screen's bottom edge, and at the panel's own depth it pokes through
+          the picture. Local -z is away from the chair. */}
+      <RoundedBox position={[0, 0.11, -0.05]} args={[0.035, 0.2, 0.03]} radius={0.008} smoothness={3} castShadow>
         <meshStandardMaterial color="#4a4d52" roughness={0.5} metalness={0.5} />
       </RoundedBox>
     </group>
@@ -955,6 +958,10 @@ export function Room({
   onOpenCert,
   onOpenCard,
   onExitRoom,
+  onWatchCamera,
+  onOpenPrinter,
+  printerOpen,
+  onClosePrinter,
   lights,
   onToggleLight,
   seated,
@@ -969,6 +976,10 @@ export function Room({
   onOpenCert: (c: ShelfCert) => void;
   onOpenCard: (c: InfoCard) => void;
   onExitRoom: () => void;
+  onWatchCamera: () => void;
+  onOpenPrinter: () => void;
+  printerOpen: boolean;
+  onClosePrinter: () => void;
   lights: Lights;
   onToggleLight: (k: LightKey) => void;
   seated: SeatId | null;
@@ -1112,11 +1123,12 @@ export function Room({
           it is the homelab cabinet, because in this flat they are one piece of
           furniture. Every device in it is named from the README tables. */}
       <group position={TV_BENCH_AT} rotation={[0, Math.PI / 2, 0]}>
-        <Sideboard position={[0, 0, 0]} onInspect={onInspect} onOpenCard={onOpenCard} />
+        <Sideboard position={[0, 0, 0]} onInspect={onInspect} onOpenCard={onOpenCard} onWatch={onWatchCamera} />
         {/* On the cabinet's front edge, in front of the set, pointing down at
             the hardware in the shelves. Out at the end it read as the speaker's. */}
         <Marker position={[0.2, SIDEBOARD_H + 0.1, 0.17]} />
       </group>
+      <HouseDevices onInspect={onInspect} />
 
       {/* Curtains on the glazed wall, ceiling track to floor, drawing to the
           sides. One pair across both living-room windows rather than a pair
@@ -1431,8 +1443,10 @@ export function Room({
       </KitchenRun>
       <WallUnits position={at(3.745, 0, 3.41)} rotation={[0, -Math.PI / 2, 0]} length={2.42} doors={4} oak={oak} />
       <Extractor position={at(3.72, 1.4, 3.7125)} rotation={[0, -Math.PI / 2, 0]} />
-      {/* Square to the wall with its back 20mm off the wall face at 3.90. */}
-      <Microwave position={at(3.71, 0.9, 4.3175)} rotation={[0, -Math.PI / 2, 0]} />
+      {/* Square to the wall with its back 20mm off the wall face at 3.90. On
+          its feet, 4mm above the worktop (0.9): at 0.9 its cavity floor and
+          the worktop are one plane, and the two z-fight in stripes. */}
+      <Microwave position={at(3.71, 0.904, 4.3175)} rotation={[0, -Math.PI / 2, 0]} />
 
       {/* The return, butted into the south end of the run so the worktop turns
           the corner in one line. It is a peninsula standing out into the room,
@@ -1534,7 +1548,7 @@ export function Room({
         />
         {/* Over the open half, clear of the lamp's shade, which reaches x 0.01
             from the other side. */}
-        <Printer position={[0.225, CABINET.top, CABINET.d / 2 - 0.02]} onStatus={onCaption} />
+        <Printer position={[0.225, CABINET.top, CABINET.d / 2 - 0.02]} onStatus={onCaption} active={printerOpen} onOpen={onOpenPrinter} onDone={onClosePrinter} />
         <Marker position={[0.225, CABINET.top + 0.35, CABINET.d / 2]} />
         <Marker position={[0.23, CABINET.bays[1] + 0.3, CABINET.d + 0.12]} />
       </group>
