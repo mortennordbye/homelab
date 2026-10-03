@@ -6,7 +6,7 @@ Three public zones and one Worker, each its own Terraform stack under
 
 | Stack | Manages |
 | --- | --- |
-| `nordbye-it` | origin record, portfolio, blog and app hostnames, mail and verification records, HTML cache rule, Web Analytics |
+| `nordbye-it` | origin record, portfolio, blog and app hostnames, mail and verification records, HTML cache rule, Tiered Cache, Web Analytics |
 | `logeverylift-com` | apex and www, www redirect, SPF and DMARC, Email Routing catch-all |
 | `bigd-no` | origin record and zone settings only; app hostnames belong to external-dns |
 | `watchdog` | the outside-in monitoring Worker on `watchdog.bigd.no` |
@@ -70,6 +70,13 @@ headers, and a superseded build's 404s must not be pinned). 4xx and 5xx are
 never cached. `gate` and `headroom` are proxied but left out of the rule, since
 their HTML is authenticated or stateful. The zone browser TTL must stay equal to
 the edge TTL; both apply only to HTML.
+
+Tiered Cache is on with the Smart topology (`tiered-cache.tf`). Cloudflare
+caches per POP, and at this traffic most POPs have not seen a page since the
+last purge, so without it a miss went straight to the residential origin. With
+it, a missing POP asks an upper-tier POP near the origin first. Both settings
+are free on every plan; Regional Tiered Cache (Enterprise) and Argo Smart
+Routing are paid and stay off.
 
 Portfolio and blog prod promotions purge the zone at the end (see
 [`../delivery/kargo.md`](../delivery/kargo.md)), so a deploy is live at the edge
