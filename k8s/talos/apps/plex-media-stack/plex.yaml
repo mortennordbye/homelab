@@ -113,7 +113,7 @@ spec:
                       - intel-quicksync
       containers:
         - name: plex
-          image: ghcr.io/linuxserver/plex:1.43.2
+          image: ghcr.io/linuxserver/plex:1.43.4
           env:
             - name: PUID
               value: "1000"
