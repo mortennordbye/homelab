@@ -129,6 +129,17 @@
       "addLabels": ["docker"]
     },
     {
+      "description": "K8s Docker - all other apps, grouped. Must precede the arr-stack and plex-media-stack rules below: packageRules apply in order with later rules overriding earlier ones on conflicting fields, and this matchFileNames glob overlaps theirs.",
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["k8s/talos/apps/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "K8s Apps",
+      "groupSlug": "k8s-apps",
+      "automerge": true,
+      "minimumReleaseAge": "14 days",
+      "addLabels": ["k8s-apps"]
+    },
+    {
       "description": "K8s Docker - arr-stack segment",
       "matchDatasources": ["docker"],
       "matchFileNames": ["k8s/talos/apps/arr-stack/**"],
@@ -149,17 +160,6 @@
       "automerge": true,
       "minimumReleaseAge": "14 days",
       "addLabels": ["plex"]
-    },
-    {
-      "description": "K8s Docker - all other apps, grouped",
-      "matchDatasources": ["docker"],
-      "matchFileNames": ["k8s/talos/apps/**"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "K8s Apps",
-      "groupSlug": "k8s-apps",
-      "automerge": true,
-      "minimumReleaseAge": "14 days",
-      "addLabels": ["k8s-apps"]
     },
     {
       "description": "K8s Docker - infra images",
