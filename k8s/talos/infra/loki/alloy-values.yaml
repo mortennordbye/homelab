@@ -1,4 +1,6 @@
 alloy:
+  # Usage stats go to stats.grafana.org, which the egress policy blocks.
+  enableReporting: false
   configMap:
     create: true
     content: |
