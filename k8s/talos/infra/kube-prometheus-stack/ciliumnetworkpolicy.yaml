@@ -161,6 +161,17 @@ spec:
             "k8s:app.kubernetes.io/name": loki
       toPorts:
         - ports: [{ port: "3100", protocol: TCP }]
+    # Authentik OIDC token exchange goes through the gateway VIP.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/name": traefik
+      toPorts:
+        - ports:
+            - port: "8443"
+              protocol: TCP
+            - port: "8444"
+              protocol: TCP
     # Dashboard and datasource sidecars watch ConfigMaps.
     - toEntities:
         - kube-apiserver
