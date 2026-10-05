@@ -391,3 +391,25 @@ spec:
             description: |
               Prometheus has not reached the Proxmox API for 30 minutes, so the Proxmox alerts are blind.
               Check: kubectl -n monitoring logs deploy/pve-exporter
+
+        # coretemp reports the package and each core; the i5-11400T throttles at 100 °C.
+        - alert: ProxmoxHostHot
+          expr: max by (instance) (node_hwmon_temp_celsius{job="proxmox-node-exporter", chip=~"platform_coretemp.*"}) > 90
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Proxmox {{ $labels.instance }} CPU at {{ $value | printf "%.0f" }} °C'
+            description: |
+              {{ $labels.instance }} has run above 90 °C for 10 minutes. Check for a blocked fan or dust, and what is loading the host.
+
+        - alert: ProxmoxSensorsDown
+          expr: max(up{job="proxmox-node-exporter"}) == 0
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Proxmox node-exporter scrape failing'
+            description: |
+              Prometheus has not reached node-exporter on any Proxmox host for 30 minutes, so ProxmoxHostHot is blind.
+              Check: systemctl status prometheus-node-exporter on the hosts, and terraform/proxmox/hyper-cluster/datacenter/sensors.tf.

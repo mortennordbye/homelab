@@ -8,3 +8,4 @@ resources:
   - deployment.yaml
   - service.yaml
   - servicemonitor.yaml
+  - scrapeconfig.yaml

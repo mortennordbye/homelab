@@ -1,3 +1,5 @@
 proxmox_endpoint  = "https://hyper1.local.bigd.no:8006/"
 proxmox_api_token = "terraform-prov@pve!token=<secret>"
 pbs_backup_token  = "<secret of pve@pbs!hyper-cluster>"
+ssh_user          = "root"
+ssh_password      = "<password of ssh_user on hyper1-3>"

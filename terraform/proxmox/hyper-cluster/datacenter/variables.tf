@@ -20,3 +20,14 @@ variable "pbs_backup_token" {
   type        = string
   sensitive   = true
 }
+
+variable "ssh_user" {
+  description = "SSH user on hyper1-3 for the node-exporter install. Must run apt as root."
+  type        = string
+}
+
+variable "ssh_password" {
+  description = "Password of ssh_user on hyper1-3"
+  type        = string
+  sensitive   = true
+}

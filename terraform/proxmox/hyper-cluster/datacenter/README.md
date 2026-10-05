@@ -18,7 +18,8 @@ terraform apply
 
 `terraform.tfvars` (gitignored) holds `proxmox_api_token` and `pbs_backup_token`, both
 created in [`../../BOOTSTRAP.md`](../../BOOTSTRAP.md), which also gives the apply order
-against `../../pbs`.
+against `../../pbs`. It also holds `ssh_user` and `ssh_password` for hyper1-3, which
+`sensors.tf` uses to install node-exporter over SSH.
 
 After an apply that creates the exporter token, copy
 `terraform output -raw prometheus_exporter_token` into Bitwarden as
