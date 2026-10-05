@@ -67,6 +67,9 @@ grafana:
       check_for_updates: false
       check_for_plugin_updates: false
       reporting_enabled: false
+    # Avatars are fetched server-side from gravatar.com, which the egress policy blocks.
+    security:
+      disable_gravatar: true
     auth:
       # Both already default to false. Spelled out because keeping the local
       # admin login working is a hard requirement, and a later edit flipping
