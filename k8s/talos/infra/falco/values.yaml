@@ -44,8 +44,14 @@ customRules:
     # ---- Cluster infrastructure --------------------------------------------
 
     # Cilium CNI plugin execs from /opt/cni/bin on every node — not a workload.
+    # BuildKit RUN steps (verksted's dind builds) have no k8s metadata; the
+    # buildkit/ container id is the only handle. FlareSolverr patches and runs
+    # its own chromedriver at startup.
     - macro: known_drop_and_execute_activities
-      condition: (proc.name=cilium-cni and proc.exepath startswith /opt/cni/bin/)
+      condition: >
+        (proc.name=cilium-cni and proc.exepath startswith /opt/cni/bin/)
+        or (container.id startswith buildkit/)
+        or (container.image.repository=ghcr.io/flaresolverr/flaresolverr and proc.exepath=/app/chromedriver)
       override:
         condition: replace
 
