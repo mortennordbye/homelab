@@ -55,6 +55,11 @@ and `lm-sensors` on each host over SSH (`ssh_user`, `ssh_password` in `terraform
 Prometheus scrapes `:9100` through the `proxmox-node-exporter` ScrapeConfig. The install
 runs once per host; change `triggers_replace` to run it again.
 
+CPU: `cpu.tf` installs `cpu-powersave.service` on each host, which sets the `powersave`
+governor and `balance_power` energy preference at boot. Proxmox defaults to `performance`,
+which holds the T-series CPUs at turbo under light load and keeps the fans loud. Fan curves
+are BIOS-only on these ThinkCentres.
+
 ## Left out on purpose
 
 - `terraform-prov@pve` and its role: a bad apply could remove the access every stack runs
