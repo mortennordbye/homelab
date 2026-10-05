@@ -48,6 +48,15 @@ spec:
     # network is included). Audit mode will narrow this later.
     - toEntities:
         - cluster
+    # node-exporter on the Proxmox hosts, outside the cluster.
+    - toCIDR:
+        - 10.3.10.12/32
+        - 10.3.10.13/32
+        - 10.3.10.14/32
+      toPorts:
+        - ports:
+            - port: "9100"
+              protocol: TCP
 ---
 # Alertmanager: receives alert payloads from Prometheus, forwards to Discord.
 apiVersion: "cilium.io/v2"

@@ -1,0 +1,24 @@
+# node-exporter on the Proxmox hosts themselves, installed by
+# terraform/proxmox/hyper-cluster/datacenter/sensors.tf. Host CPU temperatures.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: proxmox-node-exporter
+  labels:
+    release: kube-prometheus-stack
+spec:
+  jobName: proxmox-node-exporter
+  scrapeInterval: 60s
+  staticConfigs:
+    - targets:
+        - 10.3.10.12:9100
+      labels:
+        instance: hyper1
+    - targets:
+        - 10.3.10.13:9100
+      labels:
+        instance: hyper2
+    - targets:
+        - 10.3.10.14:9100
+      labels:
+        instance: hyper3

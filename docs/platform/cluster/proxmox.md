@@ -50,6 +50,11 @@ token lives in the cluster. `prometheus@pve` with `PVEAuditor` and token `export
 prometheus-pve-exporter (`k8s/talos/infra/pve-exporter`); the token goes to Bitwarden as
 `proxmox-exporter-token`.
 
+Sensors: the API has no temperatures, so `sensors.tf` installs `prometheus-node-exporter`
+and `lm-sensors` on each host over SSH (`ssh_user`, `ssh_password` in `terraform.tfvars`).
+Prometheus scrapes `:9100` through the `proxmox-node-exporter` ScrapeConfig. The install
+runs once per host; change `triggers_replace` to run it again.
+
 ## Left out on purpose
 
 - `terraform-prov@pve` and its role: a bad apply could remove the access every stack runs
