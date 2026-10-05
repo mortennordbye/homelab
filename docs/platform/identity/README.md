@@ -173,6 +173,14 @@ admits ingress from Traefik, from pods labelled `app.kubernetes.io/instance: aut
 in `identity`, and from the `host` and `health` entities, and allows egress to CoreDNS, to those same pods and to the Kubernetes API
 (the worker manages outposts through it). No external identity provider is configured.
 
+## Configured outside Git
+
+Blueprints cannot set tenant settings, so these live in Authentik's database.
+
+| Where | Setting |
+|---|---|
+| System > Settings > Avatars | `initials`. The default `gravatar,initials` fetches from gravatar.com, which the egress policy blocks. |
+
 ## Admin and recovery access
 
 The admin user is `akadmin`, which every blueprint references by username and adds to
