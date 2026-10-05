@@ -59,7 +59,7 @@ spec:
   # directory, so it renders nothing; every non-Kargo app matches nothing at all.
   templatePatch: |
     {{- $base := .path.basename }}
-    {{- range $app := list "portfolio" "blog" "logeverylift" "headroom" "verksted" "reelsmith" }}
+    {{- range $app := list "portfolio" "blog" "logeverylift" "headroom" "verksted" "reelsmith" "innestemme" }}
     {{- if eq $base $app }}
     metadata:
       annotations:

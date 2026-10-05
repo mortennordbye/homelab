@@ -21,11 +21,13 @@ one's smoke test.
 | logeverylift | `ghcr.io/mortennordbye/logeverylift` | prod | `https://logeverylift.com/` |
 | verksted | `ghcr.io/mortennordbye/verksted` | prod | `https://verksted.local.bigd.no/` |
 | reelsmith | `ghcr.io/mortennordbye/reelsmith-gateway` | prod | `https://gate.nordbye.it/healthz` |
+| innestemme | `ghcr.io/mortennordbye/innestemme` | prod | `http://innestemme.innestemme.svc.cluster.local:9090/healthz` |
 
 Every `stage` and `demo` Stage uses `promote-to-argocd`; every `prod` Stage uses
 `promote-via-pr`. The smoke tests are AnalysisTemplates in each `<app>.yaml` that
 run a curl Job; the ones on `*.local.bigd.no` and on `nordbye.it`, `blog.nordbye.it`
-and `logeverylift.com` pass `-k`, the headroom demo and reelsmith ones verify TLS.
+and `logeverylift.com` pass `-k`, the headroom demo and reelsmith ones verify TLS, and innestemme's is plain HTTP
+on its in-cluster Service.
 portfolio and blog prod also purge the Cloudflare cache for `nordbye.it` after
 the sync, using the `cloudflare-api-token` ExternalSecret in their Project.
 

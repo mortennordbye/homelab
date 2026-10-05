@@ -199,12 +199,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## innestemme
 
-### Kargo promotion for innestemme
-- **What:** innestemme's image tag is pinned in `kustomization.yaml` and bumped by hand. Give it a Kargo project straight to prod through a promotion PR, like verksted and reelsmith.
-- **Why deferred:** the first deploy only had to get the Voice PE answering from the cluster; the image publishes on every push to innestemme's `main` and a hand bump is enough while it settles.
-- **Unblock:** add an `innestemme-cd` project (Warehouse on `ghcr.io/mortennordbye/innestemme` with SemVer `0.0.N`, a prod Stage writing `kustomization.yaml` `images:`), following `docs/platform/delivery/kargo.md`.
-- **Where:** `k8s/talos/infra/kargo-projects/`, `k8s/talos/apps/innestemme/kustomization.yaml`.
-
 ### Voice PE requests in a noisy room end late
 - **What:** with background talk or a TV, innestemme's energy-based end-of-speech detection can take 7 to 9 s to decide a request ended, and the satellite's 10 s `LISTEN_TIMEOUT` then drops it. In a quiet room requests end about 1.3 s after the speaker stops. The first short utterance after the wake word (the device's wake sound or the tail of the wake word) is transcribed and ignored, which costs about 0.5 s of transcription.
 - **Why deferred:** needs listener work in innestemme, tuned on recordings of real runs rather than guessed.
