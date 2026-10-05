@@ -146,6 +146,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Cluster / infra
 
+### Cap CPU turbo on the Proxmox hosts if the fans stay loud
+- **What:** `cpu.tf` sets the `powersave` governor with `balance_power`, which lowered average CPU temperature 5-12 °C, but cores still burst to full turbo (3.8-4.0 GHz) when work queues and the fans follow. Capping turbo, for example `intel_pstate/max_perf_pct` at 60 on hyper1 and hyper3, would keep them near 50-55 °C without the spikes.
+- **Why deferred:** the user chose to live with the current noise first. A cap slows heavy jobs (tdarr, Plex CPU transcodes) up to about 40% at peak, and hyper2 has only 6 threads and was 79% busy after the governor change, so capping it risks saturating its control plane and worker.
+- **Unblock:** the fans are still a nuisance after a few days, or the BIOS fan mode change turns out not to help. Check the burst pattern on the Host CPU temperature panel first.
+- **Where:** `terraform/proxmox/hyper-cluster/datacenter/cpu.tf` (add the write to the `cpu-powersave.service` unit, scoped per host), `docs/platform/cluster/proxmox.md`.
+
 ### Run a Terraform apply before 2026-12-29 or the talosconfig lapses
 - **What:** The talosconfig client certificate expires **2026-12-29**. The provider reissues it automatically, but only during a `terraform apply` inside its renewal window: `talos_machine_secrets` has a **hardcoded 30 day** window, so it only renews on an apply between 2026-11-29 and 2026-12-29. The kubeconfig certificate is renewed through 2027-08-09; `talos_cluster_kubeconfig` uses a `2160h` `certificate_renewal_duration`, so any apply in the 90 days before that renews it again.
 - **Why deferred:** Nothing to fix. Reissuing by hand does not help: `local_sensitive_file` rewrites both files from Terraform state on the next apply, so a manually generated certificate is discarded. The renewal is genuinely automatic; the only failure mode is nobody running Terraform in the window.
