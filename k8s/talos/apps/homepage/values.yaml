@@ -114,22 +114,18 @@ config:
         - Audiobookshelf:
             icon: audiobookshelf.png
             href: https://audiobookshelf.bigd.no
-            siteMonitor: https://audiobookshelf.bigd.no
             description: Audiobook library
         - IT Tools:
             icon: it-tools.svg
             href: https://it-tools.bigd.no
-            siteMonitor: https://it-tools.bigd.no
             description: Developer tools
         - Omni Tools:
             icon: https://omni-tools.bigd.no/favicon.svg
             href: https://omni-tools.bigd.no
-            siteMonitor: https://omni-tools.bigd.no
             description: Utility tools
         - Open WebUI:
             icon: open-webui.png
             href: https://open-webui.local.bigd.no
-            siteMonitor: https://open-webui.local.bigd.no
             description: Local LLM chat (Ollama)
         - Portfolio (Production):
             icon: https://nordbye.it/favicon/android-chrome-192x192.png
@@ -144,7 +140,6 @@ config:
         - Portfolio (Staging):
             icon: https://nordbye.it/favicon/android-chrome-192x192.png
             href: https://portfolio-stage.local.bigd.no
-            siteMonitor: https://portfolio-stage.local.bigd.no
             description: Staging environment
         - Blog (Production):
             icon: https://blog.nordbye.it/apple-touch-icon.png
@@ -154,7 +149,6 @@ config:
         - Blog (Staging):
             icon: https://blog.nordbye.it/apple-touch-icon.png
             href: https://blog-stage.local.bigd.no
-            siteMonitor: https://blog-stage.local.bigd.no
             description: Blog staging environment
         - Workout (LogEveryLift):
             icon: https://logeverylift.com/apple-touch-icon.png
@@ -164,7 +158,6 @@ config:
         - Headroom:
             icon: mdi-head-cog
             href: https://headroom.local.bigd.no
-            siteMonitor: https://headroom.local.bigd.no
             description: Self-hosted Headroom instance
         - Headroom (Demo):
             icon: mdi-head-cog
@@ -176,11 +169,6 @@ config:
             href: https://mealie.bigd.no
             siteMonitor: https://mealie.bigd.no
             description: Recipe manager and meal planner
-        - LogEveryLift (Local):
-            icon: https://logeverylift.com/apple-touch-icon.png
-            href: https://logeverylift.local.bigd.no
-            siteMonitor: https://logeverylift.local.bigd.no
-            description: Workout logger (local build)
         - Verksted:
             icon: mdi-wrench
             href: https://verksted.local.bigd.no
@@ -199,7 +187,6 @@ config:
         - Trek:
             icon: sh-trek-light.svg
             href: https://trek.bigd.no
-            siteMonitor: https://trek.bigd.no
             description: Travel planner
         - BigD:
             icon: mdi-web
@@ -211,7 +198,7 @@ config:
         - Radarr:
             icon: radarr.png
             href: https://radarr.local.bigd.no
-            siteMonitor: https://radarr.local.bigd.no
+            siteMonitor: https://radarr.local.bigd.no/ping
             description: Movie management
             widget:
               type: radarr
@@ -220,7 +207,7 @@ config:
         - Radarr 4K:
             icon: radarr.png
             href: https://radarr-4k.local.bigd.no
-            siteMonitor: https://radarr-4k.local.bigd.no
+            siteMonitor: https://radarr-4k.local.bigd.no/ping
             description: 4K movie management
             widget:
               type: radarr
@@ -229,7 +216,7 @@ config:
         - Sonarr:
             icon: sonarr.png
             href: https://sonarr.local.bigd.no
-            siteMonitor: https://sonarr.local.bigd.no
+            siteMonitor: https://sonarr.local.bigd.no/ping
             description: TV show management
             widget:
               type: sonarr
@@ -238,7 +225,7 @@ config:
         - Prowlarr:
             icon: prowlarr.png
             href: https://prowlarr.local.bigd.no
-            siteMonitor: https://prowlarr.local.bigd.no
+            siteMonitor: https://prowlarr.local.bigd.no/ping
             description: Indexer manager
             widget:
               type: prowlarr
@@ -265,12 +252,10 @@ config:
         - Plex:
             icon: plex.png
             href: http://10.3.10.101:32400/web
-            siteMonitor: http://10.3.10.101:32400/web
             description: Media server (via Traefik TCPRoute)
         - Plex (Direct):
             icon: plex.png
             href: http://10.3.10.103:32400/web
-            siteMonitor: http://10.3.10.103:32400/web
             description: Direct LB IP fallback (bypasses Traefik)
         - qBittorrent:
             icon: qbittorrent.png
@@ -389,7 +374,7 @@ config:
         - Proxmox Backup:
             icon: proxmox.png
             href: https://pbs.local.bigd.no:8007/
-            siteMonitor: https://pbs.local.bigd.no:8007/
+            siteMonitor: https://pbs.local.bigd.no:8007/api2/json/ping
             description: Backup server
             widget:
               type: prometheusmetric
@@ -491,7 +476,7 @@ config:
         - Tautulli:
             icon: tautulli.png
             href: https://tautulli.local.bigd.no
-            siteMonitor: https://tautulli.local.bigd.no
+            siteMonitor: https://tautulli.local.bigd.no/status
             description: Plex monitoring
         - Hubble:
             icon: cilium.png
@@ -579,7 +564,8 @@ config:
           columns: 4
           icon: mdi-multimedia
       - Infrastructure:
-          style: list
+          style: row
+          columns: 4
           icon: mdi-server
       - Network:
           style: list
