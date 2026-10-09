@@ -86,10 +86,15 @@ config:
         - Traefik:
             icon: traefik.png
             href: https://traefik.local.bigd.no/dashboard/
+            siteMonitor: https://traefik.local.bigd.no/dashboard/
             description: Ingress controller
+            widget:
+              type: traefik
+              url: https://traefik.local.bigd.no
         - UniFi Network:
             icon: unifi.png
             href: https://10.3.10.1
+            siteMonitor: https://10.3.10.1
             description: Network controller
         - Cloudflare:
             icon: cloudflare.png
@@ -100,6 +105,7 @@ config:
         - Seerr:
             icon: seerr.svg
             href: https://seerr.bigd.no
+            siteMonitor: https://seerr.bigd.no
             description: Media requests
             widget:
               type: overseerr
@@ -108,84 +114,104 @@ config:
         - Audiobookshelf:
             icon: audiobookshelf.png
             href: https://audiobookshelf.bigd.no
+            siteMonitor: https://audiobookshelf.bigd.no
             description: Audiobook library
         - IT Tools:
             icon: it-tools.svg
             href: https://it-tools.bigd.no
+            siteMonitor: https://it-tools.bigd.no
             description: Developer tools
         - Omni Tools:
             icon: https://omni-tools.bigd.no/favicon.svg
             href: https://omni-tools.bigd.no
+            siteMonitor: https://omni-tools.bigd.no
             description: Utility tools
         - Open WebUI:
             icon: open-webui.png
             href: https://open-webui.local.bigd.no
+            siteMonitor: https://open-webui.local.bigd.no
             description: Local LLM chat (Ollama)
         - Portfolio (Production):
             icon: https://nordbye.it/favicon/android-chrome-192x192.png
             href: https://nordbye.it
+            siteMonitor: https://nordbye.it
             description: Main portfolio site
         - Portfolio (WWW):
             icon: https://nordbye.it/favicon/android-chrome-192x192.png
             href: https://www.nordbye.it
+            siteMonitor: https://www.nordbye.it
             description: Portfolio mirror
         - Portfolio (Staging):
             icon: https://nordbye.it/favicon/android-chrome-192x192.png
             href: https://portfolio-stage.local.bigd.no
+            siteMonitor: https://portfolio-stage.local.bigd.no
             description: Staging environment
         - Blog (Production):
             icon: https://blog.nordbye.it/apple-touch-icon.png
             href: https://blog.nordbye.it
+            siteMonitor: https://blog.nordbye.it
             description: Tech blog
         - Blog (Staging):
             icon: https://blog.nordbye.it/apple-touch-icon.png
             href: https://blog-stage.local.bigd.no
+            siteMonitor: https://blog-stage.local.bigd.no
             description: Blog staging environment
         - Workout (LogEveryLift):
             icon: https://logeverylift.com/apple-touch-icon.png
             href: https://logeverylift.com
+            siteMonitor: https://logeverylift.com
             description: Workout logger
         - Headroom:
             icon: mdi-head-cog
             href: https://headroom.local.bigd.no
+            siteMonitor: https://headroom.local.bigd.no
             description: Self-hosted Headroom instance
         - Headroom (Demo):
             icon: mdi-head-cog
             href: https://headroom.nordbye.it
+            siteMonitor: https://headroom.nordbye.it
             description: Public demo with fictional data
         - Mealie:
             icon: mealie.png
             href: https://mealie.bigd.no
+            siteMonitor: https://mealie.bigd.no
             description: Recipe manager and meal planner
         - LogEveryLift (Local):
             icon: https://logeverylift.com/apple-touch-icon.png
             href: https://logeverylift.local.bigd.no
+            siteMonitor: https://logeverylift.local.bigd.no
             description: Workout logger (local build)
         - Verksted:
             icon: mdi-wrench
             href: https://verksted.local.bigd.no
+            siteMonitor: https://verksted.local.bigd.no
             description: Workshop app
         - Reelsmith:
             icon: mdi-movie-open-play
             href: https://reelsmith.local.bigd.no/admin/
+            siteMonitor: https://reelsmith.local.bigd.no/admin/
             description: Reel queue, posting slots and DM funnel
         - Reelsmith Gateway:
             icon: si-instagram
             href: https://gate.nordbye.it/healthz
+            siteMonitor: https://gate.nordbye.it/healthz
             description: Public endpoint Meta fetches Reels from
         - Trek:
             icon: sh-trek-light.svg
             href: https://trek.bigd.no
+            siteMonitor: https://trek.bigd.no
             description: Travel planner
         - BigD:
             icon: mdi-web
             href: https://bigd.no
+            siteMonitor: https://bigd.no
             description: bigd.no landing page
 
     - Media Management:
         - Radarr:
             icon: radarr.png
             href: https://radarr.local.bigd.no
+            siteMonitor: https://radarr.local.bigd.no
             description: Movie management
             widget:
               type: radarr
@@ -194,6 +220,7 @@ config:
         - Radarr 4K:
             icon: radarr.png
             href: https://radarr-4k.local.bigd.no
+            siteMonitor: https://radarr-4k.local.bigd.no
             description: 4K movie management
             widget:
               type: radarr
@@ -202,6 +229,7 @@ config:
         - Sonarr:
             icon: sonarr.png
             href: https://sonarr.local.bigd.no
+            siteMonitor: https://sonarr.local.bigd.no
             description: TV show management
             widget:
               type: sonarr
@@ -210,6 +238,7 @@ config:
         - Prowlarr:
             icon: prowlarr.png
             href: https://prowlarr.local.bigd.no
+            siteMonitor: https://prowlarr.local.bigd.no
             description: Indexer manager
             widget:
               type: prowlarr
@@ -218,6 +247,7 @@ config:
         - Bazarr:
             icon: bazarr.png
             href: https://bazarr.local.bigd.no
+            siteMonitor: https://bazarr.local.bigd.no
             description: Subtitle management
             widget:
               type: bazarr
@@ -226,6 +256,7 @@ config:
         - Bazarr 4K:
             icon: bazarr.png
             href: https://bazarr-4k.local.bigd.no
+            siteMonitor: https://bazarr-4k.local.bigd.no
             description: Subtitles for Radarr 4K
             widget:
               type: bazarr
@@ -234,14 +265,17 @@ config:
         - Plex:
             icon: plex.png
             href: http://10.3.10.101:32400/web
+            siteMonitor: http://10.3.10.101:32400/web
             description: Media server (via Traefik TCPRoute)
         - Plex (Direct):
             icon: plex.png
             href: http://10.3.10.103:32400/web
+            siteMonitor: http://10.3.10.103:32400/web
             description: Direct LB IP fallback (bypasses Traefik)
         - qBittorrent:
             icon: qbittorrent.png
             href: https://qbittorrent.local.bigd.no
+            siteMonitor: https://qbittorrent.local.bigd.no
             description: Torrent client
             widget:
               type: qbittorrent
@@ -251,14 +285,17 @@ config:
         - FlareSolverr:
             icon: flaresolverr.png
             href: https://flaresolverr.local.bigd.no
+            siteMonitor: https://flaresolverr.local.bigd.no
             description: Cloudflare bypass
         - Cleanuparr:
             icon: mdi-broom
             href: https://cleanuparr.local.bigd.no
+            siteMonitor: https://cleanuparr.local.bigd.no
             description: Download queue cleanup
         - Tdarr:
             icon: tdarr.png
             href: https://tdarr.local.bigd.no
+            siteMonitor: https://tdarr.local.bigd.no
             description: Transcode automation
             widget:
               type: tdarr
@@ -268,42 +305,144 @@ config:
         - Proxmox Hyper1:
             icon: proxmox.png
             href: https://hyper1.local.bigd.no:8006/
+            siteMonitor: https://hyper1.local.bigd.no:8006/
             description: Hypervisor 1
+            widget:
+              type: prometheusmetric
+              url: https://prometheus.local.bigd.no
+              refreshInterval: 30000
+              metrics:
+                - label: CPU
+                  query: pve_cpu_usage_ratio{id="node/hyper1"}
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Memory
+                  query: pve_memory_usage_bytes{id="node/hyper1"} / pve_memory_size_bytes{id="node/hyper1"}
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Uptime
+                  query: pve_uptime_seconds{id="node/hyper1"}
+                  format:
+                    type: duration
         - Proxmox Hyper2:
             icon: proxmox.png
             href: https://hyper2.local.bigd.no:8006/
+            siteMonitor: https://hyper2.local.bigd.no:8006/
             description: Hypervisor 2
+            widget:
+              type: prometheusmetric
+              url: https://prometheus.local.bigd.no
+              refreshInterval: 30000
+              metrics:
+                - label: CPU
+                  query: pve_cpu_usage_ratio{id="node/hyper2"}
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Memory
+                  query: pve_memory_usage_bytes{id="node/hyper2"} / pve_memory_size_bytes{id="node/hyper2"}
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Uptime
+                  query: pve_uptime_seconds{id="node/hyper2"}
+                  format:
+                    type: duration
+        - Proxmox Hyper3:
+            icon: proxmox.png
+            href: https://hyper3.local.bigd.no:8006/
+            siteMonitor: https://hyper3.local.bigd.no:8006/
+            description: Hypervisor 3
+            widget:
+              type: prometheusmetric
+              url: https://prometheus.local.bigd.no
+              refreshInterval: 30000
+              metrics:
+                - label: CPU
+                  query: pve_cpu_usage_ratio{id="node/hyper3"}
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Memory
+                  query: pve_memory_usage_bytes{id="node/hyper3"} / pve_memory_size_bytes{id="node/hyper3"}
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Uptime
+                  query: pve_uptime_seconds{id="node/hyper3"}
+                  format:
+                    type: duration
         - Proxmox Backup:
             icon: proxmox.png
             href: https://pbs.local.bigd.no:8007/
+            siteMonitor: https://pbs.local.bigd.no:8007/
             description: Backup server
+            widget:
+              type: prometheusmetric
+              url: https://prometheus.local.bigd.no
+              refreshInterval: 300000
+              metrics:
+                - label: Guests without backup
+                  query: pve_not_backed_up_total
         - Synology NAS:
             icon: synology-dsm.svg
             href: https://nas.local.bigd.no:5001/
+            siteMonitor: https://nas.local.bigd.no:5001/
             description: Network storage
         - Home Assistant:
             icon: home-assistant.png
             href: https://ha.local.bigd.no
+            siteMonitor: https://ha.local.bigd.no
             description: Home automation (Traefik TLS)
         - Home Assistant (Direct):
             icon: home-assistant.png
             href: http://10.3.10.15:8123
+            siteMonitor: http://10.3.10.15:8123
             description: Direct IP fallback (k8s-independent)
         - ArgoCD:
             icon: argo-cd.svg
             href: https://argocd.local.bigd.no
+            siteMonitor: https://argocd.local.bigd.no
             description: GitOps controller (via Traefik)
+            widget:
+              type: prometheusmetric
+              url: https://prometheus.local.bigd.no
+              refreshInterval: 60000
+              metrics:
+                - label: Apps
+                  query: count(argocd_app_info)
+                - label: Out of sync
+                  query: count(argocd_app_info{sync_status!="Synced"}) or vector(0)
+                - label: Unhealthy
+                  query: count(argocd_app_info{health_status!="Healthy"}) or vector(0)
         - ArgoCD (Direct):
             icon: argo-cd.svg
             href: http://10.3.10.100
+            siteMonitor: http://10.3.10.100
             description: Direct LB IP fallback (bypasses Traefik)
         - Kargo:
             icon: https://raw.githubusercontent.com/akuity/kargo/main/ui/public/kargo-logo.png
             href: https://kargo.local.bigd.no
+            siteMonitor: https://kargo.local.bigd.no
             description: GitOps promotion (portfolio stage to prod)
         - Authentik:
             icon: authentik.png
             href: https://auth.local.bigd.no
+            siteMonitor: https://auth.local.bigd.no
             description: SSO and identity provider
 
     - Torrent Sites:
@@ -328,19 +467,54 @@ config:
         - Prometheus:
             icon: prometheus.png
             href: https://prometheus.local.bigd.no
+            siteMonitor: https://prometheus.local.bigd.no
             description: Metrics database
+            widget:
+              type: prometheus
+              url: https://prometheus.local.bigd.no
         - Grafana:
             icon: grafana.png
             href: https://grafana.local.bigd.no
+            siteMonitor: https://grafana.local.bigd.no
             description: Dashboards
+            widget:
+              type: prometheusmetric
+              url: https://prometheus.local.bigd.no
+              refreshInterval: 60000
+              metrics:
+                - label: Firing alerts
+                  query: count(ALERTS{alertstate="firing", severity=~"warning|critical"}) or vector(0)
+                - label: Next cert expiry
+                  query: min(certmanager_certificate_expiration_timestamp_seconds) - time()
+                  format:
+                    type: duration
         - Tautulli:
             icon: tautulli.png
             href: https://tautulli.local.bigd.no
+            siteMonitor: https://tautulli.local.bigd.no
             description: Plex monitoring
         - Hubble:
             icon: cilium.png
             href: https://hubble.local.bigd.no
+            siteMonitor: https://hubble.local.bigd.no
             description: Cilium network observability
+            widget:
+              type: prometheusmetric
+              url: https://prometheus.local.bigd.no
+              refreshInterval: 60000
+              metrics:
+                - label: Flows/s
+                  query: sum(rate(hubble_flows_processed_total[5m]))
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Policy drops/min
+                  query: sum(rate(hubble_drop_total{reason="POLICY_DENIED"}[5m])) * 60
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 1
 
   widgets:
     - kubernetes:
