@@ -374,7 +374,7 @@ config:
         - Proxmox Backup:
             icon: proxmox.png
             href: https://pbs.local.bigd.no:8007/
-            siteMonitor: https://pbs.local.bigd.no:8007/api2/json/ping
+            ping: pbs.local.bigd.no
             description: Backup server
             widget:
               type: prometheusmetric
