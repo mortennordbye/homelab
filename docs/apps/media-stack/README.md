@@ -226,7 +226,13 @@ Flow `h264ToHevcQsv`, stored in `tdarr-flow-h264-to-hevc-qsv.json` next to this 
 2. Skip files with more than one link (still seeding) and anything with `remux` in
    the path.
 3. Encode video to HEVC with QSV, preset slow, quality 23, audio and subtitles copied.
-4. Replace the original only when the new file is 20 to 85 percent of the old size.
+4. Stop with an error if the new file's duration is not within 0.5 percent of the
+   original's, which catches a truncated or broken encode.
+5. Replace the original only when the new file is under 85 percent of the old size;
+   otherwise switch back to the original and end without an error. There is no lower
+   size bound: QSV quality 23 lands at 6 to 20 percent on clean H.264 WEB-DL and
+   Bluray sources at 42 to 50 dB PSNR, and the duration check is what guards against
+   a broken output.
 
 Restore it with:
 
