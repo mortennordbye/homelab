@@ -27,7 +27,7 @@ spec:
         hardware.nordbye.it/gpu: intel-quicksync
       containers:
         - name: intel-gpu-plugin
-          image: intel/intel-gpu-plugin:0.37.0
+          image: intel/intel-gpu-plugin:0.37.1
           imagePullPolicy: IfNotPresent
           # Plex and Tdarr each claim the iGPU; the default of 1 lets only one schedule.
           args:
