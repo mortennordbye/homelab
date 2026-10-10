@@ -11,11 +11,19 @@ data:
     # The satellite bridge opens its session on this port from inside the pod; nothing else uses it.
     bind: 127.0.0.1:7000
     metrics-bind: 0.0.0.0:9090
+    # A page with everything the assistant understands, on the same port: http://10.3.10.99:9090/
+    web: true
     # Match the CPU limit in deployment.yaml.
     threads: 4
-    wake-name: Homie
+    wake-name: Jarvis
+    # English answers in a butler's words: "As you wish, sir."
+    honorific: sir
     home: Oslo
     norwegian: false
+    # English speech from the Kokoro sidecar in deployment.yaml.
+    english-tts: kokoro
+    kokoro-url: http://127.0.0.1:8880
+    kokoro-voice: am_onyx
     pocket-voice: cosette
     pocket-precision: f32
     whisper-size: base

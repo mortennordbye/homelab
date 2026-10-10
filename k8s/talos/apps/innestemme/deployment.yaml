@@ -31,6 +31,45 @@ spec:
         fsGroup: 65532
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        # Kokoro speech for English answers, on localhost:8880. A native sidecar: the engine starts
+        # once it answers, since the engine checks its voices at start-up.
+        - name: kokoro
+          image: ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.4
+          imagePullPolicy: IfNotPresent
+          restartPolicy: Always
+          env:
+            # The model is in the image.
+            - name: DOWNLOAD_MODEL
+              value: "false"
+          securityContext:
+            # The image's own user owns /app; the pod default (65532) cannot run it.
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8880
+            periodSeconds: 5
+            failureThreshold: 60
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8880
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 4
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1536Mi
+            limits:
+              cpu: "2"
+              memory: 3Gi
       containers:
         - name: innestemme
           # x86-64-v3 build: needs AVX2, which the host-passthrough Talos VMs have.
