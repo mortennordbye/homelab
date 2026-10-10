@@ -92,17 +92,17 @@
       }
     },
     {
-      "name": "New file 20-85% of original",
+      "name": "New file under 85% of original",
       "sourceRepo": "Community",
       "pluginName": "compareFileSizeRatio",
       "version": "1.0.0",
       "id": "ratio",
       "position": {
         "x": 400,
-        "y": 600
+        "y": 700
       },
       "inputsDB": {
-        "greaterThan": "20",
+        "greaterThan": "0",
         "lessThan": "85"
       }
     },
@@ -114,7 +114,36 @@
       "id": "replace",
       "position": {
         "x": 400,
-        "y": 700
+        "y": 800
+      }
+    },
+    {
+      "name": "Same duration as original",
+      "sourceRepo": "Community",
+      "pluginName": "compareFileDurationRatio",
+      "version": "1.0.0",
+      "id": "duration",
+      "position": {
+        "x": 400,
+        "y": 600
+      },
+      "inputsDB": {
+        "greaterThan": "99.5",
+        "lessThan": "100.5"
+      }
+    },
+    {
+      "name": "Keep original",
+      "sourceRepo": "Community",
+      "pluginName": "setWorkingFile",
+      "version": "1.0.0",
+      "id": "keep",
+      "position": {
+        "x": 650,
+        "y": 800
+      },
+      "inputsDB": {
+        "source": "originalFile"
       }
     }
   ],
@@ -157,7 +186,7 @@
     {
       "source": "exec",
       "sourceHandle": "1",
-      "target": "ratio",
+      "target": "duration",
       "targetHandle": null,
       "id": "e6"
     },
@@ -167,6 +196,20 @@
       "target": "replace",
       "targetHandle": null,
       "id": "e7"
+    },
+    {
+      "source": "duration",
+      "sourceHandle": "1",
+      "target": "ratio",
+      "targetHandle": null,
+      "id": "e8"
+    },
+    {
+      "source": "ratio",
+      "sourceHandle": "2",
+      "target": "keep",
+      "targetHandle": null,
+      "id": "e9"
     }
   ]
 }
