@@ -42,6 +42,12 @@ spec:
             # The model is in the image.
             - name: DOWNLOAD_MODEL
               value: "false"
+            # PyTorch starts a thread per node core (8) by default; in a 4-CPU limit they fight, and a
+            # sentence took 18 to 26 s instead of about 3.
+            - name: OMP_NUM_THREADS
+              value: "4"
+            - name: MKL_NUM_THREADS
+              value: "4"
           securityContext:
             # The image's own user owns /app; the pod default (65532) cannot run it.
             runAsUser: 1000
@@ -65,10 +71,10 @@ spec:
             failureThreshold: 4
           resources:
             requests:
-              cpu: 500m
+              cpu: "1"
               memory: 1536Mi
             limits:
-              cpu: "2"
+              cpu: "4"
               memory: 3Gi
       containers:
         - name: innestemme
