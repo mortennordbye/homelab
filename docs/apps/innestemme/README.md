@@ -2,7 +2,8 @@
 
 innestemme is a local voice assistant that replaces Home Assistant's Assist pipeline on the
 living room Voice PE. It connects to the device over the ESPHome native API, listens with
-Whisper, answers with its own skills and Home Assistant, and speaks with Pocket TTS. Its image,
+Whisper, answers with its own skills and Home Assistant as "Jarvis" in a butler's style, and
+speaks with Kokoro (voice `am_onyx`) from a sidecar container. Its image,
 `ghcr.io/mortennordbye/innestemme`, is built in the separate `mortennordbye/innestemme` repo.
 The manifests live in
 [`k8s/talos/apps/innestemme/`](../../../k8s/talos/apps/innestemme/kustomization.yaml).
@@ -10,21 +11,32 @@ The manifests live in
 | | |
 |---|---|
 | Namespace | `innestemme` |
-| VIP | `10.3.10.99:9090`, spoken answers and `/metrics` |
+| VIP | `10.3.10.99:9090`: spoken answers, `/metrics`, and the skills page at `/` |
 | Device | Voice PE "Home Assistant Voice 0a1f4d", `10.3.20.67` on IoT, area Living Room |
-| Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.65 |
+| Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.30 (louder deafens the Voice PE, see Troubleshooting) |
+| Voice | Kokoro-FastAPI sidecar on `localhost:8880`, voice `am_onyx`; rendered speech kept in `/models/speech-cache` |
+| Name and style | `wake-name: Jarvis`, `honorific: sir` ("As you wish, sir.") |
 | Delivery | Kargo project `innestemme-cd`: each build opens a promotion PR; merging it deploys ([kargo.md](../../platform/delivery/kargo.md)) |
 | Backup | none: the volume is a model cache that downloads again |
-| Wake words | Okay Nabu, Hey Jarvis (`satellite-wake-words`) |
+| Wake words | Hey Jarvis only (`satellite-wake-words`); sensitivity "Very sensitive" set in Home Assistant |
+| Firmware | official Voice PE 26.9.0 (a custom build in innestemme's `firmware/` is not ready) |
 
 ## How a request flows
 
 1. The pod dials the Voice PE on `10.3.20.67:6053` (Noise-encrypted) and takes its microphone.
    Trusted to IoT is open, so no firewall rule is needed for this direction.
-2. The device detects "Okay Nabu" on its own and streams the request.
-3. The engine answers from its rules and Home Assistant (`home-assistant` Service). No
-   language model is configured, so a request the rules do not understand gets a short fallback.
-4. Home Assistant announces the answer on the Sonos (`answer-player`), which downloads it from
+2. The device detects "Hey Jarvis" on its own and streams the request.
+3. The engine transcribes with Whisper (full 30 s window) and answers from its rules and Home
+   Assistant (`home-assistant` Service). No language model is configured, so a request the rules
+   do not understand gets "I'm afraid I didn't catch that, sir."
+4. Speech: fixed sentences (the persona's openers and remarks, lead-ins, the built-in jokes,
+   confirmations such as "The kitchen lights are off.") are rendered once by Kokoro and kept on the
+   models volume; only sentences with live data (numbers) are synthesized per request, about 2.5 to
+   3.5 s each on the node CPU. A slow answer (weather, departures, prices, what's on, who's home)
+   opens with a kept lead-in ("Checking the forecast, sir.") that plays at once while that sentence
+   is synthesized. After a start, the 105 fixed sentences render in about 3 minutes in idle time;
+   after a restart they load from the volume.
+5. Home Assistant announces the answer on the Sonos (`answer-player`), which downloads it from
    `http://10.3.10.99:9090/speech/<id>.wav` while it is still being synthesized. Without `answer-player` the Voice PE plays it
    itself; IoT may only reach that one address and port, from the Voice PE's MAC:
    `voice_pe_to_innestemme` in
@@ -55,8 +67,8 @@ in Home Assistant can generate a new key; update the Bitwarden secret when that 
 - The engine sets the device's wake words (`satellite-wake-words`) each time it connects. The wake
   word selects in Home Assistant go through the disabled satellite entity and do nothing; the
   sensitivity select is the device's own and still works.
-- Firmware 26.9.0 offers only on-device wake words, so the engine's own name ("Homie") is not
-  used on the device.
+- Firmware 26.9.0 offers only on-device wake words; the engine's name ("Jarvis") is how it
+  refers to itself and what Whisper is primed with.
 
 ## Operating
 
@@ -64,3 +76,41 @@ in Home Assistant can generate a new key; update the Bitwarden secret when that 
   two take turns connecting.
 - Logs: `kubectl -n innestemme logs deploy/innestemme`. A working start logs
   `satellite connected` and `satellite room from home assistant`.
+- Work on the engine from a Mac against the real device: scale the pod to zero
+  (`kubectl -n innestemme scale deploy/innestemme --replicas=0`; Argo CD ignores replicas), run
+  `make kokoro` and `make satellite` in the innestemme repo, and scale back to one afterwards.
+- The skills page (`http://10.3.10.99:9090/`) lists every skill with its data source, the calls it
+  makes and example phrases, shows how a typed phrase is parsed, and "Hear response" speaks the
+  answer in the browser for requests that change nothing.
+
+## Kokoro sidecar
+
+`ghcr.io/remsky/kokoro-fastapi-cpu`, a native sidecar (an init container with `restartPolicy:
+Always`) so the engine starts only once Kokoro answers `/health`; the engine checks its voices at
+start-up. The model is in the image (`DOWNLOAD_MODEL=false`) and it runs as the image's own user
+1000. `OMP_NUM_THREADS`/`MKL_NUM_THREADS` are 4 to match its 4-CPU limit: by default PyTorch starts
+one thread per node core (8), and in a 2-CPU limit a short answer took 18 to 26 s instead of about 3.
+
+## Troubleshooting
+
+Measured on 2026-10-10, when the assistant "worked once, then stopped":
+
+- **Loud answers deafen the wake word detector.** The Sonos stands next to the Voice PE. The
+  detector adapts to loud sound, and after an answer at volume 65 it missed normal voices for
+  several seconds; after 25 to 35 the next "Hey Jarvis" still woke it. The device's echo
+  cancellation only removes its own speaker. Keep `answer-volume` low, or play answers on the
+  device itself (that needs the Mac or the VIP allowed in `voice_pe_to_innestemme`).
+- **Whisper's short window invented text.** innestemme #11 encoded only the request plus a few
+  seconds; on real recordings it looped ("What are you doing?" ten times). The full window is the
+  default since innestemme #15 and set here with `whisper-full-window: true`.
+- **Saying "Hey Jarvis" again during a run stops it** (official firmware); the engine logs
+  `device ended the run`.
+- **Reading the device's own log:** a small aioesphomeapi script calling `subscribe_logs` with the
+  `noise_psk`; it shows `Detected 'Hey Jarvis' with sliding average probability is X` and the
+  voice assistant's state changes. A detection only logs when it passes the cutoff (0.83 at Very
+  sensitive); a voice from 1.5 m scores about 0.85.
+- **A stuck device** can be restarted with its Restart button entity (disabled by default in Home
+  Assistant) or over the API.
+- **Testing without talking:** play a Piper "Hey Jarvis." clip on the Sonos with
+  `media_player.play_media` (`announce: true`, `extra.volume`) and read the device log. It is
+  audible in the living room.
