@@ -134,7 +134,8 @@ Other apps, one directory each under `k8s/talos/apps/`:
   from zero; its model cache is not backed up.
 - innestemme: the voice assistant for the living room Voice PE, replacing Assist. It dials the
   device on IoT and serves spoken answers on the VIP `10.3.10.99:9090`, which the device may
-  reach through one UniFi firewall policy ([`../apps/innestemme/README.md`](../apps/innestemme/README.md)).
+  reach through one UniFi firewall policy; its skills page is on `jarvis.local.bigd.no`
+  ([`../apps/innestemme/README.md`](../apps/innestemme/README.md)).
 - mealie: recipe manager on `mealie.bigd.no`, SQLite, sign-up off.
 - homepage: the hub on `hub.bigd.no`, behind Authentik forward-auth.
 - bigd: the static `bigd.no` landing page, nginx serving `index.html` from a ConfigMap.
