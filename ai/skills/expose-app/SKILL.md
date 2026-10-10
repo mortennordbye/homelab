@@ -1,6 +1,6 @@
 ---
 name: expose-app
-description: Use whenever an HTTPRoute is created, renamed or removed under k8s/talos/apps/, or an app gets a new hostname on local.bigd.no, bigd.no, nordbye.it or logeverylift.com. Walks every place outside the route that has to follow - local DNS alias, Cloudflare records and middleware, network policy, homepage tile, uptime probes, Authentik, KEDA, docs - so a route never ships half-wired.
+description: Use before creating, renaming or removing an HTTPRoute in k8s/talos/apps/, or whenever an app should become reachable at a hostname - asks like "make an httproute for X", "put X on local", "expose X", "give X a URL", "add X to the public gateway", "move X to bigd.no", or adding a web UI or webserver to an app that had none. Also when an app is deleted. Lists everything outside the route that has to follow - local.bigd.no DNS alias in Terraform, Cloudflare records and middleware, TLS, network policy, homepage tile, uptime probes, Authentik, KEDA, Kargo, docs - so a route never ships half-wired.
 ---
 
 # Expose an app

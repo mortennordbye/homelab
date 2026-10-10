@@ -39,8 +39,6 @@ locals {
     "hubble",
     "jarvis",
     "kargo",
-    "lazylibrarian",
-    "logeverylift",
     "open-webui",
     "portfolio-stage",
     "prometheus",
@@ -54,7 +52,6 @@ locals {
     "tdarr",
     "traefik",
     "verksted",
-    "workout",
   ]
 }
 
