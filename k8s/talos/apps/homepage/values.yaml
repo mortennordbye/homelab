@@ -524,6 +524,12 @@ config:
         memory: true
         disk: /
 
+    - search:
+        provider: duckduckgo
+        focus: true
+        showSearchSuggestions: true
+        target: _self
+
     - datetime:
         text_size: xl
         format:
