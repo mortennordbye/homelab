@@ -25,7 +25,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: pve-exporter
-          image: prompve/prometheus-pve-exporter:3.10.0
+          image: prompve/prometheus-pve-exporter:3.10.1
           args:
             - --config.file=/etc/pve-exporter/pve.yml
           ports:
