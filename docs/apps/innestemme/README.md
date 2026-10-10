@@ -11,7 +11,7 @@ The manifests live in
 | | |
 |---|---|
 | Namespace | `innestemme` |
-| VIP | `10.3.10.99:9090`: spoken answers, `/metrics`, and the skills page at `/` |
+| VIP | `10.3.10.99:9090`: spoken answers, `/metrics`, and the skills page at `/`, which is also at `https://jarvis.local.bigd.no` through the private gateway |
 | Device | Voice PE "Home Assistant Voice 0a1f4d", `10.3.20.67` on IoT, area Living Room |
 | Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.50; "Hey Jarvis" over an answer interrupts it |
 | Voice | Kokoro-FastAPI sidecar on `localhost:8880`, voice `am_onyx`; rendered speech kept in `/models/speech-cache` |
@@ -82,7 +82,7 @@ in Home Assistant can generate a new key; update the Bitwarden secret when that 
 - Work on the engine from a Mac against the real device: scale the pod to zero
   (`kubectl -n innestemme scale deploy/innestemme --replicas=0`; Argo CD ignores replicas), run
   `make kokoro` and `make satellite` in the innestemme repo, and scale back to one afterwards.
-- The skills page (`http://10.3.10.99:9090/`) lists every skill with its data source, the calls it
+- The skills page (`https://jarvis.local.bigd.no`) lists every skill with its data source, the calls it
   makes and example phrases, shows how a typed phrase is parsed, and "Hear response" speaks the
   answer in the browser for requests that change nothing.
 
