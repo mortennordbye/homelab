@@ -13,13 +13,14 @@ The manifests live in
 | Namespace | `innestemme` |
 | VIP | `10.3.10.99:9090`: spoken answers, `/metrics`, and the skills page at `/` |
 | Device | Voice PE "Home Assistant Voice 0a1f4d", `10.3.20.67` on IoT, area Living Room |
-| Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.30 (louder deafens the Voice PE, see Troubleshooting) |
+| Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.50; "Hey Jarvis" over an answer interrupts it |
 | Voice | Kokoro-FastAPI sidecar on `localhost:8880`, voice `am_onyx`; rendered speech kept in `/models/speech-cache` |
 | Name and style | `wake-name: Jarvis`, `honorific: sir` ("As you wish, sir.") |
 | Delivery | Kargo project `innestemme-cd`: each build opens a promotion PR; merging it deploys ([kargo.md](../../platform/delivery/kargo.md)) |
 | Backup | none: the volume is a model cache that downloads again |
-| Wake words | Hey Jarvis only (`satellite-wake-words`); sensitivity "Very sensitive" set in Home Assistant |
-| Firmware | official Voice PE 26.9.0 (a custom build in innestemme's `firmware/` is not ready) |
+| Wake words | Hey Jarvis, detected in the engine (openWakeWord, `wake-model`, `wake-threshold: 0.65`) on the device's continuous stream |
+| Firmware | innestemme's `firmware/` build (26.9.0 plus a patch), "Wake word in innestemme" switch on |
+| Unhandled requests | `/models/unhandled.jsonl` (`unhandled-log`), listed on the web page |
 
 ## How a request flows
 
@@ -67,8 +68,10 @@ in Home Assistant can generate a new key; update the Bitwarden secret when that 
 - The engine sets the device's wake words (`satellite-wake-words`) each time it connects. The wake
   word selects in Home Assistant go through the disabled satellite entity and do nothing; the
   sensitivity select is the device's own and still works.
-- Firmware 26.9.0 offers only on-device wake words; the engine's name ("Jarvis") is how it
-  refers to itself and what Whisper is primed with.
+- The device runs innestemme's firmware: with its "Wake word in innestemme" switch on it streams the
+  microphone continuously and the engine detects the wake word. Turning the switch off in Home
+  Assistant goes back to the device's own wake word without a flash; the engine still works then.
+  Rolling back fully: flash the official 26.9.0 binary (`esphome upload ... --file`).
 
 ## Operating
 
@@ -95,11 +98,9 @@ one thread per node core (8), and in a 2-CPU limit a short answer took 18 to 26 
 
 Measured on 2026-10-10, when the assistant "worked once, then stopped":
 
-- **Loud answers deafen the wake word detector.** The Sonos stands next to the Voice PE. The
-  detector adapts to loud sound, and after an answer at volume 65 it missed normal voices for
-  several seconds; after 25 to 35 the next "Hey Jarvis" still woke it. The device's echo
-  cancellation only removes its own speaker. Keep `answer-volume` low, or play answers on the
-  device itself (that needs the Mac or the VIP allowed in `voice_pe_to_innestemme`).
+- **Loud answers deafened the device's wake word detector** (official firmware): after an answer at
+  volume 65 it missed normal voices for several seconds. With the wake word detected in the engine
+  this no longer applies; answers are at 0.50.
 - **Whisper's short window invented text.** innestemme #11 encoded only the request plus a few
   seconds; on real recordings it looped ("What are you doing?" ten times). The full window is the
   default since innestemme #15 and set here with `whisper-full-window: true`.

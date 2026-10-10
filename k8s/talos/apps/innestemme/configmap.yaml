@@ -40,10 +40,18 @@ data:
     # The engine sets these on the device: Home Assistant's wake word selects go through the disabled
     # Assist satellite entity and never reach it.
     satellite-wake-words: [Hey Jarvis]
+    # The wake word is detected here (openWakeWord, downloaded to /models on first start) on the
+    # device's continuous stream: the innestemme firmware with "Wake word in innestemme" on. The
+    # device's own Hey Jarvis model scored a real voice at 0.84-0.86 against its 0.83 cutoff; this
+    # one scores it at 0.9-0.99. 0.65 keeps the TV out (it reached 0.67 once).
+    wake-model: hey_jarvis
+    wake-threshold: 0.65
     # The device fetches spoken answers here: the VIP in service.yaml, opened for it in
     # terraform/unifi/network/firewall.tf.
     public-url: http://10.3.10.99:9090
     # The living room Sonos speaks the answers; the Voice PE only listens.
     answer-player: media_player.living_room
-    # Louder answers from the Sonos next to the Voice PE deafen its wake word detector for a while.
-    answer-volume: 0.30
+    # With the wake word detected in the engine, louder answers no longer deafen the device's detector.
+    answer-volume: 0.50
+    # Requests no skill handled, for what to build next; also listed on the web page.
+    unhandled-log: /models/unhandled.jsonl
