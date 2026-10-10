@@ -19,6 +19,8 @@ data:
     pocket-voice: cosette
     pocket-precision: f32
     whisper-size: base
+    # The short window loops or invents words on real requests ("What are you doing?" x10).
+    whisper-full-window: true
     ha-url: http://home-assistant.home-assistant.svc.cluster.local:8123
     speaker: Living Room
     # No llm-url: rules only. Requests they do not understand get the short fallback at once.
@@ -32,4 +34,5 @@ data:
     public-url: http://10.3.10.99:9090
     # The living room Sonos speaks the answers; the Voice PE only listens.
     answer-player: media_player.living_room
-    answer-volume: 0.65
+    # Louder answers from the Sonos next to the Voice PE deafen its wake word detector for a while.
+    answer-volume: 0.30
