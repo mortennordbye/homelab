@@ -37,6 +37,7 @@ locals {
     "ha",
     "headroom",
     "hubble",
+    "jarvis",
     "kargo",
     "lazylibrarian",
     "logeverylift",
