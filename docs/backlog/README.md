@@ -204,3 +204,15 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** needs listener work in innestemme, tuned on recordings of real runs rather than guessed.
 - **Unblock:** record runs in the noisy case (`dump-utterances`; the engine saves each satellite run's audio), then fix end-of-speech detection in `crates/voice-assistant/src/vad.rs` and keep the run open while speech or a transcription is in progress.
 - **Where:** innestemme's `crates/voice-assistant/src/vad.rs`, `crates/voice-engine/src/satellite.rs` and `crates/voice-engine/src/assistant.rs`.
+
+### Custom Voice PE firmware scores lower than the official one
+- **What:** innestemme's `firmware/` (official 26.9.0 plus a patch: repeat-wake guard, a "Hey Jarvis threshold" number, the Restart button shown) scored 0.70 to 0.86 on a test "Hey Jarvis" where the official binary scored 0.88 to 0.96, so the device runs the official firmware.
+- **Why deferred:** the likely cause, `voice_kit` taken from upstream's `dev` branch, needs a pinned build and a measured comparison.
+- **Unblock:** pin `voice_kit` to the release in `firmware/voice-pe.patch`, build, flash, and compare scores with the synthetic Sonos clip before keeping it.
+- **Where:** innestemme `firmware/`, `scripts/firmware.sh`.
+
+### Answers with live data take 2.5 to 5 s to synthesize
+- **What:** Kokoro on the node CPU (i7-8700T, 4 threads) needs about 2.5 to 3.5 s per sentence with numbers; a long departures sentence about 5 s. A kept lead-in plays first, so the answer starts at once, but the data follows only when synthesized. Light and room confirmations are kept on first use, not rendered at start.
+- **Why deferred:** the lead-ins cover most of it; the rest needs engine work or more CPU.
+- **Unblock:** render the confirmations for every Home Assistant light and room at start; split long data answers into shorter sentences; or give Kokoro more CPU.
+- **Where:** innestemme `crates/voice-engine/src/assistant.rs`, `crates/voice-assistant/src/speech_cache.rs`; `k8s/talos/apps/innestemme/deployment.yaml`.
