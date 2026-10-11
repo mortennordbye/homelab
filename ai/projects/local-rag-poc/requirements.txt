@@ -9,7 +9,7 @@
 langchain==1.4.3
 langchain-community==0.4.2
 langchain-text-splitters==1.1.3
-langchain-openai==1.6.7
+langchain-openai==1.7.0
 langchain-chroma==1.1.0
 
 # Vector store + parsers.
