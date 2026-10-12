@@ -15,7 +15,10 @@ locals {
   # Cilium LB-IPAM VIP from k8s/talos/apps/innestemme/service.yaml.
   innestemme = "10.3.10.99"
 
-  lg_tv_mac = "58:96:0a:9e:e9:e2"
+  # Cilium LB-IPAM VIP from k8s/talos/infra/traefik/service-private.yaml.
+  traefik_private = "10.3.10.102"
+
+  lg_tv_mac = local.reservations["lg-tv"].mac
 }
 
 data "unifi_firewall_zone" "internal" {
@@ -118,5 +121,29 @@ resource "unifi_firewall_policy" "voice_pe_to_innestemme" {
     ips                = [local.innestemme]
     port_matching_type = "SPECIFIC"
     port               = "9090"
+  }
+}
+
+# The TV shows the assistant's screen from https://jarvis.local.bigd.no. Cast receivers are HTTPS
+# pages that upgrade plain-http media, so the TV goes through Traefik, not the engine's 9090.
+resource "unifi_firewall_policy" "tv_to_jarvis" {
+  name                 = "LG TV -> jarvis"
+  action               = "ALLOW"
+  protocol             = "tcp"
+  ip_version           = "BOTH"
+  create_allow_respond = true
+
+  source = {
+    zone_id         = data.unifi_firewall_zone.iot.id
+    matching_target = "CLIENT"
+    client_macs     = [local.lg_tv_mac]
+  }
+
+  destination = {
+    zone_id            = data.unifi_firewall_zone.internal.id
+    matching_target    = "IP"
+    ips                = [local.traefik_private]
+    port_matching_type = "SPECIFIC"
+    port               = "443"
   }
 }
