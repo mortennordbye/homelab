@@ -29,6 +29,7 @@ const BAND: Record<string, string> = {
   "GitHub (Microsoft)": "#7157a8",
   "The Linux Foundation": "#2f8f83",
   "Amazon Web Services": "#d08a2e",
+  Anthropic: "#c0704f",
 };
 const BAND_DEFAULT = "#8b7a5a";
 
@@ -39,6 +40,7 @@ const BAND_DEFAULT = "#8b7a5a";
 function iconFor(c: ShelfCert): string | null {
   const s = `${c.title} ${c.issuer}`;
   if (/kubernetes|\bCK(A|AD|S)\b/i.test(s)) return "/icons/cert/kubernetes.svg";
+  if (/claude|anthropic/i.test(s)) return "/icons/cert/claude.svg";
   if (/github/i.test(s)) return "/icons/cert/github.svg";
   if (/azure|microsoft/i.test(s)) return "/icons/cert/azure.svg";
   if (/\baws\b|amazon/i.test(s)) return "/icons/cert/aws.svg";
