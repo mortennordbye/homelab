@@ -210,3 +210,9 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** the lead-ins cover most of it; the rest needs engine work or more CPU.
 - **Unblock:** render the confirmations for every Home Assistant light and room at start; split long data answers into shorter sentences; or give Kokoro more CPU.
 - **Where:** innestemme `crates/voice-engine/src/assistant.rs`, `crates/voice-assistant/src/speech_cache.rs`; `k8s/talos/apps/innestemme/deployment.yaml`.
+
+### The Spotify app cannot control music innestemme starts
+- **What:** innestemme plays music through Music Assistant, which streams Spotify to the Sonos itself. The Spotify app shows that session as a "custom connection" that ignores pause, skip and volume, so music started by voice can only be controlled by voice, the Music Assistant app or Home Assistant. Playing a `spotify:` link on the Sonos's own player does not help: the Sonos queues it itself, also out of the app's reach.
+- **Why deferred:** the fix is a Spotify Connect session started through the Spotify Web API, which needs a Spotify developer app and Home Assistant's Spotify integration set up by hand first.
+- **Unblock:** create an app at developer.spotify.com (redirect URI `https://my.home-assistant.io/redirect/oauth`, Web API), add the Spotify integration in Home Assistant with its client ID and secret, then have innestemme start playback on the Living Room device through the Spotify media player (Liked Songs as the `collection` context), with Music Assistant as the fallback when Spotify does not list the Sonos. Re-test pausing for a request afterwards, which today pauses only Music Assistant's player.
+- **Where:** innestemme `crates/voice-assistant/src/music.rs` and `crates/voice-engine/src/assistant.rs` (`hush`/`unhush`); Home Assistant integrations.
