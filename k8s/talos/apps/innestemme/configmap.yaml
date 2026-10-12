@@ -52,6 +52,9 @@ data:
     # The device fetches spoken answers here: the VIP in service.yaml, opened for it in
     # terraform/unifi/network/firewall.tf.
     public-url: http://10.3.10.99:9090
+    # "Show the weather on the TV" opens this in the LG's browser through Home Assistant's webOS
+    # integration. The TV reaches it over HTTPS through Traefik (terraform/unifi/network/firewall.tf).
+    screen-url: https://jarvis.local.bigd.no/tv
     # The living room Sonos speaks the answers; the Voice PE only listens.
     answer-player: media_player.living_room
     # With the wake word detected in the engine, louder answers no longer deafen the device's detector.
