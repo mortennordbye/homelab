@@ -24,8 +24,8 @@ One replica with `Recreate`, since the data PVC is ReadWriteOnce
 
 | Container | Image | Runs as | Resources |
 |---|---|---|---|
-| `verksted` | `ghcr.io/mortennordbye/verksted` (tag set by Kargo in `kustomization.yaml`) | root, `allowPrivilegeEscalation: false`, seccomp `RuntimeDefault` | 1 CPU / 6Gi requested, 6 CPU / 12Gi limit |
-| `dind` | `docker:29-dind` | privileged | 100m / 256Mi requested, 2 CPU / 4Gi limit |
+| `verksted` | `ghcr.io/mortennordbye/verksted` (tag set by Kargo in `kustomization.yaml`) | root, `allowPrivilegeEscalation: false`, seccomp `RuntimeDefault` | 1 CPU / 6Gi requested, 6 CPU / 10Gi limit |
+| `dind` | `docker:29-dind` | privileged | 100m / 256Mi requested, 2 CPU / 2Gi limit |
 
 The app talks to the Docker daemon at `tcp://localhost:2375`, plain TCP with TLS off, over
 the pod's shared network namespace. `VK_AGENT_USER=vk-agent` is left unset because the

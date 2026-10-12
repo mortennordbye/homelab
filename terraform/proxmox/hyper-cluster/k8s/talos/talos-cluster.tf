@@ -173,6 +173,22 @@ data "talos_machine_configuration" "worker" {
           },
           each.value.pci_mapping != null ? { "hardware.nordbye.it/gpu" = "intel-quicksync" } : {}
         )
+        # Talos defaults (384Mi reserved, evict at 100Mi) let pods starve machined and wedge
+        # the node. A partial evictionHard map zeroes the omitted thresholds, so list all five.
+        kubelet = {
+          extraConfig = {
+            kubeReserved = {
+              memory = "1Gi"
+            }
+            evictionHard = {
+              "memory.available"   = "500Mi"
+              "nodefs.available"   = "10%"
+              "nodefs.inodesFree"  = "5%"
+              "imagefs.available"  = "15%"
+              "imagefs.inodesFree" = "5%"
+            }
+          }
+        }
       }
       cluster = {
         network = {
