@@ -9,6 +9,12 @@ import {
 
 const certsRaw: Cert[] = [
   {
+    title: "Claude Certified Architect – Foundations",
+    issuer: "Anthropic",
+    date: "Oct 2026",
+    credentialId: "d4043620-7f8f-4004-8d02-746168a0c1a7",
+  },
+  {
     title: "GitHub Advanced Security Certification",
     issuer: "GitHub (Microsoft)",
     date: "Sep 2026",
