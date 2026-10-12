@@ -85,14 +85,14 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 6
           # Sized for agent sessions (CLIs, headless chromium, dev servers);
-          # the 12Gi limit has to clear the reelsmith nightly render peak.
+          # the limit has to clear the reelsmith nightly render peak.
           resources:
             requests:
               cpu: "1"
               memory: 6Gi
             limits:
               cpu: "6"
-              memory: 12Gi
+              memory: 10Gi
           # Still root: the backend starts every agent process as vk-agent,
           # which takes root. What it may not do is gain more than it has.
           securityContext:
@@ -142,7 +142,7 @@ spec:
               memory: 256Mi
             limits:
               cpu: "2"
-              memory: 4Gi
+              memory: 2Gi
           volumeMounts:
             # Kept off NFS: overlayfs needs local disk. maintenance.ts prunes it daily.
             - name: dind-storage
