@@ -20,6 +20,7 @@ export function GET() {
       issuer: c.issuer,
       date: c.date,
       ...(c.credentialId ? { credentialId: c.credentialId } : {}),
+      ...(c.url ? { url: c.url } : {}),
     })),
     skills: skills.map((s) => ({ label: s.label, level: s.level, group: s.group })),
   });

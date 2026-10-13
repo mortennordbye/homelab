@@ -28,7 +28,7 @@ export const certSchema = z.object({
   issuer: z.string(),
   date: z.string(),
   credentialId: z.string().optional(),
-  href: z.string().optional(),
+  url: z.string().optional(),
 });
 export type Cert = z.infer<typeof certSchema>;
 

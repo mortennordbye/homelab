@@ -94,10 +94,18 @@ const nextConfig: NextConfig = {
         permanent: true,
       })),
       { source: "/index.html", destination: "/", permanent: true },
-      // The certificates moved out of /assets when the static site was
-      // replaced. Both old paths are still indexed, and they are the proof
-      // behind the credentials the Person schema claims.
-      { source: "/assets/pdf/:file", destination: "/pdf/:file", permanent: true },
+      // The scanned certificates were replaced by their Credly badges. Both old
+      // paths are still indexed and linked from outside, so they must not 404.
+      ...[
+        ["CKA", "1a6403cf-525e-45ad-9b2e-a2260cb14c49"],
+        ["LFS458", "4458ac0e-4dd7-46ca-861a-46f1a78847b3"],
+      ].flatMap(([file, badge]) =>
+        [`/pdf/${file}.pdf`, `/assets/pdf/${file}.pdf`].map((source) => ({
+          source,
+          destination: `https://www.credly.com/badges/${badge}`,
+          permanent: true,
+        })),
+      ),
     ];
   },
 };

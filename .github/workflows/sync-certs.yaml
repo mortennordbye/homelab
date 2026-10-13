@@ -1,0 +1,47 @@
+name: Sync certs
+
+# Rebuilds portfolio/src/content/certs.json from Credly and the Microsoft Learn
+# transcript and opens a PR when the list changed. See docs/apps/portfolio/certs.md.
+# A PR opened with GITHUB_TOKEN does not trigger the portfolio CI; the image is
+# built on merge as usual.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-certs
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    if: github.repository_owner == 'mortennordbye'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Fetch certs
+        run: python3 scripts/sync-certs.py
+
+      - name: Open PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: bot/sync-certs
+        run: |
+          git diff --quiet -- portfolio/src/content/certs.json && { echo "no change"; exit 0; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git commit -qam "chore(portfolio): sync certifications"
+          git push -f origin "$BRANCH"
+          gh pr view "$BRANCH" --json state -q .state 2>/dev/null | grep -qx OPEN \
+            || gh pr create --head "$BRANCH" --title "chore(portfolio): sync certifications" \
+                 --body "Credly or the Microsoft Learn transcript changed. Review the diff of certs.json before merging."

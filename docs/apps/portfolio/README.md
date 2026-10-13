@@ -9,7 +9,8 @@ Brand and design decisions live in [brand/](brand/README.md): what is locked, re
 open, the art direction behind it, and the asset list. Read them before proposing anything about
 how the site looks. The LinkedIn banner and its build script live in `portfolio/branding/`.
 
-The 3D flat at `/fun` has its own guide: [fun-room.md](fun-room.md).
+The 3D flat at `/fun` has its own guide: [fun-room.md](fun-room.md). The cert list syncs from
+Credly and Microsoft Learn: [certs.md](certs.md).
 
 The stills the hero shows before or instead of WebGL (`public/images/globe-poster.webp`,
 `globe-poster-mobile.jpg` and `room-poster.jpg`) are frames of the live scenes. After changing

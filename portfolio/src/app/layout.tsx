@@ -133,7 +133,7 @@ const jsonLd = {
     name: c.title,
     credentialCategory: "certification",
     ...(c.credentialId ? { identifier: c.credentialId } : {}),
-    ...(c.href ? { url: `${site.url}${c.href}` } : {}),
+    ...(c.url ? { url: c.url } : {}),
     recognizedBy: { "@type": "Organization", name: c.issuer },
   })),
   sameAs: site.socials.map((s) => s.href),
