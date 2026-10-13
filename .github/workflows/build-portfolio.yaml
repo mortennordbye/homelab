@@ -1,7 +1,15 @@
 name: Build Portfolio image
 
+# PRs run checks, build the image and smoke test it. Pushes to main run the same
+# checks, then build and push the image. Manual dispatch skips the checks.
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "portfolio/**"
+      - ".github/workflows/build-portfolio.yaml"
   push:
     branches:
       - main
@@ -12,24 +20,22 @@ on:
 permissions:
   contents: read
 
-# Serialise image builds. Never cancel in progress, which could tear a
-# half-finished build. Kargo (not this workflow) owns the manifest write and
+# PRs cancel a superseded run. Main queues and never cancels, which could tear a
+# half-finished push. Kargo (not this workflow) owns the manifest write and
 # promotion; the same image is promoted stage -> prod, so there is no
 # per-environment build.
 concurrency:
-  group: build-portfolio
-  cancel-in-progress: false
+  group: build-portfolio-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/portfolio
+  PUSH: ${{ github.event_name != 'pull_request' }}
 
 jobs:
-  ci:
-    # Gates builds on push to main. Manual dispatch skips this. The next build
-    # is not repeated here: it runs inside the Docker build, and the image is
-    # only pushed if that succeeds.
-    if: github.event_name == 'push' && github.repository_owner == 'mortennordbye'
+  checks:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -55,10 +61,12 @@ jobs:
         working-directory: portfolio
         run: npm run typecheck
 
-  build-and-deploy:
-    needs: ci
-    # success = push with green ci; skipped = manual dispatch
-    if: ${{ !cancelled() && (needs.ci.result == 'success' || needs.ci.result == 'skipped') && github.repository_owner == 'mortennordbye' }}
+  # The production build (broken MDX, bad imports, route errors) runs inside the
+  # Docker build, so it is not repeated as an npm step.
+  image:
+    needs: checks
+    # success = green checks; skipped = manual dispatch
+    if: ${{ !cancelled() && (needs.checks.result == 'success' || needs.checks.result == 'skipped') && (github.event_name == 'pull_request' || github.repository_owner == 'mortennordbye') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -66,8 +74,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
 
       - name: Determine tag
         id: context
@@ -75,6 +81,7 @@ jobs:
           echo "TAG=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
+        if: env.PUSH == 'true'
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
         with:
           registry: ${{ env.REGISTRY }}
@@ -82,6 +89,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
+        if: env.PUSH == 'true'
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -99,10 +107,12 @@ jobs:
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: ./portfolio
-          push: true
+          push: ${{ env.PUSH == 'true' }}
+          load: ${{ env.PUSH != 'true' }}
           # GHA-backed layer cache; mode=max stores every intermediate layer.
+          # Only main writes it; PRs read it.
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: ${{ env.PUSH == 'true' && 'type=gha,mode=max' || '' }}
           build-args: |
             BUILD_SHA=${{ steps.context.outputs.TAG }}
           # Git short-SHA for traceability, plus a 0.0.<run_number> semver tag
@@ -112,6 +122,11 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:0.0.${{ github.run_number }}
 
+      - name: Smoke tests
+        if: env.PUSH != 'true'
+        working-directory: portfolio
+        run: make smoke-run IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
+
       - name: Logout from Docker Hub
-        if: always()
+        if: always() && env.PUSH == 'true'
         run: docker logout

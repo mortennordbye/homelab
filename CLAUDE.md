@@ -121,7 +121,7 @@ docs/
   the rendered width at 1000px or less (the `width` on the outer `<svg>`); the docs column
   is 688px and anything wider shrinks past readable. No
   ASCII box-drawing flows; directory trees stay as text. `make diagram` renders locally
-  and `render-diagram.yaml` re-renders on `main`.
+  and `render-assets.yaml` re-renders on `main`.
 - No torrent tracker or subtitle provider names anywhere in the repo; they live only in
   the apps' own config.
 - `docs/` is published to https://docs.nordbye.it by `.github/workflows/docs.yaml`

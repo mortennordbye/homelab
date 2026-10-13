@@ -1,0 +1,82 @@
+name: Render Assets
+
+# Re-renders every docs/assets/diagrams/*.d2 to SVG + PNG and re-crops
+# docs/assets/logo/source.jpg to the shipped PNG whenever a source changes, and
+# commits the result back — so the committed images never drift from source.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/assets/diagrams/*.d2"
+      - "docs/assets/logo/source.jpg"
+      - ".github/workflows/render-assets.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Commits rendered assets back to main; queue rather than cancel so a run is
+# never killed between rendering and pushing.
+concurrency:
+  group: render-assets
+  cancel-in-progress: false
+
+jobs:
+  render:
+    if: github.repository_owner == 'mortennordbye'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to commit the re-rendered assets
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin imagemagick pngquant
+
+      - name: Render every D2 diagram to SVG
+        run: |
+          for f in docs/assets/diagrams/*.d2; do
+            name=$(basename "$f" .d2)
+            docker run --rm -v "${PWD}/docs/assets/diagrams:/work" \
+              terrastruct/d2:v0.7.1 \
+              --layout elk \
+              --elk-nodeNodeBetweenLayers=35 \
+              --elk-padding="[top=25,left=25,bottom=25,right=25]" \
+              --scale 1 \
+              --pad 40 "/work/$name.d2" "/work/$name.svg"
+          done
+          sudo chown -R "$(id -u):$(id -g)" docs/assets/diagrams
+
+      - name: Rasterize each SVG to PNG
+        # GitHub serves raw SVGs with a default-src 'none' CSP that blocks the
+        # embedded data-URI icons, so the click-through link points at a PNG instead.
+        run: |
+          for f in docs/assets/diagrams/*.svg; do
+            name=$(basename "$f" .svg)
+            rsvg-convert -z 2 "$f" -o "docs/assets/diagrams/$name.png"
+          done
+
+      - name: Crop the logo to a 512 round mark
+        # Square crop around the fruit, then a circular mask: the full frame is
+        # unreadable at the 128px the README renders it at, and the round
+        # silhouette is what makes it read as a mark rather than a photo.
+        run: |
+          convert docs/assets/logo/source.jpg -crop 460x460+280+300 +repage -resize 512x512 \
+            \( +clone -alpha transparent -fill white -draw "circle 256,256 256,4" \) \
+            -compose copyopacity -composite png32:/tmp/logo-raw.png
+          pngquant --quality 70-95 --force --output docs/assets/logo/logo.png /tmp/logo-raw.png
+
+      - name: Commit re-rendered assets if changed
+        run: |
+          if [ -n "$(git status --porcelain docs/assets/diagrams docs/assets/logo)" ]; then
+            git config --global user.name "GitHub Actions"
+            git config --global user.email "actions@github.com"
+            git add docs/assets/diagrams/*.svg docs/assets/diagrams/*.png docs/assets/logo/logo.png
+            git commit -m "chore(assets): re-render from source"
+            git push origin HEAD:main
+          else
+            echo "Assets already up to date — nothing to commit."
+          fi
