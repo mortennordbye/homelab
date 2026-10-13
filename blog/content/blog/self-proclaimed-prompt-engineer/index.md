@@ -8,7 +8,7 @@ tags: ["ai", "prompting", "claude", "beginner"]
 
 Most bad AI output is not the model's fault. It is a vague prompt, a chat that has run too long, or a review done by the same chat that wrote the answer. The result looks confident and well formatted, and it is wrong in one detail you only catch when someone else does.
 
-The fixes are cheap and work in any chat window. I found most of them while studying for the Claude Certified Architect exam, which I got to sit after joining Nimtech, an Anthropic partner. Each fix is how I did it before, how I do it now, and why. There are four topics.
+The fixes are cheap and work in any chat window. I found most of them while studying for the Claude Certified Architect exam, which I got to sit after joining Nimtech. Nimtech is Certified in the Claude Partner Network. Each fix is how I did it before, how I do it now, and why. There are four topics.
 
 - Writing the prompt
 - Catching wrong answers
