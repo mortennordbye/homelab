@@ -8,20 +8,20 @@ tags: ["ai", "prompting", "claude", "beginner"]
 
 Most bad AI output is not the model's fault. It is a vague prompt, a chat that has run too long, or a review done by the same chat that wrote the answer. The result looks confident and well formatted, and it is wrong in one detail you only catch when someone else does.
 
-The fixes are cheap and work in any chat window. I found most of them while studying for the Claude Certified Architect exam, which I got to sit after joining Nimtech. Nimtech is Certified in the Claude Partner Network. Each fix is how I did it before, how I do it now, and why. There are four topics.
+The fixes are cheap and work in any chat window. I found most of them while studying for the Claude Certified Architect exam, which I got to sit after joining [Nimtech](https://nim.io). Nimtech is Certified in the Claude Partner Network. Each fix is how I did it before, how I do it now, and why. There are four topics.
 
 - Writing the prompt
 - Catching wrong answers
 - Reviewing big work
 - Long chats and reuse
 
-<div style="display:flex;align-items:center;gap:2.5rem;flex-wrap:wrap;margin:1.5rem 0;"><div role="img" aria-label="Claude Certified Architect, Foundations badge" title="Claude Certified Architect, Foundations" style="width:160px;height:160px;flex:none;background:url(/images/claude-certified-architect-badge.webp) center/contain no-repeat;"></div><svg role="img" aria-label="Nimtech" viewBox="0 0 4226 3336" fill="none" style="height:64px;width:auto;"><title>Nimtech</title><path stroke="currentColor" stroke-linecap="round" stroke-width="901" d="M466.086 455.621 2844.62 2868.91"/><path fill="currentColor" d="M2390.94 2845.69c.15 248.8 201.96 450.38 450.77 450.23 248.8-.14 450.38-201.96 450.23-450.76l-901 .53Zm899.59-2394.956L3290.26.233943l-901 .531368.27 450.499689 901-.531Zm1.41 2394.426-1.41-2394.426-901 .531 1.41 2394.425 901-.53Z"/><path stroke="currentColor" stroke-linecap="square" stroke-width="901" d="M3775 451h-935"/><circle cx="479.5" cy="2856.5" r="479.5" fill="currentColor"/></svg></div>
+<div style="display:flex;align-items:center;gap:2.5rem;flex-wrap:wrap;margin:1.5rem 0;"><div role="img" aria-label="Claude Certified Architect, Foundations badge" title="Claude Certified Architect, Foundations" style="width:160px;height:160px;flex:none;background:url(/images/claude-certified-architect-badge.webp) center/contain no-repeat;"></div><a href="https://nim.io" title="Nimtech" style="color:inherit;display:inline-flex;"><svg role="img" aria-label="Nimtech" viewBox="0 0 4226 3336" fill="none" style="height:64px;width:auto;"><title>Nimtech</title><path stroke="currentColor" stroke-linecap="round" stroke-width="901" d="M466.086 455.621 2844.62 2868.91"/><path fill="currentColor" d="M2390.94 2845.69c.15 248.8 201.96 450.38 450.77 450.23 248.8-.14 450.38-201.96 450.23-450.76l-901 .53Zm899.59-2394.956L3290.26.233943l-901 .531368.27 450.499689 901-.531Zm1.41 2394.426-1.41-2394.426-901 .531 1.41 2394.425 901-.53Z"/><path stroke="currentColor" stroke-linecap="square" stroke-width="901" d="M3775 451h-935"/><circle cx="479.5" cy="2856.5" r="479.5" fill="currentColor"/></svg></a></div>
 
 _If you find this useful or just appreciate the over-engineering, drop a ⭐ on the [Homelab repo](https://github.com/mortennordbye/Homelab)._
 
 ## Writing the Prompt
 
-Now that a model can do so much, it is easy to get lazy about the prompt. I do it too. Type half a sentence, hit enter, see what comes back. Somewhere in Anthropic's study material I read that AI is a force multiplier, and I cringed, but it is true. It multiplies a vague prompt just as faithfully as a good one, so a bad prompt gets you a bad result, only faster. The time I used to spend digging through code before changing anything is better spent up front now, on knowing what I actually want and writing a first prompt that says it.
+Now that a model can do so much, it is easy to get lazy about the prompt. I do it too. Type half a sentence, hit enter, see what comes back. Somewhere in [Anthropic](https://www.anthropic.com)'s study material I read that AI is a force multiplier, and I cringed, but it is true. It multiplies a vague prompt just as faithfully as a good one, so a bad prompt gets you a bad result, only faster. The time I used to spend digging through code before changing anything is better spent up front now, on knowing what I actually want and writing a first prompt that says it.
 
 The easiest way to show it is to rewrite one real prompt, step by step.
 
