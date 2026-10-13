@@ -1,0 +1,133 @@
+name: README cards
+
+# Draws the README's live cluster card and star history chart, and publishes each
+# to its own data branch (status-data, stars-data). The README embeds the SVGs
+# from there over raw.githubusercontent, so the branch names must not change.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub proxies README images through camo, so the cards land a few
+    # minutes behind this run; each stamps its own reading time.
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: readme-cards
+  cancel-in-progress: true
+
+jobs:
+  # The status-publisher CronJob writes the facts to a ConfigMap the portfolio
+  # serves at /api/v1/infra; this job reads that public endpoint. The cluster
+  # never needs a GitHub credential this way, and nothing extra is exposed
+  # inbound. When the endpoint doesn't answer, the card says so instead of
+  # redrawing the last good numbers.
+  status:
+    if: github.repository_owner == 'mortennordbye'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # pushes to the status-data branch
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Fetch cluster status
+        env:
+          STATUS_URL: https://nordbye.it/api/v1/infra
+          PREVIOUS: https://raw.githubusercontent.com/${{ github.repository }}/status-data/status.json
+        run: |
+          mkdir -p dist
+          if curl -sf --max-time 20 --retry 2 --retry-delay 5 "$STATUS_URL" -o dist/status.json \
+            && jq -e '.generatedAt and .gitops' dist/status.json > /dev/null; then
+            jq '{generatedAt, applications: .gitops.applications, asleep: .apps.asleep}' dist/status.json
+            exit 0
+          fi
+
+          # No answer, or an answer the renderer can't use. Carry the last
+          # published reading forward marked as stale rather than failing the
+          # run: a card that admits the cluster is unreachable is the point.
+          echo "::warning::$STATUS_URL did not answer with a usable payload"
+          curl -sf --max-time 20 "$PREVIOUS" -o prev.json || echo '{}' > prev.json
+          jq '{
+            unreachable: true,
+            lastSeen: (.generatedAt // .lastSeen),
+            versions: .versions,
+            nodes: .nodes,
+            gitops: .gitops
+          }' prev.json > dist/status.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: portfolio/.nvmrc
+
+      - name: Render the card
+        run: node scripts/render-status-card.mjs
+
+      - name: Publish to status-data branch
+        uses: crazy-max/ghaction-github-pages@1d6ee9b181a81033a16bd707a1401afa978daab4 # v5
+        with:
+          target_branch: status-data
+          build_dir: dist
+          keep_history: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Third parties can no longer read GitHub star data on our behalf, but this
+  # repo's own GITHUB_TOKEN can: collect the timestamps, bucket by day, render
+  # both themes.
+  stars:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # pushes to the stars-data branch
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Collect stargazer timestamps
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # shellcheck disable=SC2016  # $owner/$name/$endCursor are GraphQL variables, not shell
+          gh api graphql --paginate -F owner="${GITHUB_REPOSITORY%/*}" -F name="${GITHUB_REPOSITORY#*/}" -f query='
+            query($owner: String!, $name: String!, $endCursor: String) {
+              repository(owner: $owner, name: $name) {
+                stargazers(first: 100, after: $endCursor, orderBy: {field: STARRED_AT, direction: ASC}) {
+                  pageInfo { hasNextPage endCursor }
+                  edges { starredAt }
+                }
+              }
+            }' --jq '.data.repository.stargazers.edges[].starredAt' > starred.txt
+          wc -l < starred.txt
+
+      - name: Build stars JSON
+        run: |
+          # Empty means the query failed or paginated to nothing; publishing
+          # that would blank the card, so fail instead and keep the last file.
+          test -s starred.txt
+          mkdir -p dist
+          cut -c1-10 starred.txt | jq -R . | jq -s \
+            --arg repo "$GITHUB_REPOSITORY" \
+            '{repo: $repo,
+              generatedAt: (now | todate),
+              total: length,
+              days: (sort | group_by(.) | map({key: .[0], value: length}) | from_entries)}' \
+            > dist/stars.json
+          jq '{repo, generatedAt, total, days: (.days | length)}' dist/stars.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: portfolio/.nvmrc
+
+      - name: Render the chart
+        run: node scripts/render-star-history.mjs
+
+      - name: Publish to stars-data branch
+        uses: crazy-max/ghaction-github-pages@1d6ee9b181a81033a16bd707a1401afa978daab4 # v5
+        with:
+          target_branch: stars-data
+          build_dir: dist
+          keep_history: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
