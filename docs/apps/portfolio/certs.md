@@ -29,5 +29,5 @@ when the list changed. Run it locally with `python3 scripts/sync-certs.py`.
   suffix and Credly's ASCII hyphen becomes an en dash.
 - A new Learn cert links to the transcript until its credential id (from its share link on the
   Learn profile) is added to `LEARN_IDS`.
-- Bot PRs are opened with `GITHUB_TOKEN`, so they do not trigger `ci-portfolio.yaml`. That needs
+- Bot PRs are opened with `GITHUB_TOKEN`, so they do not trigger `build-portfolio.yaml`. That needs
   "Allow GitHub Actions to create and approve pull requests" on in the repo's Actions settings.

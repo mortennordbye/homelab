@@ -1,34 +1,41 @@
 name: Build Blog image
 
+# PRs lint and build the image as a render check. Pushes to main run the same
+# lint, then build and push the image. Manual dispatch skips the lint.
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "blog/**"
+      - ".github/workflows/build-blog.yaml"
   push:
     branches:
       - main
     paths:
       - "blog/**"
+      - ".github/workflows/build-blog.yaml"
 
 permissions:
   contents: read
 
-# Serialise image builds. Never cancel in progress, which could tear a
-# half-finished build. Kargo (not this workflow) owns the manifest write and
+# PRs cancel a superseded run. Main queues and never cancels, which could tear a
+# half-finished push. Kargo (not this workflow) owns the manifest write and
 # promotion; the same image is promoted stage -> prod, so there is no
 # per-environment build.
 concurrency:
-  group: build-blog
-  cancel-in-progress: false
+  group: build-blog-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/blog
+  PUSH: ${{ github.event_name != 'pull_request' }}
 
 jobs:
-  ci:
-    # Gates builds on push to main. Manual dispatch skips this. The Hugo render
-    # itself is validated by the Docker build below, and the image is only
-    # pushed if that succeeds.
-    if: github.event_name == 'push' && github.repository_owner == 'mortennordbye'
+  checks:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -42,20 +49,21 @@ jobs:
         with:
           globs: "blog/content/**/*.md"
 
-  build-and-deploy:
-    needs: ci
-    # success = push with green ci; skipped = manual dispatch
-    if: ${{ !cancelled() && (needs.ci.result == 'success' || needs.ci.result == 'skipped') && github.repository_owner == 'mortennordbye' }}
+  # Hugo renders inside the image build, which validates templates, front
+  # matter and content.
+  image:
+    needs: checks
+    # success = green checks; skipped = manual dispatch
+    if: ${{ !cancelled() && (needs.checks.result == 'success' || needs.checks.result == 'skipped') && (github.event_name == 'pull_request' || github.repository_owner == 'mortennordbye') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Needed to push images
+      packages: write
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           submodules: recursive # Critical for the Hugo theme submodule
-          fetch-depth: 0
 
       - name: Determine tag
         id: context
@@ -63,6 +71,7 @@ jobs:
           echo "TAG=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
+        if: env.PUSH == 'true'
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
         with:
           registry: ${{ env.REGISTRY }}
@@ -70,15 +79,22 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
+        if: env.PUSH == 'true'
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: ./blog
-          push: true
+          push: ${{ env.PUSH == 'true' }}
+          # Only main writes the layer cache; PRs read it.
+          cache-from: type=gha,scope=blog
+          cache-to: ${{ env.PUSH == 'true' && 'type=gha,mode=max,scope=blog' || '' }}
           # Git short-SHA for traceability, plus a 0.0.<run_number> semver tag
           # the Kargo Warehouse selects. No moving stage/prod tag: Kargo
           # promotes the same image across environments in git.
@@ -87,5 +103,5 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:0.0.${{ github.run_number }}
 
       - name: Logout from Docker Hub
-        if: always()
+        if: always() && env.PUSH == 'true'
         run: docker logout

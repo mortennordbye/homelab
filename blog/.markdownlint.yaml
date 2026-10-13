@@ -1,4 +1,4 @@
-# markdownlint rules for blog content (enforced by ci-blog.yaml via markdownlint-cli2).
+# markdownlint rules for blog content (enforced by build-blog.yaml via markdownlint-cli2).
 # Tuned for Hugo posts: front matter carries the title and inline HTML (<img>) is idiomatic.
 
 # Long prose lines are fine; posts are not wrapped

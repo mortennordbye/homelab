@@ -9,17 +9,14 @@ cluster or run `terraform plan`: images reach the cluster through Kargo
 
 | Workflow | Trigger | Does | Writes |
 |---|---|---|---|
-| [`build-portfolio.yaml`](../../../.github/workflows/build-portfolio.yaml) | push to `main` under `portfolio/`, manual | lint and typecheck, then Docker build of `portfolio/` with the live `deployment.yaml` copied in | `ghcr.io/mortennordbye/homelab/portfolio:<short-sha>` and `:0.0.<run>` |
-| [`build-blog.yaml`](../../../.github/workflows/build-blog.yaml) | push to `main` under `blog/`, manual | markdownlint, then Docker build of `blog/` with the theme submodule | `ghcr.io/mortennordbye/homelab/blog:<short-sha>` and `:0.0.<run>` |
-| [`ci-portfolio.yaml`](../../../.github/workflows/ci-portfolio.yaml) | PR under `portfolio/` | lint, typecheck, `npm run build` | nothing |
-| [`ci-blog.yaml`](../../../.github/workflows/ci-blog.yaml) | PR under `blog/` | markdownlint, Docker build as a render check | nothing |
+| [`build-portfolio.yaml`](../../../.github/workflows/build-portfolio.yaml) | PR and push to `main` under `portfolio/`, manual | lint and typecheck, then Docker build of `portfolio/` with the live `deployment.yaml` copied in; on PRs the image is smoke tested instead of pushed | on `main`: `ghcr.io/mortennordbye/homelab/portfolio:<short-sha>` and `:0.0.<run>` |
+| [`build-blog.yaml`](../../../.github/workflows/build-blog.yaml) | PR and push to `main` under `blog/`, manual | markdownlint, then Docker build of `blog/` with the theme submodule (the render check on PRs) | on `main`: `ghcr.io/mortennordbye/homelab/blog:<short-sha>` and `:0.0.<run>` |
 | [`ci-terraform.yaml`](../../../.github/workflows/ci-terraform.yaml) | PR and push under `terraform/` | `terraform fmt -check`, then `init -backend=false` and `validate` in every root it finds | nothing |
-| [`container-vulnerability-scan.yaml`](../../../.github/workflows/container-vulnerability-scan.yaml) | PR and push changing either Dockerfile, Sundays 00:00 UTC, manual | builds both images and scans them with Trivy (CRITICAL and HIGH, fixed only) | SARIF to the Security tab |
+| [`container-vulnerability-scan.yaml`](../../../.github/workflows/container-vulnerability-scan.yaml) | push to `main` changing the portfolio or blog prod `kustomization.yaml`, Sundays 00:00 UTC, manual | pulls the image tag prod runs from GHCR and scans it with Trivy (CRITICAL and HIGH, fixed only) | SARIF to the Security tab |
 | [`dependency-review.yml`](../../../.github/workflows/dependency-review.yml) | every PR | fails on a new dependency with a high severity advisory | nothing |
-| [`scorecard.yml`](../../../.github/workflows/scorecard.yml) | push to `main`, Mondays 03:00 UTC, manual | OpenSSF Scorecard | SARIF to the Security tab, published Scorecard result |
+| [`scorecard.yml`](../../../.github/workflows/scorecard.yml) | Mondays 03:00 UTC, manual | OpenSSF Scorecard | SARIF to the Security tab, published Scorecard result |
 | [`docs.yaml`](../../../.github/workflows/docs.yaml) | PR and push under `docs/`, `properdocs.yml`, `overrides/`, `scripts/docs_site_hooks.py`, manual | `properdocs build --strict` | GitHub Pages (`docs.nordbye.it`), not on PRs |
-| [`render-diagram.yaml`](../../../.github/workflows/render-diagram.yaml) | push to `main` changing `docs/assets/diagrams/*.d2`, manual | renders each D2 file to SVG, then PNG | commit to `main` |
-| [`render-logo.yaml`](../../../.github/workflows/render-logo.yaml) | push to `main` changing `docs/assets/logo/source.jpg`, manual | crops the photo to a 512 px round PNG | commit to `main` |
+| [`render-assets.yaml`](../../../.github/workflows/render-assets.yaml) | push to `main` changing `docs/assets/diagrams/*.d2` or `docs/assets/logo/source.jpg`, manual | renders each D2 file to SVG, then PNG, and crops the logo photo to a 512 px round PNG | commit to `main` |
 | [`kargo-automerge.yaml`](../../../.github/workflows/kargo-automerge.yaml) | PR opened, labelled or reopened on a `kargo/promotion/*` branch | squash-merges the PR if its `app/<name>` label is in `KARGO_AUTOMERGE_APPS` | merge into `main` |
 | [`indexnow.yaml`](../../../.github/workflows/indexnow.yaml) | push to `main` changing the portfolio or blog prod `kustomization.yaml`, manual | waits for the key file to be live, then submits the sitemap URLs to IndexNow | nothing in the repo |
 | [`lighthouse.yaml`](../../../.github/workflows/lighthouse.yaml) | Mondays 06:00 UTC, manual | Lighthouse CI, 3 runs each on `nordbye.it` and `blog.nordbye.it` | `lighthouse.json` to the `lighthouse-data` branch, reports to Lighthouse temporary public storage |
@@ -29,8 +26,8 @@ cluster or run `terraform plan`: images reach the cluster through Kargo
 
 ## What writes to the repo
 
-Three workflows change `main`. `render-diagram` and `render-logo` commit as
-`GitHub Actions` straight to `main` and only when the output changed.
+Two workflows change `main`. `render-assets` commits as `GitHub Actions` straight
+to `main` and only when the output changed.
 `kargo-automerge` merges Kargo's promotion PRs. `lighthouse`, `star-history` and
 `status-card` force-push a single commit to their own data branch
 (`keep_history: false`). This repo's README embeds the star history and status cards
@@ -49,9 +46,9 @@ job. Most jobs that push, publish or call external services check
 `star-history` and the docs deploy do not, and `kargo-automerge` instead requires the PR
 branch to come from this repo.
 
-Builds, renders, docs, IndexNow and automerge queue and never cancel a run in progress,
-so nothing is killed between building and pushing. PR checks, scans and the data-branch
-jobs cancel the superseded run.
+Pushes to `main` from the build workflows, renders, docs, IndexNow and automerge queue and
+never cancel a run in progress, so nothing is killed between building and pushing. PR runs,
+scans and the data-branch jobs cancel the superseded run.
 
 `ci-terraform` holds no credentials: `init` runs with `-backend=false`, so it never
 reads state. Plans and applies stay local.
@@ -60,7 +57,7 @@ reads state. Plans and applies stay local.
 
 | Secret or variable | Used by |
 |---|---|
-| `GITHUB_TOKEN` | GHCR push, data branches, Pages, automerge, star history |
+| `GITHUB_TOKEN` | GHCR push and scan pulls, data branches, Pages, automerge, star history |
 | `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN` | build workflows, Docker Hub login before the build |
 | `BW_ACCESS_TOKEN` | `reminders.yml`, reads the Discord webhook from Bitwarden |
 | `KARGO_AUTOMERGE_APPS` (variable) | `kargo-automerge.yaml`, comma separated app names |

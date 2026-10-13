@@ -71,7 +71,7 @@ Argo CD runs two ApplicationSets in `k8s/talos/infra/argocd/` that generate one 
 
 [![Homelab Overview](docs/assets/diagrams/homelab-overview.png)](docs/assets/diagrams/homelab-overview.png?raw=1)
 
-> **Click to open the full-size image.** A map of the whole homelab — how the hardware, cluster and services fit together. Auto-generated through the [pipeline](.github/workflows/render-diagram.yaml) from [this file](docs/assets/diagrams/homelab-overview.d2).
+> **Click to open the full-size image.** A map of the whole homelab — how the hardware, cluster and services fit together. Auto-generated through the [pipeline](.github/workflows/render-assets.yaml) from [this file](docs/assets/diagrams/homelab-overview.d2).
 
 ---
 
@@ -79,7 +79,7 @@ Argo CD runs two ApplicationSets in `k8s/talos/infra/argocd/` that generate one 
 
 [![Network & Service Flow](docs/assets/diagrams/network-flow.png)](docs/assets/diagrams/network-flow.png?raw=1)
 
-> **Click to open the full-size image.** Shows which services talk to each other and how traffic flows through the cluster. Auto-generated through the [pipeline](.github/workflows/render-diagram.yaml) from [this file](docs/assets/diagrams/network-flow.d2).
+> **Click to open the full-size image.** Shows which services talk to each other and how traffic flows through the cluster. Auto-generated through the [pipeline](.github/workflows/render-assets.yaml) from [this file](docs/assets/diagrams/network-flow.d2).
 
 ---
 
@@ -161,19 +161,17 @@ Automated vulnerability scanning runs weekly and on every Dockerfile change usin
 
 | Workflow                                                                                | Trigger                                   | Purpose                                                |
 | --------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------ |
-| [**Build and Deploy Blog**](.github/workflows/build-blog.yaml)                          | Push to `main` (blog changes)                  | Builds Hugo blog, pushes to GHCR, updates k8s manifest |
-| [**Build and Deploy Portfolio**](.github/workflows/build-portfolio.yaml)                | Push to `main`                                 | Builds portfolio image and pushes to GHCR ([Kargo](https://kargo.io/) promotes stage → prod) |
-| [**Container Vulnerability Scan**](.github/workflows/container-vulnerability-scan.yaml) | Sundays, Dockerfile changes, pull request, manual | Scans the blog and portfolio images with Trivy, CRITICAL and HIGH with a fix available |
-| [**Render Diagrams**](.github/workflows/render-diagram.yaml)                            | Push to `main` (`docs/assets/diagrams/*.d2`), manual  | Renders D2 sources to SVG + PNG, commits the result    |
+| [**Build and Deploy Blog**](.github/workflows/build-blog.yaml)                          | Push to `main` and pull request (blog changes) | Lints and builds the Hugo blog; on `main` pushes to GHCR ([Kargo](https://kargo.io/) promotes stage → prod) |
+| [**Build and Deploy Portfolio**](.github/workflows/build-portfolio.yaml)                | Push to `main` and pull request (portfolio changes) | Lints, typechecks and builds the image; smoke tests it on PRs, pushes to GHCR on `main` ([Kargo](https://kargo.io/) promotes stage → prod) |
+| [**Container Vulnerability Scan**](.github/workflows/container-vulnerability-scan.yaml) | Sundays, prod promotion, manual | Scans the blog and portfolio images prod runs with Trivy, CRITICAL and HIGH with a fix available |
+| [**Render Assets**](.github/workflows/render-assets.yaml)                               | Push to `main` (`docs/assets/diagrams/*.d2`, `docs/assets/logo/source.jpg`), manual | Renders D2 sources to SVG + PNG and re-crops the logo, commits the result |
 | [**Reminders**](.github/workflows/reminders.yml)                                        | Monthly (1st, 8th, 15th), manual | Discord reminders for Kubernetes upkeep, backups, and server updates |
 | [**Dependency Review**](.github/workflows/dependency-review.yml)                        | PR                                             | Blocks pull requests that add known-vulnerable dependencies |
-| [**Scorecard**](.github/workflows/scorecard.yml)                                        | Push to `main`, Mondays 03:00 UTC | OpenSSF supply chain score, published to the Security tab |
+| [**Scorecard**](.github/workflows/scorecard.yml)                                        | Mondays 03:00 UTC, manual | OpenSSF supply chain score, published to the Security tab |
 | [**Status Card**](.github/workflows/status-card.yaml)                                   | Every 15 minutes, manual | Reads the cluster's status endpoint and redraws the card at the top of this page |
 | [**Star History**](.github/workflows/star-history.yaml)                                 | Every 6 hours | Draws the star chart at the foot of this page from this repo's own stargazer data |
-| [**CI Blog**](.github/workflows/ci-blog.yaml) · [**CI Portfolio**](.github/workflows/ci-portfolio.yaml) | Pull request                   | Pull request gates; pushes to `main` are gated inside the build workflows |
 | [**Kargo Automerge**](.github/workflows/kargo-automerge.yaml)                           | Kargo promotion PR                             | Merges promotion PRs for the apps listed in `KARGO_AUTOMERGE_APPS`, where the canary is the real gate |
 | [**Lighthouse**](.github/workflows/lighthouse.yaml)                                     | Mondays 06:00 UTC, manual | Audits the live public sites, median of 3 runs, gating SEO, accessibility and best practices |
-| [**Render Logo**](.github/workflows/render-logo.yaml)                                   | Push to `main` (`docs/assets/logo/source.jpg`)        | Re-crops the logo from its source and commits the result, so the image can't drift |
 | [**Docs Site**](.github/workflows/docs.yaml)                                           | Push to `main` (`docs/**` and the site config), pull request, manual | Builds `docs/` with ProperDocs in strict mode and publishes it to [docs.nordbye.it](https://docs.nordbye.it) |
 
 ---
