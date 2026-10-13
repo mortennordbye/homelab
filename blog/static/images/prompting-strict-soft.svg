@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0a0a"/>
+      <stop offset="1" stop-color="#040404"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.03"/>
+    </pattern>
+    <marker id="ar-mute" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#7a7a7a"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#61b86f"/>
+    </marker>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="#61b86f" flood-opacity="0.45"/></filter>
+  </defs>
+
+  <rect width="1000" height="380" fill="url(#bg)"/>
+  <rect width="1000" height="380" fill="url(#grid)"/>
+
+  <!-- Soft lane -->
+  <text x="30" y="46" fill="#e7e7e7" font-size="16" font-weight="600">Soft: ask for a tag</text>
+  <text x="200" y="46" fill="#a5a5a5" font-size="12.5">works anywhere, but it is a request</text>
+
+  <rect x="30" y="62" width="200" height="74" rx="10" fill="#141414" stroke="#262626"/>
+  <text x="130" y="92" text-anchor="middle" fill="#e7e7e7" font-size="13.5">Prompt asks for</text>
+  <text x="130" y="114" text-anchor="middle" fill="#8ec798" font-size="12.5" font-family="ui-monospace, Menlo, monospace">&lt;fixed&gt;...&lt;/fixed&gt;</text>
+  <path d="M230 99H266" stroke="#7a7a7a" stroke-width="2" marker-end="url(#ar-mute)"/>
+
+  <rect x="270" y="62" width="220" height="74" rx="10" fill="#141414" stroke="#262626"/>
+  <text x="380" y="92" text-anchor="middle" fill="#e7e7e7" font-size="13.5">Model answers</text>
+  <text x="380" y="114" text-anchor="middle" fill="#a5a5a5" font-size="12">may add chatter or skip the tag</text>
+  <path d="M490 99H526" stroke="#7a7a7a" stroke-width="2" marker-end="url(#ar-mute)"/>
+
+  <rect x="530" y="62" width="200" height="74" rx="10" fill="#141414" stroke="#262626"/>
+  <text x="630" y="92" text-anchor="middle" fill="#e7e7e7" font-size="13.5">Script searches</text>
+  <text x="630" y="114" text-anchor="middle" fill="#a5a5a5" font-size="12">for the tag in free text</text>
+  <path d="M730 99H766" stroke="#7a7a7a" stroke-width="2" marker-end="url(#ar-mute)"/>
+
+  <rect x="770" y="62" width="200" height="74" rx="10" fill="#141414" stroke="#d18e83"/>
+  <rect x="770" y="69" width="4" height="60" rx="2" fill="#d18e83"/>
+  <text x="870" y="92" text-anchor="middle" fill="#d18e83" font-size="13.5">Format can break</text>
+  <text x="870" y="114" text-anchor="middle" fill="#a5a5a5" font-size="12">so you must check it</text>
+
+  <!-- Strict lane -->
+  <text x="30" y="186" fill="#e7e7e7" font-size="16" font-weight="600">Strict: a JSON schema</text>
+  <text x="220" y="186" fill="#a5a5a5" font-size="12.5">needs the API or a CLI, the shape is enforced</text>
+
+  <rect x="30" y="202" width="200" height="74" rx="10" fill="#141414" stroke="#61b86f"/>
+  <text x="130" y="232" text-anchor="middle" fill="#e7e7e7" font-size="13.5">Prompt plus schema</text>
+  <text x="130" y="254" text-anchor="middle" fill="#8ec798" font-size="12" font-family="ui-monospace, Menlo, monospace">--json-schema</text>
+  <path d="M230 239H266" stroke="#61b86f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="270" y="202" width="220" height="74" rx="10" fill="#141414" stroke="#61b86f"/>
+  <text x="380" y="232" text-anchor="middle" fill="#e7e7e7" font-size="13.5">Model must answer</text>
+  <text x="380" y="254" text-anchor="middle" fill="#a5a5a5" font-size="12">through a tool call in that shape</text>
+  <path d="M490 239H526" stroke="#61b86f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="530" y="202" width="200" height="74" rx="10" fill="#141414" stroke="#61b86f"/>
+  <text x="630" y="232" text-anchor="middle" fill="#e7e7e7" font-size="13.5">JSON comes back</text>
+  <text x="630" y="254" text-anchor="middle" fill="#8ec798" font-size="12" font-family="ui-monospace, Menlo, monospace">{"fixed": "..."}</text>
+  <path d="M730 239H766" stroke="#61b86f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="770" y="202" width="200" height="74" rx="10" fill="#141414" stroke="#7cc088"/>
+  <rect x="770" y="209" width="4" height="60" rx="2" fill="#7cc088"/>
+  <text x="870" y="232" text-anchor="middle" fill="#7cc088" font-size="13.5">jq reads one field</text>
+  <text x="870" y="254" text-anchor="middle" fill="#a5a5a5" font-size="12">format cannot break</text>
+
+  <!-- Both -->
+  <rect x="30" y="306" width="940" height="48" rx="10" fill="#141414" stroke="#d18e83" stroke-dasharray="5 4"/>
+  <text x="500" y="336" text-anchor="middle" fill="#e7e7e7" font-size="13.5">Either way the content can still be wrong. The shape is guaranteed, the answer inside it is not.</text>
+</svg>

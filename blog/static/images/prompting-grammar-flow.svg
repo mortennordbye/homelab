@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 350" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0a0a"/>
+      <stop offset="1" stop-color="#040404"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.03"/>
+    </pattern>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#61b86f"/>
+    </marker>
+    <marker id="ar-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#7cc088"/>
+    </marker>
+    <marker id="ar-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#d18e83"/>
+    </marker>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="#61b86f" flood-opacity="0.45"/></filter>
+  </defs>
+
+  <rect width="1000" height="350" fill="url(#bg)"/>
+  <rect width="1000" height="350" fill="url(#grid)"/>
+
+  <!-- Clipboard -->
+  <rect x="30" y="135" width="120" height="80" rx="10" fill="#141414" stroke="#262626" stroke-width="1.5"/>
+  <text x="90" y="170" text-anchor="middle" fill="#e7e7e7" font-size="15" font-weight="600">Clipboard</text>
+  <text x="90" y="192" text-anchor="middle" fill="#a5a5a5" font-size="12">copied text</text>
+  <path d="M150 175H186" stroke="#61b86f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- Prompt -->
+  <rect filter="url(#glow)" x="190" y="30" width="250" height="290" rx="12" fill="#141414" stroke="#61b86f" stroke-width="2"/>
+  <text x="315" y="58" text-anchor="middle" fill="#e7e7e7" font-size="15" font-weight="600">Prompt</text>
+
+  <rect x="206" y="74" width="218" height="52" rx="8" fill="#0d0d0d" stroke="#262626"/>
+  <text x="220" y="96" fill="#8ec798" font-size="13" font-weight="600">Instructions</text>
+  <text x="220" y="115" fill="#a5a5a5" font-size="11.5">light polish only, do not rewrite</text>
+
+  <rect x="206" y="134" width="218" height="52" rx="8" fill="#0d0d0d" stroke="#262626"/>
+  <text x="220" y="156" fill="#61b86f" font-size="13" font-family="ui-monospace, Menlo, monospace">&lt;rules&gt;</text>
+  <text x="220" y="175" fill="#a5a5a5" font-size="11.5">criteria you can check</text>
+
+  <rect x="206" y="194" width="218" height="52" rx="8" fill="#0d0d0d" stroke="#262626"/>
+  <text x="220" y="216" fill="#61b86f" font-size="13" font-family="ui-monospace, Menlo, monospace">&lt;examples&gt;</text>
+  <text x="220" y="235" fill="#a5a5a5" font-size="11.5">four awkward cases</text>
+
+  <rect x="206" y="254" width="218" height="52" rx="8" fill="#0d0d0d" stroke="#262626"/>
+  <text x="220" y="276" fill="#61b86f" font-size="13" font-family="ui-monospace, Menlo, monospace">&lt;text&gt;</text>
+  <text x="220" y="295" fill="#a5a5a5" font-size="11.5">content to edit, never instructions</text>
+
+  <path d="M440 175H476" stroke="#61b86f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- Model -->
+  <rect x="480" y="125" width="140" height="100" rx="10" fill="#141414" stroke="#262626" stroke-width="1.5"/>
+  <text x="550" y="158" text-anchor="middle" fill="#e7e7e7" font-size="15" font-weight="600">Model</text>
+  <text x="550" y="182" text-anchor="middle" fill="#a5a5a5" font-size="12.5" font-family="ui-monospace, Menlo, monospace">agy -p</text>
+  <text x="550" y="204" text-anchor="middle" fill="#7a7a7a" font-size="11.5">empty temp dir</text>
+  <path d="M620 175H656" stroke="#61b86f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- Extract -->
+  <rect x="660" y="125" width="130" height="100" rx="10" fill="#141414" stroke="#262626" stroke-width="1.5"/>
+  <text x="725" y="163" text-anchor="middle" fill="#e7e7e7" font-size="15" font-weight="600">Extract</text>
+  <text x="725" y="190" text-anchor="middle" fill="#a5a5a5" font-size="12" font-family="ui-monospace, Menlo, monospace">fixed field</text>
+
+  <!-- Branches -->
+  <path d="M790 160H812V95H836" fill="none" stroke="#7cc088" stroke-width="2" marker-end="url(#ar-ok)"/>
+  <path d="M790 190H812V255H836" fill="none" stroke="#d18e83" stroke-width="2" marker-end="url(#ar-bad)"/>
+
+  <rect x="840" y="55" width="140" height="80" rx="10" fill="#141414" stroke="#7cc088" stroke-width="1.5"/>
+  <rect x="840" y="62" width="4" height="66" rx="2" fill="#7cc088"/>
+  <text x="910" y="82" text-anchor="middle" fill="#7cc088" font-size="12.5" font-weight="600">FOUND</text>
+  <text x="910" y="104" text-anchor="middle" fill="#e7e7e7" font-size="13.5">corrected text</text>
+  <text x="910" y="123" text-anchor="middle" fill="#a5a5a5" font-size="12">to clipboard</text>
+
+  <rect x="840" y="215" width="140" height="80" rx="10" fill="#141414" stroke="#d18e83" stroke-width="1.5"/>
+  <rect x="840" y="222" width="4" height="66" rx="2" fill="#d18e83"/>
+  <text x="910" y="242" text-anchor="middle" fill="#d18e83" font-size="12.5" font-weight="600">MISSING</text>
+  <text x="910" y="264" text-anchor="middle" fill="#e7e7e7" font-size="13.5">clipboard</text>
+  <text x="910" y="283" text-anchor="middle" fill="#a5a5a5" font-size="12">left unchanged</text>
+</svg>

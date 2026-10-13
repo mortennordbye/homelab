@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0a0a"/>
+      <stop offset="1" stop-color="#040404"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.03"/>
+    </pattern>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#61b86f"/>
+    </marker>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="#61b86f" flood-opacity="0.45"/></filter>
+  </defs>
+
+  <rect width="1000" height="360" fill="url(#bg)"/>
+  <rect width="1000" height="360" fill="url(#grid)"/>
+
+  <!-- One pass -->
+  <rect x="30" y="30" width="450" height="300" rx="12" fill="#0d0d0d" stroke="#262626" stroke-width="1.5"/>
+  <text x="54" y="62" fill="#e7e7e7" font-size="17" font-weight="600">Everything in one prompt</text>
+  <text x="54" y="84" fill="#a5a5a5" font-size="12.5">attention is uneven, the middle gets the least</text>
+  <text x="250" y="104" fill="#7a7a7a" font-size="11.5">attention</text>
+
+  <g font-size="12.5" fill="#a5a5a5">
+    <rect x="54" y="114" width="180" height="28" rx="6" fill="#141414" stroke="#262626"/>
+    <text x="68" y="133">section 1</text>
+    <rect x="250" y="120" width="190" height="16" rx="4" fill="#61b86f" opacity="0.85"/>
+
+    <rect x="54" y="150" width="180" height="28" rx="6" fill="#141414" stroke="#262626"/>
+    <text x="68" y="169">section 2</text>
+    <rect x="250" y="156" width="130" height="16" rx="4" fill="#61b86f" opacity="0.6"/>
+
+    <rect x="54" y="186" width="180" height="28" rx="6" fill="#141414" stroke="#262626"/>
+    <text x="68" y="205">section 3</text>
+    <rect x="250" y="192" width="50" height="16" rx="4" fill="#d18e83" opacity="0.8"/>
+
+    <rect x="54" y="222" width="180" height="28" rx="6" fill="#141414" stroke="#262626"/>
+    <text x="68" y="241">section 4</text>
+    <rect x="250" y="228" width="35" height="16" rx="4" fill="#d18e83" opacity="0.8"/>
+
+    <rect x="54" y="258" width="180" height="28" rx="6" fill="#141414" stroke="#262626"/>
+    <text x="68" y="277">section 5</text>
+    <rect x="250" y="264" width="90" height="16" rx="4" fill="#61b86f" opacity="0.5"/>
+
+    <rect x="54" y="294" width="180" height="28" rx="6" fill="#141414" stroke="#262626"/>
+    <text x="68" y="313">section 6</text>
+    <rect x="250" y="300" width="170" height="16" rx="4" fill="#61b86f" opacity="0.8"/>
+  </g>
+
+  <!-- Passes -->
+  <rect filter="url(#glow)" x="520" y="30" width="450" height="300" rx="12" fill="#0d0d0d" stroke="#61b86f" stroke-width="2"/>
+  <text x="544" y="62" fill="#e7e7e7" font-size="17" font-weight="600">One pass per section, then one across</text>
+  <text x="544" y="84" fill="#a5a5a5" font-size="12.5">every section gets full attention once</text>
+
+  <g font-size="12.5" fill="#a5a5a5">
+    <rect x="544" y="114" width="110" height="28" rx="6" fill="#141414" stroke="#262626"/><text x="558" y="133">section 1</text>
+    <rect x="544" y="150" width="110" height="28" rx="6" fill="#141414" stroke="#262626"/><text x="558" y="169">section 2</text>
+    <rect x="544" y="186" width="110" height="28" rx="6" fill="#141414" stroke="#262626"/><text x="558" y="205">section 3</text>
+    <rect x="544" y="222" width="110" height="28" rx="6" fill="#141414" stroke="#262626"/><text x="558" y="241">section 4</text>
+    <rect x="544" y="258" width="110" height="28" rx="6" fill="#141414" stroke="#262626"/><text x="558" y="277">section 5</text>
+    <rect x="544" y="294" width="110" height="28" rx="6" fill="#141414" stroke="#262626"/><text x="558" y="313">section 6</text>
+  </g>
+
+  <g stroke="#61b86f" stroke-width="1.5">
+    <path d="M654 128H676" marker-end="url(#ar)"/>
+    <path d="M654 164H676" marker-end="url(#ar)"/>
+    <path d="M654 200H676" marker-end="url(#ar)"/>
+    <path d="M654 236H676" marker-end="url(#ar)"/>
+    <path d="M654 272H676" marker-end="url(#ar)"/>
+    <path d="M654 308H676" marker-end="url(#ar)"/>
+  </g>
+
+  <g font-size="12" fill="#8ec798">
+    <rect x="680" y="114" width="72" height="28" rx="6" fill="#141414" stroke="#5f8f6a"/><text x="716" y="133" text-anchor="middle">pass</text>
+    <rect x="680" y="150" width="72" height="28" rx="6" fill="#141414" stroke="#5f8f6a"/><text x="716" y="169" text-anchor="middle">pass</text>
+    <rect x="680" y="186" width="72" height="28" rx="6" fill="#141414" stroke="#5f8f6a"/><text x="716" y="205" text-anchor="middle">pass</text>
+    <rect x="680" y="222" width="72" height="28" rx="6" fill="#141414" stroke="#5f8f6a"/><text x="716" y="241" text-anchor="middle">pass</text>
+    <rect x="680" y="258" width="72" height="28" rx="6" fill="#141414" stroke="#5f8f6a"/><text x="716" y="277" text-anchor="middle">pass</text>
+    <rect x="680" y="294" width="72" height="28" rx="6" fill="#141414" stroke="#5f8f6a"/><text x="716" y="313" text-anchor="middle">pass</text>
+  </g>
+
+  <g stroke="#5f8f6a" stroke-width="1.5" fill="none">
+    <path d="M752 128H772V308H752"/>
+    <path d="M752 164H772M752 200H772M752 236H772M752 272H772"/>
+  </g>
+  <path d="M772 218H796" stroke="#61b86f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="800" y="168" width="150" height="100" rx="10" fill="#141414" stroke="#7cc088" stroke-width="1.5"/>
+  <text x="875" y="203" text-anchor="middle" fill="#7cc088" font-size="14" font-weight="600">Cross pass</text>
+  <text x="875" y="226" text-anchor="middle" fill="#e7e7e7" font-size="12">how the sections</text>
+  <text x="875" y="244" text-anchor="middle" fill="#e7e7e7" font-size="12">fit together</text>
+</svg>

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0a0a"/>
+      <stop offset="1" stop-color="#040404"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.03"/>
+    </pattern>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#61b86f"/>
+    </marker>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="#61b86f" flood-opacity="0.45"/></filter>
+  </defs>
+
+  <rect width="1000" height="360" fill="url(#bg)"/>
+  <rect width="1000" height="360" fill="url(#grid)"/>
+
+  <!-- Same chat -->
+  <rect x="30" y="30" width="450" height="300" rx="12" fill="#0d0d0d" stroke="#262626" stroke-width="1.5"/>
+  <text x="54" y="62" fill="#e7e7e7" font-size="17" font-weight="600">Same chat</text>
+  <text x="54" y="84" fill="#a5a5a5" font-size="12.5">the review starts from the writer's reasoning</text>
+
+  <rect x="54" y="102" width="250" height="34" rx="8" fill="#141414" stroke="#262626"/>
+  <text x="68" y="124" fill="#e7e7e7" font-size="13">You: write the summary</text>
+
+  <rect x="176" y="144" width="280" height="34" rx="8" fill="#141414" stroke="#262626"/>
+  <text x="190" y="166" fill="#e7e7e7" font-size="13">Model: here is the draft</text>
+
+  <rect x="176" y="186" width="280" height="40" rx="8" fill="none" stroke="#5f8f6a" stroke-dasharray="5 4"/>
+  <text x="190" y="211" fill="#8ec798" font-size="12.5">its reasoning stays in the context</text>
+
+  <rect x="54" y="236" width="250" height="34" rx="8" fill="#141414" stroke="#262626"/>
+  <text x="68" y="258" fill="#e7e7e7" font-size="13">You: check it for mistakes</text>
+
+  <rect x="176" y="280" width="280" height="34" rx="8" fill="#141414" stroke="#d18e83"/>
+  <rect x="176" y="287" width="4" height="20" rx="2" fill="#d18e83"/>
+  <text x="190" y="302" fill="#d18e83" font-size="13">Model: looks good to me</text>
+
+  <!-- New chat -->
+  <rect filter="url(#glow)" x="520" y="30" width="450" height="300" rx="12" fill="#0d0d0d" stroke="#61b86f" stroke-width="2"/>
+  <text x="544" y="62" fill="#e7e7e7" font-size="17" font-weight="600">New chat</text>
+  <text x="544" y="84" fill="#a5a5a5" font-size="12.5">only the source and the draft go in</text>
+
+  <rect x="544" y="106" width="190" height="44" rx="8" fill="#141414" stroke="#262626"/>
+  <text x="639" y="133" text-anchor="middle" fill="#e7e7e7" font-size="14">Source</text>
+  <rect x="756" y="106" width="190" height="44" rx="8" fill="#141414" stroke="#262626"/>
+  <text x="851" y="133" text-anchor="middle" fill="#e7e7e7" font-size="14">Draft</text>
+
+  <path d="M639 150L700 190" stroke="#61b86f" stroke-width="2" marker-end="url(#ar)"/>
+  <path d="M851 150L790 190" stroke="#61b86f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="600" y="194" width="290" height="46" rx="8" fill="#141414" stroke="#262626"/>
+  <text x="745" y="222" text-anchor="middle" fill="#e7e7e7" font-size="14">Fresh model, no history</text>
+
+  <path d="M745 240V264" stroke="#61b86f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="560" y="268" width="370" height="46" rx="8" fill="#141414" stroke="#7cc088"/>
+  <rect x="560" y="275" width="4" height="32" rx="2" fill="#7cc088"/>
+  <text x="745" y="296" text-anchor="middle" fill="#7cc088" font-size="13.5">claim by claim, with the quoted source line</text>
+</svg>
