@@ -177,7 +177,9 @@ Neither one makes the content right. A schema stops syntax errors, not a wrong v
 
 ### The Result
 
-All four steps together.
+All four steps together. This is the version my hotkey runs.
+
+**Full file:** [`ai/prompts/fix-grammar-agy.sh`](https://github.com/mortennordbye/Homelab/blob/main/ai/prompts/fix-grammar-agy.sh)
 
 ```bash
 IFS= read -r -d '' PROMPT <<EOF
