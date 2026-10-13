@@ -6,68 +6,7 @@ import {
   type Education,
   type Experience,
 } from "./schemas";
-
-const certsRaw: Cert[] = [
-  {
-    title: "Claude Certified Architect – Foundations",
-    issuer: "Anthropic",
-    date: "Oct 2026",
-    credentialId: "d4043620-7f8f-4004-8d02-746168a0c1a7",
-  },
-  {
-    title: "GitHub Advanced Security Certification",
-    issuer: "GitHub (Microsoft)",
-    date: "Sep 2026",
-    credentialId: "97A7AC3B9D0D3172",
-  },
-  {
-    title: "GitHub Copilot Certification",
-    issuer: "GitHub (Microsoft)",
-    date: "Sep 2026",
-    credentialId: "576F475095FD41FE",
-  },
-  {
-    title: "Microsoft Certified: DevOps Engineer Expert",
-    issuer: "Microsoft",
-    date: "Sep 2026",
-    credentialId: "F8616ED44F1AA2F4",
-  },
-  {
-    title: "GitHub Actions Certification",
-    issuer: "GitHub (Microsoft)",
-    date: "Jul 2026",
-    credentialId: "90FCBE7771D404BA",
-  },
-  {
-    title: "Microsoft Certified: Azure Solutions Architect Expert",
-    issuer: "Microsoft",
-    date: "Feb 2026",
-    credentialId: "1F5A74303E8DEC46",
-  },
-  {
-    title: "Microsoft Certified: Azure Administrator Associate",
-    issuer: "Microsoft",
-    date: "Jan 2026",
-    credentialId: "9AC5167520292789",
-  },
-  {
-    title: "CKA: Certified Kubernetes Administrator",
-    issuer: "The Linux Foundation",
-    date: "Jan 2024",
-    href: "/pdf/CKA.pdf",
-  },
-  {
-    title: "LFS458: Kubernetes Administration",
-    issuer: "The Linux Foundation",
-    date: "Jan 2024",
-    href: "/pdf/LFS458.pdf",
-  },
-  {
-    title: "AWS Certified Cloud Practitioner",
-    issuer: "Amazon Web Services",
-    date: "Sep 2021",
-  },
-];
+import certsJson from "./certs.json";
 
 const educationRaw: Education[] = [
   {
@@ -204,7 +143,8 @@ const experienceRaw: Experience[] = [
   },
 ];
 
-export const certs: Cert[] = certsRaw.map((c) => certSchema.parse(c));
+// Written by scripts/sync-certs.py; edit the script, not the JSON.
+export const certs: Cert[] = certsJson.map((c) => certSchema.parse(c));
 export const education: Education[] = educationRaw.map((e) => educationSchema.parse(e));
 export const experience: Experience[] = experienceRaw.map((e) => experienceSchema.parse(e));
 

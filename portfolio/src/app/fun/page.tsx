@@ -44,7 +44,7 @@ export default function FunPage() {
       title: c.title,
       issuer: c.issuer,
       date: c.date,
-      credentialId: c.credentialId,
+      url: c.url,
     })),
   };
 

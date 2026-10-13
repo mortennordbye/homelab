@@ -1104,10 +1104,9 @@ function certCard(c: ShelfCert): InfoCard {
     kicker: "certification",
     title: c.title,
     subtitle: c.issuer,
-    rows: [
-      { k: "Issued", v: c.date },
-      ...(c.credentialId ? [{ k: "Credential", v: c.credentialId }] : []),
-    ],
+    rows: [{ k: "Issued", v: c.date }],
+    href: c.url,
+    hrefLabel: "view the certificate",
   };
 }
 

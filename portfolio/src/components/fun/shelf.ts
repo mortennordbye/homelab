@@ -18,7 +18,7 @@ export type ShelfCert = {
   title: string;
   issuer: string;
   date: string;
-  credentialId?: string;
+  url?: string;
 };
 
 export type ShelfData = {

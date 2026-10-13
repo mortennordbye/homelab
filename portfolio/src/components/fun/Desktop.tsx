@@ -328,7 +328,11 @@ function FilesApp({
               <Award size={40} color="#e5a50a" className="mt-4" />
               <h3 className="mt-3" style={{ fontSize: 18, fontWeight: 700 }}>{cert.title}</h3>
               <p style={{ color: UI.dim, fontSize: 14 }}>{cert.issuer} · {cert.date}</p>
-              {cert.credentialId && <p className="mt-2" style={{ color: UI.dim, fontSize: 12 }}>Credential {cert.credentialId}</p>}
+              {cert.url && (
+                <button type="button" onClick={() => open(cert.url!)} className="mt-2" style={{ color: UI.accent, fontSize: 13 }}>
+                  View certificate ›
+                </button>
+              )}
             </div>
           ) : (
             shelf.certs.map((c, i) => row(c.title, Award, c.title, `${c.issuer} · ${c.date}`, () => onCertPick(i)))

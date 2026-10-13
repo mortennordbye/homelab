@@ -15,7 +15,7 @@ I am a Senior Platform Engineer at Nimtech, working on platforms, architecture a
 
 Part of that migration was moving off ingress-nginx onto Traefik and the Gateway API. Serving several TLS certificates from one listener needed a workaround at the time, so I wrote the upstream patch that taught Gateway API to resolve multiple certificate secrets on a single listener. It shipped in Traefik v3.7.0.
 
-Certifications, if that is what you came for: [CKA](https://nordbye.it/pdf/CKA.pdf), [LFS458](https://nordbye.it/pdf/LFS458.pdf), and Azure Solutions Architect Expert. The full history sits on [nordbye.it](https://nordbye.it/).
+Certifications, if that is what you came for: [CKA](https://www.credly.com/badges/1a6403cf-525e-45ad-9b2e-a2260cb14c49), [LFS458](https://www.credly.com/badges/4458ac0e-4dd7-46ca-861a-46f1a78847b3), and Azure Solutions Architect Expert. The full history sits on [nordbye.it](https://nordbye.it/).
 
 ## The cluster the posts come from
 

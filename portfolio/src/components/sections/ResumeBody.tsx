@@ -170,24 +170,21 @@ function Certifications() {
             {c.issuer}
           </p>
           <span aria-hidden className="hidden min-w-6 flex-1 sm:block" />
-          {(c.credentialId || c.href) && (
+          {c.url && (
             <p className="font-mono text-[0.63rem] tracking-[0.09em] whitespace-nowrap text-[color:var(--paper-ink-3)] sm:pl-4">
               {/* Only below sm, where this runs straight on from the issuer with
                   nothing between. Above it the flex fill is the separation. */}
               <span className="sm:hidden">
                 <Sep />
               </span>
-              {c.credentialId}
-              {c.href && (
-                <a
-                  href={c.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="focus-ring uppercase underline underline-offset-4 hover:text-[color:var(--paper-ink)]"
-                >
-                  Certificate
-                </a>
-              )}
+              <a
+                href={c.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="focus-ring uppercase underline underline-offset-4 hover:text-[color:var(--paper-ink)]"
+              >
+                Certificate
+              </a>
             </p>
           )}
         </div>
