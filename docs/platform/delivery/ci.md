@@ -20,16 +20,15 @@ cluster or run `terraform plan`: images reach the cluster through Kargo
 | [`kargo-automerge.yaml`](../../../.github/workflows/kargo-automerge.yaml) | PR opened, labelled or reopened on a `kargo/promotion/*` branch | squash-merges the PR if its `app/<name>` label is in `KARGO_AUTOMERGE_APPS` | merge into `main` |
 | [`indexnow.yaml`](../../../.github/workflows/indexnow.yaml) | push to `main` changing the portfolio or blog prod `kustomization.yaml`, manual | waits for the key file to be live, then submits the sitemap URLs to IndexNow | nothing in the repo |
 | [`lighthouse.yaml`](../../../.github/workflows/lighthouse.yaml) | Mondays 06:00 UTC, manual | Lighthouse CI, 3 runs each on `nordbye.it` and `blog.nordbye.it` | `lighthouse.json` to the `lighthouse-data` branch, reports to Lighthouse temporary public storage |
-| [`star-history.yaml`](../../../.github/workflows/star-history.yaml) | every 6 hours at :40, manual | reads stargazer timestamps over GraphQL and renders the chart with `scripts/render-star-history.mjs` | `stars-data` branch |
-| [`status-card.yaml`](../../../.github/workflows/status-card.yaml) | every 15 minutes, manual | reads `https://nordbye.it/api/v1/infra` and renders the cluster card with `scripts/render-status-card.mjs` | `status-data` branch |
+| [`readme-cards.yaml`](../../../.github/workflows/readme-cards.yaml) | every 15 minutes, manual | two jobs: reads `https://nordbye.it/api/v1/infra` and renders the cluster card with `scripts/render-status-card.mjs`; reads stargazer timestamps over GraphQL and renders the chart with `scripts/render-star-history.mjs` | `status-data` and `stars-data` branches |
 | [`reminders.yml`](../../../.github/workflows/reminders.yml) | 16:00 UTC on the 1st, 8th and 15th, manual | posts the Kubernetes, backup or server upkeep reminder to Discord | nothing in the repo |
 
 ## What writes to the repo
 
 Two workflows change `main`. `render-assets` commits as `GitHub Actions` straight
 to `main` and only when the output changed.
-`kargo-automerge` merges Kargo's promotion PRs. `lighthouse`, `star-history` and
-`status-card` force-push a single commit to their own data branch
+`kargo-automerge` merges Kargo's promotion PRs. `lighthouse` and the two
+`readme-cards` jobs force-push a single commit to their own data branch
 (`keep_history: false`). This repo's README embeds the star history and status cards
 from `stars-data` and `status-data` over `raw.githubusercontent.com`; `lighthouse.json`
 feeds the Lighthouse card on the GitHub profile README.
@@ -43,7 +42,7 @@ Every action is pinned to a commit SHA with the version in a comment. Workflows 
 to `permissions: contents: read` (`kargo-automerge` and `reminders` to none) and widen per
 job. Most jobs that push, publish or call external services check
 `github.repository_owner == 'mortennordbye'` so forks skip them; `lighthouse`,
-`star-history` and the docs deploy do not, and `kargo-automerge` instead requires the PR
+the `readme-cards` stars job and the docs deploy do not, and `kargo-automerge` instead requires the PR
 branch to come from this repo.
 
 Pushes to `main` from the build workflows, renders, docs, IndexNow and automerge queue and
