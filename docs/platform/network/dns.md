@@ -42,6 +42,32 @@ there is nothing to import. Declaring one in `records.tf` would create a second,
 user-defined record shadowing the generated one. Rename or renumber those in
 `clients.tf` instead.
 
+## AdGuard and the forwarding loop
+
+Clients resolve through AdGuard on Home Assistant (`10.3.10.15`), which sends
+`local.bigd.no` to the gateway with the upstream line `[/local.bigd.no/]10.3.10.1`.
+The gateway's own WAN DNS is AdGuard (`terraform/unifi/network/networks.tf`), so any
+query the gateway cannot answer from its records goes back to AdGuard, which sends it
+to the gateway again. The generated host records are A only, so every AAAA lookup for
+them loops until it times out. `getaddrinfo` then fails the whole lookup with
+`EAI_AGAIN` even though the A record answered, which takes down anything that resolves
+a Proxmox host by name (pve-exporter, the backup check).
+
+AdGuard's custom filtering rules break the loop by answering AAAA for the zone itself
+with an empty NOERROR:
+
+```
+||local.bigd.no^$dnstype=AAAA,dnsrewrite=NOERROR;;
+```
+
+Keep it. IPv6 is disabled on every network and the WAN, so nothing loses an address.
+Do not swap it for a public resolver as the gateway's WAN DNS: that answers NXDOMAIN
+for the AAAA, and musl treats an NXDOMAIN on either half as "no such host".
+
+The same rule list also carries a permanent allowlist for `tiktokv.com`, `tiktokw.eu`
+and `byteoversea.com`. TikTok signs its requests through those hosts, and with them
+blocked its developer portal loads but every write fails silently.
+
 ## Provider notes
 
 - `ttl` is unset everywhere. The console stores "Auto" as 0 and the provider maps
