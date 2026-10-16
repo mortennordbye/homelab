@@ -35,7 +35,8 @@ Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard.
 
 [![Exporters, Alloy and Traefik feeding Prometheus, Loki and Tempo, all read by Grafana](../../assets/diagrams/observability-signals.svg)](../../assets/diagrams/observability-signals.svg)
 
-Grafana reads Prometheus, Loki and Tempo as data sources.
+Grafana reads Prometheus, Loki and Tempo as data sources. A walkthrough of the stack and the
+SPOG dashboard is in [The observability stack I actually run](https://blog.nordbye.it/blog/observability-stack/).
 
 | Component | Role | Retention | Defined in |
 |---|---|---|---|

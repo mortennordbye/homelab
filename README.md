@@ -41,6 +41,21 @@ The site is built from [`docs/`](docs/architecture/README.md) on every push to `
 
 ---
 
+## Writing
+
+Longer write-ups of things built in this repo, on [blog.nordbye.it](https://blog.nordbye.it):
+
+- [Rolling out Cilium network policies without breaking everything](https://blog.nordbye.it/blog/cilium-network-policy-rollout/)
+- [The observability stack I actually run on Talos](https://blog.nordbye.it/blog/observability-stack/)
+- [A zero-downtime migration from ingress-nginx to Traefik](https://blog.nordbye.it/blog/surviving-nginx-eol/)
+- [Headroom, a self-hosted Norwegian finance tracker](https://blog.nordbye.it/blog/headroom/)
+- [Tuning Azure WAF without paying Log Analytics prices](https://blog.nordbye.it/blog/lawless-waf/)
+- [Shipping a Hugo blog to Kubernetes through GitOps](https://blog.nordbye.it/blog/i-have-a-blog/)
+- [A Kubernetes quick start](https://blog.nordbye.it/blog/kubernetes-quick-start/)
+- [Fixing my prompts: what the Claude Architect exam taught me](https://blog.nordbye.it/blog/self-proclaimed-prompt-engineer/)
+
+---
+
 ## Quick Links
 
 [![Portfolio](https://img.shields.io/badge/Portfolio-nordbye.it-378144?style=flat-square&logo=googlechrome&logoColor=white&labelColor=0f1410)](https://nordbye.it) [![Blog](https://img.shields.io/badge/Blog-blog.nordbye.it-378144?style=flat-square&logo=hugo&logoColor=white&labelColor=0f1410)](https://blog.nordbye.it) [![Docs](https://img.shields.io/badge/Docs-docs.nordbye.it-378144?style=flat-square&logo=materialformkdocs&logoColor=white&labelColor=0f1410)](https://docs.nordbye.it) [![LinkedIn](https://img.shields.io/badge/LinkedIn-morten--victor--nordbye-378144?style=flat-square&logo=linkedin&logoColor=white&labelColor=0f1410)](https://www.linkedin.com/in/morten-victor-nordbye/) [![GitHub](https://img.shields.io/badge/GitHub-mortennordbye-378144?style=flat-square&logo=github&logoColor=white&labelColor=0f1410)](https://github.com/mortennordbye)
