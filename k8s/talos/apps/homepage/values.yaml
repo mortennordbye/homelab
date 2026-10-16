@@ -81,6 +81,16 @@ config:
               href: https://www.bing.com/webmasters/home
               description: The index behind ChatGPT search and Copilot
 
+    - Writing:
+        - dev.to:
+            - icon: si-devdotto
+              href: https://dev.to/mortennordbye
+              description: Blog cross-posts, canonical to blog.nordbye.it
+        - Hashnode:
+            - icon: si-hashnode
+              href: https://mortennordbye.hashnode.dev
+              description: Blog cross-posts, canonical to blog.nordbye.it
+
   services:
     - Network:
         - Traefik:
