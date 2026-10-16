@@ -78,6 +78,9 @@ and in `hubble_policy_verdicts_total{action="dropped"}`. `policyAuditMode` is a 
 agent-wide setting with no per-namespace toggle; turning it back on relaxes every policy at
 once.
 
+How the policies were rolled out from audit mode to enforced, with the Hubble workflow, is
+written up in [Rolling out Cilium network policies](https://blog.nordbye.it/blog/cilium-network-policy-rollout/).
+
 Right after a node reboots, a pod's first connection to a `toFQDNs` name can be dropped
 before Cilium has seen the DNS answer. The retry passes; an app that does not retry needs a
 restart.

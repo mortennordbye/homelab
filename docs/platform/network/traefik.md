@@ -5,7 +5,8 @@ hypervisor (required anti-affinity on `topology.kubernetes.io/zone`), from the H
 [`kustomization.yaml`](../../../k8s/talos/infra/traefik/kustomization.yaml) with
 [`values.yaml`](../../../k8s/talos/infra/traefik/values.yaml). Routes are Gateway API
 `HTTPRoute`s; the Kubernetes CRD provider is on for `Middleware` objects, with
-`allowCrossNamespace: true`.
+`allowCrossNamespace: true`. The zero-downtime move from ingress-nginx is written up in
+[Surviving the NGINX Ingress EOL](https://blog.nordbye.it/blog/surviving-nginx-eol/).
 
 [![Public requests pass Cloudflare, the UniFi port forward, the public VIP, Traefik and the middlewares to the app; LAN requests use the private VIP](../../assets/diagrams/network-traefik.svg)](../../assets/diagrams/network-traefik.svg)
 

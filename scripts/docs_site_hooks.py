@@ -8,6 +8,7 @@ between pages.
 
 import os
 import re
+import subprocess
 
 from properdocs.structure.files import File
 
@@ -63,7 +64,7 @@ ICONS = {
 
 # docs/ holds folders only, so the root page is generated; its body is overrides/home.html.
 HOME = """---
-title: Homelab docs
+title: How the homelab is built and run
 template: home.html
 hide:
   - navigation
@@ -72,14 +73,57 @@ hide:
 """
 
 
+ROBOTS = """User-agent: *
+Allow: /
+
+Sitemap: https://docs.nordbye.it/sitemap.xml
+"""
+
+DESCRIPTION_MAX = 160
+
+
 def on_files(files, config):
     files.append(File.generated(config, "index.md", content=HOME))
+    files.append(File.generated(config, "robots.txt", content=ROBOTS))
     return files
+
+
+def first_paragraph(markdown):
+    """Plain text of the first prose paragraph, cut to a search-snippet length."""
+    for block in re.split(r"\n\s*\n", markdown):
+        block = block.strip()
+        if not block or block[0] in "#|-*>!<`[" or block[0].isdigit():
+            continue
+        text = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", block)
+        text = re.sub(r"[`*_]", "", " ".join(text.split()))
+        if len(text) <= DESCRIPTION_MAX:
+            return text
+        return text[: DESCRIPTION_MAX - 1].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+    return None
+
+
+def last_commit_date(path):
+    # The sitemap lastmod otherwise falls back to the build date on every page.
+    # Needs full history in CI (fetch-depth: 0); without git it keeps the build date.
+    try:
+        out = subprocess.run(
+            ["git", "log", "-1", "--format=%cs", "--", path],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return out or None
 
 
 def on_page_markdown(markdown, page, config, files):
     page.meta.setdefault("icon", ICONS.get(page.file.src_path))
+    if "description" not in page.meta:
+        description = first_paragraph(markdown)
+        if description:
+            page.meta["description"] = description
     docs_dir = config["docs_dir"]
+    if not page.file.generated_by:
+        page.update_date = last_commit_date(page.file.abs_src_path) or page.update_date
     repo_root = os.path.dirname(config["config_file_path"])
     page_dir = os.path.dirname(os.path.join(docs_dir, page.file.src_path))
 
