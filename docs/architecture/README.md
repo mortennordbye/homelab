@@ -156,6 +156,7 @@ Other apps, one directory each under `k8s/talos/apps/`:
 | [`platform/identity`](../platform/identity/README.md) | Authentik SSO |
 | [`platform/network`](../platform/network/README.md) | VIPs, [Traefik](../platform/network/traefik.md), [Cilium](../platform/network/cilium.md), [certificates](../platform/network/certificates.md), DNS, Cloudflare, UniFi, remote access |
 | [`platform/observability`](../platform/observability/README.md) | monitoring, alerting, [incidents](../platform/observability/incidents.md) |
+| [`platform/post-quantum`](../platform/post-quantum/README.md) | crypto inventory, [Shor on a real quantum computer](../platform/post-quantum/shor.md) |
 | [`platform/secrets`](../platform/secrets/README.md) | Bitwarden to cluster secrets |
 | [`platform/storage`](../platform/storage/README.md) | storage classes, CSI drivers |
 | [`apps/innestemme`](../apps/innestemme/README.md) | the voice assistant for the Voice PE |

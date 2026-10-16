@@ -137,3 +137,9 @@ portfolio/AGENTS.md
 
 # bitwarden/bitwarden-secrets Terraform provider session state
 .bw-provider-state
+
+# Local working plan for the quantum / post-quantum blog project
+docs/projects/quantum-pq-homelab/
+
+# Task ids of an in-flight Quafu run; removed once results land
+quantum/shor/results/pending-*.json
