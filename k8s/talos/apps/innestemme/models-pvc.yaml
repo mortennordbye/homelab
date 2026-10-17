@@ -1,4 +1,5 @@
-# Hugging Face cache (Whisper, Pocket TTS). Downloaded again on an empty volume, so not backed up.
+# Hugging Face cache (Parakeet, Whisper, Pocket TTS) and the speech cache. Downloaded and rendered again
+# on an empty volume, so not backed up.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -10,4 +11,4 @@ spec:
   storageClassName: syno-nfs-csi
   resources:
     requests:
-      storage: 2Gi
+      storage: 4Gi
