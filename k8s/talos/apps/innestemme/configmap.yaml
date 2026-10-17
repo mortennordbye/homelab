@@ -29,6 +29,9 @@ data:
     kokoro-voice: am_onyx
     pocket-voice: cosette
     pocket-precision: f32
+    # Parakeet TDT 0.6B (English only): about 8x faster than whisper-base on a CPU and more accurate on
+    # the Voice PE's recordings (innestemme docs/benchmarks.md). Whisper settings below stay for listener: whisper.
+    listener: parakeet
     whisper-size: base
     # The short window loops or invents words on real requests ("What are you doing?" x10).
     whisper-full-window: true
@@ -37,6 +40,8 @@ data:
     # "I'm home" / "daddy's home": these lights at any time, and Liked Songs.
     home-room: Living Room
     home-music: liked
+    # Good night cuts power to the kitchen's Hue plug for a few seconds: the lights behind it reset.
+    bedtime-power-cycle: [light.kjokken]
     # No llm-url: rules only. Requests they do not understand get the short fallback at once.
     # The living room Voice PE; its Assist satellite entity is disabled in Home Assistant.
     satellite: 10.3.20.67:6053
