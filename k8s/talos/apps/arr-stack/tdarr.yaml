@@ -43,7 +43,7 @@ spec:
     spec:
       containers:
         - name: tdarr
-          image: ghcr.io/haveagitgat/tdarr:2.90.01
+          image: ghcr.io/haveagitgat/tdarr:3.01.00
           ports:
             - containerPort: 8265
               name: http
