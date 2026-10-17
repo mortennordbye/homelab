@@ -42,6 +42,8 @@ data:
     home-music: liked
     # Good night cuts power to the kitchen's Hue plug for a few seconds: the lights behind it reset.
     bedtime-power-cycle: [light.kjokken]
+    # "Initiate lockdown": the music's volume while it lasts; "stand down" puts the old one back.
+    lockdown-volume: 70
     # No llm-url: rules only. Requests they do not understand get the short fallback at once.
     # The living room Voice PE; its Assist satellite entity is disabled in Home Assistant.
     satellite: 10.3.20.67:6053
