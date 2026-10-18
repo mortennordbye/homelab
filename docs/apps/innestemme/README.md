@@ -17,7 +17,7 @@ The manifests live in
 | Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.50; "Hey Jarvis" over an answer interrupts it |
 | Voice | Kokoro inside the engine (sherpa-onnx), voice `am_onyx`; rendered speech kept in `/models/speech-cache` |
 | Name and style | `wake-name: Jarvis`, `honorific: sir` ("As you wish, sir.") |
-| Delivery | Kargo project `innestemme-cd`: each build opens a promotion PR; merging it deploys ([kargo.md](../../platform/delivery/kargo.md)) |
+| Delivery | Kargo project `innestemme-cd`: each build is promoted straight to main and deployed, then smoke-tested ([kargo.md](../../platform/delivery/kargo.md)); roll back by promoting older Freight |
 | Backup | none: the volume is a model cache that downloads again |
 | Wake words | Hey Jarvis, detected in the engine (openWakeWord, `wake-model`, `wake-threshold: 0.65`) on the device's continuous stream |
 | Firmware | innestemme's `firmware/` build (26.9.0 plus a patch), "Wake word in innestemme" switch on |

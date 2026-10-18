@@ -1,8 +1,9 @@
 # Kargo project for innestemme, the voice assistant behind the living room Voice PE.
-# Single-environment, same shape as reelsmith: one Warehouse feeds one `prod` Stage
-# directly, auto-promoted through promote-via-pr. Flow: innestemme CI pushes a new
-# image -> Warehouse creates Freight -> Kargo auto-opens a homelab PR -> merging it
-# deploys -> the smoke test verifies.
+# Single-environment: one Warehouse feeds one `prod` Stage directly, auto-promoted
+# through promote-to-argocd (a direct push to main, no PR). Flow: innestemme CI pushes
+# a new image -> Warehouse creates Freight -> Kargo commits the tag to main and syncs
+# Argo CD -> the smoke test verifies. innestemme's own CI (clippy, tests, a smoke test
+# of the image) is the gate; a PR per build only waited for a click.
 #
 # The image source and CI live in mortennordbye/innestemme.
 
@@ -142,8 +143,8 @@ spec:
                         http://innestemme.innestemme.svc.cluster.local:9090/healthz
 ---
 # prod: the only Stage. Receives Freight straight from the Warehouse
-# (sources.direct), auto-promoted per ProjectConfig through promote-via-pr,
-# then verified by the smoke test. Merging the PR in GitHub is the deploy gate.
+# (sources.direct), auto-promoted per ProjectConfig through promote-to-argocd,
+# then verified by the smoke test. Roll back by promoting older Freight in Kargo.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
@@ -153,7 +154,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
     # Cosmetic UI colour, kept identical across apps: prod = red.
     kargo.akuity.io/color: "#e11d48"
-    kargo.akuity.io/description: "Auto-promoted from the Warehouse via a homelab PR; smoke-tested on the innestemme Service after merge."
+    kargo.akuity.io/description: "Auto-promoted from the Warehouse straight to main; smoke-tested on the innestemme Service after the sync."
 spec:
   requestedFreight:
     - origin:
@@ -177,5 +178,5 @@ spec:
           value: innestemme
       steps:
         - task:
-            name: promote-via-pr
+            name: promote-to-argocd
             kind: ClusterPromotionTask

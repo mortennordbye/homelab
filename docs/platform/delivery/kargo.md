@@ -24,7 +24,8 @@ one's smoke test.
 | innestemme | `ghcr.io/mortennordbye/innestemme` | prod | `http://innestemme.innestemme.svc.cluster.local:9090/healthz` |
 
 Every `stage` and `demo` Stage uses `promote-to-argocd`; every `prod` Stage uses
-`promote-via-pr`. The smoke tests are AnalysisTemplates in each `<app>.yaml` that
+`promote-via-pr`, except innestemme's, which uses `promote-to-argocd` too: a voice
+assistant in one living room, whose own CI is the gate, deployed on every build. The smoke tests are AnalysisTemplates in each `<app>.yaml` that
 run a curl Job; the ones on `*.local.bigd.no` and on `nordbye.it`, `blog.nordbye.it`
 and `logeverylift.com` pass `-k`, the headroom demo and reelsmith ones verify TLS, and innestemme's is plain HTTP
 on its in-cluster Service.
