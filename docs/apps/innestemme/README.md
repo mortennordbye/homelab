@@ -1,9 +1,10 @@
 # innestemme
 
 innestemme is a local voice assistant that replaces Home Assistant's Assist pipeline on the
-living room Voice PE. It connects to the device over the ESPHome native API, listens with
-Whisper, answers with its own skills and Home Assistant as "Jarvis" in a butler's style, and
-speaks with Kokoro (voice `am_onyx`) from a sidecar container. Its image,
+living room Voice PE. It connects to the device over the ESPHome native API, hears "Hey Jarvis"
+with openWakeWord, transcribes with Parakeet, answers with its own skills and Home Assistant as
+"Jarvis" in a butler's style, and speaks with Kokoro (voice `am_onyx`) from a sidecar container.
+How the engine works is in the innestemme repo's `docs/`. Its image,
 `ghcr.io/mortennordbye/innestemme`, is built in the separate `mortennordbye/innestemme` repo.
 The manifests live in
 [`k8s/talos/apps/innestemme/`](../../../k8s/talos/apps/innestemme/kustomization.yaml).
@@ -26,17 +27,21 @@ The manifests live in
 
 1. The pod dials the Voice PE on `10.3.20.67:6053` (Noise-encrypted) and takes its microphone.
    Trusted to IoT is open, so no firewall rule is needed for this direction.
-2. The device detects "Hey Jarvis" on its own and streams the request.
-3. The engine transcribes with Whisper (full 30 s window) and answers from its rules and Home
-   Assistant (`home-assistant` Service). No language model is configured, so a request the rules
-   do not understand gets "I'm afraid I didn't catch that, sir."
-4. Speech: fixed sentences (the persona's openers and remarks, lead-ins, the built-in jokes,
-   confirmations such as "The kitchen lights are off.") are rendered once by Kokoro and kept on the
-   models volume; only sentences with live data (numbers) are synthesized per request, about 2.5 to
-   3.5 s each on the node CPU. A slow answer (weather, departures, prices, what's on, who's home)
-   opens with a kept lead-in ("Checking the forecast, sir.") that plays at once while that sentence
-   is synthesized. After a start, the 105 fixed sentences render in about 3 minutes in idle time;
-   after a restart they load from the volume.
+2. The device streams its microphone all the time; the engine scores it with openWakeWord
+   (`wake-model: hey_jarvis`, `wake-threshold: 0.65`) and takes what follows "Hey Jarvis".
+3. Parakeet TDT 0.6B (int8) transcribes the request, and the engine answers from its rules and
+   Home Assistant (`home-assistant` Service). A complete command is acted on after 0.24 s of quiet,
+   anything else after 0.64 s. Home Assistant writes (lights, scenes, the phone's ring) are queued,
+   so the answer does not wait for the Hue lights. No language model is configured, so a request
+   the rules do not understand gets a short "didn't catch that" (only when the name was in the
+   wake word; a false wake by the TV stays silent).
+4. Speech: about 4,600 fixed sentences (openers, remarks, lead-ins, jokes, confirmations, every
+   volume level and minute of the day, this home's lights and room temperatures) are rendered once
+   by Kokoro in idle time and kept on the models volume (`/models/speech-cache`, about 560 MB);
+   only other sentences with live data are synthesized per request, 1 to 3 s each on the node CPU.
+   A slow answer (weather, departures, prices, what's on, who's home) opens with a kept lead-in
+   ("Checking the forecast, sir.") while its data sentence is synthesized. A sentence heard before
+   it was rendered is logged as `speech not rendered ahead`.
 5. Home Assistant announces the answer on the Sonos (`answer-player`), which downloads it from
    `http://10.3.10.99:9090/speech/<id>.wav` while it is still being synthesized. Without `answer-player` the Voice PE plays it
    itself; IoT may only reach that one address and port, from the Voice PE's MAC:
@@ -53,6 +58,8 @@ Reloader restarts the pod when it changes. `innestemme-secret` comes from Bitwar
 | `HA_TOKEN` | `innestemme-ha-token` | Home Assistant long-lived token `ai-voice` |
 | `VOICE_SATELLITE_KEY` | `innestemme-satellite-key` | the Voice PE's API encryption key (base64) |
 | `VOICE_ADDRESS` | `innestemme-address` | street address for weather and departures |
+| `VOICE_HUE_APP_KEY` | id `32ceeacb-…` | innestemme's key on the Hue bridge, for party mode |
+| `VOICE_HUE_CLIENT_KEY` | id `2e946f69-…` | the bridge's Entertainment stream key |
 
 The satellite key is the `noise_psk` Home Assistant set when the device was added, in the
 ESPHome entry of `/config/.storage/core.config_entries` on the HA box. Re-adding the device
@@ -101,9 +108,6 @@ Measured on 2026-10-10, when the assistant "worked once, then stopped":
 - **Loud answers deafened the device's wake word detector** (official firmware): after an answer at
   volume 65 it missed normal voices for several seconds. With the wake word detected in the engine
   this no longer applies; answers are at 0.50.
-- **Whisper's short window invented text.** innestemme #11 encoded only the request plus a few
-  seconds; on real recordings it looped ("What are you doing?" ten times). The full window is the
-  default since innestemme #15 and set here with `whisper-full-window: true`.
 - **Saying "Hey Jarvis" again during a run stops it** (official firmware); the engine logs
   `device ended the run`.
 - **Reading the device's own log:** a small aioesphomeapi script calling `subscribe_logs` with the
