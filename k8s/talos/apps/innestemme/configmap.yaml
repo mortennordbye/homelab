@@ -14,18 +14,17 @@ data:
     # A page with everything the assistant understands, on the same port: http://10.3.10.99:9090/
     web: true
     # Match the CPU limit in deployment.yaml.
-    threads: 4
+    threads: 6
     wake-name: Jarvis
     # English answers in a butler's words: "As you wish, sir."
     honorific: sir
     home: Oslo
     norwegian: false
-    # English speech from the Kokoro sidecar in deployment.yaml. About 3 s per sentence on the node CPU,
-    # so fixed sentences are rendered ahead and kept, and slow answers open with a kept lead-in while
-    # only the sentence with live data is synthesized.
-    english-tts: kokoro
+    # English speech from Kokoro inside the engine (sherpa-onnx, the f32 v1.0 model in /models/hub).
+    # Fixed sentences are rendered ahead and kept, in a folder of its own (kokoro-onnx-am_onyx), so
+    # only sentences with live data are synthesized.
+    english-tts: kokoro-onnx
     speech-cache: /models/speech-cache
-    kokoro-url: http://127.0.0.1:8880
     kokoro-voice: am_onyx
     # Parakeet TDT 0.6B (English only): about 8x faster than whisper-base on a CPU and more accurate on
     # the Voice PE's recordings (innestemme docs/benchmarks.md).

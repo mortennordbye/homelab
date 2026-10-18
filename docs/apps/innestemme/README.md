@@ -3,7 +3,7 @@
 innestemme is a local voice assistant that replaces Home Assistant's Assist pipeline on the
 living room Voice PE. It connects to the device over the ESPHome native API, hears "Hey Jarvis"
 with openWakeWord, transcribes with Parakeet, answers with its own skills and Home Assistant as
-"Jarvis" in a butler's style, and speaks with Kokoro (voice `am_onyx`) from a sidecar container.
+"Jarvis" in a butler's style, and speaks with Kokoro (voice `am_onyx`) inside the engine.
 How the engine works is in the innestemme repo's `docs/`. Its image,
 `ghcr.io/mortennordbye/innestemme`, is built in the separate `mortennordbye/innestemme` repo.
 The manifests live in
@@ -15,7 +15,7 @@ The manifests live in
 | VIP | `10.3.10.99:9090`: spoken answers, `/metrics`, and the skills page at `/`, which is also at `https://jarvis.local.bigd.no` through the private gateway |
 | Device | Voice PE "Home Assistant Voice 0a1f4d", `10.3.20.67` on IoT, area Living Room |
 | Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.50; "Hey Jarvis" over an answer interrupts it |
-| Voice | Kokoro-FastAPI sidecar on `localhost:8880`, voice `am_onyx`; rendered speech kept in `/models/speech-cache` |
+| Voice | Kokoro inside the engine (sherpa-onnx), voice `am_onyx`; rendered speech kept in `/models/speech-cache` |
 | Name and style | `wake-name: Jarvis`, `honorific: sir` ("As you wish, sir.") |
 | Delivery | Kargo project `innestemme-cd`: each build opens a promotion PR; merging it deploys ([kargo.md](../../platform/delivery/kargo.md)) |
 | Backup | none: the volume is a model cache that downloads again |
@@ -38,7 +38,8 @@ The manifests live in
 4. Speech: about 4,600 fixed sentences (openers, remarks, lead-ins, jokes, confirmations, every
    volume level and minute of the day, this home's lights and room temperatures) are rendered once
    by Kokoro in idle time and kept on the models volume (`/models/speech-cache`, about 560 MB);
-   only other sentences with live data are synthesized per request, 1 to 3 s each on the node CPU.
+   only other sentences with live data are synthesized per request. The home's forecast and the
+   electricity prices are fetched every 4 minutes, so those answers skip their lead-in.
    A slow answer (weather, departures, prices, what's on, who's home) opens with a kept lead-in
    ("Checking the forecast, sir.") while its data sentence is synthesized. A sentence heard before
    it was rendered is logged as `speech not rendered ahead`.
@@ -93,13 +94,14 @@ in Home Assistant can generate a new key; update the Bitwarden secret when that 
   makes and example phrases, shows how a typed phrase is parsed, and "Hear response" speaks the
   answer in the browser for requests that change nothing.
 
-## Kokoro sidecar
+## Kokoro
 
-`ghcr.io/remsky/kokoro-fastapi-cpu`, a native sidecar (an init container with `restartPolicy:
-Always`) so the engine starts only once Kokoro answers `/health`; the engine checks its voices at
-start-up. The model is in the image (`DOWNLOAD_MODEL=false`) and it runs as the image's own user
-1000. `OMP_NUM_THREADS`/`MKL_NUM_THREADS` are 4 to match its 4-CPU limit: by default PyTorch starts
-one thread per node core (8), and in a 2-CPU limit a short answer took 18 to 26 s instead of about 3.
+Kokoro v1.0 runs inside the engine through sherpa-onnx (`english-tts: kokoro-onnx`): the f32 model, its
+voices and English pronunciation data (about 380 MB) download into `/models/hub` on first start. It was a
+Kokoro-FastAPI sidecar (Python, 1.7 GB resident) until 2026-10-18; in the engine it is 16-31% faster on the
+same CPUs (innestemme `docs/benchmarks.md`), so the pod has the 6 CPUs the two shared. Its speech cache is
+`/models/speech-cache/kokoro-onnx-am_onyx`; after the switch the about 4,600 fixed sentences render again
+in idle time, a few hours, and until then some answers are synthesized when asked.
 
 ## Troubleshooting
 
