@@ -38,6 +38,9 @@ data:
     bedtime-power-cycle: [light.kjokken]
     # "Initiate lockdown": the music's volume while it lasts; "stand down" puts the old one back.
     lockdown-volume: 70
+    # Shopping list items under their Norwegian names; an item said by itself after an add is heard
+    # again by Whisper small in Norwegian (about 380 MB in /models/hub, about 0.5 GB of memory).
+    norwegian-groceries: true
     # "Party mode": every Hue light follows the music through the bridge's Entertainment API.
     hue-bridge: 10.3.10.16
     # No llm-url: rules only. Requests they do not understand get the short fallback at once.
