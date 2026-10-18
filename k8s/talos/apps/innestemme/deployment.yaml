@@ -31,51 +31,6 @@ spec:
         fsGroup: 65532
         seccompProfile:
           type: RuntimeDefault
-      initContainers:
-        # Kokoro speech for English answers, on localhost:8880. A native sidecar: the engine starts
-        # once it answers, since the engine checks its voices at start-up.
-        - name: kokoro
-          image: ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.4
-          imagePullPolicy: IfNotPresent
-          restartPolicy: Always
-          env:
-            # The model is in the image.
-            - name: DOWNLOAD_MODEL
-              value: "false"
-            # PyTorch starts a thread per node core (8) by default; in a 4-CPU limit they fight, and a
-            # sentence took 18 to 26 s instead of about 3.
-            - name: OMP_NUM_THREADS
-              value: "4"
-            - name: MKL_NUM_THREADS
-              value: "4"
-          securityContext:
-            # The image's own user owns /app; the pod default (65532) cannot run it.
-            runAsUser: 1000
-            runAsGroup: 1000
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-          startupProbe:
-            httpGet:
-              path: /health
-              port: 8880
-            periodSeconds: 5
-            failureThreshold: 60
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8880
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 4
-          resources:
-            requests:
-              cpu: "1"
-              memory: 1536Mi
-            limits:
-              cpu: "4"
-              memory: 3Gi
       containers:
         - name: innestemme
           # x86-64-v3 build: needs AVX2, which the host-passthrough Talos VMs have.
@@ -117,13 +72,14 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 4
+          # Kokoro runs in the engine (english-tts: kokoro-onnx), so it has the CPUs the sidecar had.
           resources:
             requests:
-              cpu: "1"
-              memory: 1536Mi
+              cpu: "2"
+              memory: 2Gi
             limits:
-              cpu: "4"
-              memory: 3Gi
+              cpu: "6"
+              memory: 4Gi
           volumeMounts:
             - name: models
               mountPath: /models
