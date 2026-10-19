@@ -7,6 +7,7 @@
 | Grafana, dashboard Homelab-SPOG | https://grafana.local.bigd.no/d/mns9wmn |
 | Alertmanager | https://alertmanager.local.bigd.no |
 | Prometheus | https://prometheus.local.bigd.no |
+| Pyrra, SLOs and error budgets | https://pyrra.local.bigd.no |
 | Discord | `#homelab-alerts` |
 
 SPOG rows, outside in: the network and hosts first, then the cluster platform, then the apps.
@@ -45,6 +46,7 @@ SPOG dashboard is in [The observability stack I actually run](https://blog.nordb
 | Loki | logs, single binary | 7 days, Kubernetes events 30 days | `k8s/talos/infra/loki/values.yaml` |
 | Alloy | DaemonSet shipping pod logs and Kubernetes events to Loki | none | `k8s/talos/infra/loki/alloy-values.yaml` |
 | Tempo | traces, pushed over OTLP by Traefik | 24 h | `k8s/talos/infra/tempo/values.yaml` |
+| Pyrra | SLOs to recording rules and burn-rate alerts, SLO UI ([slos.md](slos.md)) | none | `k8s/talos/infra/pyrra/` |
 | Falco | runtime security events, modern eBPF driver | none | `k8s/talos/infra/falco/values.yaml` |
 
 ## Alert path
@@ -109,6 +111,8 @@ Everywhere else only critical reaches Discord.
 |---|---|---|
 | `InternetDown` | both internet probes fail for 1 min | critical |
 | `PublicSiteDown` | a public site fails for 5 min while the internet is up | critical |
+| `ErrorBudgetBurn` | the public-site probe SLO burns budget at 7x or faster ([slos.md](slos.md)) | critical; slower burns warning (not sent) |
+| `SLOMetricAbsent` | the probe metric behind an SLO is gone for 2 min | critical |
 | `BackupJobStale` | etcd, a `*-db-backup` or a `*-backup-check` CronJob not successful for 26 h, or scheduled and never succeeded | critical |
 | `RestoreTestFailed` | the monthly restore test did not pass, or has not passed for 32 days | critical |
 | `VolSyncBackupStale` | a ReplicationSource out of sync for 6 h | critical |

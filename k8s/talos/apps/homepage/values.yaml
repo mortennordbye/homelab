@@ -488,6 +488,11 @@ config:
                   query: min(certmanager_certificate_expiration_timestamp_seconds) - time()
                   format:
                     type: duration
+        - Pyrra:
+            icon: mdi-target
+            href: https://pyrra.local.bigd.no
+            siteMonitor: https://pyrra.local.bigd.no
+            description: SLOs and error budgets
         - Tautulli:
             icon: tautulli.png
             href: https://tautulli.local.bigd.no

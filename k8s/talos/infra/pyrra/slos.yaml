@@ -1,0 +1,162 @@
+# SLO targets and how they were chosen: docs/platform/observability/slos.md
+# The window cannot exceed Prometheus retention (7d), or the budget is computed on partial data.
+# Request SLOs do not alert: a few requests an hour make burn rates noise. The probe SLO pages.
+# The release label is what puts Pyrra's generated PrometheusRule into Prometheus's ruleSelector.
+# Wave 1 and SkipDryRun: the CRD ships in this same app, so the first sync would fail dry-run.
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: portfolio-availability
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of portfolio requests through the public gateway that do not answer 5xx.
+  target: "99.5"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    ratio:
+      errors:
+        metric: traefik_service_requests_total{exported_service=~"httproute-portfolio-nordbye-gw-traefik-traefik-gateway-public-.*",code=~"5.."}
+      total:
+        metric: traefik_service_requests_total{exported_service=~"httproute-portfolio-nordbye-gw-traefik-traefik-gateway-public-.*"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: portfolio-latency
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of portfolio requests served in under 0.3s, measured at Traefik.
+  target: "98"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    latency:
+      success:
+        metric: traefik_service_request_duration_seconds_bucket{exported_service=~"httproute-portfolio-nordbye-gw-traefik-traefik-gateway-public-.*",le="0.3"}
+      total:
+        metric: traefik_service_request_duration_seconds_count{exported_service=~"httproute-portfolio-nordbye-gw-traefik-traefik-gateway-public-.*"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: blog-availability
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of blog requests through the public gateway that do not answer 5xx.
+  target: "99.5"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    ratio:
+      errors:
+        metric: traefik_service_requests_total{exported_service=~"httproute-blog-blog-gw-traefik-traefik-gateway-public-.*",code=~"5.."}
+      total:
+        metric: traefik_service_requests_total{exported_service=~"httproute-blog-blog-gw-traefik-traefik-gateway-public-.*"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: blog-latency
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of blog requests served in under 0.3s, measured at Traefik.
+  target: "98"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    latency:
+      success:
+        metric: traefik_service_request_duration_seconds_bucket{exported_service=~"httproute-blog-blog-gw-traefik-traefik-gateway-public-.*",le="0.3"}
+      total:
+        metric: traefik_service_request_duration_seconds_count{exported_service=~"httproute-blog-blog-gw-traefik-traefik-gateway-public-.*"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: logeverylift-availability
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of logeverylift requests through the public gateway that do not answer 5xx.
+  target: "99.5"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    ratio:
+      errors:
+        metric: traefik_service_requests_total{exported_service=~"httproute-logeverylift-logeverylift-gw-traefik-traefik-gateway-public-.*",code=~"5.."}
+      total:
+        metric: traefik_service_requests_total{exported_service=~"httproute-logeverylift-logeverylift-gw-traefik-traefik-gateway-public-.*"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: logeverylift-latency
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of logeverylift requests served in under 1.2s, measured at Traefik.
+  target: "99"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    latency:
+      success:
+        metric: traefik_service_request_duration_seconds_bucket{exported_service=~"httproute-logeverylift-logeverylift-gw-traefik-traefik-gateway-public-.*",le="1.2"}
+      total:
+        metric: traefik_service_request_duration_seconds_count{exported_service=~"httproute-logeverylift-logeverylift-gw-traefik-traefik-gateway-public-.*"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: public-sites-probe
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of blackbox probes per public site that succeed, the view a visitor gets.
+  target: "99.5"
+  window: 7d
+  indicator:
+    bool_gauge:
+      metric: probe_success{job="public-sites"}
+      grouping:
+        - instance

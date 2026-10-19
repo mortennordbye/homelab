@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+resources:
+  - slos.yaml
+  - httproute.yaml
+  - ciliumnetworkpolicy.yaml
+
+helmCharts:
+  - name: pyrra
+    repo: https://pyrra-dev.github.io/helm-charts
+    version: 1.14.0
+    releaseName: pyrra
+    namespace: monitoring
+    valuesFile: values.yaml
+    includeCRDs: true
+
+patches:
+  # Helm test hook; Argo CD would apply it as a plain Pod.
+  - target:
+      kind: Pod
+      name: pyrra-test-connection
+    patch: |-
+      $patch: delete
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: pyrra-test-connection

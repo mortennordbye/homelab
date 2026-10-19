@@ -99,6 +99,9 @@ missing Alertmanager heartbeat. Falco watches syscalls on every node and posts t
 itself through falcosidekick
 ([`../platform/observability/README.md`](../platform/observability/README.md), past
 incidents in [`../platform/observability/incidents.md`](../platform/observability/incidents.md)).
+Pyrra keeps SLOs and error budgets for the public sites over a 7-day window and pages on
+the probe SLO's burn rate
+([`../platform/observability/slos.md`](../platform/observability/slos.md)).
 metrics-server (`k8s/talos/infra/metrics-server`) serves the resource metrics API for
 `kubectl top`.
 
