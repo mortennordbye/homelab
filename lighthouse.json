@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-10-19T11:32:06Z",
+  "sites": [
+    {
+      "url": "https://nordbye.it/",
+      "performance": 77,
+      "accessibility": 96,
+      "bestPractices": 100,
+      "seo": 100
+    },
+    {
+      "url": "https://blog.nordbye.it/",
+      "performance": 97,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100
+    }
+  ]
+}
