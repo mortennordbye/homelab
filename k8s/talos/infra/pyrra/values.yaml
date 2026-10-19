@@ -3,13 +3,6 @@ fullnameOverride: pyrra
 prometheusUrl: http://prometheus-operated.monitoring.svc.cluster.local:9090
 prometheusExternalUrl: https://prometheus.local.bigd.no
 
-resources:
-  requests:
-    cpu: 10m
-    memory: 64Mi
-  limits:
-    memory: 128Mi
-
 serviceMonitor:
   enabled: true
 serviceMonitorOperator:

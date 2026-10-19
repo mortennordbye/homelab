@@ -10,22 +10,15 @@ resources:
 
 helmCharts:
   - name: pyrra
-    repo: https://rlex.github.io/helm-charts
-    version: 0.15.0
+    repo: https://pyrra-dev.github.io/helm-charts
+    version: 1.14.0
     releaseName: pyrra
     namespace: monitoring
     valuesFile: values.yaml
     includeCRDs: true
 
 patches:
-  # The chart's templates carry no metadata.namespace, and the namespace field above
-  # does not add one to them; ArgoCD then refuses the objects.
-  - target:
-      kind: ^(ServiceAccount|Service|Deployment|ServiceMonitor)$
-    patch: |-
-      - op: add
-        path: /metadata/namespace
-        value: monitoring
+  # Helm test hook; Argo CD would apply it as a plain Pod.
   - target:
       kind: Pod
       name: pyrra-test-connection
