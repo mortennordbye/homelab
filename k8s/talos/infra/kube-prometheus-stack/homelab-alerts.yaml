@@ -22,6 +22,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#containerrestartingfrequently
             summary: 'Container {{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} restarted >3 times in 15m'
             description: |
               Container `{{ $labels.container }}` in pod `{{ $labels.namespace }}/{{ $labels.pod }}` restarted {{ $value | printf "%.0f" }} times in the last 15 minutes.
@@ -38,6 +39,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#deploymentunavailable
             summary: 'Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has 0 ready replicas'
             description: |
               Deployment `{{ $labels.namespace }}/{{ $labels.deployment }}` wants >0 replicas but has 0 available for over 5 minutes.
@@ -54,6 +56,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#podcrashlooping
             summary: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} crash-looping'
             description: |
               Container `{{ $labels.container }}` in pod `{{ $labels.namespace }}/{{ $labels.pod }}` has been in CrashLoopBackOff for over 10 minutes. A rolling update may be masking this (an old pod still serving) — the new revision is broken.
@@ -72,6 +75,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#containeroomkilled
             summary: 'Container {{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} OOMKilled'
             description: |
               Container `{{ $labels.container }}` in pod `{{ $labels.namespace }}/{{ $labels.pod }}` was OOMKilled in the last 10 minutes.
@@ -87,6 +91,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#argocdappdegraded
             summary: 'ArgoCD app {{ $labels.name }} health={{ $labels.health_status }} sync={{ $labels.sync_status }}'
             description: |
               ArgoCD application `{{ $labels.name }}` (project `{{ $labels.project }}`, dest `{{ $labels.dest_namespace }}`) has been in health_status `{{ $labels.health_status }}` / sync_status `{{ $labels.sync_status }}` for over 15 minutes.
@@ -102,6 +107,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#argocdappsyncstuck
             summary: 'ArgoCD app {{ $labels.name }} stuck sync={{ $labels.sync_status }} for >20m'
             description: |
               ArgoCD application `{{ $labels.name }}` (project `{{ $labels.project }}`, dest `{{ $labels.dest_namespace }}`) has been sync_status `{{ $labels.sync_status }}` for over 20 minutes — sustained drift or a manifest-generation failure (ComparisonError) that auto-sync cannot resolve.
@@ -115,6 +121,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#externalsecretnotready
             summary: 'ExternalSecret {{ $labels.namespace }}/{{ $labels.name }} not Ready'
             description: |
               ExternalSecret `{{ $labels.namespace }}/{{ $labels.name }}` has been NotReady for 30 minutes.
@@ -129,6 +136,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#certificateexpiringsoon
             summary: 'Certificate {{ $labels.namespace }}/{{ $labels.name }} expires in {{ $value | humanizeDuration }}'
             description: |
               Certificate `{{ $labels.namespace }}/{{ $labels.name }}` expires in {{ $value | humanizeDuration }}.
@@ -154,6 +162,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#kubehpamaxedout
             summary: 'HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} running at max replicas'
             description: |
               HPA `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` has been at max replicas for over 15 minutes and cannot scale higher to meet demand. (KEDA-driven HPAs are excluded — their max is set by schedule/trigger, not load.)
@@ -172,6 +181,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#arrqueuestuck
             summary: '{{ $labels.job }}: {{ $value | printf "%.0f" }} queue items stuck in {{ $labels.download_state }}'
             description: |
               `{{ $labels.job }}` has {{ $value | printf "%.0f" }} queue items in state `{{ $labels.download_state }}` with a warning or error for over 2 hours.
@@ -186,6 +196,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#mediarootfolderlow
             summary: '{{ $labels.job }} root folder {{ $labels.path }} has {{ $value | humanize1024 }}B free'
             description: |
               Root folder `{{ $labels.path }}` in `{{ $labels.job }}` is under 200 GB free. Imports fail once it fills.
@@ -200,6 +211,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#arrappunreachable
             summary: '{{ $labels.job }} cannot reach its app API'
             description: |
               `{{ $labels.job }}` has reported the app as down for 15 minutes.
@@ -211,6 +223,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#mediaexporterdown
             summary: 'Media stack exporter {{ $labels.job }} is down'
             description: |
               Prometheus has failed to scrape `{{ $labels.job }}` for 15 minutes, so the other media alerts are blind.
@@ -223,6 +236,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#qbittorrentdisconnected
             summary: 'qBittorrent at {{ $labels.server }} has no connection'
             description: |
               qBittorrent has reported no connection for 30 minutes, so downloads are stalled.
@@ -245,6 +259,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#backupjobstale
             summary: 'Backup job {{ $labels.namespace }}/{{ $labels.cronjob }} has not succeeded in over a day'
             description: |
               CronJob `{{ $labels.namespace }}/{{ $labels.cronjob }}` has not completed a backup in over 26 hours.
@@ -267,6 +282,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#restoretestfailed
             summary: 'The monthly restore test did not pass'
             description: |
               CronJob `backup-check/restore-test` has not completed a successful run since it was last scheduled.
@@ -278,6 +294,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#volsyncbackupstale
             summary: 'Volume backup {{ $labels.obj_namespace }}/{{ $labels.obj_name }} is behind schedule'
             description: |
               ReplicationSource `{{ $labels.obj_namespace }}/{{ $labels.obj_name }}` has missed its nightly restic backup for over 6 hours.
@@ -294,6 +311,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#internetdown
             summary: 'Internet unreachable from the homelab'
             description: |
               Every internet probe (Google, Cloudflare) has failed for over a minute. The UniFi gateway's system log shows whether the WAN dropped.
@@ -308,6 +326,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#publicsitedown
             summary: '{{ $labels.instance }} is down from outside'
             description: |
               {{ $labels.instance }} has failed through public DNS and Cloudflare for 5 minutes while the internet itself is up.
@@ -323,6 +342,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#nasdiskunhealthy
             summary: 'NAS disk {{ $labels.diskID }} is not healthy'
             description: |
               DSM reports a disk as not normal (status {{ $value }}). Check Storage Manager > HDD/SSD on nas.local.bigd.no.
@@ -333,6 +353,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#nasraiddegraded
             summary: 'NAS {{ $labels.raidName }} is not normal'
             description: |
               DSM reports {{ $labels.raidName }} with RAID status {{ $value }} (1 is normal). Check Storage Manager on nas.local.bigd.no before anything else writes to it.
@@ -343,6 +364,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#nasvolumealmostfull
             summary: 'NAS Volume 1 is {{ $value | humanizePercentage }} full'
             description: |
               Volume 1 holds the media, the cluster volumes and every backup. Free space before it fills.
@@ -353,6 +375,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#nasmetricsdown
             summary: 'NAS SNMP scrape failing'
             description: |
               Prometheus has not reached the NAS over SNMPv3 for 30 minutes, so the NAS disk and RAID alerts are blind.
@@ -366,6 +389,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#proxmoxhostdown
             summary: 'Proxmox {{ $labels.id }} is down'
             description: |
               The Proxmox cluster reports {{ $labels.id }} offline for 5 minutes; its Talos VMs are down with it.
@@ -377,6 +401,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#proxmoxstoragealmostfull
             summary: 'Proxmox {{ $labels.id }} is {{ $value | humanizePercentage }} full'
             description: |
               local-lvm holds the proxmox-local PVCs, where Proxmox-CSI leaves orphaned volumes; pbs holds every VM backup.
@@ -387,6 +412,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#proxmoxmetricsdown
             summary: 'Proxmox exporter scrape failing'
             description: |
               Prometheus has not reached the Proxmox API for 30 minutes, so the Proxmox alerts are blind.
@@ -399,6 +425,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#proxmoxhosthot
             summary: 'Proxmox {{ $labels.instance }} CPU at {{ $value | printf "%.0f" }} °C'
             description: |
               {{ $labels.instance }} has run above 90 °C for 10 minutes. Check for a blocked fan or dust, and what is loading the host.
@@ -409,6 +436,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#proxmoxsensorsdown
             summary: 'Proxmox node-exporter scrape failing'
             description: |
               Prometheus has not reached node-exporter on any Proxmox host for 30 minutes, so ProxmoxHostHot is blind.

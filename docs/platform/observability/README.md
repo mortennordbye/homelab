@@ -103,6 +103,9 @@ Operating notes for the Worker (heartbeat URL rotation, the site list) are in
 
 ## Alerts
 
+Every rule links to its section in [runbooks.md](runbooks.md); postmortems go in
+[incidents.md](incidents.md).
+
 Rules live in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`, except reelsmith's,
 which live in `k8s/talos/apps/reelsmith/monitoring.yaml` and reach Discord at every severity.
 Everywhere else only critical reaches Discord.
