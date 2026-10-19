@@ -200,13 +200,14 @@ alertmanager:
             channel: "#homelab-alerts"
             send_resolved: true
             title: '[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}'
+            # Pyrra cannot set annotations, so its alerts get their runbook link here.
             text: |-
               {{ range .Alerts }}
               *Severity:* `{{ .Labels.severity }}`
               *Namespace:* `{{ .Labels.namespace }}`
               *Summary:* {{ .Annotations.summary }}
               *Description:* {{ .Annotations.description }}
-              {{ if .Annotations.runbook_url }}*Runbook:* {{ .Annotations.runbook_url }}{{ end }}
+              {{ if .Annotations.runbook_url }}*Runbook:* {{ .Annotations.runbook_url }}{{ else if or (eq .Labels.alertname "ErrorBudgetBurn") (eq .Labels.alertname "SLOMetricAbsent") }}*Runbook:* https://docs.nordbye.it/platform/observability/runbooks/#{{ .Labels.alertname | toLower }}{{ end }}
               {{ end }}
 
 nodeExporter:
