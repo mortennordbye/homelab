@@ -17,6 +17,7 @@ Every row starts collapsed.
 |---|---|
 | Internet & network | internet up/down, availability, downtime and outages over the range, probe latency; UniFi WAN latency, session uptime, drops, gateway CPU, switch port traffic, errors and drops |
 | Public sites | public site probes and response time, traffic share per site, then request rate, 5xx rate, p95 and status codes per site (one repeated set of panels over the hidden `site` variable) |
+| SLOs & error budgets | budget left per site for the paging probe SLO and per request SLO, probe burn rate against the 1x and 7x lines, rolling 7-day SLIs against their objectives ([slos.md](slos.md)) |
 | Backups | age of the last etcd and dump jobs, VolSync sources behind schedule |
 | Proxmox | host up/down, VMs running and stopped (templates excluded), host CPU, memory and CPU temperature, storage used per host (local, local-lvm) and shared (pbs, nfs-vmstore) |
 | NAS (Synology) | system status, Volume 1 used and free, RAID status, unhealthy disks, temperature, eth0 traffic, disk temperatures |

@@ -3,8 +3,8 @@
 Pyrra turns `ServiceLevelObjective` resources into Prometheus recording rules and
 multi-window, multi-burn-rate alerts (the method from the Google SRE workbook). The
 objectives are in `k8s/talos/infra/pyrra/slos.yaml`, the UI is at
-https://pyrra.local.bigd.no, and two Grafana dashboards (Pyrra list and detail) sit in the
-`SLOs` folder.
+https://pyrra.local.bigd.no, the SPOG dashboard has an "SLOs & error budgets" row, and
+Pyrra's own list and detail dashboards sit in the Grafana `SLOs` folder.
 
 ## Objectives
 
