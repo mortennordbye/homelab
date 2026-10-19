@@ -43,6 +43,7 @@ locals {
     "portfolio-stage",
     "prometheus",
     "prowlarr",
+    "pyrra",
     "qbittorrent",
     "radarr",
     "radarr-4k",

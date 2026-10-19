@@ -18,6 +18,15 @@ spec:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": traefik
             "k8s:app.kubernetes.io/instance": traefik-traefik
+    # Pyrra's UI reads SLO budgets.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": pyrra
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
     # The portfolio API and status-publisher read cluster metrics.
     - fromEndpoints:
         - matchLabels:

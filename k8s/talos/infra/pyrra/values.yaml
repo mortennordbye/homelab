@@ -1,0 +1,25 @@
+fullnameOverride: pyrra
+
+prometheusUrl: http://prometheus-operated.monitoring.svc.cluster.local:9090
+prometheusExternalUrl: https://prometheus.local.bigd.no
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+
+serviceMonitor:
+  enabled: true
+serviceMonitorOperator:
+  enabled: true
+
+# Same-name recording rules across SLOs, which the bundled dashboards query.
+genericRules:
+  enabled: true
+
+dashboards:
+  enabled: true
+  annotations:
+    k8s-sidecar-target-directory: SLOs

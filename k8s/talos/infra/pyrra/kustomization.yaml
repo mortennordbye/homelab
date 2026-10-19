@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+resources:
+  - slos.yaml
+  - httproute.yaml
+  - ciliumnetworkpolicy.yaml
+
+helmCharts:
+  - name: pyrra
+    repo: https://rlex.github.io/helm-charts
+    version: 0.15.0
+    releaseName: pyrra
+    namespace: monitoring
+    valuesFile: values.yaml
+    includeCRDs: true
+
+patches:
+  # The chart's templates carry no metadata.namespace, and the namespace field above
+  # does not add one to them; ArgoCD then refuses the objects.
+  - target:
+      kind: ^(ServiceAccount|Service|Deployment|ServiceMonitor)$
+    patch: |-
+      - op: add
+        path: /metadata/namespace
+        value: monitoring
+  - target:
+      kind: Pod
+      name: pyrra-test-connection
+    patch: |-
+      $patch: delete
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: pyrra-test-connection
