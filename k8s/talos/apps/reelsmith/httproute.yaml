@@ -64,6 +64,10 @@ spec:
         - path:
             type: Exact
             value: /facebook/callback
+        # LinkedIn OAuth redirect for the personal profile consent trip.
+        - path:
+            type: Exact
+            value: /linkedin/callback
       filters:
         - type: ExtensionRef
           extensionRef:
