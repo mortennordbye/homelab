@@ -107,6 +107,9 @@ tell Morten to press the button.
 
 - `bws secret create` failing with "Resource not found" (404) means the token can only
   read that project, not a wrong project id.
+- Bitwarden rate-limits bursts with 429 "Slow down!". When the value was just minted
+  by another API and exists nowhere else, retry the `bws secret create` a few times with
+  a short sleep, and revoke the minted credential if it still fails.
 - `bws project list` returning `[]` does not mean the token is broken; judge by a
   filtered `bws secret list`.
 - An ExternalSecret in `SecretSyncedError` with no clear cause: the ESO account cannot
