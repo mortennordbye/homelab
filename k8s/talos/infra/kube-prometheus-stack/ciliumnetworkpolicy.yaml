@@ -184,7 +184,7 @@ spec:
           rules:
             dns:
               - matchPattern: "*"
-    # Data sources: Prometheus and Loki in same namespace.
+    # Data sources: Prometheus, Loki and Tempo in same namespace.
     - toEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
@@ -197,6 +197,12 @@ spec:
             "k8s:app.kubernetes.io/name": loki
       toPorts:
         - ports: [{ port: "3100", protocol: TCP }]
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": tempo
+      toPorts:
+        - ports: [{ port: "3200", protocol: TCP }]
     # Authentik OIDC token exchange goes through the gateway VIP.
     - toEndpoints:
         - matchLabels:
