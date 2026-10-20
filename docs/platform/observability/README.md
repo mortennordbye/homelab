@@ -21,7 +21,7 @@ Every row starts collapsed.
 |---|---|
 | Internet & network | internet up/down, availability, downtime and outages over the range, probe latency; UniFi WAN latency, session uptime, drops, gateway CPU, switch port traffic, errors and drops |
 | Public sites | public site probes and response time, traffic share per site, then request rate, 5xx rate, p95 and status codes per site (one repeated set of panels over the hidden `site` variable) |
-| SLOs & error budgets | budget left per site for the paging probe SLO and per request SLO, probe burn rate against the 1x and 7x lines, rolling 7-day SLIs against their objectives ([slos.md](slos.md)) |
+| SLOs & error budgets | budget left per site for the paging probe SLO and per request SLO, probe burn rate against the 1x and 7x lines, rolling 28-day SLIs against their objectives ([slos.md](slos.md)) |
 | Backups | age of the last etcd and dump jobs, VolSync sources behind schedule |
 | Proxmox | host up/down, VMs running and stopped (templates excluded), host CPU, memory and CPU temperature, storage used per host (local, local-lvm) and shared (pbs, nfs-vmstore) |
 | NAS (Synology) | system status, Volume 1 used and free, RAID status, unhealthy disks, temperature, eth0 traffic, disk temperatures |
@@ -57,7 +57,7 @@ SPOG dashboard is in [The observability stack I actually run](https://blog.nordb
 
 | Component | Role | Retention | Defined in |
 |---|---|---|---|
-| Prometheus | metrics, alert rules | 7 days | `k8s/talos/infra/kube-prometheus-stack/values.yaml` |
+| Prometheus | metrics, alert rules | 30 days, at most 35 GB | `k8s/talos/infra/kube-prometheus-stack/values.yaml` |
 | Alertmanager | routing to Discord, 2 replicas | 5 days of silences and notification state | `k8s/talos/infra/kube-prometheus-stack/values.yaml` |
 | Loki | logs, single binary | 7 days, Kubernetes events 30 days | `k8s/talos/infra/loki/values.yaml` |
 | Alloy | DaemonSet shipping pod logs (each pod reads its own node's pods) and Kubernetes events (one clustered pod collects them) to Loki, and filtering Traefik's traces on the way to Tempo (monitoring UIs and blackbox probes dropped, per-connection and client-IP attributes removed) | none | `k8s/talos/infra/loki/alloy-values.yaml` |
@@ -145,7 +145,7 @@ keep the chart's upstream runbook links.
 | `PublicSiteDown` | a public site fails for 5 min while the internet is up | critical |
 | `InternalSiteDown` | a `local.bigd.no` host fails through the private gateway for 10 min | critical |
 | `ErrorBudgetBurn` | the public-site probe SLO burns budget at 7x or faster ([slos.md](slos.md)) | critical; slower burns warning (not sent) |
-| `SLOMetricAbsent` | the probe metric behind an SLO is gone for 2 min | critical |
+| `SLOMetricAbsent` | the probe metric behind an SLO is gone for 6 min | critical |
 | `BackupJobStale` | etcd, a `*-db-backup` or a `*-backup-check` CronJob not successful for 26 h, or scheduled and never succeeded | critical |
 | `RestoreTestFailed` | the monthly restore test did not pass, or has not passed for 32 days | critical |
 | `VolSyncBackupStale` | a ReplicationSource out of sync for 6 h | critical |

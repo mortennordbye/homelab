@@ -12,31 +12,33 @@ Pyrra ships its own "Pyrra - List" and "Pyrra - Detail" dashboards.
 
 | SLO | SLI | Target | Window | Pages |
 |---|---|---|---|---|
-| `public-sites-probe` | blackbox probes that succeed, per site in the `public-sites` Probe | 99.5 % | 7d | yes |
-| `portfolio-availability` | requests through the public gateway that do not answer 5xx | 99.5 % | 7d | no |
-| `blog-availability` | same, blog | 99.5 % | 7d | no |
-| `logeverylift-availability` | same, logeverylift | 99.5 % | 7d | no |
-| `portfolio-latency` | requests served in under 300 ms at Traefik | 98 % | 7d | no |
-| `blog-latency` | same, blog | 98 % | 7d | no |
-| `logeverylift-latency` | requests served in under 1.2 s at Traefik | 99 % | 7d | no |
-| `headroom-demo-availability` | requests through the public gateway that do not answer 5xx | 99.5 % | 7d | no |
-| `reelsmith-gate-availability` | same, reelsmith's public gateway route | 99.5 % | 7d | no |
-| `coredns-availability` | in-cluster DNS answers that are not SERVFAIL | 99.5 % | 7d | no |
-| `certificates-ready` | cert-manager Certificates Ready, sampled over time | 99 % | 7d | no |
-| `external-secrets-ready` | ExternalSecrets Ready, sampled over time | 99.9 % | 7d | no |
-| `argocd-apps-healthy` | Argo CD Applications Healthy, from the recording rule `homelab:argocd_app_healthy` | 98 % | 7d | no |
-| `volsync-in-sync` | VolSync sources within their schedule, from `homelab:volsync_in_sync` | 99 % | 7d | no |
+| `public-sites-probe` | blackbox probes that succeed, per site in the `public-sites` Probe | 99.5 % | 28d | yes |
+| `portfolio-availability` | requests through the public gateway that do not answer 5xx | 99.5 % | 28d | no |
+| `blog-availability` | same, blog | 99.5 % | 28d | no |
+| `logeverylift-availability` | same, logeverylift | 99.5 % | 28d | no |
+| `portfolio-latency` | requests served in under 300 ms at Traefik | 98 % | 28d | no |
+| `blog-latency` | same, blog | 98 % | 28d | no |
+| `logeverylift-latency` | requests served in under 1.2 s at Traefik | 99 % | 28d | no |
+| `headroom-demo-availability` | requests through the public gateway that do not answer 5xx | 99.5 % | 28d | no |
+| `reelsmith-gate-availability` | same, reelsmith's public gateway route | 99.5 % | 28d | no |
+| `coredns-availability` | in-cluster DNS answers that are not SERVFAIL | 99.5 % | 28d | no |
+| `certificates-ready` | cert-manager Certificates Ready, sampled over time | 99 % | 28d | no |
+| `external-secrets-ready` | ExternalSecrets Ready, sampled over time | 99.9 % | 28d | no |
+| `argocd-apps-healthy` | Argo CD Applications Healthy, from the recording rule `homelab:argocd_app_healthy` | 98 % | 28d | no |
+| `volsync-in-sync` | VolSync sources within their schedule, from `homelab:volsync_in_sync` | 99 % | 28d | no |
 
-99.5 % over 7 days is about 50 minutes of budget a week. The latency thresholds sit on
+99.5 % over 28 days is about 3 hours 22 minutes of budget. The latency thresholds sit on
 Traefik's histogram buckets (0.1, 0.3, 1.2, 5 s), since a latency SLI can only cut at a
 bucket edge. Each target was set a little below what the site delivered over the 7 days
 before it was introduced, so a fresh budget starts mostly unspent.
 
 ## Why these choices
 
-The window is 7 days because Prometheus keeps 7 days. A 30-day window would compute its
-budget over a week of data and call the rest perfect. Raising retention to 30 days would
-need about four times the 20 GiB volume and more memory than Prometheus's 1 GiB limit.
+The window is 28 days, four whole weeks, so every weekday weighs the same and one bad
+evening does not spend the budget. Prometheus keeps 30 days (`retention`, capped by
+`retentionSize: 35GB` because `syno-nfs-csi` does not enforce the PVC size), so the window
+always has full data. A window longer than retention would compute its budget over the data
+that exists and call the rest perfect.
 
 The SLIs are measured at the edge. Traefik sees every request on the public gateway, so
 the request SLOs need no instrumentation in the apps. The probe SLO goes through public DNS
@@ -63,13 +65,17 @@ says how soon the budget runs out at the current rate.
 
 | Short / long window | Burn rate | Budget gone in | Severity |
 |---|---|---|---|
-| 1m / 15m | 14x | 12 h | critical |
-| 8m / 1h30m | 7x | 1 d | critical |
-| 30m / 6h | 2x | 3.5 d | warning |
-| 1h30m / 1d | 1x | 7 d | warning |
+| 5m / 1h | 14x | 2 d | critical |
+| 30m / 6h | 7x | 4 d | critical |
+| 2h / 1d | 2x | 14 d | warning |
+| 6h / 4d | 1x | 28 d | warning |
 
-`SLOMetricAbsent` fires when the probe metric disappears, which would otherwise read as a
-perfect SLO.
+Pyrra derives the window pairs from the SLO window. The thresholds are error rates (14x of
+0.5 % is 7 % of probes failing), so they do not change with the window; the windows they are
+measured over do.
+
+`SLOMetricAbsent` fires when the probe metric disappears for 6 minutes, which would otherwise
+read as a perfect SLO.
 
 `PublicSiteDown` in `homelab-alerts.yaml` stays as the symptom alert for a site hard down
 for 5 minutes with the internet up. The burn alert also catches flapping that never stays

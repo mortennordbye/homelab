@@ -1915,8 +1915,8 @@
         {
           "id": 9701,
           "type": "stat",
-          "title": "Error budget left, probe SLO (7d)",
-          "description": "Share of the 7-day budget left per public site for the paging SLO public-sites-probe (target 99.5 %). Below 0 the SLO is broken. Defined in k8s/talos/infra/pyrra/slos.yaml.",
+          "title": "Error budget left, probe SLO (28d)",
+          "description": "Share of the 28-day budget left per public site for the paging SLO public-sites-probe (target 99.5 %). Below 0 the SLO is broken. Defined in k8s/talos/infra/pyrra/slos.yaml.",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1982,7 +1982,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "(sum by (instance) (probe_success:sum1w{slo=\"public-sites-probe\"}) / sum by (instance) (probe_success:count1w{slo=\"public-sites-probe\"}) - 0.995) / (1 - 0.995)",
+              "expr": "(sum by (instance) (probe_success:sum4w{slo=\"public-sites-probe\"}) / sum by (instance) (probe_success:count4w{slo=\"public-sites-probe\"}) - 0.995) / (1 - 0.995)",
               "legendFormat": "{{instance}}",
               "refId": "A",
               "instant": true
@@ -1992,7 +1992,7 @@
         {
           "id": 9702,
           "type": "stat",
-          "title": "Error budget left, request SLOs (7d)",
+          "title": "Error budget left, request SLOs (28d)",
           "description": "Availability (non-5xx) and latency SLOs measured at Traefik. Tracked, not paged: the sites see too few requests for a stable burn rate.",
           "datasource": {
             "type": "prometheus",
@@ -2069,8 +2069,8 @@
         {
           "id": 9703,
           "type": "timeseries",
-          "title": "Probe SLO burn rate (1h30m window)",
-          "description": "How fast each site spends its budget, as a multiple of the sustainable rate. 1x empties the budget in exactly 7 days; ErrorBudgetBurn pages at 7x (1h30m with 8m) and 14x (15m with 1m).",
+          "title": "Probe SLO burn rate (6h window)",
+          "description": "How fast each site spends its budget, as a multiple of the sustainable rate. 1x empties the budget in exactly 28 days; ErrorBudgetBurn pages at 7x (6h with 30m) and 14x (1h with 5m).",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2136,7 +2136,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "probe_success:burnrate1h30m{slo=\"public-sites-probe\"} / (1 - 0.995)",
+              "expr": "probe_success:burnrate6h{slo=\"public-sites-probe\"} / (1 - 0.995)",
               "legendFormat": "{{instance}}",
               "refId": "A"
             }
@@ -2145,8 +2145,8 @@
         {
           "id": 9704,
           "type": "timeseries",
-          "title": "Request SLIs (7d) against objective",
-          "description": "Rolling 7-day SLI per request SLO. Dashed lines are the objectives.",
+          "title": "Request SLIs (28d) against objective",
+          "description": "Rolling 28-day SLI per request SLO. Dashed lines are the objectives.",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
