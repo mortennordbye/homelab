@@ -17,7 +17,7 @@ open an entry in [incidents.md](incidents.md).
 
 ### ErrorBudgetBurn
 
-The public-site probe SLO ([slos.md](slos.md)) is using its 7-day budget faster than it
+The public-site probe SLO ([slos.md](slos.md)) is using its 28-day budget faster than it
 can sustain. The `exhaustion` label says when the budget runs out at this rate, `long` and
 `short` name the window pair, and `instance` names the site.
 

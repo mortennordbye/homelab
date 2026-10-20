@@ -1,7 +1,10 @@
 prometheus:
   prometheusSpec:
     replicas: 1
-    retention: 7d
+    # At least the Pyrra SLO window (28d), or budgets are computed on partial data.
+    retention: 30d
+    # syno-nfs-csi does not enforce the PVC size; this keeps Prometheus off the rest of the NAS.
+    retentionSize: 35GB
     storageSpec:
       volumeClaimTemplate:
         spec:
@@ -9,13 +12,13 @@ prometheus:
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
-              storage: 20Gi
+              storage: 40Gi
     resources:
       requests:
         cpu: 100m
-        memory: 256Mi
-      limits:
         memory: 1Gi
+      limits:
+        memory: 2Gi
     scrapeInterval: 30s
     evaluationInterval: 30s
     # Empty selectors: discover monitors in every namespace. Without the

@@ -1,5 +1,5 @@
 # SLO targets and how they were chosen: docs/platform/observability/slos.md
-# The window cannot exceed Prometheus retention (7d), or the budget is computed on partial data.
+# The window cannot exceed Prometheus retention (30d), or the budget is computed on partial data.
 # Request SLOs do not alert: a few requests an hour make burn rates noise. The probe SLO pages.
 # Platform SLOs do not alert either: each component already has a symptom alert in homelab-alerts.yaml.
 # The release label is what puts Pyrra's generated PrometheusRule into Prometheus's ruleSelector.
@@ -17,7 +17,7 @@ metadata:
 spec:
   description: Share of portfolio requests through the public gateway that do not answer 5xx.
   target: "99.5"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -40,7 +40,7 @@ metadata:
 spec:
   description: Share of portfolio requests served in under 0.3s, measured at Traefik.
   target: "98"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -63,7 +63,7 @@ metadata:
 spec:
   description: Share of blog requests through the public gateway that do not answer 5xx.
   target: "99.5"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -86,7 +86,7 @@ metadata:
 spec:
   description: Share of blog requests served in under 0.3s, measured at Traefik.
   target: "98"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -109,7 +109,7 @@ metadata:
 spec:
   description: Share of logeverylift requests through the public gateway that do not answer 5xx.
   target: "99.5"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -132,7 +132,7 @@ metadata:
 spec:
   description: Share of logeverylift requests served in under 1.2s, measured at Traefik.
   target: "99"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -155,7 +155,7 @@ metadata:
 spec:
   description: Share of blackbox probes per public site that succeed, the view a visitor gets.
   target: "99.5"
-  window: 7d
+  window: 28d
   indicator:
     bool_gauge:
       metric: probe_success{job="public-sites"}
@@ -175,7 +175,7 @@ metadata:
 spec:
   description: Share of headroom demo requests through the public gateway that do not answer 5xx.
   target: "99.5"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -198,7 +198,7 @@ metadata:
 spec:
   description: Share of reelsmith gateway requests through the public gateway that do not answer 5xx.
   target: "99.5"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -221,7 +221,7 @@ metadata:
 spec:
   description: Share of in-cluster DNS queries that do not answer SERVFAIL.
   target: "99.5"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -244,7 +244,7 @@ metadata:
 spec:
   description: Share of time cert-manager Certificates are Ready.
   target: "99"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -264,7 +264,7 @@ metadata:
 spec:
   description: Share of time ExternalSecrets are Ready.
   target: "99.9"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -284,7 +284,7 @@ metadata:
 spec:
   description: Share of time Argo CD Applications report Healthy.
   target: "98"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:
@@ -304,7 +304,7 @@ metadata:
 spec:
   description: Share of time VolSync sources are within their backup schedule.
   target: "99"
-  window: 7d
+  window: 28d
   alerting:
     disabled: true
   indicator:

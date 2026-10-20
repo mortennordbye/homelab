@@ -9,7 +9,7 @@ pages, and how a week is reviewed. Each piece has its own page; this one shows h
 
 | Piece | What it does | Where |
 |---|---|---|
-| SLOs and error budgets | the public sites, the gateway and the shared platform each have a 7-day objective, and the paging probe SLO alerts on burn rate | [slos.md](slos.md) |
+| SLOs and error budgets | the public sites, the gateway and the shared platform each have a 28-day objective, and the paging probe SLO alerts on burn rate | [slos.md](slos.md) |
 | Alerts | only `critical` reaches Discord, and every rule links to its runbook section | [README.md](README.md#alert-path), [runbooks.md](runbooks.md) |
 | Incidents | blameless postmortems, written when an event meets the criteria at the top of the page | [incidents.md](incidents.md) |
 | Change tracking | every Argo CD sync is a deploy marker on the Homelab dashboards; Kargo holds a site's prod promotion for a manual merge when its budget is below 25 % | [argocd.md](../delivery/argocd.md#deploy-markers), [slos.md](slos.md#error-budget-policy) |
