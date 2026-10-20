@@ -9,6 +9,25 @@ tempo:
           endpoint: "0.0.0.0:4317"
         http:
           endpoint: "0.0.0.0:4318"
+  # local-blocks answers TraceQL metrics (rate(), histograms), which Grafana's Traces
+  # Drilldown needs; without a generator those queries fail with "empty ring".
+  metricsGenerator:
+    enabled: true
+    # Nothing is written while local-blocks is the only processor. span-metrics or
+    # service-graphs would also need Prometheus' remote-write receiver and an egress rule.
+    remoteWriteUrl: http://kube-prometheus-stack-prometheus.monitoring:9090/api/v1/write
+    processor:
+      local_blocks:
+        flush_to_storage: true
+    storage:
+      path: /var/tempo/generator/wal
+    traces_storage:
+      path: /var/tempo/generator/traces
+  overrides:
+    defaults:
+      metrics_generator:
+        processors:
+          - local-blocks
   resources:
     requests:
       cpu: 100m
