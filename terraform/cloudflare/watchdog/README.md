@@ -11,7 +11,7 @@ State is in the shared azurerm backend under `cloudflare/watchdog.tfstate`.
 
 ```bash
 cp terraform.tfvars.example terraform.tfvars   # token and account id
-export BW_ACCESS_TOKEN=$(security find-generic-password -s bws-homelab -w)
+export BW_ACCESS_TOKEN=$(bws-token)
 export BW_ORGANIZATION_ID=$(BWS_ACCESS_TOKEN=$BW_ACCESS_TOKEN bws project get 1ea61322-5f4a-44a4-b4d0-b29b00ba1134 --output json | jq -r .organizationId)
 terraform init
 terraform plan
