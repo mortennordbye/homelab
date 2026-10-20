@@ -58,7 +58,9 @@ The private gateway serves TCP only.
 ## Tracing and metrics
 
 Every request is traced (`sampleRate: 1.0`) and exported over OTLP gRPC to
-`tempo.monitoring:4317`, service name `traefik`. Prometheus metrics with entrypoint, router
+`alloy.monitoring:4317`, service name `traefik`. Alloy drops traces of the monitoring UIs and
+blackbox probes, strips per-process, per-connection and client-IP attributes, and forwards
+the rest to Tempo (`k8s/talos/infra/loki/alloy-values.yaml`). Prometheus metrics with entrypoint, router
 and service labels are on port 9100, scraped through the chart's ServiceMonitor. Access
 logs are on. See [`../observability/README.md`](../observability/README.md).
 

@@ -97,7 +97,7 @@ Storage classes and CSI drivers: [`../platform/storage/README.md`](../platform/s
 ## Observability
 
 kube-prometheus-stack, Grafana, Loki with Alloy shipping logs, and Tempo fed by Traefik over
-OTLP. Alertmanager
+OTLP through Alloy, which filters out monitoring and probe traffic. Alertmanager
 sends only actionable, critical alerts to Discord, and a Cloudflare Worker reports a
 missing Alertmanager heartbeat. Falco watches syscalls on every node and posts to Discord
 itself through falcosidekick

@@ -1,4 +1,4 @@
-# Tempo: trace store. OTLP in from Traefik, queried by Grafana, scraped by Prometheus.
+# Tempo: trace store. OTLP in from Alloy, queried by Grafana, scraped by Prometheus.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
@@ -8,11 +8,11 @@ spec:
     matchLabels:
       app.kubernetes.io/name: tempo
   ingress:
-    # OTLP traces pushed from Traefik.
+    # OTLP traces from Alloy, which filters what Traefik sends.
     - fromEndpoints:
         - matchLabels:
-            "k8s:io.kubernetes.pod.namespace": traefik
-            "k8s:app.kubernetes.io/name": traefik
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": alloy
       toPorts:
         - ports: [{ port: "4317", protocol: TCP }]
     # Grafana trace queries + Prometheus metrics scrape.

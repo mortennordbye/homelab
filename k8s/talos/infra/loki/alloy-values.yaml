@@ -77,6 +77,110 @@ alloy:
         }
       }
 
+      // 6. Traces: Traefik pushes OTLP here, Tempo gets what survives the filters.
+      otelcol.receiver.otlp "traefik" {
+        grpc {
+          endpoint = "0.0.0.0:4317"
+        }
+        output {
+          traces = [otelcol.processor.tail_sampling.traces.input]
+        }
+      }
+
+      // Decides per whole trace, so a dropped request never leaves orphaned child spans.
+      // Every span of a trace reaches the same Alloy pod because each Traefik pod holds one
+      // long-lived gRPC connection.
+      otelcol.processor.tail_sampling "traces" {
+        decision_wait = "10s"
+
+        policy {
+          name = "keep"
+          type = "always_sample"
+        }
+        // The monitoring UIs: viewing a dashboard would otherwise trace itself.
+        policy {
+          name = "drop-monitoring-uis"
+          type = "drop"
+          drop {
+            drop_sub_policy {
+              name = "monitoring-hosts"
+              type = "string_attribute"
+              string_attribute {
+                key    = "server.address"
+                values = ["grafana.local.bigd.no", "prometheus.local.bigd.no", "alertmanager.local.bigd.no", "pyrra.local.bigd.no"]
+              }
+            }
+          }
+        }
+        policy {
+          name = "drop-probes"
+          type = "drop"
+          drop {
+            drop_sub_policy {
+              name = "blackbox"
+              type = "string_attribute"
+              string_attribute {
+                key                    = "user_agent.original"
+                values                 = ["Blackbox-Exporter/.*"]
+                enabled_regex_matching = true
+              }
+            }
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.transform.traces.input]
+        }
+      }
+
+      // Per-process, per-connection and client-IP attributes: noise in every breakdown,
+      // and the IPs are personal data.
+      otelcol.processor.transform "traces" {
+        error_mode = "ignore"
+
+        trace_statements {
+          context    = "resource"
+          statements = [
+            `delete_matching_keys(attributes, "^(process|os|host)\\..*")`,
+            `delete_key(attributes, "k8s.pod.uid")`,
+          ]
+        }
+        trace_statements {
+          context    = "span"
+          statements = [
+            `delete_key(attributes, "client.address")`,
+            `delete_key(attributes, "client.port")`,
+            `delete_key(attributes, "network.peer.address")`,
+            `delete_key(attributes, "network.peer.port")`,
+          ]
+        }
+
+        output {
+          traces = [otelcol.processor.batch.traces.input]
+        }
+      }
+
+      otelcol.processor.batch "traces" {
+        output {
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo.monitoring.svc.cluster.local:4317"
+          tls {
+            insecure = true
+          }
+        }
+      }
+
+  extraPorts:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+
   mounts:
     # Essential for Kubernetes log collection
     varlog: true

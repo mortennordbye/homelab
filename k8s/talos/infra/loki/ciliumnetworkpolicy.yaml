@@ -74,6 +74,13 @@ spec:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
             "k8s:app.kubernetes.io/name": prometheus
+    # Traefik pushes OTLP traces.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/name": traefik
+      toPorts:
+        - ports: [{ port: "4317", protocol: TCP }]
     - fromEntities:
         - host
         - health
@@ -94,6 +101,13 @@ spec:
             "k8s:app.kubernetes.io/name": loki
       toPorts:
         - ports: [{ port: "3100", protocol: TCP }]
+    # Forward filtered traces to Tempo.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": tempo
+      toPorts:
+        - ports: [{ port: "4317", protocol: TCP }]
     # Kubernetes API for pod discovery and log enrichment.
     - toEntities:
         - kube-apiserver
