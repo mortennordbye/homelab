@@ -236,8 +236,17 @@ host) pattern. `<app>` is the app's namespace and name.
    `ExtensionRef` filter on the `/` rule. On a public host, put the app's Cloudflare-only
    Middleware on both rules as homepage does, and keep the host out of any Cloudflare
    cache rule, since the session cookie decides every response.
-7. After ArgoCD syncs, sign in at the app's host and confirm a user outside the group is
-   refused.
+7. After ArgoCD syncs, the worker restarts with the new file mounted, but Authentik only
+   registers a new blueprint file on its scheduled discovery. Until then the
+   `embedded-outpost` blueprint errors on the missing `metaapplyblueprint` and the host
+   answers 404 from Authentik. Run discovery instead of waiting:
+
+   ```bash
+   kubectl -n identity exec deploy/authentik-worker -- ak shell -c \
+     "from authentik.blueprints.v1.tasks import blueprints_discovery; blueprints_discovery.send()"
+   ```
+
+8. Sign in at the app's host and confirm a user outside the group is refused.
 
 For an app that speaks OIDC, copy
 [`grafana-blueprint.yaml`](../../../k8s/talos/infra/authentik/grafana-blueprint.yaml) or,
