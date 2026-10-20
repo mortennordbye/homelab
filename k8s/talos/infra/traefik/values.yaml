@@ -166,7 +166,7 @@ experimental:
   kubernetesGateway:
     enabled: true
 
-# Emit OTLP traces for every ingress request to Tempo (blog.nordbye.it included).
+# Emit OTLP traces for every ingress request; Alloy filters them on the way to Tempo.
 tracing:
   serviceName: traefik
   sampleRate: 1.0
@@ -174,5 +174,5 @@ tracing:
     enabled: true
     grpc:
       enabled: true
-      endpoint: tempo.monitoring:4317
+      endpoint: alloy.monitoring:4317
       insecure: true

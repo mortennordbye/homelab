@@ -37,9 +37,9 @@ metrics: Scraped by Prometheus {
   pvex: "pve-exporter\nProxmox API, hyper1-3" {class: card; icon: ${di}/proxmox-light.svg; width: 210; height: 140}
 }
 
+traefik: Traefik {class: card; icon: ${di}/traefik.svg}
 pods: "pod logs, k8s events" {class: card; icon: ${k8s}/pod.svg}
 alloy: "Alloy\nDaemonSet" {class: card; icon: ${di}/alloy.svg}
-traefik: Traefik {class: card; icon: ${di}/traefik.svg}
 
 prometheus: "Prometheus\n7 days" {class: card; icon: ${di}/prometheus.svg}
 loki: "Loki\n7 days, events 30" {class: card; icon: ${di}/loki.svg}
@@ -47,8 +47,10 @@ tempo: "Tempo\n24 h" {class: card; icon: ${di}/tempo.svg}
 grafana: "Grafana\nHomelab-SPOG" {class: card; icon: ${di}/grafana.svg}
 
 metrics -> prometheus
-pods -> alloy -> loki
-traefik -> tempo: OTLP
+traefik -> alloy: OTLP traces
+pods -> alloy: logs
+alloy -> loki
+alloy -> tempo: filtered
 
 prometheus -> grafana
 loki -> grafana
