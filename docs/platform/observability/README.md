@@ -132,6 +132,11 @@ Rules live in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`, excep
 which live in `k8s/talos/apps/reelsmith/monitoring.yaml` and reach Discord at every severity.
 Everywhere else only critical reaches Discord.
 
+The chart's own default rules also load, and their critical ones reach Discord like any
+other. The Alertmanager group links to its runbook section
+([Alertmanager](runbooks.md#alertmanager)); the other groups keep the chart's upstream
+runbook links.
+
 | Alert | Fires when | Severity |
 |---|---|---|
 | `InternetDown` | both internet probes fail for 1 min | critical |

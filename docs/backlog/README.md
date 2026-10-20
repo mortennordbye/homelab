@@ -154,6 +154,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Cluster / infra
 
+### etcd metrics and alerts wait on a control-plane apply
+- **What:** etcd has no alerting. The branch `feat/etcd-alerts` turns on the chart's `kubeEtcd` scrape (10.3.10.31-33:2381) and its `etcd` rule group, adds an etcd runbook section and a sources row, and adds `cluster.etcd.extraArgs.listen-metrics-urls = http://0.0.0.0:2381` to the control-plane patch. The plan shows only that change on the three control planes, and `apply-config --dry-run` on genesis-ctrl-01 confirms it applies without a reboot (etcd restarts).
+- **Why deferred:** it needs a `terraform apply` on the control planes, which the user runs, and there was no time for it.
+- **Unblock:** apply one control plane at a time so two etcd members never restart together: `terraform apply -target='talos_machine_configuration_apply.controlplane["genesis-ctrl-01"]'`, then `talosctl -n 10.3.10.31,10.3.10.32,10.3.10.33 etcd status` and `curl http://10.3.10.31:2381/metrics`, then ctrl-02 and ctrl-03. Merge the PR only after all three answer on 2381; merged earlier, every etcd target is down and `etcdInsufficientMembers` pages.
+- **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/talos-cluster.tf`, `k8s/talos/infra/kube-prometheus-stack/values.yaml` (`kubeEtcd`, `defaultRules`), `docs/platform/observability/runbooks.md`.
+
 ### Cap CPU turbo on the Proxmox hosts if the fans stay loud
 - **What:** `cpu.tf` sets the `powersave` governor with `balance_power`, which lowered average CPU temperature 5-12 °C, but cores still burst to full turbo (3.8-4.0 GHz) when work queues and the fans follow. Capping turbo, for example `intel_pstate/max_perf_pct` at 60 on hyper1 and hyper3, would keep them near 50-55 °C without the spikes.
 - **Why deferred:** the user chose to live with the current noise first. A cap slows heavy jobs (tdarr, Plex CPU transcodes) up to about 40% at peak, and hyper2 has only 6 threads and was 79% busy after the governor change, so capping it risks saturating its control plane and worker.
