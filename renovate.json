@@ -173,7 +173,7 @@
       "addLabels": ["k8s-infra"]
     },
     {
-      "description": "npm - portfolio project",
+      "description": "npm - portfolio project. Weekly: every merge builds an image and queues a prod promotion PR, so a nightly cadence buries real changes under lockfile bumps.",
       "matchManagers": ["npm"],
       "matchFileNames": ["portfolio/**"],
       "matchUpdateTypes": ["minor", "patch"],
@@ -181,6 +181,7 @@
       "groupSlug": "npm-portfolio",
       "automerge": true,
       "minimumReleaseAge": "3 days",
+      "schedule": ["before 5am on monday"],
       "addLabels": ["npm", "portfolio"]
     },
     {
@@ -322,7 +323,8 @@
       "matchPackageNames": ["@playwright/test", "mcr.microsoft.com/playwright"],
       "groupName": "Playwright",
       "groupSlug": "playwright",
-      "minimumReleaseAge": "3 days"
+      "minimumReleaseAge": "3 days",
+      "schedule": ["before 5am on monday"]
     },
     {
       "description": "Disable: texlive pinned intentionally",
