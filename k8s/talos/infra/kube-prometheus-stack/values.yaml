@@ -31,6 +31,13 @@ grafana:
   enabled: true
   replicas: 1
 
+  # A dashboard ConfigMap's k8s-sidecar-target-directory annotation names its Grafana folder.
+  sidecar:
+    dashboards:
+      folderAnnotation: k8s-sidecar-target-directory
+      provider:
+        foldersFromFilesStructure: true
+
   # Admin credentials come from an ExternalSecret.
   admin:
     existingSecret: grafana-admin-credentials
