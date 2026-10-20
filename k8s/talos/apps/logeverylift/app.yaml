@@ -92,9 +92,9 @@ spec:
             requests:
               memory: "128Mi"
               cpu: "100m"
+            # No CPU limit: CFS throttling stalls request handling in 100ms steps.
             limits:
               memory: "512Mi"
-              cpu: "500m"
 
 ---
 apiVersion: v1
