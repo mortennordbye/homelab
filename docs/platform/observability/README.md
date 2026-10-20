@@ -33,6 +33,12 @@ Every row starts collapsed.
 
 Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard.
 
+Both dashboards draw a vertical line for every Argo CD sync (the "Deploys" annotation, on by
+default), so a change in a graph can be matched to the commit that caused it. Hover the
+line for the app, the short revision and the commit subject. Argo CD notifications writes
+these as Grafana annotations tagged `argocd`
+([`../delivery/argocd.md`](../delivery/argocd.md#deploy-markers)).
+
 ## Stack
 
 [![Exporters, Alloy and Traefik feeding Prometheus, Loki and Tempo, all read by Grafana](../../assets/diagrams/observability-signals.svg)](../../assets/diagrams/observability-signals.svg)
@@ -211,6 +217,7 @@ Falco will flag it, and no exemption targets it. See
 | DSM Notification > Webhooks | Custom "Alertmanager", rule Warning, POST `https://alertmanager.local.bigd.no/api/v2/alerts`, `Content-Type: application/json`, body `[{"labels":{"alertname":"SynologyNotification","severity":"critical","namespace":"synology","node":"nas"},"annotations":{"summary":"@@TEXT@@",...}}]` |
 | DSM Notification > Email | Synology Account, rule All |
 | UniFi Admins & Users | local user `unpoller`, restricted to local access, custom role: Network View Only, everything else None |
+| Grafana Administration > Service accounts | `argocd-notifications`, role Editor, one token stored in Bitwarden as `argocd-notifications-grafana-token` |
 | DSM Shared Folder `shared-data` | quota 31 TiB (NasVolumeAlmostFull watches the volume, not share quotas) |
 
 ## Constraints
