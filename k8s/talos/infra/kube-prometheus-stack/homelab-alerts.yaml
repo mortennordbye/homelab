@@ -355,6 +355,18 @@ spec:
               {{ $labels.instance }} has failed through public DNS and Cloudflare for 5 minutes while the internet itself is up.
               Check the app, its HTTPRoute, and Traefik's public gateway.
 
+        - alert: InternalSiteDown
+          expr: probe_success{job="internal-sites"} == 0
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#internalsitedown
+            summary: '{{ $labels.instance }} is down on the private gateway'
+            description: |
+              {{ $labels.instance }} has failed through the gateway's DNS and Traefik's private gateway for 10 minutes.
+              Check the app, its HTTPRoute, and Traefik's private gateway.
+
     - name: homelab.nas
       rules:
         # diskStatus and diskHealthStatus are 1 when normal; anything else is a

@@ -44,6 +44,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith token for {{ $labels.ig_user_id }} expires in {{ $value | printf "%.1f" }} days'
             description: |
               The automatic refresh has had several days to renew this and has not.
@@ -55,6 +56,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith token for {{ $labels.ig_user_id }} expires in under two days'
             description: |
               Past expiry it cannot be refreshed at all and needs re-authorising in a browser.
@@ -71,6 +73,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith comment poller has not completed a sweep in {{ $value | printf "%.0f" }}s'
             description: |
               Comments are polled every 20s because real-time comment webhooks need App Review.
@@ -84,6 +87,7 @@ spec:
           labels:
             severity: critical
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith scheduler has not ticked in {{ $value | printf "%.0f" }}s'
             description: |
               A stalled scheduler misses publish slots silently, and a missed slot is not retried later.
@@ -96,6 +100,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith had {{ $value | printf "%.0f" }} slot(s) come due with nothing approved'
             description: |
               Render and enqueue a batch, or approve what is already queued, at reelsmith.local.bigd.no.
@@ -110,6 +115,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith has not backed up its state in {{ $value | printf "%.0f" }}s'
             description: |
               Usually a full state volume. The copies live beside the database and the newest 14 are kept.
@@ -125,6 +131,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith has not copied a backup off its volume in {{ $value | printf "%.0f" }}s'
             description: |
               The copies go to /volume1/shared-data/media/reelsmith/gateway-backups on the NAS,
@@ -142,6 +149,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith has not finished a render host run for {{ $labels.brand }} in {{ $value | printf "%.0f" }}s'
             description: |
               The nightly run on verksted reports each account's night to POST /api/runs.
@@ -155,6 +163,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith failed {{ $value | printf "%.0f" }} {{ $labels.platform }} publish attempt(s) in the last hour'
             description: |
               The platform rejected a publish or the upload did not complete. The queue entry stays for a retry.
@@ -172,6 +181,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith has {{ $value | printf "%.0f" }} queued post(s) stuck in failed on {{ $labels.account }}'
             description: |
               These have stopped retrying and stay put until someone decides what to do with them.
@@ -193,6 +203,7 @@ spec:
           labels:
             severity: warning
           annotations:
+            runbook_url: https://docs.nordbye.it/apps/reelsmith/#alerts
             summary: 'reelsmith has {{ $value | printf "%.0f" }} claim(s) nothing finished on {{ $labels.account }}'
             description: |
               A publish claimed this row and never came back. It will not retry and will not move
