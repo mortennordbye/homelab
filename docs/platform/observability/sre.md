@@ -3,6 +3,8 @@
 How the homelab is kept running: what is measured, what pages, what to do when something
 pages, and how a week is reviewed. Each piece has its own page; this one shows how they fit.
 
+[![Signals and Pyrra rules feed Prometheus; critical alerts page Discord and lead to a runbook and a fix in Git, warnings go to the weekly review, and postmortem actions and review tuning also land as Git changes that Argo CD syncs with a deploy marker](../../assets/diagrams/sre-loop.svg)](../../assets/diagrams/sre-loop.svg)
+
 ## The pieces
 
 | Piece | What it does | Where |

@@ -25,6 +25,8 @@ The manifests live in
 
 ## How a request flows
 
+[![The Voice PE on the IoT network streams its microphone on port 6053 to the innestemme pod, where openWakeWord, Parakeet speech to text, the rule-based skills and Kokoro text to speech run in turn; the skills read and write Home Assistant, which tells the living room Sonos to announce the answer, and the Sonos downloads the .wav from the LoadBalancer VIP 10.3.10.99:9090](../../assets/diagrams/innestemme-voice.svg)](../../assets/diagrams/innestemme-voice.svg)
+
 1. The pod dials the Voice PE on `10.3.20.67:6053` (Noise-encrypted) and takes its microphone.
    Trusted to IoT is open, so no firewall rule is needed for this direction.
 2. The device streams its microphone all the time; the engine scores it with openWakeWord

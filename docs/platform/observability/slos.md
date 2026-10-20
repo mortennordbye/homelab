@@ -6,6 +6,8 @@ objectives are in `k8s/talos/infra/pyrra/slos.yaml`, the UI is at
 https://pyrra.local.bigd.no, the SPOG dashboard has an "SLOs & error budgets" row, and
 Pyrra ships its own "Pyrra - List" and "Pyrra - Detail" dashboards.
 
+[![Blackbox probes, Traefik request metrics and platform state feed Prometheus with Pyrra's rules; Prometheus raises the probe SLO's burn alerts, shows budgets in Pyrra and SPOG, and answers Kargo's budget query, whose label stops auto-merge when a budget is low](../../assets/diagrams/slo-budgets.svg)](../../assets/diagrams/slo-budgets.svg)
+
 ## Objectives
 
 | SLO | SLI | Target | Window | Pages |
