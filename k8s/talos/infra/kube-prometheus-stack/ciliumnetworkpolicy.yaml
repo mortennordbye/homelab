@@ -214,6 +214,14 @@ spec:
               protocol: TCP
             - port: "8444"
               protocol: TCP
+    # Pinned plugins download from grafana.com, which redirects to the catalog bucket.
+    - toFQDNs:
+        - matchName: grafana.com
+        - matchName: storage.googleapis.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
     # Dashboard and datasource sidecars watch ConfigMaps.
     - toEntities:
         - kube-apiserver

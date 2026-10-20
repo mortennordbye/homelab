@@ -46,6 +46,12 @@
       ]
     }
   ],
+  "customDatasources": {
+    "grafana-plugins": {
+      "defaultRegistryUrlTemplate": "https://grafana.com/api/plugins/{{packageName}}/versions",
+      "transformTemplates": ["{\"releases\": items.{\"version\": version}}"]
+    }
+  },
   "packageRules": [
     {
       "description": "Scorecard wants base images pinned by digest. Dockerfiles only; k8s manifests keep plain version tags.",
