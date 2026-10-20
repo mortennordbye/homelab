@@ -213,6 +213,16 @@
       "addLabels": ["python", "ai"]
     },
     {
+      "description": "Docs site toolchain: the Python packages and interpreter behind the ProperDocs build. The docs workflow builds with --strict on the PR, so a bump that breaks the site fails CI instead of merging.",
+      "matchFileNames": ["scripts/docs-requirements.txt", ".github/workflows/docs.yaml"],
+      "matchDatasources": ["pypi", "python-version"],
+      "groupName": "Docs Toolchain",
+      "groupSlug": "docs-toolchain",
+      "automerge": true,
+      "minimumReleaseAge": "7 days",
+      "addLabels": ["python", "docs"]
+    },
+    {
       "description": "GitHub Actions major: group all major bumps for manual review",
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["major"],
@@ -270,9 +280,11 @@
       "addLabels": ["terraform"]
     },
     {
-      "description": "Terraform helm_release charts duplicate the kustomize-managed infra charts. If these drift apart, a later terraform apply upgrades Cilium or ArgoCD out from under ArgoCD — bump both sides together, by hand.",
+      "description": "Terraform helm_release charts duplicate the kustomize-managed infra charts. If these drift apart, a later terraform apply upgrades Cilium or ArgoCD out from under ArgoCD — bump both sides together, by hand. Own group, so they don't hold the provider bumps back from automerge.",
       "matchManagers": ["terraform"],
       "matchPackageNames": ["argo-cd", "cilium"],
+      "groupName": "Terraform Bootstrap Charts",
+      "groupSlug": "terraform-bootstrap",
       "automerge": false,
       "addLabels": ["terraform", "bootstrap"]
     },
