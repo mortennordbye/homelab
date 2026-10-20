@@ -40,3 +40,46 @@ spec:
         - https://logeverylift.com
         - https://auth.bigd.no
         - https://hub.bigd.no
+---
+# Private-gateway hosts, through the gateway's DNS and Traefik, so a broken route or certificate
+# fails even while the pods are healthy. KEDA scale-to-zero hosts stay out: a probe would keep
+# them awake. Alertmanager's route serves only webhook POSTs, and the watchdog covers it.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: internal-sites
+  labels:
+    release: kube-prometheus-stack
+spec:
+  jobName: internal-sites
+  interval: 60s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter.monitoring.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - https://argocd.local.bigd.no
+        - https://auth.local.bigd.no
+        - https://bazarr.local.bigd.no
+        - https://bazarr-4k.local.bigd.no
+        - https://cleanuparr.local.bigd.no
+        - https://flaresolverr.local.bigd.no
+        - https://grafana.local.bigd.no
+        - https://ha.local.bigd.no
+        - https://hubble.local.bigd.no
+        - https://jarvis.local.bigd.no
+        - https://kargo.local.bigd.no
+        - https://prometheus.local.bigd.no
+        - https://prowlarr.local.bigd.no
+        - https://pyrra.local.bigd.no
+        - https://qbittorrent.local.bigd.no
+        - https://radarr.local.bigd.no
+        - https://radarr-4k.local.bigd.no
+        - https://reelsmith.local.bigd.no
+        - https://sonarr.local.bigd.no
+        # / redirects to a plain-http logout URL.
+        - https://tautulli.local.bigd.no/status
+        - https://tdarr.local.bigd.no
+        - https://traefik.local.bigd.no
+        - https://verksted.local.bigd.no

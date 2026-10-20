@@ -36,6 +36,9 @@ to run (Terraform applies).
 - TLS: the `*.local.bigd.no` wildcard covers one label only. `a.b.local.bigd.no` needs a
   new certificate.
 - external-dns ignores `local.bigd.no`; do not annotate a private route.
+- Uptime: add the URL to the `internal-sites` Probe in
+  `k8s/talos/infra/blackbox-exporter/probe.yaml`, unless KEDA scales the app to zero (the
+  probe would keep it awake). Use a path that answers 2xx without leaving HTTPS.
 - Only gluetun reaches `*.local.bigd.no` from inside the cluster, through `hostAliases` in
   `k8s/talos/apps/gluetun-vpn/gluetun.yaml`. Touch it only if gluetun must call the app.
 

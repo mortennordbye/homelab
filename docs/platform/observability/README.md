@@ -114,6 +114,7 @@ Operating notes for the Worker (heartbeat URL rotation, the site list) are in
 | kube-prometheus-stack | cluster, nodes, kube-state-metrics | none | `k8s/talos/infra/kube-prometheus-stack/` |
 | kube-prometheus-stack, `kubeEtcd` | etcd on the three control planes, `http://10.3.10.31-33:2381/metrics` | none; Talos serves only `/metrics` and `/health` there, set by `listen-metrics-urls` in the control-plane patch | `k8s/talos/infra/kube-prometheus-stack/values.yaml`, `terraform/proxmox/hyper-cluster/k8s/talos/talos-cluster.tf` |
 | blackbox-exporter, Probe `internet` | HTTPS to google.com/generate_204 and cloudflare.com/cdn-cgi/trace every 15 s | none | `k8s/talos/infra/blackbox-exporter/` |
+| blackbox-exporter, Probe `internal-sites` | every `local.bigd.no` host except the KEDA scale-to-zero ones and Alertmanager's webhook-only route, through the gateway's DNS and the private gateway, every 60 s | none | `k8s/talos/infra/blackbox-exporter/probe.yaml` |
 | blackbox-exporter, Probe `public-sites` | nordbye.it, blog.nordbye.it, logeverylift.com, auth.bigd.no, hub.bigd.no through public DNS and Cloudflare, every 60 s | none | `k8s/talos/infra/blackbox-exporter/probe.yaml` |
 | unpoller | UniFi gateway `https://10.3.10.1`, scraped every 30 s; the gateway's system log pushed to Loki every minute as `{application="unifi_system_log"}` | local UniFi user `unpoller`, Network View Only, other apps None, Bitwarden `unpoller-unifi-password` | `k8s/talos/infra/unpoller/` |
 | snmp-exporter | NAS `10.3.10.10`, modules `if_mib` + `synology`, every 60 s | SNMPv3 `snmp-exporter`, SHA/AES, Bitwarden `synology-snmp-auth-password`, `synology-snmp-priv-password` | `k8s/talos/infra/snmp-exporter/` |
@@ -142,6 +143,7 @@ keep the chart's upstream runbook links.
 |---|---|---|
 | `InternetDown` | both internet probes fail for 1 min | critical |
 | `PublicSiteDown` | a public site fails for 5 min while the internet is up | critical |
+| `InternalSiteDown` | a `local.bigd.no` host fails through the private gateway for 10 min | critical |
 | `ErrorBudgetBurn` | the public-site probe SLO burns budget at 7x or faster ([slos.md](slos.md)) | critical; slower burns warning (not sent) |
 | `SLOMetricAbsent` | the probe metric behind an SLO is gone for 2 min | critical |
 | `BackupJobStale` | etcd, a `*-db-backup` or a `*-backup-check` CronJob not successful for 26 h, or scheduled and never succeeded | critical |
@@ -157,6 +159,8 @@ keep the chart's upstream runbook links.
 | `ProxmoxStorageFillingUp` | a Proxmox storage full within 4 days at the last 6 h rate, for 1 h | critical |
 | `PersistentVolumeFillingUp` | a PVC under half free and full within 4 days at the last 6 h rate, for 1 h | critical |
 | `ProxmoxMetricsDown` | Proxmox exporter scrape failing for 30 min | critical |
+| `ProxmoxHostHot` | a Proxmox host's hottest CPU core above 90 °C for 10 min | critical |
+| `ProxmoxSensorsDown` | node-exporter on every Proxmox host failing for 30 min | critical |
 | `DeploymentUnavailable`, `PodCrashLooping` | a workload down | critical |
 | `ArrQueueStuck`, `MediaRootFolderLow`, `ArrAppUnreachable`, `MediaExporterDown`, `QbittorrentDisconnected` | media stack | critical |
 | `CertificateExpiringSoon` | a cert-manager certificate within 7 days of expiry | critical |

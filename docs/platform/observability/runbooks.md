@@ -364,6 +364,24 @@ The site is down for visitors.
 See [`../network/traefik.md`](../network/traefik.md) and
 [`../network/cloudflare.md`](../network/cloudflare.md).
 
+### InternalSiteDown
+
+A `local.bigd.no` host has failed through the gateway's DNS and Traefik's private gateway for
+10 minutes.
+
+The app is unreachable on the LAN and over Tailscale, even if its pods are running.
+
+- `kubectl -n <namespace> get pods,httproute`; the HTTPRoute status says whether the gateway
+  accepted it.
+- `probe_http_status_code{job="internal-sites"}`: 0 is DNS, TLS or a timeout; 404 is a route
+  that no longer matches the host; 5xx is the app or a backend with no endpoints.
+- DNS: the name must be in `aliases` in `terraform/unifi/dns/records.tf`.
+- TLS: `kubectl -n traefik get certificate`; the `*.local.bigd.no` wildcard covers one label.
+- Traefik private gateway: `kubectl -n traefik get pods` and its logs.
+
+A host that moves to KEDA scale to zero leaves the `internal-sites` Probe, or the probe keeps
+it awake.
+
 ## NAS
 
 ### NasDiskUnhealthy
