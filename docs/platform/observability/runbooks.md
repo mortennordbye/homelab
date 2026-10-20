@@ -1,8 +1,9 @@
 # Alert runbooks
 
 One section per alert in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`, plus
-the SLO alerts Pyrra generates. Every rule's `runbook_url` points at its section here, and
-the Discord message carries the link. Reelsmith's alerts are documented in
+the SLO alerts Pyrra generates and one section for the chart's Alertmanager rule group.
+Every rule's `runbook_url` points at its section here, and the Discord message carries the
+link. Reelsmith's alerts are documented in
 [`../../apps/reelsmith/README.md`](../../apps/reelsmith/README.md#alerts).
 
 All commands assume the Homelab kubeconfig:
@@ -262,6 +263,37 @@ A VolSync ReplicationSource missed its nightly restic backup by more than 6 hour
 
 Usually a locked restic repository or a PVC that could not be snapshotted. See
 [`../backups/restore.md`](../backups/restore.md#app-volume-volsync).
+
+## Alerting
+
+### Alertmanager
+
+Any `Alertmanager*` alert from the chart's Alertmanager group. The ones that reach Discord:
+
+| Alert | Means |
+|---|---|
+| `AlertmanagerFailedReload` | the last config reload failed; the replica keeps running the previous config |
+| `AlertmanagerConfigInconsistent` | the two replicas run different configs |
+| `AlertmanagerMembersInconsistent`, `AlertmanagerClusterDown` | the replicas do not see each other, or half or more are down |
+| `AlertmanagerClusterCrashlooping` | half or more of the replicas restarted more than 4 times in 10 min |
+| `AlertmanagerClusterFailedToSendAlerts` | every replica fails to deliver to one integration (`discord`, or `webhook` for the heartbeat) |
+
+A failing Discord integration cannot announce itself on Discord: that alert arrives once
+delivery works again, or shows up in the weekly review. A dead Alertmanager is caught by the
+Cloudflare watchdog instead ([README.md](README.md#alert-path)).
+
+```bash
+kubectl -n monitoring get pods -l app.kubernetes.io/name=alertmanager
+kubectl -n monitoring logs alertmanager-kube-prometheus-stack-alertmanager-0 -c config-reloader
+kubectl -n monitoring logs alertmanager-kube-prometheus-stack-alertmanager-0 -c alertmanager
+```
+
+- Reload failure or inconsistent config: the last change to `alertmanager.config` in
+  `k8s/talos/infra/kube-prometheus-stack/values.yaml`, or a changed key in the
+  `alertmanager-discord-webhook` or `alertmanager-heartbeat` secrets. Revert in Git.
+- Failed sends to `discord`: the webhook may be revoked; rotate it as in
+  [`../secrets/README.md`](../secrets/README.md#rotation-and-refresh). Failed sends to `webhook`: see the
+  watchdog notes in [`../network/cloudflare.md`](../network/cloudflare.md#watchdog-worker).
 
 ## Network
 

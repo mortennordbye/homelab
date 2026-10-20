@@ -14,7 +14,7 @@ pages, and how a week is reviewed. Each piece has its own page; this one shows h
 | Incidents | blameless postmortems, written when an event meets the criteria at the top of the page | [incidents.md](incidents.md) |
 | Change tracking | every Argo CD sync is a deploy marker on the Homelab dashboards; Kargo holds a site's prod promotion for a manual merge when its budget is below 25 % | [argocd.md](../delivery/argocd.md#deploy-markers), [slos.md](slos.md#error-budget-policy) |
 | Capacity | the NAS volume, Proxmox storages and PVCs page when they are on course to fill within 4 days, before the fixed thresholds fire | [runbooks.md](runbooks.md#persistentvolumefillingup) |
-| Watching the watchers | the Cloudflare watchdog reports a missing Alertmanager heartbeat, `SLOMetricAbsent` fires when an SLO loses its metric, and every exporter has a `*MetricsDown` alert | [README.md](README.md#alert-path) |
+| Watching the watchers | the Cloudflare watchdog reports a missing Alertmanager heartbeat, the chart's Alertmanager rules catch a failed reload, split replicas or failed sends, `SLOMetricAbsent` fires when an SLO loses its metric, and every exporter has a `*MetricsDown` alert | [README.md](README.md#alert-path) |
 
 ## What pages
 

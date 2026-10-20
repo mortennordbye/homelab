@@ -273,8 +273,11 @@ defaultRules:
   # HPAs sit at max by design.
   disabled:
     KubeHpaMaxedOut: true
+  additionalRuleGroupAnnotations:
+    alertmanager:
+      runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#alertmanager
   rules:
-    alertmanager: false
+    alertmanager: true
     etcd: false
     configReloaders: false
     general: true
