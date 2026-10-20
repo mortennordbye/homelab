@@ -27,28 +27,47 @@ what `bitwarden-certificate.yaml` and `cluster_issuer.yaml` are for.
   --from-literal=token=...`) and never lands in git, so recreating it is part
   of a cluster rebuild.
 
-## Access model: two machine accounts
+## Access model
 
-The `Homelab` account is used by ESO. It has read-only access, and its token
-lives in the cluster as `bw-auth-token`. The `claude-code` account is used from
-the laptop, with read and write on the Homelab project. Its token lives in the
-macOS Keychain under service name `bws-homelab`, never in a dotfile:
+Two stores, split by who reads the value:
+
+| Store | Holds | Read by |
+|---|---|---|
+| Secrets Manager project `Homelab` | everything a cluster workload, script or agent reads, including laptop-only device keys | ESO, the agent |
+| Bitwarden vault, folder `Homelab` | human sign-ins, and the agent's bootstrap token | Morten |
+
+One machine account, `Homelab`, has read and write on the project, and each consumer
+gets its own access token on it: the cluster's lives as `bw-auth-token`, and the `agent`
+token is for AI agents and scripts on a workstation. Revoking one token leaves the other
+working. All tokens share the account's write access, so the cluster's token can edit
+secrets too. Grants are project-level, so a new secret needs no per-secret grant.
+Agents never unlock the vault.
+
+The `agent` token is stored once, as the vault login `bws agent token`
+(password field), which syncs to every device. Each machine keeps a local copy that
+[`ai/skills/secrets/bws-token`](../../../ai/skills/secrets/bws-token) reads: the macOS
+Keychain item `bws-agent`, `~/.config/bws/token` (mode 600) elsewhere, or
+`$BWS_ACCESS_TOKEN` when set, which is how cloud agent sessions get it. A new machine
+needs one command in a terminal, which prompts for the master password:
 
 ```bash
-security add-generic-password -s bws-homelab -a claude -w   # prompts, stays out of history
+ai/skills/secrets/bws-token setup
 ```
 
-Both accounts have project-level grants covering every secret in the project,
-so a new secret needs no per-secret grant.
+It copies the vault item into the local store, checks the token against the API, and
+puts `bws-token` and `vault-add` on PATH in `~/.local/bin`, and links the skill into the
+global skill folder of each agent installed, so other repos get it. To rotate the
+token, create a new access token named `agent` on the `Homelab` machine account in the Secrets Manager web app, replace the
+vault item's password, and rerun `setup` on each machine.
 
 ## Creating a secret
 
 Use the Bitwarden Secrets Manager CLI, `bws`, installed at
 `/opt/homebrew/bin/bws` from the GitHub release binary (brew's `bitwarden-cli`
-is the unrelated Password Manager tool).
+is the Password Manager tool, `bw`).
 
 ```bash
-export BWS_ACCESS_TOKEN=$(security find-generic-password -s bws-homelab -w)
+export BWS_ACCESS_TOKEN=$(bws-token)
 
 bws secret create trek-encryption-key "$(openssl rand -hex 32)" \
   1ea61322-5f4a-44a4-b4d0-b29b00ba1134 \
@@ -140,18 +159,29 @@ needs a `kubectl rollout restart`.
   up after a renewal anyway, check the annotation is still on the Deployment and
   run `kubectl rollout restart deploy/bitwarden-sdk-server -n external-secrets`.
 
-## Local device credentials (not in Bitwarden)
+## Sign-ins created by an agent
 
-Credentials for LAN devices driven from the laptop, and never from the cluster,
-do not belong in Bitwarden: nothing in-cluster consumes them. They live in the
-macOS login Keychain, the same way the `bws-homelab` token does, and a
-gitignored `*.env` file at the repo root exports them by reference.
+When an agent creates a human login, such as an app's admin account, it generates the
+password into the `Homelab` project and hands over a filled-in command:
+
+```bash
+vault-add "<App> admin" <username> <bws-secret-id> https://<app-url>
+```
+
+Run by the human, it unlocks the vault, creates a login in the `Homelab` folder from the
+Secrets Manager value, and prints only the item name and id.
+
+## Device credentials
+
+Credentials for LAN devices driven from the laptop, and never from the cluster, live in
+the `Homelab` project like everything else, so any machine with the agent token can use
+them. A gitignored `*.env` file at the repo root exports them by reference.
 
 The Hue bridge is the worked example. `hue.env` holds the bridge address and
 resolves the key at source time:
 
 ```bash
-export HUE_APPLICATION_KEY="$(security find-generic-password -s hue-bridge -w)"
+export HUE_APPLICATION_KEY="$(BWS_ACCESS_TOKEN=$(bws-token) bws secret get <uuid> --output json | jq -r .value)"
 ```
 
 The key is never written to disk, committed, or shown in an agent transcript.
@@ -162,10 +192,11 @@ To recreate the Hue key, press the round link button on top of the bridge and
 run this within 30 seconds:
 
 ```bash
-key=$(curl -sk -X POST https://10.3.10.16/api -H 'Content-Type: application/json' \
+export BWS_ACCESS_TOKEN=$(bws-token)
+curl -sk -X POST https://10.3.10.16/api -H 'Content-Type: application/json' \
     -d '{"devicetype":"homelab#macbook"}' \
-    | grep -o '"username":"[^"]*"' | cut -d'"' -f4)
-[ -n "$key" ] && security add-generic-password -s hue-bridge -a "$USER" -w "$key" -U
+  | jq -r '.[0].success.username // empty' \
+  | xargs -I{} bws secret edit <uuid> --value {} | jq -r .id
 ```
 
 Revoke it with `DELETE /api/<key>/config/whitelist/<key>`. Pressing the link

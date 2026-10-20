@@ -239,13 +239,14 @@ Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes c
 - **Don't apply directly.** ArgoCD owns the cluster state. Edit manifests in `k8s/talos/**` and let ArgoCD reconcile.
 - **Don't `terraform apply`.** Plans are fine; apply requires explicit user approval — Proxmox/Azure changes are not easily reversible.
 - **Don't commit secrets.** Secrets flow through External Secrets Operator from the upstream secret store. If you need a new secret, add an `ExternalSecret`, not a literal `Secret`.
-- **Create Bitwarden secrets with `bws`.** The Secrets Manager CLI is installed and authenticates
-  with `BWS_ACCESS_TOKEN=$(security find-generic-password -s bws-homelab -w)`. The Homelab
-  project id is `1ea61322-5f4a-44a4-b4d0-b29b00ba1134`. Create with
-  `bws secret create <kebab-case-name> "<value>" <project-id>` (names describe the consumer,
-  notes stay empty) and put the returned `id` in the ExternalSecret's `remoteRef.key`.
-  NEVER run `bws secret list` or `bws secret get` unfiltered — the JSON includes plaintext
-  values; always pipe through a filter that keeps only `id`, `key`, and `projectId`.
+- **Create Bitwarden secrets with `bws`.** Follow the `secrets` skill (`ai/skills/secrets/`).
+  The agent's token comes from `BWS_ACCESS_TOKEN=$(bws-token)`. Every
+  secret goes in the Homelab project `1ea61322-5f4a-44a4-b4d0-b29b00ba1134`; the Bitwarden vault is for human sign-ins and agents never unlock it.
+  Create with `bws secret create <kebab-case-name> "<value>" <project-id>` (names describe
+  the consumer, notes stay empty) and put the returned `id` in the ExternalSecret's
+  `remoteRef.key`. NEVER run `bws secret list` or `bws secret get` unfiltered — the JSON
+  includes plaintext values; always pipe through a filter that keeps only `id`, `key`, and
+  `projectId`.
   Full pattern: `docs/platform/secrets/README.md`.
 - **Match the manifest style of the surrounding app.** App directories use kustomize or plain manifests inconsistently — copy the pattern of the directory you're editing rather than introducing a new one.
 - **Image tags are pinned.** Don't change a tag to `latest`; bump to a specific version. Kargo rewrites the tags of the apps it promotes; the inline tag in their Deployment is only a fallback.
