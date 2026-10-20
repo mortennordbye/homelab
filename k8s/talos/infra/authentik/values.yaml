@@ -21,6 +21,7 @@ blueprints:
     - authentik-blueprint-reelsmith
     - authentik-blueprint-login-flow
     - authentik-blueprint-homepage
+    - authentik-blueprint-alertmanager
     - authentik-blueprint-embedded-outpost
 
 server:

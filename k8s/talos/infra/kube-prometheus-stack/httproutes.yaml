@@ -52,7 +52,7 @@ spec:
           port: 80
           weight: 1
 ---
-# Proxmox posts its notifications here (webhook target "alertmanager").
+# Proxmox, PBS and DSM post their notifications here; the UI sits behind authentik.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -69,13 +69,45 @@ spec:
   hostnames:
     - "alertmanager.local.bigd.no"
   rules:
-    # POST to the alerts endpoint only. Alertmanager's API has no auth, and a
-    # PathPrefix would hand anyone on the LAN the silences and the UI.
+    # Webhook senders cannot sign in, so POST to the alerts endpoint skips authentik. Exact
+    # path and method beat the "/" rule below; a GET there still needs a sign-in.
     - matches:
         - method: POST
           path:
             type: Exact
             value: /api/v2/alerts
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: kube-prometheus-stack-alertmanager
+          port: 9093
+          weight: 1
+    # authentik's callback. Must stay unauthenticated and reach authentik, not Alertmanager,
+    # or the sign-in deadlocks against itself.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /outpost.goauthentik.io/
+      backendRefs:
+        # Cross-namespace: permitted by a ReferenceGrant in identity.
+        - group: ""
+          kind: Service
+          name: authentik-server
+          namespace: identity
+          port: 80
+          weight: 1
+    # The UI and the rest of the API. Alertmanager has no auth; removing this filter hands
+    # anyone on the LAN the silences.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: alertmanager-authentik
       backendRefs:
         - group: ""
           kind: Service

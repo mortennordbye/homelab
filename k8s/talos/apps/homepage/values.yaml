@@ -493,6 +493,11 @@ config:
             href: https://pyrra.local.bigd.no
             siteMonitor: https://pyrra.local.bigd.no
             description: SLOs and error budgets
+        - Alertmanager:
+            icon: alertmanager.png
+            href: https://alertmanager.local.bigd.no
+            siteMonitor: https://alertmanager.local.bigd.no
+            description: Alerts and silences
         - Tautulli:
             icon: tautulli.png
             href: https://tautulli.local.bigd.no

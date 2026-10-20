@@ -43,7 +43,7 @@ spec:
 ---
 # Private-gateway hosts, through the gateway's DNS and Traefik, so a broken route or certificate
 # fails even while the pods are healthy. KEDA scale-to-zero hosts stay out: a probe would keep
-# them awake. Alertmanager's route serves only webhook POSTs, and the watchdog covers it.
+# them awake.
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
@@ -59,6 +59,7 @@ spec:
   targets:
     staticConfig:
       static:
+        - https://alertmanager.local.bigd.no
         - https://argocd.local.bigd.no
         - https://auth.local.bigd.no
         - https://bazarr.local.bigd.no

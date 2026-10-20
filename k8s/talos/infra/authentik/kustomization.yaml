@@ -15,9 +15,11 @@ resources:
   - reelsmith-blueprint.yaml
   - login-flow-blueprint.yaml
   - homepage-blueprint.yaml
+  - alertmanager-blueprint.yaml
   - embedded-outpost-blueprint.yaml
   - referencegrant-reelsmith.yaml
   - referencegrant-homepage.yaml
+  - referencegrant-alertmanager.yaml
 
 helmCharts:
   - name: authentik

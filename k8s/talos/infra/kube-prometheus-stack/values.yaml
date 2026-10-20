@@ -143,6 +143,8 @@ alertmanager:
     # own NFS PVC via the volumeClaimTemplate below.
     replicas: 2
     retention: 120h
+    # Silence and alert links in notifications point here.
+    externalUrl: https://alertmanager.local.bigd.no
     # Mount the ExternalSecret with the Discord webhook so the URL is not in git.
     # The secret key 'url' is then read via api_url_file (see alertmanager.config below).
     secrets:

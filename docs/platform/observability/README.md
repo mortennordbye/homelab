@@ -8,7 +8,7 @@ How alerts, SLOs, runbooks, incidents and the weekly review fit together is in
 | What | URL |
 |---|---|
 | Grafana, dashboard Homelab-SPOG | https://grafana.local.bigd.no/d/mns9wmn |
-| Alertmanager UI, alerts and silences | `kubectl -n monitoring port-forward svc/kube-prometheus-stack-alertmanager 9093`, then http://localhost:9093; `alertmanager.local.bigd.no` only accepts webhook POSTs, since the API has no auth |
+| Alertmanager, alerts and silences (authentik sign-in, group `alertmanager-admins`) | https://alertmanager.local.bigd.no |
 | Prometheus | https://prometheus.local.bigd.no |
 | Grafana Drilldown: metrics, logs and traces without a dashboard | https://grafana.local.bigd.no/drilldown |
 | Pyrra, SLOs and error budgets | https://pyrra.local.bigd.no |
@@ -114,7 +114,7 @@ Operating notes for the Worker (heartbeat URL rotation, the site list) are in
 | kube-prometheus-stack | cluster, nodes, kube-state-metrics | none | `k8s/talos/infra/kube-prometheus-stack/` |
 | kube-prometheus-stack, `kubeEtcd` | etcd on the three control planes, `http://10.3.10.31-33:2381/metrics` | none; Talos serves only `/metrics` and `/health` there, set by `listen-metrics-urls` in the control-plane patch | `k8s/talos/infra/kube-prometheus-stack/values.yaml`, `terraform/proxmox/hyper-cluster/k8s/talos/talos-cluster.tf` |
 | blackbox-exporter, Probe `internet` | HTTPS to google.com/generate_204 and cloudflare.com/cdn-cgi/trace every 15 s | none | `k8s/talos/infra/blackbox-exporter/` |
-| blackbox-exporter, Probe `internal-sites` | every `local.bigd.no` host except the KEDA scale-to-zero ones and Alertmanager's webhook-only route, through the gateway's DNS and the private gateway, every 60 s | none | `k8s/talos/infra/blackbox-exporter/probe.yaml` |
+| blackbox-exporter, Probe `internal-sites` | every `local.bigd.no` host except the KEDA scale-to-zero ones, through the gateway's DNS and the private gateway, every 60 s | none | `k8s/talos/infra/blackbox-exporter/probe.yaml` |
 | blackbox-exporter, Probe `public-sites` | nordbye.it, blog.nordbye.it, logeverylift.com, auth.bigd.no, hub.bigd.no through public DNS and Cloudflare, every 60 s | none | `k8s/talos/infra/blackbox-exporter/probe.yaml` |
 | unpoller | UniFi gateway `https://10.3.10.1`, scraped every 30 s; the gateway's system log pushed to Loki every minute as `{application="unifi_system_log"}` | local UniFi user `unpoller`, Network View Only, other apps None, Bitwarden `unpoller-unifi-password` | `k8s/talos/infra/unpoller/` |
 | snmp-exporter | NAS `10.3.10.10`, modules `if_mib` + `synology`, every 60 s | SNMPv3 `snmp-exporter`, SHA/AES, Bitwarden `synology-snmp-auth-password`, `synology-snmp-priv-password` | `k8s/talos/infra/snmp-exporter/` |

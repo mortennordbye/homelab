@@ -7,6 +7,7 @@ resources:
   - namespace.yaml
   - volsync.yaml
   - httproutes.yaml
+  - middleware-authentik.yaml
   - grafana-admin-credentials-secret.yaml
   - grafana-oidc-secret.yaml
   - alertmanager-discord-webhook-secret.yaml
