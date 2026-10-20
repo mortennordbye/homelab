@@ -21,6 +21,9 @@ metadata:
   namespace: logeverylift
 spec:
   replicas: 1
+  # Recreate: two postmasters on one NFS data dir corrupt it
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: postgres
@@ -68,14 +71,14 @@ spec:
             exec:
               command: ["pg_isready", "-U", "postgres", "-d", "logeverylift_db"]
             initialDelaySeconds: 5
-            periodSeconds: 5
+            periodSeconds: 30
           resources:
             requests:
               memory: "128Mi"
               cpu: "100m"
+            # No CPU limit: CFS throttling stalls request handling in 100ms steps.
             limits:
               memory: "512Mi"
-              cpu: "500m"
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
