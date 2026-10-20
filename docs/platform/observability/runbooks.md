@@ -1,9 +1,9 @@
 # Alert runbooks
 
 One section per alert in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`, plus
-the SLO alerts Pyrra generates and one section for the chart's Alertmanager rule group.
-Every rule's `runbook_url` points at its section here, and the Discord message carries the
-link. Reelsmith's alerts are documented in
+the SLO alerts Pyrra generates and one section each for the chart's etcd and Alertmanager
+rule groups. Every rule's `runbook_url` points at its section here, and the Discord message
+carries the link. Reelsmith's alerts are documented in
 [`../../apps/reelsmith/README.md`](../../apps/reelsmith/README.md#alerts).
 
 All commands assume the Homelab kubeconfig:
@@ -263,6 +263,43 @@ A VolSync ReplicationSource missed its nightly restic backup by more than 6 hour
 
 Usually a locked restic repository or a PVC that could not be snapshotted. See
 [`../backups/restore.md`](../backups/restore.md#app-volume-volsync).
+
+## Control plane
+
+### etcd
+
+Any `etcd*` alert from the chart's etcd group. The ones that reach Discord:
+
+| Alert | Means |
+|---|---|
+| `etcdInsufficientMembers` | fewer than two of the three members answer the scrape: quorum is lost |
+| `etcdNoLeader` | a member has no leader for a minute |
+| `etcdHighNumberOfFailedGRPCRequests` | over 5 % of a gRPC method's requests fail |
+| `etcdGRPCRequestsSlow` | p99 gRPC latency above 150 ms |
+| `etcdHighFsyncDurations` | p99 WAL fsync above 1 s, the disk under etcd is too slow |
+| `etcdDatabaseQuotaLowSpace` | the database is above 95 % of its quota; at 100 % etcd goes read-only |
+
+Without quorum or a leader the Kubernetes API stops accepting writes: no deploys, no
+rescheduling, Argo CD and cert-manager stall. Running pods keep serving.
+
+```bash
+export TALOSCONFIG=~/Documents/Code/github/Homelab/terraform/proxmox/hyper-cluster/k8s/talos/talosconfig
+talosctl -n 10.3.10.31,10.3.10.32,10.3.10.33 etcd status
+talosctl -n 10.3.10.31 etcd members
+talosctl -n 10.3.10.31 etcd alarm list
+talosctl -n <ip> logs etcd
+```
+
+- A member missing from `etcd status`: check its VM and Proxmox host first
+  ([ProxmoxHostDown](#proxmoxhostdown)), then `talosctl -n <ip> service etcd`.
+- Slow fsync or gRPC: the control plane disks are on each host's `local-lvm`; look for a
+  backup, VolSync or Tdarr job saturating that host's disk on the Proxmox row of SPOG.
+- Quota: `talosctl -n <ip> etcd defrag`, one member at a time and never two at once, then
+  `talosctl -n <ip> etcd alarm disarm` if `alarm list` shows `NOSPACE`.
+
+Losing a majority of members means restoring from the etcd snapshot
+([`../backups/restore.md`](../backups/restore.md#etcd)). Do not remove or reset a member while
+quorum is in doubt; see [`../cluster/talos.md`](../cluster/talos.md#remove-a-node).
 
 ## Alerting
 

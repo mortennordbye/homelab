@@ -119,6 +119,13 @@ data "talos_machine_configuration" "controlplane" {
       }
       cluster = {
         allowSchedulingOnControlPlanes = true
+        # Scraped by kube-prometheus-stack (kubeEtcd); /metrics and /health only, no client API.
+        # etcd flags apply only on a node reboot; Talos neither restarts etcd on a spec change nor via API.
+        etcd = {
+          extraArgs = {
+            "listen-metrics-urls" = "http://0.0.0.0:2381"
+          }
+        }
         network = {
           cni = {
             name = "none" # Cilium installed via Helm

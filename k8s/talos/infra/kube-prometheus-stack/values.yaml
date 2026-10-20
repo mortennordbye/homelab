@@ -257,8 +257,17 @@ kubeControllerManager:
 coreDns:
   enabled: true
 
+# Talos serves etcd metrics over plain HTTP on 2381 only because the control-plane patch in
+# terraform/proxmox/hyper-cluster/k8s/talos/talos-cluster.tf sets listen-metrics-urls.
 kubeEtcd:
-  enabled: false
+  enabled: true
+  endpoints:
+    - 10.3.10.31
+    - 10.3.10.32
+    - 10.3.10.33
+  service:
+    port: 2381
+    targetPort: 2381
 
 kubeScheduler:
   enabled: false
@@ -276,9 +285,11 @@ defaultRules:
   additionalRuleGroupAnnotations:
     alertmanager:
       runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#alertmanager
+    etcd:
+      runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#etcd
   rules:
     alertmanager: true
-    etcd: false
+    etcd: true
     configReloaders: false
     general: true
     k8s: true
