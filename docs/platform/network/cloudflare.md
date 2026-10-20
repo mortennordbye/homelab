@@ -19,6 +19,8 @@ The WAN address is published through two A records, `ddns.nordbye.it` and
 hostname is a CNAME onto one of them; `logeverylift.com` chains across zones
 onto `ddns.nordbye.it`, which works because both zones are on the same account.
 
+[![Visitors reach the three Cloudflare zones; nordbye.it and logeverylift.com chain onto the proxied ddns.nordbye.it, bigd.no apps onto the DNS-only ddns.bigd.no, and both lead through the home WAN to Traefik's public gateway, while the watchdog Worker probes the public sites every minute](../../assets/diagrams/network-cloudflare.svg)](../../assets/diagrams/network-cloudflare.svg)
+
 `ddns.nordbye.it` is proxied, so the residential address never appears in its
 zone. The DDNS client never sends the proxied flag, so it survives updates.
 

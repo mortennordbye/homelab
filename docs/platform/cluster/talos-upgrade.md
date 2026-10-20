@@ -150,6 +150,8 @@ quorum. Wipe `EPHEMERAL` so it joins fresh, or do a full recovery from the snaps
 
 Run every step from `terraform/proxmox/hyper-cluster/k8s/talos`.
 
+[![Before you start, a baseline plan, then phase 1 applies the new install image and upgrades the nodes one at a time before upgrade-k8s, phase 2 raises kubernetes_config_contract straight after, and any other apply in between would downgrade the control plane](../../assets/diagrams/cluster-talos-upgrade.svg)](../../assets/diagrams/cluster-talos-upgrade.svg)
+
 ### Baseline
 
 With versions unchanged and both upgrade flags `false`, run a plan so provider churn is separated

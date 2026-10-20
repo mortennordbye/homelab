@@ -1,0 +1,46 @@
+# Proxmox Backup Server: the nightly job, its identity, the datastore and where errors go. See platform/backups/pbs.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+  group: {label.near: top-left; style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}}
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+pve: "Proxmox VE backup job\nall guests, 03:00\nstorage pbs" {class: card; icon: ${di}/proxmox-light.svg; width: 220; height: 110}
+
+pbs: "pbs.local.bigd.no:8007, own machine" {
+  class: group
+  token: "pve@pbs!hyper-cluster\nDatastorePowerUser" {class: aside; icon: ${ify}/tabler/key.svg?color=%23a1ada3&height=64; width: 220; height: 110}
+  gc: "Garbage collection\ndaily" {class: card; icon: ${ify}/tabler/trash.svg?color=%23a1ada3&height=64; width: 200; height: 110}
+  datastore: "Datastore Synology\n/mnt/synology" {class: card; icon: ${di}/proxmox-backup-server.svg; width: 220; height: 110}
+  prune: "Prune job, daily\nkeep 1 daily, weekly,\nmonthly" {class: card; icon: ${ify}/tabler/scissors.svg?color=%23a1ada3&height=64; width: 200; height: 110}
+}
+
+nfs: "Synology NFS pve-backup\n10.3.10.10, 2 TiB" {class: card; icon: ${di}/synology.svg; width: 220; height: 110}
+am: "Alertmanager\nProxmoxNotification" {class: card; icon: ${di}/alertmanager.svg; width: 220; height: 110}
+discord: Discord {class: card; icon: ${di}/discord.svg; width: 200; height: 110}
+
+pve -> pbs.token: backs up as
+pbs.token -> pbs.datastore: write, prune
+pbs.gc -> pbs.datastore
+pbs.prune -> pbs.datastore
+pbs.datastore -> nfs: NFS mount
+pve -> am: errors, webhook
+pbs -> am: errors, webhook
+am -> discord
