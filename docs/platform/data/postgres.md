@@ -21,6 +21,8 @@ Backups are a nightly `pg_dump` CronJob in `k8s/talos/apps/logeverylift/db-backu
 writing to the NAS, and the monthly restore test loads the newest dump into a scratch
 Postgres. Schedule, retention and restores: [`../backups/README.md`](../backups/README.md).
 
+[![logeverylift-secret from Bitwarden gives the password to the logeverylift app, Postgres 18 and the nightly pg_dump CronJob; Postgres stores data on a syno-nfs-csi PVC whose ownership an initContainer fixes, and the dumps land on the NAS, are copied offsite to Google Drive and are loaded by the monthly restore test](../../assets/diagrams/data-postgres.svg)](../../assets/diagrams/data-postgres.svg)
+
 ## The NFS ownership trap
 
 A freshly provisioned `syno-nfs-csi` volume grants root everything and uid 70

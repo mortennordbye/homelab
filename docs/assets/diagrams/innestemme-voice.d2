@@ -1,0 +1,57 @@
+# Voice PE to Sonos: how innestemme hears, answers and speaks a request. See apps/innestemme/README.md.
+direction: down
+grid-columns: 2
+grid-gap: 24
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+home: "LAN and IoT network" {
+  label.near: top-left
+  grid-columns: 1
+  grid-gap: 160
+  style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}
+  voicepe: "Voice PE\n10.3.20.67 on IoT" {class: card; width: 230; height: 150; icon: ${di}/esphome.svg}
+  ha: "Home Assistant\n10.3.10.15:8123" {class: card; width: 230; height: 150; icon: ${di}/home-assistant.svg}
+  sonos: "living room Sonos\nmedia_player.living_room" {class: card; width: 230; height: 150; icon: ${ify}/simple-icons/sonos.svg?color=%23e9ebe9&height=64}
+  ha -> sonos: announce
+}
+
+cluster: "namespace innestemme" {
+  label.near: top-left
+  style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}
+  pod: "pod: voice engine" {
+    label.near: top-left
+    style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}
+    wake: "openWakeWord\nHey Jarvis, 0.65" {class: card; width: 230; height: 150; icon: ${ify}/tabler/ear.svg?color=%23a1ada3&height=64}
+    stt: "Parakeet TDT 0.6B\nspeech to text" {class: card; width: 230; height: 150; icon: ${ify}/tabler/text-scan-2.svg?color=%23a1ada3&height=64}
+    tts: "Kokoro, am_onyx\ntext to speech" {class: card; width: 230; height: 150; icon: ${ify}/tabler/speakerphone.svg?color=%23a1ada3&height=64}
+    skills: "skills and rules\nno language model" {class: card; width: 230; height: 150; icon: ${ify}/tabler/list-check.svg?color=%23a1ada3&height=64}
+    wake -> stt
+    stt -> skills
+    skills -> tts
+  }
+  svc: "LoadBalancer Service\nVIP 10.3.10.99:9090" {class: card; width: 230; height: 150; icon: ${k8s}/svc.svg}
+  pod.tts -> svc: ".wav"
+}
+
+home.voicepe -> cluster.pod.wake: "mic :6053"
+cluster.pod.skills -> home.ha: "states, writes"
+cluster.svc -> home.sonos: download

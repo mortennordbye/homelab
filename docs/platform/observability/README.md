@@ -65,6 +65,12 @@ SPOG dashboard is in [The observability stack I actually run](https://blog.nordb
 | Pyrra | SLOs to recording rules and burn-rate alerts, SLO UI ([slos.md](slos.md)) | none | `k8s/talos/infra/pyrra/` |
 | Falco | runtime security events, modern eBPF driver | none | `k8s/talos/infra/falco/values.yaml` |
 
+Traces take one extra hop: Traefik exports to Alloy, which decides per whole trace what to
+keep and strips noisy attributes before Tempo stores it
+([`../network/traefik.md`](../network/traefik.md#tracing-and-metrics)).
+
+[![Traefik sends OTLP traces to Alloy, whose tail sampling drops the monitoring UIs and blackbox probes and whose transform strips per-process, per-connection and client-IP attributes, before Tempo stores them for Grafana](../../assets/diagrams/observability-traces.svg)](../../assets/diagrams/observability-traces.svg)
+
 ## Alert path
 
 [![Prometheus and webhooks to Alertmanager, then Discord; the Cloudflare watchdog and Falco post to Discord directly](../../assets/diagrams/observability-alerts.svg)](../../assets/diagrams/observability-alerts.svg)

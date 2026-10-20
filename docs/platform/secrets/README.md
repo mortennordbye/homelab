@@ -36,6 +36,8 @@ Two stores, split by who reads the value:
 | Secrets Manager project `Homelab` | everything a cluster workload, script or agent reads, including laptop-only device keys | ESO, the agent |
 | Bitwarden vault, folder `Homelab` | human sign-ins, and the agent's bootstrap token | Morten |
 
+[![The vault item feeds bws-token setup, which stores a local copy that agents use to create and rotate secrets in Secrets Manager; ESO reads the same project into Secrets for pods, and vault-add copies an agent-created sign-in back into the vault](../../assets/diagrams/secrets-agent.svg)](../../assets/diagrams/secrets-agent.svg)
+
 One machine account, `Homelab`, has read and write on the project, and each consumer
 gets its own access token on it: the cluster's lives as `bw-auth-token`, and the `agent`
 token is for AI agents and scripts on a workstation. Revoking one token leaves the other
