@@ -61,6 +61,12 @@ jobs:
             echo "PR $PR is no longer open; nothing to do."
             exit 0
           fi
+          # Read live: Kargo adds the labels after opening the PR, so the event
+          # payload can predate slo/budget-low.
+          if gh pr view "$PR" --json labels --jq '.labels[].name' | grep -qx 'slo/budget-low'; then
+            echo "Error budget below 25 % (slo/budget-low); leaving for manual merge."
+            exit 0
+          fi
           # GitHub computes mergeability asynchronously and reports UNKNOWN
           # until it finishes, which `gh pr merge` treats as a hard failure.
           for _ in 1 2 3 4 5 6; do

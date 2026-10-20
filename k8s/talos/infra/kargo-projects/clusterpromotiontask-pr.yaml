@@ -20,6 +20,10 @@ spec:
     - name: appPath      # kustomization dir, e.g. k8s/talos/apps/portfolio
     - name: imageRepo    # GHCR repo the Warehouse subscribes to
     - name: argocdApp    # Argo CD Application to sync, e.g. portfolio
+    # PromQL returning the app's lowest error budget left (0..1). `none` skips the
+    # gate; an empty value would make the var required on every Stage.
+    - name: budgetQuery
+      value: none
   steps:
     - uses: git-clone
       retry:
@@ -59,6 +63,25 @@ spec:
       config:
         path: ./repo
         generateTargetBranch: true
+    # Error budget gate (docs/platform/observability/slos.md). Below 25 % the PR
+    # gets slo/budget-low and kargo-automerge leaves it for a hand merge. Prometheus
+    # unreachable or no data also reads as low, never as a failed promotion.
+    - uses: http
+      as: budget
+      retry:
+        errorThreshold: 3
+      continueOnError: true
+      if: ${{ vars.budgetQuery != 'none' && status('commit') != 'Skipped' }}
+      config:
+        method: GET
+        url: http://kube-prometheus-stack-prometheus.monitoring.svc:9090/api/v1/query
+        queryParams:
+          - name: query
+            value: ${{ vars.budgetQuery }}
+        successExpression: response.status == 200
+        outputs:
+          - name: low
+            fromExpression: len(response.body.data.result) == 0 || float(response.body.data.result[0].value[1]) < 0.25
     - uses: git-open-pr
       as: open-pr
       retry:
@@ -71,11 +94,12 @@ spec:
         targetBranch: main
         title: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
         # The kargo-automerge workflow reads `app/<name>` to decide whether
-        # this app is opted into unattended merging.
+        # this app is opted into unattended merging, and holds slo/budget-low.
         labels:
           - kargo
           - app/${{ vars.appName }}
           - env/${{ ctx.stage }}
+          - "${{ vars.budgetQuery == 'none' ? 'slo/none' : (task.outputs?.['budget']?.low == false ? 'slo/budget-ok' : 'slo/budget-low') }}"
     # Blocks the promotion until the PR is merged in GitHub.
     - uses: git-wait-for-pr
       as: wait-pr

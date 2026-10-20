@@ -45,6 +45,13 @@ kustomize-set-image, git-commit, git-push to `main`, argocd-update, argocd-wait.
 it is merged, then runs argocd-update and argocd-wait. Merging the PR is the deploy
 gate.
 
+Before opening the PR, an `http` step queries Prometheus with the Stage's optional
+`budgetQuery` var, the app's lowest error budget left. The PR gets `slo/budget-ok`, or
+`slo/budget-low` below 25 %, with no data or with Prometheus unreachable;
+`kargo-automerge.yaml` does not merge a `slo/budget-low` PR. Stages without the var
+(apps with no SLO) get `slo/none`. Portfolio, blog and logeverylift prod set it; the
+policy is in [slos.md](../observability/slos.md#error-budget-policy).
+
 argocd-wait blocks until the Application is Synced and Healthy. `desiredRevision` is
 not pinned on argocd-update: apps track shared `main` HEAD, and a pinned revision
 reports the Stage Unhealthy as soon as any other commit lands. The smoke test is the
@@ -59,7 +66,7 @@ real verification.
 | Git write | GitHub App `mortennordbye-homelab-deployer`, credential per Project via ESO |
 | Sync permission | `kargo.akuity.io/authorized-stage` on the Argo CD app, stamped by `k8s/talos/infra/argocd/apps.yaml` |
 | Discovery latency | about 1 minute: Warehouses poll at `interval: 1m0s` |
-| PR labels | `kargo`, `app/<name>`, `env/<stage>`, set by git-open-pr |
+| PR labels | `kargo`, `app/<name>`, `env/<stage>`, `slo/budget-ok`, `slo/budget-low` or `slo/none`, set by git-open-pr |
 | UI | `https://kargo.local.bigd.no`, Authentik SSO (group `kargo-admins`), admin account kept as break-glass |
 | Versions | Kargo chart in `k8s/talos/infra/kargo/kustomization.yaml`, Argo Rollouts in `k8s/talos/infra/argo-rollouts/kustomization.yaml` |
 
@@ -82,7 +89,7 @@ Deploying to prod is automatic up to the gate: merge the PR Kargo opens
 
 Apps listed in the `KARGO_AUTOMERGE_APPS` repository variable skip the click:
 `kargo-automerge.yaml` squash-merges their promotion PR once it carries the
-`app/<name>` label. Check the current list with `gh variable get KARGO_AUTOMERGE_APPS`.
+`app/<name>` label, unless it also carries `slo/budget-low`. Check the current list with `gh variable get KARGO_AUTOMERGE_APPS`.
 Editing the variable (Settings, Secrets and variables, Actions) is the kill switch,
 per app or for all of them, with no commit. Kargo still opens the PR and waits on it,
 so removing an app just puts a human back in front of the merge.
