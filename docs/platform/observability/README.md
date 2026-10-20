@@ -33,6 +33,11 @@ Every row starts collapsed.
 
 Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard.
 
+Dashboards from this repo sit in Grafana's Homelab folder and Pyrra's in SLOs, set by the
+`k8s-sidecar-target-directory` annotation on their ConfigMap
+(`k8s/talos/infra/kube-prometheus-stack/dashboards/kustomization.yaml`). Chart dashboards
+without it stay at the top level.
+
 Both dashboards draw a vertical line for every Argo CD sync (the "Deploys" annotation, on by
 default), so a change in a graph can be matched to the commit that caused it. Hover the
 line for the app, the short revision and the commit subject. Argo CD notifications writes
