@@ -1,0 +1,59 @@
+# How Cloudflare fronts the homelab: three zones, what is proxied or cached, and the path to the origin. See platform/network/cloudflare.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+  group: {label.near: top-left; style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}}
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+visitors: "visitors" {class: card; width: 200; icon: ${ify}/tabler/users.svg?color=%23a1ada3&height=64}
+watchdog: "watchdog Worker on watchdog.bigd.no\nprobes the public sites every minute" {class: aside; width: 320; icon: ${ify}/logos/cloudflare-workers-icon.svg}
+
+nordbye: "nordbye.it" {
+  class: group
+  sites: "all proxied\nHTML cached: apex, www, blog\nnot cached: gate, headroom" {class: card; width: 250; icon: ${di}/cloudflare.svg}
+}
+
+lel: "logeverylift.com" {
+  class: group
+  apex: "apex proxied, not cached\nwww 301 to apex at edge" {class: card; width: 230; icon: ${di}/cloudflare.svg}
+}
+
+bigd: "bigd.no" {
+  class: group
+  apps: "app hostnames by external-dns\nproxy set per route" {class: card; width: 240; icon: ${di}/cloudflare.svg}
+}
+
+ddns_n: "ddns.nordbye.it\nproxied A record" {class: card; width: 220; icon: ${ify}/tabler/shield-lock.svg?color=%23a1ada3&height=64}
+ddns_b: "ddns.bigd.no\nDNS-only A record" {class: card; width: 220; icon: ${ify}/tabler/world-www.svg?color=%23a1ada3&height=64}
+
+wan: "home WAN\nUniFi DDNS updates both" {class: card; width: 220; icon: ${di}/unifi.svg}
+traefik: "Traefik public gateway" {class: card; width: 220; icon: ${di}/traefik.svg}
+
+visitors -> nordbye.sites
+visitors -> lel.apex
+visitors -> bigd.apps
+
+nordbye.sites -> ddns_n: CNAME
+lel.apex -> ddns_n: cross-zone CNAME
+bigd.apps -> ddns_b: CNAME
+
+ddns_n -> wan: via edge
+ddns_b -> wan: direct
+wan -> traefik: Full Strict TLS

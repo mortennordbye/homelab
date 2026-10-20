@@ -6,6 +6,8 @@ from a laptop. Argo CD takes over once the Talos stack has installed it.
 
 ## Stacks
 
+[![The Proxmox, UniFi and Cloudflare roots each keep their state under their own prefix in the sttfstatemvnhomelab storage account, which the azure/state root creates](../../assets/diagrams/cluster-terraform.svg)](../../assets/diagrams/cluster-terraform.svg)
+
 | Root | Manages | State key |
 |---|---|---|
 | [`azure/state`](../../../terraform/azure/state/README.md) | the storage account that holds every other stack's state | `critical/do-not-delete-state-backend.tfstate` |

@@ -41,6 +41,8 @@ where the console's generated `<name>.local.bigd.no` records come from.
 
 ## Firewall
 
+[![UniFi site: the internet reaches the Cloud Gateway Fiber on ports 80, 443, 32400 and 51820, which forwards to Traefik and Plex on the Trusted network; IoT devices are blocked from Trusted except DNS and 8123 to Home Assistant and per-device holes from the LG TV and Voice PE to the cluster; Guest gets internet only](../../assets/diagrams/network-unifi.svg)](../../assets/diagrams/network-unifi.svg)
+
 IoT is isolated from Trusted by the controller's predefined Block All policies,
 which are not managed here. Every policy in `firewall.tf` is a hole through that
 block:
@@ -50,6 +52,8 @@ block:
 | Allow Internal to Unsecure Zone | Trusted | IoT, any |
 | IoT -> Home Assistant | IoT | `10.3.10.15` tcp/udp 53, 8123 |
 | LG TV -> Plex | LG TV MAC | `10.3.10.103` tcp 32400 |
+| LG TV -> jarvis | LG TV MAC | `10.3.10.102` (private Traefik) tcp 443 |
+| Voice PE -> innestemme | Voice PE MAC | `10.3.10.99` tcp 9090 |
 
 Home Assistant dials out to ESPHome, Hue and Sonos, so Trusted reaches IoT freely
 and IoT only answers. IoT reaches Home Assistant for DNS and for TTS audio on

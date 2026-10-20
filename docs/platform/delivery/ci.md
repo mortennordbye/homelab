@@ -21,13 +21,17 @@ cluster or run `terraform plan`: images reach the cluster through Kargo
 | [`indexnow.yaml`](../../../.github/workflows/indexnow.yaml) | push to `main` changing the portfolio or blog prod `kustomization.yaml`, manual | waits for the key file to be live, then submits the sitemap URLs to IndexNow | nothing in the repo |
 | [`lighthouse.yaml`](../../../.github/workflows/lighthouse.yaml) | Mondays 06:00 UTC, manual | Lighthouse CI, 3 runs each on `nordbye.it` and `blog.nordbye.it` | `lighthouse.json` to the `lighthouse-data` branch, reports to Lighthouse temporary public storage |
 | [`readme-cards.yaml`](../../../.github/workflows/readme-cards.yaml) | every 15 minutes, manual | two jobs: reads `https://nordbye.it/api/v1/infra` and renders the cluster card with `scripts/render-status-card.mjs`; reads stargazer timestamps over GraphQL and renders the chart with `scripts/render-star-history.mjs` | `status-data` and `stars-data` branches |
+| [`sync-certs.yaml`](../../../.github/workflows/sync-certs.yaml) | daily 05:17 UTC, manual | rebuilds `portfolio/src/content/certs.json` from Credly and the Microsoft Learn transcript | a PR from `bot/sync-certs` when the list changed; opened with `GITHUB_TOKEN`, so it does not trigger the portfolio CI |
 | [`reminders.yml`](../../../.github/workflows/reminders.yml) | 16:00 UTC on the 1st, 8th and 15th, manual | posts the Kubernetes, backup or server upkeep reminder to Discord | nothing in the repo |
 
 ## What writes to the repo
 
+[![Morten, Renovate and the sync-certs workflow open PRs that pass the PR checks into main, Kargo's prod promotion PRs are merged by kargo-automerge, and a push to main starts Argo CD syncing, render-assets committing SVGs back, the docs site build, and the portfolio and blog image builds that feed Kargo](../../assets/diagrams/delivery-ci.svg)](../../assets/diagrams/delivery-ci.svg)
+
 Two workflows change `main`. `render-assets` commits as `GitHub Actions` straight
 to `main` and only when the output changed.
-`kargo-automerge` merges Kargo's promotion PRs. `lighthouse` and the two
+`kargo-automerge` merges Kargo's promotion PRs. `sync-certs` and Renovate open PRs
+but never merge them. `lighthouse` and the two
 `readme-cards` jobs force-push a single commit to their own data branch
 (`keep_history: false`). This repo's README embeds the star history and status cards
 from `stars-data` and `status-data` over `raw.githubusercontent.com`; `lighthouse.json`

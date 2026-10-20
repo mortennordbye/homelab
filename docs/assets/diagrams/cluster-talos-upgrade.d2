@@ -1,0 +1,50 @@
+# The order of a Talos and Kubernetes upgrade, and the step that must not wait. See platform/cluster/talos-upgrade.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  ify: https://api.iconify.design
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+  group: {
+    label.near: top-left
+    style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 12; font-size: 15}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+before: "Before you start\netcd snapshot, machine secrets,\nno PDB at 0 disruptions" {class: card; icon: ${di}/etcd.svg}
+baseline: "Baseline plan\nversions unchanged,\nno VM replaced" {class: card; icon: ${di}/terraform.svg}
+
+phase1: "Phase 1: raise the targets only" {
+  class: group
+  label.near: top-right
+  apply: "config apply\ninstall image only,\nno reboot" {class: card; icon: ${ify}/tabler/file-diff.svg?color=%23a1ada3&height=64}
+  nodes: "talosctl upgrade\nctrl-01 to worker-03, one at a time,\neach gated on talosctl health" {class: card; icon: ${di}/talos.svg}
+  k8s: "upgrade-k8s\ncontrol plane, then kubelets" {class: card; icon: ${di}/kubernetes.svg}
+  apply -> nodes
+  nodes -> k8s: last node done
+}
+
+phase2: "Phase 2: raise\nkubernetes_config_contract,\nupgrade flags off" {class: card; icon: ${ify}/tabler/arrow-big-up-lines.svg?color=%23a1ada3&height=64}
+verify: "Verify\nversions, health,\netcd members, Argo CD" {class: card; icon: ${ify}/tabler/checks.svg?color=%23a1ada3&height=64}
+
+trap: "Any other apply first\nrenders the old contract\nand downgrades the control plane" {class: aside; icon: ${ify}/tabler/alert-triangle.svg?color=%23a1ada3&height=64}
+
+before -> baseline
+baseline -> phase1.apply: apply
+phase1.k8s -> phase2: immediately
+phase1.k8s -> trap: if skipped
+phase2 -> verify: apply
