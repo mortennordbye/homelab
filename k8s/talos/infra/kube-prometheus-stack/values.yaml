@@ -42,12 +42,13 @@ grafana:
     storageClassName: syno-nfs-csi
     size: 10Gi
 
+  # The log dashboard's Loki queries add over 100Mi on top of the steady working set.
   resources:
     requests:
       cpu: 100m
-      memory: 128Mi
-    limits:
       memory: 512Mi
+    limits:
+      memory: 1Gi
 
   # OIDC client credentials, so they stay out of git. The chart's
   # assertNoLeakedSecrets helper fails the render on a literal client_secret,
