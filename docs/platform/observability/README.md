@@ -1,5 +1,8 @@
 # Monitoring
 
+How alerts, SLOs, runbooks, incidents and the weekly review fit together is in
+[sre.md](sre.md).
+
 ## Where to look
 
 | What | URL |
@@ -7,6 +10,7 @@
 | Grafana, dashboard Homelab-SPOG | https://grafana.local.bigd.no/d/mns9wmn |
 | Alertmanager | https://alertmanager.local.bigd.no |
 | Prometheus | https://prometheus.local.bigd.no |
+| Grafana Drilldown: metrics, logs and traces without a dashboard | https://grafana.local.bigd.no/drilldown |
 | Pyrra, SLOs and error budgets | https://pyrra.local.bigd.no |
 | Discord | `#homelab-alerts` |
 

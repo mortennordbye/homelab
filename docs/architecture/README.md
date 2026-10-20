@@ -166,7 +166,7 @@ Other apps, one directory each under `k8s/talos/apps/`:
 | [`platform/delivery`](../platform/delivery/README.md) | [Argo CD](../platform/delivery/argocd.md), Kargo promotion, [KEDA scale to zero](../platform/delivery/keda.md), [CI](../platform/delivery/ci.md) |
 | [`platform/identity`](../platform/identity/README.md) | Authentik SSO |
 | [`platform/network`](../platform/network/README.md) | VIPs, [Traefik](../platform/network/traefik.md), [Cilium](../platform/network/cilium.md), [certificates](../platform/network/certificates.md), DNS, Cloudflare, UniFi, remote access |
-| [`platform/observability`](../platform/observability/README.md) | monitoring, alerting, [incidents](../platform/observability/incidents.md) |
+| [`platform/observability`](../platform/observability/README.md) | monitoring, alerting, [incidents](../platform/observability/incidents.md), the [reliability practice](../platform/observability/sre.md) |
 | [`platform/post-quantum`](../platform/post-quantum/README.md) | crypto inventory, [Shor on a real quantum computer](../platform/post-quantum/shor.md) |
 | [`platform/secrets`](../platform/secrets/README.md) | Bitwarden to cluster secrets |
 | [`platform/storage`](../platform/storage/README.md) | storage classes, CSI drivers |
