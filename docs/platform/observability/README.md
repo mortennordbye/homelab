@@ -231,3 +231,9 @@ Falco will flag it, and no exemption targets it. See
   gateway or ISP DNS also breaks in-cluster name resolution for external names.
   This is deliberate: a public fallback would answer `local.bigd.no` with NXDOMAIN and skip the
   gateway's filtering, and CoreDNS spreads queries across upstreams unless told otherwise.
+- Grafana's app plugins (the Drilldown apps and Advisor) are pinned under `grafana.plugins`
+  in `k8s/talos/infra/kube-prometheus-stack/values.yaml` and bumped by Renovate through
+  the `custom.grafana-plugins` datasource. A pinned version not yet on Grafana's volume is
+  downloaded from grafana.com before startup, so a failed download, or a version that needs a
+  newer Grafana, keeps the pod from starting; roll the plugin back or bump the image with it.
+  `preinstall_auto_update` is off, so nothing else Grafana preinstalls updates on its own.
