@@ -165,6 +165,17 @@ The app may be slow under load.
 
 Raise `maxReplicas` or the resource requests, or find what is driving the load.
 
+### PersistentVolumeFillingUp
+
+A PVC is under half free and, at the rate of the last 6 hours, full within 4 days. The
+app's writes fail when it fills; a database stops.
+
+- `kubectl -n <namespace> exec <pod> -- du -sh /<mount>/*` to find what grew.
+
+Cut retention or delete what should not be there. To grow it, raise the PVC's
+`resources.requests.storage` in Git; both `proxmox-local` and the NFS classes allow
+expansion ([`../storage/README.md`](../storage/README.md)).
+
 ## Media stack
 
 ### ArrQueueStuck
@@ -310,6 +321,16 @@ Writes, including backups, fail when it fills.
 Free space: old media first, then backup retention on PBS
 ([`../backups/pbs.md`](../backups/pbs.md)).
 
+### NasVolumeFillingUp
+
+At the rate of the last 6 hours, Volume 1 is full within 4 days. This fires before
+`NasVolumeAlmostFull` when something writes fast, usually a large download, a backup
+that grew, or a runaway log.
+
+Find the writer before freeing space: DSM > Storage Manager > Volume 1 shows usage per
+shared folder, and the cluster volumes live under the `k8s-volumes` share. The same fixes
+as [NasVolumeAlmostFull](#nasvolumealmostfull) apply.
+
 ### NasMetricsDown
 
 Prometheus has not reached the NAS over SNMPv3 for 30 minutes, so the NAS alerts are blind.
@@ -336,6 +357,15 @@ Proxmox CSI leaves orphaned volumes; `pbs` holds every VM backup.
 
 - For `local-lvm`, compare `lvs` on the host against `kubectl get pv`; volumes with no PV
   are orphans ([`../storage/README.md`](../storage/README.md#deleting-a-pvc)).
+
+### ProxmoxStorageFillingUp
+
+At the rate of the last 6 hours, a Proxmox storage is full within 4 days.
+
+- `local-lvm`: a PVC on `proxmox-local` growing, or orphaned volumes piling up. Check as
+  for [ProxmoxStorageAlmostFull](#proxmoxstoragealmostfull).
+- `pbs`: backups growing faster than prune and GC remove them
+  ([`../backups/pbs.md`](../backups/pbs.md)).
 
 ### ProxmoxMetricsDown
 

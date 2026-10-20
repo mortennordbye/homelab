@@ -176,6 +176,21 @@ spec:
               HPA `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` has been at max replicas for over 15 minutes and cannot scale higher to meet demand. (KEDA-driven HPAs are excluded — their max is set by schedule/trigger, not load.)
               Check: kubectl -n {{ $labels.namespace }} describe hpa {{ $labels.horizontalpodautoscaler }}
 
+        # The free-space floor keeps a fresh volume being filled by a restore or migration quiet.
+        - alert: PersistentVolumeFillingUp
+          expr: |
+            predict_linear(kubelet_volume_stats_available_bytes{job="kubelet"}[6h], 4 * 86400) < 0
+            and kubelet_volume_stats_available_bytes{job="kubelet"} / kubelet_volume_stats_capacity_bytes{job="kubelet"} < 0.5
+          for: 1h
+          labels:
+            severity: critical
+          annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#persistentvolumefillingup
+            summary: 'PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} fills within 4 days'
+            description: |
+              At the last 6 hours' rate, PVC `{{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }}` runs out of space within 4 days.
+              Check what is writing to it, then expand the PVC or cut retention.
+
     # Media stack (arr-stack, exportarr + qbittorrent-exporter). Critical so they reach Discord.
     - name: homelab.media
       rules:
@@ -377,6 +392,17 @@ spec:
             description: |
               Volume 1 holds the media, the cluster volumes and every backup. Free space before it fills.
 
+        - alert: NasVolumeFillingUp
+          expr: predict_linear(raidFreeSize{raidName="Volume 1"}[6h], 4 * 86400) < 0
+          for: 1h
+          labels:
+            severity: critical
+          annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#nasvolumefillingup
+            summary: 'NAS Volume 1 fills within 4 days'
+            description: |
+              At the last 6 hours' rate, Volume 1 runs out of space within 4 days. It holds the media, the cluster volumes and every backup.
+
         - alert: NasMetricsDown
           expr: up{job="snmp-exporter"} == 0
           for: 30m
@@ -413,6 +439,17 @@ spec:
             summary: 'Proxmox {{ $labels.id }} is {{ $value | humanizePercentage }} full'
             description: |
               local-lvm holds the proxmox-local PVCs, where Proxmox-CSI leaves orphaned volumes; pbs holds every VM backup.
+
+        - alert: ProxmoxStorageFillingUp
+          expr: max by (id) (predict_linear(pve_disk_usage_bytes{id=~"storage/.*"}[6h], 4 * 86400) - pve_disk_size_bytes) > 0
+          for: 1h
+          labels:
+            severity: critical
+          annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#proxmoxstoragefillingup
+            summary: 'Proxmox {{ $labels.id }} fills within 4 days'
+            description: |
+              At the last 6 hours' rate, {{ $labels.id }} runs out of space within 4 days.
 
         - alert: ProxmoxMetricsDown
           expr: max(up{job="pve-exporter"}) == 0

@@ -123,9 +123,12 @@ Everywhere else only critical reaches Discord.
 | `NasDiskUnhealthy` | `diskStatus` or `diskHealthStatus` not 1 for 10 min | critical |
 | `NasRaidDegraded` | `raidStatus` not 1 for 10 min | critical |
 | `NasVolumeAlmostFull` | Volume 1 above 90 % for 1 h | critical |
+| `NasVolumeFillingUp` | Volume 1 full within 4 days at the last 6 h rate, for 1 h | critical |
 | `NasMetricsDown` | SNMP scrape failing for 30 min | critical |
 | `ProxmoxHostDown` | a Proxmox host offline for 5 min | critical |
 | `ProxmoxStorageAlmostFull` | a Proxmox storage above 85 % for 30 min | critical |
+| `ProxmoxStorageFillingUp` | a Proxmox storage full within 4 days at the last 6 h rate, for 1 h | critical |
+| `PersistentVolumeFillingUp` | a PVC under half free and full within 4 days at the last 6 h rate, for 1 h | critical |
 | `ProxmoxMetricsDown` | Proxmox exporter scrape failing for 30 min | critical |
 | `DeploymentUnavailable`, `PodCrashLooping` | a workload down | critical |
 | `ArrQueueStuck`, `MediaRootFolderLow`, `ArrAppUnreachable`, `MediaExporterDown`, `QbittorrentDisconnected` | media stack | critical |
