@@ -72,6 +72,23 @@
         "hide": true,
         "name": "Annotations & Alerts",
         "type": "dashboard"
+      },
+      {
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "iconColor": "rgba(138, 184, 255, 0.6)",
+        "name": "Deploys",
+        "target": {
+          "limit": 200,
+          "matchAny": false,
+          "tags": [
+            "argocd"
+          ],
+          "type": "tags"
+        }
       }
     ]
   },

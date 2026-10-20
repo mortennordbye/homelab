@@ -69,6 +69,15 @@ spec:
               protocol: TCP
             - port: "8444"
               protocol: TCP
+    # notifications-controller writes deploy annotations to Grafana.
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": grafana
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP
     # Kubernetes API server for application-controller to reconcile resources.
     - toEntities:
         - kube-apiserver

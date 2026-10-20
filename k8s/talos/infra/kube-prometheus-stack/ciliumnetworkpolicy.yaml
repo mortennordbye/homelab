@@ -162,6 +162,15 @@ spec:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
             "k8s:app.kubernetes.io/name": prometheus
+    # Argo CD notifications posts deploy annotations.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": argocd
+            "k8s:app.kubernetes.io/name": argocd-notifications-controller
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP
     - fromEntities:
         - host
         - health

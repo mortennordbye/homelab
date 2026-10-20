@@ -117,8 +117,27 @@ is in [`talos.md`](../cluster/talos.md#access).
 | applicationset-controller | 2 | `maxUnavailable: 1` |
 | application-controller | 1 | none |
 
-Redis runs as a single instance (`redis-ha` off). Notifications are enabled. server,
-repo-server and application-controller expose ServiceMonitors for kube-prometheus-stack.
+Redis runs as a single instance (`redis-ha` off). server, repo-server and
+application-controller expose ServiceMonitors for kube-prometheus-stack.
+
+## Deploy markers
+
+The notifications controller posts a Grafana annotation tagged `argocd` each time an
+Application finishes a sync, once per revision. The text is the app name, the short
+revision and the commit subject, which for a Kargo promotion names the version. The
+Homelab dashboards show these as the "Deploys" annotation.
+
+The config is under `notifications` in
+[`values.yaml`](../../../k8s/talos/infra/argocd/values.yaml): the `grafana` service, one
+trigger, one template, and a global subscription so every Application gets it without an
+annotation. The token belongs to the Grafana service account `argocd-notifications`
+(Editor) and comes from Bitwarden through
+[`argocd-notifications-secret.yaml`](../../../k8s/talos/infra/argocd/argocd-notifications-secret.yaml).
+To rotate it, create a new token for that service account in Grafana and `bws secret edit`
+the item; the Secret refreshes within the hour.
+
+The trigger ignores syncs that finished more than 15 minutes ago, so a controller restart
+or a new Application does not replay old syncs as fresh markers.
 
 ## Bootstrap
 
@@ -136,7 +155,8 @@ The `argocd` namespace runs under a default-deny CiliumNetworkPolicy
 ([`ciliumnetworkpolicy.yaml`](../../../k8s/talos/infra/argocd/ciliumnetworkpolicy.yaml)).
 Egress to the internet is limited to GitHub, `ghcr.io`, `*.github.io` and a fixed list of
 Helm repositories, which is what repo-server renders from. A chart from a new repository fails to render until its host is added to
-the `toFQDNs` list.
+the `toFQDNs` list. The notifications controller reaches
+Grafana on port 3000 for the deploy markers, and Grafana's own policy lets it in.
 
 The OIDC issuer needs its trailing slash, and its path segment is the Authentik
 application slug, not the provider name. A mismatch gives `oidc: issuer did not match`.

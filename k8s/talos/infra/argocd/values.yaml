@@ -72,6 +72,31 @@ dex:
 
 notifications:
   enabled: true
+  argocdUrl: https://argocd.local.bigd.no
+  secret:
+    # argocd-notifications-secret comes from ESO (argocd-notifications-secret.yaml).
+    create: false
+  notifiers:
+    service.grafana: |
+      apiUrl: http://kube-prometheus-stack-grafana.monitoring.svc/api
+      apiKey: $grafana-api-key
+  # Deploy markers on the Grafana dashboards, which query annotations tagged argocd.
+  subscriptions:
+    - recipients:
+        - grafana:argocd
+      triggers:
+        - on-sync-succeeded
+  triggers:
+    # The age guard stops a controller restart or first rollout from replaying old syncs.
+    trigger.on-sync-succeeded: |
+      - when: app.status.operationState != nil and app.status.operationState.phase in ['Succeeded'] and time.Now().Sub(time.Parse(app.status.operationState.finishedAt)).Minutes() < 15
+        oncePer: app.status.operationState.syncResult.revision
+        send:
+          - app-sync-succeeded
+  templates:
+    template.app-sync-succeeded: |
+      message: |
+        {{.app.metadata.name}} {{.app.status.operationState.syncResult.revision | trunc 7}}: {{(call .repo.GetCommitMetadata .app.status.operationState.syncResult.revision).Message | splitList "\n" | first}}
 
 applicationSet:
   enabled: true
