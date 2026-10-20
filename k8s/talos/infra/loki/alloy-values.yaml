@@ -1,18 +1,24 @@
 alloy:
   # Usage stats go to stats.grafana.org, which the egress policy blocks.
   enableReporting: false
+  clustering:
+    enabled: true
   configMap:
     create: true
     content: |
-      // 1. Discover pods
-      discovery.kubernetes "all_pods" {
+      // 1. Discover the pods on this node only; every node runs its own Alloy.
+      discovery.kubernetes "local_pods" {
         role = "pod"
+        selectors {
+          role  = "pod"
+          field = "spec.nodeName=" + sys.env("K8S_NODE_NAME")
+        }
       }
 
       // 2. Map k8s discovery metadata to stream labels.
       //    Keep this list short — every label here becomes part of Loki's index.
       discovery.relabel "pod_logs" {
-        targets = discovery.kubernetes.all_pods.targets
+        targets = discovery.kubernetes.local_pods.targets
 
         rule {
           source_labels = ["__meta_kubernetes_namespace"]
@@ -54,10 +60,14 @@ alloy:
 
       // 4b. Watch Kubernetes events cluster-wide for troubleshooting.
       //     Emits labels: namespace, job ("kubernetes-events"), instance.
+      //     Clustered with no namespaces listed, so exactly one Alloy pod collects them.
       loki.source.kubernetes_events "k8s_events" {
         job_name   = "kubernetes-events"
         log_format = "logfmt"
         forward_to = [loki.process.events.receiver]
+        clustering {
+          enabled = true
+        }
       }
 
       // 4c. Tag events with the cluster label, then ship through the same writer.
