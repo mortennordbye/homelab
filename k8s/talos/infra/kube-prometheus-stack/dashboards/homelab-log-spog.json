@@ -660,7 +660,7 @@
         },
         "query": {
           "label": "app",
-          "stream": "{namespace=~\"$namespace\"}",
+          "stream": "{cluster=\"genesis\", namespace=~\"$namespace\"}",
           "type": 1,
           "refId": "LokiVariableQueryEditor-VariableQuery"
         },
