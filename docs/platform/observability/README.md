@@ -56,7 +56,7 @@ SPOG dashboard is in [The observability stack I actually run](https://blog.nordb
 | Prometheus | metrics, alert rules | 7 days | `k8s/talos/infra/kube-prometheus-stack/values.yaml` |
 | Alertmanager | routing to Discord, 2 replicas | 5 days of silences and notification state | `k8s/talos/infra/kube-prometheus-stack/values.yaml` |
 | Loki | logs, single binary | 7 days, Kubernetes events 30 days | `k8s/talos/infra/loki/values.yaml` |
-| Alloy | DaemonSet shipping pod logs and Kubernetes events to Loki, and filtering Traefik's traces on the way to Tempo (monitoring UIs and blackbox probes dropped, per-connection and client-IP attributes removed) | none | `k8s/talos/infra/loki/alloy-values.yaml` |
+| Alloy | DaemonSet shipping pod logs (each pod reads its own node's pods) and Kubernetes events (one clustered pod collects them) to Loki, and filtering Traefik's traces on the way to Tempo (monitoring UIs and blackbox probes dropped, per-connection and client-IP attributes removed) | none | `k8s/talos/infra/loki/alloy-values.yaml` |
 | Tempo | traces, pushed over OTLP by Traefik through Alloy; its local-blocks generator answers TraceQL metrics for Traces Drilldown | 24 h | `k8s/talos/infra/tempo/values.yaml` |
 | Pyrra | SLOs to recording rules and burn-rate alerts, SLO UI ([slos.md](slos.md)) | none | `k8s/talos/infra/pyrra/` |
 | Falco | runtime security events, modern eBPF driver | none | `k8s/talos/infra/falco/values.yaml` |

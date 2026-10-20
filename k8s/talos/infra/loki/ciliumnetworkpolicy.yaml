@@ -74,6 +74,13 @@ spec:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
             "k8s:app.kubernetes.io/name": prometheus
+    # Cluster gossip between Alloy pods.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": alloy
+      toPorts:
+        - ports: [{ port: "12345", protocol: TCP }]
     # Traefik pushes OTLP traces.
     - fromEndpoints:
         - matchLabels:
@@ -101,6 +108,12 @@ spec:
             "k8s:app.kubernetes.io/name": loki
       toPorts:
         - ports: [{ port: "3100", protocol: TCP }]
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": alloy
+      toPorts:
+        - ports: [{ port: "12345", protocol: TCP }]
     # Forward filtered traces to Tempo.
     - toEndpoints:
         - matchLabels:
