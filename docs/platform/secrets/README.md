@@ -36,10 +36,11 @@ Two stores, split by who reads the value:
 | Secrets Manager project `Homelab` | everything a cluster workload, script or agent reads, including laptop-only device keys | ESO, the agent |
 | Bitwarden vault, folder `Homelab` | human sign-ins, and the agent's bootstrap token | Morten |
 
-The `Homelab` machine account is ESO's, and its token lives in the cluster as
-`bw-auth-token`. ESO never writes, so this account only needs read access. The
-`agent` machine account is for AI agents and scripts on a workstation, with read and write on the project.
-Grants are project-level, so a new secret needs no per-secret grant.
+One machine account, `Homelab`, has read and write on the project, and each consumer
+gets its own access token on it: the cluster's lives as `bw-auth-token`, and the `agent`
+token is for AI agents and scripts on a workstation. Revoking one token leaves the other
+working. All tokens share the account's write access, so the cluster's token can edit
+secrets too. Grants are project-level, so a new secret needs no per-secret grant.
 Agents never unlock the vault.
 
 The `agent` token is stored once, as the vault login `bws agent token`
@@ -56,7 +57,7 @@ ai/skills/secrets/bws-token setup
 It copies the vault item into the local store, checks the token against the API, and
 puts `bws-token` and `vault-add` on PATH in `~/.local/bin`, and links the skill into the
 global skill folder of each agent installed, so other repos get it. To rotate the
-token, create a new one for `agent` in the Secrets Manager web app, replace the
+token, create a new access token named `agent` on the `Homelab` machine account in the Secrets Manager web app, replace the
 vault item's password, and rerun `setup` on each machine.
 
 ## Creating a secret

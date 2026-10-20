@@ -13,7 +13,7 @@ references (Bitwarden UUIDs) only. Background and the full pattern:
 
 | Store | Holds | Read by |
 |---|---|---|
-| Secrets Manager, project `Homelab` (`1ea61322-5f4a-44a4-b4d0-b29b00ba1134`) | everything a cluster workload, script or agent reads, including laptop-only device keys | ESO (`Homelab` machine account), the agent (`agent` machine account) |
+| Secrets Manager, project `Homelab` (`1ea61322-5f4a-44a4-b4d0-b29b00ba1134`) | everything a cluster workload, script or agent reads, including laptop-only device keys | ESO and the agent, each with its own access token on the `Homelab` machine account |
 | Bitwarden vault, folder `Homelab` | Morten's own sign-ins, and the agent's bootstrap token | Morten only |
 
 The agent never unlocks the vault (`bw`). If a value must be readable by a machine or
@@ -25,7 +25,7 @@ the agent, it belongs in Secrets Manager; if only Morten types it, the vault.
 BWS_ACCESS_TOKEN=$(bws-token) bws secret ...
 ```
 
-`bws-token` prints the `agent` machine account token: `$BWS_ACCESS_TOKEN` if set
+`bws-token` prints the `agent` access token: `$BWS_ACCESS_TOKEN` if set
 (cloud sessions), else the macOS Keychain item `bws-agent`, else
 `~/.config/bws/token`. Never echo it or put it on a command line by value.
 
