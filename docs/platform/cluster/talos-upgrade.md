@@ -132,6 +132,16 @@ one exists. Database dumps and the rest of the backup layers are in
 [`../backups/README.md`](../backups/README.md). PV data needs no extra backup: `proxmox-local`
 volumes and Synology NFS are not on the node disks, which are the only thing an upgrade writes.
 
+Check that no PodDisruptionBudget would hold the drain `talosctl upgrade` does on each node:
+
+```bash
+kubectl get pdb -A
+```
+
+Every row must show `ALLOWED DISRUPTIONS` of at least 1. A 0 means the PDB's pods are already
+short (`KubePdbNotEnoughHealthyPods` fires on it), and the eviction for that node retries until the
+pods recover, so fix the workload first.
+
 If a control plane VM is ever restored from a backup, do not let the stale member rejoin a live
 quorum. Wipe `EPHEMERAL` so it joins fresh, or do a full recovery from the snapshot
 ([`../backups/restore.md`](../backups/restore.md)).
