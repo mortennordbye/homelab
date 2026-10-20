@@ -73,6 +73,10 @@ External Secrets Operator turns an `ExternalSecret` that names the item's UUID i
 Kubernetes Secret ([`../platform/secrets/README.md`](../platform/secrets/README.md)).
 Reloader (`k8s/talos/infra/reloader`) restarts any workload annotated
 `reloader.stakater.com/auto: "true"` when a ConfigMap or Secret it uses changes.
+Outside the cluster, AI agents and scripts reach the same project with their own access
+token, served on each machine by `bws-token` (`ai/skills/secrets/`) from a copy of a
+Bitwarden vault item. The vault itself holds human sign-ins only, and agents never
+unlock it.
 
 ## Storage and data
 
@@ -103,6 +107,9 @@ Pyrra keeps SLOs and error budgets for the public sites over a 7-day window and 
 the probe SLO's burn rate. Kargo reads those budgets from Prometheus before opening a prod
 promotion PR, and a low budget stops the auto-merge
 ([`../platform/observability/slos.md`](../platform/observability/slos.md)).
+Argo CD notifications writes a Grafana annotation for every finished sync, drawn on the
+Homelab dashboards as deploy markers
+([`../platform/delivery/argocd.md`](../platform/delivery/argocd.md#deploy-markers)).
 metrics-server (`k8s/talos/infra/metrics-server`) serves the resource metrics API for
 `kubectl top`.
 

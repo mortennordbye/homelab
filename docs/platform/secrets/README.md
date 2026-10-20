@@ -188,15 +188,17 @@ The key is never written to disk, committed, or shown in an agent transcript.
 `**/*.env` is gitignored, so a new file must be named `<thing>.env`; the
 pattern does not catch `.env.<thing>`.
 
-To recreate the Hue key, press the round link button on top of the bridge and
-run this within 30 seconds:
+To create the Hue key, press the round link button on top of the bridge and run this
+within 30 seconds. It prints the UUID for `hue.env`; to replace an existing key, use
+`bws secret edit <uuid> --value {}` instead of `create`.
 
 ```bash
 export BWS_ACCESS_TOKEN=$(bws-token)
 curl -sk -X POST https://10.3.10.16/api -H 'Content-Type: application/json' \
-    -d '{"devicetype":"homelab#macbook"}' \
+    -d '{"devicetype":"homelab#workstation"}' \
   | jq -r '.[0].success.username // empty' \
-  | xargs -I{} bws secret edit <uuid> --value {} | jq -r .id
+  | xargs -I{} bws secret create homelab-hue-app-key {} 1ea61322-5f4a-44a4-b4d0-b29b00ba1134 \
+  | jq -r .id
 ```
 
 Revoke it with `DELETE /api/<key>/config/whitelist/<key>`. Pressing the link

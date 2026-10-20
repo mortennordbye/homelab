@@ -144,6 +144,14 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Pick a store (SQLite on a PVC for a single-writer app, or a plain `postgres:18-alpine` StatefulSet like logeverylift's), add a route under `src/app/api/v1/` guarded by `requireApiKey`, and wire storage + any needed CiliumNetworkPolicy egress. Add an Authentik provider + Traefik forward-auth middleware on the `/api/v1` POST paths, and relax `requireApiKey` to accept the forwarded identity.
 - **Where:** `portfolio/src/app/api/v1/`, `portfolio/src/lib/api.ts`; `portfolio/src/lib/api.ts`, `k8s/talos/apps/portfolio/httproute.yaml`, Authentik config.
 
+## Secrets
+
+### Laptop keys still in the macOS Keychain
+- **What:** move the keys agents read on a workstation from the Keychain into the Bitwarden `Homelab` project, read through `bws-token`: the Hue bridge key (`hue.env`), the Home Assistant token (`ha-api` skill, item `home-assistant-mcp`), and the Quafu token (item `quafu`).
+- **Why deferred:** the agent token and `bws-token` shipped first. The Hue key has no Keychain item on the current Mac, so it has to be re-paired rather than copied.
+- **Unblock:** for Hue, a press of the bridge link button while the create command in `docs/platform/secrets/README.md#device-credentials` runs. HA and Quafu can be copied from the Keychain on a machine that still has them, or minted fresh.
+- **Where:** `hue.env` (gitignored), `ai/skills/ha-api/ha-get`, `ai/skills/ha-api/SKILL.md`, `docs/platform/post-quantum/shor.md`, `docs/platform/secrets/README.md`.
+
 ## Cluster / infra
 
 ### Cap CPU turbo on the Proxmox hosts if the fans stay loud
