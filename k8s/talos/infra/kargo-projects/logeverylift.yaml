@@ -181,6 +181,11 @@ spec:
           value: ghcr.io/mortennordbye/logeverylift
         - name: argocdApp
           value: logeverylift
+        - name: budgetQuery
+          value: >-
+            min((pyrra_availability{slo=~"logeverylift-.*"} - pyrra_objective) / (1 - pyrra_objective)
+            or (sum by (instance) (probe_success:sum1w{slo="public-sites-probe",instance="https://logeverylift.com"})
+            / sum by (instance) (probe_success:count1w{slo="public-sites-probe",instance="https://logeverylift.com"}) - 0.995) / (1 - 0.995))
       steps:
         - task:
             name: promote-via-pr

@@ -65,7 +65,9 @@ down 5 minutes in a row.
 
 - Budget left: ship as normal. Kargo promotes stage to prod on a green smoke test.
 - A site's budget below 25 %: prod promotions for that site are merged by hand after looking
-  at the Pyrra detail view, not auto-merged, until the budget recovers.
+  at the Pyrra detail view, not auto-merged, until the budget recovers. Kargo enforces this:
+  it labels the promotion PR `slo/budget-low` from the lowest budget across the site's SLOs,
+  and the auto-merge workflow skips it ([kargo.md](../delivery/kargo.md#promotion-tasks)).
 - Budget spent: no prod promotions for that site except fixes, and the cause gets an entry
   in [incidents.md](incidents.md).
 

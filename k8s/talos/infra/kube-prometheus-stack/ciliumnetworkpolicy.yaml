@@ -35,6 +35,15 @@ spec:
         - ports:
             - port: "9090"
               protocol: TCP
+    # Kargo's error budget gate before a prod promotion PR.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kargo
+            "k8s:app.kubernetes.io/component": controller
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
     - fromEntities:
         - host
         - health

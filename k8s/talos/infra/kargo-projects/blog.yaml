@@ -334,6 +334,11 @@ spec:
           value: ghcr.io/mortennordbye/homelab/blog
         - name: argocdApp
           value: blog
+        - name: budgetQuery
+          value: >-
+            min((pyrra_availability{slo=~"blog-.*"} - pyrra_objective) / (1 - pyrra_objective)
+            or (sum by (instance) (probe_success:sum1w{slo="public-sites-probe",instance="https://blog.nordbye.it"})
+            / sum by (instance) (probe_success:count1w{slo="public-sites-probe",instance="https://blog.nordbye.it"}) - 0.995) / (1 - 0.995))
       steps:
         - task:
             name: promote-via-pr
