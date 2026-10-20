@@ -44,6 +44,7 @@ asks Authentik's embedded outpost before each request reaches them.
 | Grafana | OIDC, confidential | `grafana.local.bigd.no` | `grafana-admins` (GrafanaAdmin, everyone else Viewer) | [`kube-prometheus-stack/values.yaml`](../../../k8s/talos/infra/kube-prometheus-stack/values.yaml), [`grafana-oidc-secret.yaml`](../../../k8s/talos/infra/kube-prometheus-stack/grafana-oidc-secret.yaml) |
 | reelsmith control panel | forward-auth | `reelsmith.local.bigd.no` | `reelsmith-admins` (policy binding) | [`httproute-admin.yaml`](../../../k8s/talos/apps/reelsmith/httproute-admin.yaml), [`middleware-authentik.yaml`](../../../k8s/talos/apps/reelsmith/middleware-authentik.yaml) |
 | homepage | forward-auth | `hub.bigd.no` | `homepage-users` (policy binding) | [`httproute.yaml`](../../../k8s/talos/apps/homepage/httproute.yaml), [`middleware-authentik.yaml`](../../../k8s/talos/apps/homepage/middleware-authentik.yaml) |
+| Alertmanager | forward-auth, except webhook `POST /api/v2/alerts` | `alertmanager.local.bigd.no` | `alertmanager-admins` (policy binding) | [`httproutes.yaml`](../../../k8s/talos/infra/kube-prometheus-stack/httproutes.yaml), [`middleware-authentik.yaml`](../../../k8s/talos/infra/kube-prometheus-stack/middleware-authentik.yaml) |
 
 In Argo CD and Kargo, SSO users outside the group get no role; in Grafana they sign in as
 Viewer (`role_attribute_strict: false`). The reelsmith
@@ -66,6 +67,7 @@ chart's Deployments.
 | `authentik-blueprint-reelsmith` | [`reelsmith-blueprint.yaml`](../../../k8s/talos/infra/authentik/reelsmith-blueprint.yaml) | group `reelsmith-admins`, proxy provider `reelsmith` for `https://reelsmith.local.bigd.no`, application, policy binding to the group |
 | `authentik-blueprint-login-flow` | [`login-flow-blueprint.yaml`](../../../k8s/talos/infra/authentik/login-flow-blueprint.yaml) | username (or email) and password on one page, 30-day sessions, MFA for everyone with TOTP or WebAuthn enrolment forced at next sign-in |
 | `authentik-blueprint-homepage` | [`homepage-blueprint.yaml`](../../../k8s/talos/infra/authentik/homepage-blueprint.yaml) | group `homepage-users`, proxy provider `homepage` for `https://hub.bigd.no`, application, policy binding to the group |
+| `authentik-blueprint-alertmanager` | [`alertmanager-blueprint.yaml`](../../../k8s/talos/infra/authentik/alertmanager-blueprint.yaml) | group `alertmanager-admins`, proxy provider `alertmanager` for `https://alertmanager.local.bigd.no`, application, policy binding to the group |
 | `authentik-blueprint-embedded-outpost` | [`embedded-outpost-blueprint.yaml`](../../../k8s/talos/infra/authentik/embedded-outpost-blueprint.yaml) | the embedded outpost's provider list and its `authentik_host` of `https://auth.bigd.no` |
 
 Rules that hold across them:

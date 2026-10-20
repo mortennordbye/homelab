@@ -1,0 +1,67 @@
+# Forward-auth in front of the Alertmanager UI. Alertmanager speaks no OIDC and has no auth of
+# its own, so this proxy provider is the only lock on silences. forward_single keeps the
+# callback on alertmanager.local.bigd.no, which is why its HTTPRoute has an unauthenticated
+# /outpost.goauthentik.io/ rule.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-alertmanager
+  namespace: identity
+  annotations:
+    # Ahead of the chart-inflated worker Deployment (wave 0), which mounts this.
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  alertmanager.yaml: |
+    version: 1
+    metadata:
+      name: alertmanager-forward-auth
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      - model: authentik_core.group
+        id: group-alertmanager-admins
+        state: present
+        identifiers:
+          name: alertmanager-admins
+        attrs:
+          is_superuser: false
+          # Reconciliation resets this list, so add members here rather than in authentik.
+          users:
+            - !Find [authentik_core.user, [username, akadmin]]
+
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-alertmanager
+        state: present
+        identifiers:
+          name: alertmanager
+        attrs:
+          name: alertmanager
+          # The browser-facing origin; authentik builds the callback redirect from it.
+          external_host: https://alertmanager.local.bigd.no
+          mode: forward_single
+          access_token_validity: hours=24
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          intercept_header_auth: true
+
+      - model: authentik_core.application
+        id: app-alertmanager
+        state: present
+        identifiers:
+          slug: alertmanager
+        attrs:
+          name: Alertmanager
+          slug: alertmanager
+          provider: !KeyOf provider-alertmanager
+          meta_description: Alerts and silences
+          meta_launch_url: https://alertmanager.local.bigd.no
+          policy_engine_mode: any
+
+      # Without a binding, every authenticated user can reach the application.
+      - model: authentik_policies.policybinding
+        id: binding-alertmanager
+        state: present
+        identifiers:
+          target: !KeyOf app-alertmanager
+          group: !KeyOf group-alertmanager-admins
+          order: 0
