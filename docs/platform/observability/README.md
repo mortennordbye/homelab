@@ -8,7 +8,7 @@ How alerts, SLOs, runbooks, incidents and the weekly review fit together is in
 | What | URL |
 |---|---|
 | Grafana, dashboard Homelab-SPOG | https://grafana.local.bigd.no/d/mns9wmn |
-| Alertmanager | https://alertmanager.local.bigd.no |
+| Alertmanager UI, alerts and silences | `kubectl -n monitoring port-forward svc/kube-prometheus-stack-alertmanager 9093`, then http://localhost:9093; `alertmanager.local.bigd.no` only accepts webhook POSTs, since the API has no auth |
 | Prometheus | https://prometheus.local.bigd.no |
 | Grafana Drilldown: metrics, logs and traces without a dashboard | https://grafana.local.bigd.no/drilldown |
 | Pyrra, SLOs and error budgets | https://pyrra.local.bigd.no |
