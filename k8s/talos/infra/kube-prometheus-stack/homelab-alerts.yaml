@@ -8,6 +8,14 @@ metadata:
     release: kube-prometheus-stack
 spec:
   groups:
+    # 0/1 gauges for Pyrra bool_gauge SLOs (k8s/talos/infra/pyrra/slos.yaml), which take a metric, not an expression.
+    - name: homelab.sli
+      rules:
+        - record: homelab:argocd_app_healthy
+          expr: max by (name) (argocd_app_info{health_status="Healthy"} or argocd_app_info * 0)
+        - record: homelab:volsync_in_sync
+          expr: 1 - max by (obj_namespace, obj_name) (volsync_volume_out_of_sync{role="source"})
+
     # Workload-level: anything an app would expose as user-visible breakage.
     - name: homelab.workload
       rules:

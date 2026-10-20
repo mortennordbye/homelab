@@ -17,6 +17,13 @@ Pyrra ships its own "Pyrra - List" and "Pyrra - Detail" dashboards.
 | `portfolio-latency` | requests served in under 300 ms at Traefik | 98 % | 7d | no |
 | `blog-latency` | same, blog | 98 % | 7d | no |
 | `logeverylift-latency` | requests served in under 1.2 s at Traefik | 99 % | 7d | no |
+| `headroom-demo-availability` | requests through the public gateway that do not answer 5xx | 99.5 % | 7d | no |
+| `reelsmith-gate-availability` | same, reelsmith's public gateway route | 99.5 % | 7d | no |
+| `coredns-availability` | in-cluster DNS answers that are not SERVFAIL | 99.5 % | 7d | no |
+| `certificates-ready` | cert-manager Certificates Ready, sampled over time | 99 % | 7d | no |
+| `external-secrets-ready` | ExternalSecrets Ready, sampled over time | 99.9 % | 7d | no |
+| `argocd-apps-healthy` | Argo CD Applications Healthy, from the recording rule `homelab:argocd_app_healthy` | 98 % | 7d | no |
+| `volsync-in-sync` | VolSync sources within their schedule, from `homelab:volsync_in_sync` | 99 % | 7d | no |
 
 99.5 % over 7 days is about 50 minutes of budget a week. The latency thresholds sit on
 Traefik's histogram buckets (0.1, 0.3, 1.2, 5 s), since a latency SLI can only cut at a
@@ -33,6 +40,11 @@ The SLIs are measured at the edge. Traefik sees every request on the public gate
 the request SLOs need no instrumentation in the apps. The probe SLO goes through public DNS
 and Cloudflare, so it also counts a broken record, an expired certificate or the home line
 being down, which is what a visitor sees.
+
+The platform SLOs, from `coredns-availability` down, give the shared components a budget
+and a week of history. Each already has a symptom alert in `homelab-alerts.yaml`, so none
+of them pages. Pyrra's `bool_gauge` takes a metric, not an expression, so Argo CD health
+and VolSync lag go through 0/1 recording rules in the `homelab.sli` group of that file.
 
 Only the probe SLO alerts. The sites get from a few requests an hour (blog) to a few a
 minute (logeverylift), and a burn rate over a 15-minute window built from three requests

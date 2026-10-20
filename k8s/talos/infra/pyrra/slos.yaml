@@ -1,6 +1,7 @@
 # SLO targets and how they were chosen: docs/platform/observability/slos.md
 # The window cannot exceed Prometheus retention (7d), or the budget is computed on partial data.
 # Request SLOs do not alert: a few requests an hour make burn rates noise. The probe SLO pages.
+# Platform SLOs do not alert either: each component already has a symptom alert in homelab-alerts.yaml.
 # The release label is what puts Pyrra's generated PrometheusRule into Prometheus's ruleSelector.
 # Wave 1 and SkipDryRun: the CRD ships in this same app, so the first sync would fail dry-run.
 apiVersion: pyrra.dev/v1alpha1
@@ -160,3 +161,152 @@ spec:
       metric: probe_success{job="public-sites"}
       grouping:
         - instance
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: headroom-demo-availability
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of headroom demo requests through the public gateway that do not answer 5xx.
+  target: "99.5"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    ratio:
+      errors:
+        metric: traefik_service_requests_total{exported_service=~"httproute-headroom-demo-headroom-demo-gw-traefik-traefik-gateway-public-.*",code=~"5.."}
+      total:
+        metric: traefik_service_requests_total{exported_service=~"httproute-headroom-demo-headroom-demo-gw-traefik-traefik-gateway-public-.*"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: reelsmith-gate-availability
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of reelsmith gateway requests through the public gateway that do not answer 5xx.
+  target: "99.5"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    ratio:
+      errors:
+        metric: traefik_service_requests_total{exported_service=~"httproute-reelsmith-reelsmith-gw-traefik-traefik-gateway-public-.*",code=~"5.."}
+      total:
+        metric: traefik_service_requests_total{exported_service=~"httproute-reelsmith-reelsmith-gw-traefik-traefik-gateway-public-.*"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: coredns-availability
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of in-cluster DNS queries that do not answer SERVFAIL.
+  target: "99.5"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    ratio:
+      errors:
+        metric: coredns_dns_responses_total{rcode="SERVFAIL"}
+      total:
+        metric: coredns_dns_responses_total
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: certificates-ready
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of time cert-manager Certificates are Ready.
+  target: "99"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    bool_gauge:
+      metric: certmanager_certificate_ready_status{condition="True"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: external-secrets-ready
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of time ExternalSecrets are Ready.
+  target: "99.9"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    bool_gauge:
+      metric: externalsecret_status_condition{condition="Ready",status="True"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: argocd-apps-healthy
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of time Argo CD Applications report Healthy.
+  target: "98"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    bool_gauge:
+      metric: homelab:argocd_app_healthy
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: volsync-in-sync
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: Share of time VolSync sources are within their backup schedule.
+  target: "99"
+  window: 7d
+  alerting:
+    disabled: true
+  indicator:
+    bool_gauge:
+      metric: homelab:volsync_in_sync
