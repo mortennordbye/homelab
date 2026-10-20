@@ -185,7 +185,7 @@
       "addLabels": ["npm", "portfolio"]
     },
     {
-      "description": "npm - blog theme",
+      "description": "npm - blog theme. Weekly, like portfolio: every merge builds an image and queues a prod promotion PR.",
       "matchManagers": ["npm"],
       "matchFileNames": ["blog/**"],
       "matchUpdateTypes": ["minor", "patch"],
@@ -193,6 +193,7 @@
       "groupSlug": "npm-blog",
       "automerge": true,
       "minimumReleaseAge": "3 days",
+      "schedule": ["before 5am on monday"],
       "addLabels": ["npm", "blog"]
     },
     {
