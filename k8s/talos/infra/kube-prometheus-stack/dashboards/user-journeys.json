@@ -10,7 +10,7 @@
   "graphTooltip": 1,
   "refresh": "1m",
   "time": {
-    "from": "now-24h",
+    "from": "now-6h",
     "to": "now"
   },
   "templating": {
@@ -332,7 +332,24 @@
             "fillOpacity": 0,
             "showPoints": "always",
             "pointSize": 5,
-            "spanNulls": false
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            },
+            "axisSoftMax": 3
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 2.5
+              }
+            ]
           }
         },
         "overrides": []
@@ -434,7 +451,24 @@
             "fillOpacity": 0,
             "showPoints": "always",
             "pointSize": 5,
-            "spanNulls": false
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            },
+            "axisSoftMax": 0.25
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.1
+              }
+            ]
           }
         },
         "overrides": []
