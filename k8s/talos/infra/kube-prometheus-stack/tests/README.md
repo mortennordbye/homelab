@@ -33,6 +33,7 @@ kubectl delete -f <name>.yaml
 | `deployment-unavailable.yaml` | `DeploymentUnavailable` | ~6 min |
 | `container-oom-killed.yaml` | `ContainerOOMKilled` (+ also trips restart alert later) | ~2 min |
 | `external-secret-not-ready.yaml` | `ExternalSecretNotReady` | ~31 min (long `for:` to absorb Bitwarden hiccups) |
+| `user-journey-failing.yaml` | `UserJourneyFailing` for journey `logeverylift-alert-test`, step `login` | ~20 min; resolves ~25 min after delete |
 
 ## Not included
 
@@ -50,4 +51,5 @@ keep restarting/OOMing the test pod indefinitely. Check with:
 
 ```bash
 kubectl get -n default deploy,externalsecret -l app.kubernetes.io/managed-by=homelab-alert-test
+kubectl get -n synthetics job -l app.kubernetes.io/managed-by=homelab-alert-test
 ```

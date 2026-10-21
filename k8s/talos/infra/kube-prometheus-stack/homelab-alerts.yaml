@@ -367,6 +367,36 @@ spec:
               {{ $labels.instance }} has failed through the gateway's DNS and Traefik's private gateway for 10 minutes.
               Check the app, its HTTPRoute, and Traefik's private gateway.
 
+    # k6 browser journeys from k8s/talos/infra/synthetics, one remote-written run every 10 min.
+    # Samples arrive only during a run, so the rules read the last one inside the window.
+    - name: homelab.synthetics
+      rules:
+        # for: 15m spans two runs, so one flaky run does not page.
+        - alert: UserJourneyFailing
+          expr: |
+            min by (journey, check) (last_over_time(k6_checks_rate[25m])) < 1
+            and on () max(probe_success{job="internet"}) == 1
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#userjourneyfailing
+            summary: '{{ $labels.journey }} journey breaks at step {{ $labels.check }}'
+            description: |
+              A real browser signed in as the synthetic user failed the {{ $labels.check }} step of the {{ $labels.journey }} journey on two runs in a row, while the site itself may still answer 200.
+              The step's error and the page URL are in the job log: kubectl -n synthetics logs job/<latest logeverylift-journey job>.
+
+        - alert: UserJourneyNotRunning
+          expr: absent_over_time(k6_checks_rate{journey="logeverylift"}[30m])
+          labels:
+            severity: critical
+          annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#userjourneynotrunning
+            summary: 'logeverylift journey has reported nothing for 30 minutes'
+            description: |
+              No k6 check result has reached Prometheus for 30 minutes, so UserJourneyFailing cannot fire.
+              Check the CronJob in namespace synthetics and the Prometheus remote-write ingress.
+
     - name: homelab.nas
       rules:
         # diskStatus and diskHealthStatus are 1 when normal; anything else is a

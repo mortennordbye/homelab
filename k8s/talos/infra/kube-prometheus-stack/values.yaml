@@ -1,6 +1,8 @@
 prometheus:
   prometheusSpec:
     replicas: 1
+    # The k6 user journeys in k8s/talos/infra/synthetics push their results here.
+    enableRemoteWriteReceiver: true
     # At least the Pyrra SLO window (28d), or budgets are computed on partial data.
     retention: 30d
     # syno-nfs-csi does not enforce the PVC size; this keeps Prometheus off the rest of the NAS.

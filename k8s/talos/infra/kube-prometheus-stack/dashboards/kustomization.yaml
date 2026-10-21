@@ -20,3 +20,6 @@ configMapGenerator:
   - name: dashboard-homelab-log-spog
     files:
       - homelab-log-spog.json
+  - name: dashboard-user-journeys
+    files:
+      - user-journeys.json

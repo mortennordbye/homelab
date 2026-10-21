@@ -1,0 +1,79 @@
+# Walks the logeverylift sign-in and log-a-set flow in Chromium as a dedicated user and
+# remote-writes the per-step checks to Prometheus, where UserJourneyFailing reads them.
+# See docs/platform/observability/README.md.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: logeverylift-journey
+spec:
+  schedule: "*/10 * * * *"
+  timeZone: Europe/Oslo
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 300
+      template:
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 12345
+            runAsGroup: 12345
+            fsGroup: 12345
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: k6
+              image: docker.io/grafana/k6:2.3.0-with-browser
+              args:
+                - run
+                - --out
+                - experimental-prometheus-rw
+                - /scripts/logeverylift.js
+              env:
+                - name: SYNTHETIC_EMAIL
+                  value: synthetic@nordbye.it
+                - name: SYNTHETIC_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: logeverylift-synthetic
+                      key: SYNTHETIC_PASSWORD
+                - name: K6_PROMETHEUS_RW_SERVER_URL
+                  value: http://kube-prometheus-stack-prometheus.monitoring:9090/api/v1/write
+                - name: K6_PROMETHEUS_RW_TREND_STATS
+                  value: p(95),max
+                - name: K6_NO_USAGE_REPORT
+                  value: "true"
+                - name: HOME
+                  value: /tmp
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  cpu: 200m
+                  memory: 512Mi
+                limits:
+                  memory: 1Gi
+          volumes:
+            - name: scripts
+              configMap:
+                name: journey-scripts
+            - name: tmp
+              emptyDir:
+                sizeLimit: 512Mi

@@ -382,6 +382,37 @@ The app is unreachable on the LAN and over Tailscale, even if its pods are runni
 A host that moves to KEDA scale to zero leaves the `internal-sites` Probe, or the probe keeps
 it awake.
 
+## User journeys
+
+### UserJourneyFailing
+
+A real browser signed in as the synthetic user failed the same step of a user journey on
+two runs in a row ([README.md](README.md#user-journeys)).
+
+Users likely hit the same failure, even if the site's probes are green.
+
+- The step and the page URL it failed on: `kubectl -n synthetics logs job/<newest
+  logeverylift-journey-*>`, line `step <name> failed at <url>`.
+- A fresh run: `kubectl -n synthetics create job journey-manual
+  --from=cronjob/logeverylift-journey`.
+- The latest logeverylift promotion: Kargo project `logeverylift-cd` and its newest
+  `kargo/promotion/prod` PR. A failure right after a deploy is a regression; roll back by
+  promoting the previous Freight.
+- `login` failing alone: the synthetic user's password or the account itself, before the app.
+- `open-workout` failing: the synthetic user's program was renamed, deleted or emptied.
+
+Delete `journey-manual` when done.
+
+### UserJourneyNotRunning
+
+No logeverylift journey result has reached Prometheus for 30 minutes, so
+`UserJourneyFailing` cannot fire.
+
+- `kubectl -n synthetics get cronjob,jobs,pods`; a pod OOMKilled is Chromium over its 1 GiB.
+- `kubectl -n synthetics get externalsecret`: the password must sync.
+- The job log ending in a remote-write error: the `synthetics` rule in the `prometheus`
+  CiliumNetworkPolicy, or `enableRemoteWriteReceiver` in the chart values.
+
 ## NAS
 
 ### NasDiskUnhealthy

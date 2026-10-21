@@ -107,6 +107,10 @@ Pyrra keeps SLOs and error budgets for the public sites over a 28-day window and
 the probe SLO's burn rate. Kargo reads those budgets from Prometheus before opening a prod
 promotion PR, and a low budget stops the auto-merge
 ([`../platform/observability/slos.md`](../platform/observability/slos.md)).
+A k6 CronJob in `synthetics` signs in to logeverylift in Chromium every 10 minutes and walks
+the log-a-set flow, remote-writing each step's result to Prometheus, so a flow that breaks
+behind a page still answering 200 pages Discord
+([`../platform/observability/README.md`](../platform/observability/README.md#user-journeys)).
 Argo CD notifications writes a Grafana annotation for every finished sync, drawn on the
 Homelab dashboards as deploy markers
 ([`../platform/delivery/argocd.md`](../platform/delivery/argocd.md#deploy-markers)).

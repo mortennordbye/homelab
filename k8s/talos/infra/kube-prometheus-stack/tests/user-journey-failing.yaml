@@ -1,0 +1,75 @@
+# Triggers: UserJourneyFailing. Runs the logeverylift journey with a wrong password
+# three times, 10 min apart, under its own journey tag so the real CronJob's passing
+# runs don't reset it. Fires about 20 min after apply.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alert-test-user-journey
+  namespace: synthetics
+  labels:
+    app.kubernetes.io/managed-by: homelab-alert-test
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 2400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: homelab-alert-test
+    spec:
+      restartPolicy: Never
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 12345
+        runAsGroup: 12345
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: k6
+          image: docker.io/grafana/k6:2.3.0-with-browser
+          command:
+            - /bin/sh
+            - -c
+            - |
+              for i in 1 2 3; do
+                k6 run --out experimental-prometheus-rw --tag journey=logeverylift-alert-test /scripts/logeverylift.js
+                [ "$i" = 3 ] || sleep 600
+              done
+              exit 0
+          env:
+            - name: SYNTHETIC_EMAIL
+              value: synthetic@nordbye.it
+            - name: SYNTHETIC_PASSWORD
+              value: not-the-password
+            - name: K6_PROMETHEUS_RW_SERVER_URL
+              value: http://kube-prometheus-stack-prometheus.monitoring:9090/api/v1/write
+            - name: K6_NO_USAGE_REPORT
+              value: "true"
+            - name: HOME
+              value: /tmp
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: scripts
+          configMap:
+            name: journey-scripts
+        - name: tmp
+          emptyDir:
+            sizeLimit: 512Mi
