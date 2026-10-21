@@ -44,6 +44,14 @@ spec:
         - ports:
             - port: "9090"
               protocol: TCP
+    # k6 user journeys remote-write their results.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": synthetics
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
     - fromEntities:
         - host
         - health

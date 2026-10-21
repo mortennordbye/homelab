@@ -8,6 +8,7 @@ How alerts, SLOs, runbooks, incidents and the weekly review fit together is in
 | What | URL |
 |---|---|
 | Grafana, dashboard Homelab-SPOG | https://grafana.local.bigd.no/d/mns9wmn |
+| Grafana, dashboard User journeys | https://grafana.local.bigd.no/d/user-journeys |
 | Alertmanager, alerts and silences (authentik sign-in, group `alertmanager-admins`) | https://alertmanager.local.bigd.no |
 | Prometheus | https://prometheus.local.bigd.no |
 | Grafana Drilldown: metrics, logs and traces without a dashboard | https://grafana.local.bigd.no/drilldown |
@@ -107,6 +108,44 @@ state is in its KV namespace, keys `heartbeat` and `state:heartbeat`.
 Operating notes for the Worker (heartbeat URL rotation, the site list) are in
 [`../network/cloudflare.md`](../network/cloudflare.md#watchdog-worker).
 
+## User journeys
+
+The probes above prove a page answers. A user journey proves a person can still use it:
+k6's browser module drives Chromium through the same steps as the app's own e2e suite, so a
+broken sign-in, a page that no longer renders or a write that stops saving fails while every
+probe stays green.
+
+The logeverylift journey runs every 10 minutes from `k8s/talos/infra/synthetics/` as the
+user `synthetic@nordbye.it`, through public DNS and Cloudflare like a visitor. Each step is a
+k6 check, written to Prometheus as `k6_checks_rate{journey, check}` (1 pass, 0 fail), next to
+the run time and Core Web Vitals per page (`k6_browser_web_vital_*`). The dashboard User
+journeys shows the last result per step and the history.
+
+| Step | Proves |
+|---|---|
+| `login` | the sign-in form submits and lands on `/` |
+| `dashboard` | the home page renders its heading |
+| `open-workout` | the program list and a workout page load |
+| `open-exercise` | an exercise opens from the workout |
+| `log-set` | tapping a set saves it and starts the rest timer |
+| `unlog-set` | tapping again saves the undo, so the run leaves no data |
+
+The synthetic user needs an active program whose first exercise has sets (program "Synthetic
+check", imported from the Programs screen) and the onboarding tutorial dismissed, or the
+tutorial covers every page. It lives in prod data: rename or delete its program and the
+journey fails at `open-workout`.
+
+logeverylift allows 10 sign-ins per 15 minutes per client IP, and the journey reaches it
+from the home line through Cloudflare, so it shares that budget with everyone at home. A
+run uses one; running it by hand in a loop locks the household out for 15 minutes. A failed run
+that stopped between the two taps leaves the set logged; the next run un-logs it first.
+
+To add a journey, add a script under `scripts/`, a CronJob that runs it, and keep the
+`journey` tag unique; the alert rules cover every journey by label.
+
+`kube-prometheus-stack/tests/user-journey-failing.yaml` runs the journey with a wrong
+password under its own tag and fires `UserJourneyFailing` in about 20 minutes, end to end.
+
 ## Sources
 
 | Source | Scrapes | Auth | Defined in |
@@ -121,6 +160,7 @@ Operating notes for the Worker (heartbeat URL rotation, the site list) are in
 | pve-exporter | Proxmox API on hyper1-3 (`/pve`, hyper1 also cluster-wide) every 60 s | token of `prometheus@pve` (PVEAuditor), Bitwarden `proxmox-exporter-token` | `k8s/talos/infra/pve-exporter/`, identity in `terraform/proxmox/hyper-cluster/datacenter/access.tf` |
 | node-exporter on the Proxmox hosts | hyper1-3 `:9100`, CPU temperatures (`node_hwmon_temp_celsius`) every 60 s | none | `ScrapeConfig` in `k8s/talos/infra/pve-exporter/`, installed by `terraform/proxmox/hyper-cluster/datacenter/sensors.tf` |
 | VolSync metrics | ReplicationSource sync state | none | `k8s/talos/infra/volsync/` |
+| k6, CronJob `logeverylift-journey` | pushes, not scraped: one browser run against logeverylift.com every 10 min, remote-written to Prometheus `/api/v1/write` | synthetic user `synthetic@nordbye.it`, Bitwarden `logeverylift-synthetic-password` | `k8s/talos/infra/synthetics/` |
 | exportarr, qbittorrent-exporter | media apps | app API keys | `k8s/talos/apps/arr-stack/` |
 | Proxmox VE, PBS webhooks | push to Alertmanager on errors | none | `terraform/proxmox/hyper-cluster/datacenter`, `terraform/proxmox/pbs` |
 | DSM webhook "Alertmanager" | push on Warning and above | none | DSM, see below |
@@ -146,6 +186,8 @@ keep the chart's upstream runbook links.
 | `InternalSiteDown` | a `local.bigd.no` host fails through the private gateway for 10 min | critical |
 | `ErrorBudgetBurn` | the public-site probe SLO burns budget at 7x or faster ([slos.md](slos.md)) | critical; slower burns warning (not sent) |
 | `SLOMetricAbsent` | the probe metric behind an SLO is gone for 6 min | critical |
+| `UserJourneyFailing` | a step of a k6 user journey fails on two runs in a row while the internet is up | critical |
+| `UserJourneyNotRunning` | no logeverylift journey result for 30 min | critical |
 | `BackupJobStale` | etcd, a `*-db-backup` or a `*-backup-check` CronJob not successful for 26 h, or scheduled and never succeeded | critical |
 | `RestoreTestFailed` | the monthly restore test did not pass, or has not passed for 32 days | critical |
 | `VolSyncBackupStale` | a ReplicationSource out of sync for 6 h | critical |
