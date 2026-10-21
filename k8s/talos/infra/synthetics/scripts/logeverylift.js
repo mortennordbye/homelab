@@ -83,10 +83,11 @@ export default async function () {
       await Promise.all([page.waitForURL(new RegExp(`${href}$`)), link.click()]);
     });
 
-    const toggle = page.locator("button.w-7.h-7.rounded-full").first();
+    // select-none is what sets the set's play button apart; the exercise toggle shares the rest.
+    const toggle = page.locator("button.select-none.w-7.h-7.rounded-full").first();
     const setIs = (cls) =>
       page.waitForFunction(
-        (c) => document.querySelector("button.w-7.h-7.rounded-full")?.className.includes(c),
+        (c) => document.querySelector("button.select-none.w-7.h-7.rounded-full")?.className.includes(c),
         { polling: "raf" },
         cls,
       );
