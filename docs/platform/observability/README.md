@@ -130,8 +130,14 @@ journeys shows the last result per step and the history.
 | `log-set` | tapping a set saves it and starts the rest timer |
 | `unlog-set` | tapping again saves the undo, so the run leaves no data |
 
-The synthetic user needs an active program whose first exercise has sets. It lives in prod
-data: rename or delete its program and the journey fails at `open-workout`. A failed run
+The synthetic user needs an active program whose first exercise has sets (program "Synthetic
+check", imported from the Programs screen) and the onboarding tutorial dismissed, or the
+tutorial covers every page. It lives in prod data: rename or delete its program and the
+journey fails at `open-workout`.
+
+logeverylift allows 10 sign-ins per 15 minutes per client IP, and the journey reaches it
+from the home line through Cloudflare, so it shares that budget with everyone at home. A
+run uses one; running it by hand in a loop locks the household out for 15 minutes. A failed run
 that stopped between the two taps leaves the set logged; the next run un-logs it first.
 
 To add a journey, add a script under `scripts/`, a CronJob that runs it, and keep the

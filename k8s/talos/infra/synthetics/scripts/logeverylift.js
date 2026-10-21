@@ -80,7 +80,7 @@ export default async function () {
     await step(page, "open-exercise", async () => {
       const link = page.locator('a[href*="/exercises/"]').first();
       const href = await link.getAttribute("href");
-      await Promise.all([page.waitForURL(`**${href}`), link.click()]);
+      await Promise.all([page.waitForURL(new RegExp(`${href}$`)), link.click()]);
     });
 
     const toggle = page.locator("button.w-7.h-7.rounded-full").first();

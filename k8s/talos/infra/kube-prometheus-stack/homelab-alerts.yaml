@@ -385,6 +385,7 @@ spec:
             description: |
               A real browser signed in as the synthetic user failed the {{ $labels.check }} step of the {{ $labels.journey }} journey on two runs in a row, while the site itself may still answer 200.
               The step's error and the page URL are in the job log: kubectl -n synthetics logs job/<latest logeverylift-journey job>.
+              Dashboard: https://grafana.local.bigd.no/d/user-journeys?var-journey={{ $labels.journey }}
 
         - alert: UserJourneyNotRunning
           expr: absent_over_time(k6_checks_rate{journey="logeverylift"}[30m])

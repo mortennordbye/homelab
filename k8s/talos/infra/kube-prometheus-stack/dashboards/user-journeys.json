@@ -122,7 +122,30 @@
           "fields": "",
           "values": false
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "Time",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Time": 0,
+              "login": 1,
+              "dashboard": 2,
+              "open-workout": 3,
+              "open-exercise": 4,
+              "log-set": 5,
+              "unlog-set": 6
+            }
+          }
+        }
+      ]
     },
     {
       "type": "state-timeline",
@@ -198,7 +221,30 @@
         "tooltip": {
           "mode": "single"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "Time",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Time": 0,
+              "login": 1,
+              "dashboard": 2,
+              "open-workout": 3,
+              "open-exercise": 4,
+              "log-set": 5,
+              "unlog-set": 6
+            }
+          }
+        }
+      ]
     },
     {
       "type": "timeseries",
