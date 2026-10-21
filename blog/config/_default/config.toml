@@ -1,7 +1,7 @@
 baseURL = "https://blog.nordbye.it/"
 locale = "en"
 defaultContentLanguage = "en"
-title = "Morten Victor Nordbye"
+title = "Morten Nordbye's Blog"
 theme = "northlight"
 
 enableRobotsTXT = true
