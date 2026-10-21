@@ -73,8 +73,14 @@ export default async function () {
       const workout = page.locator('a[href^="/programs/"][href$="/workout"]').first();
       await page.goto(BASE + (await workout.getAttribute("href")));
       await page.locator('a[href*="/exercises/"]').first().waitFor();
+      // The readiness sheet mounts from client state after the page, and covers the
+      // exercise links until skipped.
       const skip = page.getByRole("button", { name: "Skip" });
-      if (await skip.isVisible()) await skip.click();
+      const sheet = await skip.waitFor({ timeout: 5000 }).then(() => true, () => false);
+      if (sheet) {
+        await skip.click();
+        await skip.waitFor({ state: "hidden" });
+      }
     });
 
     await step(page, "open-exercise", async () => {
