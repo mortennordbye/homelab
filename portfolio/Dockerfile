@@ -2,7 +2,7 @@
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
 # Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
-FROM node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f AS texgen
+FROM node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS texgen
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -42,7 +42,7 @@ RUN for f in output/cv-*.pdf; do \
     done
 
 # ---- Stage 3: build the Next.js server bundle ----
-FROM node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f AS build
+FROM node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS build
 WORKDIR /app
 
 # Install deps with cache-friendly two-step copy
@@ -75,7 +75,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
 # Merges host public/ with the built CV artifacts for compose.yaml's one-shot
 # service, so the dev server serves the real CV without writing to the host.
 # Skipped automatically when CI targets the runtime image.
-FROM alpine@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 AS cv-bundle
+FROM alpine@sha256:71e9b7bae160ba167fa17414401b94cbcdaf3c32feeab9298bd794a2a0614c35 AS cv-bundle
 WORKDIR /staging
 COPY public/ ./
 COPY --from=pdfbuild /work/latex/output/resume.pdf ./resume.pdf
@@ -87,7 +87,7 @@ COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 # No shell, runs as nonroot (uid 65532). The only writable path the server
 # needs is .next/cache, mounted as an emptyDir in the Deployment so
 # readOnlyRootFilesystem still holds.
-FROM gcr.io/distroless/nodejs24-debian13@sha256:789559ab192e00c02c0e3eca752580cd2950d041545bb082c42198a0609fec7c AS runtime
+FROM gcr.io/distroless/nodejs24-debian13@sha256:c23cc7262662efd642cd9c9d61783d10f600321f7bafdd37c8a82365ffaa2aa6 AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production \
