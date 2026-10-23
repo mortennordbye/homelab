@@ -420,9 +420,9 @@ pathspec==1.1.1 \
     # via
     #   mkdocs
     #   properdocs
-platformdirs==4.13.0 \
-    --hash=sha256:1aa0b0d3f224c1f07c295121e312a5a24a180d6ae5a8425ea1784b3e3863e9c0 \
-    --hash=sha256:3dbcf4cd708f21cf876c4eaa90e58412bc4f033d87143f41b1493ff77c25b7e1
+platformdirs==4.13.3 \
+    --hash=sha256:5e567f664eb087ab8521c0179cd8d1bd60857d271136567a39719e28e2d383ce \
+    --hash=sha256:f6ad7f447f24f8a3b82cce5976387428bff894a0eca6c3488f4a17f153c130c4
     # via
     #   mkdocs-get-deps
     #   properdocs
@@ -434,9 +434,9 @@ pygments==2.21.0 \
     --hash=sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9 \
     --hash=sha256:610ca751c9bc2492b38eb9a38a7fbc93edbbb2d7182edaf34e66ae493dee5c8c
     # via mkdocs-material
-pymdown-extensions==12.2 \
-    --hash=sha256:02da896c362b548d85123e7a377a40024ea6ea938b4e45ca064e408afd994b64 \
-    --hash=sha256:caea66e916b4cfe987b5dabb0a78558e3506988f6353812b0b0288be8f976c16
+pymdown-extensions==12.3 \
+    --hash=sha256:345493a8e3497e24382902903a1c43a28e34a52f2b7571a1c9641429b820ca74 \
+    --hash=sha256:a7f2a4e0bc60c6e6babfa7922cfb3b01cd640eb00fb208f3c582e12bae00ea67
     # via mkdocs-material
 python-dateutil==2.9.0.post0 \
     --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
