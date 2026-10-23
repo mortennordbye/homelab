@@ -10712,6 +10712,16 @@
               "instant": true,
               "legendFormat": "Movies",
               "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(sonarr_episode_downloaded_total)",
+              "instant": true,
+              "legendFormat": "Episodes",
+              "refId": "C"
             }
           ]
         },
