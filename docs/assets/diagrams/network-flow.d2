@@ -1,303 +1,233 @@
-# Homelab — network & service flow (who talks to whom)
-# Source of truth. Render:  make diagram   (layout: elk)
-# Icons pulled from public repos at render time and inlined (self-contained):
-#   ${di} homarr-labs/dashboard-icons   ${sh} selfhst/icons   plus cncf/artwork (falco)
-
+# Who talks to whom: traffic, delivery, secrets, telemetry and storage across the homelab.
+# Colours are the docs site palette (assets/stylesheets/theme.css).
+# Solid edges carry requests or data; dashed edges are control: deploys, secrets, DNS, alerts.
+# Edges stay between groups: an edge into a grid cell drops ELK layering and flattens the sheet.
+# Generic icons come from Iconify with the colour set in the URL, since D2 cannot recolour them.
+direction: down
 vars: {
   di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  dipng: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png
   sh: https://raw.githubusercontent.com/selfhst/icons/main/svg
-  falcoicon: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg
+  ify: https://api.iconify.design
+  eso: https://raw.githubusercontent.com/external-secrets/external-secrets/main/assets/eso-round-logo.svg
+  falco: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg
+  kargo: https://raw.githubusercontent.com/akuity/kargo/main/ui/public/kargo-logo-head-only.png
+  pyrra: https://raw.githubusercontent.com/pyrra-dev/pyrra/main/ui/public/logo192.png
+  volsync: https://raw.githubusercontent.com/backube/volsync/main/docs/media/volsync.svg
 }
 
-direction: down
-
-title: Homelab · Network & Service Flow {
-  shape: text
-  near: top-center
-  style: {font-size: 60; bold: true; font-color: "#0f172a"}
-}
+style.fill: "#0f1410"
 
 classes: {
-  layer: {style: {stroke-width: 2; border-radius: 16; shadow: true; font-size: 19; bold: true}}
-  ext: {style: {stroke-width: 2; border-radius: 10; font-size: 14; bold: true; fill: "#f8fafc"; stroke: "#94a3b8"; font-color: "#334155"}}
+  card: {
+    label.near: bottom-center
+    width: 150
+    height: 130
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 14}
+  }
+  aside: {
+    label.near: bottom-center
+    width: 150
+    height: 130
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+  group: {
+    style: {fill: "#0f1410"; stroke: "#2a382c"; font-color: "#a1ada3"; border-radius: 8; font-size: 18}
+  }
 }
 
-# ───────────── External ─────────────
-internet: Internet {shape: cloud; style: {fill: "#f1f5f9"; stroke: "#64748b"; bold: true}}
-github: GitHub {shape: image; icon: ${di}/github.svg}
-ghcr: "GHCR\n(container registry)" {shape: image; icon: ${di}/github.svg}
-bitwarden: Bitwarden {shape: image; icon: ${di}/bitwarden.svg}
-cloudflare: Cloudflare DNS {shape: image; icon: ${di}/cloudflare.svg}
-letsencrypt: Let's Encrypt {shape: image; icon: ${di}/lets-encrypt.svg}
-discord: Discord {shape: image; icon: ${di}/discord.svg}
-pia: PIA VPN {shape: image; icon: ${di}/private-internet-access.svg}
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
 
-# ───────────── Network edge ─────────────
-edge: Network Edge {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#e0f2fe"; stroke: "#0284c7"; font-color: "#0c4a6e"}
-  modem: "Telia Modem\n(bridge · translation layer)"
-  gw: UniFi Gateway {shape: image; icon: ${di}/unifi.svg}
-  sw: UniFi Switch {shape: image; icon: ${di}/unifi.svg}
-  ap: UniFi U6+ AP {shape: image; icon: ${di}/unifi.svg}
+internet: Internet {class: card; icon: ${ify}/tabler/world.svg?color=%23a1ada3&height=64}
+github: "GitHub\nrepo, CI" {class: card; icon: ${di}/github-light.svg}
+ghcr: "GHCR\nimages" {class: card; icon: ${di}/github-light.svg}
+bitwarden: "Bitwarden\nSecrets Manager" {class: card; icon: ${di}/bitwarden.svg}
+cloudflare: "Cloudflare\nDNS, proxy" {class: card; icon: ${di}/cloudflare.svg}
+letsencrypt: Let's Encrypt {class: card; icon: ${di}/lets-encrypt.svg}
+discord: Discord {class: card; icon: ${di}/discord.svg}
+pia: PIA VPN {class: card; icon: ${di}/private-internet-access.svg}
+
+edge: Network edge {
+  class: group
+  grid-rows: 1
+  grid-columns: 4
+  grid-gap: 16
+  modem: "Telia modem\nbridge mode" {class: card; icon: ${ify}/tabler/router.svg?color=%23a1ada3&height=64}
+  gw: "UniFi Gateway\nlocal.bigd.no DNS" {class: card; icon: ${di}/unifi.svg}
+  sw: UniFi Switch {class: card; icon: ${di}/unifi.svg}
+  ap: UniFi U6+ AP {class: card; icon: ${di}/unifi.svg}
 }
 
-# ───────────── Ingress & cluster networking ─────────────
-net: Ingress & Cluster Networking {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#cffafe"; stroke: "#0891b2"; font-color: "#155e75"}
-  traefik: Traefik {shape: image; icon: ${di}/traefik.svg}
-  cert: cert-manager {shape: image; icon: ${di}/cert-manager.svg}
-  externaldns: external-dns {shape: image; icon: ${di}/cloudflare.svg}
-  coredns: CoreDNS {shape: image; icon: ${di}/coredns.svg}
-  cilium: Cilium {shape: image; icon: ${di}/cilium.svg}
-  interceptor: "KEDA HTTP Interceptor\n(wake-from-zero)" {shape: image; icon: ${di}/keda.svg}
+net: Ingress and cluster networking {
+  class: group
+  grid-rows: 2
+  grid-columns: 3
+  grid-gap: 16
+  traefik: "Traefik\npublic + private gateway" {class: card; icon: ${di}/traefik.svg}
+  cilium: "Cilium\nCNI, L2 VIPs" {class: card; icon: ${di}/cilium.svg}
+  cert: cert-manager {class: card; icon: ${di}/cert-manager.svg}
+  externaldns: external-dns {class: card; icon: ${di}/kubernetes.svg}
+  coredns: CoreDNS {class: card; icon: ${di}/coredns.svg}
+  interceptor: "KEDA interceptor\nwake from zero" {class: card; icon: ${di}/keda.svg}
 }
 
-# ───────────── GitOps & config ─────────────
-ops: GitOps & Config {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#eef2ff"; stroke: "#4f46e5"; font-color: "#312e81"}
-  argocd: ArgoCD {shape: image; icon: ${di}/argo-cd.svg}
-  kargo: "Kargo\n(promotion)"
-  eso: External Secrets
-  reloader: Reloader
-  keda: KEDA {shape: image; icon: ${di}/keda.svg}
-  rollouts: "Argo Rollouts" {shape: image; icon: ${di}/argo-cd.svg}
+ops: GitOps and config {
+  class: group
+  grid-rows: 2
+  grid-columns: 3
+  grid-gap: 16
+  argocd: Argo CD {class: card; icon: ${di}/argo-cd.svg}
+  kargo: Kargo {class: card; icon: ${kargo}}
+  rollouts: Argo Rollouts {class: card; icon: ${di}/argo-cd.svg}
+  keda: KEDA {class: card; icon: ${di}/keda.svg}
+  eso: External Secrets {class: card; icon: ${eso}}
+  reloader: Reloader {class: card; icon: ${di}/reloader.svg}
 }
 
-# ───────────── Public sites ─────────────
-sites: Public Sites {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#f5f3ff"; stroke: "#7c3aed"; font-color: "#5b21b6"}
-  portfolio: Portfolio {shape: image; icon: ${di}/nginx.svg}
-  portfolio_stage: "Portfolio (stage)" {shape: image; icon: ${di}/nginx.svg; style.opacity: 0.7}
-  blog: Blog {shape: image; icon: ${di}/hugo.svg}
-  blog_stage: "Blog (stage)" {shape: image; icon: ${di}/hugo.svg; style.opacity: 0.7}
-  workout: Workout {shape: image; icon: ${di}/nextjs.svg}
-  postgres: PostgreSQL {shape: image; icon: ${di}/postgresql.svg}
-  homepage: Homepage {shape: image; icon: ${sh}/homepage.svg}
-  abs: Audiobookshelf {shape: image; icon: ${di}/audiobookshelf.svg}
-  ittools: IT-Tools {shape: image; icon: ${di}/it-tools.svg}
-  omnitools: Omni-Tools
-  headroom: "Headroom\n(personal finance app)"
-  mealie: Mealie {shape: image; icon: ${di}/mealie.svg}
-  logeverylift: "LogEveryLift (local)" {shape: image; icon: ${di}/nextjs.svg; style.opacity: 0.7}
-  verksted: "Verksted\n(workshop)"
-  bigd: "bigd.no" {shape: image; icon: ${di}/nginx.svg}
+sites: Sites and own apps {
+  class: group
+  grid-rows: 3
+  grid-columns: 5
+  grid-gap: 16
+  portfolio: "Portfolio\nstage + prod" {class: card; icon: ${di}/nextjs-light.svg}
+  blog: "Blog\nstage + prod" {class: card; icon: ${di}/hugo.svg}
+  bigd: bigd.no {class: card; icon: ${di}/nginx.svg}
+  logeverylift: LogEveryLift {class: card; icon: ${ify}/tabler/barbell.svg?color=%23a1ada3&height=64}
+  postgres: Postgres 18 {class: card; icon: ${di}/postgresql.svg}
+  headroom: "Headroom\n+ demo" {class: card; icon: ${ify}/tabler/wallet.svg?color=%23a1ada3&height=64}
+  reelsmith: Reelsmith {class: card; icon: ${ify}/tabler/movie.svg?color=%23a1ada3&height=64}
+  verksted: Verksted {class: card; icon: ${ify}/tabler/terminal-2.svg?color=%23a1ada3&height=64}
+  trek: Trek {class: card; icon: ${sh}/trek-light.svg}
+  homepage: Homepage {class: card; icon: ${sh}/homepage.svg}
+  mealie: Mealie {class: card; icon: ${di}/mealie.svg}
+  abs: Audiobookshelf {class: card; icon: ${di}/audiobookshelf.svg}
+  ittools: IT-Tools {class: card; icon: ${di}/it-tools.svg}
+  omnitools: Omni-Tools {class: card; icon: ${ify}/tabler/tools.svg?color=%23a1ada3&height=64}
 }
 
-# ───────────── Media stack ─────────────
-media: Media Stack {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#fdf2f8"; stroke: "#db2777"; font-color: "#9d174d"}
-  seerr: Seerr {shape: image; icon: ${di}/jellyseerr.svg}
-  plex: Plex {shape: image; icon: ${di}/plex.svg}
-  tautulli: Tautulli {shape: image; icon: ${di}/tautulli.svg}
-  prowlarr: Prowlarr {shape: image; icon: ${di}/prowlarr.svg}
-  sonarr: Sonarr {shape: image; icon: ${di}/sonarr.svg}
-  radarr: Radarr {shape: image; icon: ${di}/radarr.svg}
-  bazarr: Bazarr {shape: image; icon: ${di}/bazarr.svg}
-  flaresolverr: FlareSolverr {shape: image; icon: ${di}/flaresolverr.svg}
-  qbit: qBittorrent {shape: image; icon: ${di}/qbittorrent.svg}
-  gluetun: Gluetun VPN {shape: image; icon: ${di}/gluetun.svg}
+media: Media {
+  class: group
+  grid-rows: 3
+  grid-columns: 5
+  grid-gap: 16
+  seerr: Seerr {class: card; icon: ${di}/jellyseerr.svg}
+  plex: Plex {class: card; icon: ${di}/plex.svg}
+  tautulli: Tautulli {class: card; icon: ${di}/tautulli.svg}
+  prowlarr: Prowlarr {class: card; icon: ${di}/prowlarr.svg}
+  sonarr: Sonarr {class: card; icon: ${di}/sonarr.svg}
+  radarr: "Radarr\n+ 4K" {class: card; icon: ${di}/radarr.svg}
+  bazarr: "Bazarr\n+ 4K" {class: card; icon: ${di}/bazarr.svg}
+  flaresolverr: FlareSolverr {class: card; icon: ${di}/flaresolverr.svg}
+  qbit: qBittorrent {class: card; icon: ${di}/qbittorrent.svg}
+  gluetun: Gluetun VPN {class: card; icon: ${di}/gluetun.svg}
+  unpackerr: Unpackerr {class: card; icon: ${dipng}/unpackerr.png}
+  cleanuparr: Cleanuparr {class: card; icon: ${dipng}/cleanuparr.png}
+  tdarr: "Tdarr\nQuick Sync" {class: card; icon: ${di}/tdarr.svg}
 }
 
-# ───────────── AI / LLM ─────────────
-ai: AI / LLM {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#fae8ff"; stroke: "#c026d3"; font-color: "#86198f"}
-  ollama: Ollama {shape: image; icon: ${di}/ollama.svg}
-  openwebui: Open WebUI {shape: image; icon: ${di}/open-webui.svg}
+ai: AI {
+  class: group
+  grid-rows: 1
+  grid-columns: 3
+  grid-gap: 16
+  openwebui: Open WebUI {class: card; icon: ${di}/open-webui-light.svg}
+  ollama: Ollama {class: card; icon: ${ify}/simple-icons/ollama.svg?color=%23e9ebe9&height=64}
+  innestemme: "Innestemme\nvoice assistant" {class: card; icon: ${ify}/tabler/microphone.svg?color=%23a1ada3&height=64}
 }
 
-# ───────────── Observability ─────────────
 obs: Observability {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#ccfbf1"; stroke: "#0d9488"; font-color: "#115e59"}
-  prometheus: Prometheus {shape: image; icon: ${di}/prometheus.svg}
-  alertmanager: Alertmanager {shape: image; icon: ${di}/alertmanager.svg}
-  loki: Loki {shape: image; icon: ${di}/loki.svg}
-  tempo: Tempo {shape: image; icon: ${di}/tempo.svg}
-  grafana: Grafana {shape: image; icon: ${di}/grafana.svg}
-  metrics: metrics-server {shape: image; icon: ${di}/kubernetes.svg}
+  class: group
+  grid-rows: 2
+  grid-columns: 5
+  grid-gap: 16
+  alloy: "Alloy\nlogs, traces" {class: card; icon: ${di}/alloy.svg}
+  prometheus: Prometheus {class: card; icon: ${di}/prometheus.svg}
+  alertmanager: Alertmanager {class: card; icon: ${di}/alertmanager.svg}
+  loki: Loki {class: card; icon: ${di}/loki.svg}
+  tempo: Tempo {class: card; icon: ${di}/tempo.svg}
+  grafana: Grafana {class: card; icon: ${di}/grafana.svg}
+  pyrra: "Pyrra\nSLOs" {class: card; icon: ${pyrra}}
+  blackbox: "blackbox\nprobes" {class: card; icon: ${di}/prometheus.svg}
+  synthetics: "k6\nsynthetics" {class: card; icon: ${ify}/simple-icons/k6.svg?color=%237d64ff&height=64}
+  metrics: metrics-server {class: card; icon: ${di}/kubernetes.svg}
 }
 
-# ───────────── Security ─────────────
 sec: Security {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#fee2e2"; stroke: "#dc2626"; font-color: "#7f1d1d"}
-  falco: Falco {shape: image; icon: ${falcoicon}}
-  sidekick: Falcosidekick
-  authentik: Authentik {shape: image; icon: ${di}/authentik.svg}
+  class: group
+  grid-rows: 1
+  grid-columns: 3
+  grid-gap: 16
+  authentik: Authentik {class: card; icon: ${di}/authentik.svg}
+  falco: Falco {class: card; icon: ${falco}}
+  sidekick: Falcosidekick {class: card; icon: ${falco}}
 }
 
-# ───────────── Home automation ─────────────
-home: Home Automation {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#dcfce7"; stroke: "#16a34a"; font-color: "#14532d"}
-  ha: Home Assistant {shape: image; icon: ${di}/home-assistant.svg}
-  adguard: AdGuard Home {shape: image; icon: ${di}/adguard-home.svg}
+home: Home Assistant box {
+  class: group
+  grid-rows: 1
+  grid-columns: 2
+  grid-gap: 16
+  ha: Home Assistant {class: card; icon: ${di}/home-assistant.svg}
+  adguard: "AdGuard Home\nadd-on" {class: card; icon: ${di}/adguard-home.svg}
 }
 
-smart: Smart Home Devices {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#dcfce7"; stroke: "#16a34a"; font-color: "#14532d"}
-  hue: Hue Bridge {shape: image; icon: ${sh}/philips-hue.svg}
-  zigbee: Zigbee ZBT-2 {shape: image; icon: ${di}/zigbee2mqtt.svg}
-  ble: BLE Proxy
-  cam: UniFi Camera {shape: image; icon: ${di}/unifi.svg}
+smart: Smart home devices {
+  class: group
+  grid-rows: 1
+  grid-columns: 5
+  grid-gap: 16
+  hue: Hue Bridge {class: card; icon: ${sh}/philips-hue.svg}
+  zigbee: Zigbee ZBT-2 {class: card; icon: ${di}/zigbee2mqtt.svg}
+  ble: BLE proxy {class: card; icon: ${di}/bluetooth.svg}
+  voice: Voice PE {class: card; icon: ${ify}/tabler/device-speaker.svg?color=%23a1ada3&height=64}
+  cam: UniFi Camera {class: card; icon: ${di}/unifi.svg}
 }
 
-# ───────────── Storage ─────────────
-store: Storage {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#fef3c7"; stroke: "#d97706"; font-color: "#78350f"}
-  pcsi: Proxmox CSI {shape: image; icon: ${di}/proxmox.svg}
-  nfscsi: NFS CSI {shape: image; icon: ${di}/synology.svg}
+store: Storage and backups {
+  class: group
+  grid-rows: 1
+  grid-columns: 4
+  grid-gap: 16
+  pcsi: "Proxmox CSI\nproxmox-local" {class: card; icon: ${di}/proxmox-light.svg}
+  nfscsi: "NFS CSI\nsyno-nfs-csi" {class: card; icon: ${di}/synology.svg}
+  volsync: "VolSync\nrestic per PVC" {class: card; icon: ${volsync}}
+  etcd: etcd-backup {class: card; icon: ${di}/etcd.svg}
 }
 
-# ───────────── Physical hosts ─────────────
-hw: Physical Hosts · Proxmox VE {
-  class: layer
-  style.font-size: 34
-  style: {fill: "#f1f5f9"; stroke: "#475569"; font-color: "#1e293b"}
-  hyper1: Hyper1 · M70q Gen 2 {shape: image; icon: ${di}/proxmox.svg}
-  hyper2: Hyper2 · M920q {shape: image; icon: ${di}/proxmox.svg}
-  hyper3: Hyper3 · M920 Tiny {shape: image; icon: ${di}/proxmox.svg}
-  nas: Synology · 60TB {shape: image; icon: ${di}/synology.svg}
-  habox: HA Mini-PC {shape: image; icon: ${di}/home-assistant.svg}
+hw: Physical hosts {
+  class: group
+  grid-rows: 1
+  grid-columns: 5
+  grid-gap: 16
+  hyper1: "hyper1\nM70q Gen 2" {class: card; icon: ${di}/proxmox-light.svg}
+  hyper2: "hyper2\nM920q" {class: card; icon: ${di}/proxmox-light.svg}
+  hyper3: "hyper3\nM920 Tiny" {class: card; icon: ${di}/proxmox-light.svg}
+  nas: "Synology DS1522+\nNFS, PBS VM" {class: card; icon: ${di}/synology.svg}
+  tailscale: "Tailscale\nsubnet router VM" {class: aside; icon: ${di}/tailscale-light.svg}
 }
 
-# ═════════════ FLOWS ═════════════
+internet -> cloudflare: HTTPS
+cloudflare -> edge: proxied hosts
+edge -> net: 80, 443, LAN clients
+sec -> net: forward-auth
+net -> sites: routes, wake from zero
+net -> media: routes
+net -> ai: routes, wake from zero
+net -> obs: traces, metrics
+media -> pia: VPN tunnel
+ai -> home: Innestemme actions
+home -> smart: Zigbee, BLE, Wi-Fi
 
-# ── Traffic / ingress (blue) ──
-internet -> edge.modem: WAN {style: {stroke: "#0284c7"; stroke-width: 3}}
-edge.modem -> edge.gw: translates WAN → LAN {style: {stroke: "#0284c7"; stroke-width: 3}}
-edge.gw -> edge.sw {style: {stroke: "#475569"; stroke-width: 2}}
-edge.sw -> hw: LAN {style: {stroke: "#475569"; stroke-width: 2}}
-edge.sw -> edge.ap {style: {stroke: "#475569"}}
-edge.gw -> net.traefik: ingress {style: {stroke: "#0284c7"; stroke-width: 3}}
-net.cilium -> net.traefik: LB IP · L2 + LBIPAM {style: {stroke: "#0891b2"; stroke-dash: 3}}
-net.traefik -> sites: HTTP routes {style: {stroke: "#0284c7"; stroke-width: 2}}
-net.traefik -> media.seerr {style: {stroke: "#0284c7"}}
-net.traefik -> media.plex {style: {stroke: "#0284c7"}}
-net.traefik -> obs.grafana {style: {stroke: "#0284c7"}}
+github -> ghcr: build, push {style.stroke-dash: 4}
+github -> ops: sync main {style.stroke-dash: 4}
+ghcr -> ops: new tags {style.stroke-dash: 4}
+bitwarden -> ops: secrets {style.stroke-dash: 4}
+ops -> net: deploys, Secrets, scaling {style.stroke-dash: 4}
+net -> letsencrypt: ACME {style.stroke-dash: 4}
+obs -> discord: critical alerts {style.stroke-dash: 4}
+sec -> discord: Falco events {style.stroke-dash: 4}
 
-# ── TLS / DNS (cyan dashed) ──
-net.cert -> net.traefik: certs {style: {stroke: "#0891b2"; stroke-dash: 4}}
-net.cert -> cloudflare: DNS-01 {style: {stroke: "#0891b2"; stroke-dash: 4}}
-net.externaldns -> cloudflare: CNAME records {style: {stroke: "#0891b2"; stroke-dash: 4}}
-cloudflare -> letsencrypt: ACME {style: {stroke: "#0891b2"; stroke-dash: 4}}
-
-# ── GitOps (indigo dashed) ──
-github -> ops.argocd: git push {style: {stroke: "#4f46e5"; stroke-width: 2; stroke-dash: 4}}
-github -> ghcr: build & push image {style: {stroke: "#4f46e5"; stroke-width: 2; stroke-dash: 4}}
-ghcr -> ops.kargo: watch images {style: {stroke: "#4f46e5"; stroke-dash: 4}}
-ops.kargo -> github: promote (git push) {style: {stroke: "#4f46e5"; stroke-dash: 4}}
-ghcr -> sites: image pull {style: {stroke: "#4f46e5"; stroke-dash: 4}}
-ops.argocd -> sites: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
-ops.argocd -> media: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
-ops.argocd -> net: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
-ops.argocd -> obs: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
-ops.rollouts -> sites: canary / blue-green {style: {stroke: "#4f46e5"; stroke-dash: 4}}
-
-# ── Autoscaling (indigo) ──
-# Cron scaling: portfolio & blog 1↔3 off-hours, headroom 0↔1 overnight.
-ops.keda -> sites: cron scale 0↔N {style: {stroke: "#4f46e5"; stroke-width: 2}}
-# HTTP wake-from-zero: KEDA's external scaler reads pending requests from the
-# interceptor; traffic to idle apps routes through it and wakes them 0→1.
-ops.keda -> net.interceptor: HTTP scaler {style: {stroke: "#4f46e5"; stroke-width: 2; stroke-dash: 4}}
-net.traefik -> net.interceptor: wake-from-zero routes {style: {stroke: "#0284c7"; stroke-width: 2}}
-net.interceptor -> sites: wake 0↔1 {style: {stroke: "#4f46e5"; stroke-width: 2}}
-
-# ── Secrets & reload (purple) ──
-bitwarden -> ops.eso: secrets {style: {stroke: "#7c3aed"; stroke-width: 2}}
-ops.eso -> sites.workout {style: {stroke: "#7c3aed"}}
-ops.eso -> media.gluetun {style: {stroke: "#7c3aed"}}
-ops.eso -> obs.grafana {style: {stroke: "#7c3aed"}}
-ops.eso -> obs.alertmanager {style: {stroke: "#7c3aed"}}
-ops.eso -> sec.authentik {style: {stroke: "#7c3aed"}}
-ops.eso -> sec.sidekick {style: {stroke: "#7c3aed"}}
-ops.eso -> net.cert {style: {stroke: "#7c3aed"}}
-ops.eso -> net.externaldns {style: {stroke: "#7c3aed"}}
-ops.reloader -> sec.sidekick: reload {style: {stroke: "#9333ea"; stroke-dash: 4}}
-ops.reloader -> media.gluetun: reload {style: {stroke: "#9333ea"; stroke-dash: 4}}
-
-# ── Media interactions (pink) ──
-media.seerr -> media.plex: library {style: {stroke: "#db2777"}}
-media.seerr -> media.sonarr: requests {style: {stroke: "#db2777"}}
-media.seerr -> media.radarr: requests {style: {stroke: "#db2777"}}
-media.prowlarr -> media.sonarr: indexers {style: {stroke: "#db2777"}}
-media.prowlarr -> media.radarr: indexers {style: {stroke: "#db2777"}}
-media.prowlarr -> media.flaresolverr {style: {stroke: "#db2777"}}
-media.sonarr -> media.qbit: downloads {style: {stroke: "#db2777"}}
-media.radarr -> media.qbit: downloads {style: {stroke: "#db2777"}}
-media.bazarr -> media.sonarr: subtitles {style: {stroke: "#db2777"}}
-media.bazarr -> media.radarr: subtitles {style: {stroke: "#db2777"}}
-media.tautulli -> media.plex: stats {style: {stroke: "#db2777"}}
-media.qbit -> media.gluetun: routed via {style: {stroke: "#ea580c"; stroke-width: 2}}
-media.gluetun -> pia: VPN tunnel {style: {stroke: "#ea580c"; stroke-width: 2; stroke-dash: 4}}
-
-# ── Data (blue) ──
-sites.workout -> sites.postgres: SQL {style: {stroke: "#0369a1"; stroke-width: 2}}
-
-# ── AI / LLM (fuchsia) — both wake from zero via the interceptor ──
-# open-webui wakes on inbound traffic; it then calls ollama through the same
-# interceptor (OLLAMA_BASE_URL → ollama-wake) so ollama wakes only when used.
-net.interceptor -> ai.openwebui: wake 0↔1 {style: {stroke: "#4f46e5"; stroke-width: 2}}
-ai.openwebui -> net.interceptor: ollama API {style: {stroke: "#c026d3"; stroke-width: 2}}
-net.interceptor -> ai.ollama: wake 0↔1 {style: {stroke: "#4f46e5"; stroke-width: 2}}
-ops.argocd -> ai: deploys {style: {stroke: "#4f46e5"; stroke-dash: 4}}
-ai -> store.nfscsi: models + data {style: {stroke: "#d97706"}}
-
-# ── Observability (teal) ──
-net.traefik -> obs.tempo: OTLP traces {style: {stroke: "#0d9488"}}
-obs.prometheus -> net.traefik: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
-obs.prometheus -> sec.falco: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
-obs.prometheus -> obs.loki: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
-obs.prometheus -> net.cilium: scrape {style: {stroke: "#0d9488"; stroke-dash: 2}}
-obs.grafana -> obs.prometheus: query {style: {stroke: "#0d9488"}}
-obs.grafana -> obs.loki: query {style: {stroke: "#0d9488"}}
-obs.grafana -> obs.tempo: query {style: {stroke: "#0d9488"}}
-obs.prometheus -> obs.alertmanager: alerts {style: {stroke: "#0d9488"}}
-obs.alertmanager -> discord: notify {style: {stroke: "#dc2626"; stroke-dash: 4}}
-
-# ── Security (red dashed) ──
-sec.falco -> sec.sidekick: events {style: {stroke: "#dc2626"}}
-sec.sidekick -> discord: alerts {style: {stroke: "#dc2626"; stroke-dash: 4}}
-sec.falco -> hw: syscalls {style: {stroke: "#dc2626"; stroke-dash: 4}}
-sec.authentik -> net.traefik: forward-auth {style: {stroke: "#dc2626"; stroke-dash: 4}}
-
-# ── Storage (amber) ──
-media.plex -> store.nfscsi: media {style: {stroke: "#d97706"}}
-sites.abs -> store.nfscsi: audiobooks {style: {stroke: "#d97706"}}
-sites.postgres -> store.pcsi: block {style: {stroke: "#d97706"}}
-store.nfscsi -> hw.nas: NFS {style: {stroke: "#d97706"; stroke-width: 2}}
-store.pcsi -> hw.hyper1: block {style: {stroke: "#d97706"; stroke-width: 2}}
-
-# ── Home automation (green) ──
-edge.sw -> home.ha {style: {stroke: "#16a34a"}}
-home.ha -> home.adguard: DNS add-on {style: {stroke: "#16a34a"; stroke-dash: 4}}
-edge.gw -> home.adguard: DNS queries {style: {stroke: "#0891b2"; stroke-dash: 3}}
-home.ha -> smart: Zigbee · BLE · Wi-Fi {style: {stroke: "#16a34a"}}
-
-# Inline-legibility: `direction: down` keeps the graph narrow-and-tall so GitHub's
-# width-fit downscale leaves bigger labels; this glob bumps every leaf label, and
-# the explicit container/title sizes above override it (explicit > glob > class).
-# Layout engine is set via the render command's `--layout elk` flag, since a `**`
-# glob can't coexist with a `vars.d2-config` block.
-**: {
-  style.font-size: 26
-}
+sites -> store: volumes
+media -> store: media library
+ai -> store: models
+store -> hw: NFS, block disks, backups

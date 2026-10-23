@@ -92,7 +92,7 @@ key comes from `homepage-api-keys` as `HOMEPAGE_VAR_*` through an ExternalSecret
   app also bumps the Application count there and in `CLAUDE.md`.
 - `docs/apps/<app>/README.md`, if it exists, uses the hostname rather than a raw VIP.
 - A new app on a gateway also belongs in `docs/assets/diagrams/network-flow.d2`
-  ("Public Sites" block) and `homelab-overview.d2`; re-render with `make diagram`.
+  ("Sites and own apps" or "Media" group) and `homelab-overview.d2`; re-render with `make diagram`.
 
 ## Verify
 
