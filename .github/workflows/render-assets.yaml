@@ -38,15 +38,20 @@ jobs:
 
       - name: Render every D2 diagram to SVG
         run: |
+          # Iconify answers 429 when one run fetches every icon; retry each diagram with a backoff.
           for f in docs/assets/diagrams/*.d2; do
             name=$(basename "$f" .d2)
-            docker run --rm -v "${PWD}/docs/assets/diagrams:/work" \
-              terrastruct/d2:v0.7.1 \
-              --layout elk \
-              --elk-nodeNodeBetweenLayers=35 \
-              --elk-padding="[top=25,left=25,bottom=25,right=25]" \
-              --scale 1 \
-              --pad 40 "/work/$name.d2" "/work/$name.svg"
+            for attempt in 1 2 3 4; do
+              docker run --rm -v "${PWD}/docs/assets/diagrams:/work" \
+                terrastruct/d2:v0.7.1 \
+                --layout elk \
+                --elk-nodeNodeBetweenLayers=35 \
+                --elk-padding="[top=25,left=25,bottom=25,right=25]" \
+                --scale 1 \
+                --pad 40 "/work/$name.d2" "/work/$name.svg" && break
+              [ "$attempt" = 4 ] && exit 1
+              sleep $((attempt * 30))
+            done
           done
           sudo chown -R "$(id -u):$(id -g)" docs/assets/diagrams
 
