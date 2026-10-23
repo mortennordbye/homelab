@@ -62,7 +62,8 @@ jobs:
         run: |
           for f in docs/assets/diagrams/*.svg; do
             name=$(basename "$f" .svg)
-            rsvg-convert -z 2 "$f" -o "docs/assets/diagrams/$name.png"
+            # Iconify icons embed as "data:image/svg+xml; charset=utf-8;base64", which rsvg draws blank.
+            sed 's/; charset=utf-8;base64/;base64/g' "$f" | rsvg-convert -z 2 -o "docs/assets/diagrams/$name.png"
           done
 
       - name: Crop the logo to a 512 round mark
