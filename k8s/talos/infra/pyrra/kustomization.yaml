@@ -11,7 +11,7 @@ resources:
 helmCharts:
   - name: pyrra
     repo: https://pyrra-dev.github.io/helm-charts
-    version: 1.14.0
+    version: 1.15.0
     releaseName: pyrra
     namespace: monitoring
     valuesFile: values.yaml
