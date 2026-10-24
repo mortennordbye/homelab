@@ -37,8 +37,9 @@ data:
     # The kitchen's Hue plug feeds a bench light with a touch sensor: whatever turns the plug off cuts
     # the power for a few seconds and turns it back on, so the light is off and its sensor still works.
     power-cycle: [light.kjokken]
-    # "Initiate lockdown": the music's volume while it lasts; "stand down" puts the old one back.
-    lockdown-volume: 70
+    # "Initiate lockdown": the music's volume while it lasts, or louder if it already was; "stand down"
+    # puts the old one back.
+    lockdown-volume: 85
     # Shopping list items under their Norwegian names; an item said by itself after an add is heard
     # again by Whisper small in Norwegian (about 380 MB in /models/hub, about 0.5 GB of memory).
     norwegian-groceries: true
