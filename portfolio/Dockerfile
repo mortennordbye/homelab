@@ -75,7 +75,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
 # Merges host public/ with the built CV artifacts for compose.yaml's one-shot
 # service, so the dev server serves the real CV without writing to the host.
 # Skipped automatically when CI targets the runtime image.
-FROM alpine@sha256:71e9b7bae160ba167fa17414401b94cbcdaf3c32feeab9298bd794a2a0614c35 AS cv-bundle
+FROM alpine@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS cv-bundle
 WORKDIR /staging
 COPY public/ ./
 COPY --from=pdfbuild /work/latex/output/resume.pdf ./resume.pdf
@@ -87,7 +87,7 @@ COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 # No shell, runs as nonroot (uid 65532). The only writable path the server
 # needs is .next/cache, mounted as an emptyDir in the Deployment so
 # readOnlyRootFilesystem still holds.
-FROM gcr.io/distroless/nodejs24-debian13@sha256:c23cc7262662efd642cd9c9d61783d10f600321f7bafdd37c8a82365ffaa2aa6 AS runtime
+FROM gcr.io/distroless/nodejs24-debian13@sha256:206cfbab1a64af20b63645150e3aa61b7babc17869e0254914947732963d6f07 AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production \
