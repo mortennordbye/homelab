@@ -9,7 +9,7 @@ resources:
 helmCharts:
   - name: prometheus-snmp-exporter
     repo: https://prometheus-community.github.io/helm-charts
-    version: 9.18.1
+    version: 9.18.2
     releaseName: snmp-exporter
     namespace: monitoring
     valuesFile: values.yaml
