@@ -32,6 +32,9 @@ spec:
               value: "1"
             - name: BETTER_AUTH_URL
               value: "https://logeverylift.com"
+            # Weekly copy of OpenStreetMap's gyms for "Gyms near me".
+            - name: GYM_IMPORT_COUNTRIES
+              value: "NO"
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
