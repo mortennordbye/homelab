@@ -57,6 +57,9 @@ data:
     # one scores it at 0.9-0.99. 0.65 keeps the TV out (it reached 0.67 once).
     wake-model: hey_jarvis
     wake-threshold: 0.65
+    # Near misses from 0.15 wake when Parakeet hears "Jarvis" in them: the model scores some voices
+    # (a Norwegian accent, "Hei Jarvis") well under 0.65, and the TV does not say the name.
+    wake-check-from: 0.15
     # The device fetches spoken answers here: the VIP in service.yaml, opened for it in
     # terraform/unifi/network/firewall.tf.
     public-url: http://10.3.10.99:9090
