@@ -66,6 +66,26 @@ account's repositories with read-only Metadata, Contents and Pull requests. The 
 come from Bitwarden through the `grafana-github-app` ExternalSecret and are mounted as files,
 since the PEM is multiline. The Grafana network policy allows egress to `api.github.com`.
 
+## Cloudflare
+
+The Cloudflare dashboard shows edge traffic for the zone picked in its Zone dropdown:
+requests, bandwidth and visits, cache status, status codes, origin response time for uncached
+requests, top hosts, paths, countries, content types, edge locations and HTTP protocol. Below
+that are Web Analytics for every site with the beacon (visits, page views, Core Web Vitals at
+p75, page load time, top pages, referrers, countries, browsers, devices), the zone's DNS
+queries, the watchdog Worker, and Email Routing.
+
+Grafana queries Cloudflare's GraphQL analytics API live through the Infinity plugin (data
+source uid `cloudflare`). Nothing is stored, so history ends where Cloudflare's does: 31 days
+for traffic and DNS, 184 for Web Analytics. The zones are on the Free plan, which leaves out
+some fields: edge time to first byte, referrer host and ASN on HTTP requests, and firewall
+events. Queries that name one fail with "does not have access to the field". Referrers come
+from Web Analytics instead.
+
+The data source reads a read-only user token, `homelab-grafana-read`, from the
+`grafana-cloudflare` ExternalSecret, mounted as a file. The Grafana network policy allows
+egress to `api.cloudflare.com`.
+
 ## Stack
 
 [![Exporters, Alloy and Traefik feeding Prometheus, Loki and Tempo, all read by Grafana](../../assets/diagrams/observability-signals.svg)](../../assets/diagrams/observability-signals.svg)
@@ -303,6 +323,7 @@ Falco will flag it, and no exemption targets it. See
 | UniFi Admins & Users | local user `unpoller`, restricted to local access, custom role: Network View Only, everything else None |
 | Grafana Administration > Service accounts | `argocd-notifications`, role Editor, one token stored in Bitwarden as `argocd-notifications-grafana-token` |
 | GitHub Settings > Developer settings > GitHub Apps | `mortennordbye-homelab-grafana`, webhook off, repository permissions Metadata, Contents and Pull requests read-only, installed on all repositories; ID, installation ID and key in Bitwarden as `grafana-github-app-*` |
+| Cloudflare My Profile > API Tokens | `homelab-grafana-read`, user token, read on Analytics, Zone, DNS, Zone Settings, Firewall Services and SSL and Certificates for all zones, and Account Analytics, Account Settings and Workers Scripts; stored in Bitwarden as `cloudflare-grafana-read-token` |
 | DSM Shared Folder `shared-data` | quota 31 TiB (NasVolumeAlmostFull watches the volume, not share quotas) |
 
 ## Constraints

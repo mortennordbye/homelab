@@ -160,8 +160,7 @@ grafana:
         installationId: $__file{/etc/secrets/github-app/installation-id}
       secureJsonData:
         privateKey: $__file{/etc/secrets/github-app/private-key}
-    # Cloudflare's GraphQL analytics API, for what the exporter does not export:
-    # DNS, Web Analytics, Email Routing, per-host and per-path breakdowns.
+    # Cloudflare's GraphQL analytics API, queried live by the Cloudflare dashboard.
     - name: Cloudflare
       type: yesoreyeram-infinity-datasource
       uid: cloudflare
