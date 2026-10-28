@@ -63,6 +63,7 @@ Reloader restarts the pod when it changes. `innestemme-secret` comes from Bitwar
 | `VOICE_ADDRESS` | `innestemme-address` | street address for weather and departures |
 | `VOICE_HUE_APP_KEY` | id `32ceeacb-…` | innestemme's key on the Hue bridge, for party mode |
 | `VOICE_HUE_CLIENT_KEY` | id `2e946f69-…` | the bridge's Entertainment stream key |
+| `VOICE_PLEX_TOKEN` | `innestemme-plex-token` | the Plex server's own token, for "play <title> on Plex" |
 
 The satellite key is the `noise_psk` Home Assistant set when the device was added, in the
 ESPHome entry of `/config/.storage/core.config_entries` on the HA box. Re-adding the device
@@ -75,6 +76,10 @@ in Home Assistant can generate a new key; update the Bitwarden secret when that 
 - The engine finds the room from the device's area in Home Assistant, looked up by the device
   name. Renaming the device in Home Assistant breaks that lookup; set `room` in the ConfigMap
   if it is renamed.
+- "Play <title> on Plex" plays through the TV's Cast player as `plex://<key>`, which needs Home
+  Assistant's Plex integration (manual setup, `10.3.10.103:32400`, the same token). innestemme
+  itself searches `plex-url`, the Plex service in the cluster, which the Plex CiliumNetworkPolicy
+  lets the innestemme namespace reach.
 - The engine sets the device's wake words (`satellite-wake-words`) each time it connects. The wake
   word selects in Home Assistant go through the disabled satellite entity and do nothing; the
   sensitivity select is the device's own and still works.
