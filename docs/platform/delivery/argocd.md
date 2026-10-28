@@ -124,8 +124,10 @@ application-controller expose ServiceMonitors for kube-prometheus-stack.
 
 The notifications controller posts a Grafana annotation tagged `argocd` each time an
 Application finishes a sync, once per revision. The text is the app name, the short
-revision and the commit subject, which for a Kargo promotion names the version. The
-Homelab dashboards show these as the "Deploys" annotation.
+revision and the commit subject, which for a Kargo promotion names the version. Grafana
+renders it as sanitized HTML, so the revision links to the commit and a squash merge's
+`(#N)` suffix links to the pull request; click the marker to pin the tooltip and follow
+them. The Homelab dashboards show these as the "Deploys" annotation.
 
 The config is under `notifications` in
 [`values.yaml`](../../../k8s/talos/infra/argocd/values.yaml): the `grafana` service, one

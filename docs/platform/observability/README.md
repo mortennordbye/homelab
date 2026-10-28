@@ -54,7 +54,8 @@ these as Grafana annotations tagged `argocd`
 The GitHub dashboard lists merged and open pull requests and the merges per day for the repo
 picked in its Repository dropdown (default `homelab`). The SPOG also draws a "PR merged"
 annotation for every Homelab merge, so the gap between a merge and its Argo CD deploy marker
-is visible on the same graph.
+is visible on the same graph. The PR marker shows the title and author; the plugin cannot
+make it a link, so the PR link sits on the deploy marker next to it.
 
 Grafana queries the GitHub API on demand with the `grafana-github-datasource` plugin (data
 source uid `github`). Nothing is scraped or stored, so the panels only reach as far back as
