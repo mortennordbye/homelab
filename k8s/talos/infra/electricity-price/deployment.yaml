@@ -1,0 +1,61 @@
+# Current electricity spot price, used by the cost panels on the SPOG.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: electricity-price
+  labels:
+    app.kubernetes.io/name: electricity-price
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: electricity-price
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: electricity-price
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: exporter
+          image: python:3.13.18-alpine
+          command:
+            - python
+            - -B
+            - /app/exporter.py
+          env:
+            - name: PRICE_AREA
+              value: NO1
+          ports:
+            - name: metrics
+              containerPort: 8080
+          volumeMounts:
+            - name: app
+              mountPath: /app
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: metrics
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 5m
+              memory: 24Mi
+            limits:
+              memory: 64Mi
+      volumes:
+        - name: app
+          configMap:
+            name: electricity-price

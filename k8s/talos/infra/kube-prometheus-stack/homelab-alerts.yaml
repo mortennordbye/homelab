@@ -323,6 +323,22 @@ spec:
               ReplicationSource `{{ $labels.obj_namespace }}/{{ $labels.obj_name }}` has missed its nightly restic backup for over 6 hours.
               Check: kubectl -n {{ $labels.obj_namespace }} describe replicationsource {{ $labels.obj_name }} and the volsync-src-{{ $labels.obj_name }} pod logs.
 
+    - name: homelab.data
+      rules:
+        # Warning, not critical: when the database is down the logeverylift user journey
+        # and public-site probe already page; this names the cause.
+        - alert: PostgresDown
+          expr: pg_up == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#postgresdown
+            summary: 'Postgres in {{ $labels.namespace }} is not accepting connections'
+            description: |
+              postgres-exporter in `{{ $labels.namespace }}` has failed to connect to the database for 5 minutes.
+              Check: kubectl -n {{ $labels.namespace }} get pods -l app=postgres and the postgres container logs.
+
     - name: homelab.network
       rules:
         # Fires only when every internet target fails, so one site being down is not an
