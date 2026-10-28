@@ -160,6 +160,15 @@ function startYearOf(period: string): string {
   return period.match(/\b(?:19|20)\d{2}\b/)?.[0] ?? "";
 }
 
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+// Year alone ties two stops in the same year; the start month orders them.
+function startMonthsOf(period: string): number {
+  const m = period.match(/\b([A-Za-z]{3})[a-z]*\.?\s+((?:19|20)\d{2})\b/);
+  if (m) return Number(m[2]) * 12 + Math.max(0, MONTHS.indexOf(m[1].toLowerCase()));
+  return Number(startYearOf(period)) * 12;
+}
+
 /**
  * Career timeline rendered in the About section. Derived from `experience` —
  * every entry appears here by default, sorted chronologically (oldest first).
@@ -168,14 +177,14 @@ function startYearOf(period: string): string {
  */
 export const careerPath: CareerStop[] = experience
   .filter((e) => !e.timeline?.hidden)
+  .sort((a, b) => startMonthsOf(a.period) - startMonthsOf(b.period))
   .map((e) => ({
     year: startYearOf(e.period),
     role: e.timeline?.role ?? e.role,
     company: e.timeline?.company ?? e.company,
     note: e.timeline?.note ?? "",
     current: e.current ?? false,
-  }))
-  .sort((a, b) => Number(a.year) - Number(b.year));
+  }));
 
 /**
  * Résumé summary paragraph. Drives the LaTeX `resume/summary.tex` and is
