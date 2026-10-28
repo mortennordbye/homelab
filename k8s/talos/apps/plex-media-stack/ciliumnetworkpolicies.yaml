@@ -16,12 +16,15 @@ spec:
         - ports:
             - port: "32400"
               protocol: TCP
-    # Tautulli/Seerr (intra-ns) + Sonarr/Radarr (arr-stack) library refresh.
+    # Tautulli/Seerr (intra-ns) + Sonarr/Radarr (arr-stack) library refresh; innestemme searches
+    # for "play <title> on Plex".
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": plex-media-stack
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": arr-stack
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": innestemme
       toPorts:
         - ports:
             - port: "32400"
