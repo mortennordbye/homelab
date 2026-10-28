@@ -9346,7 +9346,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Notional electricity cost avoided by downscaling, on owned bare metal: freed CPU cores \u00d7 ${watts_per_core} W/core \u00d7 hours \u00d7 ${cost_per_kwh} per kWh. It is a request-based estimate (not measured draw), shown in kr.",
+          "description": "Notional electricity cost avoided by downscaling, on owned bare metal: freed CPU cores \u00d7 ${watts_per_core} W/core \u00d7 hours \u00d7 the price per kWh. The price is the NO1 spot price averaged over the range, plus 25% VAT, plus ${grid_fee_per_kwh} kr/kWh grid fee. It is a request-based estimate (not measured draw), shown in kr.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -9399,7 +9399,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "A",
               "refId": "A"
             }
@@ -9465,7 +9465,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * ${watts_per_core}/1000 * 730 * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05 + sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05 + sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * ${watts_per_core}/1000 * 730 * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "A",
               "refId": "A"
             }
@@ -9501,7 +9501,7 @@
           },
           "gridPos": {
             "h": 7,
-            "w": 24,
+            "w": 16,
             "x": 0,
             "y": 70
           },
@@ -9538,7 +9538,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"headroom\",deployment=\"headroom\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "headroom",
               "refId": "A"
             },
@@ -9548,7 +9548,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"portfolio\",deployment=\"portfolio\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "portfolio",
               "refId": "B"
             },
@@ -9558,7 +9558,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((3 - kube_deployment_status_replicas{namespace=\"blog\",deployment=\"blog\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "blog",
               "refId": "C"
             },
@@ -9568,7 +9568,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-portfolio\",deployment=\"portfolio-stage\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "portfolio-stage",
               "refId": "D"
             },
@@ -9578,7 +9578,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"stage-blog\",deployment=\"blog-stage\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "blog-stage",
               "refId": "E"
             },
@@ -9588,7 +9588,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"it-tools\",deployment=\"it-tools\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "it-tools",
               "refId": "F"
             },
@@ -9598,7 +9598,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"omni-tools\",deployment=\"omni-tools\"}),0))*0.01)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "omni-tools",
               "refId": "G"
             },
@@ -9608,7 +9608,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"ollama\",deployment=\"ollama\"}),0))*0.5)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "ollama",
               "refId": "H"
             },
@@ -9618,7 +9618,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"open-webui\",deployment=\"open-webui\"}),0))*0.1)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "open-webui",
               "refId": "I"
             },
@@ -9628,7 +9628,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"audiobookshelf\",deployment=\"audiobookshelf\"}),0))*0.05)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "audiobookshelf",
               "refId": "J"
             },
@@ -9638,13 +9638,67 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * ${cost_per_kwh}",
+              "expr": "avg_over_time((sum(clamp_min((1 - kube_deployment_status_replicas{namespace=\"homepage\",deployment=\"homepage\"}),0))*0)[$__range:5m]) * ${watts_per_core}/1000 * ($__range_s/3600) * scalar(avg_over_time(electricity_spot_price_nok_per_kwh{area=\"NO1\"}[$__range]) * 1.25 + ${grid_fee_per_kwh})",
               "legendFormat": "homepage",
               "refId": "K"
             }
           ],
           "title": "Electricity cost avoided per app (range)",
           "type": "bargauge"
+        },
+        {
+          "id": 9017,
+          "type": "timeseries",
+          "title": "Electricity price (NO1)",
+          "description": "Spot price plus 25% VAT plus the grid fee variable: the price per kWh the cost panels use.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 16,
+            "y": 70
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "suffix: kr/kWh",
+              "decimals": 2,
+              "min": 0,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "yellow"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "fillOpacity": 10,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": false
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "refId": "A",
+              "expr": "electricity_spot_price_nok_per_kwh{area=\"NO1\"} * 1.25 + ${grid_fee_per_kwh}",
+              "legendFormat": "kr/kWh"
+            }
+          ]
         }
       ],
       "title": "KEDA autoscaling",
@@ -11411,20 +11465,20 @@
       },
       {
         "current": {
-          "text": "1.5",
-          "value": "1.5"
+          "text": "0.39",
+          "value": "0.39"
         },
-        "description": "Electricity price in kr per kWh used for the cost-avoided panels.",
-        "label": "El. price (kr/kWh)",
-        "name": "cost_per_kwh",
+        "description": "Grid fee per kWh including electricity tax and VAT, added to the spot price in the cost-avoided panels. Elvia's energy charge, day and night blended for a 24/7 load.",
+        "label": "Grid fee (kr/kWh)",
+        "name": "grid_fee_per_kwh",
         "options": [
           {
             "selected": true,
-            "text": "1.5",
-            "value": "1.5"
+            "text": "0.39",
+            "value": "0.39"
           }
         ],
-        "query": "1.5",
+        "query": "0.39",
         "skipUrlSync": false,
         "type": "textbox"
       },

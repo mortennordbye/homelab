@@ -1,0 +1,88 @@
+---
+# Reads pg_stat_* from the logeverylift database for Prometheus. Separate from the
+# postgres pod so adding or upgrading it never restarts the database.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-exporter
+  namespace: logeverylift
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-exporter
+  template:
+    metadata:
+      labels:
+        app: postgres-exporter
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres-exporter
+          image: quay.io/prometheuscommunity/postgres-exporter:v0.20.1
+          args:
+            - --collector.long_running_transactions
+          env:
+            - name: DATA_SOURCE_URI
+              value: postgres:5432/logeverylift_db?sslmode=disable
+            - name: DATA_SOURCE_USER
+              value: postgres
+            - name: DATA_SOURCE_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: logeverylift-secret
+                  key: POSTGRES_PASSWORD
+          ports:
+            - name: metrics
+              containerPort: 9187
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 96Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-exporter
+  namespace: logeverylift
+  labels:
+    app: postgres-exporter
+spec:
+  selector:
+    app: postgres-exporter
+  ports:
+    - name: metrics
+      port: 9187
+      targetPort: metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgres-exporter
+  namespace: logeverylift
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: postgres-exporter
+  endpoints:
+    - port: metrics
+      interval: 60s

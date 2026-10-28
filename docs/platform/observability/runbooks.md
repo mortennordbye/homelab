@@ -264,6 +264,19 @@ A VolSync ReplicationSource missed its nightly restic backup by more than 6 hour
 Usually a locked restic repository or a PVC that could not be snapshotted. See
 [`../backups/restore.md`](../backups/restore.md#app-volume-volsync).
 
+## Data
+
+### PostgresDown
+
+postgres-exporter in the namespace cannot connect to its database (`pg_up` is 0).
+
+- `kubectl -n <namespace> get pods -l app=postgres` and the `postgres` container logs.
+- A pod stuck in `ContainerCreating` is usually the NFS volume; see
+  [`../data/postgres.md`](../data/postgres.md).
+
+If the database pod is healthy, the exporter's own credentials or the
+`logeverylift-postgres-policy` network policy are the next suspects.
+
 ## Control plane
 
 ### etcd
