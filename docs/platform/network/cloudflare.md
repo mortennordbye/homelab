@@ -11,6 +11,9 @@ Three public zones and one Worker, each its own Terraform stack under
 | `bigd-no` | origin record and zone settings only; app hostnames belong to external-dns |
 | `watchdog` | the outside-in monitoring Worker on `watchdog.bigd.no` |
 
+Traffic, cache, DNS and Web Analytics for all three zones are on the Grafana Cloudflare
+dashboard ([`../observability/README.md`](../observability/README.md#cloudflare)).
+
 ## Origin and proxying
 
 The WAN address is published through two A records, `ddns.nordbye.it` and

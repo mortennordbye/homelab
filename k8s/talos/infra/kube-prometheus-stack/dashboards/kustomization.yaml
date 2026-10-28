@@ -26,3 +26,6 @@ configMapGenerator:
   - name: dashboard-github
     files:
       - github.json
+  - name: dashboard-cloudflare
+    files:
+      - cloudflare.json

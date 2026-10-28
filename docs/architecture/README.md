@@ -115,7 +115,9 @@ Argo CD notifications writes a Grafana annotation for every finished sync, drawn
 Homelab dashboards as deploy markers
 ([`../platform/delivery/argocd.md`](../platform/delivery/argocd.md#deploy-markers)).
 Grafana also reads pull requests from the GitHub API through a read-only
-GitHub App ([`../platform/observability/README.md`](../platform/observability/README.md#github)).
+GitHub App ([`../platform/observability/README.md`](../platform/observability/README.md#github)),
+and Cloudflare's analytics from its GraphQL API with a read-only token
+([`../platform/observability/README.md`](../platform/observability/README.md#cloudflare)).
 metrics-server (`k8s/talos/infra/metrics-server`) serves the resource metrics API for
 `kubectl top`.
 
