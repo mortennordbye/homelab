@@ -28,6 +28,7 @@ that share.
 |---|---|---|---|
 | `terraform@pbs!terraform` | Admin on `/` | `terraform/proxmox/BOOTSTRAP.md` | this Terraform stack |
 | `pve@pbs!hyper-cluster` | DatastorePowerUser on `/datastore/Synology` | `BOOTSTRAP.md`, ACL from Terraform | Proxmox VE writing and pruning backups |
+| `prometheus@pbs!exporter` | Audit on `/` | `BOOTSTRAP.md`, ACL from Terraform | `pbs-exporter` reading datastore usage and snapshots for the SPOG Backups row |
 
 A PBS token gets only what both it and its user are granted, so each role is set on the
 user and on the token. The backup identity needs DatastorePowerUser, not DatastoreBackup,
