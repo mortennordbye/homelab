@@ -230,9 +230,10 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
-    # GitHub data source.
+    # GitHub and Cloudflare data sources.
     - toFQDNs:
         - matchName: api.github.com
+        - matchName: api.cloudflare.com
       toPorts:
         - ports:
             - port: "443"
