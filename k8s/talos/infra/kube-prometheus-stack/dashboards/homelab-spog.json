@@ -134,12 +134,322 @@
   "links": [],
   "panels": [
     {
-      "collapsed": true,
+      "id": 9800,
+      "type": "row",
+      "title": "Alerts",
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 0
+      },
+      "panels": []
+    },
+    {
+      "id": 9801,
+      "type": "stat",
+      "title": "Firing",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "description": "Prometheus alerts firing now, by severity, one per alert and namespace as in the list. Critical ones page Discord; warning and info only show here and in Alertmanager.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "refId": "A",
+          "expr": "count(count by (alertname, namespace) (ALERTS{alertstate=\"firing\", severity=\"critical\", alertname!~\"Watchdog|InfoInhibitor\"})) or vector(0)",
+          "legendFormat": "critical",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "refId": "B",
+          "expr": "count(count by (alertname, namespace) (ALERTS{alertstate=\"firing\", severity=\"warning\", alertname!~\"Watchdog|InfoInhibitor\"})) or vector(0)",
+          "legendFormat": "warning",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "refId": "C",
+          "expr": "count(count by (alertname, namespace) (ALERTS{alertstate=\"firing\", severity=\"info\", alertname!~\"Watchdog|InfoInhibitor\"})) or vector(0)",
+          "legendFormat": "info",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "critical"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "warning"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "info"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "blue",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "orientation": "vertical",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 9802,
+      "type": "table",
+      "title": "Firing alerts",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 18,
+        "x": 6,
+        "y": 1
+      },
+      "description": "Click an alert to open it in Alertmanager.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "expr": "(time() - min by (alertname, severity, namespace) (ALERTS_FOR_STATE{alertname!~\"Watchdog|InfoInhibitor\"})) and on (alertname, severity, namespace) max by (alertname, severity, namespace) (ALERTS{alertstate=\"firing\", alertname!~\"Watchdog|InfoInhibitor\"})"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "alertname": 0,
+              "severity": 1,
+              "namespace": 2,
+              "Value": 3
+            },
+            "renameByName": {
+              "alertname": "Alert",
+              "severity": "Severity",
+              "namespace": "Namespace",
+              "Value": "Firing for"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Firing for"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "critical": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "warning": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "info": {
+                        "color": "blue",
+                        "index": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Open in Alertmanager",
+                    "targetBlank": true,
+                    "url": "https://alertmanager.local.bigd.no/#/alerts?filter=%7Balertname%3D%22${__data.fields.Alert}%22%7D"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Firing for",
+            "desc": true
+          }
+        ],
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
       },
       "id": 9300,
       "panels": [
@@ -1240,7 +1550,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 1
+        "y": 8
       },
       "id": 8400,
       "panels": [
@@ -1945,7 +2255,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 2
+        "y": 9
       },
       "panels": [
         {
@@ -2285,7 +2595,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 3
+        "y": 10
       },
       "id": 9610,
       "panels": [
@@ -2722,7 +3032,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 4
+        "y": 11
       },
       "id": 9600,
       "panels": [
@@ -3609,7 +3919,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 12
       },
       "id": 9500,
       "panels": [
@@ -4236,7 +4546,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 13
       },
       "id": 100,
       "panels": [
@@ -5222,7 +5532,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 7
+        "y": 14
       },
       "id": 102,
       "panels": [
@@ -5871,7 +6181,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 8
+        "y": 15
       },
       "id": 305,
       "panels": [
@@ -6693,7 +7003,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 16
       },
       "id": 405,
       "panels": [
@@ -7362,7 +7672,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 17
       },
       "id": 505,
       "panels": [
@@ -7857,7 +8167,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 18
       },
       "id": 205,
       "panels": [
@@ -8829,7 +9139,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 19
       },
       "id": 9000,
       "panels": [
@@ -10354,7 +10664,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 20
       },
       "id": 8100,
       "panels": [
@@ -10837,7 +11147,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 21
       },
       "id": 9200,
       "panels": [
