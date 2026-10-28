@@ -10,6 +10,8 @@ resource "proxmox_backup_job" "daily" {
   compress       = "zstd"
   enabled        = true
   notes_template = "{{guestname}}"
+  # Must be set: bpg/proxmox 0.117+ plans clearing it when unset.
+  notification_mode = "notification-system"
   fleecing = {
     enabled = false
   }

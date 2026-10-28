@@ -49,10 +49,15 @@ proxmox-backup-manager acl update / Admin --auth-id 'terraform@pbs!terraform'
 
 proxmox-backup-manager user create pve@pbs --comment "Proxmox VE hyper-cluster backups"
 proxmox-backup-manager user generate-token pve@pbs hyper-cluster
+
+proxmox-backup-manager user create prometheus@pbs --comment "pbs-exporter (k8s/talos/infra/pbs-exporter)"
+proxmox-backup-manager user generate-token prometheus@pbs exporter
 ```
 
 A PBS token only gets what both it and its user are granted, hence the two
-ACLs for Terraform. The backup identity gets its ACLs from the `pbs` stack.
+ACLs for Terraform. The backup and exporter identities get their ACLs from the
+`pbs` stack. The exporter's secret goes to Bitwarden as `pbs-exporter-token`, read by
+the `pbs-exporter` ExternalSecret.
 
 Each `generate-token` prints its secret once, as `"value"`. In
 `pbs/terraform.tfvars`:

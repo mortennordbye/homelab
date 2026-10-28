@@ -33,3 +33,30 @@ resource "terraform_data" "pve_acl" {
   }
 
 }
+
+# Read-only identity for k8s/talos/infra/pbs-exporter, created by ../BOOTSTRAP.md.
+# Audit on / covers Sys.Audit (host stats) and Datastore.Audit (usage, snapshots).
+resource "terraform_data" "exporter_acl" {
+  for_each = toset(["prometheus@pbs", "prometheus@pbs!exporter"])
+
+  input = {
+    path    = "/"
+    role    = "Audit"
+    auth_id = each.key
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      curl -fsS ${var.pbs_insecure ? "-k" : ""} --max-time 120 -X PUT \
+        "${trimsuffix(var.pbs_endpoint, "/")}/api2/json/access/acl" \
+        -H "Authorization: PBSAPIToken=$PBS_TOKEN" \
+        --data-urlencode "path=${self.input.path}" \
+        --data-urlencode "role=${self.input.role}" \
+        --data-urlencode "auth-id=${self.input.auth_id}" \
+        --data-urlencode "propagate=1"
+    EOT
+    environment = {
+      PBS_TOKEN = var.pbs_api_token
+    }
+  }
+}
