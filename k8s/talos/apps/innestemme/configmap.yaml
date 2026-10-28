@@ -66,9 +66,6 @@ data:
     # "Show the weather on the TV" opens this in the LG's browser through Home Assistant's webOS
     # integration. The TV reaches it over HTTPS through Traefik (terraform/unifi/network/firewall.tf).
     screen-url: https://jarvis.local.bigd.no/tv
-    # "Play <title> on Plex": innestemme searches here (VOICE_PLEX_TOKEN in the Secret); the TV's
-    # Cast player plays it through Home Assistant's Plex integration.
-    plex-url: http://plex.plex-media-stack.svc.cluster.local:32400
     # The living room Sonos speaks the answers; the Voice PE only listens.
     answer-player: media_player.living_room
     # With the wake word detected in the engine, louder answers no longer deafen the device's detector.

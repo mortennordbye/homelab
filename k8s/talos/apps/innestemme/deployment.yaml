@@ -44,6 +44,11 @@ spec:
               value: /config/config.yaml
             - name: TZ
               value: Europe/Oslo
+            # "Play <title> on Plex": innestemme searches here (VOICE_PLEX_TOKEN in the Secret); the
+            # TV's Cast player plays it through Home Assistant's Plex integration. An environment
+            # variable rather than plex-url in the ConfigMap, which images without it would refuse.
+            - name: VOICE_PLEX_URL
+              value: http://plex.plex-media-stack.svc.cluster.local:32400
           envFrom:
             - secretRef:
                 name: innestemme-secret
