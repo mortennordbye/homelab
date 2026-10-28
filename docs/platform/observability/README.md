@@ -37,7 +37,8 @@ Every row starts collapsed except Alerts, which sits on top.
 | Falco | instances, rule matches, event drops, CPU and memory per node |
 | Media stack | service status, health issues, queues, free space, library, download client and indexers |
 
-Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard.
+Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard. The other
+dashboards from this repo: User journeys, GitHub, Cloudflare and Postgres.
 
 Dashboards from this repo sit in Grafana's Homelab folder and Pyrra's in SLOs, set by the
 `k8s-sidecar-target-directory` annotation on their ConfigMap
@@ -89,9 +90,10 @@ egress to `api.cloudflare.com`.
 
 ## Stack
 
-[![Exporters, Alloy and Traefik feeding Prometheus, Loki and Tempo, all read by Grafana](../../assets/diagrams/observability-signals.svg)](../../assets/diagrams/observability-signals.svg)
+[![Exporters for the cluster, NAS, UniFi, Proxmox hosts, PBS, Postgres and the electricity price feed Prometheus, Alloy ships logs and Traefik traces to Loki and Tempo, and Grafana reads those three plus GitHub, Cloudflare and Argo CD deploy markers directly](../../assets/diagrams/observability-signals.svg)](../../assets/diagrams/observability-signals.svg)
 
-Grafana reads Prometheus, Loki and Tempo as data sources. A walkthrough of the stack and the
+Grafana reads Prometheus, Loki and Tempo as data sources, and GitHub and Cloudflare directly
+([GitHub](#github), [Cloudflare](#cloudflare)). A walkthrough of the stack and the
 SPOG dashboard is in [The observability stack I actually run](https://blog.nordbye.it/blog/observability-stack/).
 
 | Component | Role | Retention | Defined in |

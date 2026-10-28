@@ -22,19 +22,22 @@ classes: {
 (** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
 
 secret: "Secret logeverylift-secret\nExternalSecret from Bitwarden" {class: card; icon: https://raw.githubusercontent.com/external-secrets/external-secrets/main/assets/eso-round-logo.svg}
-app: "Deployment\nlogeverylift-app" {class: card; width: 190; icon: ${k8s}/deploy.svg}
-postgres: "Deployment postgres\npostgres:18-alpine\nService :5432" {class: card; width: 190; icon: ${di}/postgresql.svg}
-init: "initContainer\nfix-nfs-ownership\nchown 70:70\nchmod 700" {class: aside; width: 190; icon: ${k8s}/pod.svg}
-pvc: "PVC postgres-pvc-18\nsyno-nfs-csi\n/var/lib/postgresql" {class: card; width: 190; icon: ${k8s}/pvc.svg}
-cron: "CronJob\nlogeverylift-\ndb-backup\nnightly 00:45" {class: card; width: 190; icon: ${k8s}/cronjob.svg}
-nas: "NAS k8s-backups\npostgres/logeverylift/\n30 days" {class: card; width: 190; icon: ${di}/synology.svg}
-gdrive: "Google Drive\nHyper Backup\n03:20" {class: card; width: 190; icon: ${di}/google-drive.svg}
-restore: "restore-test\nmonthly, into\nscratch Postgres" {class: card; width: 190; icon: ${ify}/tabler/restore.svg?color=%23a1ada3&height=64}
+app: "Deployment\nlogeverylift-app" {class: card; width: 172; icon: ${k8s}/deploy.svg}
+postgres: "Deployment postgres\npostgres:18-alpine\nService :5432" {class: card; width: 172; icon: ${di}/postgresql.svg}
+init: "initContainer\nfix-nfs-ownership\nchown 70:70\nchmod 700" {class: aside; width: 172; icon: ${k8s}/pod.svg}
+pvc: "PVC postgres-pvc-18\nsyno-nfs-csi\n/var/lib/postgresql" {class: card; width: 172; icon: ${k8s}/pvc.svg}
+cron: "CronJob\nlogeverylift-\ndb-backup\nnightly 00:45" {class: card; width: 172; icon: ${k8s}/cronjob.svg}
+nas: "NAS k8s-backups\npostgres/logeverylift/\n30 days" {class: card; width: 172; icon: ${di}/synology.svg}
+gdrive: "Google Drive\nHyper Backup\n03:20" {class: card; width: 172; icon: ${di}/google-drive.svg}
+exporter: "postgres-exporter\nown Deployment\n:9187 to Prometheus" {class: card; width: 172; icon: ${di}/prometheus.svg}
+restore: "restore-test\nmonthly, into\nscratch Postgres" {class: card; width: 172; icon: ${ify}/tabler/restore.svg?color=%23a1ada3&height=64}
 
 secret -> app: password
 secret -> postgres: password
 secret -> cron: password
+secret -> exporter: password
 app -> postgres: SQL
+exporter -> postgres: pg_stat_*
 init -> pvc: chowns
 postgres -> pvc: data
 cron -> postgres: pg_dump
