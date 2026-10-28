@@ -44,6 +44,7 @@ grafana:
     - grafana-metricsdrilldown-app@3.0.0 # renovate: custom.grafana-plugins=grafana-metricsdrilldown-app
     - grafana-pyroscope-app@3.0.0 # renovate: custom.grafana-plugins=grafana-pyroscope-app
     - grafana-advisor-app@1.1.0 # renovate: custom.grafana-plugins=grafana-advisor-app
+    - grafana-github-datasource@2.9.4 # renovate: custom.grafana-plugins=grafana-github-datasource
 
   # A dashboard ConfigMap's k8s-sidecar-target-directory annotation names its Grafana folder.
   sidecar:
@@ -75,6 +76,13 @@ grafana:
   # assertNoLeakedSecrets helper fails the render on a literal client_secret,
   # so the $__env indirection below is required rather than stylistic.
   envFromSecret: grafana-oidc
+
+  # GitHub App credentials for the GitHub data source, read with $__file below.
+  extraSecretMounts:
+    - name: github-app
+      secretName: grafana-github-app
+      mountPath: /etc/secrets/github-app
+      readOnly: true
 
   grafana.ini:
     server:
@@ -138,6 +146,15 @@ grafana:
       uid: tempo
       access: proxy
       url: http://tempo.monitoring:3200/
+    - name: GitHub
+      type: grafana-github-datasource
+      uid: github
+      jsonData:
+        selectedAuthType: github-app
+        appId: $__file{/etc/secrets/github-app/app-id}
+        installationId: $__file{/etc/secrets/github-app/installation-id}
+      secureJsonData:
+        privateKey: $__file{/etc/secrets/github-app/private-key}
 
 # Routes Prometheus alerts to Discord.
 alertmanager:

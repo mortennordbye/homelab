@@ -23,3 +23,6 @@ configMapGenerator:
   - name: dashboard-user-journeys
     files:
       - user-journeys.json
+  - name: dashboard-github
+    files:
+      - github.json
