@@ -45,6 +45,7 @@ grafana:
     - grafana-pyroscope-app@3.0.0 # renovate: custom.grafana-plugins=grafana-pyroscope-app
     - grafana-advisor-app@1.1.0 # renovate: custom.grafana-plugins=grafana-advisor-app
     - grafana-github-datasource@2.9.4 # renovate: custom.grafana-plugins=grafana-github-datasource
+    - yesoreyeram-infinity-datasource@4.1.4 # renovate: custom.grafana-plugins=yesoreyeram-infinity-datasource
 
   # A dashboard ConfigMap's k8s-sidecar-target-directory annotation names its Grafana folder.
   sidecar:
@@ -77,11 +78,15 @@ grafana:
   # so the $__env indirection below is required rather than stylistic.
   envFromSecret: grafana-oidc
 
-  # GitHub App credentials for the GitHub data source, read with $__file below.
+  # Credentials for the GitHub and Cloudflare data sources, read with $__file below.
   extraSecretMounts:
     - name: github-app
       secretName: grafana-github-app
       mountPath: /etc/secrets/github-app
+      readOnly: true
+    - name: cloudflare
+      secretName: grafana-cloudflare
+      mountPath: /etc/secrets/cloudflare
       readOnly: true
 
   grafana.ini:
@@ -155,6 +160,17 @@ grafana:
         installationId: $__file{/etc/secrets/github-app/installation-id}
       secureJsonData:
         privateKey: $__file{/etc/secrets/github-app/private-key}
+    # Cloudflare's GraphQL analytics API, for what the exporter does not export:
+    # DNS, Web Analytics, Email Routing, per-host and per-path breakdowns.
+    - name: Cloudflare
+      type: yesoreyeram-infinity-datasource
+      uid: cloudflare
+      jsonData:
+        auth_method: bearerToken
+        allowedHosts:
+          - https://api.cloudflare.com
+      secureJsonData:
+        bearerToken: $__file{/etc/secrets/cloudflare/token}
 
 # Routes Prometheus alerts to Discord.
 alertmanager:

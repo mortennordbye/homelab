@@ -1,0 +1,54 @@
+# Polls Cloudflare's GraphQL analytics API for the proxied zones' edge traffic.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflare-exporter
+  labels:
+    app.kubernetes.io/name: cloudflare-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudflare-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cloudflare-exporter
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cloudflare-exporter
+          image: ghcr.io/lablabs/cloudflare_exporter:0.2.3
+          envFrom:
+            - secretRef:
+                name: cloudflare-exporter
+          env:
+            # Skips the paid-plan queries, which fail on Free-plan zones.
+            - name: FREE_TIER
+              value: "true"
+            - name: LISTEN
+              value: ":8080"
+          ports:
+            - name: metrics
+              containerPort: 8080
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
