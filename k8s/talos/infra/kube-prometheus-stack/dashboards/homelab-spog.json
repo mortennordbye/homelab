@@ -96,7 +96,7 @@
           "uid": "github"
         },
         "enable": true,
-        "iconColor": "rgba(115, 191, 105, 0.8)",
+        "iconColor": "#B877D9",
         "name": "PR merged",
         "target": {
           "queryType": "Pull_Requests",
