@@ -32,7 +32,7 @@ Every row starts collapsed.
 | Cilium | drops by reason, policy import, endpoint regeneration, Hubble policy drops and the dropped flows |
 | Certificates | readiness, days to expiry per certificate, sync errors, ACME latency |
 | GitOps & secrets | Argo CD sync and health, ESO sync status and secrets not ready, Reloader reloads |
-| KEDA autoscaling | replica and scaler state, wake-from-zero, capacity and electricity reclaimed |
+| KEDA autoscaling | replica and scaler state, wake-from-zero, capacity and electricity reclaimed, priced at the NO1 spot price plus VAT plus the `grid_fee_per_kwh` variable |
 | Falco | instances, rule matches, event drops, CPU and memory per node |
 | Media stack | service status, health issues, queues, free space, library, download client and indexers |
 
@@ -196,6 +196,8 @@ password under its own tag and fires `UserJourneyFailing` in about 20 minutes, e
 | snmp-exporter | NAS `10.3.10.10`, modules `if_mib` + `synology`, every 60 s | SNMPv3 `snmp-exporter`, SHA/AES, Bitwarden `synology-snmp-auth-password`, `synology-snmp-priv-password` | `k8s/talos/infra/snmp-exporter/` |
 | pve-exporter | Proxmox API on hyper1-3 (`/pve`, hyper1 also cluster-wide) every 60 s | token of `prometheus@pve` (PVEAuditor), Bitwarden `proxmox-exporter-token` | `k8s/talos/infra/pve-exporter/`, identity in `terraform/proxmox/hyper-cluster/datacenter/access.tf` |
 | node-exporter on the Proxmox hosts | hyper1-3 `:9100`, CPU temperatures (`node_hwmon_temp_celsius`) every 60 s | none | `ScrapeConfig` in `k8s/talos/infra/pve-exporter/`, installed by `terraform/proxmox/hyper-cluster/datacenter/sensors.tf` |
+| postgres-exporter | logeverylift's Postgres (`pg_stat_*`, sizes, locks, long transactions) every 60 s; the Postgres dashboard and `PostgresDown` read it | the `postgres` user from `logeverylift-secret` | `k8s/talos/apps/logeverylift/postgres-exporter.yaml` |
+| electricity-price | NO1 spot price (`electricity_spot_price_nok_per_kwh`, excl. VAT) from hvakosterstrommen.no every 5 min | none | `k8s/talos/infra/electricity-price/` |
 | VolSync metrics | ReplicationSource sync state | none | `k8s/talos/infra/volsync/` |
 | k6, CronJob `logeverylift-journey` | pushes, not scraped: one browser run against logeverylift.com every 10 min, remote-written to Prometheus `/api/v1/write` | synthetic user `synthetic@nordbye.it`, Bitwarden `logeverylift-synthetic-password` | `k8s/talos/infra/synthetics/` |
 | exportarr, qbittorrent-exporter | media apps | app API keys | `k8s/talos/apps/arr-stack/` |

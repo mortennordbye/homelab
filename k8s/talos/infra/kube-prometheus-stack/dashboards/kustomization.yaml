@@ -29,3 +29,6 @@ configMapGenerator:
   - name: dashboard-cloudflare
     files:
       - cloudflare.json
+  - name: dashboard-postgres
+    files:
+      - postgres.json

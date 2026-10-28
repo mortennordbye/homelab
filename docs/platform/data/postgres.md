@@ -21,6 +21,13 @@ Backups are a nightly `pg_dump` CronJob in `k8s/talos/apps/logeverylift/db-backu
 writing to the NAS, and the monthly restore test loads the newest dump into a scratch
 Postgres. Schedule, retention and restores: [`../backups/README.md`](../backups/README.md).
 
+`postgres-exporter` (`k8s/talos/apps/logeverylift/postgres-exporter.yaml`) is its own
+Deployment, so adding or upgrading it never restarts the database, and connects through
+the Service as `postgres`. Its metrics feed the Grafana Postgres dashboard (connections,
+size, cache hit ratio, transactions, locks, per-table size, dead rows and autovacuum) and
+the `PostgresDown` warning. The `logeverylift-postgres-policy` network policy has to list
+it, or every scrape reports `pg_up 0`.
+
 [![logeverylift-secret from Bitwarden gives the password to the logeverylift app, Postgres 18 and the nightly pg_dump CronJob; Postgres stores data on a syno-nfs-csi PVC whose ownership an initContainer fixes, and the dumps land on the NAS, are copied offsite to Google Drive and are loaded by the monthly restore test](../../assets/diagrams/data-postgres.svg)](../../assets/diagrams/data-postgres.svg)
 
 ## The NFS ownership trap
