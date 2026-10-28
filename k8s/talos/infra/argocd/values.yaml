@@ -95,8 +95,13 @@ notifications:
           - app-sync-succeeded
   templates:
     template.app-sync-succeeded: |
+      # Grafana renders the annotation text as sanitized HTML, so the commit and the
+      # "(#123)" squash-merge suffix become links once the marker is clicked.
       message: |
-        {{.app.metadata.name}} {{.app.status.operationState.syncResult.revision | trunc 7}}: {{(call .repo.GetCommitMetadata .app.status.operationState.syncResult.revision).Message | splitList "\n" | first}}
+        {{- $rev := .app.status.operationState.syncResult.revision -}}
+        {{- $repo := .app.spec.source.repoURL | trimSuffix ".git" -}}
+        {{- $subject := (call .repo.GetCommitMetadata $rev).Message | splitList "\n" | first | html -}}
+        {{.app.metadata.name}} <a href="{{$repo}}/commit/{{$rev}}">{{$rev | trunc 7}}</a>: {{regexReplaceAll "\\(#([0-9]+)\\)" $subject (printf "(<a href=\"%s/pull/$1\">#$1</a>)" $repo)}}
 
 applicationSet:
   enabled: true
