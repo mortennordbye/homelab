@@ -6,7 +6,7 @@ nightly Proxmox VE job writes every guest to it. The server is configured by
 `terraform/proxmox/pbs`; the Proxmox VE side (the job and the `pbs` storage) is
 `terraform/proxmox/hyper-cluster/datacenter` ([`../cluster/proxmox.md`](../cluster/proxmox.md)).
 
-[![The nightly Proxmox VE backup job writes every guest through the pve@pbs!hyper-cluster token to the Synology datastore on PBS, which sits on the pve-backup NFS share, with daily garbage collection and prune, and errors from PVE and PBS going by webhook to Alertmanager and on to Discord](../../assets/diagrams/backups-pbs.svg)](../../assets/diagrams/backups-pbs.svg)
+[![The nightly Proxmox VE backup job writes every guest through the pve@pbs!hyper-cluster token to the Synology datastore on PBS, which sits on the pve-backup NFS share, with daily garbage collection and prune, errors from PVE and PBS going by webhook to Alertmanager and on to Discord, and pbs-exporter reading datastore usage and snapshots with the read-only prometheus@pbs!exporter token](../../assets/diagrams/backups-pbs.svg)](../../assets/diagrams/backups-pbs.svg)
 
 ## Datastore
 

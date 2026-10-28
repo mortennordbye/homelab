@@ -29,12 +29,25 @@ classes.group: {
 metrics: Scraped by Prometheus {
   class: group
   grid-columns: 2
+  grid-gap: 12
+  k8s: "kube-state-metrics\nnodes and workloads" {class: card; icon: ${di}/kubernetes.svg; width: 172; height: 135}
+  blackbox: "blackbox-exporter\nprobes public sites" {class: card; icon: ${di}/prometheus.svg; width: 172; height: 135}
+  unpoller: "unpoller, UniFi 10.3.10.1\nmetrics, and log to Loki" {class: card; icon: ${di}/unifi.svg; width: 172; height: 135}
+  snmp: "snmp-exporter\nNAS 10.3.10.10, SNMPv3" {class: card; icon: ${di}/synology.svg; width: 172; height: 135}
+  pvex: "pve-exporter\nProxmox API, hyper1-3" {class: card; icon: ${di}/proxmox-light.svg; width: 172; height: 135}
+  hosts: "node-exporter on hyper1-3\nCPU temperature, NVMe" {class: card; icon: ${di}/proxmox-light.svg; width: 172; height: 135}
+  pbs: "pbs-exporter\nBackup Server datastore" {class: card; icon: ${di}/proxmox-backup-server.svg; width: 172; height: 135}
+  pg: "postgres-exporter\nlogeverylift database" {class: card; icon: ${di}/postgresql.svg; width: 172; height: 135}
+  price: "electricity-price\nNO1 spot price" {class: card; icon: ${ify}/tabler/bolt.svg?color=%23a1ada3&height=64; width: 172; height: 135}
+}
+
+direct: Read by Grafana directly {
+  class: group
+  grid-columns: 1
   grid-gap: 20
-  k8s: "kube-state-metrics\nnodes and workloads" {class: card; icon: ${di}/kubernetes.svg; width: 210; height: 140}
-  blackbox: "blackbox-exporter\nprobes public sites" {class: card; icon: ${di}/prometheus.svg; width: 210; height: 140}
-  unpoller: "unpoller, UniFi 10.3.10.1\nmetrics, and log to Loki" {class: card; icon: ${di}/unifi.svg; width: 210; height: 140}
-  snmp: "snmp-exporter\nNAS 10.3.10.10, SNMPv3" {class: card; icon: ${di}/synology.svg; width: 210; height: 140}
-  pvex: "pve-exporter\nProxmox API, hyper1-3" {class: card; icon: ${di}/proxmox-light.svg; width: 210; height: 140}
+  github: "GitHub API\npull requests" {class: card; icon: ${di}/github-light.svg; width: 172; height: 135}
+  cloudflare: "Cloudflare GraphQL API\nedge, DNS, Web Analytics" {class: card; icon: ${di}/cloudflare.svg; width: 172; height: 135}
+  argocd: "Argo CD notifications\ndeploy markers" {class: card; icon: ${di}/argo-cd.svg; width: 172; height: 135}
 }
 
 traefik: Traefik {class: card; icon: ${di}/traefik.svg}
@@ -44,7 +57,7 @@ alloy: "Alloy\nDaemonSet" {class: card; icon: ${di}/alloy.svg}
 prometheus: "Prometheus\n7 days" {class: card; icon: ${di}/prometheus.svg}
 loki: "Loki\n7 days, events 30" {class: card; icon: ${di}/loki.svg}
 tempo: "Tempo\n24 h" {class: card; icon: ${di}/tempo.svg}
-grafana: "Grafana\nHomelab-SPOG" {class: card; icon: ${di}/grafana.svg}
+grafana: "Grafana\nSPOG and dashboards" {class: card; icon: ${di}/grafana.svg}
 
 metrics -> prometheus
 traefik -> alloy: OTLP traces
@@ -55,3 +68,6 @@ alloy -> tempo: filtered
 prometheus -> grafana
 loki -> grafana
 tempo -> grafana
+direct.github -> grafana: plugin
+direct.cloudflare -> grafana: Infinity
+direct.argocd -> grafana: annotations

@@ -32,6 +32,7 @@ pbs: "pbs.local.bigd.no:8007, own machine" {
   prune: "Prune job, daily\nkeep 1 daily, weekly,\nmonthly" {class: card; icon: ${ify}/tabler/scissors.svg?color=%23a1ada3&height=64; width: 200; height: 110}
 }
 
+exporter: "pbs-exporter in the cluster\nprometheus@pbs!exporter, Audit" {class: card; icon: ${di}/prometheus.svg; width: 220; height: 110}
 nfs: "Synology NFS pve-backup\n10.3.10.10, 2 TiB" {class: card; icon: ${di}/synology.svg; width: 220; height: 110}
 am: "Alertmanager\nProxmoxNotification" {class: card; icon: ${di}/alertmanager.svg; width: 220; height: 110}
 discord: Discord {class: card; icon: ${di}/discord.svg; width: 200; height: 110}
@@ -44,3 +45,4 @@ pbs.datastore -> nfs: NFS mount
 pve -> am: errors, webhook
 pbs -> am: errors, webhook
 am -> discord
+exporter -> pbs.datastore: usage, snapshots
