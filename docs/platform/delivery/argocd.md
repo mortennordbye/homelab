@@ -126,9 +126,8 @@ The notifications controller posts a Grafana annotation tagged `argocd` each tim
 Application finishes a sync, once per revision. The text is the app name, the short
 revision and the commit subject, which for a Kargo promotion names the version. Grafana
 renders it as sanitized HTML, so the app name links to the Application in Argo CD, the
-revision to the commit, and a squash merge's
-`(#N)` suffix links to the pull request; click the marker to pin the tooltip and follow
-them. The Homelab dashboards show these as the "Deploys" annotation.
+revision to the commit, and a squash merge's `(#N)` suffix to the pull request; click the
+marker to pin the tooltip and follow them. The Homelab dashboards show these as the "Deploys" annotation.
 
 The config is under `notifications` in
 [`values.yaml`](../../../k8s/talos/infra/argocd/values.yaml): the `grafana` service, one
