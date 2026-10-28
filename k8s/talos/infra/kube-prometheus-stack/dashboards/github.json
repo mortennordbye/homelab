@@ -8,9 +8,9 @@
   "schemaVersion": 42,
   "editable": true,
   "graphTooltip": 1,
-  "refresh": "5m",
+  "refresh": "15m",
   "time": {
-    "from": "now-30d",
+    "from": "now-7d",
     "to": "now"
   },
   "templating": {
@@ -47,10 +47,10 @@
     {
       "id": 1,
       "type": "stat",
-      "title": "PRs merged",
+      "title": "Merged",
       "datasource": {
-        "type": "grafana-github-datasource",
-        "uid": "github"
+        "type": "datasource",
+        "uid": "-- Dashboard --"
       },
       "gridPos": {
         "h": 4,
@@ -61,19 +61,24 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-github-datasource",
-            "uid": "github"
+            "type": "datasource",
+            "uid": "-- Dashboard --"
           },
           "refId": "A",
-          "queryType": "Pull_Requests",
-          "owner": "mortennordbye",
-          "repository": "$repository",
-          "options": {
-            "query": "is:merged",
-            "timeField": 2
-          }
+          "panelId": 4,
+          "withTransforms": false
         }
       ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
       "options": {
         "reduceOptions": {
           "calcs": [
@@ -84,13 +89,15 @@
         },
         "colorMode": "none",
         "graphMode": "none",
-        "textMode": "value"
+        "justifyMode": "center",
+        "textMode": "value",
+        "wideLayout": true
       }
     },
     {
       "id": 2,
       "type": "stat",
-      "title": "Open PRs",
+      "title": "Open",
       "datasource": {
         "type": "grafana-github-datasource",
         "uid": "github"
@@ -117,6 +124,16 @@
           }
         }
       ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
       "options": {
         "reduceOptions": {
           "calcs": [
@@ -127,37 +144,161 @@
         },
         "colorMode": "none",
         "graphMode": "none",
-        "textMode": "value"
-      }
+        "justifyMode": "center",
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "description": "Open right now, regardless of the time range."
     },
     {
       "id": 3,
-      "type": "barchart",
-      "title": "PRs merged per day",
+      "type": "stat",
+      "title": "Median time to merge",
       "datasource": {
-        "type": "grafana-github-datasource",
-        "uid": "github"
+        "type": "datasource",
+        "uid": "-- Dashboard --"
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 4,
+        "w": 6,
         "x": 12,
         "y": 0
       },
       "targets": [
         {
           "datasource": {
-            "type": "grafana-github-datasource",
-            "uid": "github"
+            "type": "datasource",
+            "uid": "-- Dashboard --"
           },
           "refId": "A",
-          "queryType": "Pull_Requests",
-          "owner": "mortennordbye",
-          "repository": "$repository",
-          "options": {
-            "query": "is:merged",
-            "timeField": 2
+          "panelId": 4,
+          "withTransforms": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "median"
+          ],
+          "fields": "/^open_time$/",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "wideLayout": true
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Lines changed",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "refId": "A",
+          "panelId": 4,
+          "withTransforms": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
           }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "/^lines$/",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "binary",
+            "alias": "lines",
+            "binary": {
+              "left": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "additions"
+                }
+              },
+              "operator": "+",
+              "right": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "deletions"
+                }
+              }
+            },
+            "replaceFields": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Merges per day",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "refId": "A",
+          "panelId": 4,
+          "withTransforms": false
         }
       ],
       "transformations": [
@@ -187,6 +328,19 @@
           }
         },
         {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "merged_at",
+                "destinationType": "time",
+                "dateFormat": "YYYY-MM-DD"
+              }
+            ],
+            "fields": {}
+          }
+        },
+        {
           "id": "sortBy",
           "options": {
             "sort": [
@@ -197,17 +351,35 @@
           }
         }
       ],
-      "options": {
-        "xField": "merged_at",
-        "legend": {
-          "showLegend": false
-        }
-      },
       "fieldConfig": {
         "defaults": {
-          "displayName": "Merged"
+          "displayName": "Merged",
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "fillOpacity": 70,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "axisSoftMin": 0
+          }
         },
         "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       }
     },
     {
@@ -219,10 +391,10 @@
         "uid": "github"
       },
       "gridPos": {
-        "h": 12,
+        "h": 20,
         "w": 24,
         "x": 0,
-        "y": 8
+        "y": 12
       },
       "targets": [
         {
@@ -249,6 +421,7 @@
               "title": true,
               "author_login": true,
               "merged_at": true,
+              "open_time": true,
               "additions": true,
               "deletions": true,
               "url": true
@@ -258,17 +431,19 @@
               "number": 1,
               "title": 2,
               "author_login": 3,
-              "additions": 4,
-              "deletions": 5,
-              "url": 6
+              "open_time": 4,
+              "additions": 5,
+              "deletions": 6,
+              "url": 7
             },
             "renameByName": {
               "merged_at": "Merged",
-              "number": "#",
+              "number": "PR",
               "title": "Title",
               "author_login": "Author",
-              "additions": "+",
-              "deletions": "-"
+              "open_time": "Open for",
+              "additions": "Added",
+              "deletions": "Removed"
             }
           }
         },
@@ -285,8 +460,52 @@
         }
       ],
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
         "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Merged"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              },
+              {
+                "id": "unit",
+                "value": "time:YYYY-MM-DD HH:mm"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
           {
             "matcher": {
               "id": "byName",
@@ -308,6 +527,115 @@
           {
             "matcher": {
               "id": "byName",
+              "options": "Author"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 160
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "special",
+                    "options": {
+                      "match": "empty",
+                      "result": {
+                        "text": "bot",
+                        "color": "text",
+                        "index": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "special",
+                    "options": {
+                      "match": "null",
+                      "result": {
+                        "text": "bot",
+                        "color": "text",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Open for"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Added"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Removed"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
               "options": "url"
             },
             "properties": [
@@ -320,7 +648,8 @@
         ]
       },
       "options": {
-        "showHeader": true
+        "showHeader": true,
+        "cellHeight": "sm"
       }
     }
   ]
