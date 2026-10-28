@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pbs-exporter
+  labels:
+    app.kubernetes.io/name: pbs-exporter
+spec:
+  selector:
+    app.kubernetes.io/name: pbs-exporter
+  ports:
+    - name: metrics
+      port: 10019
+      targetPort: metrics

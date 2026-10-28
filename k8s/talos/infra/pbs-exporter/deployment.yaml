@@ -1,0 +1,70 @@
+# Datastore usage, snapshots per VM and host stats from the Proxmox Backup Server API.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pbs-exporter
+  labels:
+    app.kubernetes.io/name: pbs-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pbs-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pbs-exporter
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: pbs-exporter
+          image: ghcr.io/natrontech/pbs-exporter:v0.9.4
+          env:
+            - name: PBS_ENDPOINT
+              value: https://pbs.local.bigd.no:8007
+            # PBS serves its self-signed certificate.
+            - name: PBS_INSECURE
+              value: "true"
+            - name: PBS_USERNAME
+              value: prometheus@pbs
+            - name: PBS_API_TOKEN_NAME
+              value: exporter
+            - name: PBS_API_TOKEN_FILE
+              value: /etc/pbs-exporter/token
+            # Headroom over the 5 s and 10 s defaults: the datastore is on NFS.
+            - name: PBS_TIMEOUT
+              value: 20s
+            - name: PBS_WRITE_TIMEOUT
+              value: 40s
+          ports:
+            - name: metrics
+              containerPort: 10019
+          volumeMounts:
+            - name: token
+              mountPath: /etc/pbs-exporter
+              readOnly: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: token
+          secret:
+            secretName: pbs-exporter
