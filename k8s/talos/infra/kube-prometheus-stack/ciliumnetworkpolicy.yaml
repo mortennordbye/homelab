@@ -230,6 +230,13 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
+    # GitHub data source.
+    - toFQDNs:
+        - matchName: api.github.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
     # Dashboard and datasource sidecars watch ConfigMaps.
     - toEntities:
         - kube-apiserver

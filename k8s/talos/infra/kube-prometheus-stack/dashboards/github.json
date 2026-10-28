@@ -1,0 +1,327 @@
+{
+  "uid": "github",
+  "title": "GitHub",
+  "tags": [
+    "homelab",
+    "github"
+  ],
+  "schemaVersion": 42,
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "5m",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "repository",
+        "label": "Repository",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-github-datasource",
+          "uid": "github"
+        },
+        "query": {
+          "queryType": "Repositories",
+          "owner": "mortennordbye",
+          "key": "name",
+          "field": "name",
+          "refId": "repos"
+        },
+        "current": {
+          "text": "homelab",
+          "value": "homelab"
+        },
+        "refresh": 1,
+        "sort": 1,
+        "hide": 0
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "PRs merged",
+      "datasource": {
+        "type": "grafana-github-datasource",
+        "uid": "github"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-github-datasource",
+            "uid": "github"
+          },
+          "refId": "A",
+          "queryType": "Pull_Requests",
+          "owner": "mortennordbye",
+          "repository": "$repository",
+          "options": {
+            "query": "is:merged",
+            "timeField": 2
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "count"
+          ],
+          "fields": "/^number$/",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Open PRs",
+      "datasource": {
+        "type": "grafana-github-datasource",
+        "uid": "github"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-github-datasource",
+            "uid": "github"
+          },
+          "refId": "A",
+          "queryType": "Pull_Requests",
+          "owner": "mortennordbye",
+          "repository": "$repository",
+          "options": {
+            "query": "is:open",
+            "timeField": 4
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "count"
+          ],
+          "fields": "/^number$/",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 3,
+      "type": "barchart",
+      "title": "PRs merged per day",
+      "datasource": {
+        "type": "grafana-github-datasource",
+        "uid": "github"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-github-datasource",
+            "uid": "github"
+          },
+          "refId": "A",
+          "queryType": "Pull_Requests",
+          "owner": "mortennordbye",
+          "repository": "$repository",
+          "options": {
+            "query": "is:merged",
+            "timeField": 2
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "formatTime",
+          "options": {
+            "timeField": "merged_at",
+            "outputFormat": "YYYY-MM-DD",
+            "useTimezone": true
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "merged_at": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "number": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "merged_at"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "xField": "merged_at",
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "displayName": "Merged"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "table",
+      "title": "Merged pull requests",
+      "datasource": {
+        "type": "grafana-github-datasource",
+        "uid": "github"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-github-datasource",
+            "uid": "github"
+          },
+          "refId": "A",
+          "queryType": "Pull_Requests",
+          "owner": "mortennordbye",
+          "repository": "$repository",
+          "options": {
+            "query": "is:merged",
+            "timeField": 2
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {
+              "number": true,
+              "title": true,
+              "author_login": true,
+              "merged_at": true,
+              "additions": true,
+              "deletions": true,
+              "url": true
+            },
+            "indexByName": {
+              "merged_at": 0,
+              "number": 1,
+              "title": 2,
+              "author_login": 3,
+              "additions": 4,
+              "deletions": 5,
+              "url": 6
+            },
+            "renameByName": {
+              "merged_at": "Merged",
+              "number": "#",
+              "title": "Title",
+              "author_login": "Author",
+              "additions": "+",
+              "deletions": "-"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Merged",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Title"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Open PR",
+                    "url": "${__data.fields.url}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    }
+  ]
+}

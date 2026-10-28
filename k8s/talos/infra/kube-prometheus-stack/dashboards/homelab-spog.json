@@ -89,6 +89,39 @@
           ],
           "type": "tags"
         }
+      },
+      {
+        "datasource": {
+          "type": "grafana-github-datasource",
+          "uid": "github"
+        },
+        "enable": true,
+        "iconColor": "rgba(115, 191, 105, 0.8)",
+        "name": "PR merged",
+        "target": {
+          "queryType": "Pull_Requests",
+          "owner": "mortennordbye",
+          "repository": "Homelab",
+          "options": {
+            "query": "is:merged",
+            "timeField": 2
+          },
+          "refId": "Anno"
+        },
+        "mappings": {
+          "time": {
+            "source": "field",
+            "value": "merged_at"
+          },
+          "title": {
+            "source": "field",
+            "value": "title"
+          },
+          "text": {
+            "source": "field",
+            "value": "url"
+          }
+        }
       }
     ]
   },

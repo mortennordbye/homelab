@@ -114,6 +114,8 @@ behind a page still answering 200 pages Discord
 Argo CD notifications writes a Grafana annotation for every finished sync, drawn on the
 Homelab dashboards as deploy markers
 ([`../platform/delivery/argocd.md`](../platform/delivery/argocd.md#deploy-markers)).
+Grafana also reads pull requests from the GitHub API through a read-only
+GitHub App ([`../platform/observability/README.md`](../platform/observability/README.md#github)).
 metrics-server (`k8s/talos/infra/metrics-server`) serves the resource metrics API for
 `kubectl top`.
 

@@ -10,6 +10,7 @@ resources:
   - middleware-authentik.yaml
   - grafana-admin-credentials-secret.yaml
   - grafana-oidc-secret.yaml
+  - grafana-github-app-secret.yaml
   - alertmanager-discord-webhook-secret.yaml
   - alertmanager-heartbeat-secret.yaml
   - homelab-alerts.yaml

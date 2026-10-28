@@ -49,6 +49,22 @@ line for the app, the short revision and the commit subject. Argo CD notificatio
 these as Grafana annotations tagged `argocd`
 ([`../delivery/argocd.md`](../delivery/argocd.md#deploy-markers)).
 
+## GitHub
+
+The GitHub dashboard lists merged and open pull requests and the merges per day for the repo
+picked in its Repository dropdown (default `homelab`). The SPOG also draws a "PR merged"
+annotation for every Homelab merge, so the gap between a merge and its Argo CD deploy marker
+is visible on the same graph.
+
+Grafana queries the GitHub API on demand with the `grafana-github-datasource` plugin (data
+source uid `github`). Nothing is scraped or stored, so the panels only reach as far back as
+the time range asks for, and each refresh spends GitHub API quota.
+
+It authenticates as the GitHub App `mortennordbye-homelab-grafana`, installed on all of the
+account's repositories with read-only Metadata, Contents and Pull requests. The App ID, installation ID and private key
+come from Bitwarden through the `grafana-github-app` ExternalSecret and are mounted as files,
+since the PEM is multiline. The Grafana network policy allows egress to `api.github.com`.
+
 ## Stack
 
 [![Exporters, Alloy and Traefik feeding Prometheus, Loki and Tempo, all read by Grafana](../../assets/diagrams/observability-signals.svg)](../../assets/diagrams/observability-signals.svg)
@@ -285,6 +301,7 @@ Falco will flag it, and no exemption targets it. See
 | DSM Notification > Email | Synology Account, rule All |
 | UniFi Admins & Users | local user `unpoller`, restricted to local access, custom role: Network View Only, everything else None |
 | Grafana Administration > Service accounts | `argocd-notifications`, role Editor, one token stored in Bitwarden as `argocd-notifications-grafana-token` |
+| GitHub Settings > Developer settings > GitHub Apps | `mortennordbye-homelab-grafana`, webhook off, repository permissions Metadata, Contents and Pull requests read-only, installed on all repositories; ID, installation ID and key in Bitwarden as `grafana-github-app-*` |
 | DSM Shared Folder `shared-data` | quota 31 TiB (NasVolumeAlmostFull watches the volume, not share quotas) |
 
 ## Constraints
