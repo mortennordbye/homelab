@@ -114,12 +114,15 @@
             "value": "merged_at"
           },
           "title": {
-            "source": "field",
-            "value": "title"
+            "source": "skip"
           },
           "text": {
             "source": "field",
-            "value": "url"
+            "value": "title"
+          },
+          "tags": {
+            "source": "field",
+            "value": "author_login"
           }
         }
       }
