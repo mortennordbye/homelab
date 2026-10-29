@@ -2,7 +2,7 @@
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
 # Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
-FROM node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS texgen
+FROM node:24-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS texgen
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -42,7 +42,7 @@ RUN for f in output/cv-*.pdf; do \
     done
 
 # ---- Stage 3: build the Next.js server bundle ----
-FROM node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS build
+FROM node:24-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS build
 WORKDIR /app
 
 # Install deps with cache-friendly two-step copy
@@ -87,7 +87,7 @@ COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 # No shell, runs as nonroot (uid 65532). The only writable path the server
 # needs is .next/cache, mounted as an emptyDir in the Deployment so
 # readOnlyRootFilesystem still holds.
-FROM gcr.io/distroless/nodejs24-debian13@sha256:206cfbab1a64af20b63645150e3aa61b7babc17869e0254914947732963d6f07 AS runtime
+FROM gcr.io/distroless/nodejs24-debian13@sha256:51eee69b25037942014428da85f5b436a4d88f283e545981d03f25b7db72469a AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production \
