@@ -24,6 +24,8 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: isponsorblocktv
           image: ghcr.io/dmunozv04/isponsorblocktv:v2.11.0
