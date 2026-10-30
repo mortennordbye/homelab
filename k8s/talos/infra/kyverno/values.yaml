@@ -1,5 +1,5 @@
 features:
-  # Every policy here audits; a Kyverno outage must never block the API server.
+  # A Kyverno outage must never block the API server, even for the enforcing policies.
   forceFailurePolicyIgnore:
     enabled: true
   # Exceptions are only read from the kyverno namespace, so no app can exempt itself.

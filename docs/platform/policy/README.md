@@ -1,16 +1,18 @@
 # Policy
 
 Kyverno checks every Pod against the repo's manifest rules and writes the result to
-PolicyReports. All policies run in `Audit`: they report and never block a deploy. The
+PolicyReports. `disallow-mutable-image-tags` and `pod-security-baseline` run in `Enforce`:
+the API server rejects a new Pod, or a workload template, that breaks them. The other two
+run in `Audit` and only report. The
 install and the policies live in
 [`k8s/talos/infra/kyverno/`](../../../k8s/talos/infra/kyverno/kustomization.yaml).
 
-| Policy | Checks |
-|---|---|
-| `disallow-mutable-image-tags` | every image has a version tag or a digest; no tag, `latest`, `develop`, `main`, `master`, `nightly`, `edge`, `stable` or `dev` |
-| `pod-security-baseline` | the baseline Pod Security Standard: no privileged containers, host namespaces or hostPath |
-| `pod-security-restricted` | the restricted Pod Security Standard: non-root, no privilege escalation, capabilities dropped, `RuntimeDefault` seccomp |
-| `require-requests-limits` | every container sets CPU and memory requests and a memory limit |
+| Policy | Mode | Checks |
+|---|---|---|
+| `disallow-mutable-image-tags` | Enforce | every image has a version tag or a digest; no tag, `latest`, `develop`, `main`, `master`, `nightly`, `edge`, `stable` or `dev` |
+| `pod-security-baseline` | Enforce | the baseline Pod Security Standard: no privileged containers, host namespaces or hostPath |
+| `pod-security-restricted` | Audit | the restricted Pod Security Standard: non-root, no privilege escalation, capabilities dropped, `RuntimeDefault` seccomp |
+| `require-requests-limits` | Audit | every container sets CPU and memory requests and a memory limit |
 
 The Pod rules also cover Deployments, StatefulSets, DaemonSets, Jobs and CronJobs through
 Kyverno's autogen. Both Pod Security policies skip `kube-system`, `falco`,
@@ -21,7 +23,7 @@ for one image each: `Capabilities` for gluetun (`NET_ADMIN` makes the VPN tunnel
 `Privileged Containers` for verksted's `docker:*-dind` sidecar. Exceptions are only read
 from the `kyverno` namespace.
 
-[![Argo CD applies a manifest to the API server, which sends it to Kyverno's admission webhook in Audit mode; that and the hourly background scan write one PolicyReport per workload, a PolicyException in the kyverno namespace exempts named workloads, and Policy Reporter turns the reports into the policy_report_result metric that Prometheus scrapes for the Policy (Kyverno) row on the SPOG dashboard](../../assets/diagrams/policy-reports.svg)](../../assets/diagrams/policy-reports.svg)
+[![Argo CD applies a manifest to the API server, which sends it to Kyverno's admission webhook, where a mutable tag or a baseline break is rejected; that and the hourly background scan write one PolicyReport per workload, a PolicyException in the kyverno namespace exempts named workloads, and Policy Reporter turns the reports into the policy_report_result metric that Prometheus scrapes for the Policy (Kyverno) row on the SPOG dashboard](../../assets/diagrams/policy-reports.svg)](../../assets/diagrams/policy-reports.svg)
 
 ## Reading the results
 
@@ -46,8 +48,12 @@ Reports refresh on the background scan, about once an hour, and on every admissi
 ## Traps
 
 - `features.forceFailurePolicyIgnore` is on, so a Kyverno outage lets every request
-  through. Turning a policy to `Enforce` keeps it that way; an enforcing webhook with
-  `Fail` would stop the API server accepting Pods whenever Kyverno is down.
+  through, enforcing policies included. With `Fail` the API server would stop accepting
+  Pods whenever Kyverno is down.
+- Existing objects that break an enforcing policy keep running and can still be updated
+  (`allowExistingViolations`); only new violations are rejected.
+- Debug Pods count too. `kubectl debug node/<node>` needs host access, so run it in
+  `kube-system`, which the webhook skips, and give `kubectl debug --image` a version tag.
 - Scope a Pod Security exception with `podSecurity` (control and image) rather than the
   whole rule, so the pod's other violations keep reporting.
 - Exempt one workload with a `PolicyException` in `kyverno`, never with `names` in a

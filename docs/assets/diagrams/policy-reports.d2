@@ -24,7 +24,7 @@ classes: {
 git: "git (this repo)\nk8s/talos/**" {class: card; icon: ${di}/git.svg}
 argocd: Argo CD {class: card; icon: ${di}/argo-cd.svg}
 api: "API server" {class: card; icon: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/control_plane_components/labeled/api.svg}
-admission: "Kyverno admission\nAudit, failurePolicy Ignore" {class: card; icon: ${kyverno}}
+admission: "Kyverno admission\ntags and baseline enforced\nfailurePolicy Ignore" {class: card; icon: ${kyverno}}
 background: "Kyverno background scan\nhourly, every live workload" {class: card; icon: ${kyverno}}
 report: "PolicyReport\none per workload" {class: card; icon: ${k8s}/crd.svg}
 exception: "PolicyException\nkyverno namespace only" {class: aside; icon: ${kyverno}}
@@ -33,7 +33,8 @@ prometheus: Prometheus {class: card; icon: ${di}/prometheus.svg}
 grafana: "Grafana SPOG\nPolicy (Kyverno) row" {class: card; icon: ${di}/grafana.svg}
 
 git -> argocd -> api: apply
-api -> admission: webhook, never blocks
+api -> admission: webhook
+admission -> api: rejects a tag or baseline break {style.stroke-dash: 4}
 admission -> report
 background -> report
 exception -> admission: exempts
