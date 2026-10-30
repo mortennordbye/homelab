@@ -8,9 +8,14 @@ metadata:
       Images must name a version tag or a digest. No tag, latest, or a branch-style
       tag lets a restart pull different code than Git describes.
 spec:
+  # Kyverno fills in these defaults; spelled out so Argo CD sees no drift.
+  admission: true
   background: true
+  emitWarning: false
+  validationFailureAction: Audit
   rules:
     - name: pinned-image
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -18,6 +23,7 @@ spec:
                 - Pod
       validate:
         failureAction: Audit
+        allowExistingViolations: true
         message: "Every image needs a version tag or a digest, not latest or a branch name."
         foreach:
           - list: "request.object.spec.[ephemeralContainers, initContainers, containers][]"
