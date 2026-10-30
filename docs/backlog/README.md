@@ -43,10 +43,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `k8s/talos/infra/kyverno/policies/`, `docs/platform/policy/README.md`.
 
 ### Kyverno ClusterPolicy to ValidatingPolicy
-- **What:** move the four policies from the deprecated `kyverno.io/v1` `ClusterPolicy` to the CEL `ValidatingPolicy`.
+- **What:** move the four policies from the deprecated `kyverno.io/v1` `ClusterPolicy` to the CEL `ValidatingPolicy`, and the `kyverno.io/v2` `PolicyException` to the `policies.kyverno.io` one with them.
 - **Why deferred:** the Pod Security policies use `validate.podSecurity`, which has no single `ValidatingPolicy` equivalent; Kyverno 1.19 still runs `ClusterPolicy` and only warns.
 - **Unblock:** a Kyverno release that announces `ClusterPolicy` removal or ships a Pod Security equivalent for `ValidatingPolicy`; the Kyverno CLI (`kyverno apply`) checks the rewritten policies against rendered manifests.
-- **Where:** `k8s/talos/infra/kyverno/policies/`.
+- **Where:** `k8s/talos/infra/kyverno/policies/`, `k8s/talos/infra/kyverno/policyexception-monitoring.yaml`.
 
 ## AI / RAG POC
 
