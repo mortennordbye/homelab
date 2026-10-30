@@ -8,9 +8,14 @@ metadata:
       The restricted Pod Security Standard: non-root, no privilege escalation, all
       capabilities dropped and a RuntimeDefault seccomp profile.
 spec:
+  # Kyverno fills in these defaults; spelled out so Argo CD sees no drift.
+  admission: true
   background: true
+  emitWarning: false
+  validationFailureAction: Audit
   rules:
     - name: restricted
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -27,6 +32,7 @@ spec:
                 - intel-gpu-plugin
       validate:
         failureAction: Audit
+        allowExistingViolations: true
         podSecurity:
           level: restricted
           version: latest

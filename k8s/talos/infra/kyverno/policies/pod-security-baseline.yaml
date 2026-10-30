@@ -9,9 +9,14 @@ metadata:
       The baseline Pod Security Standard: no privileged containers, host namespaces,
       hostPath volumes or added capabilities beyond the default set.
 spec:
+  # Kyverno fills in these defaults; spelled out so Argo CD sees no drift.
+  admission: true
   background: true
+  emitWarning: false
+  validationFailureAction: Audit
   rules:
     - name: baseline
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -28,6 +33,7 @@ spec:
                 - intel-gpu-plugin
       validate:
         failureAction: Audit
+        allowExistingViolations: true
         podSecurity:
           level: baseline
           version: latest

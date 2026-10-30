@@ -8,9 +8,14 @@ metadata:
       Every container sets CPU and memory requests so the scheduler can place it, and
       a memory limit so one leak cannot take the node.
 spec:
+  # Kyverno fills in these defaults; spelled out so Argo CD sees no drift.
+  admission: true
   background: true
+  emitWarning: false
+  validationFailureAction: Audit
   rules:
     - name: requests-and-memory-limit
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -18,6 +23,7 @@ spec:
                 - Pod
       validate:
         failureAction: Audit
+        allowExistingViolations: true
         message: "Set resources.requests.cpu, resources.requests.memory and resources.limits.memory."
         pattern:
           spec:
