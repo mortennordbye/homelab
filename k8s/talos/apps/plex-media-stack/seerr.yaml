@@ -46,7 +46,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: seerr
-          image: ghcr.io/seerr-team/seerr:develop
+          image: ghcr.io/seerr-team/seerr:v3.5.1
           env:
             - name: PUID
               value: "1000"
