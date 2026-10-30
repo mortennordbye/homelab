@@ -37,3 +37,9 @@ helmCharts:
     version: 3.9.2
     releaseName: kyverno
     valuesFile: ./values.yaml
+  - name: policy-reporter
+    repo: https://kyverno.github.io/policy-reporter
+    namespace: kyverno
+    version: 3.11.2
+    releaseName: policy-reporter
+    valuesFile: ./values-policy-reporter.yaml
