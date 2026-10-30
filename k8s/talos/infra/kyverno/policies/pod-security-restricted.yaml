@@ -3,6 +3,9 @@ kind: ClusterPolicy
 metadata:
   name: pod-security-restricted
   annotations:
+    # No ReplicaSets: their Pods and Deployment are checked already, and old revisions
+    # would keep reporting a config that no longer runs.
+    pod-policies.kyverno.io/autogen-controllers: DaemonSet,Deployment,StatefulSet,Job,CronJob
     policies.kyverno.io/title: Pod Security Standards, restricted
     policies.kyverno.io/description: >-
       The restricted Pod Security Standard: non-root, no privilege escalation, all
