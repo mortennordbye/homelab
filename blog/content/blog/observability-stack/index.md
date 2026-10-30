@@ -291,7 +291,7 @@ Three "No data" panels next to a working one. The fix is to wire up the Hubble m
 
 You have now seen a dozen snippets from as many files. What makes them a system rather than a pile is that they share one source of truth.
 
-The dashboard up top is a `ConfigMap`, [`homelab-spog.json`](https://github.com/mortennordbye/Homelab/blob/main/grafana/homelab-spog.json), that the Grafana sidecar discovers and loads. Nobody clicked it together in the Grafana UI, where it would vanish the moment the pod restarts. Same for every Helm value, every alert rule, every Falco exception in this post. ArgoCD reconciles all of it from `main`. If I delete the Grafana pod, the dashboard comes back exactly as it was.
+The dashboard up top is a JSON file, [`homelab-spog.json`](https://github.com/mortennordbye/Homelab/blob/main/grafana/homelab-spog.json), that Grafana's Git Sync pulls from `main`. An edit in the Grafana UI becomes a pull request against that file, not a change that lives only in Grafana. Every Helm value, every alert rule, every Falco exception in this post is in the same repo, and ArgoCD reconciles all of it from `main`. If I delete the Grafana pod, the dashboard comes back exactly as it was.
 
 That is the part that makes this maintainable rather than a pet. The cluster is blind by default. What you have read is the wiring that gives it sight, and all of it is text in a repo you can read.
 
