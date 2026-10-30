@@ -18,6 +18,7 @@ resources:
   - alertmanager-pdb.yaml
   - dashboards
   - ciliumnetworkpolicy.yaml
+  - git-sync.yaml
 
 helmCharts:
   - name: kube-prometheus-stack

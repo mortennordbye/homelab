@@ -179,6 +179,15 @@ spec:
         - ports:
             - port: "3000"
               protocol: TCP
+    # The git-sync Job registers the Git Sync repository.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": grafana-git-sync
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP
     - fromEntities:
         - host
         - health
