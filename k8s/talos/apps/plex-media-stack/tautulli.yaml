@@ -68,6 +68,12 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+          resources:
+            requests:
+              cpu: 10m
+              memory: 160Mi
+            limits:
+              memory: 512Mi
           livenessProbe:
             httpGet:
               path: /status

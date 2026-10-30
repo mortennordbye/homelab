@@ -16,7 +16,10 @@ The Pod rules also cover Deployments, StatefulSets, DaemonSets, Jobs and CronJob
 Kyverno's autogen. Both Pod Security policies skip `kube-system`, `falco`,
 `csi-driver-nfs`, `csi-proxmox` and `intel-gpu-plugin`, whose work needs the host. The
 Alloy and node-exporter DaemonSets in `monitoring` are exempt through
-`policyexception-monitoring.yaml`; exceptions are only read from the `kyverno` namespace.
+`policyexception-monitoring.yaml`. `policyexception-host-access.yaml` exempts one control
+for one image each: `Capabilities` for gluetun (`NET_ADMIN` makes the VPN tunnel) and
+`Privileged Containers` for verksted's `docker:*-dind` sidecar. Exceptions are only read
+from the `kyverno` namespace.
 
 [![Argo CD applies a manifest to the API server, which sends it to Kyverno's admission webhook in Audit mode; that and the hourly background scan write one PolicyReport per workload, a PolicyException in the kyverno namespace exempts named workloads, and Policy Reporter turns the reports into the policy_report_result metric that Prometheus scrapes for the Policy (Kyverno) row on the SPOG dashboard](../../assets/diagrams/policy-reports.svg)](../../assets/diagrams/policy-reports.svg)
 
@@ -45,6 +48,8 @@ Reports refresh on the background scan, about once an hour, and on every admissi
 - `features.forceFailurePolicyIgnore` is on, so a Kyverno outage lets every request
   through. Turning a policy to `Enforce` keeps it that way; an enforcing webhook with
   `Fail` would stop the API server accepting Pods whenever Kyverno is down.
+- Scope a Pod Security exception with `podSecurity` (control and image) rather than the
+  whole rule, so the pod's other violations keep reporting.
 - Exempt one workload with a `PolicyException` in `kyverno`, never with `names` in a
   policy's `exclude`: a names filter switches off autogen, and the policy then stops
   checking Deployments, StatefulSets and DaemonSets.

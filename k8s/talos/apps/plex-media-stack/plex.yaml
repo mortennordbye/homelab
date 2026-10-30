@@ -153,8 +153,11 @@ spec:
           # this resource, so the request is also what places Plex on the iGPU node.
           resources:
             requests:
+              cpu: 500m
+              memory: 1Gi
               gpu.intel.com/i915: 1
             limits:
+              memory: 4Gi
               gpu.intel.com/i915: 1
           volumeMounts:
             - name: config
