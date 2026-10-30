@@ -52,7 +52,11 @@ export default async function () {
 
   try {
     await step(page, "login", async () => {
-      await page.goto(`${BASE}/login`);
+      // Chromium in the pod can abort its first navigation with ERR_NETWORK_CHANGED.
+      await page.goto(`${BASE}/login`).catch((e) => {
+        if (!String(e).includes("ERR_NETWORK_CHANGED")) throw e;
+        return page.goto(`${BASE}/login`);
+      });
       await page.getByLabel("Email").fill(__ENV.SYNTHETIC_EMAIL);
       await page.getByLabel("Password").fill(__ENV.SYNTHETIC_PASSWORD);
       await Promise.all([
