@@ -73,8 +73,8 @@ since the PEM is multiline. The Grafana network policy allows egress to `api.git
 
 Grafana's Git Sync keeps the dashboards under [`grafana/`](../../../grafana/README.md) in this
 repo in a Grafana folder named Homelab (Git). Grafana polls `main` every 60 seconds and loads
-any change. Saving a dashboard in that folder in the UI commits to a new branch and opens a
-pull request; nothing writes to `main` directly (the repository's `workflows` is `branch`
+any change. Saving a dashboard in that folder in the UI commits to a new branch and shows a
+link to open the pull request; Grafana doesn't open it itself, and nothing writes to `main` directly (the repository's `workflows` is `branch`
 only). Git Sync registers a repository webhook on create and refuses to start without the
 Webhooks permission, but GitHub can't reach `grafana.local.bigd.no`, so polling is the only
 trigger that lands.
