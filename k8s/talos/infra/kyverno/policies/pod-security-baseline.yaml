@@ -16,7 +16,7 @@ spec:
   admission: true
   background: true
   emitWarning: false
-  validationFailureAction: Audit
+  validationFailureAction: Enforce
   rules:
     - name: baseline
       skipBackgroundRequests: true
@@ -35,7 +35,7 @@ spec:
                 - csi-proxmox
                 - intel-gpu-plugin
       validate:
-        failureAction: Audit
+        failureAction: Enforce
         allowExistingViolations: true
         podSecurity:
           level: baseline

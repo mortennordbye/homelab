@@ -36,10 +36,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** pick the backup target for WAL and base backups (NAS over S3, e.g. MinIO or the Synology S3 server), import the current database into a CNPG cluster on stage, verify a point-in-time restore, then cut prod over.
 - **Where:** `k8s/talos/apps/logeverylift/` (Postgres, `db-backup.yaml`, `postgres-exporter.yaml`), `docs/platform/data/postgres.md`.
 
-### Kyverno policies from Audit to Enforce
-- **What:** turn `disallow-mutable-image-tags` and `pod-security-baseline` to `failureAction: Enforce`, and decide per namespace for `pod-security-restricted` (56 workloads failing, mostly linuxserver images running as root) and `require-requests-limits` (42, mostly third-party charts: Argo CD, cert-manager, ESO, Kargo, Authentik, kube-prometheus-stack, Cilium's Hubble).
-- **Why deferred:** enforcing is held until the owner says so. The tag and baseline reports are clean; the other two need chart values sized from real usage, where a wrong memory limit OOM-kills a platform component.
-- **Unblock:** the owner's go for Enforce on the two clean policies; for the others, requests and memory limits per chart from 7-day usage (the media containers in `k8s/talos/apps/{plex-media-stack,gluetun-vpn}` show the method), or a `PolicyException` where a workload needs it.
+### Kyverno restricted and requests policies to Enforce
+- **What:** decide per namespace whether `pod-security-restricted` (56 workloads failing, mostly linuxserver images running as root) and `require-requests-limits` (42, mostly third-party charts: Argo CD, cert-manager, ESO, Kargo, Authentik, kube-prometheus-stack, Cilium's Hubble) can enforce. The tag and baseline policies already do.
+- **Why deferred:** the failing workloads need chart values sized from real usage, where a wrong memory limit OOM-kills a platform component, or images that can run non-root.
+- **Unblock:** requests and memory limits per chart from 7-day usage (the media containers in `k8s/talos/apps/{plex-media-stack,gluetun-vpn}` show the method), or a `PolicyException` where a workload needs it, until a policy's report is clean.
 - **Where:** `k8s/talos/infra/kyverno/policies/`, `docs/platform/policy/README.md`.
 
 ### Kyverno ClusterPolicy to ValidatingPolicy

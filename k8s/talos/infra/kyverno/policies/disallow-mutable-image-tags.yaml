@@ -15,7 +15,7 @@ spec:
   admission: true
   background: true
   emitWarning: false
-  validationFailureAction: Audit
+  validationFailureAction: Enforce
   rules:
     - name: pinned-image
       skipBackgroundRequests: true
@@ -25,7 +25,7 @@ spec:
               kinds:
                 - Pod
       validate:
-        failureAction: Audit
+        failureAction: Enforce
         allowExistingViolations: true
         message: "Every image needs a version tag or a digest, not latest or a branch name."
         foreach:
