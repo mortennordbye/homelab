@@ -16,7 +16,6 @@ resources:
   - alertmanager-heartbeat-secret.yaml
   - homelab-alerts.yaml
   - alertmanager-pdb.yaml
-  - dashboards
   - ciliumnetworkpolicy.yaml
   - git-sync.yaml
 

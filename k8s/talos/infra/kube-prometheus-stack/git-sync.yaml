@@ -75,7 +75,7 @@ spec:
                 "kind": "Repository",
                 "metadata": {"name": "homelab"},
                 "spec": {
-                  "title": "Homelab (Git)",
+                  "title": "Homelab",
                   "type": "github",
                   "connection": {"name": "homelab-github"},
                   "github": {

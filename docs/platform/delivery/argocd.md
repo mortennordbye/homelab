@@ -82,7 +82,6 @@ Application or tolerated with `SkipDryRunOnMissingResource=true`, as the VolSync
 
 | Where | Option | Why |
 |---|---|---|
-| [`dashboards/kustomization.yaml`](../../../k8s/talos/infra/kube-prometheus-stack/dashboards/kustomization.yaml) | `ServerSideApply=true` | The SPOG dashboard JSON is over the 256 KiB annotation limit of client-side apply |
 | `volsync.yaml` in each backed-up app | `SkipDryRunOnMissingResource=true` | The VolSync CRDs come from the `volsync` Application |
 | [`talos-serviceaccount.yaml`](../../../k8s/talos/infra/etcd-backup/talos-serviceaccount.yaml) | `SkipDryRunOnMissingResource=true` | The `talos.dev` CRD exists only once Talos `kubernetesTalosAPIAccess` is on |
 | [`cilium/namespace.yaml`](../../../k8s/talos/infra/cilium/namespace.yaml) | `Prune=false` | The namespace is never pruned |

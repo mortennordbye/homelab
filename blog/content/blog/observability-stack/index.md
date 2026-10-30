@@ -20,7 +20,7 @@ This is the screen I check first when something feels off. One dashboard, the gl
 
 <img src="/images/homelab-spog-dashboard.webp" alt="Top of the Homelab-SPOG dashboard in Grafana: global request rate by status code, 5xx error rate, P95 and P99 routing latency, top services by traffic, and a recent errors panel from Loki" title="Homelab-SPOG dashboard" style="width:100%;" />
 
-It is my own Homelab-SPOG, for single pane of glass. The summary row up top carries request rate, latency and the 5xx rate. Below it sit collapsible sections for each part of the cluster: Traefik, cert-manager, Cilium, CoreDNS, the public sites, ArgoCD, Falco, per-node health and storage. [The JSON is in the repo](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json) if you want to copy what you like.
+It is my own Homelab-SPOG, for single pane of glass. The summary row up top carries request rate, latency and the 5xx rate. Below it sit collapsible sections for each part of the cluster: Traefik, cert-manager, Cilium, CoreDNS, the public sites, ArgoCD, Falco, per-node health and storage. [The JSON is in the repo](https://github.com/mortennordbye/Homelab/blob/main/grafana/homelab-spog.json) if you want to copy what you like.
 
 Every panel on that screen is the visible end of a decision I had to make and would have to defend in a design review. What store, what retention, what to scrape and what to ignore, what to alert on and what to leave on the dashboard. The rest of this post walks back from the panels to those decisions, one pillar at a time. Whether your cluster runs four pods or four hundred, the questions are the same. Only the blast radius changes.
 
@@ -291,7 +291,7 @@ Three "No data" panels next to a working one. The fix is to wire up the Hubble m
 
 You have now seen a dozen snippets from as many files. What makes them a system rather than a pile is that they share one source of truth.
 
-The dashboard up top is a `ConfigMap`, [`homelab-spog.json`](https://github.com/mortennordbye/Homelab/blob/main/k8s/talos/infra/kube-prometheus-stack/dashboards/homelab-spog.json), that the Grafana sidecar discovers and loads. Nobody clicked it together in the Grafana UI, where it would vanish the moment the pod restarts. Same for every Helm value, every alert rule, every Falco exception in this post. ArgoCD reconciles all of it from `main`. If I delete the Grafana pod, the dashboard comes back exactly as it was.
+The dashboard up top is a `ConfigMap`, [`homelab-spog.json`](https://github.com/mortennordbye/Homelab/blob/main/grafana/homelab-spog.json), that the Grafana sidecar discovers and loads. Nobody clicked it together in the Grafana UI, where it would vanish the moment the pod restarts. Same for every Helm value, every alert rule, every Falco exception in this post. ArgoCD reconciles all of it from `main`. If I delete the Grafana pod, the dashboard comes back exactly as it was.
 
 That is the part that makes this maintainable rather than a pet. The cluster is blind by default. What you have read is the wiring that gives it sight, and all of it is text in a repo you can read.
 

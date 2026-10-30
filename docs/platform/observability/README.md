@@ -40,10 +40,10 @@ Every row starts collapsed except Alerts, which sits on top.
 Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard. The other
 dashboards from this repo: User journeys, GitHub, Cloudflare and Postgres.
 
-Dashboards from this repo sit in Grafana's Homelab folder and Pyrra's in SLOs, set by the
-`k8s-sidecar-target-directory` annotation on their ConfigMap
-(`k8s/talos/infra/kube-prometheus-stack/dashboards/kustomization.yaml`). Chart dashboards
-without it stay at the top level.
+Dashboards from this repo are JSON under [`grafana/`](../../../grafana/README.md), loaded by
+[Git Sync](#git-sync) into Grafana's Homelab folder. Pyrra's sit in SLOs, set by the
+`k8s-sidecar-target-directory` annotation on the ConfigMaps the sidecar loads
+(`k8s/talos/infra/pyrra/values.yaml`). Chart dashboards without it stay at the top level.
 
 Both dashboards draw a vertical line for every Argo CD sync (the "Deploys" annotation, on by
 default), so a change in a graph can be matched to the commit that caused it. Hover the
@@ -72,7 +72,7 @@ since the PEM is multiline. The Grafana network policy allows egress to `api.git
 ## Git Sync
 
 Grafana's Git Sync keeps the dashboards under [`grafana/`](../../../grafana/README.md) in this
-repo in a Grafana folder named Homelab (Git). Grafana polls `main` every 60 seconds and loads
+repo in a Grafana folder named Homelab. Grafana polls `main` every 60 seconds and loads
 any change. Saving a dashboard in that folder in the UI commits to a new branch and shows a
 link to open the pull request; Grafana doesn't open it itself, and nothing writes to `main` directly (the repository's `workflows` is `branch`
 only). Git Sync registers a repository webhook on create and refuses to start without the
@@ -98,10 +98,9 @@ A Repository caches its installation token for an hour, so after changing the Ap
 permissions, delete the Repository in Administration > Provisioning and sync the app to
 recreate it with a fresh token.
 
-The dashboards loaded from ConfigMaps stay with the sidecar and can't be saved back to git.
-To move one to Git Sync, add its JSON under `grafana/`, then drop its ConfigMap from
-`k8s/talos/infra/kube-prometheus-stack/dashboards/kustomization.yaml` in the same PR. Two
-dashboards with one `uid` in both places conflict.
+The chart's and Pyrra's dashboards still come from ConfigMaps through the sidecar and can't
+be saved back to git. A dashboard `uid` must exist in only one of the two; Git Sync won't
+take over a dashboard the sidecar already provisions.
 
 ## Cloudflare
 
