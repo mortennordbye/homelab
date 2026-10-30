@@ -35,6 +35,7 @@ Every row starts collapsed except Alerts, which sits on top.
 | GitOps & secrets | Argo CD sync and health, ESO sync status and secrets not ready, Reloader reloads |
 | KEDA autoscaling | replica and scaler state, wake-from-zero, capacity and electricity reclaimed, priced at the NO1 spot price plus VAT plus the `grid_fee_per_kwh` variable |
 | Falco | instances, rule matches, event drops, CPU and memory per node |
+| Policy (Kyverno) | controllers up, workloads on mutable tags and breaking baseline, restricted and requests compliance, admission rate, the failing workloads ([policy](../policy/README.md)) |
 | Media stack | service status, health issues, queues, free space, library, download client and indexers |
 
 Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard. The other

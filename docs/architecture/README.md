@@ -82,7 +82,8 @@ unlock it.
 
 Kyverno audits every Pod for pinned image tags, the baseline and restricted Pod Security
 Standards, and resource requests, and writes PolicyReports. Nothing is enforced; a
-violation shows in the report and the deploy goes ahead
+violation shows in the report and the deploy goes ahead. Policy Reporter exports the reports
+to Prometheus for the SPOG dashboard
 ([`../platform/policy/README.md`](../platform/policy/README.md)).
 
 ## Storage and data
