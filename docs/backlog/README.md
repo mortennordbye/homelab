@@ -37,9 +37,9 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `k8s/talos/apps/logeverylift/` (Postgres, `db-backup.yaml`, `postgres-exporter.yaml`), `docs/platform/data/postgres.md`.
 
 ### Kyverno policies from Audit to Enforce
-- **What:** turn `disallow-mutable-image-tags` and `pod-security-baseline` to `failureAction: Enforce` once their reports are clean, and decide per namespace for `pod-security-restricted` and `require-requests-limits`.
-- **Why deferred:** the policies started in Audit to see what already breaks them; enforcing first would have blocked existing apps on their next sync.
-- **Unblock:** `kubectl get policyreport -A` showing no failures for a policy, by fixing the manifests or adding a `PolicyException` for a workload that needs it.
+- **What:** turn `disallow-mutable-image-tags` and `pod-security-baseline` to `failureAction: Enforce`, and decide per namespace for `pod-security-restricted` (56 workloads failing, mostly linuxserver images running as root) and `require-requests-limits` (42, mostly third-party charts: Argo CD, cert-manager, ESO, Kargo, Authentik, kube-prometheus-stack, Cilium's Hubble).
+- **Why deferred:** enforcing is held until the owner says so. The tag and baseline reports are clean; the other two need chart values sized from real usage, where a wrong memory limit OOM-kills a platform component.
+- **Unblock:** the owner's go for Enforce on the two clean policies; for the others, requests and memory limits per chart from 7-day usage (the media containers in `k8s/talos/apps/{plex-media-stack,gluetun-vpn}` show the method), or a `PolicyException` where a workload needs it.
 - **Where:** `k8s/talos/infra/kyverno/policies/`, `docs/platform/policy/README.md`.
 
 ### Kyverno ClusterPolicy to ValidatingPolicy
