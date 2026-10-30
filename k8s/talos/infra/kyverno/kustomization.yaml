@@ -9,6 +9,7 @@ resources:
   - policies/pod-security-baseline.yaml
   - policies/pod-security-restricted.yaml
   - policies/require-requests-limits.yaml
+  - policyexception-monitoring.yaml
 
 # kustomize's namespace transformer doesn't recognise the ServiceMonitor CRD
 # as namespaced, so stamp it explicitly.

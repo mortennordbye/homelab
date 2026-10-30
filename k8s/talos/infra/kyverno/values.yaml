@@ -2,6 +2,10 @@ features:
   # Every policy here audits; a Kyverno outage must never block the API server.
   forceFailurePolicyIgnore:
     enabled: true
+  # Exceptions are only read from the kyverno namespace, so no app can exempt itself.
+  policyExceptions:
+    enabled: true
+    namespace: kyverno
 
 admissionController:
   replicas: 1

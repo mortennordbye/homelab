@@ -14,7 +14,9 @@ install and the policies live in
 
 The Pod rules also cover Deployments, StatefulSets, DaemonSets, Jobs and CronJobs through
 Kyverno's autogen. Both Pod Security policies skip `kube-system`, `falco`,
-`csi-driver-nfs`, `proxmox-csi-plugin` and `intel-gpu-plugin`, whose work needs the host.
+`csi-driver-nfs`, `csi-proxmox` and `intel-gpu-plugin`, whose work needs the host. The
+Alloy and node-exporter DaemonSets in `monitoring` are exempt through
+`policyexception-monitoring.yaml`; exceptions are only read from the `kyverno` namespace.
 
 ## Reading the results
 
@@ -34,5 +36,8 @@ Reports refresh on the background scan, about once an hour, and on every admissi
 - `features.forceFailurePolicyIgnore` is on, so a Kyverno outage lets every request
   through. Turning a policy to `Enforce` keeps it that way; an enforcing webhook with
   `Fail` would stop the API server accepting Pods whenever Kyverno is down.
+- Exempt one workload with a `PolicyException` in `kyverno`, never with `names` in a
+  policy's `exclude`: a names filter switches off autogen, and the policy then stops
+  checking Deployments, StatefulSets and DaemonSets.
 - Argo CD excludes `EphemeralReport` and `ClusterEphemeralReport`
   (`k8s/talos/infra/argocd/values.yaml`); without that, every admission churns the app trees.
