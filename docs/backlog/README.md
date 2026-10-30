@@ -28,6 +28,26 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** the logeverylift consent flow read against the synthetic user's state, or a failed run reproduced with a screenshot.
 - **Where:** `k8s/talos/infra/synthetics/scripts/logeverylift.js`, the consent route in the logeverylift repo; failing runs are in Loki under `{namespace="synthetics"}`.
 
+## Platform
+
+### CloudNativePG for logeverylift's Postgres
+- **What:** replace the hand-built Postgres 18 Deployment behind logeverylift with a CloudNativePG `Cluster`: a standby replica with automatic failover, WAL archiving for point-in-time restore, and operator-run backups in place of the nightly dump CronJob.
+- **Why deferred:** agreed as the next platform step after Kyverno; it moves a live database with real users, so it gets its own change and a maintenance window.
+- **Unblock:** pick the backup target for WAL and base backups (NAS over S3, e.g. MinIO or the Synology S3 server), import the current database into a CNPG cluster on stage, verify a point-in-time restore, then cut prod over.
+- **Where:** `k8s/talos/apps/logeverylift/` (Postgres, `db-backup.yaml`, `postgres-exporter.yaml`), `docs/platform/data/postgres.md`.
+
+### Kyverno policies from Audit to Enforce
+- **What:** turn `disallow-mutable-image-tags` and `pod-security-baseline` to `failureAction: Enforce` once their reports are clean, and decide per namespace for `pod-security-restricted` and `require-requests-limits`.
+- **Why deferred:** the policies started in Audit to see what already breaks them; enforcing first would have blocked existing apps on their next sync.
+- **Unblock:** `kubectl get policyreport -A` showing no failures for a policy, by fixing the manifests or adding a `PolicyException` for a workload that needs it.
+- **Where:** `k8s/talos/infra/kyverno/policies/`, `docs/platform/policy/README.md`.
+
+### Kyverno ClusterPolicy to ValidatingPolicy
+- **What:** move the four policies from the deprecated `kyverno.io/v1` `ClusterPolicy` to the CEL `ValidatingPolicy`.
+- **Why deferred:** the Pod Security policies use `validate.podSecurity`, which has no single `ValidatingPolicy` equivalent; Kyverno 1.19 still runs `ClusterPolicy` and only warns.
+- **Unblock:** a Kyverno release that announces `ClusterPolicy` removal or ships a Pod Security equivalent for `ValidatingPolicy`; the Kyverno CLI (`kyverno apply`) checks the rewritten policies against rendered manifests.
+- **Where:** `k8s/talos/infra/kyverno/policies/`.
+
 ## AI / RAG POC
 
 ### Eval harness

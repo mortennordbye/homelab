@@ -78,6 +78,13 @@ token, served on each machine by `bws-token` (`ai/skills/secrets/`) from a copy 
 Bitwarden vault item. The vault itself holds human sign-ins only, and agents never
 unlock it.
 
+## Policy
+
+Kyverno audits every Pod for pinned image tags, the baseline and restricted Pod Security
+Standards, and resource requests, and writes PolicyReports. Nothing is enforced; a
+violation shows in the report and the deploy goes ahead
+([`../platform/policy/README.md`](../platform/policy/README.md)).
+
 ## Storage and data
 
 Storage classes and CSI drivers: [`../platform/storage/README.md`](../platform/storage/README.md).
@@ -186,6 +193,7 @@ Other apps, one directory each under `k8s/talos/apps/`:
 | [`platform/network`](../platform/network/README.md) | VIPs, [Traefik](../platform/network/traefik.md), [Cilium](../platform/network/cilium.md), [certificates](../platform/network/certificates.md), DNS, Cloudflare, UniFi, remote access |
 | [`platform/observability`](../platform/observability/README.md) | monitoring, alerting, [incidents](../platform/observability/incidents.md), the [reliability practice](../platform/observability/sre.md) |
 | [`platform/post-quantum`](../platform/post-quantum/README.md) | crypto inventory, [Shor on a real quantum computer](../platform/post-quantum/shor.md) |
+| [`platform/policy`](../platform/policy/README.md) | Kyverno policies and their reports |
 | [`platform/secrets`](../platform/secrets/README.md) | Bitwarden to cluster secrets |
 | [`platform/storage`](../platform/storage/README.md) | storage classes, CSI drivers |
 | [`apps/innestemme`](../apps/innestemme/README.md) | the voice assistant for the Voice PE |

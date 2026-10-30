@@ -1,0 +1,32 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: pod-security-restricted
+  annotations:
+    policies.kyverno.io/title: Pod Security Standards, restricted
+    policies.kyverno.io/description: >-
+      The restricted Pod Security Standard: non-root, no privilege escalation, all
+      capabilities dropped and a RuntimeDefault seccomp profile.
+spec:
+  background: true
+  rules:
+    - name: restricted
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - falco
+                - csi-driver-nfs
+                - proxmox-csi-plugin
+                - intel-gpu-plugin
+      validate:
+        failureAction: Audit
+        podSecurity:
+          level: restricted
+          version: latest

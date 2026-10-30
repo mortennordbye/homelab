@@ -1,0 +1,32 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-mutable-image-tags
+  annotations:
+    policies.kyverno.io/title: Disallow mutable image tags
+    policies.kyverno.io/description: >-
+      Images must name a version tag or a digest. No tag, latest, or a branch-style
+      tag lets a restart pull different code than Git describes.
+spec:
+  background: true
+  rules:
+    - name: pinned-image
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        failureAction: Audit
+        message: "Every image needs a version tag or a digest, not latest or a branch name."
+        foreach:
+          - list: "request.object.spec.[ephemeralContainers, initContainers, containers][]"
+            deny:
+              conditions:
+                any:
+                  - key: "{{ regex_match('^([^@]*/)?[^:@/]+$', '{{ element.image }}') }}"
+                    operator: Equals
+                    value: true
+                  - key: "{{ regex_match(':(latest|develop|dev|main|master|nightly|edge|stable)$', '{{ element.image }}') }}"
+                    operator: Equals
+                    value: true
