@@ -37,7 +37,7 @@ spec:
               set -eu
               api=http://kube-prometheus-stack-grafana.monitoring/apis/provisioning.grafana.app/v1beta1/namespaces/default
               auth="$(cat /admin/admin-user):$(cat /admin/admin-password)"
-              key=$(awk '{printf "%s\\n", $0}' /github-app/private-key)
+              key=$(base64 -w 0 /github-app/private-key)
 
               # POST, and on 409 (exists) merge-patch the same body.
               apply() {
