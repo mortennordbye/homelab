@@ -22,6 +22,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** the Renovate PR for 0.60, plus `terraform plan` in `terraform/unifi/network` showing no change to the networks after the migration.
 - **Where:** `terraform/unifi/network/networks.tf`, `terraform/unifi/*/version.tf`.
 
+### logeverylift journey hangs on /consent
+- **What:** about one run in ten of the `logeverylift-journey` synthetic stops at `dashboard` or `open-workout` with the page sitting on `https://logeverylift.com/consent`, where the navigation to `/new-workout` times out. Find out why the synthetic user is sent to `/consent` after a successful sign-in, and either accept it in the script or stop the app from sending it there.
+- **Why deferred:** the cause is in the logeverylift app, not the cluster, and single failures never fire `UserJourneyFailing` (it needs two runs in a row).
+- **Unblock:** the logeverylift consent flow read against the synthetic user's state, or a failed run reproduced with a screenshot.
+- **Where:** `k8s/talos/infra/synthetics/scripts/logeverylift.js`, the consent route in the logeverylift repo; failing runs are in Loki under `{namespace="synthetics"}`.
+
 ## AI / RAG POC
 
 ### Eval harness
