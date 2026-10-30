@@ -1,0 +1,41 @@
+# How a manifest becomes a policy result on the SPOG dashboard. See platform/policy/README.md.
+direction: down
+vars: {
+  di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
+  kyverno: https://raw.githubusercontent.com/cncf/artwork/main/projects/kyverno/icon/color/kyverno-icon-color.svg
+}
+
+style.fill: "#0f1410"
+
+classes: {
+  card: {
+    label.near: bottom-center
+    style: {fill: "#191f1a"; stroke: "#2a382c"; font-color: "#e9ebe9"; border-radius: 8; font-size: 16}
+  }
+  aside: {
+    label.near: bottom-center
+    style: {fill: "#0f1410"; stroke: "#c09955"; stroke-dash: 4; font-color: "#a1ada3"; border-radius: 8; font-size: 14}
+  }
+}
+
+(** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+
+git: "git (this repo)\nk8s/talos/**" {class: card; icon: ${di}/git.svg}
+argocd: Argo CD {class: card; icon: ${di}/argo-cd.svg}
+api: "API server" {class: card; icon: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/control_plane_components/labeled/api.svg}
+admission: "Kyverno admission\nAudit, failurePolicy Ignore" {class: card; icon: ${kyverno}}
+background: "Kyverno background scan\nhourly, every live workload" {class: card; icon: ${kyverno}}
+report: "PolicyReport\none per workload" {class: card; icon: ${k8s}/crd.svg}
+exception: "PolicyException\nkyverno namespace only" {class: aside; icon: ${kyverno}}
+reporter: "Policy Reporter\npolicy_report_result" {class: card; icon: ${kyverno}}
+prometheus: Prometheus {class: card; icon: ${di}/prometheus.svg}
+grafana: "Grafana SPOG\nPolicy (Kyverno) row" {class: card; icon: ${di}/grafana.svg}
+
+git -> argocd -> api: apply
+api -> admission: webhook, never blocks
+admission -> report
+background -> report
+exception -> admission: exempts
+exception -> background: exempts
+report -> reporter -> prometheus -> grafana

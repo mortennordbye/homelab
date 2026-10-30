@@ -11,6 +11,7 @@ vars: {
   ify: https://api.iconify.design
   eso: https://raw.githubusercontent.com/external-secrets/external-secrets/main/assets/eso-round-logo.svg
   falco: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg
+  kyverno: https://raw.githubusercontent.com/cncf/artwork/main/projects/kyverno/icon/color/kyverno-icon-color.svg
   kargo: https://raw.githubusercontent.com/akuity/kargo/main/ui/public/kargo-logo-head-only.png
   pyrra: https://raw.githubusercontent.com/pyrra-dev/pyrra/main/ui/public/logo192.png
   volsync: https://raw.githubusercontent.com/backube/volsync/main/docs/media/volsync.svg
@@ -155,11 +156,12 @@ obs: Observability {
 sec: Security {
   class: group
   grid-rows: 1
-  grid-columns: 3
+  grid-columns: 4
   grid-gap: 16
   authentik: Authentik {class: card; icon: ${di}/authentik.svg}
   falco: Falco {class: card; icon: ${falco}}
   sidekick: Falcosidekick {class: card; icon: ${falco}}
+  kyverno: "Kyverno\naudit policies" {class: card; icon: ${kyverno}}
 }
 
 home: Home Assistant box {

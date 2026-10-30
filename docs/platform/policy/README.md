@@ -18,7 +18,16 @@ Kyverno's autogen. Both Pod Security policies skip `kube-system`, `falco`,
 Alloy and node-exporter DaemonSets in `monitoring` are exempt through
 `policyexception-monitoring.yaml`; exceptions are only read from the `kyverno` namespace.
 
+[![Argo CD applies a manifest to the API server, which sends it to Kyverno's admission webhook in Audit mode; that and the hourly background scan write one PolicyReport per workload, a PolicyException in the kyverno namespace exempts named workloads, and Policy Reporter turns the reports into the policy_report_result metric that Prometheus scrapes for the Policy (Kyverno) row on the SPOG dashboard](../../assets/diagrams/policy-reports.svg)](../../assets/diagrams/policy-reports.svg)
+
 ## Reading the results
+
+The Policy (Kyverno) row on the SPOG dashboard shows the failures per policy, the share of
+workloads meeting the restricted standard and the requests rule, and a table of every
+failing workload. Policy Reporter feeds it: it exports the current report state as
+`policy_report_result`, for Deployments, StatefulSets, DaemonSets and CronJobs only. The
+workload's namespace is the `exported_namespace` label, since `namespace` is Policy
+Reporter's own.
 
 ```bash
 # One line per namespace with pass and fail counts

@@ -8,6 +8,7 @@ vars: {
   ify: https://api.iconify.design
   eso: https://raw.githubusercontent.com/external-secrets/external-secrets/main/assets/eso-round-logo.svg
   falco: https://raw.githubusercontent.com/cncf/artwork/main/projects/falco/icon/color/falco-icon-color.svg
+  kyverno: https://raw.githubusercontent.com/cncf/artwork/main/projects/kyverno/icon/color/kyverno-icon-color.svg
   kargo: https://raw.githubusercontent.com/akuity/kargo/main/ui/public/kargo-logo-head-only.png
   pyrra: https://raw.githubusercontent.com/pyrra-dev/pyrra/main/ui/public/logo192.png
   volsync: https://raw.githubusercontent.com/backube/volsync/main/docs/media/volsync.svg
@@ -83,7 +84,7 @@ k8s: Genesis, Talos Kubernetes {
 
   platform: Platform {
     class: subgroup
-    grid-rows: 5
+    grid-rows: 6
     grid-gap: 16
     grid-columns: 6
     argocd: Argo CD {class: card; icon: ${di}/argo-cd.svg}
@@ -109,6 +110,7 @@ k8s: Genesis, Talos Kubernetes {
     synthetics: "k6\nsynthetics" {class: card; icon: ${ify}/simple-icons/k6.svg?color=%237d64ff&height=64}
     exporters: "exporters\nPVE, SNMP, UniFi" {class: card; icon: ${di}/prometheus.svg}
     falco: Falco {class: card; icon: ${falco}}
+    kyverno: "Kyverno\naudit policies" {class: card; icon: ${kyverno}}
     metrics: metrics-server {class: card; icon: ${di}/kubernetes.svg}
     pcsi: Proxmox CSI {class: card; icon: ${di}/proxmox-light.svg}
     nfscsi: NFS CSI {class: card; icon: ${di}/synology.svg}
