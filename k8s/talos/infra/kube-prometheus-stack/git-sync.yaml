@@ -64,7 +64,7 @@ spec:
                     "installationID": "$(cat /github-app/installation-id)"
                   }
                 },
-                "secure": {"privateKey": {"create": "$key"}}
+                "secure": {"privateKey": {"create": "$key", "name": null}}
               }
               EOF
               apply connections homelab-github
