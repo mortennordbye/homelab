@@ -1,0 +1,49 @@
+# Each exemption is one Pod Security control for one image, so anything else those pods
+# break still reports. The reasons are in each app's docs.
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: gluetun-net-admin
+spec:
+  exceptions:
+    - policyName: pod-security-baseline
+      ruleNames:
+        - baseline
+        - autogen-baseline
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+            - Deployment
+          namespaces:
+            - gluetun-vpn
+  # NET_ADMIN creates the VPN tunnel the download clients route through.
+  podSecurity:
+    - controlName: Capabilities
+      images:
+        - qmcgaw/gluetun*
+---
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: verksted-dind-privileged
+spec:
+  exceptions:
+    - policyName: pod-security-baseline
+      ruleNames:
+        - baseline
+        - autogen-baseline
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+            - Deployment
+          namespaces:
+            - verksted
+  # The Docker-in-Docker sidecar needs privileged; docs/apps/verksted/README.md.
+  podSecurity:
+    - controlName: Privileged Containers
+      images:
+        - docker:*-dind

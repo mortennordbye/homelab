@@ -108,6 +108,13 @@ spec:
               mountPath: /config
             - name: torrents
               mountPath: /torrents
+          # The working set includes file cache from seeding; a tight limit makes the kernel thrash it.
+          resources:
+            requests:
+              cpu: 100m
+              memory: 3Gi
+            limits:
+              memory: 10Gi
           startupProbe:
             httpGet:
               path: /
@@ -137,6 +144,12 @@ spec:
           volumeMounts:
             - name: prowlarr-config
               mountPath: /config
+          resources:
+            requests:
+              cpu: 10m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
           startupProbe:
             httpGet:
               path: /ping
