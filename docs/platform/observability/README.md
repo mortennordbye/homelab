@@ -64,8 +64,8 @@ source uid `github`). Nothing is scraped or stored, so the panels only reach as 
 the time range asks for, and each refresh spends GitHub API quota.
 
 It authenticates as the GitHub App `mortennordbye-homelab-grafana`, installed on all of the
-account's repositories with Metadata read and Contents and Pull requests read and write (the
-write is for [Git Sync](#git-sync); the data source only reads). The App ID, installation ID and private key
+account's repositories with Metadata read and Contents, Pull requests and Webhooks read and
+write (the write is for [Git Sync](#git-sync); the data source only reads). The App ID, installation ID and private key
 come from Bitwarden through the `grafana-github-app` ExternalSecret and are mounted as files,
 since the PEM is multiline. The Grafana network policy allows egress to `api.github.com`.
 
@@ -75,8 +75,9 @@ Grafana's Git Sync keeps the dashboards under [`grafana/`](../../../grafana/READ
 repo in a Grafana folder named Homelab (Git). Grafana polls `main` every 60 seconds and loads
 any change. Saving a dashboard in that folder in the UI commits to a new branch and opens a
 pull request; nothing writes to `main` directly (the repository's `workflows` is `branch`
-only). GitHub can't reach `grafana.local.bigd.no`, so there is no webhook and polling is the
-only trigger.
+only). Git Sync registers a repository webhook on create and refuses to start without the
+Webhooks permission, but GitHub can't reach `grafana.local.bigd.no`, so polling is the only
+trigger that lands.
 
 The `grafana-git-sync` Job (`k8s/talos/infra/kube-prometheus-stack/git-sync.yaml`) is an Argo
 CD PostSync hook. It POSTs two resources to Grafana's `provisioning.grafana.app/v1beta1` API
@@ -356,7 +357,7 @@ Falco will flag it, and no exemption targets it. See
 | DSM Notification > Email | Synology Account, rule All |
 | UniFi Admins & Users | local user `unpoller`, restricted to local access, custom role: Network View Only, everything else None |
 | Grafana Administration > Service accounts | `argocd-notifications`, role Editor, one token stored in Bitwarden as `argocd-notifications-grafana-token` |
-| GitHub Settings > Developer settings > GitHub Apps | `mortennordbye-homelab-grafana`, webhook off, repository permissions Metadata read, Contents and Pull requests read and write, installed on all repositories; ID, installation ID and key in Bitwarden as `grafana-github-app-*` |
+| GitHub Settings > Developer settings > GitHub Apps | `mortennordbye-homelab-grafana`, webhook off, repository permissions Metadata read, Contents, Pull requests and Webhooks read and write, installed on all repositories; ID, installation ID and key in Bitwarden as `grafana-github-app-*` |
 | Cloudflare My Profile > API Tokens | `homelab-grafana-read`, user token, read on Analytics, Zone, DNS, Zone Settings, Firewall Services and SSL and Certificates for all zones, and Account Analytics, Account Settings and Workers Scripts; stored in Bitwarden as `cloudflare-grafana-read-token` |
 | DSM Shared Folder `shared-data` | quota 31 TiB (NasVolumeAlmostFull watches the volume, not share quotas) |
 
