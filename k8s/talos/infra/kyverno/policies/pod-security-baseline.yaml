@@ -1,0 +1,33 @@
+# Namespaces whose job needs host access are excluded rather than reported forever.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: pod-security-baseline
+  annotations:
+    policies.kyverno.io/title: Pod Security Standards, baseline
+    policies.kyverno.io/description: >-
+      The baseline Pod Security Standard: no privileged containers, host namespaces,
+      hostPath volumes or added capabilities beyond the default set.
+spec:
+  background: true
+  rules:
+    - name: baseline
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - falco
+                - csi-driver-nfs
+                - proxmox-csi-plugin
+                - intel-gpu-plugin
+      validate:
+        failureAction: Audit
+        podSecurity:
+          level: baseline
+          version: latest

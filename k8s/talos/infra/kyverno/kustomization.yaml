@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kyverno
+
+resources:
+  - namespace.yaml
+  - policies/disallow-mutable-image-tags.yaml
+  - policies/pod-security-baseline.yaml
+  - policies/pod-security-restricted.yaml
+  - policies/require-requests-limits.yaml
+
+# kustomize's namespace transformer doesn't recognise the ServiceMonitor CRD
+# as namespaced, so stamp it explicitly.
+patches:
+  - target:
+      kind: ServiceMonitor
+    patch: |
+      - op: add
+        path: /metadata/namespace
+        value: kyverno
+
+helmCharts:
+  - name: kyverno
+    repo: https://kyverno.github.io/kyverno
+    includeCRDs: true
+    skipTests: true
+    namespace: kyverno
+    version: 3.9.2
+    releaseName: kyverno
+    valuesFile: ./values.yaml

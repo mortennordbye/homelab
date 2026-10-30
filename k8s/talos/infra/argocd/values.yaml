@@ -17,6 +17,14 @@ configs:
           - CiliumIdentity
         clusters:
           - "*"
+      # Kyverno's intermediate reports churn on every admission request.
+      - apiGroups:
+          - reports.kyverno.io
+        kinds:
+          - EphemeralReport
+          - ClusterEphemeralReport
+        clusters:
+          - "*"
     # The provider is defined declaratively in
     # k8s/talos/infra/authentik/argocd-blueprint.yaml.
     # `url` is intentionally not set here: the chart derives it from
