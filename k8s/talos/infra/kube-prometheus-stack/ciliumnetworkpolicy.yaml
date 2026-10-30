@@ -239,9 +239,10 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
-    # GitHub and Cloudflare data sources.
+    # GitHub and Cloudflare data sources; github.com is Git Sync's clone and fetch.
     - toFQDNs:
         - matchName: api.github.com
+        - matchName: github.com
         - matchName: api.cloudflare.com
       toPorts:
         - ports:

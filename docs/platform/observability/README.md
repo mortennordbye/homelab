@@ -89,8 +89,14 @@ as the local admin, and merge-patches them when they already exist:
 | Repository | `homelab` | repo URL, branch `main`, path `grafana/`, folder target, branch workflow |
 
 Change either by editing the Job and syncing; an edit in Administration > Provisioning is
-overwritten on the next sync. The Job reaches Grafana on port 3000 through an ingress rule
-in the Grafana network policy, and Grafana uses its existing egress to `api.github.com`.
+overwritten on the next sync. Argo CD doesn't count a hook as drift, so a commit that only
+changes the Job needs a manual sync before it runs. The Job reaches Grafana on port 3000
+through an ingress rule in the Grafana network policy. Grafana needs egress to both
+`api.github.com` (App tokens, webhook, PRs) and `github.com` (the git clone and fetch).
+
+A Repository caches its installation token for an hour, so after changing the App's
+permissions, delete the Repository in Administration > Provisioning and sync the app to
+recreate it with a fresh token.
 
 The dashboards loaded from ConfigMaps stay with the sidecar and can't be saved back to git.
 To move one to Git Sync, add its JSON under `grafana/`, then drop its ConfigMap from
