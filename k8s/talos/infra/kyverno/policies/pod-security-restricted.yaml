@@ -28,7 +28,7 @@ spec:
                 - kube-system
                 - falco
                 - csi-driver-nfs
-                - proxmox-csi-plugin
+                - csi-proxmox
                 - intel-gpu-plugin
       validate:
         failureAction: Audit

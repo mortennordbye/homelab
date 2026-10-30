@@ -1,0 +1,27 @@
+# Log shipping and node metrics read the host by design. An exception, not a `names`
+# exclude in the policies: a names filter switches off autogen for the whole rule.
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: monitoring-host-daemonsets
+spec:
+  exceptions:
+    - policyName: pod-security-baseline
+      ruleNames:
+        - baseline
+        - autogen-baseline
+    - policyName: pod-security-restricted
+      ruleNames:
+        - restricted
+        - autogen-restricted
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+            - DaemonSet
+          namespaces:
+            - monitoring
+          names:
+            - alloy*
+            - kube-prometheus-stack-prometheus-node-exporter*
