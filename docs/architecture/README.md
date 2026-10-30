@@ -114,8 +114,10 @@ behind a page still answering 200 pages Discord
 Argo CD notifications writes a Grafana annotation for every finished sync, drawn on the
 Homelab dashboards as deploy markers
 ([`../platform/delivery/argocd.md`](../platform/delivery/argocd.md#deploy-markers)).
-Grafana also reads pull requests from the GitHub API through a read-only
-GitHub App ([`../platform/observability/README.md`](../platform/observability/README.md#github)),
+Grafana also reads pull requests from the GitHub API through a GitHub App
+([`../platform/observability/README.md`](../platform/observability/README.md#github)), and
+the same App lets Git Sync load the dashboards under `grafana/` and open a PR for each save
+in the UI ([`../platform/observability/README.md`](../platform/observability/README.md#git-sync)),
 and Cloudflare's analytics from its GraphQL API with a read-only token
 ([`../platform/observability/README.md`](../platform/observability/README.md#cloudflare)).
 Outside the cluster, Prometheus scrapes the Proxmox API (pve-exporter), node-exporter on the
