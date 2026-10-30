@@ -167,6 +167,9 @@ Other apps, one directory each under `k8s/talos/apps/`:
 - bigd: the static `bigd.no` landing page, nginx serving `index.html` from a ConfigMap.
 - it-tools and omni-tools: stateless browser tool collections on `it-tools.bigd.no` and
   `omni-tools.bigd.no`.
+- isponsorblocktv: skips sponsor segments and ads in the YouTube app on the TVs through
+  YouTube's lounge API. No route and no volume; the paired screens live in Bitwarden
+  ([`../apps/isponsorblocktv/README.md`](../apps/isponsorblocktv/README.md)).
 
 ## Doc map
 
@@ -186,6 +189,7 @@ Other apps, one directory each under `k8s/talos/apps/`:
 | [`platform/secrets`](../platform/secrets/README.md) | Bitwarden to cluster secrets |
 | [`platform/storage`](../platform/storage/README.md) | storage classes, CSI drivers |
 | [`apps/innestemme`](../apps/innestemme/README.md) | the voice assistant for the Voice PE |
+| [`apps/isponsorblocktv`](../apps/isponsorblocktv/README.md) | SponsorBlock for the TVs, pairing a screen |
 | [`apps/media-stack`](../apps/media-stack/README.md) | requests, storage, 4K, seeding, subtitles, re-encoding |
 | [`apps/portfolio`](../apps/portfolio/README.md) | the portfolio site, brand decisions, the fun room |
 | [`apps/reelsmith`](../apps/reelsmith/README.md) | the reelsmith publishing gateway |

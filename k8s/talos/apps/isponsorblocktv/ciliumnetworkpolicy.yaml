@@ -1,0 +1,14 @@
+# Nothing connects in; the app only dials YouTube's lounge API and SponsorBlock.
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: isponsorblocktv-policy
+  namespace: isponsorblocktv
+spec:
+  endpointSelector:
+    matchLabels:
+      app: isponsorblocktv
+  ingress:
+    - fromEntities:
+        - host
+        - health
