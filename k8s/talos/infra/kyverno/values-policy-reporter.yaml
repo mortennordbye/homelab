@@ -1,0 +1,33 @@
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+
+metrics:
+  enabled: true
+  mode: custom
+  customLabels:
+    - namespace
+    - policy
+    - kind
+    - name
+    - status
+  # Workload objects only; their Pods and ReplicaSets repeat every result.
+  filter:
+    kinds:
+      include:
+        - Deployment
+        - StatefulSet
+        - DaemonSet
+        - CronJob
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    labels:
+      release: kube-prometheus-stack
+  grafana:
+    dashboards:
+      enabled: false
