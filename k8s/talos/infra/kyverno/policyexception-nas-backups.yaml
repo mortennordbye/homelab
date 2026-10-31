@@ -1,0 +1,52 @@
+# The k8s-backups NFS export only admits root, so these dump jobs run as root with
+# DAC_OVERRIDE; docs/platform/backups/README.md. Scoped to the two controls and the
+# dump images, so anything else the pods break still reports.
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: nas-backup-root
+spec:
+  exceptions:
+    - policyName: pod-security-restricted
+      ruleNames:
+        - restricted
+        - autogen-restricted
+        - autogen-cronjob-restricted
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+            - Job
+            - CronJob
+          namespaces:
+            - identity
+          names:
+            - authentik-db-backup*
+      - resources:
+          kinds:
+            - Pod
+            - Job
+            - CronJob
+          namespaces:
+            - logeverylift
+          names:
+            - logeverylift-db-backup*
+      - resources:
+          kinds:
+            - Pod
+            - Job
+            - CronJob
+          namespaces:
+            - etcd-backup
+          names:
+            - etcd-backup*
+  podSecurity:
+    - controlName: Running as Non-root
+      images:
+        - postgres:*-alpine
+        - docker.io/library/alpine:*
+    - controlName: Capabilities
+      images:
+        - postgres:*-alpine
+        - docker.io/library/alpine:*
