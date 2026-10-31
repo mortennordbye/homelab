@@ -57,20 +57,25 @@ spec:
   # "<app>-stage" and demo app "<app>-demo" get authorized-stage <app>-cd:prod /
   # <app>-cd:stage / <app>-cd:demo. A suffix an app doesn't use matches no
   # directory, so it renders nothing; every non-Kargo app matches nothing at all.
+  # Apps holding a CloudNativePG Cluster need server-side diff: the client-side
+  # diff reports the webhook-defaulted Cluster as OutOfSync and self-heal loops.
   templatePatch: |
     {{- $base := .path.basename }}
+    {{- $stage := "" }}
     {{- range $app := list "portfolio" "blog" "logeverylift" "headroom" "verksted" "reelsmith" "innestemme" }}
-    {{- if eq $base $app }}
-    metadata:
-      annotations:
-        kargo.akuity.io/authorized-stage: {{ $app }}-cd:prod
-    {{- else if eq $base (printf "%s-stage" $app) }}
-    metadata:
-      annotations:
-        kargo.akuity.io/authorized-stage: {{ $app }}-cd:stage
-    {{- else if eq $base (printf "%s-demo" $app) }}
-    metadata:
-      annotations:
-        kargo.akuity.io/authorized-stage: {{ $app }}-cd:demo
+    {{- if eq $base $app }}{{ $stage = printf "%s-cd:prod" $app }}
+    {{- else if eq $base (printf "%s-stage" $app) }}{{ $stage = printf "%s-cd:stage" $app }}
+    {{- else if eq $base (printf "%s-demo" $app) }}{{ $stage = printf "%s-cd:demo" $app }}
     {{- end }}
+    {{- end }}
+    {{- $serverSideDiff := has $base (list "logeverylift" "cnpg-scratch") }}
+    {{- if or $stage $serverSideDiff }}
+    metadata:
+      annotations:
+        {{- if $stage }}
+        kargo.akuity.io/authorized-stage: {{ $stage }}
+        {{- end }}
+        {{- if $serverSideDiff }}
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
+        {{- end }}
     {{- end }}
