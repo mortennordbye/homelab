@@ -26,6 +26,11 @@ tempo:
       path: /var/tempo/generator/wal
     traces_storage:
       path: /var/tempo/generator/traces
+  # TraceQL metrics refuse a range over 3h by default, which errors every panel on the
+  # logeverylift Traces dashboard. Wider than retention so any picker range answers.
+  queryFrontend:
+    metrics:
+      max_duration: 168h
   overrides:
     defaults:
       metrics_generator:
