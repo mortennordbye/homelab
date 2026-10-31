@@ -46,7 +46,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: tdarr
-          image: ghcr.io/haveagitgat/tdarr:2.90.01
+          image: ghcr.io/haveagitgat/tdarr:3.04.00
           securityContext:
             allowPrivilegeEscalation: false
           ports:
