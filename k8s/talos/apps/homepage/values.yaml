@@ -32,6 +32,19 @@ resources:
   limits:
     memory: 512Mi
 
+# The image runs as root unless told otherwise; /app is owned by 1000.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
 # Environment variables
 env:
   - name: HOMEPAGE_ALLOWED_HOSTS

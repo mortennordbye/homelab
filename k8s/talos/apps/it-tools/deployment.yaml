@@ -15,10 +15,27 @@ spec:
       labels:
         app: it-tools
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: it-tools
           image: ghcr.io/corentinth/it-tools:2024.10.22-7ca5933
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          # nginx writes its pid and cache into root-owned paths in the image.
+          volumeMounts:
+            - name: cache
+              mountPath: /var/cache/nginx
+            - name: run
+              mountPath: /run
           ports:
             - containerPort: 80
           resources:
@@ -39,3 +56,8 @@ spec:
               port: 80
             periodSeconds: 20
             failureThreshold: 3
+      volumes:
+        - name: cache
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
