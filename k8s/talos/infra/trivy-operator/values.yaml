@@ -9,6 +9,7 @@ operator:
   sbomGenerationEnabled: false
   # One trivy-server holds the vulnerability DB, so scan jobs don't each download it.
   builtInTrivyServer: true
+  # No scanJobTTL: finished jobs left to the TTL controller still count against this limit.
   scanJobsConcurrentLimit: 3
 
 compliance:
