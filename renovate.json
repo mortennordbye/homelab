@@ -14,6 +14,7 @@
   ],
   "labels": ["dependencies"],
   "automergeStrategy": "squash",
+  "prConcurrentLimit": 20,
   "osvVulnerabilityAlerts": true,
   "dependencyDashboardOSVVulnerabilitySummary": "unresolved",
   "vulnerabilityAlerts": {
@@ -67,6 +68,15 @@
       "automerge": true,
       "platformAutomerge": true,
       "addLabels": ["github-actions"]
+    },
+    {
+      "description": "Helm charts without a named group below: automerge minor/patch on their own branch after a week. The named groups override this.",
+      "matchManagers": ["kustomize"],
+      "matchDatasources": ["helm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "minimumReleaseAge": "7 days",
+      "addLabels": ["helm"]
     },
     {
       "description": "Helm Networking: traefik, cilium, cert-manager, external-dns, traefik-crds",
@@ -177,6 +187,16 @@
       "automerge": true,
       "minimumReleaseAge": "7 days",
       "addLabels": ["k8s-infra"]
+    },
+    {
+      "description": "Grafana plugins installed by the kube-prometheus-stack values: one PR, so they don't each hold an open-PR slot.",
+      "matchDatasources": ["custom.grafana-plugins"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Grafana Plugins",
+      "groupSlug": "grafana-plugins",
+      "automerge": true,
+      "minimumReleaseAge": "7 days",
+      "addLabels": ["monitoring"]
     },
     {
       "description": "npm - portfolio project. Weekly: every merge builds an image and queues a prod promotion PR, so a nightly cadence buries real changes under lockfile bumps.",
