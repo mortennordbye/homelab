@@ -97,7 +97,7 @@ rules, snapshots or Hyper Backup, so these are set by hand in DSM and recorded h
 
 - Only root can read or write `k8s-backups`: with No mapping the client uid reaches the
   share ACL unchanged, and the ACL denies every other uid, the folders' owner 1026
-  included. The etcd and Postgres dump jobs therefore run as root with `DAC_OVERRIDE`,
+  included. The etcd and Postgres dump jobs and the `backup-check` jobs therefore run as root,
   exempt from `pod-security-restricted` through
   `k8s/talos/infra/kyverno/policyexception-nas-backups.yaml`.
 - VolSync needs the VolumeSnapshot CRDs installed (`k8s/talos/infra/crds`) even with

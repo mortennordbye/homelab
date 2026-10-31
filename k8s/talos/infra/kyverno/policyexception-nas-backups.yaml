@@ -1,6 +1,6 @@
-# The k8s-backups NFS export only admits root, so these dump jobs run as root with
-# DAC_OVERRIDE; docs/platform/backups/README.md. Scoped to the two controls and the
-# dump images, so anything else the pods break still reports.
+# The k8s-backups NFS export only admits root, so the dump jobs and the backup checks that
+# read them run as root with DAC_OVERRIDE, CHOWN or FOWNER; docs/platform/backups/README.md.
+# Scoped to the two controls and these images, so anything else the pods break still reports.
 apiVersion: kyverno.io/v2
 kind: PolicyException
 metadata:
@@ -41,12 +41,24 @@ spec:
             - etcd-backup
           names:
             - etcd-backup*
+      - resources:
+          kinds:
+            - Pod
+            - Job
+            - CronJob
+          namespaces:
+            - backup-check
+          names:
+            - restore-test*
+            - ha-backup-check*
   podSecurity:
     - controlName: Running as Non-root
       images:
         - postgres:*-alpine
         - docker.io/library/alpine:*
+        - docker.io/restic/restic:*
     - controlName: Capabilities
       images:
         - postgres:*-alpine
         - docker.io/library/alpine:*
+        - docker.io/restic/restic:*
