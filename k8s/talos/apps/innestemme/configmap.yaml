@@ -16,8 +16,10 @@ data:
     # Match the CPU limit in deployment.yaml.
     threads: 6
     wake-name: Jarvis
-    # English answers in a butler's words: "As you wish, sir."
+    # English answers in a butler's words: "As you wish, sir." Female voices get "ma'am", told apart
+    # by how the wake word sounds (a 30 MB model in /models/speaker); a voice it is unsure of gets neither.
     honorific: sir
+    honorific-female: ma'am
     home: Oslo
     norwegian: false
     # English speech from Kokoro inside the engine (sherpa-onnx, the f32 v1.0 model in /models/hub).
