@@ -15,13 +15,16 @@ spec:
       labels:
         app: headroom
     spec:
-      # The image starts as root to chown /data, then drops to uid 1000; on this
-      # NFS PVC the chown doesn't stick and it falls back to root. Do NOT add
-      # runAsUser — a non-root start removes the fallback and crashes SQLite
-      # on open (SQLITE_CANTOPEN).
+      # SQLite opens /data/database.sqlite; the files on the NFS PVC are owned by
+      # 1000, so runAsUser and the volume's owner must stay the same uid.
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: headroom
           # Kargo sets the tag through kustomization.yaml `images:`; this inline value is only a kubectl-apply fallback.
@@ -32,6 +35,11 @@ spec:
             # only, so the served hostname must be listed or the app 403s.
             - name: ALLOWED_HOSTS
               value: "headroom.local.bigd.no,localhost,127.0.0.1"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: 3001
           volumeMounts:
