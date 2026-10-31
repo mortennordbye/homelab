@@ -20,9 +20,10 @@ spec:
     spec:
       automountServiceAccountToken: false
       enableServiceLinks: false
-      # The image starts as root to chown /data, then drops to uid 1000. Do NOT
-      # add runAsUser — a non-root start removes the entrypoint's ability to chown.
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
@@ -42,6 +43,11 @@ spec:
             # Host header instead of hitting the pod IP.
             - name: ALLOWED_HOSTS
               value: "headroom.nordbye.it,localhost,127.0.0.1"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: http
               containerPort: 3001

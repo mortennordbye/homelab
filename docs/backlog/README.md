@@ -37,7 +37,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `k8s/talos/apps/logeverylift/` (Postgres, `db-backup.yaml`, `postgres-exporter.yaml`), `docs/platform/data/postgres.md`.
 
 ### Kyverno restricted and requests policies to Enforce
-- **What:** decide per namespace whether `pod-security-restricted` (37 workloads failing, mostly linuxserver images running as root; an inline `nfs:` volume fails it on its own, so those workloads also need a PV and PVC) and `require-requests-limits` (42, mostly third-party charts: Argo CD, cert-manager, ESO, Kargo, Authentik, kube-prometheus-stack, Cilium's Hubble) can enforce. The tag and baseline policies already do.
+- **What:** decide per namespace whether `pod-security-restricted` (31 workloads failing, mostly linuxserver images running as root; an inline `nfs:` volume fails it on its own, so those workloads also need a PV and PVC) and `require-requests-limits` (42, mostly third-party charts: Argo CD, cert-manager, ESO, Kargo, Authentik, kube-prometheus-stack, Cilium's Hubble) can enforce. The tag and baseline policies already do.
 - **Why deferred:** the failing workloads need chart values sized from real usage, where a wrong memory limit OOM-kills a platform component, or images that can run non-root.
 - **Unblock:** requests and memory limits per chart from 7-day usage (the media containers in `k8s/talos/apps/{plex-media-stack,gluetun-vpn}` show the method), or a `PolicyException` where a workload needs it, until a policy's report is clean.
 - **Where:** `k8s/talos/infra/kyverno/policies/`, `docs/platform/policy/README.md`.
