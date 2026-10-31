@@ -65,13 +65,13 @@ connections from any other pod.
 
 | Database | Namespace | Dump PVC | Image | Host / user / db | Label the policy admits |
 |---|---|---|---|---|---|
-| logeverylift | `logeverylift` | `logeverylift-db-backup` | `postgres:18-alpine` | `postgres` / `postgres` / `logeverylift_db` | `app: postgres-backup` |
+| logeverylift | `logeverylift` | `logeverylift-db-backup` | `postgres:18-alpine` | `logeverylift-db-rw` / `logeverylift` / `logeverylift_db` | `app: postgres-backup` |
 | Authentik | `identity` | `authentik-db-backup` | `postgres:17-alpine` | `authentik-postgresql` / `authentik` / `authentik` | `app.kubernetes.io/instance: authentik` |
 
 1. Scale the app (not the database) to zero.
 2. Start a pod in the namespace with the label from the table, the dump PVC mounted
    read-only at `/backup`, and `PGHOST`, `PGUSER`, `PGDATABASE` and `PGPASSWORD`
-   (from `logeverylift-secret/POSTGRES_PASSWORD` or `authentik-secrets/postgres-password`),
+   (from `logeverylift-db-app/password` or `authentik-secrets/postgres-password`),
    modelled on the CronJob in `db-backup.yaml`.
 3. In that pod:
 
@@ -84,6 +84,40 @@ connections from any other pod.
 
 To inspect a dump without touching the live database, restore it into a throwaway
 Postgres of the same major version instead.
+
+### Point in time (logeverylift)
+
+`logeverylift-db` can be restored to any moment since its oldest base backup in Garage
+(30 days), from the base backups and WAL. Recovery always builds a new Cluster; it never
+rewinds the running one.
+
+1. Pick the target in UTC, before the damage (`2026-11-02T08:15:00Z`).
+2. Add a Cluster with a new name to `k8s/talos/apps/logeverylift/`, the same spec as
+   `logeverylift-db` but bootstrapped from the archive, and merge it:
+
+   ```yaml
+   bootstrap:
+     recovery:
+       source: logeverylift-db
+       recoveryTarget:
+         targetTime: "2026-11-02T08:15:00Z"
+   externalClusters:
+     - name: logeverylift-db
+       plugin:
+         name: barman-cloud.cloudnative-pg.io
+         parameters:
+           barmanObjectName: garage
+           serverName: logeverylift-db
+   ```
+
+   Leave `plugins` out (or give it a new `serverName`), so the restored Cluster never
+   archives into the source's prefix. Omit `recoveryTarget` to replay all archived WAL.
+3. When it is healthy, check the data with `psql` in its `-1` pod, then point the app's
+   `DATABASE_URL` at the new Cluster's `-app` Secret (or dump from it into the live one
+   for a partial repair).
+
+If Garage itself is gone, restore `garage-data` from VolSync first
+([`../data/cloudnative-pg.md`](../data/cloudnative-pg.md#restoring-garage-itself)).
 
 ## etcd
 

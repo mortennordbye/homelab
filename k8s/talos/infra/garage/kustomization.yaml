@@ -12,3 +12,4 @@ resources:
   - service.yaml
   - servicemonitor.yaml
   - ciliumnetworkpolicy.yaml
+  - volsync.yaml

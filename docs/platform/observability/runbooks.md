@@ -243,6 +243,18 @@ No user impact now; the next restore would lose more data.
 Fix the job and run it once by hand: `kubectl -n <namespace> create job --from=cronjob/<cronjob> <cronjob>-manual`.
 Restore paths are in [`../backups/restore.md`](../backups/restore.md).
 
+### PostgresBaseBackupStale
+
+The newest CloudNativePG base backup in Garage is more than 26 hours old. WAL keeps
+being archived, but a restore has to replay everything since the last base backup,
+and retention cannot drop old WAL.
+
+- `kubectl -n <namespace> get scheduledbackup,backup`: the newest Backup's phase and
+  error.
+- The `plugin-barman-cloud` container logs on the instance that ran it, and Garage
+  ([`../data/cloudnative-pg.md`](../data/cloudnative-pg.md)).
+- Take one by hand with a `Backup` object of `method: plugin` once the cause is fixed.
+
 ### RestoreTestFailed
 
 The monthly restore test did not pass, or has not passed for 32 days. The backups may not
@@ -268,14 +280,17 @@ Usually a locked restic repository or a PVC that could not be snapshotted. See
 
 ### PostgresDown
 
-postgres-exporter in the namespace cannot connect to its database (`pg_up` is 0).
+No instance of the CloudNativePG Cluster `logeverylift-db` reports itself as primary,
+so the app cannot write.
 
-- `kubectl -n <namespace> get pods -l app=postgres` and the `postgres` container logs.
-- A pod stuck in `ContainerCreating` is usually the NFS volume; see
-  [`../data/postgres.md`](../data/postgres.md).
+- `kubectl -n logeverylift get cluster logeverylift-db`: the phase says whether a
+  failover is in progress or stuck.
+- `kubectl -n logeverylift get pods -l cnpg.io/cluster=logeverylift-db` and the
+  `postgres` container logs. A pod stuck in `ContainerCreating` is usually the NFS
+  volume ([`../storage/README.md`](../storage/README.md#synology-nfs)).
+- The operator's view: `kubectl -n cnpg-system logs deploy/cnpg-cloudnative-pg`.
 
-If the database pod is healthy, the exporter's own credentials or the
-`logeverylift-postgres-policy` network policy are the next suspects.
+More in [`../data/postgres.md`](../data/postgres.md).
 
 ### PostgresWalArchivingFailing
 

@@ -37,12 +37,60 @@ spec:
       password:
         name: logeverylift-secret
         key: POSTGRES_PASSWORD
+  monitoring:
+    customQueriesConfigMap:
+      - name: logeverylift-db-monitoring
+        key: queries.yaml
   plugins:
     - name: barman-cloud.cloudnative-pg.io
       isWALArchiver: true
       parameters:
         barmanObjectName: garage
         serverName: logeverylift-db
+---
+# Per-table stats for the Grafana Postgres dashboard; CNPG's default queries stop at
+# the database level.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logeverylift-db-monitoring
+  namespace: logeverylift
+  labels:
+    cnpg.io/reload: ""
+data:
+  queries.yaml: |
+    pg_stat_user_tables:
+      query: |
+        SELECT current_database() AS datname, schemaname, relname,
+          seq_scan, COALESCE(idx_scan, 0) AS idx_scan, n_live_tup, n_dead_tup,
+          COALESCE(EXTRACT(EPOCH FROM last_autovacuum), 0) AS last_autovacuum,
+          pg_table_size(relid) AS table_size_bytes,
+          pg_indexes_size(relid) AS index_size_bytes
+        FROM pg_stat_user_tables
+      target_databases:
+        - logeverylift_db
+      primary: true
+      metrics:
+        - datname:
+            usage: LABEL
+        - schemaname:
+            usage: LABEL
+        - relname:
+            usage: LABEL
+        - seq_scan:
+            usage: COUNTER
+        - idx_scan:
+            usage: COUNTER
+        - n_live_tup:
+            usage: GAUGE
+        - n_dead_tup:
+            usage: GAUGE
+        - last_autovacuum:
+            usage: GAUGE
+        - table_size_bytes:
+            usage: GAUGE
+        - index_size_bytes:
+            usage: GAUGE
 ---
 apiVersion: barmancloud.cnpg.io/v1
 kind: ObjectStore

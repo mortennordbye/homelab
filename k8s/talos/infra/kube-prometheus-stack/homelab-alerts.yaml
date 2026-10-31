@@ -288,6 +288,19 @@ spec:
               CronJob `{{ $labels.namespace }}/{{ $labels.cronjob }}` has not completed a backup in over 26 hours.
               Check: kubectl -n {{ $labels.namespace }} get jobs,pods and the failed pod's logs.
 
+        # Nightly ScheduledBackup; 26 h leaves room for one slow run.
+        - alert: PostgresBaseBackupStale
+          expr: time() - max by (namespace) (barman_cloud_cloudnative_pg_io_last_available_backup_timestamp) > 26 * 3600
+          for: 1h
+          labels:
+            severity: critical
+          annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#postgresbasebackupstale
+            summary: 'No CloudNativePG base backup in {{ $labels.namespace }} for over a day'
+            description: |
+              The newest base backup in Garage for the Cluster in `{{ $labels.namespace }}` is older than 26 hours.
+              Check: kubectl -n {{ $labels.namespace }} get backups and the latest Backup's status.
+
         # Monthly job: fires 6 h after a run that did not succeed, or when no run has
         # succeeded for 32 days.
         - alert: RestoreTestFailed
@@ -327,17 +340,19 @@ spec:
       rules:
         # Warning, not critical: when the database is down the logeverylift user journey
         # and public-site probe already page; this names the cause.
+        # absent(): a primary that is down stops reporting rather than reporting 0.
         - alert: PostgresDown
-          expr: pg_up == 0
+          expr: absent(cnpg_pg_replication_in_recovery{namespace="logeverylift"} == 0)
           for: 5m
           labels:
             severity: warning
+            namespace: logeverylift
           annotations:
             runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#postgresdown
-            summary: 'Postgres in {{ $labels.namespace }} is not accepting connections'
+            summary: 'logeverylift-db has no writable primary'
             description: |
-              postgres-exporter in `{{ $labels.namespace }}` has failed to connect to the database for 5 minutes.
-              Check: kubectl -n {{ $labels.namespace }} get pods -l app=postgres and the postgres container logs.
+              No instance of the CloudNativePG Cluster `logeverylift-db` has reported itself as primary for 5 minutes.
+              Check: kubectl -n logeverylift get cluster logeverylift-db and the instance pods' postgres logs.
 
         # Critical: WAL that cannot be archived stays on the instance volume until it
         # fills and the primary stops, and point-in-time restore has a gap.

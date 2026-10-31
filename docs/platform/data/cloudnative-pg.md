@@ -30,9 +30,11 @@ path-style addressing.
 | `garage-meta` | `proxmox-local` | the live LMDB metadata |
 
 LMDB corrupts on NFS, so the metadata lives on block storage and Garage snapshots it to
-the NAS volume every 6 hours. Everything a restore needs is therefore on the NAS, under
-its Btrfs snapshots and the Hyper Backup offsite copy
-([`../backups/README.md`](../backups/README.md)).
+the NAS volume every hour. `garage-data` sits on the `k8s-volumes` share, which has no
+snapshots or offsite copy, so VolSync backs it up nightly at 01:50 with restic into
+`k8s-backups/volsync/garage/garage-data`, which the NAS snapshots and Hyper Backup cover
+([`../backups/README.md`](../backups/README.md)). `garage-meta` is not backed up: a live
+LMDB copy can be torn, and the hourly snapshots in `garage-data` replace it.
 
 The pod runs as uid 1000 with `fsGroup: 1000`. The NFS driver's `File` fsGroupPolicy
 lets kubelet hand the fresh, root-only NAS directory to that group on first mount
@@ -102,5 +104,8 @@ docker run --rm \
 
 If `garage-meta` is lost, point `metadata_dir` at a copy of the newest directory under
 `meta-snapshots/` (or restore the PVC and copy it in), start Garage, and the objects on
-the NAS are readable again. If the NAS volume is lost, restore `garage-data` from the
-Btrfs snapshot or Hyper Backup first.
+the NAS are readable again. If `garage-data` is lost, restore it from VolSync first
+([`../backups/restore.md`](../backups/restore.md)), then the metadata from the
+snapshot inside it. Objects written after that snapshot are not in its index, so a
+restore from the nightly copy can lose up to an hour of WAL; the nightly `pg_dump` is
+the fallback.
