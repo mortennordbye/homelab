@@ -21,7 +21,8 @@ Alloy and node-exporter DaemonSets in `monitoring` are exempt through
 `policyexception-monitoring.yaml`. `policyexception-host-access.yaml` exempts one control
 for one image each: `Capabilities` for gluetun (`NET_ADMIN` makes the VPN tunnel) and
 `Privileged Containers` for verksted's `docker:*-dind` sidecar. `policyexception-nas-backups.yaml`
-exempts the etcd, Authentik and logeverylift dump CronJobs from the restricted
+exempts the etcd, Authentik and logeverylift dump CronJobs and the `backup-check` restore and
+Home Assistant checks from the restricted
 `Running as Non-root` and `Capabilities` controls, since the backup share only admits root
 ([backups](../backups/README.md#constraints)). Exceptions are only read
 from the `kyverno` namespace.

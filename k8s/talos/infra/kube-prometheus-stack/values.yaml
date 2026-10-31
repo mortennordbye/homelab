@@ -36,6 +36,10 @@ grafana:
   enabled: true
   replicas: 1
 
+  # The root chown init container breaks the restricted standard; the PVC is already 472-owned.
+  initChownData:
+    enabled: false
+
   # Installed before startup when the version on the PVC differs, so a failed download or a
   # version needing a newer Grafana keeps the pod from starting. Bump with the Grafana image.
   plugins:
