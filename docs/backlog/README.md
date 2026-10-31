@@ -33,7 +33,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 ### CloudNativePG for logeverylift's Postgres
 - **What:** replace the hand-built Postgres 18 Deployment behind logeverylift with a CloudNativePG `Cluster`: a standby replica with automatic failover, WAL archiving for point-in-time restore, and operator-run backups in place of the nightly dump CronJob.
 - **Why deferred:** agreed as the next platform step after Kyverno; it moves a live database with real users, so it gets its own change and a maintenance window.
-- **Unblock:** pick the backup target for WAL and base backups (NAS over S3, e.g. MinIO or the Synology S3 server), import the current database into a CNPG cluster on stage, verify a point-in-time restore, then cut prod over.
+- **Unblock:** the operator, Barman Cloud plugin and Garage are in place ([`docs/platform/data/cloudnative-pg.md`](../platform/data/cloudnative-pg.md)). Import the current database into a scratch CNPG cluster, verify failover and a point-in-time restore from Garage, then cut prod over.
 - **Where:** `k8s/talos/apps/logeverylift/` (Postgres, `db-backup.yaml`, `postgres-exporter.yaml`), `docs/platform/data/postgres.md`.
 
 ### Kyverno restricted and requests policies to Enforce

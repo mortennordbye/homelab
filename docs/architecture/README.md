@@ -96,6 +96,10 @@ Storage classes and CSI drivers: [`../platform/storage/README.md`](../platform/s
   so apps that create directories in it need an initContainer chown.
 - Postgres 18 for logeverylift runs in-cluster on NFS, PVC mounted at
   `/var/lib/postgresql`.
+- The CloudNativePG operator (`cnpg-system`) with its Barman Cloud plugin, and a
+  single-node Garage (`garage`) as the S3 target for base backups and WAL: data on NFS,
+  LMDB metadata on `proxmox-local` and snapshotted to NFS
+  ([`../platform/data/cloudnative-pg.md`](../platform/data/cloudnative-pg.md)).
 - The media share `/volume1/shared-data/media` is one mount so imports can hardlink
   ([`../apps/media-stack/README.md`](../apps/media-stack/README.md)).
 - Backups: etcd snapshots, Postgres dumps, VolSync restic per PVC, Home Assistant, NAS
@@ -189,7 +193,7 @@ Other apps, one directory each under `k8s/talos/apps/`:
 | ------ | -------- |
 | [`platform/backups`](../platform/backups/README.md) | backup layers, watching them, [restores](../platform/backups/restore.md) |
 | [`platform/cluster`](../platform/cluster/README.md) | Proxmox and Talos, upgrades, GPU passthrough, [Terraform stacks](../platform/cluster/terraform.md) |
-| [`platform/data`](../platform/data/README.md) | in-cluster Postgres, major upgrades |
+| [`platform/data`](../platform/data/README.md) | in-cluster Postgres, major upgrades, CloudNativePG, Garage |
 | [`platform/delivery`](../platform/delivery/README.md) | [Argo CD](../platform/delivery/argocd.md), Kargo promotion, [KEDA scale to zero](../platform/delivery/keda.md), [CI](../platform/delivery/ci.md) |
 | [`platform/identity`](../platform/identity/README.md) | Authentik SSO |
 | [`platform/network`](../platform/network/README.md) | VIPs, [Traefik](../platform/network/traefik.md), [Cilium](../platform/network/cilium.md), [certificates](../platform/network/certificates.md), DNS, Cloudflare, UniFi, remote access |
