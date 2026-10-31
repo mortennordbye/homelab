@@ -171,6 +171,5 @@ spec:
           persistentVolumeClaim:
             claimName: prowlarr-config
         - name: torrents
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/torrents
+          persistentVolumeClaim:
+            claimName: torrents

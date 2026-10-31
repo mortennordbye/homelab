@@ -103,6 +103,5 @@ spec:
           persistentVolumeClaim:
             claimName: radarr-config
         - name: data
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media
+          persistentVolumeClaim:
+            claimName: media

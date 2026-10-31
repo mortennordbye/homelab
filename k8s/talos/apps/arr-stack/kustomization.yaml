@@ -5,6 +5,7 @@ namespace: arr-stack
 resources:
   - namespace.yaml
   - volsync.yaml
+  - nfs-volumes.yaml
   - sonarr.yaml
   - tdarr.yaml
   - radarr.yaml

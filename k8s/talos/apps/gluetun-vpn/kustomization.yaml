@@ -7,6 +7,7 @@ resources:
   - pia-secret.yaml
   - gluetun-config.yaml
   - pvcs.yaml
+  - nfs-volumes.yaml
   - service.yaml
   - gluetun.yaml
   - httproute.yaml

@@ -84,12 +84,16 @@ starts.
 | `logeverylift-db-backup` | `logeverylift` | `/volume1/k8s-backups/postgres/logeverylift` | [`db-backup.yaml`](../../../k8s/talos/apps/logeverylift/db-backup.yaml) |
 | `authentik-db-backup` | `identity` | `/volume1/k8s-backups/postgres/authentik` | [`db-backup.yaml`](../../../k8s/talos/infra/authentik/db-backup.yaml) |
 | `reelsmith-offsite-backups` | `reelsmith` | `/volume1/shared-data/media/reelsmith` | [`offsite-pv.yaml`](../../../k8s/talos/apps/reelsmith/offsite-pv.yaml) |
+| `arr-stack-media` | `arr-stack` | `/volume1/shared-data/media` | [`nfs-volumes.yaml`](../../../k8s/talos/apps/arr-stack/nfs-volumes.yaml) |
+| `plex-media-stack-media` | `plex-media-stack` | `/volume1/shared-data/media` (read-only, one subPath per library) | [`nfs-volumes.yaml`](../../../k8s/talos/apps/plex-media-stack/nfs-volumes.yaml) |
+| `gluetun-vpn-torrents` | `gluetun-vpn` | `/volume1/shared-data/media/torrents` | [`nfs-volumes.yaml`](../../../k8s/talos/apps/gluetun-vpn/nfs-volumes.yaml) |
+| `audiobookshelf-shared-data` | `audiobookshelf` | `/volume1/shared-data` | [`nfs-volumes.yaml`](../../../k8s/talos/apps/audiobookshelf/nfs-volumes.yaml) |
+| `verksted-shared-data` | `verksted` | `/volume1/shared-data` | [`nfs-volumes.yaml`](../../../k8s/talos/apps/verksted/nfs-volumes.yaml) |
+| `backup-check-k8s-backups` | `backup-check` | `/volume1/k8s-backups` (read-only) | [`nfs-volumes.yaml`](../../../k8s/talos/infra/backup-check/nfs-volumes.yaml) |
 
-The media apps, audiobookshelf and verksted mount `/volume1/shared-data` (or a folder under
-it) as inline `nfs` volumes in the pod spec instead, and the VolSync movers and
-`backup-check` jobs mount `/volume1/k8s-backups` the same way. A namespace that enforces Pod Security
-`restricted` refuses inline `nfs` volumes, so there the NFS path goes through a static PV
-and PVC, as reelsmith does.
+Workloads never mount NFS inline: the restricted Pod Security standard refuses inline
+`nfs` volumes, so every NAS path goes through a static PV and PVC. The VolSync movers are
+the exception, since VolSync builds their pod spec.
 
 ## Choosing a class
 

@@ -1,0 +1,33 @@
+# Static NFS claims: the restricted Pod Security standard forbids inline nfs volumes.
+# Retain, so deleting a claim never touches the folder on the NAS.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gluetun-vpn-torrents
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: gluetun-vpn
+    name: torrents
+  nfs:
+    server: nas.local.bigd.no
+    path: /volume1/shared-data/media/torrents
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: torrents
+  namespace: gluetun-vpn
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: gluetun-vpn-torrents
+  resources:
+    requests:
+      storage: 1Ti
