@@ -48,7 +48,7 @@ grafana:
     - grafana-metricsdrilldown-app@3.0.0 # renovate: custom.grafana-plugins=grafana-metricsdrilldown-app
     - grafana-pyroscope-app@3.0.0 # renovate: custom.grafana-plugins=grafana-pyroscope-app
     - grafana-advisor-app@1.1.0 # renovate: custom.grafana-plugins=grafana-advisor-app
-    - grafana-github-datasource@2.9.4 # renovate: custom.grafana-plugins=grafana-github-datasource
+    - grafana-github-datasource@2.9.6 # renovate: custom.grafana-plugins=grafana-github-datasource
     - yesoreyeram-infinity-datasource@4.1.4 # renovate: custom.grafana-plugins=yesoreyeram-infinity-datasource
 
   # A dashboard ConfigMap's k8s-sidecar-target-directory annotation names its Grafana folder.
