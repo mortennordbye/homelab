@@ -29,7 +29,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: garage
-          image: dxflrs/garage:v2.4.1
+          image: dxflrs/garage:v2.5.0
           envFrom:
             - secretRef:
                 name: garage-secrets
