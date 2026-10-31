@@ -17,7 +17,6 @@ spec:
               operator: In
               values:
                 - logeverylift
-                - cnpg-scratch
             # Any CloudNativePG pod: recovery runs in a job pod, not an instance.
             - key: cnpg.io/cluster
               operator: Exists
