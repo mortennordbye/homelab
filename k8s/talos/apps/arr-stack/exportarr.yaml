@@ -88,9 +88,20 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: exportarr
           image: ghcr.io/onedr0p/exportarr:v2.3.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           args:
             - sonarr
           env:
@@ -181,9 +192,20 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: exportarr
           image: ghcr.io/onedr0p/exportarr:v2.3.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           args:
             - radarr
           env:
@@ -274,9 +296,20 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: exportarr
           image: ghcr.io/onedr0p/exportarr:v2.3.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           args:
             - radarr
           env:
@@ -367,9 +400,20 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: exportarr
           image: ghcr.io/onedr0p/exportarr:v2.3.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           args:
             - bazarr
           env:
@@ -464,9 +508,20 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: exportarr
           image: ghcr.io/onedr0p/exportarr:v2.3.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           args:
             - bazarr
           env:
@@ -561,9 +616,20 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: exportarr
           image: ghcr.io/onedr0p/exportarr:v2.3.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           args:
             - prowlarr
             # Pull historical indexer stats so query/grab metrics populate

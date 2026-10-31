@@ -64,9 +64,20 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: exporter
           image: ghcr.io/esanchezm/prometheus-qbittorrent-exporter:v1.7.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: QBITTORRENT_HOST
               value: "qbittorrent.gluetun-vpn"

@@ -20,6 +20,9 @@ spec:
     spec:
       securityContext:
         fsGroup: 911
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: mealie
           image: ghcr.io/mealie-recipes/mealie:v3.28.0
@@ -29,6 +32,10 @@ spec:
           securityContext:
             runAsUser: 911
             runAsGroup: 911
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: PUID
               value: "911"
