@@ -13,4 +13,4 @@ resources:
 - ciliumnetworkpolicy.yaml
 images:
 - name: ghcr.io/mortennordbye/innestemme
-  newTag: 0.0.1793464593
+  newTag: 0.0.1793470804
