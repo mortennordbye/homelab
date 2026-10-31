@@ -79,6 +79,9 @@ spec:
               value: "false"
             - name: openBrowser
               value: "false"
+            # A 2.x rollback asks upstream for its engine; NodeJS reads the pre-Rust DB tree.
+            - name: TDARR_ENGINE
+              value: "rust"
           volumeMounts:
             - name: config
               mountPath: /app/server
