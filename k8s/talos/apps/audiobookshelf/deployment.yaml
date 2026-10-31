@@ -64,10 +64,8 @@ spec:
             failureThreshold: 3
       volumes:
         - name: share
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data
-            readOnly: false
+          persistentVolumeClaim:
+            claimName: shared-data
         - name: config
           persistentVolumeClaim:
             claimName: config-pvc

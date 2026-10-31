@@ -6,6 +6,7 @@ commonAnnotations:
 
 resources:
   - config-pvc.yaml
+  - nfs-volumes.yaml
   - deployment.yaml
   - httproute.yaml
   - metadata-pvc.yaml

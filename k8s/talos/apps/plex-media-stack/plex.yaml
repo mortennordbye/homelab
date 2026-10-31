@@ -162,16 +162,26 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
-            - name: media-series
+            - name: media
               mountPath: /tv
-            - name: media-movies
+              subPath: series
+              readOnly: true
+            - name: media
               mountPath: /movies
-            - name: media-movies-4k
+              subPath: movies
+              readOnly: true
+            - name: media
               mountPath: /movies-4k
-            - name: media-courses
+              subPath: movies-4k
+              readOnly: true
+            - name: media
               mountPath: /courses
-            - name: media-youtube
+              subPath: courses
+              readOnly: true
+            - name: media
               mountPath: /youtube
+              subPath: youtube
+              readOnly: true
             - name: transcode
               mountPath: /transcode
             # subPath: a whole ConfigMap mount makes the directory 0777, which
@@ -197,34 +207,13 @@ spec:
             timeoutSeconds: 30
             failureThreshold: 10
       volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: media
+            readOnly: true
         - name: config
           persistentVolumeClaim:
             claimName: plex-config
-        - name: media-series
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/series
-            readOnly: true
-        - name: media-movies
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/movies
-            readOnly: true
-        - name: media-movies-4k
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/movies-4k
-            readOnly: true
-        - name: media-courses
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/courses
-            readOnly: true
-        - name: media-youtube
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media/youtube
-            readOnly: true
         - name: transcode
           emptyDir:
             sizeLimit: 35Gi

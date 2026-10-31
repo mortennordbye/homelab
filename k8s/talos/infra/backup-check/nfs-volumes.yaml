@@ -1,0 +1,33 @@
+# Static NFS claims: the restricted Pod Security standard forbids inline nfs volumes.
+# Retain, so deleting a claim never touches the folder on the NAS.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: backup-check-k8s-backups
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: backup-check
+    name: k8s-backups
+  nfs:
+    server: nas.local.bigd.no
+    path: /volume1/k8s-backups
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: k8s-backups
+  namespace: backup-check
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: ""
+  volumeName: backup-check-k8s-backups
+  resources:
+    requests:
+      storage: 1Ti

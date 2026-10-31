@@ -94,6 +94,5 @@ spec:
               memory: 256Mi
       volumes:
         - name: data
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media
+          persistentVolumeClaim:
+            claimName: media

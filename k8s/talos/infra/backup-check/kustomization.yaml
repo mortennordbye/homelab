@@ -6,5 +6,6 @@ namespace: backup-check
 resources:
   - namespace.yaml
   - externalsecrets.yaml
+  - nfs-volumes.yaml
   - freshness.yaml
   - restore-test.yaml

@@ -103,6 +103,5 @@ spec:
           persistentVolumeClaim:
             claimName: bazarr-4k-config
         - name: data
-          nfs:
-            server: nas.local.bigd.no
-            path: /volume1/shared-data/media
+          persistentVolumeClaim:
+            claimName: media

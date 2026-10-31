@@ -191,9 +191,8 @@ spec:
                   memory: 16Mi
           volumes:
             - name: backup
-              nfs:
-                server: nas.local.bigd.no
-                path: /volume1/k8s-backups
+              persistentVolumeClaim:
+                claimName: k8s-backups
                 readOnly: true
             - name: work
               emptyDir:
