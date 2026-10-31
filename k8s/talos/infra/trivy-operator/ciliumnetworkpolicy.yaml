@@ -30,6 +30,14 @@ spec:
               protocol: ANY
     - toEntities:
         - kube-apiserver
+    # The operator holds off scanning until trivy-server answers its health check.
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: trivy-server
+      toPorts:
+        - ports:
+            - port: "4954"
+              protocol: TCP
 ---
 # trivy-server holds the vulnerability DB, pulled from mirror.gcr.io, and answers the scan jobs.
 apiVersion: "cilium.io/v2"
@@ -48,6 +56,9 @@ spec:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": trivy-system
             "k8s:app.kubernetes.io/managed-by": trivy-operator
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": trivy-system
+            "k8s:app.kubernetes.io/name": trivy-operator
       toPorts:
         - ports:
             - port: "4954"
