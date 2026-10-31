@@ -44,7 +44,7 @@ grafana:
   # version needing a newer Grafana keeps the pod from starting. Bump with the Grafana image.
   plugins:
     - grafana-exploretraces-app@3.0.0 # renovate: custom.grafana-plugins=grafana-exploretraces-app
-    - grafana-lokiexplore-app@3.0.0 # renovate: custom.grafana-plugins=grafana-lokiexplore-app
+    - grafana-lokiexplore-app@3.1.0 # renovate: custom.grafana-plugins=grafana-lokiexplore-app
     - grafana-metricsdrilldown-app@3.0.0 # renovate: custom.grafana-plugins=grafana-metricsdrilldown-app
     - grafana-pyroscope-app@3.0.0 # renovate: custom.grafana-plugins=grafana-pyroscope-app
     - grafana-advisor-app@1.1.0 # renovate: custom.grafana-plugins=grafana-advisor-app
