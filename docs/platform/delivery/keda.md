@@ -59,7 +59,6 @@ manifest does not fight KEDA.
 | --- | --- | --- | --- | --- |
 | audiobookshelf | `audiobookshelf` | `audiobookshelf.bigd.no` | 0 / 1 | cron, HTTP |
 | homepage | `homepage` | `hub.bigd.no` | 0 / 1 | cron, HTTP |
-| it-tools | `it-tools` | `it-tools.bigd.no` | 0 / 1 | cron, HTTP |
 | omni-tools | `omni-tools` | `omni-tools.bigd.no` | 0 / 1 | cron, HTTP |
 | trek | `trek` | `trek.bigd.no` | 0 / 1 | cron, HTTP |
 | headroom | `headroom` | `headroom.local.bigd.no` | 0 / 1 | cron, HTTP |
@@ -81,7 +80,7 @@ only use cron: 3 replicas from 07:00 to 23:00 Europe/Oslo, 1 outside it.
 ## Cron warm plus HTTP wake
 
 Most HTTP-triggered apps carry two triggers
-([`it-tools/scaledobject.yaml`](../../../k8s/talos/apps/it-tools/scaledobject.yaml)):
+([`omni-tools/scaledobject.yaml`](../../../k8s/talos/apps/omni-tools/scaledobject.yaml)):
 
 ```yaml
 triggers:
@@ -94,7 +93,7 @@ triggers:
   - type: external-push
     metadata:
       scalerAddress: keda-add-ons-http-external-scaler.keda:9090
-      interceptorRoute: it-tools
+      interceptorRoute: omni-tools
 ```
 
 KEDA scales to the highest value any trigger asks for. From 07:00 to 23:00 Oslo time
@@ -129,24 +128,24 @@ allows port 11434 from the whole cluster.
 
 ## Onboard an app
 
-Built from it-tools. The app already has a Deployment, Service, HTTPRoute and
+Built from omni-tools. The app already has a Deployment, Service, HTTPRoute and
 CiliumNetworkPolicy under `k8s/talos/apps/<app>/`.
 
 1. Add `interceptorroute.yaml`: copy
-   [`it-tools/interceptorroute.yaml`](../../../k8s/talos/apps/it-tools/interceptorroute.yaml),
+   [`omni-tools/interceptorroute.yaml`](../../../k8s/talos/apps/omni-tools/interceptorroute.yaml),
    set the namespace, `spec.target.service` and `port` to the app Service, and
    `spec.rules[].hosts` to the exact hostname in the HTTPRoute.
 2. Add `scaledobject.yaml`: copy
-   [`it-tools/scaledobject.yaml`](../../../k8s/talos/apps/it-tools/scaledobject.yaml),
+   [`omni-tools/scaledobject.yaml`](../../../k8s/talos/apps/omni-tools/scaledobject.yaml),
    set `scaleTargetRef.name` to the Deployment and `interceptorRoute` to the
    InterceptorRoute's name. Drop the cron trigger if the app may sit at zero all day.
 3. In `httproute.yaml`, replace the app Service in `backendRefs` with
    `keda-add-ons-http-interceptor-proxy`, namespace `keda`, port `8080`
-   ([`it-tools/httproute.yaml`](../../../k8s/talos/apps/it-tools/httproute.yaml)).
+   ([`omni-tools/httproute.yaml`](../../../k8s/talos/apps/omni-tools/httproute.yaml)).
    Keep the hostnames and filters.
 4. In `ciliumnetworkpolicy.yaml`, add an ingress rule from the interceptor pods on the
    container port
-   ([`it-tools/ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/it-tools/ciliumnetworkpolicy.yaml)).
+   ([`omni-tools/ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/omni-tools/ciliumnetworkpolicy.yaml)).
 5. Add both new files to the app's `kustomization.yaml`.
 6. Add the app namespace to the `from` list in
    [`referencegrant.yaml`](../../../k8s/talos/infra/keda-http-add-on/referencegrant.yaml).

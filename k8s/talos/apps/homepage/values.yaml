@@ -138,10 +138,6 @@ config:
             icon: audiobookshelf.png
             href: https://audiobookshelf.bigd.no
             description: Audiobook library
-        - IT Tools:
-            icon: it-tools.svg
-            href: https://it-tools.bigd.no
-            description: Developer tools
         - Omni Tools:
             icon: https://omni-tools.bigd.no/favicon.svg
             href: https://omni-tools.bigd.no

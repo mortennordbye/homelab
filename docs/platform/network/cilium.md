@@ -107,7 +107,7 @@ A new app's policy, copied from the one closest to it:
 
 - Ingress from the KEDA interceptor as well if the app scales to zero, and always
   `fromEntities: [host, health]` for probes.
-  [`it-tools/ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/it-tools/ciliumnetworkpolicy.yaml)
+  [`omni-tools/ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/omni-tools/ciliumnetworkpolicy.yaml)
   has all three.
 - No egress rules if the app needs broad outbound access, as
   [`verksted/ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/verksted/ciliumnetworkpolicy.yaml).

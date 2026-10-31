@@ -13,9 +13,6 @@ spec:
       namespace: stage-blog
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      namespace: it-tools
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
       namespace: omni-tools
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
