@@ -16,7 +16,7 @@ The manifests live in
 | Device | Voice PE "Home Assistant Voice 0a1f4d", `10.3.20.67` on IoT, area Living Room |
 | Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.50; "Hey Jarvis" over an answer interrupts it |
 | Voice | Kokoro inside the engine (sherpa-onnx), voice `am_onyx`; rendered speech kept in `/models/speech-cache` |
-| Name and style | `wake-name: Jarvis`, `honorific: sir` ("As you wish, sir.") |
+| Name and style | `wake-name: Jarvis`, `honorific: sir` ("As you wish, sir."), `honorific-female: ma'am` for female voices, no honorific when the voice is unclear |
 | Delivery | Kargo project `innestemme-cd`: each build is promoted straight to main and deployed, then smoke-tested ([kargo.md](../../platform/delivery/kargo.md)); roll back by promoting older Freight |
 | Backup | none: the volume is a model cache that downloads again |
 | Wake words | Hey Jarvis, detected in the engine (openWakeWord, `wake-model`, `wake-threshold: 0.65`) on the device's continuous stream |
