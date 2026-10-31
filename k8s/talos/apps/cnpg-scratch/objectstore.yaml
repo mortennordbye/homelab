@@ -1,0 +1,23 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: garage
+spec:
+  retentionPolicy: 7d
+  configuration:
+    destinationPath: s3://cnpg-logeverylift/
+    endpointURL: http://garage.garage.svc:3900
+    s3Credentials:
+      accessKeyId:
+        name: garage-s3
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: garage-s3
+        key: ACCESS_SECRET_KEY
+      region:
+        name: garage-s3
+        key: REGION
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
