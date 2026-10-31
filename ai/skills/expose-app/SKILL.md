@@ -18,7 +18,7 @@ to run (Terraform applies).
 
 - `k8s/talos/apps/<app>/httproute.yaml`, listed in that directory's `kustomization.yaml`.
   Private template: `k8s/talos/apps/verksted/httproute.yaml`. Public template:
-  `k8s/talos/apps/it-tools/httproute.yaml`.
+  `k8s/talos/apps/omni-tools/httproute.yaml`.
 - The app's own config, if it needs to know its URL: base-URL env vars (mealie, verksted),
   headroom's `ALLOWED_HOSTS`.
 - `ciliumnetworkpolicy.yaml` must let Traefik in on the container port. The selector is

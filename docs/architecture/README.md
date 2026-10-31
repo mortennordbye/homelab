@@ -183,8 +183,7 @@ Other apps, one directory each under `k8s/talos/apps/`:
 - mealie: recipe manager on `mealie.bigd.no`, SQLite, sign-up off.
 - homepage: the hub on `hub.bigd.no`, behind Authentik forward-auth.
 - bigd: the static `bigd.no` landing page, nginx serving `index.html` from a ConfigMap.
-- it-tools and omni-tools: stateless browser tool collections on `it-tools.bigd.no` and
-  `omni-tools.bigd.no`.
+- omni-tools: a stateless browser tool collection on `omni-tools.bigd.no`.
 - isponsorblocktv: skips sponsor segments and ads in the YouTube app on the TVs through
   YouTube's lounge API. No route and no volume; the paired screens live in Bitwarden
   ([`../apps/isponsorblocktv/README.md`](../apps/isponsorblocktv/README.md)).
