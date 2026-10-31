@@ -2,3 +2,9 @@ interceptor:
   replicas:
     min: 2
     max: 5
+
+# The images run as uid 65532.
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
