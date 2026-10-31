@@ -29,6 +29,9 @@ spec:
                       - hyper1
       securityContext:
         fsGroup: 1000
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: audiobookshelf
           image: ghcr.io/advplyr/audiobookshelf:2.35.1
@@ -38,6 +41,10 @@ spec:
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - name: share
               mountPath: /audiobooks

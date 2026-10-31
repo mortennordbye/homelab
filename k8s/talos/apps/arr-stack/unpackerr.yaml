@@ -58,12 +58,20 @@ spec:
                     values:
                       - hyper1
       securityContext:
+        runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: unpackerr
           image: ghcr.io/unpackerr/unpackerr:0.15.2
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: TZ
               value: "Europe/Oslo"
