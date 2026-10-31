@@ -18,8 +18,9 @@ spec:
               values:
                 - logeverylift
                 - cnpg-scratch
-          matchLabels:
-            cnpg.io/podRole: instance
+            # Any CloudNativePG pod: recovery runs in a job pod, not an instance.
+            - key: cnpg.io/cluster
+              operator: Exists
       toPorts:
         - ports:
             - port: "3900"

@@ -38,8 +38,8 @@ The pod runs as uid 1000 with `fsGroup: 1000`. The NFS driver's `File` fsGroupPo
 lets kubelet hand the fresh, root-only NAS directory to that group on first mount
 ([`../storage/README.md`](../storage/README.md#synology-nfs)).
 
-The network policy admits S3 only from CloudNativePG instance pods
-(`cnpg.io/podRole: instance`) in the namespaces listed there. A new database namespace
+The network policy admits S3 only from CloudNativePG pods (any pod labelled
+`cnpg.io/cluster`, which covers recovery jobs) in the namespaces listed there. A new database namespace
 has to be added to it.
 
 ### Secrets
