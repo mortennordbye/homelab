@@ -1,0 +1,10 @@
+# Temporary: shows which headers Traefik forwards upstream (trace propagation check).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: whoami-debug
+
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - httproute.yaml
