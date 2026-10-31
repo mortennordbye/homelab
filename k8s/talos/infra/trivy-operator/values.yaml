@@ -10,7 +10,6 @@ operator:
   # One trivy-server holds the vulnerability DB, so scan jobs don't each download it.
   builtInTrivyServer: true
   scanJobsConcurrentLimit: 3
-  scanJobTTL: 10m
 
 compliance:
   specs: []
