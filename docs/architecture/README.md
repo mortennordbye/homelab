@@ -136,7 +136,7 @@ and Cloudflare's analytics from its GraphQL API with a read-only token
 ([`../platform/observability/README.md`](../platform/observability/README.md#cloudflare)).
 Outside the cluster, Prometheus scrapes the Proxmox API (pve-exporter), node-exporter on the
 hosts (CPU temperatures and NVMe health), Proxmox Backup Server (pbs-exporter), the NAS over
-SNMP and the UniFi gateway; inside, postgres-exporter reads logeverylift's database and
+SNMP and the UniFi gateway; inside, CloudNativePG's exporter reports logeverylift's database and
 electricity-price supplies the NO1 spot price for the SPOG's cost panels
 ([`../platform/observability/README.md`](../platform/observability/README.md#sources)).
 metrics-server (`k8s/talos/infra/metrics-server`) serves the resource metrics API for

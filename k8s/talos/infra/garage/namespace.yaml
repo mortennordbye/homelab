@@ -3,8 +3,10 @@ kind: Namespace
 metadata:
   name: garage
   labels:
-    pod-security.kubernetes.io/enforce: restricted
+    # Baseline, not restricted: the VolSync mover runs as root on an inline NFS volume.
+    pod-security.kubernetes.io/enforce: baseline
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
   annotations:
+    volsync.backube/privileged-movers: "true"
     argocd.argoproj.io/sync-wave: "2"

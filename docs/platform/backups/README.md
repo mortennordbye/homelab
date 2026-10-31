@@ -14,7 +14,8 @@ notifications) is in [`pbs.md`](pbs.md).
 | etcd | `talosctl etcd snapshot` via a Talos API ServiceAccount (`os:etcd:backup`) | 00:30 | 30 | `etcd/etcd-<UTC>.db.gz` | `k8s/talos/infra/etcd-backup/`, patch in `terraform/proxmox/hyper-cluster/k8s/talos/talos-cluster.tf` |
 | logeverylift DB | `pg_dump --format=custom`, Postgres 18 | 00:45 | 30 days | `postgres/logeverylift/` | `k8s/talos/apps/logeverylift/db-backup.yaml` |
 | Authentik DB | `pg_dump --format=custom`, Postgres 17 | 00:50 | 30 days | `postgres/authentik/` | `k8s/talos/infra/authentik/db-backup.yaml` |
-| App volumes (21) | VolSync restic, `copyMethod: Direct`, one repository per PVC | 01:00 to 01:45 by namespace | 14 daily, 8 weekly, 6 monthly | `volsync/<namespace>/<pvc>/` | `volsync.yaml` in each app, controller `k8s/talos/infra/volsync/` |
+| logeverylift DB, point in time | CloudNativePG base backup and continuous WAL archiving to Garage | base backup 00:15, WAL continuous | 30 days | in `volsync/garage/garage-data/` | `k8s/talos/apps/logeverylift/cnpg-cluster.yaml`, [`../data/cloudnative-pg.md`](../data/cloudnative-pg.md) |
+| App volumes (22) | VolSync restic, `copyMethod: Direct`, one repository per PVC | 01:00 to 01:45 by namespace | 14 daily, 8 weekly, 6 monthly | `volsync/<namespace>/<pvc>/` | `volsync.yaml` in each app, controller `k8s/talos/infra/volsync/` |
 | Home Assistant | HA OS automatic backup (encrypted) | 01:30 | 14 | `home-assistant/` | HA UI, Settings > System > Backups |
 | *arr databases | App-native zips inside `/config/Backups` (Sonarr, Radarr, Radarr 4K, Prowlarr) | daily | 14 days | inside the VolSync copy | app UI, see [media stack](../../apps/media-stack/README.md) |
 | Whole share | Btrfs snapshot, immutable 7 days | 02:45 | 30 | `k8s-backups` | DSM Snapshot Replication |
@@ -33,7 +34,8 @@ repo root. Nothing checks how old the newest zip is.
 
 VolSync covers: arr-stack (sonarr, radarr, radarr-4k, bazarr, bazarr-4k, cleanuparr, tdarr), gluetun-vpn (prowlarr,
 qbittorrent), plex-media-stack (plex, tautulli, seerr), audiobookshelf (config, metadata),
-trek (data, uploads), mealie, open-webui, headroom, verksted, monitoring (grafana).
+trek (data, uploads), mealie, open-webui, headroom, verksted, monitoring (grafana), garage
+(data).
 
 Not backed up by design: Loki, Tempo, Prometheus, Alertmanager, the Ollama model cache,
 flaresolverr, reelsmith (keeps its own copies), the media itself.
@@ -51,7 +53,8 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
 - Grafana SPOG, row `Backups`: age of the last successful etcd and dump job,
   VolSync sources behind schedule.
 - Alerts (critical, Discord): `BackupJobStale` (etcd or a dump not successful for 26 h),
-  `VolSyncBackupStale` (a source behind schedule for 6 h). DSM failures (Hyper Backup,
+  `VolSyncBackupStale` (a source behind schedule for 6 h), `PostgresBaseBackupStale` (no
+  CloudNativePG base backup for 26 h) and `PostgresWalArchivingFailing`. DSM failures (Hyper Backup,
   snapshots) arrive as `SynologyNotification` and by email.
 - Backups made outside the cluster only report failures, so daily checks in
   `k8s/talos/infra/backup-check/` look for the newest one at 09:00 and fail past 26 h;

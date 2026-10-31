@@ -35,7 +35,7 @@
           "uid": "${datasource}"
         },
         "query": {
-          "query": "label_values(pg_up, namespace)",
+          "query": "label_values(cnpg_collector_up, namespace)",
           "refId": "ns"
         },
         "refresh": 1,
@@ -51,7 +51,7 @@
           "uid": "${datasource}"
         },
         "query": {
-          "query": "label_values(pg_database_size_bytes{namespace=\"$namespace\", datname!~\"postgres|template.*\"}, datname)",
+          "query": "label_values(cnpg_pg_database_size_bytes{namespace=\"$namespace\", datname!~\"postgres|template.*\"}, datname)",
           "refId": "db"
         },
         "refresh": 1,
@@ -95,7 +95,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "pg_up{namespace=\"$namespace\"}",
+          "expr": "max(cnpg_collector_up{namespace=\"$namespace\"})",
           "legendFormat": ""
         }
       ],
@@ -167,7 +167,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "sum(pg_stat_database_numbackends{namespace=\"$namespace\", datname=\"$database\"}) / max(pg_settings_max_connections{namespace=\"$namespace\"})",
+          "expr": "sum(cnpg_backends_total{namespace=\"$namespace\", datname=\"$database\", usename!~\"cnpg_metrics_exporter|streaming_replica|postgres\"}) / max(cnpg_pg_settings_setting{namespace=\"$namespace\", name=\"max_connections\"})",
           "legendFormat": ""
         }
       ],
@@ -231,7 +231,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "pg_database_size_bytes{namespace=\"$namespace\", datname=\"$database\"}",
+          "expr": "max(cnpg_pg_database_size_bytes{namespace=\"$namespace\", datname=\"$database\"})",
           "legendFormat": ""
         }
       ],
@@ -276,7 +276,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "sum(rate(pg_stat_database_blks_hit{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval])) / clamp_min(sum(rate(pg_stat_database_blks_hit{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval])) + sum(rate(pg_stat_database_blks_read{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval])), 1e-9)",
+          "expr": "sum(rate(cnpg_pg_stat_database_blks_hit{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval])) / clamp_min(sum(rate(cnpg_pg_stat_database_blks_hit{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval])) + sum(rate(cnpg_pg_stat_database_blks_read{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval])), 1e-9)",
           "legendFormat": ""
         }
       ],
@@ -341,7 +341,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "max(pg_stat_activity_max_tx_duration{namespace=\"$namespace\", datname=\"$database\"})",
+          "expr": "max(cnpg_backends_max_tx_duration_seconds{namespace=\"$namespace\", datname=\"$database\"})",
           "legendFormat": ""
         }
       ],
@@ -405,7 +405,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "sum(increase(pg_stat_database_deadlocks{namespace=\"$namespace\", datname=\"$database\"}[$__range]))",
+          "expr": "sum(increase(cnpg_pg_stat_database_deadlocks{namespace=\"$namespace\", datname=\"$database\"}[$__range]))",
           "legendFormat": "",
           "instant": true,
           "range": false
@@ -466,7 +466,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "sum by (state) (pg_stat_activity_count{namespace=\"$namespace\", datname=\"$database\"})",
+          "expr": "sum by (state) (cnpg_backends_total{namespace=\"$namespace\", datname=\"$database\", usename!~\"cnpg_metrics_exporter|streaming_replica|postgres\"})",
           "legendFormat": "{{state}}"
         }
       ],
@@ -520,7 +520,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "sum(rate(pg_stat_database_xact_commit{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
+          "expr": "sum(rate(cnpg_pg_stat_database_xact_commit{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
           "legendFormat": "commits"
         },
         {
@@ -529,7 +529,7 @@
             "uid": "${datasource}"
           },
           "refId": "B",
-          "expr": "sum(rate(pg_stat_database_xact_rollback{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
+          "expr": "sum(rate(cnpg_pg_stat_database_xact_rollback{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
           "legendFormat": "rollbacks"
         }
       ],
@@ -595,7 +595,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "sum(rate(pg_stat_database_tup_fetched{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
+          "expr": "sum(rate(cnpg_pg_stat_database_tup_fetched{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
           "legendFormat": "fetched"
         },
         {
@@ -604,7 +604,7 @@
             "uid": "${datasource}"
           },
           "refId": "B",
-          "expr": "sum(rate(pg_stat_database_tup_inserted{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
+          "expr": "sum(rate(cnpg_pg_stat_database_tup_inserted{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
           "legendFormat": "inserted"
         },
         {
@@ -613,7 +613,7 @@
             "uid": "${datasource}"
           },
           "refId": "C",
-          "expr": "sum(rate(pg_stat_database_tup_updated{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
+          "expr": "sum(rate(cnpg_pg_stat_database_tup_updated{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
           "legendFormat": "updated"
         },
         {
@@ -622,7 +622,7 @@
             "uid": "${datasource}"
           },
           "refId": "D",
-          "expr": "sum(rate(pg_stat_database_tup_deleted{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
+          "expr": "sum(rate(cnpg_pg_stat_database_tup_deleted{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
           "legendFormat": "deleted"
         }
       ],
@@ -677,7 +677,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "pg_database_size_bytes{namespace=\"$namespace\", datname=\"$database\"}",
+          "expr": "max(cnpg_pg_database_size_bytes{namespace=\"$namespace\", datname=\"$database\"})",
           "legendFormat": "size"
         },
         {
@@ -686,7 +686,7 @@
             "uid": "${datasource}"
           },
           "refId": "B",
-          "expr": "sum(pg_wal_size_bytes{namespace=\"$namespace\"})",
+          "expr": "max(cnpg_collector_pg_wal{namespace=\"$namespace\", value=\"size\"})",
           "legendFormat": "WAL"
         }
       ],
@@ -722,7 +722,7 @@
     {
       "id": 12,
       "type": "timeseries",
-      "title": "Locks by mode",
+      "title": "Backends waiting on locks",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -740,7 +740,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "sum by (mode) (pg_locks_count{namespace=\"$namespace\", datname=\"$database\"}) > 0",
+          "expr": "sum(cnpg_backends_waiting_total{namespace=\"$namespace\"})",
           "legendFormat": "{{mode}}"
         }
       ],
@@ -794,7 +794,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "sum(rate(pg_stat_database_temp_bytes{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
+          "expr": "sum(rate(cnpg_pg_stat_database_temp_bytes{namespace=\"$namespace\", datname=\"$database\"}[$__rate_interval]))",
           "legendFormat": "temp"
         }
       ],
@@ -862,7 +862,7 @@
             "uid": "${datasource}"
           },
           "refId": "A",
-          "expr": "sum by (relname) (pg_stat_user_tables_table_size_bytes{namespace=\"$namespace\", datname=\"$database\"})",
+          "expr": "sum by (relname) (cnpg_pg_stat_user_tables_table_size_bytes{namespace=\"$namespace\", datname=\"$database\"})",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -874,7 +874,7 @@
             "uid": "${datasource}"
           },
           "refId": "B",
-          "expr": "sum by (relname) (pg_stat_user_tables_index_size_bytes{namespace=\"$namespace\", datname=\"$database\"})",
+          "expr": "sum by (relname) (cnpg_pg_stat_user_tables_index_size_bytes{namespace=\"$namespace\", datname=\"$database\"})",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -886,7 +886,7 @@
             "uid": "${datasource}"
           },
           "refId": "C",
-          "expr": "sum by (relname) (pg_stat_user_tables_n_live_tup{namespace=\"$namespace\", datname=\"$database\"})",
+          "expr": "sum by (relname) (cnpg_pg_stat_user_tables_n_live_tup{namespace=\"$namespace\", datname=\"$database\"})",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -898,7 +898,7 @@
             "uid": "${datasource}"
           },
           "refId": "D",
-          "expr": "sum by (relname) (pg_stat_user_tables_n_dead_tup{namespace=\"$namespace\", datname=\"$database\"})",
+          "expr": "sum by (relname) (cnpg_pg_stat_user_tables_n_dead_tup{namespace=\"$namespace\", datname=\"$database\"})",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -910,7 +910,7 @@
             "uid": "${datasource}"
           },
           "refId": "E",
-          "expr": "sum by (relname) (increase(pg_stat_user_tables_seq_scan{namespace=\"$namespace\", datname=\"$database\"}[$__range]))",
+          "expr": "sum by (relname) (increase(cnpg_pg_stat_user_tables_seq_scan{namespace=\"$namespace\", datname=\"$database\"}[$__range]))",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -922,7 +922,7 @@
             "uid": "${datasource}"
           },
           "refId": "F",
-          "expr": "sum by (relname) (increase(pg_stat_user_tables_idx_scan{namespace=\"$namespace\", datname=\"$database\"}[$__range]))",
+          "expr": "sum by (relname) (increase(cnpg_pg_stat_user_tables_idx_scan{namespace=\"$namespace\", datname=\"$database\"}[$__range]))",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -934,7 +934,7 @@
             "uid": "${datasource}"
           },
           "refId": "G",
-          "expr": "time() - max by (relname) (pg_stat_user_tables_last_autovacuum{namespace=\"$namespace\", datname=\"$database\"} > 0)",
+          "expr": "time() - max by (relname) (cnpg_pg_stat_user_tables_last_autovacuum{namespace=\"$namespace\", datname=\"$database\"} > 0)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -1047,6 +1047,244 @@
           }
         }
       ]
+    },
+    {
+      "id": 16,
+      "type": "row",
+      "title": "Replication and backups",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 41,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "Streaming replicas",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "refId": "A",
+          "expr": "max(cnpg_pg_replication_streaming_replicas{namespace=\"$namespace\"})",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 18,
+      "type": "stat",
+      "title": "Replication lag",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 42,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "refId": "A",
+          "expr": "max(cnpg_pg_replication_lag{namespace=\"$namespace\"})",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 19,
+      "type": "stat",
+      "title": "Since last WAL archived",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 42,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "refId": "A",
+          "expr": "min(cnpg_pg_stat_archiver_seconds_since_last_archival{namespace=\"$namespace\"} >= 0)",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Last base backup age",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 42,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "refId": "A",
+          "expr": "time() - max(barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace=\"$namespace\"})",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Recoverable since",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 42,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "refId": "A",
+          "expr": "max(barman_cloud_cloudnative_pg_io_first_recoverability_point{namespace=\"$namespace\"}) * 1000",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dateTimeAsIso"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
     }
   ]
 }

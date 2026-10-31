@@ -23,7 +23,11 @@ replication the last few seconds of commits can be lost in a failover.
 - The nightly `pg_dump` CronJob in `k8s/talos/apps/logeverylift/db-backup.yaml` dumps
   from `logeverylift-db-rw` to the NAS as before, and the monthly restore test loads the
   newest dump ([`../backups/README.md`](../backups/README.md)).
-- `PostgresWalArchivingFailing` pages when WAL stops reaching Garage.
+- Metrics come from each instance's built-in exporter through the PodMonitor
+  `logeverylift-db`, plus the per-table query in the ConfigMap
+  `logeverylift-db-monitoring`. They feed the Grafana Postgres dashboard.
+- Alerts: `PostgresWalArchivingFailing` and `PostgresBaseBackupStale` page,
+  `PostgresDown` warns when no instance is primary.
 
 The previous hand-built Postgres (Deployment and Service `postgres`, PVC
 `postgres-pvc-18`, `postgres-exporter`) is still declared, scaled to zero, as the
