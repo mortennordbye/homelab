@@ -36,6 +36,15 @@ tempo:
       # The generator's local blocks hold a steady few hundred MiB, and a trace search or
       # WAL replay adds 500Mi or more on top.
       memory: 2Gi
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+securityContext:
+  seccompProfile:
+    type: RuntimeDefault
 
 # Local block storage for traces (same class Loki uses); 24h retention.
 persistence:

@@ -1,5 +1,14 @@
 fullnameOverride: snmp-exporter
 
+securityContext:
+  seccompProfile:
+    type: RuntimeDefault
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
 # The image's built-in snmp.yml (modules incl. synology) plus the SNMPv3 auth,
 # which lives in a Secret so the credentials stay out of Git.
 extraArgs:
