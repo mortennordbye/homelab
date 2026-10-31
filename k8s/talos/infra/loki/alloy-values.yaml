@@ -87,10 +87,14 @@ alloy:
         }
       }
 
-      // 6. Traces: Traefik pushes OTLP here, Tempo gets what survives the filters.
+      // 6. Traces: Traefik pushes OTLP over gRPC, logeverylift over HTTP; Tempo gets
+      // what survives the filters.
       otelcol.receiver.otlp "traefik" {
         grpc {
           endpoint = "0.0.0.0:4317"
+        }
+        http {
+          endpoint = "0.0.0.0:4318"
         }
         output {
           traces = [otelcol.processor.tail_sampling.traces.input]
@@ -98,8 +102,9 @@ alloy:
       }
 
       // Decides per whole trace, so a dropped request never leaves orphaned child spans.
-      // Every span of a trace reaches the same Alloy pod because each Traefik pod holds one
-      // long-lived gRPC connection.
+      // Every Traefik span of a trace reaches the same Alloy pod because each Traefik pod
+      // holds one long-lived gRPC connection. An app's spans may land on another pod, so
+      // a drop policy here never removes them.
       otelcol.processor.tail_sampling "traces" {
         decision_wait = "10s"
 
@@ -144,7 +149,8 @@ alloy:
       }
 
       // Per-process, per-connection and client-IP attributes: noise in every breakdown,
-      // and the IPs are personal data.
+      // and the IPs are personal data. Query strings go too: they can carry what a
+      // user typed (logeverylift's gym search sends it to Nominatim in the URL).
       otelcol.processor.transform "traces" {
         error_mode = "ignore"
 
@@ -162,6 +168,10 @@ alloy:
             `delete_key(attributes, "client.port")`,
             `delete_key(attributes, "network.peer.address")`,
             `delete_key(attributes, "network.peer.port")`,
+            `delete_key(attributes, "url.query")`,
+            `replace_pattern(attributes["url.full"], "\\?.*", "")`,
+            `replace_pattern(attributes["http.url"], "\\?.*", "")`,
+            `replace_pattern(attributes["http.target"], "\\?.*", "")`,
           ]
         }
 
@@ -189,6 +199,10 @@ alloy:
     - name: otlp-grpc
       port: 4317
       targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
       protocol: TCP
 
   mounts:

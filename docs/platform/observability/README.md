@@ -136,14 +136,27 @@ SPOG dashboard is in [The observability stack I actually run](https://blog.nordb
 | Prometheus | metrics, alert rules | 30 days, at most 35 GB | `k8s/talos/infra/kube-prometheus-stack/values.yaml` |
 | Alertmanager | routing to Discord, 2 replicas | 5 days of silences and notification state | `k8s/talos/infra/kube-prometheus-stack/values.yaml` |
 | Loki | logs, single binary | 7 days, Kubernetes events 30 days | `k8s/talos/infra/loki/values.yaml` |
-| Alloy | DaemonSet shipping pod logs (each pod reads its own node's pods) and Kubernetes events (one clustered pod collects them) to Loki, and filtering Traefik's traces on the way to Tempo (monitoring UIs and blackbox probes dropped, per-connection and client-IP attributes removed) | none | `k8s/talos/infra/loki/alloy-values.yaml` |
-| Tempo | traces, pushed over OTLP by Traefik through Alloy; its local-blocks generator answers TraceQL metrics for Traces Drilldown | 24 h | `k8s/talos/infra/tempo/values.yaml` |
+| Alloy | DaemonSet shipping pod logs (each pod reads its own node's pods) and Kubernetes events (one clustered pod collects them) to Loki, and filtering traces on the way to Tempo (monitoring UIs and blackbox probes dropped, per-connection and client-IP attributes and URL query strings removed) | none | `k8s/talos/infra/loki/alloy-values.yaml` |
+| Tempo | traces, pushed over OTLP by Traefik and logeverylift through Alloy; its local-blocks generator answers TraceQL metrics for Traces Drilldown | 24 h | `k8s/talos/infra/tempo/values.yaml` |
 | Pyrra | SLOs to recording rules and burn-rate alerts, SLO UI ([slos.md](slos.md)) | none | `k8s/talos/infra/pyrra/` |
 | Falco | runtime security events, modern eBPF driver | none | `k8s/talos/infra/falco/values.yaml` |
 
 Traces take one extra hop: Traefik exports to Alloy, which decides per whole trace what to
 keep and strips noisy attributes before Tempo stores it
 ([`../network/traefik.md`](../network/traefik.md#tracing-and-metrics)).
+
+logeverylift continues Traefik's trace from the `traceparent` header: its `@vercel/otel`
+setup (`src/instrumentation.ts` in the app repo) adds spans for each Next.js route and
+render, outgoing `fetch`, and every Postgres query, and pushes them over OTLP/HTTP to
+`alloy.monitoring:4318` (set by `OTEL_EXPORTER_OTLP_ENDPOINT` in
+`k8s/talos/apps/logeverylift/app.yaml`). Query text keeps its `$n` placeholders, never the
+values. In Grafana, Explore on Tempo with `{ resource.service.name = "logeverylift" }`, or
+open a slow Traefik trace and read the app's spans under it.
+
+An app's spans can reach a different Alloy pod than Traefik's for the same trace, so a
+tail-sampling drop that matches on Traefik's attributes never removes them. The blackbox
+probe of logeverylift.com therefore leaves a small app-only trace every minute; the
+monitoring-UI drop is unaffected, since no instrumented app serves those hosts.
 
 [![Traefik sends OTLP traces to Alloy, whose tail sampling drops the monitoring UIs and blackbox probes and whose transform strips per-process, per-connection and client-IP attributes, before Tempo stores them for Grafana](../../assets/diagrams/observability-traces.svg)](../../assets/diagrams/observability-traces.svg)
 
