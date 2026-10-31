@@ -16,10 +16,45 @@ spec:
       labels:
         app: open-webui
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      # Startup copies the frontend's assets into static/, which is root-owned in
+      # the image; seed a writable copy so the copy succeeds and nothing is lost.
+      initContainers:
+        - name: seed-static
+          image: ghcr.io/open-webui/open-webui:v0.10.2
+          command:
+            - cp
+            - -r
+            - /app/backend/open_webui/static/.
+            - /static/
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: static
+              mountPath: /static
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
       containers:
         - name: open-webui
           image: ghcr.io/open-webui/open-webui:v0.10.2
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: 8080
           env:
@@ -29,9 +64,17 @@ spec:
               value: "http://ollama-wake:8080"
             - name: WEBUI_AUTH
               value: "true"
+            # The default key file sits in the root-owned app dir, and would not
+            # survive a restart anyway.
+            - name: WEBUI_SECRET_KEY_FILE
+              value: /app/backend/data/.webui_secret_key
+            - name: HOME
+              value: /tmp
           volumeMounts:
             - name: data
               mountPath: /app/backend/data
+            - name: static
+              mountPath: /app/backend/open_webui/static
           resources:
             requests:
               cpu: 100m
@@ -60,3 +103,5 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: data-pvc
+        - name: static
+          emptyDir: {}

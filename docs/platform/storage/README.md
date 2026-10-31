@@ -67,6 +67,11 @@ mount root first; the logeverylift Postgres is the example
 ([`../data/postgres.md`](../data/postgres.md)). VolSync movers write as root for the same
 reason ([`../backups/README.md`](../backups/README.md)).
 
+Moving data a root container wrote to a non-root uid takes a `chown -R` and an explicit
+`chmod` on every entry (directories 0775, files 0664), run once from a root pod. The NAS
+keeps an ACL that admits only root until the mode is set, so a chown alone still leaves the
+new owner with `Permission denied`.
+
 ## Static NFS volumes
 
 These PVs have `storageClassName: ""`, reclaim `Retain` and a `claimRef` to one PVC, so
