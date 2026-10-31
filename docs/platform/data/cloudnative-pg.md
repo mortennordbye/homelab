@@ -80,6 +80,24 @@ garage bucket allow --read --write --owner cnpg-logeverylift --key logeverylift
 
 `garage bucket info cnpg-logeverylift` shows its size and object count.
 
+### Emptying a server's prefix
+
+A new Cluster refuses to archive into a prefix that already holds WAL, so a Cluster
+recreated under the same `serverName` (after a failed cutover, say) needs its old
+prefix removed first. Garage has no CLI for objects; use any S3 client through a
+port-forward, which the network policy admits as host traffic:
+
+```bash
+kubectl port-forward -n garage svc/garage 13900:3900 &
+bws_get() { BWS_ACCESS_TOKEN=$(bws-token) bws secret get "$1" --output json | jq -r .value; }
+docker run --rm \
+  -e AWS_ACCESS_KEY_ID="$(bws_get 5e61c8e6-3642-4bbc-8a6a-b4f400f0eb33)" \
+  -e AWS_SECRET_ACCESS_KEY="$(bws_get 48d4180c-091c-48ec-8971-b4f400f0ecb3)" \
+  -e AWS_DEFAULT_REGION=garage amazon/aws-cli:2.27.50 \
+  --endpoint-url http://host.docker.internal:13900 \
+  s3 rm --recursive s3://cnpg-logeverylift/<serverName>/
+```
+
 ### Restoring Garage itself
 
 If `garage-meta` is lost, point `metadata_dir` at a copy of the newest directory under

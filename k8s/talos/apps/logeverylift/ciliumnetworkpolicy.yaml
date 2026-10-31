@@ -54,6 +54,67 @@ spec:
         - ports:
             - port: "5432"
               protocol: TCP
+    # The logeverylift-db bootstrap imports this database once.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": logeverylift
+            cnpg.io/cluster: logeverylift-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: logeverylift-db-policy
+  namespace: logeverylift
+spec:
+  endpointSelector:
+    matchLabels:
+      cnpg.io/cluster: logeverylift-db
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": logeverylift
+            app: logeverylift-app
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": logeverylift
+            app: postgres-backup
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    # Replication and the instance manager's status endpoint between instances.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": logeverylift
+            cnpg.io/cluster: logeverylift-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+            - port: "8000"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": cnpg-system
+            app.kubernetes.io/name: cloudnative-pg
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": prometheus
+      toPorts:
+        - ports:
+            - port: "9187"
+              protocol: TCP
     - fromEntities:
         - host
         - health

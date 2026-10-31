@@ -277,6 +277,18 @@ postgres-exporter in the namespace cannot connect to its database (`pg_up` is 0)
 If the database pod is healthy, the exporter's own credentials or the
 `logeverylift-postgres-policy` network policy are the next suspects.
 
+### PostgresWalArchivingFailing
+
+A CloudNativePG primary cannot ship WAL to Garage. Unarchived WAL stays on the
+instance volume, so this ends with a full volume and a stopped primary, and every
+minute of it is missing from point-in-time restore.
+
+- `kubectl -n <namespace> get cluster` and the `ContinuousArchiving` condition.
+- The `plugin-barman-cloud` container logs on the primary show the S3 error.
+- Garage itself: `kubectl -n garage get pods`, its logs, and `garage status`
+  ([`../data/cloudnative-pg.md`](../data/cloudnative-pg.md)). An S3 `403` points at
+  the key or the bucket grant, a timeout at the `garage` network policy.
+
 ## Control plane
 
 ### etcd

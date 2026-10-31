@@ -30,11 +30,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Platform
 
-### CloudNativePG for logeverylift's Postgres
-- **What:** replace the hand-built Postgres 18 Deployment behind logeverylift with a CloudNativePG `Cluster`: a standby replica with automatic failover, WAL archiving for point-in-time restore, and operator-run backups in place of the nightly dump CronJob.
-- **Why deferred:** agreed as the next platform step after Kyverno; it moves a live database with real users, so it gets its own change and a maintenance window.
-- **Unblock:** the operator, Barman Cloud plugin and Garage are in place ([`docs/platform/data/cloudnative-pg.md`](../platform/data/cloudnative-pg.md)). Import the current database into a scratch CNPG cluster, verify failover and a point-in-time restore from Garage, then cut prod over.
-- **Where:** `k8s/talos/apps/logeverylift/` (Postgres, `db-backup.yaml`, `postgres-exporter.yaml`), `docs/platform/data/postgres.md`.
+### Retire the legacy logeverylift Postgres
+- **What:** after the CloudNativePG cutover, remove the old `postgres` Deployment, Service, PVC `postgres-pvc-18`, its root chown initContainer and `postgres-exporter`; move the Grafana Postgres dashboard and `PostgresDown` to CNPG metrics; add a stale-base-backup alert; extend the `renovate.json` Postgres-major rule to the CNPG `imageName`; rewrite the major-upgrade procedure and the `data-postgres` diagram in `docs/platform/data/postgres.md`; add a monthly point-in-time restore from Garage to the restore test.
+- **Why deferred:** the old database stays as the rollback source until the new Cluster has run for a week with nightly base backups.
+- **Unblock:** a week of healthy `logeverylift-db` with successful nightly backups and no archiving alerts.
+- **Where:** `k8s/talos/apps/logeverylift/{postgres.yaml,postgres-exporter.yaml,ciliumnetworkpolicy.yaml}`, `grafana/postgres.json`, `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`, `k8s/talos/infra/backup-check/restore-test.yaml`, `renovate.json`, `docs/platform/data/postgres.md`.
 
 ### Kyverno restricted and requests policies to Enforce
 - **What:** decide per namespace whether `pod-security-restricted` and `require-requests-limits` (42 workloads, mostly third-party charts: Argo CD, cert-manager, ESO, Kargo, Authentik, kube-prometheus-stack, Cilium's Hubble) can enforce. The tag and baseline policies already do. Two workloads still fail restricted: verksted (the app image runs as root and its `docker:*-dind` sidecar is privileged) and logeverylift's `postgres` (a root chown initContainer, gone with the CloudNativePG move).
