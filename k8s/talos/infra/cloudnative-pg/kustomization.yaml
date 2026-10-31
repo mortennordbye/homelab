@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: cnpg-system
+
+resources:
+  - namespace.yaml
+
+# The Barman Cloud plugin must run in the operator's namespace.
+helmCharts:
+  - name: cloudnative-pg
+    repo: https://cloudnative-pg.github.io/charts
+    version: 0.29.1
+    releaseName: cnpg
+    namespace: cnpg-system
+    includeCRDs: true
+    valuesFile: values.yaml
+  - name: plugin-barman-cloud
+    repo: https://cloudnative-pg.github.io/charts
+    version: 0.8.1
+    releaseName: barman-cloud
+    namespace: cnpg-system
+    includeCRDs: true
+    valuesFile: values-barman-cloud.yaml
