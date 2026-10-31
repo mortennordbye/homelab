@@ -142,12 +142,14 @@ spec:
             runAsGroup: 65534
           containers:
             - name: publish
-              # kubectl + jq in one small image; tag tracks the cluster minor.
-              image: docker.io/alpine/k8s:1.37.1
+              # sh and curl; kubectl and jq come from the image volumes below.
+              image: docker.io/curlimages/curl:8.22.0
               env:
                 # kubectl writes discovery cache under $HOME
                 - name: HOME
                   value: /tmp
+                - name: PATH
+                  value: /opt/kubectl/bin:/opt/jq:/usr/local/bin:/usr/bin:/bin
                 - name: PROM
                   value: http://kube-prometheus-stack-prometheus.monitoring:9090
               command: ["/bin/sh", "-ec"]
@@ -439,6 +441,10 @@ spec:
               volumeMounts:
                 - name: tmp
                   mountPath: /tmp
+                - name: kubectl
+                  mountPath: /opt/kubectl
+                - name: jq
+                  mountPath: /opt/jq
               resources:
                 requests:
                   cpu: 50m
@@ -446,6 +452,16 @@ spec:
                 limits:
                   cpu: 200m
                   memory: 128Mi
+          # Image volumes: only the two binaries reach the pod, not a toolbox image's
+          # extras. trivy-operator scans container images, so kubectl's own CVEs don't
+          # show on the dashboard; Renovate keeps the tag current.
           volumes:
             - name: tmp
               emptyDir: {}
+            - name: kubectl
+              image:
+                # Tag tracks the cluster version.
+                reference: registry.k8s.io/kubectl:v1.36.5 # renovate: docker=registry.k8s.io/kubectl
+            - name: jq
+              image:
+                reference: ghcr.io/jqlang/jq:1.8.1 # renovate: docker=ghcr.io/jqlang/jq
