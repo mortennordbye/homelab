@@ -37,10 +37,16 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** `k8s/talos/apps/logeverylift/` (Postgres, `db-backup.yaml`, `postgres-exporter.yaml`), `docs/platform/data/postgres.md`.
 
 ### Kyverno restricted and requests policies to Enforce
-- **What:** decide per namespace whether `pod-security-restricted` (11 workloads failing, mostly linuxserver images running as root; an inline `nfs:` volume fails it on its own, so those workloads also need a PV and PVC) and `require-requests-limits` (42, mostly third-party charts: Argo CD, cert-manager, ESO, Kargo, Authentik, kube-prometheus-stack, Cilium's Hubble) can enforce. The tag and baseline policies already do.
-- **Why deferred:** the failing workloads need chart values sized from real usage, where a wrong memory limit OOM-kills a platform component, or images that can run non-root.
+- **What:** decide per namespace whether `pod-security-restricted` and `require-requests-limits` (42 workloads, mostly third-party charts: Argo CD, cert-manager, ESO, Kargo, Authentik, kube-prometheus-stack, Cilium's Hubble) can enforce. The tag and baseline policies already do. Two workloads still fail restricted: verksted (the app image runs as root and its `docker:*-dind` sidecar is privileged) and logeverylift's `postgres` (a root chown initContainer, gone with the CloudNativePG move).
+- **Why deferred:** the requests failures need chart values sized from real usage, where a wrong memory limit OOM-kills a platform component; verksted needs a `USER` in its own image and a restricted exception for the dind sidecar.
 - **Unblock:** requests and memory limits per chart from 7-day usage (the media containers in `k8s/talos/apps/{plex-media-stack,gluetun-vpn}` show the method), or a `PolicyException` where a workload needs it, until a policy's report is clean.
-- **Where:** `k8s/talos/infra/kyverno/policies/`, `docs/platform/policy/README.md`.
+- **Where:** `k8s/talos/infra/kyverno/policies/`, `docs/platform/policy/README.md`, `k8s/talos/apps/verksted/deployment.yaml`.
+
+### Rootless images for the media stack
+- **What:** replace the linuxserver images (sonarr, radarr, radarr-4k, bazarr, bazarr-4k, plex, tautulli, and qBittorrent and Prowlarr in the gluetun pod) with images that start as non-root, then drop them from `policyexception-media-root.yaml`.
+- **Why deferred:** chosen over a migration while the restricted work landed; each swap restarts an app whose seeding and config must survive, so it goes one app at a time. Started as non-root, the s6 init fails with `unable to set supplementary group list`.
+- **Unblock:** a rootless image per app that reads the existing `/config`, tried on a copy of the config PVC first. tdarr has no rootless build and keeps the exception.
+- **Where:** `k8s/talos/apps/{arr-stack,plex-media-stack,gluetun-vpn}/`, `k8s/talos/infra/kyverno/policyexception-media-root.yaml`.
 
 ### Kyverno ClusterPolicy to ValidatingPolicy
 - **What:** move the four policies from the deprecated `kyverno.io/v1` `ClusterPolicy` to the CEL `ValidatingPolicy`, and the `kyverno.io/v2` `PolicyException` to the `policies.kyverno.io` one with them.

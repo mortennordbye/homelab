@@ -1,0 +1,54 @@
+# The linuxserver and tdarr images start s6 as root and drop to PUID; started as non-root,
+# s6 cannot set the group list and the app never runs. gluetun needs root for the tunnel.
+# Scoped to the two controls and these images, so anything else the pods break still reports.
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: media-root
+spec:
+  exceptions:
+    - policyName: pod-security-restricted
+      ruleNames:
+        - restricted
+        - autogen-restricted
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+            - Deployment
+          namespaces:
+            - arr-stack
+          names:
+            - sonarr*
+            - radarr*
+            - bazarr*
+            - tdarr*
+      - resources:
+          kinds:
+            - Pod
+            - Deployment
+          namespaces:
+            - plex-media-stack
+          names:
+            - plex*
+            - tautulli*
+      - resources:
+          kinds:
+            - Pod
+            - Deployment
+          namespaces:
+            - gluetun-vpn
+          names:
+            - gluetun*
+  podSecurity:
+    - controlName: Running as Non-root
+      images:
+        - ghcr.io/linuxserver/*
+        - ghcr.io/haveagitgat/tdarr:*
+        - qmcgaw/gluetun:*
+    - controlName: Capabilities
+      images:
+        - ghcr.io/linuxserver/*
+        - ghcr.io/haveagitgat/tdarr:*
+        - qmcgaw/gluetun:*

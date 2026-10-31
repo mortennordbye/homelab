@@ -50,9 +50,14 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: bazarr-4k
           image: ghcr.io/linuxserver/bazarr:1.6.0
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: 6767
               name: http

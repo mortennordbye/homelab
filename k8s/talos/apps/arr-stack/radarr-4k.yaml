@@ -50,9 +50,14 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: radarr-4k
           image: ghcr.io/linuxserver/radarr:6.2.1
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: 7878
               name: http

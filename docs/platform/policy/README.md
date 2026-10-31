@@ -24,7 +24,9 @@ for one image each: `Capabilities` for gluetun (`NET_ADMIN` makes the VPN tunnel
 exempts the etcd, Authentik and logeverylift dump CronJobs and the `backup-check` restore and
 Home Assistant checks from the restricted
 `Running as Non-root` and `Capabilities` controls, since the backup share only admits root
-([backups](../backups/README.md#constraints)). Exceptions are only read
+([backups](../backups/README.md#constraints)). `policyexception-media-root.yaml` exempts the same two
+controls for the linuxserver and tdarr images in `arr-stack` and `plex-media-stack` and for
+the gluetun pod, whose s6 init has to start as root before it drops to `PUID`. Exceptions are only read
 from the `kyverno` namespace.
 
 [![Argo CD applies a manifest to the API server, which sends it to Kyverno's admission webhook, where a mutable tag or a baseline break is rejected; that and the hourly background scan write one PolicyReport per workload, a PolicyException in the kyverno namespace exempts named workloads, and Policy Reporter turns the reports into the policy_report_result metric that Prometheus scrapes for the Policy (Kyverno) row on the SPOG dashboard](../../assets/diagrams/policy-reports.svg)](../../assets/diagrams/policy-reports.svg)

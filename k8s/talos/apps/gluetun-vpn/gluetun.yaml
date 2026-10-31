@@ -36,12 +36,16 @@ spec:
             - radarr-4k.local.bigd.no
             - sonarr.local.bigd.no
             - flaresolverr.local.bigd.no
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       initContainers:
         # Gluetun VPN - runs as sidecar with restartPolicy: Always (K8s 1.29+)
         - name: gluetun
           image: qmcgaw/gluetun:v3.41.3
           restartPolicy: Always
           securityContext:
+            allowPrivilegeEscalation: false
             capabilities:
               add:
                 - NET_ADMIN
@@ -91,6 +95,8 @@ spec:
         # qBittorrent - torrent client
         - name: qbittorrent
           image: ghcr.io/linuxserver/qbittorrent:5.1.0
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: 8080
               name: http
@@ -131,6 +137,8 @@ spec:
         # Prowlarr - indexer manager
         - name: prowlarr
           image: ghcr.io/linuxserver/prowlarr:2.4.0
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: 9696
               name: http

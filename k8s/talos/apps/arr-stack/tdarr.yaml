@@ -41,9 +41,14 @@ spec:
       labels:
         app: tdarr
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: tdarr
           image: ghcr.io/haveagitgat/tdarr:2.90.01
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: 8265
               name: http

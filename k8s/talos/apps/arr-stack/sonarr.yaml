@@ -50,9 +50,14 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: sonarr
           image: ghcr.io/linuxserver/sonarr:4.0.19
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: 8989
               name: http
