@@ -19,6 +19,9 @@ tempo:
     processor:
       local_blocks:
         flush_to_storage: true
+        # Keep every span, not only server spans: the logeverylift Traces dashboard
+        # charts Postgres queries and outgoing fetches, which are client spans.
+        filter_server_spans: false
     storage:
       path: /var/tempo/generator/wal
     traces_storage:
