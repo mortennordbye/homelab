@@ -9,3 +9,4 @@ resources:
   - externalsecret.yaml
   - objectstore.yaml
   - cluster.yaml
+  - restore.yaml
