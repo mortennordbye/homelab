@@ -9,6 +9,7 @@ How alerts, SLOs, runbooks, incidents and the weekly review fit together is in
 |---|---|
 | Grafana, dashboard Homelab-SPOG | https://grafana.local.bigd.no/d/mns9wmn |
 | Grafana, dashboard User journeys | https://grafana.local.bigd.no/d/user-journeys |
+| Grafana, dashboard logeverylift Traces | https://grafana.local.bigd.no/d/logeverylift-traces |
 | Alertmanager, alerts and silences (authentik sign-in, group `alertmanager-admins`) | https://alertmanager.local.bigd.no |
 | Prometheus | https://prometheus.local.bigd.no |
 | Grafana Drilldown: metrics, logs and traces without a dashboard | https://grafana.local.bigd.no/drilldown |
@@ -39,7 +40,7 @@ Every row starts collapsed except Alerts, which sits on top.
 | Media stack | service status, health issues, queues, free space, library, download client and indexers |
 
 Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard. The other
-dashboards from this repo: User journeys, GitHub, Cloudflare and Postgres.
+dashboards from this repo: User journeys, GitHub, Cloudflare, Postgres and logeverylift Traces.
 
 Dashboards from this repo are JSON under [`grafana/`](../../../grafana/README.md), loaded by
 [Git Sync](#git-sync) into Grafana's Homelab folder. Pyrra's sit in SLOs, set by the
@@ -150,8 +151,13 @@ setup (`src/instrumentation.ts` in the app repo) adds spans for each Next.js rou
 render, outgoing `fetch`, and every Postgres query, and pushes them over OTLP/HTTP to
 `alloy.monitoring:4318` (set by `OTEL_EXPORTER_OTLP_ENDPOINT` in
 `k8s/talos/apps/logeverylift/app.yaml`). Query text keeps its `$n` placeholders, never the
-values. In Grafana, Explore on Tempo with `{ resource.service.name = "logeverylift" }`, or
-open a slow Traefik trace and read the app's spans under it.
+values. The logeverylift Traces dashboard charts them with TraceQL metrics: request rate,
+latency and failures by route, Postgres queries by statement and the connection pool wait,
+outgoing calls by host, and tables of the slowest and failed requests that open the full
+waterfall. Tempo's generator keeps client spans as well as server spans
+(`filter_server_spans: false` in `k8s/talos/infra/tempo/values.yaml`); without that the
+Postgres and outgoing-call panels stay empty. For anything else, Explore on Tempo with
+`{ resource.service.name = "logeverylift" }`.
 
 An app's spans can reach a different Alloy pod than Traefik's for the same trace, so a
 tail-sampling drop that matches on Traefik's attributes never removes them. The blackbox

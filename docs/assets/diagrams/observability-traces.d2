@@ -1,4 +1,4 @@
-# Traefik's traces through Alloy's filters into Tempo. See platform/observability/README.md.
+# Traefik's and logeverylift's traces through Alloy's filters into Tempo. See platform/observability/README.md.
 direction: down
 vars: {
   di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
@@ -26,6 +26,7 @@ classes: {
 (** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
 
 traefik: "Traefik\nevery request, both gateways" {class: card; icon: ${di}/traefik.svg}
+app: "logeverylift\nroutes, Postgres, fetch" {class: card; icon: ${di}/nextjs-light.svg}
 
 alloy: Alloy {
   class: group
@@ -34,13 +35,15 @@ alloy: Alloy {
   sample -> strip: kept
 }
 
-dropped: "dropped\nGrafana, Prometheus,\nAlertmanager, Pyrra, probes" {class: aside; icon: ${ify}/tabler/trash.svg?color=%23a1ada3&height=64}
-removed: "removed\nprocess, OS, pod UID,\nports, client IPs" {class: aside; icon: ${ify}/tabler/trash.svg?color=%23a1ada3&height=64}
+dropped: "dropped\nmonitoring UIs, blackbox\nand kubelet probes" {class: aside; icon: ${ify}/tabler/trash.svg?color=%23a1ada3&height=64}
+removed: "removed\nprocess, OS, pod UID, ports,\nclient IPs, query strings" {class: aside; icon: ${ify}/tabler/trash.svg?color=%23a1ada3&height=64}
 
 tempo: "Tempo\n24 h, local-blocks generator" {class: card; icon: ${di}/tempo.svg}
-grafana: "Grafana\nTraces Drilldown, Explore" {class: card; icon: ${di}/grafana.svg}
+grafana: "Grafana\nDrilldown, Explore,\nlogeverylift Traces" {class: card; icon: ${di}/grafana.svg}
 
 traefik -> alloy.sample: OTLP gRPC
+traefik -> app: traceparent
+app -> alloy.sample: OTLP HTTP
 alloy.sample -> dropped: matched
 alloy.strip -> removed: attributes
 alloy.strip -> tempo: OTLP

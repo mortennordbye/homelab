@@ -1,0 +1,984 @@
+{
+  "title": "logeverylift Traces",
+  "uid": "logeverylift-traces",
+  "tags": [
+    "logeverylift",
+    "traces",
+    "tempo"
+  ],
+  "description": "Request, Postgres and outgoing-call performance of logeverylift from its OpenTelemetry traces (TraceQL metrics on Tempo, 24 h retention). docs/platform/observability/README.md",
+  "editable": true,
+  "graphTooltip": 1,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "1m",
+  "schemaVersion": 42,
+  "annotations": {
+    "list": [
+      {
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "iconColor": "#5794F2",
+        "name": "Deploys",
+        "target": {
+          "limit": 200,
+          "matchAny": false,
+          "tags": [
+            "argocd"
+          ],
+          "type": "tags"
+        }
+      }
+    ]
+  },
+  "links": [
+    {
+      "title": "Postgres",
+      "type": "link",
+      "url": "/d/postgres",
+      "icon": "dashboard"
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "tempo_datasource",
+        "type": "datasource",
+        "query": "tempo",
+        "label": "Tempo",
+        "regex": "",
+        "current": {
+          "selected": false,
+          "text": "Tempo",
+          "value": "tempo"
+        },
+        "hide": 0,
+        "refresh": 1,
+        "skipUrlSync": false,
+        "multi": false,
+        "includeAll": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Requests",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Requests / s",
+      "description": "Server requests the app handled, averaged over the range. Kubelet health probes are dropped in Alloy, so this is real traffic and the blackbox probe.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && kind = server } | rate()",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "p95 latency",
+      "description": "95th percentile of the app's server span duration, averaged over the range. Time spent in Cloudflare and Traefik is not included.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && kind = server } | quantile_over_time(duration, .95)",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Failed requests",
+      "description": "Server requests with status error or an HTTP 5xx, summed over the range.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && kind = server && (status = error || span.http.status_code >= 500) } | count_over_time()",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Postgres queries / s",
+      "description": "Queries the app sent to logeverylift-db, averaged over the range.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && span.operation.name = \"opentelemetry_instrumentation-pg.client\" && name =~ \"pg.query.*\" } | rate()",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Requests by route",
+      "description": "Requests per second per Next.js route (span.http.route).",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && kind = server } | rate() by (span.http.route)",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^\\{[^=]+=\"?([^\"]*)\"?\\}$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Latency",
+      "description": "p50, p95 and p99 of the app's server spans.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && kind = server } | quantile_over_time(duration, .5, .95, .99)",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^\\{[^=]+=\"?([^\"]*)\"?\\}$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "p95 latency by route",
+      "description": "Which route is slow. Routes with few requests swing widely.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && kind = server } | quantile_over_time(duration, .95) by (span.http.route)",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^\\{[^=]+=\"?([^\"]*)\"?\\}$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "row",
+      "title": "Postgres",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Queries by statement",
+      "description": "Query rate per statement type, from the pg instrumentation (span name pg.query:<STATEMENT> <db>).",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && span.operation.name = \"opentelemetry_instrumentation-pg.client\" && name =~ \"pg.query.*\" } | rate() by (name)",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^\\{[^=]+=\"?([^\"]*)\"?\\}$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "p95 query time by statement",
+      "description": "Time from sending a query to its result, per statement type.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && span.operation.name = \"opentelemetry_instrumentation-pg.client\" && name =~ \"pg.query.*\" } | quantile_over_time(duration, .95) by (name)",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^\\{[^=]+=\"?([^\"]*)\"?\\}$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Connection pool wait",
+      "description": "How long a request waited for a pooled connection (pg-pool.connect, pool max 20). A rising line means the pool is exhausted, not that Postgres is slow.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && name = \"pg-pool.connect\" } | quantile_over_time(duration, .95, .99)",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^\\{[^=]+=\"?([^\"]*)\"?\\}$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "row",
+      "title": "Outgoing calls",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 37,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Calls by host",
+      "description": "Outgoing fetch calls per host: OpenRouter, Google, Nominatim, Overpass. Most hours have none.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && span.operation.name =~ \"fetch.*\" } | rate() by (span.net.peer.name)",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "noValue": "No outgoing calls in range"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^\\{[^=]+=\"?([^\"]*)\"?\\}$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "p95 call time by host",
+      "description": "Outgoing fetch duration per host.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 38,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && span.operation.name =~ \"fetch.*\" } | quantile_over_time(duration, .95) by (span.net.peer.name)",
+          "metricsQueryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "noValue": "No outgoing calls in range"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^\\{[^=]+=\"?([^\"]*)\"?\\}$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "row",
+      "title": "Traces",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 17,
+      "type": "table",
+      "title": "Slowest requests (over 500 ms)",
+      "description": "Click a trace ID to open the waterfall, including the Traefik span above and the queries below.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 47,
+        "w": 12,
+        "h": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && kind = server && duration > 500ms }",
+          "limit": 20,
+          "tableType": "traces",
+          "spss": 3
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "None in range"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "id": 18,
+      "type": "table",
+      "title": "Failed requests",
+      "description": "Server requests with status error or an HTTP 5xx.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${tempo_datasource}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 47,
+        "w": 12,
+        "h": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${tempo_datasource}"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"logeverylift\" && kind = server && (status = error || span.http.status_code >= 500) }",
+          "limit": 20,
+          "tableType": "traces",
+          "spss": 3
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "None in range"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    }
+  ]
+}
