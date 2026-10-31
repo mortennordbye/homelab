@@ -51,6 +51,36 @@ kubectl -n plex-media-stack get policyreport -o json \
 
 Reports refresh on the background scan, about once an hour, and on every admission.
 
+## Vulnerability scanning
+
+trivy-operator in `trivy-system` scans the image of every running workload for known CVEs
+and for secrets baked into its layers. It writes a `VulnerabilityReport` and an
+`ExposedSecretReport` per container next to the workload, and rescans when a workload's
+image changes or a report turns 24 hours old. Only `HIGH` and `CRITICAL` findings with a
+fixed version are kept, so every entry is something a version bump can clear. The install
+lives in [`k8s/talos/infra/trivy-operator/`](../../../k8s/talos/infra/trivy-operator/kustomization.yaml).
+
+A built-in trivy-server holds the vulnerability database, pulled from `mirror.gcr.io`, and
+the operator's scan Jobs, at most three at a time, ask it for matches. The Jobs pull image
+layers from each workload's registry themselves, so their network policy allows any HTTPS
+host. Config audit, RBAC and CIS scanning are off: Kyverno already covers pod config, and
+the node collector needs hostPath.
+
+```bash
+# Findings per workload, most critical first
+kubectl get vulnerabilityreports -A -o wide --sort-by=.report.summary.criticalCount
+
+# Which packages to bump in one report
+kubectl -n arr-stack get vulnerabilityreport <name> -o json \
+  | jq -r '.report.vulnerabilities[] | "\(.severity)  \(.resource) \(.installedVersion) -> \(.fixedVersion)  \(.vulnerabilityID)"'
+
+# Any secret found in an image
+kubectl get exposedsecretreports -A -o wide
+```
+
+Prometheus scrapes the operator's `trivy_image_vulnerabilities` and
+`trivy_image_exposedsecrets` gauges through its ServiceMonitor.
+
 ## Traps
 
 - `features.forceFailurePolicyIgnore` is on, so a Kyverno outage lets every request
@@ -65,5 +95,7 @@ Reports refresh on the background scan, about once an hour, and on every admissi
 - Exempt one workload with a `PolicyException` in `kyverno`, never with `names` in a
   policy's `exclude`: a names filter switches off autogen, and the policy then stops
   checking Deployments, StatefulSets and DaemonSets.
+- A scan Job that hits its 1Gi memory limit on a large image leaves no report for that
+  workload; the operator's log names the Job. Raise `trivy.resources` in the values.
 - Argo CD excludes `EphemeralReport` and `ClusterEphemeralReport`
   (`k8s/talos/infra/argocd/values.yaml`); without that, every admission churns the app trees.

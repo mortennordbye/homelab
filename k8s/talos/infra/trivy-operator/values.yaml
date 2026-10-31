@@ -1,0 +1,75 @@
+# Vulnerability and exposed-secret scanning only. Kyverno already audits pod config,
+# and the node-collector for infra/CIS checks needs hostPath, which Talos and the
+# baseline policy refuse.
+operator:
+  configAuditScannerEnabled: false
+  rbacAssessmentScannerEnabled: false
+  infraAssessmentScannerEnabled: false
+  clusterComplianceEnabled: false
+  sbomGenerationEnabled: false
+  # One trivy-server holds the vulnerability DB, so scan jobs don't each download it.
+  builtInTrivyServer: true
+  scanJobsConcurrentLimit: 3
+  scanJobTTL: 10m
+
+compliance:
+  specs: []
+
+serviceMonitor:
+  enabled: true
+
+trivyOperator:
+  scanJobPodTemplatePodSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    runAsGroup: 65534
+    seccompProfile:
+      type: RuntimeDefault
+
+trivy:
+  # Only what can be acted on: a fix exists and it is worth a bump.
+  severity: HIGH,CRITICAL
+  ignoreUnfixed: true
+  storageClassEnabled: false
+  # Scan jobs unpack whole images; the largest (ollama, plex) need the headroom.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: null
+      memory: 1Gi
+  server:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        cpu: null
+        memory: 1Gi
+    podSecurityContext:
+      runAsUser: 65534
+      runAsGroup: 65534
+      runAsNonRoot: true
+      fsGroup: 65534
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      privileged: false
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
