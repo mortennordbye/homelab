@@ -88,6 +88,13 @@ spec:
             "k8s:app.kubernetes.io/name": traefik
       toPorts:
         - ports: [{ port: "4317", protocol: TCP }]
+    # logeverylift pushes OTLP/HTTP traces.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": logeverylift
+            app: logeverylift-app
+      toPorts:
+        - ports: [{ port: "4318", protocol: TCP }]
     - fromEntities:
         - host
         - health
