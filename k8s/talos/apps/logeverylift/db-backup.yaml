@@ -1,5 +1,5 @@
-# Nightly pg_dump to the NAS, 30 days kept (docs/platform/backups/README.md). The postgres
-# CiliumNetworkPolicy admits these pods by the app: postgres-backup label.
+# Nightly pg_dump to the NAS, 30 days kept (docs/platform/backups/README.md). The
+# logeverylift-db CiliumNetworkPolicy admits these pods by the app: postgres-backup label.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -65,17 +65,21 @@ spec:
               # Same major as the server: pg_dump refuses a newer server.
               image: postgres:18-alpine
               env:
+                # The primary: a dump on a standby can be cancelled by replay conflicts.
                 - name: PGHOST
-                  value: postgres
+                  value: logeverylift-db-rw
                 - name: PGUSER
-                  value: postgres
+                  valueFrom:
+                    secretKeyRef:
+                      name: logeverylift-db-app
+                      key: username
                 - name: PGDATABASE
                   value: logeverylift_db
                 - name: PGPASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: logeverylift-secret
-                      key: POSTGRES_PASSWORD
+                      name: logeverylift-db-app
+                      key: password
               command:
                 - /bin/sh
                 - -ec

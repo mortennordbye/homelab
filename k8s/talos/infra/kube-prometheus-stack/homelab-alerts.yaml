@@ -339,6 +339,20 @@ spec:
               postgres-exporter in `{{ $labels.namespace }}` has failed to connect to the database for 5 minutes.
               Check: kubectl -n {{ $labels.namespace }} get pods -l app=postgres and the postgres container logs.
 
+        # Critical: WAL that cannot be archived stays on the instance volume until it
+        # fills and the primary stops, and point-in-time restore has a gap.
+        - alert: PostgresWalArchivingFailing
+          expr: cnpg_pg_stat_archiver_last_failed_time > cnpg_pg_stat_archiver_last_archived_time
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#postgreswalarchivingfailing
+            summary: 'WAL archiving is failing on {{ $labels.namespace }}/{{ $labels.pod }}'
+            description: |
+              The newest WAL archive attempt on `{{ $labels.pod }}` failed and none has succeeded since, for 15 minutes.
+              Check: kubectl -n {{ $labels.namespace }} logs {{ $labels.pod }} -c plugin-barman-cloud, and the garage pod in namespace garage.
+
     - name: homelab.network
       rules:
         # Fires only when every internet target fails, so one site being down is not an

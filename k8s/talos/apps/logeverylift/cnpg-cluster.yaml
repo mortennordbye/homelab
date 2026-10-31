@@ -1,0 +1,98 @@
+# logeverylift's Postgres. docs/platform/data/cloudnative-pg.md
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: logeverylift-db
+  namespace: logeverylift
+spec:
+  instances: 2
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6-minimal-trixie
+  storage:
+    storageClass: syno-nfs-csi
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    # No CPU limit: CFS throttling stalls request handling in 100ms steps.
+    limits:
+      memory: 512Mi
+  # Bootstrap runs once; changing it later does nothing to a running cluster.
+  bootstrap:
+    initdb:
+      database: logeverylift_db
+      owner: logeverylift
+      import:
+        type: microservice
+        databases:
+          - logeverylift_db
+        source:
+          externalCluster: legacy
+  externalClusters:
+    - name: legacy
+      connectionParameters:
+        host: postgres
+        user: postgres
+        dbname: logeverylift_db
+      password:
+        name: logeverylift-secret
+        key: POSTGRES_PASSWORD
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: garage
+        serverName: logeverylift-db
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: garage
+  namespace: logeverylift
+spec:
+  retentionPolicy: 30d
+  configuration:
+    destinationPath: s3://cnpg-logeverylift/
+    endpointURL: http://garage.garage.svc:3900
+    s3Credentials:
+      accessKeyId:
+        name: garage-s3
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: garage-s3
+        key: ACCESS_SECRET_KEY
+      region:
+        name: garage-s3
+        key: REGION
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: logeverylift-db
+  namespace: logeverylift
+spec:
+  # Six fields, UTC: 00:15 Oslo in winter, before the NAS snapshot at 02:45.
+  schedule: "0 15 23 * * *"
+  immediate: true
+  backupOwnerReference: self
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+  cluster:
+    name: logeverylift-db
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: logeverylift-db
+  namespace: logeverylift
+spec:
+  selector:
+    matchLabels:
+      cnpg.io/cluster: logeverylift-db
+  podMetricsEndpoints:
+    - port: metrics

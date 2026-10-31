@@ -7,26 +7,28 @@ Restoring its nightly dump is in [`../backups/restore.md`](../backups/restore.md
 
 ## Current setup
 
-All of it is in `k8s/talos/apps/logeverylift/postgres.yaml`:
+logeverylift's database is the CloudNativePG Cluster `logeverylift-db`
+(`k8s/talos/apps/logeverylift/cnpg-cluster.yaml`): two instances of
+`ghcr.io/cloudnative-pg/postgresql:18.6-minimal-trixie`, one primary and one
+asynchronous standby, each on its own `syno-nfs-csi` PVC. The operator promotes the
+standby when the primary goes away, which takes about 10 seconds; with asynchronous
+replication the last few seconds of commits can be lost in a failover.
 
-- Deployment `postgres` (label `app=postgres`), image `postgres:18-alpine`, fronted by
-  a ClusterIP Service `postgres`. The app is the Deployment `logeverylift-app`.
-- `POSTGRES_DB` is `logeverylift_db` and `POSTGRES_USER` is `postgres`; the password
-  comes from `logeverylift-secret`.
-- Data lives on the PVC `postgres-pvc-18` (`syno-nfs-csi`), mounted at
-  `/var/lib/postgresql`. The image keeps the cluster in a version-named subdirectory,
-  so `PGDATA` is `/var/lib/postgresql/18/docker`.
+- The app connects to `logeverylift-db-rw` as the owner role `logeverylift`, with the
+  `uri` from the Secret `logeverylift-db-app` that the operator generates.
+- `logeverylift-db-ro` reaches the standby, `logeverylift-db-r` any instance.
+- WAL is archived continuously, and a base backup is taken nightly at 23:15 UTC, to
+  Garage under `s3://cnpg-logeverylift/logeverylift-db/`, kept 30 days. Garage and the
+  operator: [`cloudnative-pg.md`](cloudnative-pg.md).
+- The nightly `pg_dump` CronJob in `k8s/talos/apps/logeverylift/db-backup.yaml` dumps
+  from `logeverylift-db-rw` to the NAS as before, and the monthly restore test loads the
+  newest dump ([`../backups/README.md`](../backups/README.md)).
+- `PostgresWalArchivingFailing` pages when WAL stops reaching Garage.
 
-Backups are a nightly `pg_dump` CronJob in `k8s/talos/apps/logeverylift/db-backup.yaml`
-writing to the NAS, and the monthly restore test loads the newest dump into a scratch
-Postgres. Schedule, retention and restores: [`../backups/README.md`](../backups/README.md).
-
-`postgres-exporter` (`k8s/talos/apps/logeverylift/postgres-exporter.yaml`) is its own
-Deployment, so adding or upgrading it never restarts the database, and connects through
-the Service as `postgres`. Its metrics feed the Grafana Postgres dashboard (connections,
-size, cache hit ratio, transactions, locks, per-table size, dead rows and autovacuum) and
-the `PostgresDown` warning. The `logeverylift-postgres-policy` network policy has to list
-it, or every scrape reports `pg_up 0`.
+The previous hand-built Postgres (Deployment and Service `postgres`, PVC
+`postgres-pvc-18`, `postgres-exporter`) is still declared, scaled to zero, as the
+source the Cluster was imported from. The sections below describe it until it is
+removed.
 
 [![logeverylift-secret from Bitwarden gives the password to the logeverylift app, Postgres 18, the nightly pg_dump CronJob and postgres-exporter, which reads pg_stat_* for Prometheus; Postgres stores data on a syno-nfs-csi PVC whose ownership an initContainer fixes, and the dumps land on the NAS, are copied offsite to Google Drive and are loaded by the monthly restore test](../../assets/diagrams/data-postgres.svg)](../../assets/diagrams/data-postgres.svg)
 
