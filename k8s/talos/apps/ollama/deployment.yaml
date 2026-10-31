@@ -25,10 +25,21 @@ spec:
                     operator: In
                     values:
                       - hyper3
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: ollama
           image: ollama/ollama:0.40.6
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: 11434
           env:
@@ -40,9 +51,12 @@ spec:
               value: "1"
             - name: OLLAMA_KEEP_ALIVE
               value: "5m"
+            # The image's HOME is /root, which uid 1000 cannot enter.
+            - name: HOME
+              value: /home/ollama
           volumeMounts:
             - name: models
-              mountPath: /root/.ollama
+              mountPath: /home/ollama/.ollama
           resources:
             requests:
               cpu: 500m
