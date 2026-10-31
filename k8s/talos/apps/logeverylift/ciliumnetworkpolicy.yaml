@@ -54,6 +54,15 @@ spec:
         - ports:
             - port: "5432"
               protocol: TCP
+    # CloudNativePG rehearsal importing this database; removed with cnpg-scratch.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": cnpg-scratch
+            cnpg.io/cluster: scratch-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
     - fromEntities:
         - host
         - health

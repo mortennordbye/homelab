@@ -57,12 +57,12 @@ rebuilt Garage, run once from the laptop:
 
 ```bash
 export KUBECONFIG=~/Documents/Code/github/Homelab/terraform/proxmox/hyper-cluster/k8s/talos/kubeconfig
-g() { kubectl exec -n garage deploy/garage -- /garage "$@"; }
+garage() { kubectl exec -n garage deploy/garage -- /garage "$@"; }
 
-NODE=$(g node id -q | cut -d@ -f1)
-g layout assign -z homelab -c 20G "$NODE"
-g layout apply --version 1
-g status
+NODE=$(garage node id -q | cut -d@ -f1)
+garage layout assign -z homelab -c 20G "$NODE"
+garage layout apply --version 1
+garage status
 ```
 
 Then per database, a bucket and a key imported from Bitwarden, so the ID and secret
@@ -71,14 +71,14 @@ never pass through the terminal:
 ```bash
 bws_get() { BWS_ACCESS_TOKEN=$(bws-token) bws secret get "$1" --output json | jq -r .value; }
 
-g bucket create cnpg-logeverylift
-g key import --yes -n logeverylift \
+garage bucket create cnpg-logeverylift
+garage key import --yes -n logeverylift \
   "$(bws_get 5e61c8e6-3642-4bbc-8a6a-b4f400f0eb33)" \
   "$(bws_get 48d4180c-091c-48ec-8971-b4f400f0ecb3)" > /dev/null
-g bucket allow --read --write --owner cnpg-logeverylift --key logeverylift
+garage bucket allow --read --write --owner cnpg-logeverylift --key logeverylift
 ```
 
-`g bucket info cnpg-logeverylift` shows its size and object count.
+`garage bucket info cnpg-logeverylift` shows its size and object count.
 
 ### Restoring Garage itself
 
