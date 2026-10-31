@@ -2,6 +2,17 @@
 # them from the pre-existing Secret named below (synced by ESO in
 # kargo-api-secret.yaml), which must hold ADMIN_ACCOUNT_PASSWORD_HASH and
 # ADMIN_ACCOUNT_TOKEN_SIGNING_KEY.
+global:
+  # Container-level, applied to every Kargo workload; the image runs as uid 65532.
+  securityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
 api:
   secret:
     name: kargo-api

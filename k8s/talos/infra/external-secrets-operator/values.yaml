@@ -6,6 +6,16 @@ bitwarden-sdk-server:
   # Stakater Reloader restarts the Deployment when the cert secret changes.
   deploymentAnnotations:
     secret.reloader.stakater.com/reload: bitwarden-tls-certs
+  # The image runs as uid 65532.
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
 
 installCRDs: true
 

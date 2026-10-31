@@ -1,5 +1,12 @@
 deploymentMode: SingleBinary
 
+# Pod-level for server and worker; the image runs as uid 1000.
+global:
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
 authentik:
   existingSecret: 
     secretName: "authentik-secrets"
@@ -25,6 +32,11 @@ blueprints:
     - authentik-blueprint-embedded-outpost
 
 server:
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   env:
     - name: AUTHENTIK_POSTGRESQL__HOST
       value: "authentik-postgresql"
@@ -80,6 +92,11 @@ server:
 
 worker:
   replicas: 1
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   env:
     - name: AUTHENTIK_POSTGRESQL__HOST
       value: "authentik-postgresql"
