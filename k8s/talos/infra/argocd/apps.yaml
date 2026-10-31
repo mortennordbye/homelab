@@ -68,7 +68,7 @@ spec:
     {{- else if eq $base (printf "%s-demo" $app) }}{{ $stage = printf "%s-cd:demo" $app }}
     {{- end }}
     {{- end }}
-    {{- $serverSideDiff := has $base (list "logeverylift" "cnpg-scratch") }}
+    {{- $serverSideDiff := has $base (list "logeverylift") }}
     {{- if or $stage $serverSideDiff }}
     metadata:
       annotations:
