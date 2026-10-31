@@ -31,10 +31,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 ## Platform
 
 ### Retire the legacy logeverylift Postgres
-- **What:** after the CloudNativePG cutover, remove the old `postgres` Deployment, Service, PVC `postgres-pvc-18`, its root chown initContainer and `postgres-exporter` (with its rule in `logeverylift-postgres-policy`); extend the `renovate.json` Postgres-major rule to the CNPG `imageName`; rewrite the major-upgrade procedure and the `data-postgres` diagram in `docs/platform/data/postgres.md`; add a monthly point-in-time restore from Garage to the restore test.
+- **What:** after the CloudNativePG cutover, remove the old `postgres` Deployment, Service, PVC `postgres-pvc-18`, its root chown initContainer and `postgres-exporter` (with its rule in `logeverylift-postgres-policy`); rewrite the major-upgrade procedure and the `data-postgres` diagram in `docs/platform/data/postgres.md`; add a monthly point-in-time restore from Garage to the restore test.
 - **Why deferred:** the old database stays as the rollback source until the new Cluster has run for a week with nightly base backups.
 - **Unblock:** a week of healthy `logeverylift-db` with successful nightly backups and no archiving alerts.
-- **Where:** `k8s/talos/apps/logeverylift/{postgres.yaml,postgres-exporter.yaml,ciliumnetworkpolicy.yaml}`, `k8s/talos/infra/backup-check/restore-test.yaml`, `renovate.json`, `docs/platform/data/postgres.md`.
+- **Where:** `k8s/talos/apps/logeverylift/{postgres.yaml,postgres-exporter.yaml,ciliumnetworkpolicy.yaml}`, `k8s/talos/infra/backup-check/restore-test.yaml`, `docs/platform/data/postgres.md`.
 
 ### Kyverno restricted and requests policies to Enforce
 - **What:** decide per namespace whether `pod-security-restricted` and `require-requests-limits` (42 workloads, mostly third-party charts: Argo CD, cert-manager, ESO, Kargo, Authentik, kube-prometheus-stack, Cilium's Hubble) can enforce. The tag and baseline policies already do. Two workloads still fail restricted: verksted (the app image runs as root and its `docker:*-dind` sidecar is privileged) and logeverylift's `postgres` (a root chown initContainer, gone with the CloudNativePG move).
