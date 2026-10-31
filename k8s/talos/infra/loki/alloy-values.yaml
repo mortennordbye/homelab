@@ -143,6 +143,23 @@ alloy:
           }
         }
 
+        // The kubelet's readiness and liveness probes hit logeverylift's /api/health
+        // directly, several times a minute; each would be a trace of its own.
+        policy {
+          name = "drop-health-checks"
+          type = "drop"
+          drop {
+            drop_sub_policy {
+              name = "app-health"
+              type = "string_attribute"
+              string_attribute {
+                key    = "http.route"
+                values = ["/api/health"]
+              }
+            }
+          }
+        }
+
         output {
           traces = [otelcol.processor.transform.traces.input]
         }
@@ -159,6 +176,9 @@ alloy:
           statements = [
             `delete_matching_keys(attributes, "^(process|os|host)\\..*")`,
             `delete_key(attributes, "k8s.pod.uid")`,
+            // @vercel/otel labels every resource as running on Vercel.
+            `delete_matching_keys(attributes, "^vercel\\..*")`,
+            `delete_key(attributes, "cloud.provider")`,
           ]
         }
         trace_statements {

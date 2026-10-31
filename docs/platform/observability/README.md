@@ -157,6 +157,8 @@ An app's spans can reach a different Alloy pod than Traefik's for the same trace
 tail-sampling drop that matches on Traefik's attributes never removes them. The blackbox
 probe of logeverylift.com therefore leaves a small app-only trace every minute; the
 monitoring-UI drop is unaffected, since no instrumented app serves those hosts.
+Traces whose `http.route` is `/api/health` are dropped: the kubelet's readiness and
+liveness probes call it straight on the pod, bypassing Traefik, several times a minute.
 
 [![Traefik sends OTLP traces to Alloy, whose tail sampling drops the monitoring UIs and blackbox probes and whose transform strips per-process, per-connection and client-IP attributes, before Tempo stores them for Grafana](../../assets/diagrams/observability-traces.svg)](../../assets/diagrams/observability-traces.svg)
 
