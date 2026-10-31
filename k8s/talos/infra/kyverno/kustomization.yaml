@@ -12,6 +12,7 @@ resources:
   - policyexception-monitoring.yaml
   - policyexception-host-access.yaml
   - policyexception-nas-backups.yaml
+  - policyexception-media-root.yaml
 
 # kustomize's namespace transformer doesn't recognise the ServiceMonitor CRD
 # as namespaced, so stamp it explicitly.

@@ -51,9 +51,14 @@ spec:
                     operator: In
                     values:
                       - hyper1
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: tautulli
           image: ghcr.io/linuxserver/tautulli:2.17.2
+          securityContext:
+            allowPrivilegeEscalation: false
           env:
             - name: PUID
               value: "1000"

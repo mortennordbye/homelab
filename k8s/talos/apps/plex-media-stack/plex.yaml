@@ -111,9 +111,14 @@ spec:
                     operator: In
                     values:
                       - intel-quicksync
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: plex
           image: ghcr.io/linuxserver/plex:1.43.4
+          securityContext:
+            allowPrivilegeEscalation: false
           env:
             - name: PUID
               value: "1000"
