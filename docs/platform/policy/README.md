@@ -56,8 +56,10 @@ Reports refresh on the background scan, about once an hour, and on every admissi
 trivy-operator in `trivy-system` scans the image of every running workload for known CVEs
 and for secrets baked into its layers. It writes a `VulnerabilityReport` and an
 `ExposedSecretReport` per container next to the workload, and rescans when a workload's
-image changes or a report turns 24 hours old. Only `HIGH` and `CRITICAL` findings with a
-fixed version are kept, so every entry is something a version bump can clear. The install
+image changes or a report turns 24 hours old. Only findings with a fixed version are kept,
+so every entry is something a version bump can clear. The filter is `HIGH` and `CRITICAL`,
+but Trivy also keeps `UNKNOWN`: CVEs published too recently for a vendor rating, many of
+which score high. The install
 lives in [`k8s/talos/infra/trivy-operator/`](../../../k8s/talos/infra/trivy-operator/kustomization.yaml).
 
 A built-in trivy-server holds the vulnerability database, pulled from `mirror.gcr.io`, and
@@ -77,6 +79,10 @@ kubectl -n arr-stack get vulnerabilityreport <name> -o json \
 # Any secret found in an image
 kubectl get exposedsecretreports -A -o wide
 ```
+
+Expect a few `ExposedSecretReport` hits from upstream images, such as the Debian snakeoil
+key in the postgres images and test certificates in Python packages. A real leak is one in a
+path our own image builds.
 
 Prometheus scrapes the operator's `trivy_image_vulnerabilities` and
 `trivy_image_exposedsecrets` gauges through its ServiceMonitor.
