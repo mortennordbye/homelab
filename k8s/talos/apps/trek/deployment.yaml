@@ -29,24 +29,34 @@ spec:
                       - hyper1
       securityContext:
         fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: trek
           image: mauriceboe/trek:4.3.3
           imagePullPolicy: IfNotPresent
+          # The image entrypoint chowns as root and drops to node via gosu, which
+          # fails as non-root; this is its final exec, so check it on upgrades.
+          workingDir: /app/server
+          command:
+            - dumb-init
+            - --
+          args:
+            - node
+            - --require
+            - tsconfig-paths/register
+            - dist/index.js
           ports:
             - containerPort: 3000
-          # The entrypoint starts as root and drops to the node user via gosu,
-          # mirroring the upstream compose file's capability set.
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             capabilities:
               drop:
                 - ALL
-              add:
-                - CHOWN
-                - SETUID
-                - SETGID
           env:
             - name: TZ
               value: Europe/Oslo

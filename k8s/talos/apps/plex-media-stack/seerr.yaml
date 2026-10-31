@@ -43,10 +43,20 @@ spec:
         app: seerr
     spec:
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
         fsGroup: 1000
       containers:
         - name: seerr
           image: ghcr.io/seerr-team/seerr:v3.5.1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: PUID
               value: "1000"
