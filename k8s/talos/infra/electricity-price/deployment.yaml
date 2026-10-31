@@ -25,7 +25,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: exporter
-          image: python:3.13.18-alpine
+          image: python:3.15.1-alpine
           command:
             - python
             - -B
