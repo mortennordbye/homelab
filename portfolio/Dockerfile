@@ -36,7 +36,12 @@ RUN mkdir -p output && \
 
 # Page one of each CV as a JPEG, for the sheet the /fun printer feeds out.
 # 96 dpi is A4 at 794x1123: headings legible on a 0.21m sheet up close.
-RUN for f in /work/latex/output/cv-*.pdf; do \
+RUN set -x; which gs pdftoppm mutool magick convert || true; readlink -f "$(which gs)"; \
+    head -c 8 /work/latex/output/cv-0000.pdf; echo; \
+    gs -q -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r96 -dFirstPage=1 -dLastPage=1 -sOutputFile=/tmp/t.jpg - < /work/latex/output/cv-0000.pdf; ls -l /tmp/t.jpg || true; \
+    gs -q -dBATCH -dNOPAUSE -sDEVICE=jpeg -r96 -dFirstPage=1 -dLastPage=1 -sOutputFile=/tmp/u.jpg /work/latex/output/cv-0000.pdf; ls -l /tmp/u.jpg || true; \
+    cp /work/latex/output/cv-0000.pdf /tmp/c.pdf && gs -q -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r96 -sOutputFile=/tmp/v.jpg /tmp/c.pdf; ls -l /tmp/v.jpg || true; \
+    for f in /work/latex/output/cv-*.pdf; do \
       gs -q -dSAFER --permit-file-all=/work/latex/output/ -dBATCH -dNOPAUSE -sDEVICE=jpeg -dJPEGQ=82 -r96 \
         -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -dFirstPage=1 -dLastPage=1 \
         -sOutputFile="${f%.pdf}.jpg" "$f"; \
