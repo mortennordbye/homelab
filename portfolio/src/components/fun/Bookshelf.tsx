@@ -3,6 +3,7 @@
 import { RoundedBox } from "@/components/scene/RoundedBox";
 import { useMemo } from "react";
 import { Interactive } from "./interaction";
+import { MERGE_STATIC } from "./StaticMerge";
 import type { ShelfBook } from "./shelf";
 
 /**
@@ -72,26 +73,41 @@ function Book({
     >
       {(hovered) => (
         <group position={[x + w / 2, y + h / 2, z]} rotation={[0, 0, lean]}>
+          <group userData={MERGE_STATIC}>
+            <RoundedBox
+              args={[w, h, ITEM_D]}
+              radius={0.004}
+              smoothness={3}
+              receiveShadow
+            >
+              <meshStandardMaterial color={colour} roughness={0.78} />
+            </RoundedBox>
+            {/* head and tail bands, so a spine is not one flat colour */}
+            {[h / 2 - 0.016, -h / 2 + 0.016].map((by) => (
+              <mesh key={by} position={[0, by, 0.001]}>
+                <boxGeometry args={[w * 0.98, 0.006, ITEM_D + 0.004]} />
+                <meshStandardMaterial color="#cbbfa6" roughness={0.7} />
+              </mesh>
+            ))}
+          </group>
+          {/* The merged spine cannot light up, so hover draws a lit copy over it. */}
           <RoundedBox
             args={[w, h, ITEM_D]}
             radius={0.004}
             smoothness={3}
             receiveShadow
+            visible={hovered}
           >
             <meshStandardMaterial
               color={colour}
               roughness={0.78}
-              emissive={hovered ? "#ffd9a6" : "#000000"}
-              emissiveIntensity={hovered ? 0.28 : 0}
+              emissive="#ffd9a6"
+              emissiveIntensity={0.28}
+              polygonOffset
+              polygonOffsetFactor={-1}
+              polygonOffsetUnits={-1}
             />
           </RoundedBox>
-          {/* head and tail bands, so a spine is not one flat colour */}
-          {[h / 2 - 0.016, -h / 2 + 0.016].map((by) => (
-            <mesh key={by} position={[0, by, 0.001]}>
-              <boxGeometry args={[w * 0.98, 0.006, ITEM_D + 0.004]} />
-              <meshStandardMaterial color="#cbbfa6" roughness={0.7} />
-            </mesh>
-          ))}
         </group>
       )}
     </Interactive>

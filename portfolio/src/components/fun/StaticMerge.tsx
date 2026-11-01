@@ -20,6 +20,15 @@ export const NO_MERGE = { noMerge: true };
  */
 export const MERGE_STATIC = { mergeStatic: true };
 
+/**
+ * userData for the group a `Door` or `Drawer` animates. Its meshes are drawn
+ * through one BatchedMesh per material shared by every leaf in the flat, and
+ * each instance follows its leaf's transform. Nothing in it may change
+ * relative to the leaf after mount: the same rule as the static merge, one
+ * level down. A NO_MERGE inside excludes its subtree again.
+ */
+export const MERGE_LEAF = { mergeLeaf: true };
+
 const KEYED_MAPS = ["map", "normalMap", "roughnessMap", "metalnessMap"] as const;
 const UNSUPPORTED_MAPS = [
   "aoMap",
@@ -113,18 +122,26 @@ export function StaticMerge({ children }: { children: React.ReactNode }) {
     const toRoot = group.matrixWorld.clone().invert();
 
     const buckets = new Map<string, THREE.Mesh[]>();
+    const leafBuckets = new Map<string, { mesh: THREE.Mesh; leaf: THREE.Object3D }[]>();
     // A NO_MERGE subtree is still walked, since a MERGE_STATIC part may sit inside it.
-    const visit = (o: THREE.Object3D, blocked: boolean) => {
+    const visit = (o: THREE.Object3D, blocked: boolean, leaf: THREE.Object3D | null) => {
       if (!o.visible) return;
-      if (o.userData.noMerge) blocked = true;
-      else if (o.userData.mergeStatic) blocked = false;
+      if (o.userData.noMerge) {
+        blocked = true;
+        leaf = null;
+      } else if (o.userData.mergeLeaf) {
+        blocked = false;
+        leaf = o;
+      } else if (o.userData.mergeStatic && !leaf) blocked = false;
       if (!blocked && (o as THREE.Mesh).isMesh) {
-        const key = meshKey(o as THREE.Mesh);
-        if (key) buckets.set(key, [...(buckets.get(key) ?? []), o as THREE.Mesh]);
+        const mesh = o as THREE.Mesh;
+        const key = meshKey(mesh);
+        if (key && leaf) leafBuckets.set(key, [...(leafBuckets.get(key) ?? []), { mesh, leaf }]);
+        else if (key) buckets.set(key, [...(buckets.get(key) ?? []), mesh]);
       }
-      o.children.forEach((c) => visit(c, blocked));
+      o.children.forEach((c) => visit(c, blocked, leaf));
     };
-    group.children.forEach((c) => visit(c, false));
+    group.children.forEach((c) => visit(c, false, null));
 
     const made: THREE.Mesh[] = [];
     const hidden: THREE.Mesh[] = [];
@@ -148,10 +165,53 @@ export function StaticMerge({ children }: { children: React.ReactNode }) {
       }
     }
 
+    for (const parts of leafBuckets.values()) {
+      if (parts.length < 2) continue;
+      const geometries = [...new Set(parts.map((p) => p.mesh.geometry))];
+      const batch = new THREE.BatchedMesh(
+        parts.length,
+        geometries.reduce((n, g) => n + g.getAttribute("position").count, 0),
+        geometries.reduce((n, g) => n + (g.getIndex()?.count ?? 0), 0),
+        parts[0].mesh.material as THREE.Material,
+      );
+      const ids = new Map(geometries.map((g) => [g, batch.addGeometry(g)]));
+      const instances = parts.map(({ mesh, leaf }) => ({
+        id: batch.addInstance(ids.get(mesh.geometry)!),
+        leaf,
+        inLeaf: leaf.matrixWorld.clone().invert().multiply(mesh.matrixWorld),
+        at: new THREE.Matrix4().makeScale(0, 0, 0),
+      }));
+      /* In onBeforeRender, not useFrame: only there is every matrixWorld
+         current, and onBeforeShadow calls it before each shadow pass. It runs
+         after the renderer culls the batch as a whole, so that cull stays off
+         and instances are culled one by one. */
+      const sync = () => {
+        for (const i of instances) {
+          if (i.at.equals(i.leaf.matrixWorld)) continue;
+          i.at.copy(i.leaf.matrixWorld);
+          batch.setMatrixAt(i.id, local.multiplyMatrices(toRoot, i.at).multiply(i.inLeaf));
+        }
+      };
+      batch.onBeforeRender = (...args) => {
+        sync();
+        THREE.BatchedMesh.prototype.onBeforeRender.apply(batch, args);
+      };
+      batch.frustumCulled = false;
+      batch.castShadow = parts[0].mesh.castShadow;
+      batch.receiveShadow = parts[0].mesh.receiveShadow;
+      group.add(batch);
+      made.push(batch);
+      for (const { mesh } of parts) {
+        mesh.visible = false;
+        hidden.push(mesh);
+      }
+    }
+
     return () => {
       for (const m of made) {
         group.remove(m);
-        m.geometry.dispose();
+        if (m instanceof THREE.BatchedMesh) m.dispose();
+        else m.geometry.dispose();
       }
       for (const m of hidden) m.visible = true;
     };

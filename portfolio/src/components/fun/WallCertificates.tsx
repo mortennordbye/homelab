@@ -116,16 +116,29 @@ function Certificate({
     >
       {(hovered) => (
         <group position={[x, BOARD.t + CERT_H / 2, 0.05]} rotation={[LEAN, 0, 0]}>
-          {/* frame */}
-          <RoundedBox args={[CERT_W, CERT_H, 0.014]} radius={0.003} smoothness={3} receiveShadow>
+          {/* The merged frame cannot light up, so hover draws a lit copy over it. */}
+          <RoundedBox
+            args={[CERT_W, CERT_H, 0.014]}
+            radius={0.003}
+            smoothness={3}
+            receiveShadow
+            visible={hovered}
+          >
             <meshStandardMaterial
               color="#2e2219"
               roughness={0.55}
-              emissive={hovered ? "#ffd9a6" : "#000000"}
-              emissiveIntensity={hovered ? 0.3 : 0}
+              emissive="#ffd9a6"
+              emissiveIntensity={0.3}
+              polygonOffset
+              polygonOffsetFactor={-1}
+              polygonOffsetUnits={-1}
             />
           </RoundedBox>
           <group userData={MERGE_STATIC}>
+            {/* frame */}
+            <RoundedBox args={[CERT_W, CERT_H, 0.014]} radius={0.003} smoothness={3} receiveShadow>
+              <meshStandardMaterial color="#2e2219" roughness={0.55} />
+            </RoundedBox>
             {/* mount */}
             <mesh position={[0, 0, 0.0075]}>
               <planeGeometry args={[CERT_W - 0.02, CERT_H - 0.02]} />

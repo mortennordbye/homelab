@@ -4,6 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { cloneElement, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Interactive, Occluder } from "./interaction";
+import { MERGE_LEAF } from "./StaticMerge";
 
 /** A front lands in about a third of a second. Slower reads as a cutscene,
  *  faster loses the mass. */
@@ -100,7 +101,7 @@ export function Door({
   return (
     <Interactive label={label} verb={open ? "close" : "open"} onActivate={() => setOpen((o) => !o)}>
       <group position={pivot}>
-        <group ref={g}>
+        <group ref={g} userData={MERGE_LEAF}>
           <group position={[-pivot[0], -pivot[1], -pivot[2]]}>{children}</group>
         </group>
       </group>
@@ -127,7 +128,7 @@ export function Drawer({
 
   return (
     <Interactive label={label} verb={open ? "close" : "open"} onActivate={() => setOpen((o) => !o)}>
-      <group ref={g}>{children}</group>
+      <group ref={g} userData={MERGE_LEAF}>{children}</group>
     </Interactive>
   );
 }
