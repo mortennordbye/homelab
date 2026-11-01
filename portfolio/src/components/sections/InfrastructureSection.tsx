@@ -1,5 +1,6 @@
 import { Section } from "@/components/primitives/Section";
 import { InfraBench } from "@/components/infrastructure/InfraBench";
+import { RepoStamp } from "@/components/RepoStamp";
 
 export function InfrastructureSection() {
   return (
@@ -8,7 +9,16 @@ export function InfrastructureSection() {
       heading="This site is the case study."
       description="No Vercel, no Netlify. The page you are reading was built by CI, pushed to a registry, and reconciled by ArgoCD onto a self-hosted Talos Kubernetes cluster in Oslo. This is the cabinet it runs in, and the set is reading the cluster."
       className="section-rule"
-      bleed={<InfraBench />}
+      bleed={
+        <>
+          <InfraBench />
+          <div className="mt-10 px-6">
+            <div className="mx-auto max-w-[var(--container-wide)]">
+              <RepoStamp />
+            </div>
+          </div>
+        </>
+      }
     />
   );
 }

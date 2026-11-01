@@ -354,7 +354,8 @@ live state, and the availability lamp is the one thing still allowed to emit.
 on the site because it is a measurement the site takes of itself and cannot
 fake, and that device should recur rather than sit once at the bottom. It is
 the honest version of a stats row and the only decorative element here that
-gets better the more real the site becomes. Not built; see `docs/backlog/README.md`.
+gets better the more real the site becomes. Built for the pinned repositories
+under the infrastructure section (`RepoStamp`); the rest is in `docs/backlog/README.md`.
 
 ### The section label, and the plate that failed
 
