@@ -2,7 +2,7 @@
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
 # Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
-FROM node:24-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS texgen
+FROM node:26-alpine@sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2a7d4c8de6d94 AS texgen
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -45,7 +45,7 @@ RUN for f in output/cv-*.pdf; do \
     done
 
 # ---- Stage 3: build the Next.js server bundle ----
-FROM node:24-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS build
+FROM node:26-alpine@sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2a7d4c8de6d94 AS build
 WORKDIR /app
 
 # Install deps with cache-friendly two-step copy
