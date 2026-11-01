@@ -46,7 +46,9 @@ resource "unifi_device" "u6_plus" {
   name = "U6+"
   mac  = "0c:ea:14:5e:d6:8f"
 
-  led_override = "off"
+  led = {
+    override = "off"
+  }
 
   # Same reason as the switch: an update must not blank the AP's address.
   config_network = {
