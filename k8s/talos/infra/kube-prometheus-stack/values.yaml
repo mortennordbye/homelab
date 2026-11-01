@@ -20,7 +20,7 @@ prometheus:
         cpu: 100m
         memory: 1Gi
       limits:
-        memory: 2Gi
+        memory: 3Gi
     scrapeInterval: 30s
     evaluationInterval: 30s
     # Empty selectors: discover monitors in every namespace. Without the
@@ -57,6 +57,12 @@ grafana:
       folderAnnotation: k8s-sidecar-target-directory
       provider:
         foldersFromFilesStructure: true
+    resources:
+      requests:
+        cpu: 25m
+        memory: 96Mi
+      limits:
+        memory: 256Mi
 
   # Admin credentials come from an ExternalSecret.
   admin:
@@ -277,8 +283,24 @@ alertmanager:
 nodeExporter:
   enabled: true
 
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
+
 kubeStateMetrics:
   enabled: true
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
 
 prometheusOperator:
   resources:
@@ -287,6 +309,13 @@ prometheusOperator:
       memory: 128Mi
     limits:
       memory: 256Mi
+  prometheusConfigReloader:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 96Mi
 
 kubeApiServer:
   enabled: false

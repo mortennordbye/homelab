@@ -16,10 +16,24 @@ bitwarden-sdk-server:
     capabilities:
       drop:
         - ALL
+  # The request is the idle size; the limit leaves room for a burst the server keeps
+  # resident afterwards.
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      memory: 1Gi
 
 installCRDs: true
 
 replicaCount: 1
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
 
 # HA for the admission webhook: API calls to ExternalSecret/SecretStore block on
 # it, so keep 2 replicas with a PDB across node drains.
@@ -28,6 +42,12 @@ webhook:
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 80Mi
+    limits:
+      memory: 192Mi
   # Soft spread the 2 webhook replicas across hypervisors (zones).
   affinity:
     podAntiAffinity:
@@ -38,6 +58,14 @@ webhook:
               matchLabels:
                 app.kubernetes.io/name: external-secrets-webhook
             topologyKey: topology.kubernetes.io/zone
+
+certController:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 160Mi
+    limits:
+      memory: 384Mi
 
 serviceMonitor:
   enabled: true

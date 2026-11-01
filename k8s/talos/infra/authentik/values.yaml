@@ -32,6 +32,12 @@ blueprints:
     - authentik-blueprint-embedded-outpost
 
 server:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 832Mi
+    limits:
+      memory: 2Gi
   containerSecurityContext:
     allowPrivilegeEscalation: false
     capabilities:
@@ -92,6 +98,12 @@ server:
 
 worker:
   replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 320Mi
+    limits:
+      memory: 1Gi
   containerSecurityContext:
     allowPrivilegeEscalation: false
     capabilities:
@@ -121,6 +133,13 @@ postgresql:
     secretKeys:
       adminPasswordKey: "postgres-password"
       userPasswordKey: "postgres-password"
+  primary:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 320Mi
+      limits:
+        memory: 1Gi
   persistence:
     enabled: true
     storageClass: "syno-nfs-csi"

@@ -92,10 +92,10 @@ declaring it would put the key every peer trusts into tfvars and state.
 
 - The provider fills unset arguments with its own defaults rather than the
   controller's, so arguments that look redundant (`setting_preference`,
-  `lte_lan`, `group_rekey`, `bss_transition`, `ap_group_ids`, `wlan_band`) are
+  `lte_lan`, `group_rekey`, `bss_transition`, `ap_group.ids`, `wlan_band`) are
   pinned to the console's values. Removing one shows up as a change in `plan`.
-- `bandsteering_mode` must stay declared on every WLAN. Unset, it plans as
-  unknown on every run and re-pushes the SSID, dropping every client.
+- Band steering is set on the access point (`unifi_device`), not the WLAN. On
+  `unifi_wlan`, `bandsteering_mode` is deprecated and never reaches the controller.
 - Devices have `prevent_destroy`: destroying a `unifi_device` forgets (unadopts)
   it. `config_network` is pinned on the switch and AP so an update can never
   send an empty management address.

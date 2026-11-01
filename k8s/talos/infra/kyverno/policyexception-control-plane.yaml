@@ -1,0 +1,22 @@
+# Talos runs these as static pods from its machine config, which sets their requests but no
+# memory limit; nothing in this repo can change their spec.
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: talos-control-plane
+spec:
+  exceptions:
+    - policyName: require-requests-limits
+      ruleNames:
+        - requests-and-memory-limit
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+          namespaces:
+            - kube-system
+          names:
+            - kube-apiserver-*
+            - kube-controller-manager-*
+            - kube-scheduler-*

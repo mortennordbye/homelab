@@ -9,6 +9,13 @@ containerSecurityContext:
     drop:
       - ALL
 
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
+
 # The image's built-in snmp.yml (modules incl. synology) plus the SNMPv3 auth,
 # which lives in a Secret so the credentials stay out of Git.
 extraArgs:

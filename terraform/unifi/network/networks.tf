@@ -11,20 +11,26 @@ resource "unifi_network" "trusted" {
   domain_name      = "local.bigd.no"
 
   dhcp_server = {
-    enabled     = true
-    start       = "10.3.10.6"
-    stop        = "10.3.10.254"
-    dns_servers = [local.dns_server]
-    leasetime   = "24h0m0s"
+    enabled   = true
+    start     = "10.3.10.6"
+    stop      = "10.3.10.254"
+    leasetime = "24h0m0s"
+
+    dns = {
+      servers = [local.dns_server]
+    }
   }
 
-  multicast_dns       = true
-  igmp_snooping       = false
-  network_isolation   = false
-  internet_access     = true
-  ipv6_interface_type = "none"
-  lte_lan             = false
-  setting_preference  = "manual"
+  multicast_dns      = true
+  igmp_snooping      = false
+  network_isolation  = false
+  internet_access    = true
+  lte_lan            = false
+  setting_preference = "manual"
+
+  ipv6 = {
+    interface_type = "none"
+  }
 }
 
 resource "unifi_network" "iot" {
@@ -35,20 +41,26 @@ resource "unifi_network" "iot" {
   subnet           = "10.3.20.1/24"
 
   dhcp_server = {
-    enabled     = true
-    start       = "10.3.20.6"
-    stop        = "10.3.20.254"
-    dns_servers = [local.dns_server]
-    leasetime   = "24h0m0s"
+    enabled   = true
+    start     = "10.3.20.6"
+    stop      = "10.3.20.254"
+    leasetime = "24h0m0s"
+
+    dns = {
+      servers = [local.dns_server]
+    }
   }
 
-  multicast_dns       = true
-  igmp_snooping       = false
-  network_isolation   = true
-  internet_access     = true
-  ipv6_interface_type = "none"
-  lte_lan             = true
-  setting_preference  = "manual"
+  multicast_dns      = true
+  igmp_snooping      = false
+  network_isolation  = true
+  internet_access    = true
+  lte_lan            = true
+  setting_preference = "manual"
+
+  ipv6 = {
+    interface_type = "none"
+  }
 }
 
 resource "unifi_network" "guest" {
@@ -59,20 +71,26 @@ resource "unifi_network" "guest" {
   subnet           = "192.168.100.1/24"
 
   dhcp_server = {
-    enabled     = true
-    start       = "192.168.100.6"
-    stop        = "192.168.100.254"
-    dns_servers = [local.dns_server]
-    leasetime   = "24h0m0s"
+    enabled   = true
+    start     = "192.168.100.6"
+    stop      = "192.168.100.254"
+    leasetime = "24h0m0s"
+
+    dns = {
+      servers = [local.dns_server]
+    }
   }
 
-  multicast_dns       = false
-  igmp_snooping       = false
-  network_isolation   = false
-  internet_access     = true
-  ipv6_interface_type = "none"
-  lte_lan             = true
-  setting_preference  = "manual"
+  multicast_dns      = false
+  igmp_snooping      = false
+  network_isolation  = false
+  internet_access    = true
+  lte_lan            = true
+  setting_preference = "manual"
+
+  ipv6 = {
+    interface_type = "none"
+  }
 }
 
 resource "unifi_wan" "internet_1" {

@@ -14,6 +14,22 @@ tolerations:
 node:
   kubeletDir: /var/lib/kubelet
 
+  plugin:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 48Mi
+      limits:
+        memory: 128Mi
+
+  driverRegistrar:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 24Mi
+      limits:
+        memory: 64Mi
+
   tolerations:
     - operator: Exists
 
@@ -30,40 +46,42 @@ controller:
     resources:
       requests:
         cpu: 10m
-        memory: 16Mi
+        memory: 64Mi
+      limits:
+        memory: 128Mi
 
   provisioner:
     resources:
       requests:
         cpu: 10m
-        memory: 16Mi
+        memory: 64Mi
+      limits:
+        memory: 128Mi
 
   resizer:
     resources:
       requests:
         cpu: 10m
-        memory: 16Mi
+        memory: 64Mi
+      limits:
+        memory: 128Mi
 
   snapshotter:
     enabled: true
     resources:
       requests:
         cpu: 10m
-        memory: 16Mi
+        memory: 64Mi
+      limits:
+        memory: 128Mi
 
-nodePlugin:
+livenessprobe:
   resources:
     requests:
       cpu: 10m
-      memory: 32Mi
+      memory: 24Mi
     limits:
-      memory: 128Mi
-
-nodeRegistrar:
-  resources:
-    requests:
-      cpu: 10m
-      memory: 16Mi
+      memory: 64Mi
 
 options:
   enableCapacity: true

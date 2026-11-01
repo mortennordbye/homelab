@@ -46,12 +46,18 @@ resource "unifi_setting" "site" {
   }
 
   syslog = {
-    enabled                        = true
-    this_controller                = true
-    this_controller_encrypted_only = true
-    log_all_contents               = true
-    debug                          = false
-    netconsole_enabled             = false
+    enabled          = true
+    log_all_contents = true
+    debug            = false
+
+    this_controller = {
+      enabled        = true
+      encrypted_only = true
+    }
+
+    netconsole = {
+      enabled = false
+    }
   }
 
   igmp_snooping = {
@@ -61,12 +67,15 @@ resource "unifi_setting" "site" {
   # SSH is left out on purpose: the provider keeps the live values for any mgmt
   # field not declared, and the SSH credentials do not belong in this repo.
   mgmt = {
-    auto_upgrade             = true
-    auto_upgrade_hour        = 3
     advanced_feature_enabled = true
     debug_tools_enabled      = false
     unifi_idp_enabled        = true
     wifiman_enabled          = true
+
+    auto_upgrade = {
+      enabled = true
+      hour    = 3
+    }
   }
 
   # Ad blocking and DNS filtering are not modelled by the provider and stay as
