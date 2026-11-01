@@ -30,7 +30,8 @@ WORKDIR /work/latex
 RUN mkdir -p output && \
     for f in resume.tex cv-*.tex; do \
       echo "→ xelatex $f"; \
-      xelatex -interaction=nonstopmode -output-directory=output "$f" >/dev/null; \
+      xelatex -interaction=nonstopmode -halt-on-error -output-directory=output "$f" >/dev/null \
+        || { tail -n 40 "output/${f%.tex}.log"; exit 1; }; \
     done
 
 # Page one of each CV as a JPEG, for the sheet the /fun printer feeds out.
