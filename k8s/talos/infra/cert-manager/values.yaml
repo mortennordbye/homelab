@@ -8,6 +8,12 @@ replicaCount: 2
 podDisruptionBudget:
   enabled: true
   maxUnavailable: 1
+resources:
+  requests:
+    cpu: 10m
+    memory: 96Mi
+  limits:
+    memory: 256Mi
 # Soft spread the 2 replicas across hypervisors (zones); preferred so it never
 # blocks scheduling or rollouts.
 affinity:
@@ -24,6 +30,12 @@ webhook:
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 80Mi
+    limits:
+      memory: 192Mi
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -38,6 +50,12 @@ cainjector:
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
