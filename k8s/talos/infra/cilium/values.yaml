@@ -91,9 +91,37 @@ hubble:
   ui:
     enabled: true
     rollOutPods: true
+    frontend:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          memory: 64Mi
+    backend:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          memory: 128Mi
   relay:
     enabled: true
     rollOutPods: true
+    resources:
+      requests:
+        cpu: 10m
+        memory: 80Mi
+      limits:
+        memory: 192Mi
+
+certgen:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 128Mi
 
 operator:
   # HA: 2 replicas (active + standby via leader election) with a PDB so a node
@@ -178,6 +206,12 @@ k8sClientRateLimit:
 
 envoy:
   enabled: true
+  resources:
+    requests:
+      cpu: 15m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
   prometheus:
     enabled: true
     # Quoted: the chart schema wants a string here.
