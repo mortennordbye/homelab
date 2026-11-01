@@ -57,6 +57,12 @@ configs:
 
 server:
   replicas: 2
+  resources:
+    requests:
+      cpu: 10m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
   # Chart applies soft pod anti-affinity by default (global.affinity), so the
   # replicas spread across nodes on their own.
   pdb:
@@ -80,6 +86,12 @@ dex:
 
 notifications:
   enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 48Mi
+    limits:
+      memory: 128Mi
   argocdUrl: https://argocd.local.bigd.no
   secret:
     # argocd-notifications-secret comes from ESO (argocd-notifications-secret.yaml).
@@ -114,6 +126,12 @@ notifications:
 applicationSet:
   enabled: true
   replicas: 2
+  resources:
+    requests:
+      cpu: 20m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
   pdb:
     enabled: true
     maxUnavailable: 1
@@ -121,8 +139,22 @@ applicationSet:
 redis-ha:
   enabled: false
 
+redis:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 112Mi
+    limits:
+      memory: 256Mi
+
 controller:
   replicas: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+    limits:
+      memory: 3Gi
   metrics:
     enabled: true
     serviceMonitor:
@@ -132,6 +164,12 @@ controller:
 
 repoServer:
   replicas: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 192Mi
+    limits:
+      memory: 1Gi
   pdb:
     enabled: true
     maxUnavailable: 1
