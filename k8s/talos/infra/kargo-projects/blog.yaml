@@ -158,9 +158,26 @@ spec:
             template:
               spec:
                 restartPolicy: Never
+                securityContext:
+                  runAsNonRoot: true
+                  # The image names its USER (curl_user), which runAsNonRoot cannot verify.
+                  runAsUser: 100
+                  seccompProfile:
+                    type: RuntimeDefault
                 containers:
                   - name: smoke
                     image: curlimages/curl:8.22.0
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - ALL
+                    resources:
+                      requests:
+                        cpu: 10m
+                        memory: 16Mi
+                      limits:
+                        memory: 64Mi
                     command:
                       - /bin/sh
                       - -c
@@ -223,9 +240,26 @@ spec:
             template:
               spec:
                 restartPolicy: Never
+                securityContext:
+                  runAsNonRoot: true
+                  # The image names its USER (curl_user), which runAsNonRoot cannot verify.
+                  runAsUser: 100
+                  seccompProfile:
+                    type: RuntimeDefault
                 containers:
                   - name: smoke
                     image: curlimages/curl:8.22.0
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - ALL
+                    resources:
+                      requests:
+                        cpu: 10m
+                        memory: 16Mi
+                      limits:
+                        memory: 64Mi
                     command:
                       - /bin/sh
                       - -c
