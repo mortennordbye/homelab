@@ -148,11 +148,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** First case study that needs a Result callout, or first tag that should read as material rather than brand. Check both against the ramp's two rules: brass takes `--fg` only, and `--fg-3` never sits on wood.
 - **Where:** `portfolio/src/components/primitives/{Tag,Callout}.tsx`.
 
-### lucide-react still feeds the stack tiles and the shelf art
-- **What:** Diagrams and card covers now use real product marks (`work/logos.ts`, simple-icons, one tone). `work/brand-icons.ts` still supplies lucide pictograms to `StackTiles`, the 3D shelf's canvas art, diagram boxes for products simple-icons lacks (Azure, AWS, cert-manager, Telegraf), and the fun room's card icons, so `lucide-react` stays installed.
-- **Why deferred:** Moving the tiles and shelf to `logos.ts` changes two other surfaces and the shelf's canvas renderer; out of scope for the diagram work.
-- **Unblock:** Point `StackTiles` and `shelf-art.ts` at `logoFor` with the lucide icon as fallback; drop `lucide-react` once nothing imports it.
-- **Where:** `portfolio/src/components/work/{brand-icons,logos,StackTiles,shelf-art}.ts*`, `portfolio/package.json`.
+### lucide-react still backs the marks simple-icons lacks, and the fun room
+- **What:** Diagrams, card covers, stack tiles and the shelf covers draw real product marks from `work/logos.ts`. `lucide-react` stays installed because `work/brand-icons.ts` still supplies the fallback pictogram where simple-icons has no mark (Azure, AWS, cert-manager, Telegraf, MetalLB, Wazuh, Postfix, FreeIPA, BIND, Splunk, GitOps) to `StackTiles`, `ArchitectureDiagram` and the no-diagram `WorkCardCover`, and the fun room imports it directly for its UI and card icons.
+- **Why deferred:** The missing marks have no CC0 source (Microsoft and Amazon had theirs removed from simple-icons), and the fun room's icons are UI glyphs rather than product marks, so neither has a `logos.ts` replacement.
+- **Unblock:** Hand-drawn one-tone marks for the missing products, plus moving the fun room's glyphs to `components/icons.tsx`; then delete `brand-icons.ts`'s `Icon` field and drop `lucide-react`.
+- **Where:** `portfolio/src/components/work/{brand-icons.ts,StackTiles.tsx,ArchitectureDiagram.tsx,WorkCardCover.tsx}`, `portfolio/src/components/fun/{Desktop.tsx,Hud.tsx,cardIcons.ts}`, `portfolio/package.json`.
 
 ### `Callout` has no paper variant
 - **What:** The case study write-up now renders on a `.sheet`, and `.paper-prose` re-inks the elements `mdx-components.tsx` hard-codes dark: headings, prose, list bullets, links, `code`, `strong`, `blockquote`. `Callout` is not covered. Its four tones are tinted panels solved against the dark ground (`border-accent/40 bg-accent/[0.06]`, and a `bg-wood` block for `result`), and every one of them would sit on cream as a dark box with `text-fg-2` inside it.
