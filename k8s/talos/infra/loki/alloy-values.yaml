@@ -225,11 +225,26 @@ alloy:
       targetPort: 4318
       protocol: TCP
 
+  resources:
+    requests:
+      cpu: 40m
+      memory: 352Mi
+    limits:
+      memory: 768Mi
+
   mounts:
     # Essential for Kubernetes log collection
     varlog: true
     # Talos uses containerd; this ensures Alloy can reach the symlinks
     dockercontainers: true
+
+configReloader:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 48Mi
+    limits:
+      memory: 96Mi
 
 controller:
   # Ensure an agent runs on every node
