@@ -3,3 +3,11 @@
 # Rollout workload type itself, so the dashboard is left off.
 dashboard:
   enabled: false
+
+controller:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 96Mi
+    limits:
+      memory: 192Mi
