@@ -18,6 +18,12 @@ falcosidekick:
     extraEnv:
       - name: DISCORD_MINIMUMPRIORITY
         value: notice
+  resources:
+    requests:
+      cpu: 10m
+      memory: 80Mi
+    limits:
+      memory: 192Mi
 
 resources:
   requests:
@@ -26,6 +32,16 @@ resources:
   limits:
     cpu: 500m
     memory: 512Mi
+
+falcoctl:
+  artifact:
+    follow:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 48Mi
+        limits:
+          memory: 128Mi
 
 # Expose Falco's Prometheus metrics; kube-prometheus-stack scrapes the
 # ServiceMonitor (release label matches the operator's selector convention).
