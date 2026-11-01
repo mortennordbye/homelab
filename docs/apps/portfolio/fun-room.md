@@ -508,8 +508,15 @@ Canvas turns it off in production and leaves it on in dev. Once the Suspense bou
 `frameloop="never"` until it settles. The hold is load-bearing: any frame drawn while programs
 are still compiling makes three.js wait on them synchronously. After the compile, `SceneReady`
 uploads every texture with `gl.initTexture`, one per task, so the first frame does not upload
-them all in one blocking call. Starting the room's chunk early
-from the nav link or the Hero's enter button measured no reliable gain, so it is not done.
+them all in one blocking call. The room only ever draws into the composer's linear buffers, so
+the scene compiles with a render target bound; compiled for the sRGB screen, every program would
+be rebuilt on the first frame. The composer's programs are not in the scene, so `compilePost`
+gathers every material its passes hold (bloom's blur passes and N8AO's quads included) and
+compiles them in the same parallel batch: the passes that draw into buffers under a render
+target, the last one, which draws to the screen, without. Then `SceneReady` renders the composer
+once before reporting compiled, so the shadow-map programs and the composer's buffers are made
+behind the loading screen, not on the first frame the visitor sees. Starting the room's chunk
+early from the nav link or the Hero's enter button measured no reliable gain, so it is not done.
 
 On phones the loading screen lights one of the room's fittings over the poster per real stage
 (`LoadStage` in `RoomLoading.tsx`): the lantern when the code arrives, the desk lamp when the

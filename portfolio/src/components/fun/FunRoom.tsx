@@ -13,7 +13,12 @@ import {
   ToneMapping,
   Vignette,
 } from "@react-three/postprocessing";
-import { BlendFunction, ToneMappingMode } from "postprocessing";
+import {
+  BlendFunction,
+  Pass,
+  ToneMappingMode,
+  type EffectComposer as EffectComposerImpl,
+} from "postprocessing";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -261,21 +266,113 @@ function WorldMatrices() {
   return null;
 }
 
+/**
+ * Every material the given passes hold, nested ones included: the bloom's blur
+ * and luminance passes and N8AO's quads are not in any scene, so the scene
+ * compile never sees them. Disabled passes never draw and are skipped.
+ */
+function postMaterials(passes: Pass[]): THREE.Material[] {
+  const found = new Set<THREE.Material>();
+  const seen = new Set<object>();
+  const walk = (v: unknown, depth: number) => {
+    if (!v || typeof v !== "object" || seen.has(v) || depth > 8) return;
+    seen.add(v);
+    if (v instanceof THREE.Material) {
+      found.add(v);
+      return;
+    }
+    if (v instanceof THREE.Mesh) {
+      for (const m of [v.material].flat()) found.add(m);
+      return;
+    }
+    if (
+      (v instanceof Pass && !v.enabled) ||
+      v instanceof THREE.Object3D ||
+      v instanceof THREE.Texture ||
+      v instanceof THREE.BufferGeometry ||
+      v instanceof THREE.WebGLRenderTarget ||
+      v instanceof THREE.WebGLRenderer
+    ) {
+      return;
+    }
+    for (const child of Object.values(v)) walk(child, depth + 1);
+  };
+  walk(passes, 0);
+  return [...found];
+}
+
+/** Starts a parallel compile of `materials` against whatever target is bound. */
+function compileQuads(gl: THREE.WebGLRenderer, materials: THREE.Material[], tri: THREE.BufferGeometry) {
+  const quads = new THREE.Scene();
+  for (const m of materials) {
+    const mesh = new THREE.Mesh(tri, m);
+    mesh.frustumCulled = false;
+    quads.add(mesh);
+  }
+  return gl.compileAsync(quads, new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1));
+}
+
+/**
+ * Compiles the composer's programs in parallel the way `compileAsync` does the
+ * scene's. The program key carries the target's colour space, so the passes
+ * that draw into buffers compile under a render target and the last one, which
+ * draws to the screen, without.
+ */
+function compilePost(gl: THREE.WebGLRenderer, composer: EffectComposerImpl): Promise<unknown> {
+  const tri = new THREE.BufferGeometry();
+  tri.setAttribute("position", new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3));
+  tri.setAttribute("uv", new THREE.Float32BufferAttribute([0, 0, 2, 0, 0, 2], 2));
+  const last = composer.passes.slice(-1);
+  const target = new THREE.WebGLRenderTarget(1, 1);
+  const prev = gl.getRenderTarget();
+  gl.setRenderTarget(target);
+  const buffered = compileQuads(gl, postMaterials(composer.passes.slice(0, -1)), tri);
+  gl.setRenderTarget(null);
+  const screen = compileQuads(gl, postMaterials(last), tri);
+  gl.setRenderTarget(prev);
+  return Promise.all([buffered, screen]).finally(() => {
+    target.dispose();
+    tri.dispose();
+  });
+}
+
 /** Mounts inside the Suspense boundary, so its effect cannot run until every
  *  asset under it has resolved. Then compiles every shader in the background,
  *  which is what the loading screen's building stage is waiting on. */
 function SceneReady({
   onReady,
   onCompiled,
+  composer,
 }: {
   onReady: () => void;
   onCompiled: () => void;
+  composer: React.RefObject<EffectComposerImpl | null>;
 }) {
   const { gl, scene, camera } = useThree();
   useEffect(() => {
     onReady();
     let live = true;
-    gl.compileAsync(scene, camera).then(async () => {
+    let post: EffectComposerImpl | null = null;
+    /* The composer is built in an effect and its passes added a commit after
+       that, so neither is there yet when this first runs. */
+    const postReady = async () => {
+      for (let i = 0; i < 100 && live; i++) {
+        const c = composer.current;
+        if (c && c.passes.length > 1) {
+          post = c;
+          return compilePost(gl, c);
+        }
+        await new Promise((r) => setTimeout(r, 0));
+      }
+    };
+    /* Under a target: the room only ever draws into the composer's linear
+       buffers, and a program compiled for the sRGB screen is not reused there. */
+    const sceneTarget = new THREE.WebGLRenderTarget(1, 1);
+    const prev = gl.getRenderTarget();
+    gl.setRenderTarget(sceneTarget);
+    const sceneCompiled = gl.compileAsync(scene, camera).finally(() => sceneTarget.dispose());
+    gl.setRenderTarget(prev);
+    Promise.all([sceneCompiled, postReady().catch(() => undefined)]).then(async () => {
       /* Upload every texture here, one per task, or the first frame uploads
          them all in one blocking call. */
       const textures = new Set<THREE.Texture>();
@@ -292,12 +389,31 @@ function SceneReady({
         gl.initTexture(t);
         await new Promise((r) => setTimeout(r, 0));
       }
-      if (live) onCompiled();
+      /* One frame through the composer while the loading screen still covers
+         it, so the shadow-map programs and the composer's buffers are made here
+         rather than on the first frame the visitor sees. World matrices first:
+         auto-update is off and the frame loop that refreshes them has not run. */
+      try {
+        const c = composer.current;
+        if (live && post && c === post) {
+          scene.updateMatrixWorld();
+          const autoClear = gl.autoClear;
+          gl.autoClear = true;
+          try {
+            c.render(0);
+          } finally {
+            gl.autoClear = autoClear;
+          }
+          gl.shadowMap.needsUpdate = true;
+        }
+      } finally {
+        if (live) onCompiled();
+      }
     });
     return () => {
       live = false;
     };
-  }, [gl, scene, camera, onReady, onCompiled]);
+  }, [gl, scene, camera, onReady, onCompiled, composer]);
   return null;
 }
 
@@ -722,13 +838,13 @@ function Lighting({
    and the eye reads the whole room as decals on a backdrop. AO is what makes
    objects look like they are resting on things. It costs no download, which
    is why it belongs ahead of any asset work. */
-function Post() {
+function Post({ composer }: { composer: React.RefObject<EffectComposerImpl | null> }) {
   return (
     /* multisampling 2, down from 4. Measured at 1.8ms a frame for the step
        from 4 to 0 at 8 Mpx, and half of that comes back for free at 2 — which
        still resolves the room's many straight edges (door stiles, shelf
        boards, bezels) without the shimmer that 0 would bring. */
-    <EffectComposer multisampling={2} enableNormalPass={false}>
+    <EffectComposer ref={composer} multisampling={2} enableNormalPass={false}>
       <N8AO
         aoRadius={0.55}
         intensity={2.6}
@@ -859,6 +975,7 @@ function Scene({
   dragging: boolean;
 }) {
   const [stepsOn, setStepsOn] = useState(0);
+  const composer = useRef<EffectComposerImpl | null>(null);
   /* True only while the camera is easing back out of the chair. `seated` has
      already gone false by then, and it is the flag that was keeping FirstPerson
      off, so without this the walk controller grabs the camera mid-move and
@@ -949,7 +1066,7 @@ function Scene({
           onSit={onSit}
           remote={{ held: holdingRemote || thrown !== null, place: remotePlace, onPickUp: pickUpRemote }}
         />
-        <Post />
+        <Post composer={composer} />
         <CctvView active={watching} />
         {/* Fires only once everything above has resolved, which is the honest
             "the room is ready" signal. Progress percentage alone is not: it
@@ -966,7 +1083,7 @@ function Scene({
         />
         {holdingRemote && <HeldRemote onPutDown={putDownRemote} onThrow={throwRemote} />}
         {thrown && <ThrownRemote from={thrown.from} velocity={thrown.velocity} onLand={landRemote} />}
-        <SceneReady onReady={onSceneReady} onCompiled={onSceneCompiled} />
+        <SceneReady onReady={onSceneReady} onCompiled={onSceneCompiled} composer={composer} />
       </Suspense>
       {/* Over the television, centred on its screen. Here rather than in Room
           because the fjord reads the live feed's uptime history. */}
