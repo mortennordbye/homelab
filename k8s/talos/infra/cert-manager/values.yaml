@@ -65,6 +65,14 @@ cainjector:
               matchLabels:
                 app.kubernetes.io/name: cainjector
             topologyKey: topology.kubernetes.io/zone
+startupapicheck:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 128Mi
+
 extraArgs:
   - --dns01-recursive-nameservers=1.1.1.1:53,9.9.9.9:53
   - --dns01-recursive-nameservers-only
