@@ -3,6 +3,7 @@ import { Section } from "@/components/primitives/Section";
 import { Reveal } from "@/components/primitives/Reveal";
 import { WorkCardCover } from "@/components/work/WorkCardCover";
 import { WorkShelf } from "@/components/work/WorkShelf";
+import { ShelfStamp } from "@/components/work/ShelfStamp";
 import type { WorkMeta } from "@/lib/work";
 
 // The measurement line carries this many stack entries; a spec line, not
@@ -27,9 +28,16 @@ export function FeaturedWork({ items }: { items: WorkMeta[] }) {
       heading="Portfolio."
       description="Selected case studies from client engagements and the homelab. Each one carries the design rationale, the trade-offs, and what shipped. Pull a volume off the shelf to open it."
       bleed={
-        <div className="hidden lg:block motion-reduce:lg:hidden">
-          <WorkShelf items={items} />
-        </div>
+        <>
+          <div className="hidden lg:block motion-reduce:lg:hidden">
+            <WorkShelf items={items} />
+          </div>
+          <div className="px-6 lg:mt-10 motion-reduce:lg:mt-0">
+            <div className="mx-auto max-w-[var(--container-wide)]">
+              <ShelfStamp items={items} />
+            </div>
+          </div>
+        </>
       }
     >
       <div className="lg:hidden motion-reduce:lg:block">
