@@ -29,6 +29,16 @@ controls for the linuxserver and tdarr images in `arr-stack` and `plex-media-sta
 the gluetun pod, whose s6 init has to start as root before it drops to `PUID`. Exceptions are only read
 from the `kyverno` namespace.
 
+`policyexception-control-plane.yaml` exempts the `kube-apiserver`, `kube-controller-manager`
+and `kube-scheduler` static pods from `require-requests-limits`: Talos writes them from its
+machine config with requests but no memory limit.
+
+Every chart this repo installs sets requests and a memory limit through its values, sized
+from seven days of `container_memory_working_set_bytes` and CPU rate, with the memory limit
+at about twice the observed peak. The workloads that still fail the two `Audit` policies,
+and why they cannot enforce yet, are listed in the backlog: the VolSync mover Jobs,
+logeverylift's legacy `postgres` and smoke test, and verksted.
+
 [![Argo CD applies a manifest to the API server, which sends it to Kyverno's admission webhook, where a mutable tag or a baseline break is rejected; that and the hourly background scan write one PolicyReport per workload, a PolicyException in the kyverno namespace exempts named workloads, and Policy Reporter turns the reports into the policy_report_result metric that Prometheus scrapes for the Policy (Kyverno) row on the SPOG dashboard](../../assets/diagrams/policy-reports.svg)](../../assets/diagrams/policy-reports.svg)
 
 ## Reading the results
@@ -50,6 +60,16 @@ kubectl -n plex-media-stack get policyreport -o json \
 ```
 
 Reports refresh on the background scan, about once an hour, and on every admission.
+
+A Job that is deleted once it succeeds, such as a chart hook or a VolSync mover, leaves no
+report behind. Kyverno's own `kyverno_policy_results_total` counter keeps every admission
+result, so check it before moving a policy to `Enforce`:
+
+```promql
+sum by (policy_name, resource_namespace, resource_kind) (
+  increase(kyverno_policy_results_total{rule_result="fail", rule_execution_cause="admission_request"}[24h])
+) > 0
+```
 
 ## Vulnerability scanning
 
