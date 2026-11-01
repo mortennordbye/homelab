@@ -16,12 +16,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** the H.264 queue is mostly done, or Plex playback starts stuttering during the day.
 - **Where:** Tdarr library settings at `https://tdarr.local.bigd.no` (schedule lives in the Tdarr DB, not Git), target settings in `docs/apps/media-stack/README.md`.
 
-### unifi Terraform provider held at 0.59.0
-- **What:** move `terraform/unifi/network` and `terraform/unifi/dns` to `ubiquiti-community/unifi` 0.60: replace `ipv6_interface_type` on the `trusted`, `iot` and `guest` networks with whatever 0.60 uses, then unpin.
-- **Why deferred:** 0.60.0 removed the argument and broke CI Terraform for every PR; pinning 0.59.0 (the version applied) was the fix that unblocked them, and a schema migration of the live network config needs a plan reviewed against the gateway.
-- **Unblock:** the Renovate PR for 0.60, plus `terraform plan` in `terraform/unifi/network` showing no change to the networks after the migration.
-- **Where:** `terraform/unifi/network/networks.tf`, `terraform/unifi/*/version.tf`.
-
 ### logeverylift journey hangs on /consent
 - **What:** about one run in ten of the `logeverylift-journey` synthetic stops at `dashboard` or `open-workout` with the page sitting on `https://logeverylift.com/consent`, where the navigation to `/new-workout` times out. Find out why the synthetic user is sent to `/consent` after a successful sign-in, and either accept it in the script or stop the app from sending it there.
 - **Why deferred:** the cause is in the logeverylift app, not the cluster, and single failures never fire `UserJourneyFailing` (it needs two runs in a row).
