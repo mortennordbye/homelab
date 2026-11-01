@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { Architecture, ArchNode } from "@/content/schemas";
+import { logoFor } from "./logos";
 
 /**
  * Spine and cover artwork for the portfolio shelf.
@@ -206,6 +207,16 @@ export function coverStamp(v: Volume) {
       x.fill();
       x.restore();
       x.stroke();
+
+      const logo = logoFor(n.label);
+      if (logo) {
+        const size = h * 0.56;
+        x.save();
+        x.translate(px + w / 2 - size / 2, py + h / 2 - size / 2);
+        x.scale(size / 24, size / 24);
+        x.fill(new Path2D(logo.path));
+        x.restore();
+      }
     });
   }
 
