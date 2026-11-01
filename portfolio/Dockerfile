@@ -36,7 +36,8 @@ RUN mkdir -p output && \
 
 # Page one of each CV as a JPEG, for the sheet the /fun printer feeds out.
 # 96 dpi is A4 at 794x1123: headings legible on a 0.21m sheet up close.
-RUN for f in output/cv-*.pdf; do \
+RUN id; umask; ls -la output | head -8; stat output/cv-0000.pdf; gs --version; \
+    for f in output/cv-*.pdf; do \
       gs -q -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -dJPEGQ=82 -r96 \
         -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -dFirstPage=1 -dLastPage=1 \
         -sOutputFile="${f%.pdf}.jpg" "$f"; \
