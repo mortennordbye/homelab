@@ -461,7 +461,16 @@ The parts of an `Interactive` that never move or change material go back into th
 pickable because the hover raycast walks hidden meshes too; filtering it on `visible` would make
 every merged carcass unaimable. A part whose material follows `hovered` or a switch (the frame
 that lights up, the lantern's paper, the tap's lever) stays outside the group, and a `NO_MERGE`
-nested inside one excludes its subtree again.
+nested inside one excludes its subtree again. When the whole part lights up, as a book's spine
+does, the part merges and the hover shows a lit copy over it (`visible={hovered}`, drawn with a
+polygon offset so it wins the depth test).
+
+Door and drawer leaves move, so they cannot be baked, but they are not drawn one by one either.
+`Door` and `Drawer` tag the group they animate with `MERGE_LEAF`, and `StaticMerge` draws every
+leaf mesh through one `BatchedMesh` per material for the whole flat, with each instance
+following its leaf's transform. The originals stay hidden and pickable, as with the static
+merge. The rule is the same one level down: nothing inside a leaf may move or change material
+relative to the leaf after mount without a `NO_MERGE` or a `visible` prop.
 
 A reflector is a second copy of the flat. drei's `MeshReflectorMaterial` renders the whole scene
 from a mirrored camera every frame, so the floor is a plain standard material. The wardrobe
