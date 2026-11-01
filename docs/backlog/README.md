@@ -97,11 +97,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** Open `/fun` in a real browser, look at a printer switch, press `E`, and watch the pill. If it does not flip, instrument `onActivate` in `Interactive`: the registry hands activation the ref payload, so the suspect is either hover resolution or the keydown listener's `enabled` gate. Open `/fun` on a desktop, listen to the melody, hard-reload with cache disabled to see the loading bar. Then open it on a phone and tune `LOOK_SENS`, `TAP_SLOP_PX` and `STICK_R` in `Touch.tsx` against how it actually feels.
 - **Where:** `portfolio/src/components/fun/Printer.tsx` (`Switch`), `portfolio/src/components/fun/interaction.tsx`; `portfolio/src/components/fun/Sonos.tsx` (`MELODY`), `portfolio/src/components/fun/Touch.tsx`, `docs/apps/portfolio/fun-room.md`.
 
-### Fun flat: the parts of the plan not yet modelled
-- **What:** `/fun` is the real apartment with all four spaces walkable, the north wall glazed and the entré's two built-ins modelled, but two things on the floor plan are still not built: the **P** marked in the living room (a post, or a flue), and **door leaves** for the bedroom and bathroom: those openings are cased and lined but carry no door, so neither room can be shut.
-- **Why deferred:** Neither changes whether the flat is navigable or whether it reads correctly, and the shell, the windows, the merged TV bench and the furniture were the agreed passes.
-- **Unblock:** The door leaves can reuse the `Door` component the front door already uses. The post needs confirming against the flat before it is worth modelling.
-- **Where:** `portfolio/src/components/fun/flat.ts` (`WALLS`, `doorOpenings`), `portfolio/src/components/fun/Room.tsx` (`Door`, `DoorLining`, `Window`), `portfolio/src/components/fun/Furniture.tsx`.
+### Fun flat: the post marked P on the plan is not modelled
+- **What:** `/fun` is the real apartment with all four spaces walkable, its doors hung and the entré's two built-ins modelled. The one thing on the floor plan still not built is the **P** marked in the living room, a post or a flue.
+- **Why deferred:** It does not change whether the flat is navigable or reads correctly, and what it is has not been confirmed.
+- **Unblock:** Confirm against the flat what the P is and its size, then add it to `WALLS` or as a solid box so the walker collides with it.
+- **Where:** `portfolio/src/components/fun/flat.ts` (`WALLS`), `portfolio/src/components/fun/Room.tsx`.
 
 ### Fun room: content parity gaps
 - **What:** `/fun` now carries the site's materials, light and annotation language, but three sections of the site still have no object in the room. The hero's positioning (`site.hero.headline` / `.sub`: "I am a Cloud Engineer", Oslo, Nimtech) is never stated, so the room never says who it belongs to. The About narrative (the two bio paragraphs) and the portrait have no object either, though skills, interests and career all do. And `/brand` is reachable only through the terminal's `brand` command and the command palette, with nothing in the room representing it.
@@ -162,12 +162,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Why deferred:** No case study uses a callout (all thirteen bodies are `##` headings, lists and paragraphs only) so there is nothing on screen to design against, and inventing a tone ramp for an unused component is the same mistake the entry above already records for `Tag variant="warm"`.
 - **Unblock:** First case study that actually needs a callout. Solve the four tones against `--paper-2` the way the dark ones were solved against `--bg`, and add them under `.paper-prose` beside the other overrides rather than as a prop on the component.
 - **Where:** `portfolio/src/app/globals.css` (`.paper-prose`), `portfolio/src/components/primitives/Callout.tsx`, `portfolio/src/components/work/mdx-components.tsx`.
-
-### The provenance stamp covers only the build and the repositories
-- **What:** `FooterStamp` reports the build sha and the time to first byte, and `RepoStamp` in the infrastructure section the pinned repositories' live star counts. §12 accepted two more: the shelf stating its volume count and newest entry, and the resume its revision date and size. Neither is built.
-- **Why deferred:** Each stamp needs a real source. The shelf count is derivable from `getAllWork()`; the resume PDF is built in the Dockerfile's `pdfbuild` stage and nothing hands its date or size to the app yet.
-- **Unblock:** Render the shelf stamp under `FeaturedWork` from the work list; for the resume, have `pdfbuild` write its date and size next to the PDF and read that at build time. Same mono treatment as the two existing stamps.
-- **Where:** `portfolio/src/components/{FooterStamp,RepoStamp}.tsx` (the pattern), `portfolio/src/components/sections/{FeaturedWork,ResumeSection}.tsx`, `portfolio/Dockerfile` (`pdfbuild` stage).
 
 ## Portfolio API
 

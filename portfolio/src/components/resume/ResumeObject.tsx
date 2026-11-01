@@ -61,6 +61,9 @@ export function ResumeObject({ counts }: { counts: SheetCounts }) {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [failed, setFailed] = useState(false);
   const [taking, setTaking] = useState(false);
+  // What the server says about each PDF, keyed by URL so an answer can only
+  // ever show against the variant it was asked about.
+  const [files, setFiles] = useState<Record<string, { kb: number; built: string }>>({});
   // Set by the scene once it has a frame on screen; until then the poster is
   // what the section shows.
   const [painted, setPainted] = useState(false);
@@ -145,6 +148,26 @@ export function ResumeObject({ counts }: { counts: SheetCounts }) {
     );
   }, [manifest, asResume, flags]);
 
+  useEffect(() => {
+    if (!url || files[url]) return;
+    fetch(url, { method: "HEAD" })
+      .then((r) => {
+        const bytes = Number(r.headers.get("content-length"));
+        const modified = r.headers.get("last-modified");
+        if (!r.ok || !bytes || !modified) return;
+        const built = new Date(modified).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC",
+        });
+        setFiles((p) => ({ ...p, [url]: { kb: Math.round(bytes / 1024), built } }));
+      })
+      .catch(() => {});
+  }, [url, files]);
+
+  const file = url ? files[url] : undefined;
+
   const spec: SheetSpec = useMemo(() => {
     const runs = asResume
       ? [
@@ -223,6 +246,21 @@ export function ResumeObject({ counts }: { counts: SheetCounts }) {
           {failed ? "Not built in dev" : url ? "Take the sheet" : "Loading…"}
         </button>
       </div>
+
+      {/* Height reserved so the measurement arriving never moves the desk. */}
+      <p className="mx-auto mt-3 flex min-h-[2lh] max-w-[var(--container-wide)] flex-wrap content-start justify-end gap-x-2 font-mono text-xs text-fg-3 sm:min-h-[1lh]">
+        {file && (
+          <>
+            <span>{pdfFilename(asResume)}</span>
+            <span className="whitespace-nowrap">
+              <span aria-hidden>· </span>
+              <span className="text-fg-2">{file.kb} KB</span>
+              <span aria-hidden> · </span>
+              built <span className="text-fg-2">{file.built}</span>
+            </span>
+          </>
+        )}
+      </p>
 
       {/* Nothing at all where the object is skipped. A phone would otherwise
           get a 145px strip of empty desk under the controls, which is worse
