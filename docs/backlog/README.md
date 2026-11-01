@@ -163,11 +163,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** First case study that actually needs a callout. Solve the four tones against `--paper-2` the way the dark ones were solved against `--bg`, and add them under `.paper-prose` beside the other overrides rather than as a prop on the component.
 - **Where:** `portfolio/src/app/globals.css` (`.paper-prose`), `portfolio/src/components/primitives/Callout.tsx`, `portfolio/src/components/work/mdx-components.tsx`.
 
-### The provenance stamp exists only in the footer
-- **What:** `FooterStamp` reports the build sha and the time to first byte. §12 accepted extending that device: the shelf stating its volume count and newest entry, the resume its revision date and size, the repositories their live star counts. None of it is built. Related gap: `content/repos.ts` fetches live stars and forks for four pinned repositories, and the only thing that renders it is `GithubWall` inside `/fun`, so the open-source work is invisible on the main site.
-- **Why deferred:** Each stamp needs a real source, and three of the four do not have one yet: the shelf count is derivable, the resume figures are produced inside the cv-bundle container, and the repo numbers already come from `/api/v1/github` but have no home outside the room.
-- **Unblock:** Pick sources one at a time and render each stamp under its own object in the same mono treatment as `FooterStamp`. The repositories one is the largest return, since it is the only place the GitHub work appears at all and the endpoint already exists.
-- **Where:** `portfolio/src/components/FooterStamp.tsx` (the pattern), `portfolio/src/content/repos.ts`, `portfolio/src/app/api/v1/github/route.ts`, `portfolio/src/components/fun/GithubWall.tsx`.
+### The provenance stamp covers only the build and the repositories
+- **What:** `FooterStamp` reports the build sha and the time to first byte, and `RepoStamp` in the infrastructure section the pinned repositories' live star counts. §12 accepted two more: the shelf stating its volume count and newest entry, and the resume its revision date and size. Neither is built.
+- **Why deferred:** Each stamp needs a real source. The shelf count is derivable from `getAllWork()`; the resume PDF is built in the Dockerfile's `pdfbuild` stage and nothing hands its date or size to the app yet.
+- **Unblock:** Render the shelf stamp under `FeaturedWork` from the work list; for the resume, have `pdfbuild` write its date and size next to the PDF and read that at build time. Same mono treatment as the two existing stamps.
+- **Where:** `portfolio/src/components/{FooterStamp,RepoStamp}.tsx` (the pattern), `portfolio/src/components/sections/{FeaturedWork,ResumeSection}.tsx`, `portfolio/Dockerfile` (`pdfbuild` stage).
 
 ## Portfolio API
 
