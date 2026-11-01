@@ -1,8 +1,7 @@
 "use client";
 
 import { RoundedBox } from "@/components/scene/RoundedBox";
-import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import * as THREE from "three";
 import { DEVICE, HOUSE, type HouseDevice } from "@/content/hardware";
 import { at } from "./flat";
@@ -10,6 +9,7 @@ import type { InfoCard } from "./Hud";
 import { Interactive } from "./interaction";
 import { MERGE_STATIC } from "./StaticMerge";
 import { Sonos } from "./Sonos";
+import { Led } from "./Leds";
 import { Television } from "./Furniture";
 import { OAK } from "@/components/materials/oak";
 
@@ -23,37 +23,6 @@ import { OAK } from "@/components/materials/oak";
 const PLASTIC_WHITE = { color: "#dcdde0", roughness: 0.44, metalness: 0.04 };
 const CHASSIS_BLACK = { color: "#141619", roughness: 0.58, metalness: 0.3 };
 const CHASSIS_GREY = { color: "#232629", roughness: 0.52, metalness: 0.42 };
-
-/** Blinking status LED on a deterministic schedule, so it reads as activity. */
-function Led({
-  position,
-  rotation = [0, 0, 0],
-  color = "#7fc48c",
-  seed = 1,
-  size = 0.005,
-  steady = false,
-}: {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-  color?: string;
-  seed?: number;
-  size?: number;
-  steady?: boolean;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
-  useFrame(({ clock }) => {
-    if (steady || !ref.current) return;
-    const m = ref.current.material as THREE.MeshBasicMaterial;
-    const p = Math.sin(clock.getElapsedTime() * seed + seed * 3.1);
-    m.opacity = p > 0.55 ? 1 : p > -0.1 ? 0.4 : 0.08;
-  });
-  return (
-    <mesh ref={ref} position={position} rotation={rotation}>
-      <planeGeometry args={[size, size]} />
-      <meshBasicMaterial color={color} transparent opacity={steady ? 0.95 : 0.5} />
-    </mesh>
-  );
-}
 
 /**
  * Lenovo ThinkCentre tiny, stood on edge as they actually are: 183 x 179 x

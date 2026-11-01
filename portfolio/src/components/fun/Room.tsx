@@ -8,6 +8,7 @@ import { WallCertificates } from "./WallCertificates";
 import { Abacus } from "./Abacus";
 import { ALCOVE, BENCH_TOP, CABINET, CABINET_AT, Hallway } from "./Hallway";
 import { Outside } from "./Outside";
+import { LedField } from "./Leds";
 import { HouseDevices, SIDEBOARD_H, SIDEBOARD_TV, Sideboard, type Inspected } from "./Devices";
 import type { InfoCard } from "./Hud";
 import {
@@ -1129,6 +1130,7 @@ export function Room({
         <Marker position={[0.2, SIDEBOARD_H + 0.1, 0.17]} />
       </group>
       <HouseDevices onInspect={onInspect} />
+      <LedField />
 
       {/* Curtains on the glazed wall, ceiling track to floor, drawing to the
           sides. One pair across both living-room windows rather than a pair
