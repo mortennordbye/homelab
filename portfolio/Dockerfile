@@ -30,15 +30,18 @@ WORKDIR /work/latex
 RUN mkdir -p output && \
     for f in resume.tex cv-*.tex; do \
       echo "→ xelatex $f"; \
-      xelatex -interaction=nonstopmode -output-directory=output "$f" >/dev/null; \
+      xelatex -interaction=nonstopmode -halt-on-error -output-directory=output "$f" >/dev/null \
+        || { tail -n 40 "output/${f%.tex}.log"; exit 1; }; \
     done
 
 # Page one of each CV as a JPEG, for the sheet the /fun printer feeds out.
 # 96 dpi is A4 at 794x1123: headings legible on a 0.21m sheet up close.
+# gs reads the PDF on stdin and writes to /tmp: GitHub's runners deny gs opening files under /work.
 RUN for f in output/cv-*.pdf; do \
+      jpg="/tmp/$(basename "${f%.pdf}").jpg"; \
       gs -q -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -dJPEGQ=82 -r96 \
         -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -dFirstPage=1 -dLastPage=1 \
-        -sOutputFile="${f%.pdf}.jpg" "$f"; \
+        -sOutputFile="$jpg" - < "$f" && mv "$jpg" output/ || exit 1; \
     done
 
 # ---- Stage 3: build the Next.js server bundle ----
