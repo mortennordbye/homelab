@@ -1,0 +1,70 @@
+fullnameOverride: opencost
+namespaceOverride: monitoring
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+opencost:
+  exporter:
+    defaultClusterId: genesis
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+    resources:
+      requests:
+        cpu: 10m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+
+  # Off: nothing here calls it, and it would be another open port.
+  mcp:
+    enabled: false
+
+  metrics:
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: kube-prometheus-stack
+
+  prometheus:
+    internal:
+      serviceName: prometheus-operated
+      namespaceName: monitoring
+      port: 9090
+
+  ui:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 128Mi
+
+  # NOK per hour, from an estimated 100 W, not a measurement: docs/platform/observability/costs.md
+  customPricing:
+    enabled: true
+    costModel:
+      description: Electricity only, estimated at 100 W for the cluster
+      currencyCode: NOK
+      CPU: 0.00629
+      spotCPU: 0.00629
+      RAM: 0.00054
+      spotRAM: 0.00054
+      GPU: 0
+      storage: 0
+      zoneNetworkEgress: 0
+      regionNetworkEgress: 0
+      internetNetworkEgress: 0

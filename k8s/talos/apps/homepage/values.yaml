@@ -502,6 +502,11 @@ config:
             href: https://pyrra.local.bigd.no
             siteMonitor: https://pyrra.local.bigd.no
             description: SLOs and error budgets
+        - OpenCost:
+            icon: opencost.png
+            href: https://opencost.local.bigd.no
+            siteMonitor: https://opencost.local.bigd.no
+            description: Estimated electricity cost per namespace
         - Alertmanager:
             icon: alertmanager.png
             href: https://alertmanager.local.bigd.no

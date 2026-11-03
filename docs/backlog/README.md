@@ -24,6 +24,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** a verksted release that starts agents without root. Then remove `ghcr.io/mortennordbye/verksted:*` from the exception and check that a server-side dry-run of the Deployment is still admitted.
 - **Where:** `k8s/talos/infra/kyverno/policyexception-host-access.yaml`, `k8s/talos/apps/verksted/deployment.yaml`, the verksted repo.
 
+### OpenCost rates come from an estimated 100 W
+- **What:** the OpenCost rates assume the cluster draws 100 W, split 85/15 between CPU and memory. Replace that with a measured draw, then recompute both rates.
+- **Why deferred:** no host has a power meter, and OpenCost was worth installing without one. The estimate is labelled as such on the page.
+- **Unblock:** a smart plug or meter on the three hosts, read over a week that includes night transcodes. The formula is in `docs/platform/observability/costs.md`.
+- **Where:** `k8s/talos/infra/opencost/values.yaml` (`customPricing`), `docs/platform/observability/costs.md`.
+
 ### Rootless images for the media stack
 - **What:** replace the linuxserver images (sonarr, radarr, radarr-4k, bazarr, bazarr-4k, plex, tautulli, and qBittorrent and Prowlarr in the gluetun pod) with images that start as non-root, then drop them from `policyexception-media-root.yaml`.
 - **Why deferred:** chosen over a migration while the restricted work landed; each swap restarts an app whose seeding and config must survive, so it goes one app at a time. Started as non-root, the s6 init fails with `unable to set supplementary group list`.

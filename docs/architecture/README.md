@@ -121,6 +121,8 @@ missing Alertmanager heartbeat. Falco watches syscalls on every node and posts t
 itself through falcosidekick
 ([`../platform/observability/README.md`](../platform/observability/README.md), past
 incidents in [`../platform/observability/incidents.md`](../platform/observability/incidents.md)).
+OpenCost estimates electricity cost per namespace from Prometheus usage
+([costs](../platform/observability/costs.md)).
 Pyrra keeps SLOs and error budgets for the public sites over a 28-day window and pages on
 the probe SLO's burn rate. Kargo reads those budgets from Prometheus before opening a prod
 promotion PR, and a low budget stops the auto-merge

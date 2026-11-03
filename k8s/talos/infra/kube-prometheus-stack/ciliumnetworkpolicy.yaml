@@ -18,6 +18,15 @@ spec:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": traefik
             "k8s:app.kubernetes.io/instance": traefik-traefik
+    # OpenCost reads usage to allocate cost.
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+            "k8s:app.kubernetes.io/name": opencost
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
     # Pyrra's UI reads SLO budgets.
     - fromEndpoints:
         - matchLabels:
