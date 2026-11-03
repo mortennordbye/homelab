@@ -26,9 +26,9 @@ Every row starts collapsed except Alerts, which sits on top.
 | Internet & network | internet up/down, availability, downtime and outages over the range, probe latency; UniFi WAN latency, session uptime, drops, gateway CPU, switch port traffic, errors and drops |
 | Public sites | public site probes and response time, traffic share per site, then request rate, 5xx rate, p95 and status codes per site (one repeated set of panels over the hidden `site` variable) |
 | SLOs & error budgets | budget left per site for the paging probe SLO and per request SLO, probe burn rate against the 1x and 7x lines, rolling 28-day SLIs against their objectives ([slos.md](slos.md)) |
-| Backups | age of the last etcd and dump jobs, VolSync sources behind schedule, PBS datastore usage and the newest snapshot per VM |
 | Proxmox | host up/down, VMs running and stopped (templates excluded), host CPU, memory and CPU temperature, storage used per host (local, local-lvm) and shared (pbs, nfs-vmstore), NVMe wear, spare, temperature and errors per host |
 | NAS (Synology) | system status, Volume 1 used and free, RAID status, unhealthy disks, temperature, eth0 traffic, disk temperatures |
+| Backups | age of the last etcd and dump jobs, VolSync sources behind schedule, PBS datastore usage and the newest snapshot per VM |
 | Nodes | per-node CPU, load, memory, disk I/O and space, network, Talos `/var` free space |
 | Workloads | CPU and memory usage and limits per namespace, PVC inventory, warning event rate by reason |
 | Ingress & DNS | Traefik request rate, 5xx rate, latency, top services; CoreDNS requests, response codes, cache hits, latency |
@@ -36,10 +36,10 @@ Every row starts collapsed except Alerts, which sits on top.
 | Certificates | readiness, days to expiry per certificate, sync errors, ACME latency |
 | GitOps & secrets | Argo CD sync and health, ESO sync status and secrets not ready, Reloader reloads |
 | KEDA autoscaling | replica and scaler state, wake-from-zero, capacity and electricity reclaimed, priced at the NO1 spot price plus VAT plus the `grid_fee_per_kwh` variable |
-| Cost, estimated (OpenCost) | estimated electricity cost per 30 days and per namespace, idle share, allocated CPU and memory, today's price against the OpenCost rate ([costs](costs.md)) |
-| Monitoring stack (storage and intake) | disk used by metrics, logs and traces against their limits, active series, logs received per day, dropped log entries, metrics by scrape job, logs by namespace, memory per component, intake over time ([storage](#monitoring-stack-storage)) |
 | Falco | instances, rule matches, event drops, CPU and memory per node |
 | Policy (Kyverno) | controllers up, workloads on mutable tags and breaking baseline, restricted and requests compliance, admission rate, image provenance coverage, failures and verification time, the failing workloads ([policy](../policy/README.md)) |
+| Cost, estimated (OpenCost) | estimated electricity cost per 30 days and per namespace, idle share, allocated CPU and memory, today's price against the OpenCost rate ([costs](costs.md)) |
+| Monitoring stack (storage and intake) | disk used by metrics, logs and traces against their limits, active series, logs received per day, dropped log entries, metrics by scrape job, logs by namespace, memory per component, intake over time ([storage](#monitoring-stack-storage)) |
 | Media stack | service status, health issues, queues, free space, library, download client and indexers |
 
 Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard. The other
