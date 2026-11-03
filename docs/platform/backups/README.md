@@ -69,6 +69,9 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
   data read on every VolSync repository, a full restore of `mealie/data-pvc`, and the
   newest logeverylift and Authentik dumps loaded into a scratch Postgres. It reads the
   NAS only. `RestoreTestFailed` alerts when a run does not pass.
+- `logeverylift-db-restore-test` (namespace `logeverylift`) runs on the 1st of each month
+  at 10:30: it recovers a throwaway one-instance Cluster from Garage to an hour earlier,
+  counts tables and rows, and deletes the Cluster. `RestoreTestFailed` covers it too.
 - If the whole homelab goes quiet, the Cloudflare watchdog reports the missing
   Alertmanager heartbeat to Discord (`docs/platform/observability/README.md`).
 - By hand:

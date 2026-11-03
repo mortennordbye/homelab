@@ -1,0 +1,155 @@
+# Monthly proof that the archive in Garage restores: recovers a throwaway Cluster to an
+# hour ago and counts rows. docs/platform/backups/README.md
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: logeverylift-db-restore-test
+  namespace: logeverylift
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: logeverylift-db-restore-test
+  namespace: logeverylift
+rules:
+  # create cannot be restricted by resourceName; the rest is pinned to the throwaway.
+  - apiGroups: ["postgresql.cnpg.io"]
+    resources: ["clusters"]
+    verbs: ["create"]
+  - apiGroups: ["postgresql.cnpg.io"]
+    resources: ["clusters"]
+    resourceNames: ["logeverylift-db-restore-test"]
+    verbs: ["get", "list", "watch", "delete"]
+  # Reads the live Cluster's image only, so the test has no second tag to track.
+  - apiGroups: ["postgresql.cnpg.io"]
+    resources: ["clusters"]
+    resourceNames: ["logeverylift-db"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    resourceNames: ["logeverylift-db-restore-test-1"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    resourceNames: ["logeverylift-db-restore-test-1"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: logeverylift-db-restore-test
+  namespace: logeverylift
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: logeverylift-db-restore-test
+subjects:
+  - kind: ServiceAccount
+    name: logeverylift-db-restore-test
+    namespace: logeverylift
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: logeverylift-db-restore-test
+  namespace: logeverylift
+spec:
+  schedule: "30 10 1 * *"
+  timeZone: Europe/Oslo
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 1800
+      template:
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          serviceAccountName: logeverylift-db-restore-test
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: restore-test
+              image: docker.io/alpine/k8s:1.36.5
+              env:
+                - name: HOME
+                  value: /tmp
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  name=logeverylift-db-restore-test
+                  kubectl delete cluster "$name" --ignore-not-found --wait=true
+                  trap 'kubectl delete cluster "$name" --ignore-not-found --wait=false' EXIT
+
+                  image=$(kubectl get cluster logeverylift-db -o jsonpath='{.spec.imageName}')
+                  target=$(date -u -d "@$(($(date +%s) - 3600))" +%Y-%m-%dT%H:%M:%SZ)
+                  echo "recovering to $target with $image"
+
+                  # No plugins: a restored Cluster must never archive into the source's prefix.
+                  kubectl create -f - <<MANIFEST
+                  apiVersion: postgresql.cnpg.io/v1
+                  kind: Cluster
+                  metadata:
+                    name: $name
+                  spec:
+                    instances: 1
+                    imageName: $image
+                    storage:
+                      storageClass: syno-nfs-csi
+                      size: 5Gi
+                    resources:
+                      requests:
+                        cpu: 100m
+                        memory: 128Mi
+                      limits:
+                        memory: 512Mi
+                    bootstrap:
+                      recovery:
+                        source: logeverylift-db
+                        recoveryTarget:
+                          targetTime: "$target"
+                    externalClusters:
+                      - name: logeverylift-db
+                        plugin:
+                          name: barman-cloud.cloudnative-pg.io
+                          parameters:
+                            barmanObjectName: garage
+                            serverName: logeverylift-db
+                  MANIFEST
+
+                  # Postgres refuses to promote when WAL ends before the target, so Ready
+                  # proves the archive reaches it.
+                  kubectl wait cluster "$name" --for=condition=Ready --timeout=1500s
+
+                  q() { kubectl exec "$name-1" -c postgres -- psql -d logeverylift_db -Atc "$1"; }
+                  tables=$(q "select count(*) from information_schema.tables where table_schema = 'public'")
+                  rows=$(q "select count(*) from workout_sets")
+                  echo "restored: $tables tables, $rows rows in workout_sets"
+                  [ "$tables" -gt 0 ] && [ "$rows" -gt 0 ]
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+          volumes:
+            - name: tmp
+              emptyDir: {}

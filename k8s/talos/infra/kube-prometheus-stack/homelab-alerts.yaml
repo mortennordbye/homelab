@@ -305,13 +305,13 @@ spec:
         # succeeded for 32 days.
         - alert: RestoreTestFailed
           expr: |
-            kube_cronjob_status_last_schedule_time{cronjob="restore-test"}
+            kube_cronjob_status_last_schedule_time{cronjob=~"restore-test|logeverylift-db-restore-test"}
               > on (namespace, cronjob) kube_cronjob_status_last_successful_time
             or
-            (time() - kube_cronjob_status_last_successful_time{cronjob="restore-test"}) > 32 * 24 * 3600
+            (time() - kube_cronjob_status_last_successful_time{cronjob=~"restore-test|logeverylift-db-restore-test"}) > 32 * 24 * 3600
             or
             (
-              kube_cronjob_status_last_schedule_time{cronjob="restore-test"}
+              kube_cronjob_status_last_schedule_time{cronjob=~"restore-test|logeverylift-db-restore-test"}
               unless on (namespace, cronjob) kube_cronjob_status_last_successful_time
             )
           for: 6h
@@ -321,8 +321,8 @@ spec:
             runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#restoretestfailed
             summary: 'The monthly restore test did not pass'
             description: |
-              CronJob `backup-check/restore-test` has not completed a successful run since it was last scheduled.
-              Check: kubectl -n backup-check logs job/<latest restore-test job> --all-containers
+              CronJob `{{ $labels.namespace }}/{{ $labels.cronjob }}` has not completed a successful run since it was last scheduled.
+              Check: kubectl -n {{ $labels.namespace }} logs job/<latest {{ $labels.cronjob }} job> --all-containers
 
         - alert: VolSyncBackupStale
           expr: max by (obj_namespace, obj_name) (volsync_volume_out_of_sync{role="source"}) == 1
