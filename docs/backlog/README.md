@@ -25,10 +25,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 ## Platform
 
 ### Retire the legacy logeverylift Postgres
-- **What:** after the CloudNativePG cutover, remove the old `postgres` Deployment, Service, PVC `postgres-pvc-18`, its root chown initContainer and `postgres-exporter` (with its rule in `logeverylift-postgres-policy`); rewrite the major-upgrade procedure and the `data-postgres` diagram in `docs/platform/data/postgres.md`; add a monthly point-in-time restore from Garage to the restore test.
+- **What:** after the CloudNativePG cutover, remove the old `postgres` Deployment, Service, PVC `postgres-pvc-18`, its root chown initContainer and `postgres-exporter` (with its rule in `logeverylift-postgres-policy`); rewrite the major-upgrade procedure and the `data-postgres` diagram in `docs/platform/data/postgres.md`.
 - **Why deferred:** the old database stays as the rollback source until the new Cluster has run for a week with nightly base backups.
 - **Unblock:** a week of healthy `logeverylift-db` with successful nightly backups and no archiving alerts.
-- **Where:** `k8s/talos/apps/logeverylift/{postgres.yaml,postgres-exporter.yaml,ciliumnetworkpolicy.yaml}`, `k8s/talos/infra/backup-check/restore-test.yaml`, `docs/platform/data/postgres.md`.
+- **Where:** `k8s/talos/apps/logeverylift/{postgres.yaml,postgres-exporter.yaml,ciliumnetworkpolicy.yaml}`, `docs/platform/data/postgres.md`.
 
 ### Kyverno restricted and requests policies to Enforce
 - **What:** move `pod-security-restricted` and `require-requests-limits` from `Audit` to `Enforce`. Every long-running workload now passes both, apart from three:

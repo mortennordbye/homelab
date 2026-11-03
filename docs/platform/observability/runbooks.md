@@ -261,6 +261,7 @@ The monthly restore test did not pass, or has not passed for 32 days. The backup
 restore.
 
 - `kubectl -n backup-check logs job/<latest restore-test job> --all-containers`
+- `kubectl -n logeverylift logs job/<latest logeverylift-db-restore-test job>` when that is the CronJob named in the alert
 
 Find which layer failed and run that restore by hand following
 [`../backups/restore.md`](../backups/restore.md#testing). Treat a failure as an incident:
