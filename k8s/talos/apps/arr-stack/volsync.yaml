@@ -49,6 +49,15 @@ spec:
       monthly: 6
     cacheStorageClassName: syno-nfs-csi
     cacheCapacity: 2Gi
+    moverSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    moverResources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
     moverVolumes:
       - mountPath: repo
         volumeSource:
@@ -104,6 +113,15 @@ spec:
       monthly: 6
     cacheStorageClassName: syno-nfs-csi
     cacheCapacity: 2Gi
+    moverSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    moverResources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
     moverVolumes:
       - mountPath: repo
         volumeSource:
@@ -159,6 +177,15 @@ spec:
       monthly: 6
     cacheStorageClassName: syno-nfs-csi
     cacheCapacity: 2Gi
+    moverSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    moverResources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
     moverVolumes:
       - mountPath: repo
         volumeSource:
@@ -214,6 +241,15 @@ spec:
       monthly: 6
     cacheStorageClassName: syno-nfs-csi
     cacheCapacity: 2Gi
+    moverSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    moverResources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
     moverVolumes:
       - mountPath: repo
         volumeSource:
@@ -269,6 +305,15 @@ spec:
       monthly: 6
     cacheStorageClassName: syno-nfs-csi
     cacheCapacity: 2Gi
+    moverSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    moverResources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
     moverVolumes:
       - mountPath: repo
         volumeSource:
@@ -324,6 +369,15 @@ spec:
       monthly: 6
     cacheStorageClassName: syno-nfs-csi
     cacheCapacity: 2Gi
+    moverSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    moverResources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
     moverVolumes:
       - mountPath: repo
         volumeSource:
@@ -379,6 +433,15 @@ spec:
       monthly: 6
     cacheStorageClassName: syno-nfs-csi
     cacheCapacity: 2Gi
+    moverSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    moverResources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
     moverVolumes:
       - mountPath: repo
         volumeSource:
