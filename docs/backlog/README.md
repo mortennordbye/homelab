@@ -10,12 +10,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** a decision on whether live volumes need point-in-time protection beyond the nightly VolSync copies, and a maintenance window if it means migrating to a new share.
 - **Where:** DSM Snapshot Replication and Shared Folder settings; record the result in `docs/platform/backups/README.md` under "Configured outside Git".
 
-### Tdarr: back to the night-only window and one GPU worker
-- **What:** all Tdarr libraries (`TV`, `Movies`, `Movies 4K`) currently transcode 24/7, and the node runs 2 GPU transcode workers, to work through the H.264 backlog. Set the library schedule back to 00:00 to 07:00 every day and the node back to 1 GPU worker (Nodes page), as recorded in the media-stack docs.
-- **Why deferred:** running around the clock clears the backlog faster; the night window exists because Plex shares the Quick Sync iGPU.
-- **Unblock:** the H.264 queue is mostly done, or Plex playback starts stuttering during the day.
-- **Where:** Tdarr library settings at `https://tdarr.local.bigd.no` (schedule lives in the Tdarr DB, not Git), target settings in `docs/apps/media-stack/README.md`.
-
 ### logeverylift journey hangs on /consent
 - **What:** about one run in ten of the `logeverylift-journey` synthetic stops at `dashboard` or `open-workout` with the page sitting on `https://logeverylift.com/consent`, where the navigation to `/new-workout` times out. Find out why the synthetic user is sent to `/consent` after a successful sign-in, and either accept it in the script or stop the app from sending it there.
 - **Why deferred:** the cause is in the logeverylift app, not the cluster, and single failures never fire `UserJourneyFailing` (it needs two runs in a row).
@@ -188,7 +182,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 ### Run a Terraform apply before 2026-12-29 or the talosconfig lapses
 - **What:** The talosconfig client certificate expires **2026-12-29**. The provider reissues it automatically, but only during a `terraform apply` inside its renewal window: `talos_machine_secrets` has a **hardcoded 30 day** window, so it only renews on an apply between 2026-11-29 and 2026-12-29. The kubeconfig certificate is renewed through 2027-08-09; `talos_cluster_kubeconfig` uses a `2160h` `certificate_renewal_duration`, so any apply in the 90 days before that renews it again.
 - **Why deferred:** Nothing to fix. Reissuing by hand does not help: `local_sensitive_file` rewrites both files from Terraform state on the next apply, so a manually generated certificate is discarded. The renewal is genuinely automatic; the only failure mode is nobody running Terraform in the window.
-- **Unblock:** Run `terraform apply` in this directory at some point in December 2026, then confirm with `grep "client-certificate-data:" kubeconfig | awk '{print $2}' | base64 -d | openssl x509 -noout -enddate` and the equivalent `crt:` line in `talosconfig`. If a certificate does lapse, recovery is the `convert-secrets.sh` flow in that directory's `README.md`, which rebuilds them from the machine secrets in Terraform state. That works as long as the state is intact, which is why `machine-secrets.yaml` belongs in Bitwarden.
+- **Unblock:** Run `terraform apply` in this directory between 2026-11-29 and 2026-12-29, then confirm with `grep "client-certificate-data:" kubeconfig | awk '{print $2}' | base64 -d | openssl x509 -noout -enddate` and the equivalent `crt:` line in `talosconfig`. If a certificate does lapse, recovery is the `convert-secrets.sh` flow in that directory's `README.md`, which rebuilds them from the machine secrets in Terraform state. That works as long as the state is intact. If it is not, the same bundle is in Bitwarden Secrets Manager as `talos-genesis-machine-secrets`.
 - **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/talos-cluster.tf` (`talos_cluster_kubeconfig.certificate_renewal_duration`), README "Certificate Management".
 
 ### Raise `talos_config_contract` from v1.11.6

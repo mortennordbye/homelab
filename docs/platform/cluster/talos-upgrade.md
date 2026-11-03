@@ -127,7 +127,7 @@ talosctl -e 10.3.10.30 -n 10.3.10.31 etcd snapshot etcd-pre-upgrade.db
 ```
 
 `machine-secrets.yaml` is the cluster identity. With it the cluster can be rebuilt even if the
-Terraform state is lost; copy it into Bitwarden. Take a fresh etcd snapshot even though the nightly
+Terraform state is lost; a copy is in Bitwarden Secrets Manager as `talos-genesis-machine-secrets`. Take a fresh etcd snapshot even though the nightly
 one exists. Database dumps and the rest of the backup layers are in
 [`../backups/README.md`](../backups/README.md). PV data needs no extra backup: `proxmox-local`
 volumes and Synology NFS are not on the node disks, which are the only thing an upgrade writes.
