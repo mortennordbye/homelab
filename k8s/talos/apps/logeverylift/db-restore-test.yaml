@@ -1,15 +1,17 @@
 # Monthly proof that the archive in Garage restores: recovers a throwaway Cluster to an
 # hour ago and counts rows. docs/platform/backups/README.md
+# The RBAC must not share the throwaway's name: CloudNativePG owns a ServiceAccount,
+# Role and RoleBinding named after each Cluster.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: logeverylift-db-restore-test
+  name: logeverylift-db-restore-runner
   namespace: logeverylift
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: logeverylift-db-restore-test
+  name: logeverylift-db-restore-runner
   namespace: logeverylift
 rules:
   # create cannot be restricted by resourceName; the rest is pinned to the throwaway.
@@ -37,15 +39,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: logeverylift-db-restore-test
+  name: logeverylift-db-restore-runner
   namespace: logeverylift
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: logeverylift-db-restore-test
+  name: logeverylift-db-restore-runner
 subjects:
   - kind: ServiceAccount
-    name: logeverylift-db-restore-test
+    name: logeverylift-db-restore-runner
     namespace: logeverylift
 ---
 apiVersion: batch/v1
@@ -68,7 +70,7 @@ spec:
         spec:
           restartPolicy: Never
           enableServiceLinks: false
-          serviceAccountName: logeverylift-db-restore-test
+          serviceAccountName: logeverylift-db-restore-runner
           securityContext:
             runAsNonRoot: true
             runAsUser: 65534
