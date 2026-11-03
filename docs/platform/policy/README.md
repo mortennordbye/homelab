@@ -51,6 +51,8 @@ included.
 
 ## Image provenance
 
+[![build-portfolio pushes the image to GHCR and signs provenance and an SBOM through Sigstore; Kargo and Argo CD promote the tag; a new Pod goes through the API server to verify-first-party-images, which reads the attestations from GHCR and writes pass or fail to a PolicyReport that reaches the SPOG dashboard through Policy Reporter and Prometheus](../../assets/diagrams/policy-provenance.svg)](../../assets/diagrams/policy-provenance.svg)
+
 `build-portfolio.yaml` attests SLSA provenance and an SPDX SBOM for each image it pushes, with
 `actions/attest`, through Sigstore's public instance. The attestations sit in GHCR next to the
 image, under the `sha256-<digest>` fallback tag, since GHCR has no referrers API. Check one by hand:
@@ -64,6 +66,10 @@ gh attestation verify oci://ghcr.io/mortennordbye/homelab/portfolio:<tag> -R mor
 with no caching seen between checks. On a KEDA wake from zero that is about 5 of 26 seconds, which
 is the cost to weigh before `Deny`. Old ReplicaSets that still name an unsigned image report `fail`
 until they age out.
+
+The Policy (Kyverno) row on the SPOG dashboard shows provenance coverage, verified workloads, failures
+and the p95 check time. Policy Reporter leaves out ReplicaSets, so those old revisions do not count as
+failures there.
 
 ## Reading the results
 

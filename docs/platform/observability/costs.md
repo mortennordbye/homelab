@@ -4,6 +4,8 @@ OpenCost turns the usage in Prometheus into a cost per namespace, controller and
 <https://opencost.local.bigd.no>. It lives in `k8s/talos/infra/opencost/`, in the `monitoring`
 namespace, behind the private gateway.
 
+[![Kube-state-metrics, cAdvisor and the electricity price feed Prometheus; OpenCost reads usage from Prometheus and fixed rates from its ConfigMap, then publishes price and allocation metrics back; Grafana's SPOG reads those from Prometheus and OpenCost serves its own UI](../../assets/diagrams/observability-cost.svg)](../../assets/diagrams/observability-cost.svg)
+
 ## What the numbers mean
 
 The figures are estimates of electricity only. They leave out the hardware, the NAS, the
@@ -24,6 +26,14 @@ RAM rate = 100 W x 0.15 / 70 GiB    x 2.52 NOK/kWh / 1000 = 0.00054 NOK per GiB-
 The rates cover the whole draw spread over capacity, so the cluster total is about
 0.25 NOK an hour. The 10 W per core in the KEDA panels is a different number: the extra draw
 of a busy core, which is right for a saving and far too high for a total.
+
+## Where to read it
+
+The Cost, estimated (OpenCost) row on the SPOG dashboard shows the 30-day cost, the idle cost and
+share, allocated CPU and memory, cost per namespace, and allocated against idle over time. It reads
+OpenCost's metrics from Prometheus, so a figure agrees with the OpenCost UI only over the same window.
+Allocation is the larger of a container's request and its use, and idle is the rest of the node
+cost. The Price against OpenCost rate tile compares today's price with the 2.52 kr/kWh behind the rates.
 
 ## Changing the rates
 
