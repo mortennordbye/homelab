@@ -239,6 +239,8 @@ or has been scheduled and never succeeded.
 No user impact now; the next restore would lose more data.
 
 - `kubectl -n <namespace> get jobs,pods`, then the failed pod's logs.
+- `volsync-backup-check` prints `STALE` for each repository without a recent snapshot. Look for
+  a leftover manual trigger: `kubectl -n <namespace> get replicationsource <name> -o jsonpath='{.spec.trigger}'`.
 
 Fix the job and run it once by hand: `kubectl -n <namespace> create job --from=cronjob/<cronjob> <cronjob>-manual`.
 Restore paths are in [`../backups/restore.md`](../backups/restore.md).

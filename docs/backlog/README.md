@@ -10,12 +10,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** a decision on whether live volumes need point-in-time protection beyond the nightly VolSync copies, and a maintenance window if it means migrating to a new share.
 - **Where:** DSM Snapshot Replication and Shared Folder settings; record the result in `docs/platform/backups/README.md` under "Configured outside Git".
 
-### VolSyncBackupStale cannot see a source waiting on a manual trigger
-- **What:** `volsync_volume_out_of_sync` stays at 0 for a `ReplicationSource` with `trigger.manual` set, because VolSync then ignores its schedule. A leftover trigger stopped mealie's backups without an alert, and ArgoCD reports Synced because the field has another field manager. Nothing checks the age of the newest restic snapshot.
-- **Why deferred:** found while working on Kyverno, and it needs a different signal rather than a threshold change on this alert.
-- **Unblock:** check the newest snapshot per repository against a maximum age in a `backup-check` job, or alert on any source whose `Synchronizing` condition reports `WaitingForManual`, which needs a metric for that condition.
-- **Where:** `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml` (`VolSyncBackupStale`), `k8s/talos/infra/backup-check/freshness.yaml`.
-
 ### logeverylift journey hangs on /consent
 - **What:** about one run in ten of the `logeverylift-journey` synthetic stops at `dashboard` or `open-workout` with the page sitting on `https://logeverylift.com/consent`, where the navigation to `/new-workout` times out. Find out why the synthetic user is sent to `/consent` after a successful sign-in, and either accept it in the script or stop the app from sending it there.
 - **Why deferred:** the cause is in the logeverylift app, not the cluster, and single failures never fire `UserJourneyFailing` (it needs two runs in a row).

@@ -158,3 +158,68 @@ spec:
               persistentVolumeClaim:
                 claimName: k8s-backups
                 readOnly: true
+---
+# VolSyncBackupStale cannot see a source left on trigger.manual, since VolSync then ignores its
+# schedule. restic writes one file per snapshot, so the file age needs no repository password.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: volsync-backup-check
+spec:
+  schedule: "0 9 * * *"
+  timeZone: Europe/Oslo
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 300
+      template:
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          automountServiceAccountToken: false
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: check
+              image: docker.io/library/alpine:3.24
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  stale=0
+                  for repo in /backup/volsync/*/*; do
+                    if find "$repo/snapshots" -type f -mmin -1560 | grep -q .; then
+                      echo "ok    $repo"
+                    else
+                      echo "STALE $repo"
+                      stale=1
+                    fi
+                  done
+                  exit "$stale"
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  memory: 32Mi
+          volumes:
+            - name: backup
+              persistentVolumeClaim:
+                claimName: k8s-backups
+                readOnly: true
