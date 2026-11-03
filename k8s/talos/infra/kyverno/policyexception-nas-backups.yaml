@@ -106,3 +106,5 @@ spec:
     - controlName: Capabilities
       images:
         - quay.io/backube/volsync:*
+    # The repository is an inline nfs volume, which restricted does not allow.
+    - controlName: Volume Types
