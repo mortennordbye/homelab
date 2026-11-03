@@ -249,9 +249,6 @@ Libraries `TV` (`/data/series`), `Movies` (`/data/movies`) and `Movies 4K`
 reads ffprobe data and each extra scanner reads every file again over NFS. FFprobe and
 ExifTool always run; the UI shows them as fixed ON.
 
-These are the target settings. While the H.264 backlog is worked through, both
-libraries run all day and the node has 2 GPU workers; BACKLOG tracks switching back.
-
 Node: 1 GPU transcode worker, no CPU workers. The worker limit is set on the live
 node (Nodes page, or `POST /api/v2/alter-worker-limit`); writing it to the database
 alone does nothing.
