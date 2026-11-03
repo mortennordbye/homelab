@@ -31,6 +31,8 @@ opencost:
   metrics:
     serviceMonitor:
       enabled: true
+      # The chart renders none otherwise, and Argo CD refuses a namespaced object without one.
+      namespace: monitoring
       additionalLabels:
         release: kube-prometheus-stack
 
