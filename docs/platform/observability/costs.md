@@ -37,4 +37,6 @@ measured. Panels that need the live price multiply usage by
 - `kube_pod_labels`, `kube_node_labels` and `kube_namespace_labels` are not scraped, so cost
   cannot be split by label. Namespace, controller and pod work.
 - Storage and network are priced at zero.
+- Talos nodes have no `providerID`, so the ServiceMonitor copies `node` into `provider_id` on the
+  node price metrics. Without it OpenCost skips those prices and reports idle cost as zero.
 - History is limited by Prometheus retention (30 days).

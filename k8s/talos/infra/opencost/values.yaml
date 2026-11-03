@@ -38,7 +38,9 @@ opencost:
       # Talos nodes have no providerID, and OpenCost skips a node's price without this
       # label, which leaves idle cost at zero.
       metricRelabelings:
-        - sourceLabels:
+        # Spelled out: the API server defaults it, and Argo CD would see drift.
+        - action: replace
+          sourceLabels:
             - __name__
             - node
           regex: node_(cpu|ram|gpu|total)_hourly_cost;(.+)
