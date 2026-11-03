@@ -40,6 +40,7 @@ locals {
     "jarvis",
     "kargo",
     "open-webui",
+    "opencost",
     "portfolio-stage",
     "prometheus",
     "prowlarr",

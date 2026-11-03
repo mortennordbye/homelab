@@ -14,6 +14,7 @@ How alerts, SLOs, runbooks, incidents and the weekly review fit together is in
 | Prometheus | https://prometheus.local.bigd.no |
 | Grafana Drilldown: metrics, logs and traces without a dashboard | https://grafana.local.bigd.no/drilldown |
 | Pyrra, SLOs and error budgets | https://pyrra.local.bigd.no |
+| OpenCost, estimated cost per namespace ([costs.md](costs.md)) | https://opencost.local.bigd.no |
 | Discord | `#homelab-alerts` |
 
 SPOG rows, outside in: the network and hosts first, then the cluster platform, then the apps.
@@ -140,6 +141,7 @@ SPOG dashboard is in [The observability stack I actually run](https://blog.nordb
 | Alloy | DaemonSet shipping pod logs (each pod reads its own node's pods) and Kubernetes events (one clustered pod collects them) to Loki, and filtering traces on the way to Tempo (monitoring UIs and blackbox probes dropped, per-connection and client-IP attributes and URL query strings removed) | none | `k8s/talos/infra/loki/alloy-values.yaml` |
 | Tempo | traces, pushed over OTLP by Traefik and logeverylift through Alloy; its local-blocks generator answers TraceQL metrics for Traces Drilldown | 24 h | `k8s/talos/infra/tempo/values.yaml` |
 | Pyrra | SLOs to recording rules and burn-rate alerts, SLO UI ([slos.md](slos.md)) | none | `k8s/talos/infra/pyrra/` |
+| OpenCost | cost allocation from Prometheus usage, cost UI ([costs.md](costs.md)) | none | `k8s/talos/infra/opencost/` |
 | Falco | runtime security events, modern eBPF driver | none | `k8s/talos/infra/falco/values.yaml` |
 
 Traces take one extra hop: Traefik exports to Alloy, which decides per whole trace what to
