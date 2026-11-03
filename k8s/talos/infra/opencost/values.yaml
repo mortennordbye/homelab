@@ -35,6 +35,15 @@ opencost:
       namespace: monitoring
       additionalLabels:
         release: kube-prometheus-stack
+      # Talos nodes have no providerID, and OpenCost skips a node's price without this
+      # label, which leaves idle cost at zero.
+      metricRelabelings:
+        - sourceLabels:
+            - __name__
+            - node
+          regex: node_(cpu|ram|gpu|total)_hourly_cost;(.+)
+          targetLabel: provider_id
+          replacement: $2
 
   prometheus:
     internal:
