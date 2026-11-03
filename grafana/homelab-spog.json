@@ -11237,6 +11237,1281 @@
         "x": 0,
         "y": 21
       },
+      "id": 9831,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Prometheus blocks plus write-ahead log, from its own TSDB metrics. Its volume is on NFS, where kubelet volume stats report the whole NAS share, so they cannot be used here. Kept 30 days or 35 GiB, whichever comes first.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 0,
+            "y": 22
+          },
+          "id": 9816,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "prometheus_tsdb_storage_blocks_bytes{job=\"kube-prometheus-stack-prometheus\"} + prometheus_tsdb_wal_storage_size_bytes{job=\"kube-prometheus-stack-prometheus\"}",
+              "refId": "A"
+            }
+          ],
+          "title": "Metrics on disk",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Loki's volume on local disk, which also holds its index and compactor files. Kept 7 days.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 4,
+            "y": 22
+          },
+          "id": 9817,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "kubelet_volume_stats_used_bytes{namespace=\"monitoring\",persistentvolumeclaim=\"storage-loki-0\"}",
+              "refId": "A"
+            }
+          ],
+          "title": "Logs on disk",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Tempo's volume on local disk. Kept 24 hours.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 8,
+            "y": 22
+          },
+          "id": 9818,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "kubelet_volume_stats_used_bytes{namespace=\"monitoring\",persistentvolumeclaim=\"storage-tempo-0\"}",
+              "refId": "A"
+            }
+          ],
+          "title": "Traces on disk",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Series in Prometheus's head block. The number that decides how fast metrics grow on disk.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 12,
+            "y": 22
+          },
+          "id": 9819,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "prometheus_tsdb_head_series{job=\"kube-prometheus-stack-prometheus\"}",
+              "refId": "A"
+            }
+          ],
+          "title": "Active series",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "What Loki received over the last hour, projected to a day, before compression. It stores roughly a tenth of this.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 16,
+            "y": 22
+          },
+          "id": 9820,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(loki_distributor_bytes_received_total[1h])) * 86400",
+              "refId": "A"
+            }
+          ],
+          "title": "Logs received per day",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Entries Alloy gave up on after Loki refused them. Usually lines past Loki's 24-hour age limit, which Alloy read again from a running pod, so a small number is expected. A jump is worth a look in Alloy's logs, which carry the reason.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 20,
+            "y": 22
+          },
+          "id": 9821,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(loki_write_dropped_entries_total[24h]))",
+              "refId": "A"
+            }
+          ],
+          "title": "Log entries dropped (24h)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Metrics against Prometheus's size limit, logs and traces against their volumes. Time retention usually removes data first, so a stable bar is normal.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 0.7
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.85
+                  }
+                ]
+              },
+              "unit": "percentunit",
+              "decimals": 0,
+              "min": 0,
+              "max": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 26
+          },
+          "id": 9822,
+          "options": {
+            "displayMode": "basic",
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "maxVizHeight": 300,
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "(prometheus_tsdb_storage_blocks_bytes{job=\"kube-prometheus-stack-prometheus\"} + prometheus_tsdb_wal_storage_size_bytes{job=\"kube-prometheus-stack-prometheus\"}) / prometheus_tsdb_retention_limit_bytes{job=\"kube-prometheus-stack-prometheus\"}",
+              "refId": "A",
+              "legendFormat": "Metrics (30d or 35 GiB)",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "kubelet_volume_stats_used_bytes{namespace=\"monitoring\",persistentvolumeclaim=\"storage-loki-0\"} / kubelet_volume_stats_capacity_bytes{namespace=\"monitoring\",persistentvolumeclaim=\"storage-loki-0\"}",
+              "refId": "B",
+              "legendFormat": "Logs (7d)",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "kubelet_volume_stats_used_bytes{namespace=\"monitoring\",persistentvolumeclaim=\"storage-tempo-0\"} / kubelet_volume_stats_capacity_bytes{namespace=\"monitoring\",persistentvolumeclaim=\"storage-tempo-0\"}",
+              "refId": "C",
+              "legendFormat": "Traces (24h)",
+              "instant": true
+            }
+          ],
+          "title": "Storage used against limit",
+          "type": "bargauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Prometheus's disk use against its size limit.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "bytes",
+              "min": 0,
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 26
+          },
+          "id": 9823,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "prometheus_tsdb_storage_blocks_bytes{job=\"kube-prometheus-stack-prometheus\"} + prometheus_tsdb_wal_storage_size_bytes{job=\"kube-prometheus-stack-prometheus\"}",
+              "refId": "A",
+              "legendFormat": "Used"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "prometheus_tsdb_retention_limit_bytes{job=\"kube-prometheus-stack-prometheus\"}",
+              "refId": "B",
+              "legendFormat": "Limit"
+            }
+          ],
+          "title": "Metrics storage over time",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Disk use of Loki and Tempo. On their own chart because metrics take far more.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "bytes",
+              "min": 0,
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 26
+          },
+          "id": 9824,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "kubelet_volume_stats_used_bytes{namespace=\"monitoring\",persistentvolumeclaim=\"storage-loki-0\"}",
+              "refId": "A",
+              "legendFormat": "Logs (Loki)"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "kubelet_volume_stats_used_bytes{namespace=\"monitoring\",persistentvolumeclaim=\"storage-tempo-0\"}",
+              "refId": "B",
+              "legendFormat": "Traces (Tempo)"
+            }
+          ],
+          "title": "Logs and traces storage over time",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Samples each job exposes per scrape, after relabeling. This is what to trim when metrics grow.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 34
+          },
+          "id": 9825,
+          "options": {
+            "displayMode": "basic",
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "maxVizHeight": 300,
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sort_desc(topk(10, sum by (job) (scrape_samples_post_metric_relabeling)))",
+              "refId": "A",
+              "legendFormat": "{{job}}",
+              "instant": true
+            }
+          ],
+          "title": "Metrics by scrape job (top 10)",
+          "type": "bargauge"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "description": "Log volume per namespace, before compression. Runs a Loki query when this row is open, and can take several seconds.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "bytes",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 34
+          },
+          "id": 9826,
+          "options": {
+            "displayMode": "basic",
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "maxVizHeight": 300,
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "loki",
+                "uid": "${loki_datasource}"
+              },
+              "editorMode": "code",
+              "expr": "topk(10, sum by (namespace) (bytes_over_time({namespace=~\".+\"}[6h])))",
+              "refId": "A",
+              "legendFormat": "{{namespace}}",
+              "queryType": "instant"
+            }
+          ],
+          "title": "Logs by namespace, last 6h (top 10)",
+          "type": "bargauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Working set per component, all replicas together.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "bytes",
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 34
+          },
+          "id": 9827,
+          "options": {
+            "displayMode": "basic",
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "maxVizHeight": 300,
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"monitoring\",pod=~\"prometheus-kube-prometheus-stack-prometheus-.*\",container!=\"\"})",
+              "refId": "A",
+              "legendFormat": "Prometheus",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"monitoring\",pod=~\"kube-prometheus-stack-grafana-.*\",container!=\"\"})",
+              "refId": "B",
+              "legendFormat": "Grafana",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"monitoring\",pod=~\"alloy-.*\",container!=\"\"})",
+              "refId": "C",
+              "legendFormat": "Alloy",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"monitoring\",pod=~\"tempo-.*\",container!=\"\"})",
+              "refId": "D",
+              "legendFormat": "Tempo",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"monitoring\",pod=~\"loki-.*\",container!=\"\"})",
+              "refId": "E",
+              "legendFormat": "Loki",
+              "instant": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"monitoring\",pod=~\"alertmanager-.*\",container!=\"\"})",
+              "refId": "F",
+              "legendFormat": "Alertmanager",
+              "instant": true
+            }
+          ],
+          "title": "Memory of the monitoring stack",
+          "type": "bargauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Samples per second written to Prometheus.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short",
+              "min": 0,
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 0,
+            "y": 42
+          },
+          "id": 9828,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "rate(prometheus_tsdb_head_samples_appended_total{job=\"kube-prometheus-stack-prometheus\"}[5m])",
+              "refId": "A",
+              "legendFormat": "Samples"
+            }
+          ],
+          "title": "Metric samples ingested",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Bytes per second received by Loki, before compression.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "Bps",
+              "min": 0,
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 8,
+            "y": 42
+          },
+          "id": 9829,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(loki_distributor_bytes_received_total[5m]))",
+              "refId": "A",
+              "legendFormat": "Logs"
+            }
+          ],
+          "title": "Logs received",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Spans per second received by Tempo.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short",
+              "min": 0,
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 16,
+            "y": 42
+          },
+          "id": 9830,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(tempo_distributor_spans_received_total[5m]))",
+              "refId": "A",
+              "legendFormat": "Spans"
+            }
+          ],
+          "title": "Trace spans received",
+          "type": "timeseries"
+        }
+      ],
+      "title": "Monitoring stack (storage and intake)",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
       "id": 8100,
       "panels": [
         {
@@ -11267,7 +12542,7 @@
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 28
+            "y": 29
           },
           "id": 8101,
           "options": {
@@ -11326,7 +12601,7 @@
             "h": 4,
             "w": 6,
             "x": 6,
-            "y": 28
+            "y": 29
           },
           "id": 8102,
           "options": {
@@ -11385,7 +12660,7 @@
             "h": 4,
             "w": 6,
             "x": 12,
-            "y": 28
+            "y": 29
           },
           "id": 8103,
           "options": {
@@ -11444,7 +12719,7 @@
             "h": 4,
             "w": 6,
             "x": 18,
-            "y": 28
+            "y": 29
           },
           "id": 8104,
           "options": {
@@ -11502,7 +12777,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 32
+            "y": 33
           },
           "id": 8105,
           "options": {
@@ -11558,7 +12833,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 32
+            "y": 33
           },
           "id": 8106,
           "options": {
@@ -11623,7 +12898,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 40
+            "y": 41
           },
           "id": 8107,
           "options": {
@@ -11679,7 +12954,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 40
+            "y": 41
           },
           "id": 8108,
           "options": {
@@ -11718,7 +12993,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 23
       },
       "id": 8150,
       "panels": [
@@ -11755,7 +13030,7 @@
             "h": 4,
             "w": 4,
             "x": 0,
-            "y": 23
+            "y": 24
           },
           "id": 8151,
           "options": {
@@ -11819,7 +13094,7 @@
             "h": 4,
             "w": 4,
             "x": 4,
-            "y": 23
+            "y": 24
           },
           "id": 8152,
           "options": {
@@ -11883,7 +13158,7 @@
             "h": 4,
             "w": 4,
             "x": 8,
-            "y": 23
+            "y": 24
           },
           "id": 8153,
           "options": {
@@ -11951,7 +13226,7 @@
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 23
+            "y": 24
           },
           "id": 8154,
           "options": {
@@ -12019,7 +13294,7 @@
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 23
+            "y": 24
           },
           "id": 8155,
           "options": {
@@ -12079,7 +13354,7 @@
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 23
+            "y": 24
           },
           "id": 8156,
           "options": {
@@ -12177,7 +13452,7 @@
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 27
+            "y": 28
           },
           "id": 8157,
           "options": {
@@ -12263,7 +13538,7 @@
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 37
+            "y": 38
           },
           "id": 9812,
           "options": {
@@ -12325,7 +13600,7 @@
             "h": 4,
             "w": 6,
             "x": 6,
-            "y": 37
+            "y": 38
           },
           "id": 9813,
           "options": {
@@ -12391,7 +13666,7 @@
             "h": 4,
             "w": 6,
             "x": 12,
-            "y": 37
+            "y": 38
           },
           "id": 9814,
           "options": {
@@ -12454,7 +13729,7 @@
             "h": 4,
             "w": 6,
             "x": 18,
-            "y": 37
+            "y": 38
           },
           "id": 9815,
           "options": {
@@ -12496,7 +13771,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 24
       },
       "id": 8180,
       "panels": [
@@ -12533,7 +13808,7 @@
             "h": 4,
             "w": 4,
             "x": 0,
-            "y": 24
+            "y": 25
           },
           "id": 8181,
           "options": {
@@ -12597,7 +13872,7 @@
             "h": 4,
             "w": 4,
             "x": 4,
-            "y": 24
+            "y": 25
           },
           "id": 8182,
           "options": {
@@ -12661,7 +13936,7 @@
             "h": 4,
             "w": 4,
             "x": 8,
-            "y": 24
+            "y": 25
           },
           "id": 8183,
           "options": {
@@ -12725,7 +14000,7 @@
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 24
+            "y": 25
           },
           "id": 8184,
           "options": {
@@ -12789,7 +14064,7 @@
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 24
+            "y": 25
           },
           "id": 8185,
           "options": {
@@ -12853,7 +14128,7 @@
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 24
+            "y": 25
           },
           "id": 8186,
           "options": {
@@ -12951,7 +14226,7 @@
             "h": 10,
             "w": 8,
             "x": 0,
-            "y": 28
+            "y": 29
           },
           "id": 8187,
           "options": {
@@ -13082,7 +14357,7 @@
             "h": 10,
             "w": 16,
             "x": 8,
-            "y": 28
+            "y": 29
           },
           "id": 8188,
           "options": {
@@ -13177,7 +14452,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 25
       },
       "id": 9200,
       "panels": [
@@ -13193,7 +14468,7 @@
             "h": 4,
             "w": 24,
             "x": 0,
-            "y": 29
+            "y": 30
           },
           "fieldConfig": {
             "defaults": {
@@ -13357,7 +14632,7 @@
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 33
+            "y": 34
           },
           "fieldConfig": {
             "defaults": {
@@ -13441,7 +14716,7 @@
             "h": 4,
             "w": 6,
             "x": 6,
-            "y": 33
+            "y": 34
           },
           "fieldConfig": {
             "defaults": {
@@ -13525,7 +14800,7 @@
             "h": 4,
             "w": 6,
             "x": 12,
-            "y": 33
+            "y": 34
           },
           "fieldConfig": {
             "defaults": {
@@ -13581,7 +14856,7 @@
             "h": 4,
             "w": 6,
             "x": 18,
-            "y": 33
+            "y": 34
           },
           "fieldConfig": {
             "defaults": {
@@ -13655,7 +14930,7 @@
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 37
+            "y": 38
           },
           "fieldConfig": {
             "defaults": {
@@ -13735,7 +15010,7 @@
             "h": 4,
             "w": 6,
             "x": 6,
-            "y": 37
+            "y": 38
           },
           "fieldConfig": {
             "defaults": {
@@ -13811,7 +15086,7 @@
             "h": 4,
             "w": 6,
             "x": 12,
-            "y": 37
+            "y": 38
           },
           "fieldConfig": {
             "defaults": {
@@ -13891,7 +15166,7 @@
             "h": 4,
             "w": 6,
             "x": 18,
-            "y": 37
+            "y": 38
           },
           "fieldConfig": {
             "defaults": {
@@ -13971,7 +15246,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 41
+            "y": 42
           },
           "fieldConfig": {
             "defaults": {
@@ -14032,7 +15307,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 41
+            "y": 42
           },
           "fieldConfig": {
             "defaults": {
@@ -14102,7 +15377,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 49
+            "y": 50
           },
           "fieldConfig": {
             "defaults": {
@@ -14172,7 +15447,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 49
+            "y": 50
           },
           "fieldConfig": {
             "defaults": {
@@ -14233,7 +15508,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 57
+            "y": 58
           },
           "fieldConfig": {
             "defaults": {
@@ -14294,7 +15569,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 57
+            "y": 58
           },
           "fieldConfig": {
             "defaults": {

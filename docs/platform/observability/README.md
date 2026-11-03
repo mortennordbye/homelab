@@ -37,6 +37,7 @@ Every row starts collapsed except Alerts, which sits on top.
 | GitOps & secrets | Argo CD sync and health, ESO sync status and secrets not ready, Reloader reloads |
 | KEDA autoscaling | replica and scaler state, wake-from-zero, capacity and electricity reclaimed, priced at the NO1 spot price plus VAT plus the `grid_fee_per_kwh` variable |
 | Cost, estimated (OpenCost) | estimated electricity cost per 30 days and per namespace, idle share, allocated CPU and memory, today's price against the OpenCost rate ([costs](costs.md)) |
+| Monitoring stack (storage and intake) | disk used by metrics, logs and traces against their limits, active series, logs received per day, dropped log entries, metrics by scrape job, logs by namespace, memory per component, intake over time ([storage](#monitoring-stack-storage)) |
 | Falco | instances, rule matches, event drops, CPU and memory per node |
 | Policy (Kyverno) | controllers up, workloads on mutable tags and breaking baseline, restricted and requests compliance, admission rate, image provenance coverage, failures and verification time, the failing workloads ([policy](../policy/README.md)) |
 | Media stack | service status, health issues, queues, free space, library, download client and indexers |
@@ -54,6 +55,24 @@ default), so a change in a graph can be matched to the commit that caused it. Ho
 line for the app, the short revision and the commit subject. Argo CD notifications writes
 these as Grafana annotations tagged `argocd`
 ([`../delivery/argocd.md`](../delivery/argocd.md#deploy-markers)).
+
+## Monitoring stack storage
+
+| Signal | Store | Kept | Volume |
+|---|---|---|---|
+| Metrics | Prometheus | 30 days or 35 GiB, whichever comes first | 40 GiB on `syno-nfs-csi` |
+| Logs | Loki | 7 days | 20 GiB on `proxmox-local` |
+| Traces | Tempo | 24 hours | 10 GiB on `proxmox-local` |
+
+`kubelet_volume_stats_*` is only right for the two local volumes. On an NFS volume it reports the
+whole NAS share, so the Prometheus, Grafana and Alertmanager volumes all show the same figure.
+The SPOG row reads Prometheus's size from `prometheus_tsdb_storage_blocks_bytes` and
+`prometheus_tsdb_wal_storage_size_bytes` instead. It has no real figure for Grafana or Alertmanager.
+
+When metrics grow, start with Metrics by scrape job. For logs, start with Logs by namespace.
+
+Log entries dropped counts lines Loki refused, usually for being past its 24-hour age limit
+(`reject_old_samples_max_age`) after Alloy read them again from a running pod. A small number is expected.
 
 ## GitHub
 
