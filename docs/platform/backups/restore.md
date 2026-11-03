@@ -39,6 +39,15 @@ Restores a PVC in place from its restic repository. The repository Secret
        destinationPVC: <pvc>
        cacheStorageClassName: syno-nfs-csi
        cacheCapacity: 2Gi
+       moverSecurityContext:
+         seccompProfile:
+           type: RuntimeDefault
+       moverResources:
+         requests:
+           cpu: 50m
+           memory: 128Mi
+         limits:
+           memory: 1Gi
        # Optional: an older point in time instead of the newest backup.
        # restoreAsOf: "2026-09-20T00:00:00Z"
        moverVolumes:

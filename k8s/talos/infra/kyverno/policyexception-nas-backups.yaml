@@ -62,3 +62,47 @@ spec:
         - postgres:*-alpine
         - docker.io/library/alpine:*
         - docker.io/restic/restic:*
+---
+# VolSync movers write the restic repositories on the same root-only export, so they run as
+# uid 0 with added capabilities. moverSecurityContext cannot change that without breaking backups.
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: volsync-movers-root
+spec:
+  exceptions:
+    - policyName: pod-security-restricted
+      ruleNames:
+        - restricted
+        - autogen-restricted
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+            - Job
+          namespaces:
+            - arr-stack
+            - audiobookshelf
+            - garage
+            - gluetun-vpn
+            - headroom
+            - mealie
+            - monitoring
+            - open-webui
+            - plex-media-stack
+            - trek
+            - verksted
+          names:
+            - volsync-src-*
+            - volsync-dst-*
+  podSecurity:
+    - controlName: Running as Non-root
+      images:
+        - quay.io/backube/volsync:*
+    - controlName: Running as Non-root user
+      images:
+        - quay.io/backube/volsync:*
+    - controlName: Capabilities
+      images:
+        - quay.io/backube/volsync:*
