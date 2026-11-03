@@ -1,0 +1,53 @@
+# Requires SLSA provenance signed by the repo's build workflow. Each check takes seconds, so
+# Deny needs the cold-start cost weighed first: docs/platform/policy/README.md.
+apiVersion: policies.kyverno.io/v1
+kind: ImageValidatingPolicy
+metadata:
+  name: verify-first-party-images
+  annotations:
+    policies.kyverno.io/title: Verify first-party images
+    policies.kyverno.io/description: >-
+      First-party images carry SLSA provenance from their build workflow, signed through
+      Sigstore's public instance.
+spec:
+  validationActions:
+    - Audit
+  failurePolicy: Ignore
+  webhookConfiguration:
+    timeoutSeconds: 15
+  matchConstraints:
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: stage-portfolio
+    resourceRules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+        resources:
+          - pods
+  matchImageReferences:
+    - glob: ghcr.io/mortennordbye/homelab/portfolio*
+  validationConfigurations:
+    mutateDigest: false
+    verifyDigest: false
+    required: false
+  attestations:
+    - name: slsa
+      intoto:
+        type: https://slsa.dev/provenance/v1
+  attestors:
+    - name: github
+      cosign:
+        keyless:
+          identities:
+            - subject: https://github.com/mortennordbye/homelab/.github/workflows/build-portfolio.yaml@refs/heads/main
+              issuer: https://token.actions.githubusercontent.com
+        ctlog:
+          url: https://rekor.sigstore.dev
+  validations:
+    - expression: >-
+        images.containers.map(image, verifyAttestationSignatures(image, attestations.slsa, [attestors.github])).all(e, e > 0)
+      message: No verified SLSA provenance from the expected workflow.
