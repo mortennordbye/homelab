@@ -24,11 +24,11 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Platform
 
-### Kyverno restricted and requests policies to Enforce
-- **What:** move `require-requests-limits` and then `pod-security-restricted` from `Audit` to `Enforce`. VolSync movers and the logeverylift smoke test now comply. What still fails restricted is verksted: the app image runs as root because its backend starts every agent process as `vk-agent`, and its `docker:*-dind` sidecar is privileged. Verksted passes the requests policy.
-- **Why deferred:** a rollout of verksted would be refused under restricted, so it needs a non-root image from its own repo or an exception for the whole pod, which is a decision rather than a fix. Separately, the failure history only reaches back about a week, so it cannot vouch for Jobs that run only during a chart upgrade.
-- **Unblock:** first check that `kyverno_policy_results_total{rule_result="fail",rule_execution_cause="admission_request"}` stays at zero for a day that includes a nightly backup; `background_scan` results and wider windows repeat failures that are already fixed. Then render the charts for `argocd`, `cert-manager` and `kargo` and check their hook Jobs, which appear in that history and would block an upgrade if they lack resources. Flip the requests policy after that, and the restricted policy once verksted is settled.
-- **Where:** `k8s/talos/infra/kyverno/policies/`, `k8s/talos/infra/kyverno/policyexception-nas-backups.yaml`, `k8s/talos/apps/verksted/deployment.yaml`.
+### Non-root image for verksted
+- **What:** replace the `verksted-restricted` exception on the app image with an image that starts as non-root and drops all capabilities. The `docker:*-dind` sidecar keeps its exception.
+- **Why deferred:** the backend starts every agent process as `vk-agent`, which takes root, so this is a change to how verksted runs agents in its own repo. An exception let the restricted policy enforce without it.
+- **Unblock:** a verksted release that starts agents without root. Then remove `ghcr.io/mortennordbye/verksted:*` from the exception and check that a server-side dry-run of the Deployment is still admitted.
+- **Where:** `k8s/talos/infra/kyverno/policyexception-host-access.yaml`, `k8s/talos/apps/verksted/deployment.yaml`, the verksted repo.
 
 ### Rootless images for the media stack
 - **What:** replace the linuxserver images (sonarr, radarr, radarr-4k, bazarr, bazarr-4k, plex, tautulli, and qBittorrent and Prowlarr in the gluetun pod) with images that start as non-root, then drop them from `policyexception-media-root.yaml`.

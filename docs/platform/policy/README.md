@@ -1,18 +1,16 @@
 # Policy
 
 Kyverno checks every Pod against the repo's manifest rules and writes the result to
-PolicyReports. `disallow-mutable-image-tags` and `pod-security-baseline` run in `Enforce`:
-the API server rejects a new Pod, or a workload template, that breaks them. The other two
-run in `Audit` and only report. The
-install and the policies live in
+PolicyReports. All four policies run in `Enforce`: the API server rejects a new Pod, or a
+workload template, that breaks them. The install and the policies live in
 [`k8s/talos/infra/kyverno/`](../../../k8s/talos/infra/kyverno/kustomization.yaml).
 
 | Policy | Mode | Checks |
 |---|---|---|
 | `disallow-mutable-image-tags` | Enforce | every image has a version tag or a digest; no tag, `latest`, `develop`, `main`, `master`, `nightly`, `edge`, `stable` or `dev` |
 | `pod-security-baseline` | Enforce | the baseline Pod Security Standard: no privileged containers, host namespaces or hostPath |
-| `pod-security-restricted` | Audit | the restricted Pod Security Standard: non-root, no privilege escalation, capabilities dropped, `RuntimeDefault` seccomp |
-| `require-requests-limits` | Audit | every container sets CPU and memory requests and a memory limit |
+| `pod-security-restricted` | Enforce | the restricted Pod Security Standard: non-root, no privilege escalation, capabilities dropped, `RuntimeDefault` seccomp |
+| `require-requests-limits` | Enforce | every container sets CPU and memory requests and a memory limit |
 
 The Pod rules also cover Deployments, StatefulSets, DaemonSets, Jobs and CronJobs through
 Kyverno's autogen. Both Pod Security policies skip `kube-system`, `falco`,
@@ -20,13 +18,18 @@ Kyverno's autogen. Both Pod Security policies skip `kube-system`, `falco`,
 Alloy and node-exporter DaemonSets in `monitoring` are exempt through
 `policyexception-monitoring.yaml`. `policyexception-host-access.yaml` exempts one control
 for one image each: `Capabilities` for gluetun (`NET_ADMIN` makes the VPN tunnel) and
-`Privileged Containers` for verksted's `docker:*-dind` sidecar. `policyexception-nas-backups.yaml`
+`Privileged Containers` for verksted's `docker:*-dind` sidecar. The same file holds
+`verksted-restricted`, which exempts `verksted-app*` from the restricted controls it breaks, per
+image: the backend starts agents as `vk-agent`, which takes root. `policyexception-nas-backups.yaml`
 exempts the etcd, Authentik and logeverylift dump CronJobs and the `backup-check` restore and
 Home Assistant checks from the restricted
 `Running as Non-root` and `Capabilities` controls, since the backup share only admits root
 ([backups](../backups/README.md#constraints)). `policyexception-media-root.yaml` exempts the same two
 controls for the linuxserver and tdarr images in `arr-stack` and `plex-media-stack` and for
-the gluetun pod, whose s6 init has to start as root before it drops to `PUID`. Exceptions are only read
+the gluetun pod, whose s6 init has to start as root before it drops to `PUID`. `volsync-movers-root`,
+in the NAS file, exempts `volsync-src-*` and `volsync-dst-*` pods running the VolSync image from
+`Running as Non-root`, `Running as Non-root user`, `Capabilities` and `Volume Types`. A new namespace
+with a VolSync source has to be added to it, or that source's backups are refused. Exceptions are only read
 from the `kyverno` namespace.
 
 `policyexception-control-plane.yaml` exempts the `kube-apiserver`, `kube-controller-manager`
@@ -35,11 +38,14 @@ machine config with requests but no memory limit.
 
 Every chart this repo installs sets requests and a memory limit through its values, sized
 from seven days of `container_memory_working_set_bytes` and CPU rate, with the memory limit
-at about twice the observed peak. The workloads that still fail the two `Audit` policies,
-and why they cannot enforce yet, are listed in the backlog: the VolSync mover Jobs,
-logeverylift's smoke test, and verksted.
+at about twice the observed peak. VolSync movers take the same fields from each
+`ReplicationSource` (`moverSecurityContext`, `moverResources`).
 
-[![Argo CD applies a manifest to the API server, which sends it to Kyverno's admission webhook, where a mutable tag or a baseline break is rejected; that and the hourly background scan write one PolicyReport per workload, a PolicyException in the kyverno namespace exempts named workloads, and Policy Reporter turns the reports into the policy_report_result metric that Prometheus scrapes for the Policy (Kyverno) row on the SPOG dashboard](../../assets/diagrams/policy-reports.svg)](../../assets/diagrams/policy-reports.svg)
+To test a workload before it ships, a server-side dry-run goes through the real webhook and
+creates nothing. An offline test with the Kyverno CLI has to use the full pod spec, volumes
+included.
+
+[![Argo CD applies a manifest to the API server, which sends it to Kyverno's admission webhook, where a policy break is rejected; that and the hourly background scan write one PolicyReport per workload, a PolicyException in the kyverno namespace exempts named workloads, and Policy Reporter turns the reports into the policy_report_result metric that Prometheus scrapes for the Policy (Kyverno) row on the SPOG dashboard](../../assets/diagrams/policy-reports.svg)](../../assets/diagrams/policy-reports.svg)
 
 ## Reading the results
 
