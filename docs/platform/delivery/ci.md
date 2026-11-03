@@ -26,7 +26,7 @@ cluster or run `terraform plan`: images reach the cluster through Kargo
 
 ## What writes to the repo
 
-[![Morten, Renovate and the sync-certs workflow open PRs that pass the PR checks into main, Kargo's prod promotion PRs are merged by kargo-automerge, and a push to main starts Argo CD syncing, render-assets committing SVGs back, the docs site build, and the portfolio and blog image builds that feed Kargo](../../assets/diagrams/delivery-ci.svg)](../../assets/diagrams/delivery-ci.svg)
+[![Morten, Renovate and the sync-certs workflow open PRs that pass the PR checks into main, Kargo's prod promotion PRs are merged by kargo-automerge, and a push to main starts Argo CD syncing, render-assets committing SVGs back and then starting the docs site build, the docs site build, and the portfolio and blog image builds that feed Kargo](../../assets/diagrams/delivery-ci.svg)](../../assets/diagrams/delivery-ci.svg)
 
 Two workflows change `main`. `render-assets` commits as `GitHub Actions` straight
 to `main` and only when the output changed.
