@@ -9,6 +9,7 @@ resources:
   - policies/pod-security-baseline.yaml
   - policies/pod-security-restricted.yaml
   - policies/require-requests-limits.yaml
+  - policies/verify-first-party-images.yaml
   - policyexception-monitoring.yaml
   - policyexception-host-access.yaml
   - policyexception-nas-backups.yaml
