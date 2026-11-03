@@ -1,8 +1,9 @@
 # Policy
 
 Kyverno checks every Pod against the repo's manifest rules and writes the result to
-PolicyReports. All four policies run in `Enforce`: the API server rejects a new Pod, or a
-workload template, that breaks them. The install and the policies live in
+PolicyReports. Four policies run in `Enforce`: the API server rejects a new Pod, or a
+workload template, that breaks them. `verify-first-party-images` only reports for now. The
+install and the policies live in
 [`k8s/talos/infra/kyverno/`](../../../k8s/talos/infra/kyverno/kustomization.yaml).
 
 | Policy | Mode | Checks |
@@ -11,6 +12,7 @@ workload template, that breaks them. The install and the policies live in
 | `pod-security-baseline` | Enforce | the baseline Pod Security Standard: no privileged containers, host namespaces or hostPath |
 | `pod-security-restricted` | Enforce | the restricted Pod Security Standard: non-root, no privilege escalation, capabilities dropped, `RuntimeDefault` seccomp |
 | `require-requests-limits` | Enforce | every container sets CPU and memory requests and a memory limit |
+| `verify-first-party-images` | Audit, `stage-portfolio` only | the portfolio image has SLSA provenance signed by its build workflow |
 
 The Pod rules also cover Deployments, StatefulSets, DaemonSets, Jobs and CronJobs through
 Kyverno's autogen. Both Pod Security policies skip `kube-system`, `falco`,
@@ -46,6 +48,22 @@ creates nothing. An offline test with the Kyverno CLI has to use the full pod sp
 included.
 
 [![Argo CD applies a manifest to the API server, which sends it to Kyverno's admission webhook, where a policy break is rejected; that and the hourly background scan write one PolicyReport per workload, a PolicyException in the kyverno namespace exempts named workloads, and Policy Reporter turns the reports into the policy_report_result metric that Prometheus scrapes for the Policy (Kyverno) row on the SPOG dashboard](../../assets/diagrams/policy-reports.svg)](../../assets/diagrams/policy-reports.svg)
+
+## Image provenance
+
+`build-portfolio.yaml` attests SLSA provenance and an SPDX SBOM for each image it pushes, with
+`actions/attest`, through Sigstore's public instance. The attestations sit in GHCR next to the
+image, under the `sha256-<digest>` fallback tag, since GHCR has no referrers API. Check one by hand:
+
+```bash
+gh attestation verify oci://ghcr.io/mortennordbye/homelab/portfolio:<tag> -R mortennordbye/homelab
+```
+
+`verify-first-party-images` is an `ImageValidatingPolicy`, a separate type from the
+`ClusterPolicy` policies above. Each matched Pod takes 4 to 5 seconds to verify, in `Audit` too,
+with no caching seen between checks. On a KEDA wake from zero that is about 5 of 26 seconds, which
+is the cost to weigh before `Deny`. Old ReplicaSets that still name an unsigned image report `fail`
+until they age out.
 
 ## Reading the results
 
