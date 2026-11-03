@@ -10,6 +10,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** a decision on whether live volumes need point-in-time protection beyond the nightly VolSync copies, and a maintenance window if it means migrating to a new share.
 - **Where:** DSM Snapshot Replication and Shared Folder settings; record the result in `docs/platform/backups/README.md` under "Configured outside Git".
 
+### VolSyncBackupStale cannot see a source waiting on a manual trigger
+- **What:** `volsync_volume_out_of_sync` stays at 0 for a `ReplicationSource` with `trigger.manual` set, because VolSync then ignores its schedule. A leftover trigger stopped mealie's backups without an alert, and ArgoCD reports Synced because the field has another field manager. Nothing checks the age of the newest restic snapshot.
+- **Why deferred:** found while working on Kyverno, and it needs a different signal rather than a threshold change on this alert.
+- **Unblock:** check the newest snapshot per repository against a maximum age in a `backup-check` job, or alert on any source whose `Synchronizing` condition reports `WaitingForManual`, which needs a metric for that condition.
+- **Where:** `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml` (`VolSyncBackupStale`), `k8s/talos/infra/backup-check/freshness.yaml`.
+
 ### logeverylift journey hangs on /consent
 - **What:** about one run in ten of the `logeverylift-journey` synthetic stops at `dashboard` or `open-workout` with the page sitting on `https://logeverylift.com/consent`, where the navigation to `/new-workout` times out. Find out why the synthetic user is sent to `/consent` after a successful sign-in, and either accept it in the script or stop the app from sending it there.
 - **Why deferred:** the cause is in the logeverylift app, not the cluster, and single failures never fire `UserJourneyFailing` (it needs two runs in a row).
@@ -19,13 +25,10 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 ## Platform
 
 ### Kyverno restricted and requests policies to Enforce
-- **What:** move `pod-security-restricted` and `require-requests-limits` from `Audit` to `Enforce`. Every long-running workload now passes both, apart from three:
-  - VolSync mover Jobs, for every `ReplicationSource` (arr-stack, audiobookshelf, garage, gluetun-vpn, headroom, mealie, monitoring, open-webui, plex-media-stack, trek, verksted): no `moverResources` and no `moverSecurityContext`, so each nightly run fails both policies. Under `Enforce` the backups would stop.
-  - logeverylift: the `logeverylift-cd` smoke-test `AnalysisTemplate` still lacks the security context and resources the other Kargo projects' smoke tests have.
-  - verksted: the app image runs as root, and its `docker:*-dind` sidecar is privileged.
-- **Why deferred:** a mover that runs as non-root must read files owned by each app's uid, so a wrong `moverSecurityContext` makes a backup fail quietly; the restic movers peak at about 365Mi, so their limits need sizing per source. verksted needs a `USER` in its own image.
-- **Unblock:** `moverSecurityContext` (the uid and gid that own each PVC) and `moverResources` on every `ReplicationSource`, checked against one night's runs and a restore; the same smoke-test fields on logeverylift as `k8s/talos/infra/kargo-projects/headroom.yaml`; a non-root verksted image and a restricted exception for the dind sidecar. Then check that `kyverno_policy_results_total{rule_result="fail"}` stays at zero for a day, since Jobs that are deleted on success never show in a PolicyReport, and flip the policy.
-- **Where:** `k8s/talos/apps/*/volsync.yaml`, `k8s/talos/infra/{garage,kube-prometheus-stack}/volsync.yaml`, `k8s/talos/infra/kargo-projects/logeverylift.yaml`, `k8s/talos/apps/verksted/deployment.yaml`, `k8s/talos/infra/kyverno/policies/`.
+- **What:** move `require-requests-limits` and then `pod-security-restricted` from `Audit` to `Enforce`. VolSync movers and the logeverylift smoke test now comply. What still fails restricted is verksted: the app image runs as root because its backend starts every agent process as `vk-agent`, and its `docker:*-dind` sidecar is privileged. Verksted passes the requests policy.
+- **Why deferred:** a rollout of verksted would be refused under restricted, so it needs a non-root image from its own repo or an exception for the whole pod, which is a decision rather than a fix. Separately, the failure history only reaches back about a week, so it cannot vouch for Jobs that run only during a chart upgrade.
+- **Unblock:** first check that `kyverno_policy_results_total{rule_result="fail",rule_execution_cause="admission_request"}` stays at zero for a day that includes a nightly backup; `background_scan` results and wider windows repeat failures that are already fixed. Then render the charts for `argocd`, `cert-manager` and `kargo` and check their hook Jobs, which appear in that history and would block an upgrade if they lack resources. Flip the requests policy after that, and the restricted policy once verksted is settled.
+- **Where:** `k8s/talos/infra/kyverno/policies/`, `k8s/talos/infra/kyverno/policyexception-nas-backups.yaml`, `k8s/talos/apps/verksted/deployment.yaml`.
 
 ### Rootless images for the media stack
 - **What:** replace the linuxserver images (sonarr, radarr, radarr-4k, bazarr, bazarr-4k, plex, tautulli, and qBittorrent and Prowlarr in the gluetun pod) with images that start as non-root, then drop them from `policyexception-media-root.yaml`.

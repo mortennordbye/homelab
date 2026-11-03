@@ -106,6 +106,8 @@ rules, snapshots or Hyper Backup, so these are set by hand in DSM and recorded h
   included. The etcd and Postgres dump jobs and the `backup-check` jobs therefore run as root,
   exempt from `pod-security-restricted` through
   `k8s/talos/infra/kyverno/policyexception-nas-backups.yaml`.
+- `trigger.manual` on a ReplicationSource replaces its schedule, and neither `VolSyncBackupStale` nor
+  ArgoCD notices. After a test run, remove the field and check that `nextSyncTime` is set.
 - VolSync needs the VolumeSnapshot CRDs installed (`k8s/talos/infra/crds`) even with
   `copyMethod: Direct`; no snapshot controller runs.
 - Each namespace with a VolSync source carries `volsync.backube/privileged-movers: "true"`;
