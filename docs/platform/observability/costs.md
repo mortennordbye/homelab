@@ -33,7 +33,7 @@ The Cost, estimated (OpenCost) row on the SPOG dashboard shows the 30-day cost, 
 share, allocated CPU and memory, cost per namespace, and allocated against idle over time. It reads
 OpenCost's metrics from Prometheus, so a figure agrees with the OpenCost UI only over the same window.
 Allocation is the larger of a container's request and its use, and idle is the rest of the node
-cost. The Price against OpenCost rate tile compares today's price with the 2.52 kr/kWh behind the rates.
+cost. The Price against OpenCost rate tile compares today's price with the price the rates work out to, using the dashboard's Cluster watts variable, which has to match the draw in the table above.
 
 ## Changing the rates
 
