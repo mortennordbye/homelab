@@ -47,4 +47,5 @@ main -> render: "*.d2"
 main -> docs: "docs/"
 main -> argocd: manifests
 render -> main: commit
+render -> docs: then deploys
 builds -> kargo: "0.0.<run>"

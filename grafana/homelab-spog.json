@@ -15732,6 +15732,32 @@
       "id": 9837,
       "panels": [
         {
+          "description": "The whole homelab on one picture, from docs/assets/diagrams/homelab-overview.d2. A change to that file reaches this panel by itself, a few minutes after it lands on main. Not live data. Click it for the full size.",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 92,
+            "w": 24,
+            "x": 0,
+            "y": 28
+          },
+          "id": 9840,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "[![The whole homelab, from the internet to the NAS](https://docs.nordbye.it/assets/diagrams/homelab-overview.svg)](https://docs.nordbye.it/assets/diagrams/homelab-overview.svg)",
+            "mode": "markdown"
+          },
+          "pluginVersion": "12.4.2",
+          "title": "Full architecture",
+          "type": "text"
+        },
+        {
           "description": "Reference diagram from the docs site, not live data. How metrics, logs and traces reach Grafana. Click it for the full size.",
           "fieldConfig": {
             "defaults": {},
@@ -15741,7 +15767,7 @@
             "h": 46,
             "w": 12,
             "x": 0,
-            "y": 28
+            "y": 120
           },
           "id": 9832,
           "options": {
@@ -15767,7 +15793,7 @@
             "h": 30,
             "w": 12,
             "x": 12,
-            "y": 28
+            "y": 120
           },
           "id": 9833,
           "options": {
@@ -15793,7 +15819,7 @@
             "h": 52,
             "w": 12,
             "x": 12,
-            "y": 58
+            "y": 150
           },
           "id": 9834,
           "options": {
@@ -15819,7 +15845,7 @@
             "h": 32,
             "w": 12,
             "x": 0,
-            "y": 74
+            "y": 166
           },
           "id": 9835,
           "options": {
@@ -15845,7 +15871,7 @@
             "h": 54,
             "w": 12,
             "x": 0,
-            "y": 106
+            "y": 198
           },
           "id": 9836,
           "options": {

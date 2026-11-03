@@ -42,7 +42,7 @@ Every row starts collapsed except Alerts, which sits on top.
 | Monitoring stack (storage and intake) | disk used by metrics, logs and traces against their limits, active series, logs received per day, dropped log entries, metrics by scrape job, logs by namespace, memory per component, intake over time ([storage](#monitoring-stack-storage)) |
 | Media stack | service status, health issues, queues, free space, library, download client and indexers |
 | Live service map (Hubble) | which namespaces talk to which, drawn from `hubble_policy_verdicts_total`, so new apps appear by themselves. Shows policy decisions per second, not bytes, and leaves out traffic to the internet and the nodes. |
-| Diagrams (reference, not live) | signal flow, backup layers, policy results, cost estimate and image provenance, loaded from the docs site, so a change to a `.d2` file reaches them once `render-assets` and the docs deploy have run. They need the docs site and the internet to show. |
+| Diagrams (reference, not live) | the full architecture, signal flow, backup layers, policy results, cost estimate and image provenance, loaded from the docs site, so a change to a `.d2` file reaches them by itself: `render-assets` commits the SVG and starts the docs deploy, and browsers may cache the old image for up to 10 minutes. They need the docs site and the internet to show. |
 
 Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard. The other
 dashboards from this repo: User journeys, GitHub, Cloudflare, Postgres and logeverylift Traces.
