@@ -22,21 +22,6 @@ spec:
     initdb:
       database: logeverylift_db
       owner: logeverylift
-      import:
-        type: microservice
-        databases:
-          - logeverylift_db
-        source:
-          externalCluster: legacy
-  externalClusters:
-    - name: legacy
-      connectionParameters:
-        host: postgres
-        user: postgres
-        dbname: logeverylift_db
-      password:
-        name: logeverylift-secret
-        key: POSTGRES_PASSWORD
   monitoring:
     customQueriesConfigMap:
       - name: logeverylift-db-monitoring

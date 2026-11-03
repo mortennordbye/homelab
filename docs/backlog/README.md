@@ -24,20 +24,14 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 
 ## Platform
 
-### Retire the legacy logeverylift Postgres
-- **What:** after the CloudNativePG cutover, remove the old `postgres` Deployment, Service, PVC `postgres-pvc-18`, its root chown initContainer and `postgres-exporter` (with its rule in `logeverylift-postgres-policy`); rewrite the major-upgrade procedure and the `data-postgres` diagram in `docs/platform/data/postgres.md`.
-- **Why deferred:** the old database stays as the rollback source until the new Cluster has run for a week with nightly base backups.
-- **Unblock:** a week of healthy `logeverylift-db` with successful nightly backups and no archiving alerts.
-- **Where:** `k8s/talos/apps/logeverylift/{postgres.yaml,postgres-exporter.yaml,ciliumnetworkpolicy.yaml}`, `docs/platform/data/postgres.md`.
-
 ### Kyverno restricted and requests policies to Enforce
 - **What:** move `pod-security-restricted` and `require-requests-limits` from `Audit` to `Enforce`. Every long-running workload now passes both, apart from three:
   - VolSync mover Jobs, for every `ReplicationSource` (arr-stack, audiobookshelf, garage, gluetun-vpn, headroom, mealie, monitoring, open-webui, plex-media-stack, trek, verksted): no `moverResources` and no `moverSecurityContext`, so each nightly run fails both policies. Under `Enforce` the backups would stop.
-  - logeverylift: the legacy `postgres` Deployment fails restricted (root chown initContainer, gone with the CloudNativePG move), and the `logeverylift-cd` smoke-test `AnalysisTemplate` still lacks the security context and resources the other Kargo projects' smoke tests have.
+  - logeverylift: the `logeverylift-cd` smoke-test `AnalysisTemplate` still lacks the security context and resources the other Kargo projects' smoke tests have.
   - verksted: the app image runs as root, and its `docker:*-dind` sidecar is privileged.
-- **Why deferred:** a mover that runs as non-root must read files owned by each app's uid, so a wrong `moverSecurityContext` makes a backup fail quietly; the restic movers peak at about 365Mi, so their limits need sizing per source. logeverylift is in the middle of its database move. verksted needs a `USER` in its own image.
-- **Unblock:** `moverSecurityContext` (the uid and gid that own each PVC) and `moverResources` on every `ReplicationSource`, checked against one night's runs and a restore; the logeverylift `postgres` retirement plus the same smoke-test fields as `k8s/talos/infra/kargo-projects/headroom.yaml`; a non-root verksted image and a restricted exception for the dind sidecar. Then check that `kyverno_policy_results_total{rule_result="fail"}` stays at zero for a day, since Jobs that are deleted on success never show in a PolicyReport, and flip the policy.
-- **Where:** `k8s/talos/apps/*/volsync.yaml`, `k8s/talos/infra/{garage,kube-prometheus-stack}/volsync.yaml`, `k8s/talos/apps/logeverylift/postgres.yaml`, `k8s/talos/infra/kargo-projects/logeverylift.yaml`, `k8s/talos/apps/verksted/deployment.yaml`, `k8s/talos/infra/kyverno/policies/`.
+- **Why deferred:** a mover that runs as non-root must read files owned by each app's uid, so a wrong `moverSecurityContext` makes a backup fail quietly; the restic movers peak at about 365Mi, so their limits need sizing per source. verksted needs a `USER` in its own image.
+- **Unblock:** `moverSecurityContext` (the uid and gid that own each PVC) and `moverResources` on every `ReplicationSource`, checked against one night's runs and a restore; the same smoke-test fields on logeverylift as `k8s/talos/infra/kargo-projects/headroom.yaml`; a non-root verksted image and a restricted exception for the dind sidecar. Then check that `kyverno_policy_results_total{rule_result="fail"}` stays at zero for a day, since Jobs that are deleted on success never show in a PolicyReport, and flip the policy.
+- **Where:** `k8s/talos/apps/*/volsync.yaml`, `k8s/talos/infra/{garage,kube-prometheus-stack}/volsync.yaml`, `k8s/talos/infra/kargo-projects/logeverylift.yaml`, `k8s/talos/apps/verksted/deployment.yaml`, `k8s/talos/infra/kyverno/policies/`.
 
 ### Rootless images for the media stack
 - **What:** replace the linuxserver images (sonarr, radarr, radarr-4k, bazarr, bazarr-4k, plex, tautulli, and qBittorrent and Prowlarr in the gluetun pod) with images that start as non-root, then drop them from `policyexception-media-root.yaml`.
