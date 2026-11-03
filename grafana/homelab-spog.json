@@ -15639,6 +15639,46 @@
         "x": 0,
         "y": 26
       },
+      "id": 9843,
+      "panels": [
+        {
+          "description": "The whole homelab on one picture, from docs/assets/diagrams/homelab-overview.d2. A change to that file reaches this panel by itself, a few minutes after it lands on main. It is written by hand, so it shows the design, not live state. Click it for the full size.",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 92,
+            "w": 24,
+            "x": 0,
+            "y": 27
+          },
+          "id": 9842,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "[![The whole homelab, from the internet to the NAS](https://docs.nordbye.it/assets/diagrams/homelab-overview.svg)](https://docs.nordbye.it/assets/diagrams/homelab-overview.svg)",
+            "mode": "markdown"
+          },
+          "pluginVersion": "12.4.2",
+          "title": "Full architecture",
+          "type": "text"
+        }
+      ],
+      "title": "Full architecture (from .d2, not live)",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
       "id": 9839,
       "panels": [
         {
@@ -15658,7 +15698,7 @@
             "h": 24,
             "w": 24,
             "x": 0,
-            "y": 27
+            "y": 28
           },
           "id": 9838,
           "options": {
@@ -15727,7 +15767,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 28
       },
       "id": 9837,
       "panels": [
@@ -15748,7 +15788,7 @@
             "h": 30,
             "w": 24,
             "x": 0,
-            "y": 28
+            "y": 29
           },
           "id": 9841,
           "options": {

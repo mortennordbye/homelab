@@ -17,7 +17,7 @@ How alerts, SLOs, runbooks, incidents and the weekly review fit together is in
 | OpenCost, estimated cost per namespace ([costs.md](costs.md)) | https://opencost.local.bigd.no |
 | Discord | `#homelab-alerts` |
 
-Everything on a dashboard comes from live data. Hand-drawn diagrams belong in these docs, not in Grafana.
+Dashboards show live data. The one exception is the Full architecture row, which is labelled as not live.
 
 SPOG rows, outside in: the network and hosts first, then the cluster platform, then the apps.
 Every row starts collapsed except Alerts, which sits on top.
@@ -43,6 +43,7 @@ Every row starts collapsed except Alerts, which sits on top.
 | Cost, estimated (OpenCost) | estimated electricity cost per 30 days and per namespace, idle share, allocated CPU and memory, today's price against the OpenCost rate ([costs](costs.md)) |
 | Monitoring stack (storage and intake) | disk used by metrics, logs and traces against their limits, active series, logs received per day, dropped log entries, metrics by scrape job, logs by namespace, memory per component, intake over time ([storage](#monitoring-stack-storage)) |
 | Media stack | service status, health issues, queues, free space, library, download client and indexers |
+| Full architecture (from .d2, not live) | the whole homelab from `homelab-overview.d2`, loaded from the docs site. A change to that file reaches it by itself: `render-assets` commits the SVG and starts the docs deploy, and browsers may cache the old image for up to 10 minutes. It needs the docs site and the internet to show. |
 | Live service map (Hubble) | which namespaces talk to which, drawn from `hubble_policy_verdicts_total`, so new apps appear by themselves. Shows policy decisions per second, not bytes, and leaves out traffic to the internet and the nodes. |
 | Live architecture | running Proxmox hosts, their VMs, the namespaces on each node and the storage classes they claim, all drawn from live metrics. DaemonSets, Jobs and anything outside the cluster's metrics are left out. |
 
