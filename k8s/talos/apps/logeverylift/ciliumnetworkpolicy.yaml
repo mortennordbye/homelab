@@ -23,53 +23,6 @@ spec:
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
-  name: logeverylift-postgres-policy
-  namespace: logeverylift
-spec:
-  endpointSelector:
-    matchLabels:
-      app: postgres
-  ingress:
-    - fromEndpoints:
-        - matchLabels:
-            "k8s:io.kubernetes.pod.namespace": logeverylift
-            app: logeverylift-app
-      toPorts:
-        - ports:
-            - port: "5432"
-              protocol: TCP
-    - fromEndpoints:
-        - matchLabels:
-            "k8s:io.kubernetes.pod.namespace": logeverylift
-            app: postgres-backup
-      toPorts:
-        - ports:
-            - port: "5432"
-              protocol: TCP
-    - fromEndpoints:
-        - matchLabels:
-            "k8s:io.kubernetes.pod.namespace": logeverylift
-            app: postgres-exporter
-      toPorts:
-        - ports:
-            - port: "5432"
-              protocol: TCP
-    # The logeverylift-db bootstrap imports this database once.
-    - fromEndpoints:
-        - matchLabels:
-            "k8s:io.kubernetes.pod.namespace": logeverylift
-            cnpg.io/cluster: logeverylift-db
-      toPorts:
-        - ports:
-            - port: "5432"
-              protocol: TCP
-    - fromEntities:
-        - host
-        - health
----
-apiVersion: "cilium.io/v2"
-kind: CiliumNetworkPolicy
-metadata:
   name: logeverylift-db-policy
   namespace: logeverylift
 spec:

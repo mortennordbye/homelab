@@ -1,7 +1,6 @@
 # Postgres for logeverylift
 
-logeverylift keeps its data in a single in-cluster Postgres in the `logeverylift`
-namespace. Authentik runs its own Postgres (`authentik-postgresql` in `identity`,
+logeverylift keeps its data in a CloudNativePG Cluster in the `logeverylift` namespace. Authentik runs its own Postgres (`authentik-postgresql` in `identity`,
 deployed and managed by the Authentik Helm chart), which this doc does not cover.
 Restoring its nightly dump is in [`../backups/restore.md`](../backups/restore.md#postgres).
 
@@ -29,106 +28,53 @@ replication the last few seconds of commits can be lost in a failover.
 - Alerts: `PostgresWalArchivingFailing` and `PostgresBaseBackupStale` page,
   `PostgresDown` warns when no instance is primary.
 
-The previous hand-built Postgres (Deployment and Service `postgres`, PVC
-`postgres-pvc-18`, `postgres-exporter`) is still declared, scaled to zero, as the
-source the Cluster was imported from. The sections below describe it until it is
-removed.
+[![The app reads the logeverylift-db-app Secret that the operator generates and connects to the primary of logeverylift-db, which streams to a standby; each instance has its own NFS PVC. The primary archives WAL and nightly base backups to Garage, and a monthly test recovers a throwaway Cluster from them. A nightly pg_dump CronJob writes to the NAS, which is copied offsite to Google Drive and loaded by the monthly restore test](../../assets/diagrams/data-postgres.svg)](../../assets/diagrams/data-postgres.svg)
 
-[![logeverylift-secret from Bitwarden gives the password to the logeverylift app, Postgres 18, the nightly pg_dump CronJob and postgres-exporter, which reads pg_stat_* for Prometheus; Postgres stores data on a syno-nfs-csi PVC whose ownership an initContainer fixes, and the dumps land on the NAS, are copied offsite to Google Drive and are loaded by the monthly restore test](../../assets/diagrams/data-postgres.svg)](../../assets/diagrams/data-postgres.svg)
+## Recreating the Cluster
 
-## The NFS ownership trap
-
-A freshly provisioned `syno-nfs-csi` volume grants root everything and uid 70
-(postgres) nothing. Since the volume is mounted at the parent of `PGDATA`, the
-entrypoint has to create `18/docker` itself, and it does that after dropping to
-uid 70, so it fails with:
-
-```
-mkdir: can't create directory '/var/lib/postgresql/18/': Permission denied
-```
-
-The `fix-nfs-ownership` initContainer runs `chown 70:70` and `chmod 700` on the mount
-root before Postgres starts, so a recreated PVC recovers on its own.
-
-`fsGroup: 70` is not used because it recursively adds group write, and Postgres
-refuses to start unless `PGDATA` is exactly `0700` or `0750`. The entrypoint happens
-to chmod it back, but the initContainer does not depend on that.
+The manifest bootstraps with a plain `initdb`, so a Cluster recreated from it starts
+empty. To bring the data back, bootstrap from the archive as in
+[`../backups/restore.md`](../backups/restore.md#point-in-time-logeverylift), or load a dump.
 
 ## Why a major is not a tag bump
 
-A Postgres major cannot read the previous major's data directory. The data has to be
-dumped out of the old server and loaded into a freshly initialised new one. Bumping
-only the tag makes the new image find the old cluster and exit 1.
-
-`renovate.json` therefore disables Postgres major updates repo-wide and points here.
-The backup CronJob (`db-backup.yaml`) and the logeverylift container in
-`k8s/talos/infra/backup-check/restore-test.yaml` must move to the same major as the
-server in the same change: `pg_dump` refuses a newer server.
+A Postgres major cannot read the previous major's data directory, and pre-upgrade backups
+cannot recover past the upgrade. `renovate.json` therefore disables Postgres major updates
+repo-wide and points here.
 
 ## Major upgrade procedure (N to N+1)
 
-Expect around 10 minutes of app downtime. Prepare the manifest change as its own PR:
-the new image in `postgres.yaml` (initContainer and main container), a new PVC
-`postgres-pvc-<N+1>` as the claim while the old PVC stays declared and untouched,
-and the backup and restore-test images. Do not
-merge it before step 5; merging early takes the app down until the restore finishes.
+CloudNativePG upgrades in place with `pg_upgrade` when `imageName` moves to a higher major.
+All instances are down while it runs, the standby is re-cloned afterwards, and images must
+stay on the same OS distribution. The upstream
+[upgrade guide](https://cloudnative-pg.io/docs/current/postgres_upgrades) covers failure
+handling; read it first, since this procedure has not been run on this Cluster yet.
 
-```bash
-export KUBECONFIG=~/Documents/github/Homelab/terraform/proxmox/hyper-cluster/k8s/talos/kubeconfig
-```
-
-1. Stop writes. The `apps` ApplicationSet sets `ignoreDifferences` on
-   `/spec/replicas` for Deployments with `RespectIgnoreDifferences=true`, so scaling
-   sticks without suspending auto-sync. The same rule means ArgoCD never scales
-   anything back up; every scale-up below is manual.
-
-   ```bash
-   kubectl scale deploy/logeverylift-app -n logeverylift --replicas=0
-   ```
-
-2. Dump and check it. A truncated dump nobody looked at is the only way this loses data.
+1. Take a fresh dump: `kubectl -n logeverylift create job --from=cronjob/logeverylift-db-backup logeverylift-db-backup-pre-upgrade`.
+2. Prepare one PR with all of these, because `pg_dump` refuses a newer server and the
+   Barman plugin does not separate archives by major:
+   - `imageName` in `cnpg-cluster.yaml`, and `serverName` in its `plugins` to a new value
+     such as `logeverylift-db-<N+1>`, which leaves the old archive intact.
+   - The image in `db-backup.yaml` and the logeverylift container in
+     `k8s/talos/infra/backup-check/restore-test.yaml`.
+   - `serverName` in `db-restore-test.yaml` and in the example in `restore.md`.
+3. Merge it and wait for the Cluster to report healthy.
+4. Take a base backup straight away, since nothing before the upgrade can recover past it:
 
    ```bash
-   POD=$(kubectl get pod -n logeverylift -l app=postgres -o jsonpath='{.items[0].metadata.name}')
-   DUMP=~/logeverylift-pg<N>.sql
-   kubectl exec -n logeverylift "$POD" -- pg_dumpall -U postgres > "$DUMP"
-   grep -c "^CREATE TABLE" "$DUMP"   # matches the table count
-   tail -1 "$DUMP"                   # PostgreSQL database dump complete
+   kubectl -n logeverylift create -f - <<EOF
+   apiVersion: postgresql.cnpg.io/v1
+   kind: Backup
+   metadata:
+     name: logeverylift-db-post-upgrade
+   spec:
+     cluster:
+       name: logeverylift-db
+     method: plugin
+     pluginConfiguration:
+       name: barman-cloud.cloudnative-pg.io
+   EOF
    ```
 
-   Keep a copy somewhere durable before going on.
-
-3. Record per-table row counts.
-
-   ```bash
-   kubectl exec -n logeverylift "$POD" -- psql -U postgres -d logeverylift_db \
-     -tAc "select relname, n_live_tup from pg_stat_user_tables order by relname;" \
-     > ~/rowcounts-before.txt
-   ```
-
-4. Scale Postgres down: `kubectl scale deploy/postgres -n logeverylift --replicas=0`.
-
-5. Merge the manifest PR, wait for the `logeverylift` Application to report `Synced`,
-   then scale Postgres up and wait until it accepts connections (the image briefly
-   runs a temporary server while initialising):
-
-   ```bash
-   kubectl scale deploy/postgres -n logeverylift --replicas=1
-   NEW=$(kubectl get pod -n logeverylift -l app=postgres -o jsonpath='{.items[0].metadata.name}')
-   until kubectl exec -n logeverylift "$NEW" -- pg_isready -U postgres | grep -q accepting; do sleep 2; done
-   ```
-
-6. Restore: `kubectl exec -i -n logeverylift "$NEW" -- psql -U postgres < "$DUMP"`.
-   Two errors are expected, because `POSTGRES_DB` and `POSTGRES_USER` already created
-   both objects: `database "logeverylift_db" already exists` and
-   `role "postgres" already exists`. Any other error means stop.
-
-7. Verify. Run `analyze;` first, since `n_live_tup` starts at 0 on a fresh restore,
-   then take the same row-count query into `~/rowcounts-after.txt` and diff it against
-   the before counts. Only then bring the app back with
-   `kubectl scale deploy/logeverylift-app -n logeverylift --replicas=1` and check that
-   real workout history renders on logeverylift.com.
-
-8. Keep the old PVC until the new server has been used for a while and at least one
-   nightly backup of it exists, then remove its declaration from `postgres.yaml` and
-   let ArgoCD prune it.
+5. Check real workout history on logeverylift.com. An hour after the base backup, run
+   `logeverylift-db-restore-test` and the backup restore test by hand.

@@ -37,7 +37,7 @@ Every chart this repo installs sets requests and a memory limit through its valu
 from seven days of `container_memory_working_set_bytes` and CPU rate, with the memory limit
 at about twice the observed peak. The workloads that still fail the two `Audit` policies,
 and why they cannot enforce yet, are listed in the backlog: the VolSync mover Jobs,
-logeverylift's legacy `postgres` and smoke test, and verksted.
+logeverylift's smoke test, and verksted.
 
 [![Argo CD applies a manifest to the API server, which sends it to Kyverno's admission webhook, where a mutable tag or a baseline break is rejected; that and the hourly background scan write one PolicyReport per workload, a PolicyException in the kyverno namespace exempts named workloads, and Policy Reporter turns the reports into the policy_report_result metric that Prometheus scrapes for the Policy (Kyverno) row on the SPOG dashboard](../../assets/diagrams/policy-reports.svg)](../../assets/diagrams/policy-reports.svg)
 

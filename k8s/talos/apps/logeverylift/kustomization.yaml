@@ -5,9 +5,7 @@ commonAnnotations:
 resources:
 - namespace.yaml
 - externalsecret.yaml
-- postgres.yaml
 - cnpg-cluster.yaml
-- postgres-exporter.yaml
 - db-backup.yaml
 - db-restore-test.yaml
 - app.yaml
