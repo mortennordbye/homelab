@@ -51,6 +51,7 @@ spec:
           names:
             - restore-test*
             - ha-backup-check*
+            - volsync-backup-check*
   podSecurity:
     - controlName: Running as Non-root
       images:

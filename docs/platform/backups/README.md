@@ -64,7 +64,10 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
   is stuck as a pending delete, the state a Proxmox-CSI detach leaves when it loses the VM
   config lock, and prints the `qm set <vmid> --delete <disk>` that clears it once QEMU no
   longer has the device. `ha-backup-check` looks for a
-  fresh `.tar` in `home-assistant/`. Hyper Backup and the DSM snapshots have no staleness check.
+  fresh `.tar` in `home-assistant/`. `volsync-backup-check` fails for any repository under
+  `volsync/` with no snapshot file from the last 26 h, whatever stopped it, so a repository left
+  behind by a removed app has to be deleted or archived. Hyper Backup and the DSM snapshots
+  have no staleness check.
 - `restore-test` runs on the 1st of each month at 10:00: `restic check` with 5 % of the
   data read on every VolSync repository, a full restore of `mealie/data-pvc`, and the
   newest logeverylift and Authentik dumps loaded into a scratch Postgres. It reads the
@@ -107,7 +110,8 @@ rules, snapshots or Hyper Backup, so these are set by hand in DSM and recorded h
   exempt from `pod-security-restricted` through
   `k8s/talos/infra/kyverno/policyexception-nas-backups.yaml`.
 - `trigger.manual` on a ReplicationSource replaces its schedule, and neither `VolSyncBackupStale` nor
-  ArgoCD notices. After a test run, remove the field and check that `nextSyncTime` is set.
+  ArgoCD notices; only `volsync-backup-check` does, up to a day and a half later. After a test run,
+  remove the field and check that `nextSyncTime` is set.
 - VolSync needs the VolumeSnapshot CRDs installed (`k8s/talos/infra/crds`) even with
   `copyMethod: Direct`; no snapshot controller runs.
 - Each namespace with a VolSync source carries `volsync.backube/privileged-movers: "true"`;
