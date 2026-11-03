@@ -47,3 +47,44 @@ spec:
     - controlName: Privileged Containers
       images:
         - docker:*-dind
+---
+# The backend starts every agent process as vk-agent, which takes root, and the
+# Docker-in-Docker sidecar runs privileged. A non-root app image would shrink this.
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: verksted-restricted
+spec:
+  exceptions:
+    - policyName: pod-security-restricted
+      ruleNames:
+        - restricted
+        - autogen-restricted
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+            - Deployment
+          namespaces:
+            - verksted
+          names:
+            - verksted-app*
+  podSecurity:
+    - controlName: Running as Non-root
+      images:
+        - ghcr.io/mortennordbye/verksted:*
+        - docker:*-dind
+    - controlName: Capabilities
+      images:
+        - ghcr.io/mortennordbye/verksted:*
+        - docker:*-dind
+    - controlName: Privileged Containers
+      images:
+        - docker:*-dind
+    - controlName: Privilege Escalation
+      images:
+        - docker:*-dind
+    - controlName: Seccomp
+      images:
+        - docker:*-dind
