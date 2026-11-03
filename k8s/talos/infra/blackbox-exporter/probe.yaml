@@ -71,6 +71,7 @@ spec:
         - https://hubble.local.bigd.no
         - https://jarvis.local.bigd.no
         - https://kargo.local.bigd.no
+        - https://opencost.local.bigd.no
         - https://prometheus.local.bigd.no
         - https://prowlarr.local.bigd.no
         - https://pyrra.local.bigd.no

@@ -36,12 +36,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** merge a portfolio prod promotion at or after 0.0.743, add the attest steps from `build-portfolio.yaml` to the other builds, and decide `Deny` per app. Before `Deny`, test what a GHCR or Sigstore outage does to a wake.
 - **Where:** `k8s/talos/infra/kyverno/policies/verify-first-party-images.yaml`, `.github/workflows/build-portfolio.yaml`, `.github/workflows/build-blog.yaml`, each app repo's build workflow, `docs/platform/policy/README.md`.
 
-### Uptime probe for OpenCost
-- **What:** add `https://opencost.local.bigd.no` to the `internal-sites` Probe.
-- **Why deferred:** the probe would fail and could alert until the DNS alias exists, and that apply needs the user's Azure login and approval.
-- **Unblock:** `terraform -chdir=terraform/unifi/dns apply`, whose plan adds only that alias.
-- **Where:** `k8s/talos/infra/blackbox-exporter/probe.yaml`, `terraform/unifi/dns/records.tf`.
-
 ### Rootless images for the media stack
 - **What:** replace the linuxserver images (sonarr, radarr, radarr-4k, bazarr, bazarr-4k, plex, tautulli, and qBittorrent and Prowlarr in the gluetun pod) with images that start as non-root, then drop them from `policyexception-media-root.yaml`.
 - **Why deferred:** chosen over a migration while the restricted work landed; each swap restarts an app whose seeding and config must survive, so it goes one app at a time. Started as non-root, the s6 init fails with `unable to set supplementary group list`.
