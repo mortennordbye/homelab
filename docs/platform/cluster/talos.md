@@ -116,6 +116,12 @@ rm -f machine-secrets.yaml controlplane.yaml worker.yaml
 
 The secrets bundle holds the cluster CA keys; never leave `machine-secrets.yaml` on disk.
 
+If the Terraform state is unavailable, the same bundle is in Bitwarden Secrets Manager as
+`talos-genesis-machine-secrets`. Write its value to `machine-secrets.yaml` instead of running
+`convert-secrets.sh`. It stops working after `talosctl rotate-ca`, so replace it after a rotation.
+A `talosconfig` minted this way outside the Terraform folder survives the next apply, which
+rewrites the one inside it from state.
+
 ## Upgrades
 
 [`talos-upgrade.md`](talos-upgrade.md).
