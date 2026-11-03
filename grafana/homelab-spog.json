@@ -15639,6 +15639,96 @@
         "x": 0,
         "y": 26
       },
+      "id": 9839,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Built from live data: every namespace with traffic in the last 5 minutes, and which namespaces it talks to, from Cilium's policy verdicts. New apps appear by themselves. The numbers are policy decisions per second, roughly new connections, not bytes. Traffic to and from the internet or the nodes is not shown, because those flows have no namespace.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 24,
+            "w": 24,
+            "x": 0,
+            "y": 27
+          },
+          "id": 9838,
+          "options": {
+            "edges": {
+              "mainStatUnit": "short"
+            },
+            "nodes": {
+              "mainStatUnit": "short"
+            },
+            "zoomMode": "cooperative"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "label_join(sum by (id) (label_replace(sum by (source_namespace, destination_namespace) (rate(hubble_policy_verdicts_total{source_namespace!=\"\",destination_namespace!=\"\"}[5m])) > 0, \"id\", \"$1\", \"source_namespace\", \"(.+)\") or label_replace(sum by (source_namespace, destination_namespace) (rate(hubble_policy_verdicts_total{source_namespace!=\"\",destination_namespace!=\"\"}[5m])) > 0, \"id\", \"$1\", \"destination_namespace\", \"(.+)\")), \"title\", \"\", \"id\")",
+              "format": "table",
+              "instant": true,
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "label_replace(label_replace(label_join(sum by (source_namespace, destination_namespace) (rate(hubble_policy_verdicts_total{source_namespace!=\"\",destination_namespace!=\"\"}[5m])) > 0, \"id\", \"->\", \"source_namespace\", \"destination_namespace\"), \"source\", \"$1\", \"source_namespace\", \"(.+)\"), \"target\", \"$1\", \"destination_namespace\", \"(.+)\")",
+              "format": "table",
+              "instant": true,
+              "range": false,
+              "refId": "B"
+            }
+          ],
+          "title": "Namespace traffic, live",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "source_namespace": true,
+                  "destination_namespace": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "Value #A": "mainStat",
+                  "Value #B": "mainStat"
+                }
+              }
+            }
+          ],
+          "type": "nodeGraph"
+        }
+      ],
+      "title": "Live service map (Hubble)",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
       "id": 9837,
       "panels": [
         {
@@ -15651,7 +15741,7 @@
             "h": 46,
             "w": 12,
             "x": 0,
-            "y": 27
+            "y": 28
           },
           "id": 9832,
           "options": {
@@ -15677,7 +15767,7 @@
             "h": 30,
             "w": 12,
             "x": 12,
-            "y": 27
+            "y": 28
           },
           "id": 9833,
           "options": {
@@ -15703,7 +15793,7 @@
             "h": 52,
             "w": 12,
             "x": 12,
-            "y": 57
+            "y": 58
           },
           "id": 9834,
           "options": {
@@ -15729,7 +15819,7 @@
             "h": 32,
             "w": 12,
             "x": 0,
-            "y": 73
+            "y": 74
           },
           "id": 9835,
           "options": {
@@ -15755,7 +15845,7 @@
             "h": 54,
             "w": 12,
             "x": 0,
-            "y": 105
+            "y": 106
           },
           "id": 9836,
           "options": {
