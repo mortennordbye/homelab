@@ -12929,7 +12929,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Today's NO1 price with VAT and the grid fee, against the 2.52 kr/kWh behind the OpenCost rates. OpenCost cannot take a live price, so a figure that stays far from 100 % means the rates in k8s/talos/infra/opencost/values.yaml are due an update.",
+          "description": "Today's NO1 price with VAT and the grid fee, against the price the OpenCost rates work out to, from its node cost and the cluster watts. OpenCost cannot take a live price, so a figure that stays far from 100 % means the rates in k8s/talos/infra/opencost/values.yaml are due an update.",
           "fieldConfig": {
             "defaults": {
               "unit": "percentunit",
@@ -12979,7 +12979,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "(avg(electricity_spot_price_nok_per_kwh{area=\"NO1\"}) * 1.25 + ${grid_fee_per_kwh}) / 2.52",
+              "expr": "(avg(electricity_spot_price_nok_per_kwh{area=\"NO1\"}) * 1.25 + ${grid_fee_per_kwh}) / (sum(node_total_hourly_cost) / (${cluster_watts} / 1000))",
               "refId": "A"
             }
           ],
@@ -15732,163 +15732,85 @@
       "id": 9837,
       "panels": [
         {
-          "description": "The whole homelab on one picture, from docs/assets/diagrams/homelab-overview.d2. A change to that file reaches this panel by itself, a few minutes after it lands on main. Not live data. Click it for the full size.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Built only from live metrics, with nothing drawn by hand: running Proxmox hosts and VMs from pve-exporter, the namespaces each node runs from kube-state-metrics, and the storage classes they claim. A new VM, app or storage class appears by itself. Numbers are VMs on a host, pods on a VM or in a namespace, and claims on a storage class. DaemonSets and Jobs are left out, because they connect every node to the same namespaces. Things outside the cluster's metrics, such as the internet path and the NAS, are not on it.",
           "fieldConfig": {
-            "defaults": {},
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 92,
-            "w": 24,
-            "x": 0,
-            "y": 28
-          },
-          "id": 9840,
-          "options": {
-            "code": {
-              "language": "plaintext",
-              "showLineNumbers": false,
-              "showMiniMap": false
+            "defaults": {
+              "unit": "short",
+              "decimals": 0
             },
-            "content": "[![The whole homelab, from the internet to the NAS](https://docs.nordbye.it/assets/diagrams/homelab-overview.svg)](https://docs.nordbye.it/assets/diagrams/homelab-overview.svg)",
-            "mode": "markdown"
-          },
-          "pluginVersion": "12.4.2",
-          "title": "Full architecture",
-          "type": "text"
-        },
-        {
-          "description": "Reference diagram from the docs site, not live data. How metrics, logs and traces reach Grafana. Click it for the full size.",
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 46,
-            "w": 12,
-            "x": 0,
-            "y": 120
-          },
-          "id": 9832,
-          "options": {
-            "code": {
-              "language": "plaintext",
-              "showLineNumbers": false,
-              "showMiniMap": false
-            },
-            "content": "[![How metrics, logs and traces reach Grafana](https://docs.nordbye.it/assets/diagrams/observability-signals.svg)](https://docs.nordbye.it/assets/diagrams/observability-signals.svg)",
-            "mode": "markdown"
-          },
-          "pluginVersion": "12.4.2",
-          "title": "Metrics, logs and traces",
-          "type": "text"
-        },
-        {
-          "description": "Reference diagram from the docs site, not live data. Backup layers and where each one lands. Click it for the full size.",
-          "fieldConfig": {
-            "defaults": {},
             "overrides": []
           },
           "gridPos": {
             "h": 30,
-            "w": 12,
-            "x": 12,
-            "y": 120
-          },
-          "id": 9833,
-          "options": {
-            "code": {
-              "language": "plaintext",
-              "showLineNumbers": false,
-              "showMiniMap": false
-            },
-            "content": "[![Backup layers and where each one lands](https://docs.nordbye.it/assets/diagrams/backups-layers.svg)](https://docs.nordbye.it/assets/diagrams/backups-layers.svg)",
-            "mode": "markdown"
-          },
-          "pluginVersion": "12.4.2",
-          "title": "Backup layers",
-          "type": "text"
-        },
-        {
-          "description": "Reference diagram from the docs site, not live data. How a manifest becomes a policy result. Click it for the full size.",
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 52,
-            "w": 12,
-            "x": 12,
-            "y": 150
-          },
-          "id": 9834,
-          "options": {
-            "code": {
-              "language": "plaintext",
-              "showLineNumbers": false,
-              "showMiniMap": false
-            },
-            "content": "[![How a manifest becomes a policy result](https://docs.nordbye.it/assets/diagrams/policy-reports.svg)](https://docs.nordbye.it/assets/diagrams/policy-reports.svg)",
-            "mode": "markdown"
-          },
-          "pluginVersion": "12.4.2",
-          "title": "Policy results",
-          "type": "text"
-        },
-        {
-          "description": "Reference diagram from the docs site, not live data. How usage becomes an estimated cost. Click it for the full size.",
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 32,
-            "w": 12,
+            "w": 24,
             "x": 0,
-            "y": 166
+            "y": 28
           },
-          "id": 9835,
+          "id": 9841,
           "options": {
-            "code": {
-              "language": "plaintext",
-              "showLineNumbers": false,
-              "showMiniMap": false
+            "edges": {
+              "mainStatUnit": "short"
             },
-            "content": "[![How usage becomes an estimated cost](https://docs.nordbye.it/assets/diagrams/observability-cost.svg)](https://docs.nordbye.it/assets/diagrams/observability-cost.svg)",
-            "mode": "markdown"
+            "nodes": {
+              "mainStatUnit": "short"
+            },
+            "zoomMode": "cooperative"
           },
           "pluginVersion": "12.4.2",
-          "title": "Cost estimate",
-          "type": "text"
-        },
-        {
-          "description": "Reference diagram from the docs site, not live data. How an image gets signed and verified. Click it for the full size.",
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 54,
-            "w": 12,
-            "x": 0,
-            "y": 198
-          },
-          "id": 9836,
-          "options": {
-            "code": {
-              "language": "plaintext",
-              "showLineNumbers": false,
-              "showMiniMap": false
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "label_replace(label_replace(label_replace(count by (node) ((pve_guest_info * on (id) group_left () (pve_up == 1))), \"id\", \"host:$1\", \"node\", \"(.+)\"), \"title\", \"$1\", \"node\", \"(.+)\"), \"subTitle\", \"Proxmox host\", \"__name__\", \".*\") or label_replace(label_replace(label_replace((count by (name) (label_replace(kube_pod_info{node!=\"\"}, \"name\", \"$1\", \"node\", \"(.+)\")) or 0 * count by (name) ((pve_guest_info * on (id) group_left () (pve_up == 1)))), \"id\", \"vm:$1\", \"name\", \"(.+)\"), \"title\", \"$1\", \"name\", \"(.+)\"), \"subTitle\", \"VM\", \"__name__\", \".*\") or label_replace(label_replace(label_replace((count by (namespace) (kube_pod_info{node!=\"\",created_by_kind!=\"DaemonSet\",created_by_kind!=\"Job\",created_by_kind!=\"<none>\"}) or 0 * count by (namespace) (kube_persistentvolumeclaim_info{storageclass!=\"\"})), \"id\", \"ns:$1\", \"namespace\", \"(.+)\"), \"title\", \"$1\", \"namespace\", \"(.+)\"), \"subTitle\", \"Namespace\", \"__name__\", \".*\") or label_replace(label_replace(label_replace(count by (storageclass) (kube_persistentvolumeclaim_info{storageclass!=\"\"}), \"id\", \"sc:$1\", \"storageclass\", \"(.+)\"), \"title\", \"$1\", \"storageclass\", \"(.+)\"), \"subTitle\", \"Storage class\", \"__name__\", \".*\")",
+              "format": "table",
+              "instant": true,
+              "range": false,
+              "refId": "A"
             },
-            "content": "[![How an image gets signed and verified](https://docs.nordbye.it/assets/diagrams/policy-provenance.svg)](https://docs.nordbye.it/assets/diagrams/policy-provenance.svg)",
-            "mode": "markdown"
-          },
-          "pluginVersion": "12.4.2",
-          "title": "Image provenance",
-          "type": "text"
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "label_join(label_replace(label_replace(count by (node, name) ((pve_guest_info * on (id) group_left () (pve_up == 1))), \"source\", \"host:$1\", \"node\", \"(.+)\"), \"target\", \"vm:$1\", \"name\", \"(.+)\"), \"id\", \"->\", \"source\", \"target\") or label_join(label_replace(label_replace(count by (node, namespace) (kube_pod_info{node!=\"\",created_by_kind!=\"DaemonSet\",created_by_kind!=\"Job\",created_by_kind!=\"<none>\"}), \"source\", \"vm:$1\", \"node\", \"(.+)\"), \"target\", \"ns:$1\", \"namespace\", \"(.+)\"), \"id\", \"->\", \"source\", \"target\") or label_join(label_replace(label_replace(count by (namespace, storageclass) (kube_persistentvolumeclaim_info{storageclass!=\"\"}), \"source\", \"ns:$1\", \"namespace\", \"(.+)\"), \"target\", \"sc:$1\", \"storageclass\", \"(.+)\"), \"id\", \"->\", \"source\", \"target\")",
+              "format": "table",
+              "instant": true,
+              "range": false,
+              "refId": "B"
+            }
+          ],
+          "title": "Hosts, VMs, namespaces and storage, live",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "namespace": true,
+                  "node": true,
+                  "name": true,
+                  "storageclass": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "Value #A": "mainStat",
+                  "Value #B": "mainStat"
+                }
+              }
+            }
+          ],
+          "type": "nodeGraph"
         }
       ],
-      "title": "Diagrams (reference, not live)",
+      "title": "Live architecture",
       "type": "row"
     }
   ],
@@ -16017,6 +15939,25 @@
           }
         ],
         "query": "10",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "100",
+          "value": "100"
+        },
+        "description": "The cluster draw assumed by the OpenCost rates in k8s/talos/infra/opencost/values.yaml. Keep the two the same.",
+        "label": "Cluster watts (estimate)",
+        "name": "cluster_watts",
+        "options": [
+          {
+            "selected": true,
+            "text": "100",
+            "value": "100"
+          }
+        ],
+        "query": "100",
         "skipUrlSync": false,
         "type": "textbox"
       }
