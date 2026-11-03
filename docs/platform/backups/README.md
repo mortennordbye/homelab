@@ -109,4 +109,7 @@ rules, snapshots or Hyper Backup, so these are set by hand in DSM and recorded h
 - VolSync needs the VolumeSnapshot CRDs installed (`k8s/talos/infra/crds`) even with
   `copyMethod: Direct`; no snapshot controller runs.
 - Each namespace with a VolSync source carries `volsync.backube/privileged-movers: "true"`;
-  the NFS export writes as root only.
+  the NFS export writes as root only. That namespace also has to be listed in the
+  `volsync-movers-root` exception in `k8s/talos/infra/kyverno/policyexception-nas-backups.yaml`,
+  and each source and restore sets `moverSecurityContext` (seccomp only) and `moverResources`.
+  `runAsUser` stays unset: a non-root mover cannot write its repository.
