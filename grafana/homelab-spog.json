@@ -15630,6 +15630,150 @@
       ],
       "title": "Media stack",
       "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 9837,
+      "panels": [
+        {
+          "description": "Reference diagram from the docs site, not live data. How metrics, logs and traces reach Grafana. Click it for the full size.",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 46,
+            "w": 12,
+            "x": 0,
+            "y": 27
+          },
+          "id": 9832,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "[![How metrics, logs and traces reach Grafana](https://docs.nordbye.it/assets/diagrams/observability-signals.svg)](https://docs.nordbye.it/assets/diagrams/observability-signals.svg)",
+            "mode": "markdown"
+          },
+          "pluginVersion": "12.4.2",
+          "title": "Metrics, logs and traces",
+          "type": "text"
+        },
+        {
+          "description": "Reference diagram from the docs site, not live data. Backup layers and where each one lands. Click it for the full size.",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 30,
+            "w": 12,
+            "x": 12,
+            "y": 27
+          },
+          "id": 9833,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "[![Backup layers and where each one lands](https://docs.nordbye.it/assets/diagrams/backups-layers.svg)](https://docs.nordbye.it/assets/diagrams/backups-layers.svg)",
+            "mode": "markdown"
+          },
+          "pluginVersion": "12.4.2",
+          "title": "Backup layers",
+          "type": "text"
+        },
+        {
+          "description": "Reference diagram from the docs site, not live data. How a manifest becomes a policy result. Click it for the full size.",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 52,
+            "w": 12,
+            "x": 12,
+            "y": 57
+          },
+          "id": 9834,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "[![How a manifest becomes a policy result](https://docs.nordbye.it/assets/diagrams/policy-reports.svg)](https://docs.nordbye.it/assets/diagrams/policy-reports.svg)",
+            "mode": "markdown"
+          },
+          "pluginVersion": "12.4.2",
+          "title": "Policy results",
+          "type": "text"
+        },
+        {
+          "description": "Reference diagram from the docs site, not live data. How usage becomes an estimated cost. Click it for the full size.",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 32,
+            "w": 12,
+            "x": 0,
+            "y": 73
+          },
+          "id": 9835,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "[![How usage becomes an estimated cost](https://docs.nordbye.it/assets/diagrams/observability-cost.svg)](https://docs.nordbye.it/assets/diagrams/observability-cost.svg)",
+            "mode": "markdown"
+          },
+          "pluginVersion": "12.4.2",
+          "title": "Cost estimate",
+          "type": "text"
+        },
+        {
+          "description": "Reference diagram from the docs site, not live data. How an image gets signed and verified. Click it for the full size.",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 54,
+            "w": 12,
+            "x": 0,
+            "y": 105
+          },
+          "id": 9836,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "[![How an image gets signed and verified](https://docs.nordbye.it/assets/diagrams/policy-provenance.svg)](https://docs.nordbye.it/assets/diagrams/policy-provenance.svg)",
+            "mode": "markdown"
+          },
+          "pluginVersion": "12.4.2",
+          "title": "Image provenance",
+          "type": "text"
+        }
+      ],
+      "title": "Diagrams (reference, not live)",
+      "type": "row"
     }
   ],
   "preload": false,
