@@ -204,7 +204,7 @@ Homelab infrastructure for a 3-node Proxmox cluster running a Talos Kubernetes c
 
 - **Compute:** Proxmox VE on three Lenovo ThinkCentre nodes; three control plane and three worker Talos VMs form the K8s cluster.
 - **Networking:** Cilium (CNI + L2 announcements / LB IPAM for LoadBalancer VIPs), Traefik via Gateway API.
-- **Security:** cert-manager, External Secrets Operator, Falco, Authentik, Kyverno (pinned tags and baseline Pod Security enforced, the rest audited), trivy-operator (image CVE and secret scanning).
+- **Security:** cert-manager, External Secrets Operator, Falco, Authentik, Kyverno (pinned tags, baseline and restricted Pod Security, and requests and memory limits, all enforced), trivy-operator (image CVE and secret scanning).
 - **Observability:** kube-prometheus-stack, Grafana, Loki (Alloy ships the logs), Tempo.
 - **Storage:** Proxmox CSI for block, Synology NFS for shared volumes.
 - **Databases:** the CloudNativePG Cluster `logeverylift-db` (Postgres 18, primary and standby) backing logeverylift, with WAL and base backups in Garage. See `docs/platform/data/postgres.md`.

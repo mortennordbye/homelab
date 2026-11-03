@@ -81,9 +81,9 @@ unlock it.
 ## Policy
 
 Kyverno checks every Pod for pinned image tags, the baseline and restricted Pod Security
-Standards, and resource requests, and writes PolicyReports. Pinned tags and baseline are
-enforced, so the API server rejects a Pod that breaks them; restricted and requests only
-report. Policy Reporter exports the reports
+Standards, and resource requests, and writes PolicyReports. All of them are enforced, so the
+API server rejects a Pod that breaks one, apart from workloads with a named exception. Policy
+Reporter exports the reports
 to Prometheus for the SPOG dashboard
 ([`../platform/policy/README.md`](../platform/policy/README.md)). trivy-operator scans the
 image of every running workload for fixable high and critical CVEs and exposed secrets,
