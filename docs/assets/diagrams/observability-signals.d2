@@ -38,6 +38,7 @@ metrics: Scraped by Prometheus {
   hosts: "node-exporter on hyper1-3\nCPU temperature, NVMe" {class: card; icon: ${di}/proxmox-light.svg; width: 172; height: 135}
   pbs: "pbs-exporter\nBackup Server datastore" {class: card; icon: ${di}/proxmox-backup-server.svg; width: 172; height: 135}
   pg: "CloudNativePG exporter\nlogeverylift-db" {class: card; icon: ${di}/postgresql.svg; width: 172; height: 135}
+  opencost: "OpenCost\nestimated cost" {class: card; icon: ${ify}/tabler/pig-money.svg?color=%23a1ada3&height=64; width: 172; height: 135}
   price: "electricity-price\nNO1 spot price" {class: card; icon: ${ify}/tabler/bolt.svg?color=%23a1ada3&height=64; width: 172; height: 135}
 }
 
@@ -54,7 +55,7 @@ traefik: Traefik {class: card; icon: ${di}/traefik.svg}
 pods: "pod logs, k8s events" {class: card; icon: ${k8s}/pod.svg}
 alloy: "Alloy\nDaemonSet" {class: card; icon: ${di}/alloy.svg}
 
-prometheus: "Prometheus\n7 days" {class: card; icon: ${di}/prometheus.svg}
+prometheus: "Prometheus\n30 days" {class: card; icon: ${di}/prometheus.svg}
 loki: "Loki\n7 days, events 30" {class: card; icon: ${di}/loki.svg}
 tempo: "Tempo\n24 h" {class: card; icon: ${di}/tempo.svg}
 grafana: "Grafana\nSPOG and dashboards" {class: card; icon: ${di}/grafana.svg}

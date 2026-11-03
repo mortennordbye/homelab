@@ -36,8 +36,9 @@ Every row starts collapsed except Alerts, which sits on top.
 | Certificates | readiness, days to expiry per certificate, sync errors, ACME latency |
 | GitOps & secrets | Argo CD sync and health, ESO sync status and secrets not ready, Reloader reloads |
 | KEDA autoscaling | replica and scaler state, wake-from-zero, capacity and electricity reclaimed, priced at the NO1 spot price plus VAT plus the `grid_fee_per_kwh` variable |
+| Cost, estimated (OpenCost) | estimated electricity cost per 30 days and per namespace, idle share, allocated CPU and memory, today's price against the OpenCost rate ([costs](costs.md)) |
 | Falco | instances, rule matches, event drops, CPU and memory per node |
-| Policy (Kyverno) | controllers up, workloads on mutable tags and breaking baseline, restricted and requests compliance, admission rate, the failing workloads ([policy](../policy/README.md)) |
+| Policy (Kyverno) | controllers up, workloads on mutable tags and breaking baseline, restricted and requests compliance, admission rate, image provenance coverage, failures and verification time, the failing workloads ([policy](../policy/README.md)) |
 | Media stack | service status, health issues, queues, free space, library, download client and indexers |
 
 Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard. The other
@@ -127,7 +128,7 @@ egress to `api.cloudflare.com`.
 
 ## Stack
 
-[![Exporters for the cluster, NAS, UniFi, Proxmox hosts, PBS, Postgres and the electricity price feed Prometheus, Alloy ships logs and Traefik traces to Loki and Tempo, and Grafana reads those three plus GitHub, Cloudflare and Argo CD deploy markers directly](../../assets/diagrams/observability-signals.svg)](../../assets/diagrams/observability-signals.svg)
+[![Exporters for the cluster, NAS, UniFi, Proxmox hosts, PBS, Postgres, OpenCost and the electricity price feed Prometheus, Alloy ships logs and Traefik traces to Loki and Tempo, and Grafana reads those three plus GitHub, Cloudflare and Argo CD deploy markers directly](../../assets/diagrams/observability-signals.svg)](../../assets/diagrams/observability-signals.svg)
 
 Grafana reads Prometheus, Loki and Tempo as data sources, and GitHub and Cloudflare directly
 ([GitHub](#github), [Cloudflare](#cloudflare)). A walkthrough of the stack and the

@@ -10656,6 +10656,587 @@
         "x": 0,
         "y": 20
       },
+      "id": 9811,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Every node's estimated hourly cost, over 720 hours. Estimate of electricity only, from an assumed 100 W for the cluster: https://docs.nordbye.it/platform/observability/costs/",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "suffix: kr",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 0,
+            "y": 21
+          },
+          "id": 9803,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(node_total_hourly_cost) * 720",
+              "refId": "A"
+            }
+          ],
+          "title": "Cluster cost per 30 days",
+          "type": "stat",
+          "links": [
+            {
+              "title": "OpenCost",
+              "url": "https://opencost.local.bigd.no",
+              "targetBlank": true
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "The part no workload is allocated, the larger of its request and its use. Estimate of electricity only, from an assumed 100 W for the cluster: https://docs.nordbye.it/platform/observability/costs/",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "suffix: kr",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 4,
+            "y": 21
+          },
+          "id": 9804,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "(sum(node_total_hourly_cost) - (sum(sum by (node) (container_cpu_allocation) * on (node) group_left max by (node) (node_cpu_hourly_cost)) + sum(sum by (node) (container_memory_allocation_bytes) / 2^30 * on (node) group_left max by (node) (node_ram_hourly_cost)))) * 720",
+              "refId": "A"
+            }
+          ],
+          "title": "Idle cost per 30 days",
+          "type": "stat",
+          "links": [
+            {
+              "title": "OpenCost",
+              "url": "https://opencost.local.bigd.no",
+              "targetBlank": true
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Share of the cost no workload is allocated. A cluster this size keeps spare room on purpose, so this is a figure to read, not a target. Estimate of electricity only, from an assumed 100 W for the cluster: https://docs.nordbye.it/platform/observability/costs/",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 8,
+            "y": 21
+          },
+          "id": 9805,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "1 - (sum(sum by (node) (container_cpu_allocation) * on (node) group_left max by (node) (node_cpu_hourly_cost)) + sum(sum by (node) (container_memory_allocation_bytes) / 2^30 * on (node) group_left max by (node) (node_ram_hourly_cost))) / sum(node_total_hourly_cost)",
+              "refId": "A"
+            }
+          ],
+          "title": "Idle share of cost",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Allocated CPU against capacity. Allocation is the larger of a container's request and its use.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 12,
+            "y": 21
+          },
+          "id": 9806,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_cpu_allocation) / sum(kube_node_status_capacity_cpu_cores)",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU allocated",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Allocated memory against capacity. Allocation is the larger of a container's request and its use.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 16,
+            "y": 21
+          },
+          "id": 9807,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_memory_allocation_bytes) / sum(kube_node_status_capacity_memory_bytes)",
+              "refId": "A"
+            }
+          ],
+          "title": "Memory allocated",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Today's NO1 price with VAT and the grid fee, against the 2.52 kr/kWh behind the OpenCost rates. OpenCost cannot take a live price, so a figure that stays far from 100 % means the rates in k8s/talos/infra/opencost/values.yaml are due an update.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 20,
+            "y": 21
+          },
+          "id": 9808,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "(avg(electricity_spot_price_nok_per_kwh{area=\"NO1\"}) * 1.25 + ${grid_fee_per_kwh}) / 2.52",
+              "refId": "A"
+            }
+          ],
+          "title": "Price against OpenCost rate",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Estimated cost of each namespace's allocation, projected to 30 days. Idle capacity is not included. Estimate of electricity only, from an assumed 100 W for the cluster: https://docs.nordbye.it/platform/observability/costs/",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "suffix: kr",
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 12,
+            "x": 0,
+            "y": 25
+          },
+          "id": 9809,
+          "options": {
+            "displayMode": "basic",
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "maxVizHeight": 300,
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sort_desc(topk(15, (sum by (namespace) (sum by (namespace, node) (container_cpu_allocation) * on (node) group_left max by (node) (node_cpu_hourly_cost)) + sum by (namespace) (sum by (namespace, node) (container_memory_allocation_bytes) / 2^30 * on (node) group_left max by (node) (node_ram_hourly_cost))) * 720))",
+              "instant": true,
+              "legendFormat": "{{namespace}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Cost per namespace, 30 days (top 15)",
+          "type": "bargauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Estimated cost per hour, split into what workloads are allocated and what sits idle. Together they are the cluster's total. Estimate of electricity only, from an assumed 100 W for the cluster: https://docs.nordbye.it/platform/observability/costs/",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 30,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "normal"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "suffix: kr/h",
+              "decimals": 3,
+              "min": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 12,
+            "x": 12,
+            "y": 25
+          },
+          "id": 9810,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "(sum(sum by (node) (container_cpu_allocation) * on (node) group_left max by (node) (node_cpu_hourly_cost)) + sum(sum by (node) (container_memory_allocation_bytes) / 2^30 * on (node) group_left max by (node) (node_ram_hourly_cost)))",
+              "legendFormat": "Allocated",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(node_total_hourly_cost) - (sum(sum by (node) (container_cpu_allocation) * on (node) group_left max by (node) (node_cpu_hourly_cost)) + sum(sum by (node) (container_memory_allocation_bytes) / 2^30 * on (node) group_left max by (node) (node_ram_hourly_cost)))",
+              "legendFormat": "Idle",
+              "refId": "B"
+            }
+          ],
+          "title": "Allocated and idle cost",
+          "type": "timeseries"
+        }
+      ],
+      "title": "Cost, estimated (OpenCost)",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
       "id": 8100,
       "panels": [
         {
@@ -10686,7 +11267,7 @@
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 27
+            "y": 28
           },
           "id": 8101,
           "options": {
@@ -10745,7 +11326,7 @@
             "h": 4,
             "w": 6,
             "x": 6,
-            "y": 27
+            "y": 28
           },
           "id": 8102,
           "options": {
@@ -10804,7 +11385,7 @@
             "h": 4,
             "w": 6,
             "x": 12,
-            "y": 27
+            "y": 28
           },
           "id": 8103,
           "options": {
@@ -10863,7 +11444,7 @@
             "h": 4,
             "w": 6,
             "x": 18,
-            "y": 27
+            "y": 28
           },
           "id": 8104,
           "options": {
@@ -10921,7 +11502,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 31
+            "y": 32
           },
           "id": 8105,
           "options": {
@@ -10977,7 +11558,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 31
+            "y": 32
           },
           "id": 8106,
           "options": {
@@ -11042,7 +11623,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 39
+            "y": 40
           },
           "id": 8107,
           "options": {
@@ -11098,7 +11679,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 39
+            "y": 40
           },
           "id": 8108,
           "options": {
@@ -11137,7 +11718,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 22
       },
       "id": 8150,
       "panels": [
@@ -11174,7 +11755,7 @@
             "h": 4,
             "w": 4,
             "x": 0,
-            "y": 22
+            "y": 23
           },
           "id": 8151,
           "options": {
@@ -11238,7 +11819,7 @@
             "h": 4,
             "w": 4,
             "x": 4,
-            "y": 22
+            "y": 23
           },
           "id": 8152,
           "options": {
@@ -11302,7 +11883,7 @@
             "h": 4,
             "w": 4,
             "x": 8,
-            "y": 22
+            "y": 23
           },
           "id": 8153,
           "options": {
@@ -11370,7 +11951,7 @@
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 22
+            "y": 23
           },
           "id": 8154,
           "options": {
@@ -11438,7 +12019,7 @@
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 22
+            "y": 23
           },
           "id": 8155,
           "options": {
@@ -11498,7 +12079,7 @@
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 22
+            "y": 23
           },
           "id": 8156,
           "options": {
@@ -11596,7 +12177,7 @@
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 26
+            "y": 27
           },
           "id": 8157,
           "options": {
@@ -11651,6 +12232,259 @@
             }
           ],
           "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Workloads whose image provenance is verified, against the first-party images running. The rest are not attested or not in the policy's scope yet.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 37
+          },
+          "id": 9812,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "(count(policy_report_result{policy=\"verify-first-party-images\",status=\"pass\"}) or vector(0)) / count(count by (image) (kube_pod_container_info{image=~\"ghcr.io/mortennordbye/.*\"}))",
+              "refId": "A"
+            }
+          ],
+          "title": "Provenance coverage",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Workloads passing verify-first-party-images: SLSA provenance signed by the expected build workflow.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 37
+          },
+          "id": 9813,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "count(policy_report_result{policy=\"verify-first-party-images\",status=\"pass\"}) or vector(0)",
+              "refId": "A"
+            }
+          ],
+          "title": "Verified workloads",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Workloads failing verify-first-party-images. The policy is in Audit, so these still run. Policy Reporter leaves out ReplicaSets, so old unsigned revisions do not count here.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 37
+          },
+          "id": 9814,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "count(policy_report_result{policy=\"verify-first-party-images\",status=\"fail\"}) or vector(0)",
+              "refId": "A"
+            }
+          ],
+          "title": "Provenance failures",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "How long a provenance check took. A matched Pod waits for this at admission, in Audit too, which adds to a KEDA wake from zero. No data means no check ran in the window.",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [],
+              "decimals": 1,
+              "noValue": "no checks"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 37
+          },
+          "id": 9815,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "12.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kyverno_image_validating_policy_execution_duration_seconds_bucket{policy_name=\"verify-first-party-images\"}[24h])))",
+              "refId": "A"
+            }
+          ],
+          "title": "Verification time, p95 (24h)",
+          "type": "stat"
         }
       ],
       "title": "Policy (Kyverno)",
@@ -11662,7 +12496,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 23
       },
       "id": 8180,
       "panels": [
@@ -11699,7 +12533,7 @@
             "h": 4,
             "w": 4,
             "x": 0,
-            "y": 23
+            "y": 24
           },
           "id": 8181,
           "options": {
@@ -11763,7 +12597,7 @@
             "h": 4,
             "w": 4,
             "x": 4,
-            "y": 23
+            "y": 24
           },
           "id": 8182,
           "options": {
@@ -11827,7 +12661,7 @@
             "h": 4,
             "w": 4,
             "x": 8,
-            "y": 23
+            "y": 24
           },
           "id": 8183,
           "options": {
@@ -11891,7 +12725,7 @@
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 23
+            "y": 24
           },
           "id": 8184,
           "options": {
@@ -11955,7 +12789,7 @@
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 23
+            "y": 24
           },
           "id": 8185,
           "options": {
@@ -12019,7 +12853,7 @@
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 23
+            "y": 24
           },
           "id": 8186,
           "options": {
@@ -12117,7 +12951,7 @@
             "h": 10,
             "w": 8,
             "x": 0,
-            "y": 27
+            "y": 28
           },
           "id": 8187,
           "options": {
@@ -12248,7 +13082,7 @@
             "h": 10,
             "w": 16,
             "x": 8,
-            "y": 27
+            "y": 28
           },
           "id": 8188,
           "options": {
@@ -12343,7 +13177,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 24
       },
       "id": 9200,
       "panels": [
@@ -12359,7 +13193,7 @@
             "h": 4,
             "w": 24,
             "x": 0,
-            "y": 28
+            "y": 29
           },
           "fieldConfig": {
             "defaults": {
@@ -12523,7 +13357,7 @@
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 32
+            "y": 33
           },
           "fieldConfig": {
             "defaults": {
@@ -12607,7 +13441,7 @@
             "h": 4,
             "w": 6,
             "x": 6,
-            "y": 32
+            "y": 33
           },
           "fieldConfig": {
             "defaults": {
@@ -12691,7 +13525,7 @@
             "h": 4,
             "w": 6,
             "x": 12,
-            "y": 32
+            "y": 33
           },
           "fieldConfig": {
             "defaults": {
@@ -12747,7 +13581,7 @@
             "h": 4,
             "w": 6,
             "x": 18,
-            "y": 32
+            "y": 33
           },
           "fieldConfig": {
             "defaults": {
@@ -12821,7 +13655,7 @@
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 36
+            "y": 37
           },
           "fieldConfig": {
             "defaults": {
@@ -12901,7 +13735,7 @@
             "h": 4,
             "w": 6,
             "x": 6,
-            "y": 36
+            "y": 37
           },
           "fieldConfig": {
             "defaults": {
@@ -12977,7 +13811,7 @@
             "h": 4,
             "w": 6,
             "x": 12,
-            "y": 36
+            "y": 37
           },
           "fieldConfig": {
             "defaults": {
@@ -13057,7 +13891,7 @@
             "h": 4,
             "w": 6,
             "x": 18,
-            "y": 36
+            "y": 37
           },
           "fieldConfig": {
             "defaults": {
@@ -13137,7 +13971,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 40
+            "y": 41
           },
           "fieldConfig": {
             "defaults": {
@@ -13198,7 +14032,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 40
+            "y": 41
           },
           "fieldConfig": {
             "defaults": {
@@ -13268,7 +14102,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 48
+            "y": 49
           },
           "fieldConfig": {
             "defaults": {
@@ -13338,7 +14172,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 48
+            "y": 49
           },
           "fieldConfig": {
             "defaults": {
@@ -13399,7 +14233,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 56
+            "y": 57
           },
           "fieldConfig": {
             "defaults": {
@@ -13460,7 +14294,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 56
+            "y": 57
           },
           "fieldConfig": {
             "defaults": {
