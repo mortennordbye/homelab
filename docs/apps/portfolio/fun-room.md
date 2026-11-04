@@ -69,6 +69,7 @@ All under `portfolio/src/`.
 | `components/fun/Furniture.tsx` | Sofa and television; the wood stove, the small corner table and its chairs; the kitchen; the bedroom (bed, mirrored wardrobe, over-bed units, fan, poster, blind); the bathroom. |
 | `components/fun/Hallway.tsx` | The entré: coat run, shoe rack, and the tall cabinet (`CABINET`) that holds the case studies. |
 | `components/fun/Contents.tsx` | What stands inside cupboards, drawers and the fridge, as two instanced meshes. |
+| `components/fun/Leds.tsx` | The status LEDs, as one instanced mesh. |
 | `components/fun/openable.tsx` | Shared motion for doors, drawers and fronts. |
 | `components/fun/Outside.tsx` | The view beyond the windows, built as real geometry for parallax and left unlit. |
 | `components/fun/Devices.tsx` | Homelab hardware models, the sideboard, and `HouseDevices`: the smart-home kit placed around the flat. |
@@ -471,6 +472,11 @@ leaf mesh through one `BatchedMesh` per material for the whole flat, with each i
 following its leaf's transform. The originals stay hidden and pickable, as with the static
 merge. The rule is the same one level down: nothing inside a leaf may move or change material
 relative to the leaf after mount without a `NO_MERGE` or a `visible` prop.
+
+Status LEDs blink, so they cannot merge either. `Led` in `Leds.tsx` is only an anchor that registers
+itself, and `LedField` draws them all as one instanced mesh with a per-instance opacity attribute,
+updated from one `useFrame`. The field reads each anchor's position once, so never put an `Led` on
+something that moves. It holds `MAX` LEDs and silently skips any past that.
 
 A reflector is a second copy of the flat. drei's `MeshReflectorMaterial` renders the whole scene
 from a mirrored camera every frame, so the floor is a plain standard material. The wardrobe
