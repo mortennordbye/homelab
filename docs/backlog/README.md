@@ -16,6 +16,12 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** the logeverylift consent flow read against the synthetic user's state, or a failed run reproduced with a screenshot.
 - **Where:** `k8s/talos/infra/synthetics/scripts/logeverylift.js`, the consent route in the logeverylift repo; failing runs are in Loki under `{namespace="synthetics"}`.
 
+### Grafana Git Sync down until 13.3.1
+- **What:** upgrade Grafana to 13.3.1, remove the temporary dashboard copies, and check that Git Sync restores them. GitHub rejects the `nanogit/0` User-Agent, which Grafana reports as `secure.token: not authorized`, so sync is skipped and changes under `grafana/` don't reach Grafana.
+- **Why deferred:** the fix hasn't been released. Until then the 7 dashboards are imported through the API into the `homelab-temp` folder, so they don't follow `main` and can't save back to git.
+- **Unblock:** Grafana 13.3.1 ([issue](https://github.com/grafana/grafana/issues/136913), [fix](https://github.com/grafana/grafana/pull/136929)). Roll it out, delete the `homelab-temp` folder and its dashboards, then confirm the `homelab` Repository is healthy, the dashboards are back in the Homelab folder, and SPOG has no Live architecture row. Delete `homelab-temp` only once the new version runs, so the dashboards are missing for as short a time as possible.
+- **Where:** Grafana image tag in `k8s/talos/infra/kube-prometheus-stack/`, `k8s/talos/infra/kube-prometheus-stack/git-sync.yaml`, `grafana/`.
+
 ## Platform
 
 ### Non-root image for verksted
