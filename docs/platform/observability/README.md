@@ -45,7 +45,6 @@ Every row starts collapsed except Alerts, which sits on top.
 | Media stack | service status, health issues, queues, free space, library, download client and indexers |
 | Full architecture (from .d2, not live) | the whole homelab from `homelab-overview.d2`, loaded from the docs site. A change to that file reaches it by itself: `render-assets` commits the SVG and starts the docs deploy, and browsers may cache the old image for up to 10 minutes. It needs the docs site and the internet to show. |
 | Live service map (Hubble) | which namespaces talk to which, drawn from `hubble_policy_verdicts_total`, so new apps appear by themselves. Shows policy decisions per second, not bytes, and leaves out traffic to the internet and the nodes. |
-| Live architecture | running Proxmox hosts, their VMs, the namespaces on each node and the storage classes they claim, all drawn from live metrics. DaemonSets, Jobs and anything outside the cluster's metrics are left out. |
 
 Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard. The other
 dashboards from this repo: User journeys, GitHub, Cloudflare, Postgres and logeverylift Traces.
