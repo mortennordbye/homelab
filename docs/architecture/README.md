@@ -98,6 +98,8 @@ Storage classes and CSI drivers: [`../platform/storage/README.md`](../platform/s
 - `proxmox-local` (Proxmox CSI) for block volumes such as app config.
 - `syno-nfs-csi` for shared volumes. A fresh NFS volume is root-only for non-root uids,
   so apps that create directories in it need an initContainer chown.
+- `syno-nfs-csi-scratch`, the same share with `onDelete: delete`, for the restore tests'
+  throwaway volumes.
 - Postgres 18 for logeverylift is the CloudNativePG Cluster `logeverylift-db`: a
   primary and a standby, each on an NFS PVC, WAL and nightly base backups in Garage
   ([`../platform/data/postgres.md`](../platform/data/postgres.md)).

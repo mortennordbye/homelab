@@ -13,6 +13,7 @@ how, is in [`../backups/README.md`](../backups/README.md).
 |---|---|---|---|---|---|
 | `proxmox-local` | `csi.proxmox.sinextra.dev` | `local-lvm` on the Proxmox host that runs the pod, ext4, SSD, writethrough cache | `WaitForFirstConsumer` | `Delete` | yes |
 | `syno-nfs-csi` | `nfs.csi.k8s.io` | `nas.local.bigd.no:/volume1/k8s-volumes/talos`, one subdirectory `<namespace>/<pvc>` per claim, `onDelete: archive` | `Immediate` | `Delete` | no |
+| `syno-nfs-csi-scratch` | `nfs.csi.k8s.io` | same share and layout, `onDelete: delete`; for the restore tests' throwaway volumes only | `Immediate` | `Delete` | no |
 
 Both allow volume expansion. Defined in
 [`proxmox-csi-plugin/storageclass.yaml`](../../../k8s/talos/infra/proxmox-csi-plugin/storageclass.yaml)
@@ -117,6 +118,8 @@ and stays there until the claim is recreated.
   cleans these up; remove them on the NAS once the data is no longer needed. A new claim
   with the same name starts empty. If an archived copy of the same claim already exists,
   the rename fails and the PV delete stays stuck until the old copy is removed.
+- `syno-nfs-csi-scratch`: the PV and its directory are deleted. Only the restore tests
+  use it, since they recreate the same claim name every month.
 - Static PVs: the PV goes to `Released` and keeps the data. To bind a new claim, clear the
   PV's `claimRef.uid` or delete and recreate the PV.
 

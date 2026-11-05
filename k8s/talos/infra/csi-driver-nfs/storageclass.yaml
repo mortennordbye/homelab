@@ -11,3 +11,19 @@ parameters:
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
 allowVolumeExpansion: true
+---
+# Scratch volumes the restore tests recreate under the same claim name every month.
+# Deleted, not archived: a second archive of the same name fails and leaves the PV stuck.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: syno-nfs-csi-scratch
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: nas.local.bigd.no
+  share: /volume1/k8s-volumes/talos
+  subDir: ${pvc.metadata.namespace}/${pvc.metadata.name}
+  onDelete: delete
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
