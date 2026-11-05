@@ -66,7 +66,22 @@ export default async function () {
     });
 
     await step(page, "dashboard", async () => {
-      await page.getByRole("heading", { name: "LogEveryLift", exact: true }).waitFor();
+      // Home sends a user behind on the terms to /consent. Its loading skeleton carries
+      // the same heading as the real page, so wait for one of the two real outcomes.
+      const home = page.locator('a[href="/new-workout"]').first();
+      await page.waitForFunction(
+        () => document.querySelector('a[href="/new-workout"]') || location.pathname === "/consent",
+        { polling: "raf" },
+      );
+      if (new URL(page.url()).pathname === "/consent") {
+        await page.getByRole("checkbox", { name: /I accept the terms of use/ }).check();
+        await page.getByRole("checkbox", { name: /I consent to LogEveryLift storing/ }).check();
+        await Promise.all([
+          page.waitForURL(`${BASE}/`),
+          page.getByRole("button", { name: "Continue" }).click(),
+        ]);
+      }
+      await home.waitFor();
     });
 
     await step(page, "open-workout", async () => {

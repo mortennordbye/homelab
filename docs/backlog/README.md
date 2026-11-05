@@ -10,12 +10,6 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Unblock:** a decision on whether live volumes need point-in-time protection beyond the nightly VolSync copies, and a maintenance window if it means migrating to a new share.
 - **Where:** DSM Snapshot Replication and Shared Folder settings; record the result in `docs/platform/backups/README.md` under "Configured outside Git".
 
-### logeverylift journey hangs on /consent
-- **What:** about one run in three of the `logeverylift-journey` synthetic (one in ten when first noted) stops at `dashboard` or `open-workout` with the page sitting on `https://logeverylift.com/consent`, where the navigation to `/new-workout` times out. Find out why the synthetic user is sent to `/consent` after a successful sign-in, and either accept it in the script or stop the app from sending it there.
-- **Why deferred:** the cause is in the logeverylift app, not the cluster, and single failures never fire `UserJourneyFailing` (it needs two runs in a row).
-- **Unblock:** the logeverylift consent flow read against the synthetic user's state, or a failed run reproduced with a screenshot.
-- **Where:** `k8s/talos/infra/synthetics/scripts/logeverylift.js`, the consent route in the logeverylift repo; failing runs are in Loki under `{namespace="synthetics"}`.
-
 ### Grafana Git Sync down until 13.3.1
 - **What:** upgrade Grafana to 13.3.1, remove the temporary dashboard copies, and check that Git Sync restores them. GitHub rejects the `nanogit/0` User-Agent, which Grafana reports as `secure.token: not authorized`, so sync is skipped and changes under `grafana/` don't reach Grafana.
 - **Why deferred:** the fix hasn't been released. Until then the 7 dashboards are imported through the API into the `homelab-temp` folder, so they don't follow `main` and can't save back to git.
