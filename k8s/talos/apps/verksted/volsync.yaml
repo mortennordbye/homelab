@@ -43,6 +43,8 @@ spec:
     repository: verksted-data-restic
     copyMethod: Direct
     pruneIntervalDays: 7
+    # Bump to clear a lock a mover killed mid-run left behind; forget fails until it is gone.
+    unlock: "1"
     retain:
       daily: 14
       weekly: 8

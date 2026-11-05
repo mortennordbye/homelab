@@ -11,7 +11,7 @@ Known gaps the team has agreed to leave for later. Each entry: **what**, **why d
 - **Where:** DSM Snapshot Replication and Shared Folder settings; record the result in `docs/platform/backups/README.md` under "Configured outside Git".
 
 ### logeverylift journey hangs on /consent
-- **What:** about one run in ten of the `logeverylift-journey` synthetic stops at `dashboard` or `open-workout` with the page sitting on `https://logeverylift.com/consent`, where the navigation to `/new-workout` times out. Find out why the synthetic user is sent to `/consent` after a successful sign-in, and either accept it in the script or stop the app from sending it there.
+- **What:** about one run in three of the `logeverylift-journey` synthetic (one in ten when first noted) stops at `dashboard` or `open-workout` with the page sitting on `https://logeverylift.com/consent`, where the navigation to `/new-workout` times out. Find out why the synthetic user is sent to `/consent` after a successful sign-in, and either accept it in the script or stop the app from sending it there.
 - **Why deferred:** the cause is in the logeverylift app, not the cluster, and single failures never fire `UserJourneyFailing` (it needs two runs in a row).
 - **Unblock:** the logeverylift consent flow read against the synthetic user's state, or a failed run reproduced with a screenshot.
 - **Where:** `k8s/talos/infra/synthetics/scripts/logeverylift.js`, the consent route in the logeverylift repo; failing runs are in Loki under `{namespace="synthetics"}`.
