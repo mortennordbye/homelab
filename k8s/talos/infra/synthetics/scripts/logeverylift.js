@@ -72,7 +72,7 @@ export default async function () {
       const home = page.locator('a[href="/new-workout"]').first();
       const boxes = page.locator('input[type="checkbox"]');
       await page.locator('a[href="/new-workout"], input[type="checkbox"]').first().waitFor();
-      if (new URL(page.url()).pathname === "/consent") {
+      if (page.url().startsWith(`${BASE}/consent`)) {
         await boxes.nth(0).check();
         await boxes.nth(1).check();
         await Promise.all([
