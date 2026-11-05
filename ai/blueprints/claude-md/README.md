@@ -7,7 +7,7 @@ templates to copy rather than live config.
 
 | File | Purpose |
 | ---- | ------- |
-| `generic.blueprint.md` | Principles only — the 5 working principles (Think / Simplicity / Surgical / Goal-driven / BACKLOG). Drop into any `CLAUDE.md`, agent prompt, or project instructions and merge. |
+| `generic.blueprint.md` | Principles only — the working principles (Think / Simplicity / Surgical / Goal-driven / BACKLOG / No AI attribution / Writing style). Drop into any `CLAUDE.md`, agent prompt, or project instructions and merge. |
 | `coding.blueprint.md`  | Full `CLAUDE.md` for a new code repo — the generic principles + a built-in security baseline + `<!-- TODO -->` placeholders for Development, Architecture, project-specific safety rules, and the rest. |
 
 **Which one?** Reach for `coding.blueprint.md` when starting a repo from
