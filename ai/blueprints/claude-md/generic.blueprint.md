@@ -10,7 +10,7 @@ Behavioral guidelines to reduce common LLM coding mistakes. Drop into a `CLAUDE.
 
 Before implementing:
 - State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them — don't pick silently.
+- If multiple interpretations exist, present them, do not pick silently.
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
 
@@ -34,7 +34,7 @@ When editing existing code:
 - Don't "improve" adjacent code, comments, or formatting.
 - Don't refactor things that aren't broken.
 - Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it — don't delete it.
+- If you notice unrelated dead code, mention it, do not delete it.
 
 When your changes create orphans:
 - Remove imports/variables/functions that YOUR changes made unused.
@@ -60,28 +60,40 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-## 5. Track unfinished work in BACKLOG.md
+## 5. Comments state constraints, not stories
 
-**Defer in writing, not in chat. Unfinished or deferred work goes to `BACKLOG.md`, not the conversation — chat vanishes next session.**
+**A comment states a constraint or a trap, never the story of how a value was reached.**
 
-If you leave anything unfinished, partially implemented, or explicitly defer it, add an entry to `BACKLOG.md` in the repo root before reporting the task done.
+A comment states what the code cannot: a constraint the next editor must not break, a trap
+that fails silently or expensively, or a non-obvious decision, in one or two lines. Everything
+else is noise.
 
-Each entry needs four things: **what** the work is, **why** it was deferred, **what would unblock it**, and **where** the relevant code lives (file paths). Read existing entries for the format.
+- Keep and write: one-line constraints, traps, machine-read annotations (`# renovate: ...`),
+  upstream-required markers, license headers.
+- Never write: how the value was arrived at (dates, incident timelines, measurements, A/B
+  statistics, "until <date> this was..."); a restatement of the line below; a justification
+  for the reviewer of the change; Markdown emphasis. History lives in git. A rationale worth
+  a narrative goes in the docs, and the comment points there.
+- The tell for AI-session residue is a comment that cites a date, a past value or evidence.
+  Compress it to the rule that survives, or delete it.
 
-Don't put work-in-progress on `BACKLOG.md` — WIP belongs on a branch. The backlog is for *known gaps the team has agreed to leave for later*. If you finish an item, delete it.
+## 6. Track unfinished work in BACKLOG.md
 
-What counts as "unfinished":
-- Tier 1 / Tier 2 splits where you only shipped Tier 1.
-- Out-of-scope items you noticed but didn't fix.
-- Features behind a feature flag that still need ramping or cleanup.
-- Tests skipped, mocks left in, debug logging not yet stripped.
-- TODO comments you wrote (write the entry instead — TODOs rot in code).
+**Defer in writing, not in chat.**
 
-What does NOT belong:
-- Forward-looking ideas the user didn't agree to defer ("we could also..."). Either do them or drop them.
-- Codebase-wide debts that pre-existed your work and the user didn't ask you to track.
+Anything left unfinished or deferred gets an entry in `BACKLOG.md` in the repo root before the
+task is reported done. Deferrals in chat vanish next session. Each entry states what the work
+is, why it was deferred, what unblocks it, and where the code lives (file paths). Copy the
+format of the existing entries.
 
-## 6. No AI attribution in commits
+- Unfinished means: a tier you did not ship, out-of-scope items you noticed but did not fix,
+  features behind a flag that still need ramping or cleanup, skipped tests, mocks or debug
+  logging left in, and TODO comments you wrote (write the entry instead, TODOs rot in code).
+- Not backlog: work in progress (that belongs on a branch), ideas the user did not agree to
+  defer (do them or drop them), and pre-existing debt the user did not ask you to track.
+- Delete an entry when the work is done.
+
+## 7. No AI attribution in commits
 
 **Commits and PRs read as the human author's. No AI fingerprint, ever.**
 
@@ -90,7 +102,7 @@ What does NOT belong:
 - No "Generated with Claude Code", 🤖 emoji, or similar tool signatures in commit messages, PR descriptions, or issue bodies.
 - Describe the change, not the tool that produced it.
 
-## 7. Writing style
+## 8. Writing style
 
 **All text follows ASD-STE100 (Simplified Technical English) at about 80 % strictness.**
 
