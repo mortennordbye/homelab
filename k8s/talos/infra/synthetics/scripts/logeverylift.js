@@ -68,14 +68,13 @@ export default async function () {
     await step(page, "dashboard", async () => {
       // Home sends a user behind on the terms to /consent. Its loading skeleton carries
       // the same heading as the real page, so wait for one of the two real outcomes.
+      // An element wait, not waitForFunction: the redirect destroys the page's JS context.
       const home = page.locator('a[href="/new-workout"]').first();
-      await page.waitForFunction(
-        () => document.querySelector('a[href="/new-workout"]') || location.pathname === "/consent",
-        { polling: "raf" },
-      );
+      const boxes = page.locator('input[type="checkbox"]');
+      await page.locator('a[href="/new-workout"], input[type="checkbox"]').first().waitFor();
       if (new URL(page.url()).pathname === "/consent") {
-        await page.getByRole("checkbox", { name: /I accept the terms of use/ }).check();
-        await page.getByRole("checkbox", { name: /I consent to LogEveryLift storing/ }).check();
+        await boxes.nth(0).check();
+        await boxes.nth(1).check();
         await Promise.all([
           page.waitForURL(`${BASE}/`),
           page.getByRole("button", { name: "Continue" }).click(),
