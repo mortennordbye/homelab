@@ -106,7 +106,7 @@ spec:
                     instances: 1
                     imageName: $image
                     storage:
-                      storageClass: syno-nfs-csi
+                      storageClass: syno-nfs-csi-scratch
                       size: 5Gi
                     resources:
                       requests:
