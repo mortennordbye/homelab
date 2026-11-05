@@ -158,6 +158,17 @@ Commits and PRs read as the human author's. No AI fingerprint, ever.
 - No "Generated with Claude Code", 🤖 emoji, or similar tool signatures in commit messages, PR descriptions, or issue bodies.
 - Describe the change, not the tool that produced it.
 
+### Writing style
+
+All text in this repo follows ASD-STE100 (Simplified Technical English) at about 80 %
+strictness: docs, code comments, commit messages, PR and issue bodies, and replies to the user.
+
+- Short sentences, one fact or one instruction each. Active voice. Simple verbs.
+- One meaning per word. No idioms, no metaphors, no filler.
+- Keep code names, error text and quotes exact, even when they break an STE rule.
+- Text with its own style guide keeps it: blog posts (`blog/TEXT-STYLE.md`) and the portfolio
+  copy (`docs/apps/portfolio/brand/`).
+
 These guidelines are working if: fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
 ## Development
