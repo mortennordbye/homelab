@@ -1,9 +1,9 @@
 # SLOs and error budgets
 
 Pyrra turns `ServiceLevelObjective` resources into Prometheus recording rules and
-multi-window, multi-burn-rate alerts (the method from the Google SRE workbook). The
-objectives are in `k8s/talos/infra/pyrra/slos.yaml`, the UI is at
-https://pyrra.local.bigd.no, the SPOG dashboard has an "SLOs & error budgets" row, and
+multi-window, multi-burn-rate alerts. This is the method from the Google SRE workbook. The
+objectives are in `k8s/talos/infra/pyrra/slos.yaml`. The UI is at
+https://pyrra.local.bigd.no, and the SPOG dashboard has an "SLOs & error budgets" row.
 Pyrra ships its own "Pyrra - List" and "Pyrra - Detail" dashboards.
 
 [![Blackbox probes, Traefik request metrics and platform state feed Prometheus with Pyrra's rules; Prometheus raises the probe SLO's burn alerts, shows budgets in Pyrra and SPOG, and answers Kargo's budget query, whose label stops auto-merge when a budget is low](../../assets/diagrams/slo-budgets.svg)](../../assets/diagrams/slo-budgets.svg)
@@ -27,39 +27,40 @@ Pyrra ships its own "Pyrra - List" and "Pyrra - Detail" dashboards.
 | `argocd-apps-healthy` | Argo CD Applications Healthy, from the recording rule `homelab:argocd_app_healthy` | 98 % | 28d | no |
 | `volsync-in-sync` | VolSync sources within their schedule, from `homelab:volsync_in_sync` | 99 % | 28d | no |
 
-99.5 % over 28 days is about 3 hours 22 minutes of budget. The latency thresholds sit on
-Traefik's histogram buckets (0.1, 0.3, 1.2, 5 s), since a latency SLI can only cut at a
-bucket edge. Each target was set a little below what the site delivered over the 7 days
-before it was introduced, so a fresh budget starts mostly unspent.
+99.5 % over 28 days is about 3 hours 22 minutes of budget. The latency thresholds are
+Traefik's histogram buckets (0.1, 0.3, 1.2, 5 s), because a latency SLI can only cut at a
+bucket edge. Each target is set a little below what the site delivered over the 7 days
+before the SLO was introduced. A fresh budget therefore starts mostly unspent.
 
 ## Why these choices
 
-The window is 28 days, four whole weeks, so every weekday weighs the same and one bad
-evening does not spend the budget. Prometheus keeps 30 days (`retention`, capped by
-`retentionSize: 35GB` because `syno-nfs-csi` does not enforce the PVC size), so the window
-always has full data. A window longer than retention would compute its budget over the data
-that exists and call the rest perfect.
+The window is 28 days, four whole weeks. Every weekday has the same weight, and one bad
+evening does not spend the budget. Prometheus keeps 30 days (`retention`).
+`retentionSize: 35GB` caps it, because `syno-nfs-csi` does not enforce the PVC size. The
+window therefore always has full data. A window longer than retention would compute its
+budget over the data that exists and count the rest as perfect.
 
 The SLIs are measured at the edge. Traefik sees every request on the public gateway, so
 the request SLOs need no instrumentation in the apps. The probe SLO goes through public DNS
-and Cloudflare, so it also counts a broken record, an expired certificate or the home line
-being down, which is what a visitor sees.
+and Cloudflare. It therefore also counts a broken record, an expired certificate or a home
+line that is down. That is what a visitor sees.
 
 The platform SLOs, from `coredns-availability` down, give the shared components a budget
 and a week of history. Each already has a symptom alert in `homelab-alerts.yaml`, so none
-of them pages. Pyrra's `bool_gauge` takes a metric, not an expression, so Argo CD health
-and VolSync lag go through 0/1 recording rules in the `homelab.sli` group of that file.
+of them pages. Pyrra's `bool_gauge` takes a metric, not an expression. Argo CD health and
+VolSync lag therefore go through 0/1 recording rules in the `homelab.sli` group of that
+file.
 
-Only the probe SLO alerts. The sites get from a few requests an hour (blog) to a few a
-minute (logeverylift), and a burn rate over a 15-minute window built from three requests
-pages on one slow bot. The probe produces one sample a minute per site whatever the
-traffic, so its burn rate means something. The request SLOs keep their budgets on the
-dashboards and are read when reviewing a release or an incident.
+Only the probe SLO alerts. The sites get from a few requests an hour (blog) to a few
+requests a minute (logeverylift). A burn rate over a 15-minute window built from three
+requests pages on one slow bot. The probe produces one sample a minute per site, whatever
+the traffic, so its burn rate has meaning. The request SLOs keep their budgets on the
+dashboards. Read them when you review a release or an incident.
 
 ## Alerts
 
 Pyrra generates `ErrorBudgetBurn` with four window pairs. The two fast pairs are
-`severity=critical` and reach Discord; the two slow pairs are `warning` and are not sent,
+`severity=critical` and reach Discord. The two slow pairs are `warning` and are not sent,
 like every other warning (see [README.md](README.md#alert-path)). The `exhaustion` label
 says how soon the budget runs out at the current rate.
 
@@ -71,35 +72,35 @@ says how soon the budget runs out at the current rate.
 | 6h / 4d | 1x | 28 d | warning |
 
 Pyrra derives the window pairs from the SLO window. The thresholds are error rates (14x of
-0.5 % is 7 % of probes failing), so they do not change with the window; the windows they are
-measured over do.
+0.5 % is 7 % of probes failing), so they do not change with the window. The measurement
+windows do.
 
-`SLOMetricAbsent` fires when the probe metric disappears for 6 minutes, which would otherwise
-read as a perfect SLO.
+`SLOMetricAbsent` fires when the probe metric is absent for 6 minutes. Otherwise the SLO
+would read as perfect.
 
-`PublicSiteDown` in `homelab-alerts.yaml` stays as the symptom alert for a site hard down
-for 5 minutes with the internet up. The burn alert also catches flapping that never stays
-down 5 minutes in a row.
+`PublicSiteDown` in `homelab-alerts.yaml` stays as the symptom alert for a site that is
+fully down for 5 minutes while the internet is up. The burn alert also catches flapping
+that never stays down for 5 minutes in a row.
 
 ## Error budget policy
 
 - Budget left: ship as normal. Kargo promotes stage to prod on a green smoke test.
-- A site's budget below 25 %: prod promotions for that site are merged by hand after looking
-  at the Pyrra detail view, not auto-merged, until the budget recovers. Kargo enforces this:
-  it labels the promotion PR `slo/budget-low` from the lowest budget across the site's SLOs,
+- A site's budget below 25 %: merge prod promotions for that site by hand, after you look
+  at the Pyrra detail view. No auto-merge until the budget recovers. Kargo enforces this.
+  It labels the promotion PR `slo/budget-low` from the lowest budget across the site's SLOs,
   and the auto-merge workflow skips it ([kargo.md](../delivery/kargo.md#promotion-tasks)).
-- Budget spent: no prod promotions for that site except fixes, and the cause gets an entry
-  in [incidents.md](incidents.md).
+- Budget spent: no prod promotions for that site except fixes. The cause gets an entry in
+  [incidents.md](incidents.md).
 
 ## Add an SLO
 
 1. Add a `ServiceLevelObjective` to `k8s/talos/infra/pyrra/slos.yaml`. Keep the
-   `release: kube-prometheus-stack` label: Pyrra copies the SLO's labels onto the
-   PrometheusRule it writes, and Prometheus only loads rules with that label.
+   `release: kube-prometheus-stack` label. Pyrra copies the SLO's labels onto the
+   PrometheusRule that it writes, and Prometheus only loads rules with that label.
 2. Keep `window` at or below Prometheus retention.
 3. For a low-traffic SLI set `alerting.disabled: true`, as above.
-4. Check the rules locally before pushing: `pyrra generate --config-files='<dir>/*.yaml'
-   --prometheus-folder=<out>/` with the `ghcr.io/pyrra-dev/pyrra` image, then look at the
+4. Check the rules locally before you push: run `pyrra generate --config-files='<dir>/*.yaml'
+   --prometheus-folder=<out>/` with the `ghcr.io/pyrra-dev/pyrra` image. Then read the
    generated expressions.
-5. After the sync, `kubectl -n monitoring get prometheusrules` shows one rule per SLO and
-   the Prometheus rules page shows no evaluation errors.
+5. After the sync, `kubectl -n monitoring get prometheusrules` shows one rule per SLO. The
+   Prometheus rules page shows no evaluation errors.
