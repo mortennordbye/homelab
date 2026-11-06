@@ -16,4 +16,4 @@ resources:
 # inline tag in deployment.yaml. The verksted-cd Warehouse/promotion sets it to 0.0.N.
 images:
 - name: ghcr.io/mortennordbye/verksted
-  newTag: 0.0.1793951764
+  newTag: 0.0.1793989878
