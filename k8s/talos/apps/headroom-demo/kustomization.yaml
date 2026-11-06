@@ -15,4 +15,4 @@ resources:
 # to main. Do not edit it by hand.
 images:
 - name: ghcr.io/mortennordbye/headroom
-  newTag: 0.0.1009
+  newTag: 0.0.1010
