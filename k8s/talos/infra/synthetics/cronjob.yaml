@@ -1,5 +1,5 @@
-# Walks the logeverylift sign-in and log-a-set flow in Chromium as a dedicated user and
-# remote-writes the per-step checks to Prometheus, where UserJourneyFailing reads them.
+# Runs the logeverylift sign-in and log-a-set flow in Chromium as a dedicated user.
+# Remote-writes the per-step checks to Prometheus, where UserJourneyFailing reads them.
 # See docs/platform/observability/README.md.
 apiVersion: batch/v1
 kind: CronJob

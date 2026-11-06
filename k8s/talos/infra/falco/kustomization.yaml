@@ -16,8 +16,8 @@ helmCharts:
     namespace: falco
     valuesFile: values.yaml
 
-# falcosidekick is a subchart that only exposes pod annotations, so patch the
-# Reloader annotation onto its Deployment to auto-restart on webhook secret change.
+# falcosidekick is a subchart that only exposes pod annotations. This patch puts the
+# Reloader annotation on its Deployment, so it restarts on a webhook secret change.
 patches:
   - patch: |-
       apiVersion: apps/v1

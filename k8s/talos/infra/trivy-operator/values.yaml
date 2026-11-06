@@ -1,5 +1,5 @@
-# Vulnerability and exposed-secret scanning only. Kyverno already audits pod config,
-# and the node-collector for infra/CIS checks needs hostPath, which Talos and the
+# Vulnerability and exposed-secret scanning only. Kyverno already audits pod config.
+# The node-collector for infra/CIS checks needs hostPath, which Talos and the
 # baseline policy refuse.
 operator:
   configAuditScannerEnabled: false
@@ -7,7 +7,7 @@ operator:
   infraAssessmentScannerEnabled: false
   clusterComplianceEnabled: false
   sbomGenerationEnabled: false
-  # One trivy-server holds the vulnerability DB, so scan jobs don't each download it.
+  # One trivy-server holds the vulnerability DB, so the scan jobs do not each download it.
   builtInTrivyServer: true
   # No scanJobTTL: finished jobs left to the TTL controller still count against this limit.
   scanJobsConcurrentLimit: 3

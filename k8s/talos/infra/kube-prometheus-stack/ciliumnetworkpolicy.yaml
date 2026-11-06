@@ -78,9 +78,9 @@ spec:
     # Kubernetes API for service discovery.
     - toEntities:
         - kube-apiserver
-    # Scrape targets: every pod, host, and remote node in the cluster (cluster entity
-    # already covers host + remote-node + kube-apiserver, so node-exporter on the host
-    # network is included). Audit mode will narrow this later.
+    # Scrape targets: every pod, host, and remote node in the cluster. The cluster
+    # entity already covers host, remote-node and kube-apiserver, so node-exporter on
+    # the host network is included. Audit mode will narrow this later.
     - toEntities:
         - cluster
     # node-exporter on the Proxmox hosts, outside the cluster.
@@ -169,7 +169,7 @@ spec:
     matchLabels:
       app.kubernetes.io/name: grafana
   ingress:
-    # Traefik fronts the UI.
+    # Traefik proxies the UI.
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": traefik

@@ -1,6 +1,6 @@
-# Triggers: ContainerOOMKilled — anonymous RSS allocation past a 64 MiB limit,
+# Triggers: ContainerOOMKilled. Anonymous RSS allocation past a 64 MiB limit,
 # OOMKilled in a loop until deleted. Anonymous allocation, not dd to /dev/shm:
-# the bounded tmpfs hits ENOSPC and exits StartError instead of OOMKilled.
+# the bounded tmpfs gets ENOSPC and exits StartError instead of OOMKilled.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

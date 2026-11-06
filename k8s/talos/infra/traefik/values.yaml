@@ -13,18 +13,18 @@ resources:
     memory: 512Mi
 
 # Required zone anti-affinity below pins one replica per hypervisor (replicas ==
-# zones). The default surging rollout (maxSurge:1) then deadlocks — a 4th pod has
+# zones). The default surging rollout (maxSurge:1) then stops: a 4th pod has
 # no free zone and stays Pending. Terminate-then-recreate frees a zone first, so
-# rollouts run at 2/3 briefly instead of getting stuck.
+# rollouts run at 2/3 briefly instead of stopping.
 updateStrategy:
   type: RollingUpdate
   rollingUpdate:
     maxSurge: 0
     maxUnavailable: 1
 
-# Spread the replicas one-per-hypervisor so losing a physical host (or a VIP
-# L2-announce re-election) can't take the edge proxy down. topology.kubernetes.io/zone
-# maps to the hypervisor (hyper1/2/3), matching how the apps express failure domains.
+# Spread the replicas one per hypervisor, so the loss of a physical host (or a VIP
+# L2-announce re-election) cannot take the edge proxy down. topology.kubernetes.io/zone
+# maps to the hypervisor (hyper1/2/3), the same failure domains the apps use.
 # 3 replicas / 3 zones => exactly one replica per hypervisor.
 affinity:
   podAntiAffinity:
@@ -35,7 +35,7 @@ affinity:
             app.kubernetes.io/instance: traefik-traefik
         topologyKey: topology.kubernetes.io/zone
 
-# Keep at least 2 of the 3 replicas up through node drains / voluntary disruptions.
+# Keep at least 2 of the 3 replicas up through node drains and voluntary disruptions.
 podDisruptionBudget:
   enabled: true
   maxUnavailable: 1
@@ -63,8 +63,8 @@ ports:
     port: 8000
     exposedPort: 80
     protocol: TCP
-    # blog.nordbye.it is proxied through Cloudflare, so requests arrive from an
-    # edge address. Without trustedIPs the entrypoint strips X-Forwarded-For and
+    # Cloudflare proxies blog.nordbye.it, so requests arrive from an
+    # edge address. Without trustedIPs the entrypoint strips X-Forwarded-For, and
     # the per-client limits downstream key on the edge IP, not the visitor.
     # Ranges from cloudflare.com/ips-v4 and /ips-v6, fetched 2026-08-21.
     # Also copied into every */cloudflare-only-middleware.yaml.
@@ -104,20 +104,20 @@ ports:
     port: 8443
     exposedPort: 443
     protocol: TCP
-    # Same ranges as web; this is where proxied traffic lands.
+    # Same ranges as web. Proxied traffic arrives here.
     forwardedHeaders:
       trustedIPs: *cloudflareIPs
     # HTTP/3 (QUIC) on the public HTTPS entrypoint. Traefik also listens UDP on
-    # this port and advertises Alt-Svc: h3=":443" so browsers upgrade. Serving
-    # over UDP/443 additionally needs the port on the public Service and the
+    # this port and advertises Alt-Svc: h3=":443", so browsers upgrade. Service
+    # over UDP/443 also needs the port on the public Service and the
     # CiliumNetworkPolicy (both below), plus a UDP/443 forward on the router.
-    # TCP stays the fallback, so clients that can't reach H3 use HTTP/2.
+    # TCP stays the fallback, so clients that cannot reach H3 use HTTP/2.
     http3:
       enabled: true
       # Advertise h3 on the exposed port (443), not Traefik's internal 8443.
-      # The Service maps 443 -> 8443, so browsers must be told to reach h3 on
-      # 443; without this Traefik advertises alt-svc h3=":8443", which isn't
-      # exposed externally and h3 silently fails.
+      # The Service maps 443 -> 8443, so the Alt-Svc header must name 443.
+      # Without this Traefik advertises alt-svc h3=":8443", which is not
+      # exposed externally, and h3 silently fails.
       advertisedPort: 443
     expose:
       default: true
@@ -173,7 +173,7 @@ experimental:
   kubernetesGateway:
     enabled: true
 
-# Emit OTLP traces for every ingress request; Alloy filters them on the way to Tempo.
+# Emit OTLP traces for every ingress request. Alloy filters them before Tempo.
 tracing:
   serviceName: traefik
   sampleRate: 1.0

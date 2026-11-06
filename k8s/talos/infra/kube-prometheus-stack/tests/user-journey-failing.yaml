@@ -1,6 +1,6 @@
 # Triggers: UserJourneyFailing. Runs the logeverylift journey with a wrong password
-# three times, 10 min apart, under its own journey tag so the real CronJob's passing
-# runs don't reset it. Fires about 20 min after apply.
+# three times, 10 min apart, under its own journey tag. The real CronJob's passing
+# runs then do not reset it. Fires about 20 min after apply.
 apiVersion: batch/v1
 kind: Job
 metadata:

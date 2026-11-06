@@ -21,8 +21,8 @@ data:
           name: argocd-admins
         attrs:
           is_superuser: false
-          # Membership is declared here on purpose, so a rebuilt cluster grants
-          # Argo CD access without anyone touching the UI. Reconciliation resets
+          # Membership is declared here intentionally, so a rebuilt cluster grants
+          # Argo CD access without manual UI work. Reconciliation resets
           # this list, so add members here rather than in authentik.
           users:
             - !Find [authentik_core.user, [username, akadmin]]
@@ -35,13 +35,13 @@ data:
         attrs:
           name: argocd
           client_type: confidential
-          # Sourced from authentik-secrets via envFrom on the worker pod, so the
-          # credentials never land in git. No !Env default: a missing variable
-          # should fail the blueprint import loudly rather than quietly create a
+          # Comes from authentik-secrets via envFrom on the worker pod, so the
+          # credentials never enter git. No !Env default: a missing variable
+          # must fail the blueprint import, not create a
           # provider with an empty secret.
           client_id: !Env ARGOCD_OIDC_CLIENT_ID
           client_secret: !Env ARGOCD_OIDC_CLIENT_SECRET
-          # Empty by default in 2026.5. Unset here means every grant is rejected.
+          # Empty by default in 2026.5. Unset, authentik rejects every grant.
           grant_types:
             - authorization_code
             - refresh_token
@@ -55,9 +55,9 @@ data:
             - matching_mode: strict
               url: http://localhost:8085/auth/callback
           # Matched on `managed`, the stable identifier in authentik's own system
-          # blueprints, rather than the mutable scope_name. The groups claim that
-          # Argo CD RBAC keys on is emitted by `profile`; there is no groups scope.
-          # offline_access is required for the refresh_token grant to issue tokens.
+          # blueprints, not the mutable scope_name. `profile` emits the groups claim
+          # that Argo CD RBAC keys on; there is no groups scope. The refresh_token
+          # grant requires offline_access to issue tokens.
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
             - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]

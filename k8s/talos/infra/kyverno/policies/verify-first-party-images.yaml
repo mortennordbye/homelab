@@ -1,5 +1,5 @@
-# Requires SLSA provenance signed by the repo's build workflow. Each check takes seconds, so
-# Deny needs the cold-start cost weighed first: docs/platform/policy/README.md.
+# Requires SLSA provenance signed by the repo's build workflow. Each check takes seconds.
+# Weigh the cold-start cost before a switch to Deny: docs/platform/policy/README.md.
 apiVersion: policies.kyverno.io/v1
 kind: ImageValidatingPolicy
 metadata:

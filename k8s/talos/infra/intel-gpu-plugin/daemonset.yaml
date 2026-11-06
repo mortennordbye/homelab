@@ -1,5 +1,5 @@
 # Vendored from intel/intel-device-plugins-for-kubernetes v0.37.0,
-# deployments/gpu_plugin/base. Re-sync this file when the image tag moves.
+# deployments/gpu_plugin/base. Sync this file again when the image tag changes.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -23,7 +23,7 @@ spec:
       nodeSelector:
         kubernetes.io/arch: amd64
         # Only genesis-worker-01 has the iGPU passed through. Without this the
-        # plugin lands on all six nodes and hostPath-creates /dev/dri on five.
+        # plugin runs on all six nodes and hostPath-creates /dev/dri on five.
         hardware.nordbye.it/gpu: intel-quicksync
       containers:
         - name: intel-gpu-plugin

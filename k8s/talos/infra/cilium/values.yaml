@@ -21,13 +21,13 @@ policyAuditMode: false
 
 bpf:
   masquerade: true
-  # Required for Talos's kube-dns-to-host-DNS forwarding; DNS breaks without it.
+  # Required for Talos's kube-dns-to-host-DNS forwarding. DNS breaks without it.
   hostLegacyRouting: true
 
 securityContext:
   capabilities:
     ciliumAgent:
-      # SYS_MODULE deliberately excluded: Talos forbids workloads loading
+      # SYS_MODULE intentionally excluded: Talos forbids workloads that load
       # kernel modules.
       - CHOWN
       - KILL
@@ -53,8 +53,8 @@ cgroup:
 
 hubble:
   enabled: true
-  # helm (the default) mints a new CA on every render, so each ArgoCD sync rotated it
-  # under running agents and the relay lost them. certgen issues them in-cluster.
+  # helm (the default) creates a new CA on every render. Each ArgoCD sync then rotates it
+  # under running agents, and the relay loses them. certgen issues them in-cluster.
   tls:
     auto:
       enabled: true
@@ -70,8 +70,8 @@ hubble:
       - flow
       - icmp
       - httpV2
-      # Policy verdicts to Prometheus, so drops are kept for the 7d retention
-      # rather than only the short Hubble ring buffer.
+      # Policy verdicts to Prometheus, so drops stay for the 7d retention
+      # and not only in the short Hubble ring buffer.
       - policy:sourceContext=workload-name|reserved-identity;destinationContext=workload-name|reserved-identity;labelsContext=source_namespace,destination_namespace
     enableOpenMetrics: true
     port: 9965
@@ -124,14 +124,14 @@ certgen:
       memory: 128Mi
 
 operator:
-  # HA: 2 replicas (active + standby via leader election) with a PDB so a node
-  # drain can't take the only operator down.
+  # HA: 2 replicas (active + standby via leader election) with a PDB, so a node
+  # drain cannot take the only operator down.
   replicas: 2
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
   rollOutPods: true
-  # Tolerate everything: nodes can't become Ready until Cilium runs, so the
+  # Tolerate everything: nodes cannot become Ready until Cilium runs, so the
   # operator must schedule on NotReady nodes during bootstrap.
   tolerations:
     - operator: Exists
@@ -153,7 +153,7 @@ operator:
       cpu: 25m
       memory: 64Mi
 
-# Native routing is required for DSR mode.
+# DSR mode requires native routing.
 routingMode: native
 autoDirectNodeRoutes: true
 # Must match the cluster pod CIDR.
@@ -163,7 +163,7 @@ loadBalancer:
   algorithm: maglev
   mode: dsr
 
-# LoadBalancer VIPs are announced on the local network via L2.
+# L2 announces the LoadBalancer VIPs on the local network.
 l2announcements:
   enabled: true
 

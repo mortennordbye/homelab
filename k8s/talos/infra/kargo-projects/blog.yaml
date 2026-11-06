@@ -1,8 +1,8 @@
-# Kargo project for the blog app: stage -> prod promotion driven by the blog
-# Warehouse. Mirrors portfolio.yaml; the promotion steps live in the shared
+# Kargo project for the blog app: the blog Warehouse drives the stage -> prod
+# promotion. Mirrors portfolio.yaml. The promotion steps live in the shared
 # promote-to-argocd ClusterPromotionTask.
 
-# Named `blog-cd` (not `blog`) to avoid colliding with the blog app namespace.
+# Named `blog-cd` (not `blog`) to avoid a collision with the blog app namespace.
 # The label lets the Project below adopt this pre-created namespace instead of
 # racing to create it.
 apiVersion: v1
@@ -22,8 +22,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "0"
 ---
 # Auto-promotion is a Project-level policy in Kargo, never on a Stage. Both
-# Stages auto-promote; prod goes through promote-via-pr, so the only human gate
-# is merging that PR in GitHub.
+# Stages auto-promote. prod goes through promote-via-pr, so the only human gate
+# is the merge of that PR in GitHub.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ProjectConfig
 metadata:
@@ -40,7 +40,7 @@ spec:
 ---
 # Git write credential for Kargo's git-push (GitHub App
 # mortennordbye-homelab-deployer). The Secret must live in this Project
-# namespace — Kargo cred lookup is per-Project.
+# namespace: Kargo cred lookup is per-Project.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -86,9 +86,9 @@ spec:
         metadataPolicy: None
 ---
 # Cloudflare API token for the prod cache purge. Kargo's secret() resolves by
-# name in the Project's own namespace, so this is repeated per project.
-# It is the broad token (DNS:Edit on nordbye.it); a purge-only token would cap
-# the blast radius and is only a Bitwarden UUID swap here.
+# name in the Project's own namespace, so each project repeats this.
+# It is the broad token (DNS:Edit on nordbye.it). A purge-only token would limit
+# the damage and is only a Bitwarden UUID swap here.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -107,7 +107,7 @@ spec:
   data:
     # Key is apiToken, not cloudflare-token as in cert-manager and external-dns:
     # Kargo reads it as ${{ secret('cloudflare-api-token').apiToken }}, and a
-    # hyphenated key would need bracket indexing to reach.
+    # hyphenated key would need bracket indexing.
     - secretKey: apiToken
       remoteRef:
         key: "621a3a65-abe5-4c24-9a32-b29e010850f5"
@@ -129,15 +129,15 @@ spec:
   subscriptions:
     - image:
         repoURL: ghcr.io/mortennordbye/homelab/blog
-        # CI tags every build 0.0.<run_number>; SemVer picks the greatest.
+        # CI tags every build 0.0.<run_number>. SemVer picks the greatest.
         # strictSemvers keeps the git-SHA and moving env tags out of selection.
         imageSelectionStrategy: SemVer
         strictSemvers: true
         discoveryLimit: 20
 ---
 # Stage verification: a one-shot Job that asserts the theme rendered, each page
-# kind builds, and the search index has content — a bare 200 on / passes even
-# when the site is half-broken. -k skips TLS verify for the internal local cert.
+# kind builds, and the search index has content. A bare 200 on / passes even
+# when the site is partly broken. -k skips TLS verify for the internal local cert.
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -195,22 +195,22 @@ spec:
                         grep -q 'northlight-strings' /tmp/home.html
 
                         # One request per page kind. A template that fails to build
-                        # takes its whole kind down while the home page stays fine.
+                        # breaks its whole kind while the home page stays fine.
                         for p in /blog/ /tags/ /404.html /index.xml; do
                           curl -fsSk --retry 2 --retry-delay 3 --retry-all-errors \
                             --max-time 20 -o /dev/null "$BASE$p"
                         done
 
                         # The search index. Missing or empty is a silent search
-                        # outage: the modal opens and simply finds nothing.
+                        # outage: the modal opens and finds nothing.
                         curl -fsSk --retry 2 --retry-delay 3 --retry-all-errors \
                           --max-time 20 -H 'Accept-Encoding: identity' \
                           -o /tmp/index.json "$BASE/index.json"
                         grep -q '"title"' /tmp/index.json
 
-                        # An article page; slug taken from the index so a renamed post
-                        # stays covered. Split on commas first — the index is one
-                        # minified line and a greedy match would grab the last url.
+                        # An article page. The slug comes from the index, so a renamed post
+                        # stays covered. Split on commas first: the index is one
+                        # minified line, and a greedy match would take the last url.
                         POST=$(tr ',' '\n' < /tmp/index.json \
                           | sed -n 's|.*"url":"\([^"]*\)".*|\1|p' | head -1)
                         test -n "$POST"
@@ -267,8 +267,8 @@ spec:
                         set -eu
                         BASE=https://blog.nordbye.it
                         # Prod runs minReplicaCount 1, so there is no
-                        # scale-from-zero wait to absorb here and the retries
-                        # only have to cover a rollout or a blip.
+                        # scale-from-zero wait here. The retries only have to
+                        # cover a rollout or a short failure.
                         curl -fsSk --retry 3 --retry-delay 3 --retry-all-errors \
                           --max-time 20 -H 'Accept-Encoding: identity' \
                           -o /tmp/home.html "$BASE/"
@@ -335,7 +335,7 @@ spec:
             kind: ClusterPromotionTask
 ---
 # prod: receives only Freight already verified in `stage` (sources.stages).
-# promote-via-pr auto-opens a homelab PR and blocks on the merge — the PR
+# promote-via-pr opens a homelab PR and waits for the merge. The PR
 # review is the prod gate.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
@@ -380,7 +380,7 @@ spec:
         # The edge caches HTML for 4h (terraform/cloudflare/nordbye-it/cache.tf)
         # while CSS/JS are content-hashed, so stale HTML 404s every asset of a
         # new build. Purge as the last step, after argocd-wait, so the new pods
-        # are already serving. Zone ID is looked up by name to keep the
+        # are already serving. The step looks up the zone ID by name to keep the
         # identifier out of this public repo.
         - uses: http
           as: cf-zone
@@ -392,9 +392,9 @@ spec:
             headers:
               - name: Authorization
                 value: Bearer ${{ secret('cloudflare-api-token').apiToken }}
-            # Asserting on the result count as well as the status, so a token
-            # that cannot see the zone fails here with an obvious cause rather
-            # than indexing into an empty list in fromExpression.
+            # Assert on the result count as well as the status, so a token
+            # that cannot see the zone fails here with an obvious cause, not
+            # with an index into an empty list in fromExpression.
             successExpression: response.status == 200 && len(response.body.result) == 1
             outputs:
               - name: zoneId
@@ -414,8 +414,8 @@ spec:
               - name: Content-Type
                 value: application/json
             body: '{"purge_everything":true}'
-            # Status alone is the signal; asserting response.body.success would
+            # Status alone is the signal. An assert on response.body.success would
             # turn an unparseable body into a failed promotion.
             successExpression: response.status == 200
           # No continueOnError: a purge that did not happen means broken HTML at
-          # the edge for hours, and that should read red in the pipeline.
+          # the edge for hours, and the pipeline must show that as a failure.

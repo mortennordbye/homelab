@@ -23,7 +23,7 @@ spec:
           restartPolicy: Never
           enableServiceLinks: false
           automountServiceAccountToken: false
-          # talosctl talks to the node it runs on, and only control planes run etcd.
+          # talosctl connects to the node it runs on, and only control planes run etcd.
           affinity:
             nodeAffinity:
               requiredDuringSchedulingIgnoredDuringExecution:

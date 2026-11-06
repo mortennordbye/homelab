@@ -1,7 +1,7 @@
-# Monthly proof that the backups restore, not only that they exist: every VolSync
-# repository is checked with 5 % of its data read back, one volume is restored in
-# full, and the newest dump of each database is loaded into a scratch Postgres of
-# the same major. Nothing here writes to the NAS or touches a live app.
+# Monthly proof that the backups restore, not only that they exist. The jobs read
+# back 5 % of every VolSync repository, restore one volume in full, and load the
+# newest dump of each database into a scratch Postgres of the same major. Nothing
+# here writes to the NAS or touches a live app.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -87,7 +87,7 @@ spec:
                   memory: 256Mi
                 limits:
                   memory: 1Gi
-            # The dumps are root-only on the NAS; hand copies to the postgres uid (70).
+            # The dumps are root-only on the NAS. Copy them and chown to the postgres uid (70).
             - name: stage-dumps
               image: docker.io/library/alpine:3.24
               command:

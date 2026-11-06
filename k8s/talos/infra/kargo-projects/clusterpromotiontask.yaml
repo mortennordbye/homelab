@@ -2,10 +2,10 @@
 # tag in the app's kustomization, commit + push to main, sync Argo CD, block
 # until Synced + Healthy. Cluster-scoped; each Stage supplies vars.
 #
-# desiredRevision is deliberately NOT pinned: the apps track shared main HEAD,
+# desiredRevision is intentionally NOT pinned: the apps track shared main HEAD,
 # and a fixed revision reports the Stage perpetually Unhealthy on the next
 # commit. Every step that reaches GitHub or Argo CD carries a
-# retry.errorThreshold — Kargo's default of 1 means no retries, and a failed
+# retry.errorThreshold. Kargo's default of 1 means no retries, and a failed
 # Promotion is terminal (see clusterpromotiontask-pr.yaml).
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ClusterPromotionTask

@@ -43,8 +43,8 @@ falcoctl:
         limits:
           memory: 128Mi
 
-# Expose Falco's Prometheus metrics; kube-prometheus-stack scrapes the
-# ServiceMonitor (release label matches the operator's selector convention).
+# Expose Falco's Prometheus metrics. kube-prometheus-stack scrapes the
+# ServiceMonitor (the release label matches the operator's selector convention).
 metrics:
   enabled: true
   interval: 15m
@@ -53,14 +53,14 @@ serviceMonitor:
   labels:
     release: kube-prometheus-stack
 
-# Tune known-benign behaviour through the upstream rules' own template macros
-# (best practice: overriding these hooks is upgrade-safe; the rules consume them).
+# Tune known-benign behaviour through the upstream rules' own template macros.
+# Overrides of these hooks survive upgrades, because the rules consume them.
 customRules:
   tuning.yaml: |-
     # ---- Cluster infrastructure --------------------------------------------
 
-    # Cilium CNI plugin execs from /opt/cni/bin on every node — not a workload.
-    # BuildKit RUN steps (verksted's dind builds) have no k8s metadata; the
+    # Cilium CNI plugin execs from /opt/cni/bin on every node. It is not a workload.
+    # BuildKit RUN steps (verksted's dind builds) have no k8s metadata. The
     # buildkit/ container id is the only handle. FlareSolverr patches and runs
     # its own chromedriver at startup.
     - macro: known_drop_and_execute_activities
@@ -71,10 +71,10 @@ customRules:
       override:
         condition: replace
 
-    # Test suites hardening against symlink escape create links to /etc or
-    # /root inside /tmp/vk-repos-<random> clones, from inside dind where Falco
-    # has no container metadata (<NA>) — the linkpath is the only handle.
-    # Exempts where the link is created, not what it points at, so a link to a
+    # Test suites that harden against symlink escape create links to /etc or
+    # /root inside /tmp/vk-repos-<random> clones. They run inside dind, where Falco
+    # has no container metadata (<NA>), so the linkpath is the only handle.
+    # Exempts the location of the link, not its target, so a link to a
     # sensitive file anywhere else still alerts.
     - rule: Create Symlink Over Sensitive Files
       condition: >
@@ -82,8 +82,8 @@ customRules:
       override:
         condition: append
 
-    # kubelet (exec/port-forward streams) and Authentik wire stdio to sockets
-    # legitimately; scoped to those binaries so a real shell still alerts.
+    # kubelet (exec/port-forward streams) and Authentik connect stdio to sockets
+    # legitimately. Scoped to those binaries, so a real shell still alerts.
     - macro: user_known_stand_streams_redirect_activities
       condition: (proc.name=kubelet) or (container.image.repository=ghcr.io/goauthentik/server and proc.name=authentik)
       override:
@@ -93,10 +93,10 @@ customRules:
     #
     # verksted is an agent sandbox: sessions install tooling and run arbitrary
     # code as root, so per-path tuning never lasts. Exempted via the adopter
-    # hooks upstream documents, scoped to the image. These two signals have no
-    # discriminating power in a pod whose purpose is a root shell; the rules
-    # that watch the real boundary (container escape, kernel module injection,
-    # release_agent, debugfs) stay armed for this image like any other.
+    # hooks that upstream documents, scoped to the image. These two signals have
+    # no value in a pod whose purpose is a root shell. The rules that watch the
+    # real boundary (container escape, kernel module injection, release_agent,
+    # debugfs) stay active for this image like any other.
     - list: known_drop_and_execute_containers
       items:
         - ghcr.io/mortennordbye/verksted
@@ -113,14 +113,14 @@ customRules:
 
     # ---- verksted: the dind sidecar ----------------------------------------
     #
-    # Falco sees the sidecar as the upstream docker image, so every exemption
-    # must pin the namespace too or it exempts that image cluster-wide.
+    # Falco sees the sidecar as the upstream docker image. Every exemption
+    # must also pin the namespace, or it exempts that image cluster-wide.
     - macro: verksted_dind
       condition: (container.image.repository=docker.io/library/docker and k8s.ns.name=verksted)
 
-    # The dind containerd truncates /var/log/dpkg.log when unpacking Debian
-    # layers; upstream only exempts the host containerd's snapshot root.
-    # Pinned to the dind root so the same write anywhere else still alerts.
+    # The dind containerd truncates /var/log/dpkg.log when it unpacks Debian
+    # layers. Upstream only exempts the host containerd's snapshot root.
+    # Pinned to the dind root, so the same write anywhere else still alerts.
     - macro: allowed_clear_log_files
       condition: >
         (proc.name=containerd and verksted_dind
@@ -130,8 +130,8 @@ customRules:
 
     # cilium-agent and the dind dockerd open AF_PACKET sockets as normal
     # datapath setup. Appended to the rule, not the template hook:
-    # user_known_packet_socket_binaries is a list consumed by proc.name in
-    # (...), which could only exempt the binary name cluster-wide.
+    # user_known_packet_socket_binaries is a list that proc.name in (...)
+    # consumes, and that can only exempt the binary name cluster-wide.
     - rule: Packet socket created in container
       condition: >
         and not (proc.name=cilium-agent and container.image.repository=quay.io/cilium/cilium)

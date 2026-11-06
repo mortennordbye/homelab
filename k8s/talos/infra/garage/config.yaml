@@ -4,8 +4,8 @@ metadata:
   name: garage-config
 data:
   garage.toml: |
-    # LMDB is unsafe on NFS, so the metadata stays on block storage and is
-    # snapshotted onto the NAS volume next to the data it indexes.
+    # LMDB is unsafe on NFS, so the metadata stays on block storage. Its
+    # snapshots go to the NAS volume, next to the data it indexes.
     metadata_dir = "/var/lib/garage/meta"
     metadata_snapshots_dir = "/var/lib/garage/nas/meta-snapshots"
     metadata_auto_snapshot_interval = "1h"

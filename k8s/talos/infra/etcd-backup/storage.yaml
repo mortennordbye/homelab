@@ -1,5 +1,5 @@
 # Statically bound to k8s-backups/etcd on the NAS (see docs/platform/backups/README.md). Retain:
-# deleting the claim must never take the snapshots with it.
+# deleting the claim must never delete the snapshots.
 apiVersion: v1
 kind: PersistentVolume
 metadata:

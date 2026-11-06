@@ -3,13 +3,13 @@
 # through promote-to-argocd (a direct push to main, no PR). Flow: innestemme CI pushes
 # a new image -> Warehouse creates Freight -> Kargo commits the tag to main and syncs
 # Argo CD -> the smoke test verifies. innestemme's own CI (clippy, tests, a smoke test
-# of the image) is the gate; a PR per build only waited for a click.
+# of the image) is the gate. A PR per build only waited for a click.
 #
 # The image source and CI live in mortennordbye/innestemme.
 
-# Named `innestemme-cd` (not `innestemme`) to avoid colliding with the app
+# Named `innestemme-cd` (not `innestemme`) to avoid a collision with the app
 # namespace. The label lets the Project adopt this pre-created namespace
-# instead of racing to create it.
+# instead of a race to create it.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -40,7 +40,7 @@ spec:
 ---
 # Git write credential for Kargo's git-push/PR, using the existing GitHub App
 # `mortennordbye-homelab-deployer`. Same App and Bitwarden keys as the other
-# -cd projects; only the namespace differs, because Kargo cred lookup is
+# -cd projects. Only the namespace differs, because Kargo cred lookup is
 # per-Project.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
@@ -100,7 +100,7 @@ spec:
   subscriptions:
     - image:
         repoURL: ghcr.io/mortennordbye/innestemme
-        # innestemme CI tags every main build 0.0.<commit time>; SemVer picks the
+        # innestemme CI tags every main build 0.0.<commit time>. SemVer picks the
         # greatest. strictSemvers keeps the sha-, latest and buildcache tags out of
         # selection.
         imageSelectionStrategy: SemVer
@@ -160,8 +160,8 @@ spec:
                         http://innestemme.innestemme.svc.cluster.local:9090/healthz
 ---
 # prod: the only Stage. Receives Freight straight from the Warehouse
-# (sources.direct), auto-promoted per ProjectConfig through promote-to-argocd,
-# then verified by the smoke test. Roll back by promoting older Freight in Kargo.
+# (sources.direct), auto-promoted per ProjectConfig through promote-to-argocd.
+# The smoke test then verifies it. Roll back by promoting older Freight in Kargo.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:

@@ -1,11 +1,11 @@
-# Kargo project for the portfolio app: stage -> prod promotion driven by the
-# portfolio Warehouse. All portfolio-cd resources live in this one file; the
+# Kargo project for the portfolio app: the portfolio Warehouse drives the
+# stage -> prod promotion. All portfolio-cd resources live in this one file. The
 # reusable promotion steps live in clusterpromotiontask.yaml (shared with every
-# other app's project). Onboarding another app = a sibling <app>.yaml here.
+# other app's project). To onboard another app, add a sibling <app>.yaml here.
 
-# Named `portfolio-cd` (not `portfolio`) to avoid colliding with the portfolio
+# Named `portfolio-cd` (not `portfolio`) to avoid a collision with the portfolio
 # app namespace. The label lets the Project below adopt this pre-created
-# namespace instead of racing to create it.
+# namespace instead of a race to create it.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -23,8 +23,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "0"
 ---
 # Auto-promotion is a Project-level policy in Kargo, never on a Stage. Both
-# Stages auto-promote; prod goes through promote-via-pr, so the only human gate
-# is merging that PR in GitHub.
+# Stages auto-promote. prod goes through promote-via-pr, so the only human gate
+# is the merge of that PR in GitHub.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ProjectConfig
 metadata:
@@ -41,7 +41,7 @@ spec:
 ---
 # Git write credential for Kargo's git-push (GitHub App
 # mortennordbye-homelab-deployer). The Secret must live in this Project
-# namespace — Kargo cred lookup is per-Project.
+# namespace: Kargo cred lookup is per-Project.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -87,9 +87,9 @@ spec:
         metadataPolicy: None
 ---
 # Cloudflare API token for the prod cache purge. Kargo's secret() resolves by
-# name in the Project's own namespace, so this is repeated per project.
-# It is the broad token (DNS:Edit on nordbye.it); a purge-only token would cap
-# the blast radius and is only a Bitwarden UUID swap here.
+# name in the Project's own namespace, so each project repeats this.
+# It is the broad token (DNS:Edit on nordbye.it). A purge-only token would limit
+# the damage and is only a Bitwarden UUID swap here.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -108,7 +108,7 @@ spec:
   data:
     # Key is apiToken, not cloudflare-token as in cert-manager and external-dns:
     # Kargo reads it as ${{ secret('cloudflare-api-token').apiToken }}, and a
-    # hyphenated key would need bracket indexing to reach.
+    # hyphenated key would need bracket indexing.
     - secretKey: apiToken
       remoteRef:
         key: "621a3a65-abe5-4c24-9a32-b29e010850f5"
@@ -130,9 +130,9 @@ spec:
   subscriptions:
     - image:
         repoURL: ghcr.io/mortennordbye/homelab/portfolio
-        # CI tags every build 0.0.<run_number>; SemVer picks the greatest.
-        # NewestBuild stalls here — all builds share the base layer's `created`.
-        # strictSemvers keeps git-SHA and env tags out of selection; defaults
+        # CI tags every build 0.0.<run_number>. SemVer picks the greatest.
+        # NewestBuild stalls here: all builds share the base layer's `created`.
+        # strictSemvers keeps git-SHA and env tags out of selection. Defaults are
         # spelled out to avoid ArgoCD drift.
         imageSelectionStrategy: SemVer
         strictSemvers: true
@@ -190,7 +190,7 @@ spec:
                         https://portfolio-stage.local.bigd.no/
 ---
 # prod verification: the same check against the live public domain. Fewer
-# retries than stage since prod stays warm.
+# retries than stage, because prod stays warm.
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -278,7 +278,7 @@ spec:
             kind: ClusterPromotionTask
 ---
 # prod: receives only Freight already verified in `stage` (sources.stages).
-# promote-via-pr auto-opens a homelab PR and blocks on the merge — the PR
+# promote-via-pr opens a homelab PR and waits for the merge. The PR
 # review is the prod gate.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
@@ -323,7 +323,7 @@ spec:
         # The edge caches HTML for 4h (terraform/cloudflare/nordbye-it/cache.tf)
         # while CSS/JS are content-hashed, so stale HTML 404s every asset of a
         # new build. Purge as the last step, after argocd-wait, so the new pods
-        # are already serving. Zone ID is looked up by name to keep the
+        # are already serving. The step looks up the zone ID by name to keep the
         # identifier out of this public repo.
         - uses: http
           as: cf-zone
@@ -335,9 +335,9 @@ spec:
             headers:
               - name: Authorization
                 value: Bearer ${{ secret('cloudflare-api-token').apiToken }}
-            # Asserting on the result count as well as the status, so a token
-            # that cannot see the zone fails here with an obvious cause rather
-            # than indexing into an empty list in fromExpression.
+            # Assert on the result count as well as the status, so a token
+            # that cannot see the zone fails here with an obvious cause, not
+            # with an index into an empty list in fromExpression.
             successExpression: response.status == 200 && len(response.body.result) == 1
             outputs:
               - name: zoneId
@@ -357,8 +357,8 @@ spec:
               - name: Content-Type
                 value: application/json
             body: '{"purge_everything":true}'
-            # Status alone is the signal; asserting response.body.success would
+            # Status alone is the signal. An assert on response.body.success would
             # turn an unparseable body into a failed promotion.
             successExpression: response.status == 200
           # No continueOnError: a purge that did not happen means broken HTML at
-          # the edge for hours, and that should read red in the pipeline.
+          # the edge for hours, and the pipeline must show that as a failure.

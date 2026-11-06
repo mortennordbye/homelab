@@ -1,6 +1,6 @@
-# Triggers: PodCrashLooping — container exits on start, CrashLoopBackOff must
+# Triggers: PodCrashLooping. The container exits on start. CrashLoopBackOff must
 # persist `for: 10m`. DeploymentUnavailable also fires here, so verify this
-# alert by name in Alertmanager, not just that Discord pinged.
+# alert by name in Alertmanager, not only by a Discord message.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

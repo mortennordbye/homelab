@@ -1,5 +1,5 @@
 # A config file, not env vars: this image loads its bundled up.conf, and the Loki
-# output only switched on when configured here.
+# output only switches on when it is configured here.
 apiVersion: v1
 kind: ConfigMap
 metadata:

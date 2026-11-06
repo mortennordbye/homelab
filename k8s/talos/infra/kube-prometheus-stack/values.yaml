@@ -3,9 +3,9 @@ prometheus:
     replicas: 1
     # The k6 user journeys in k8s/talos/infra/synthetics push their results here.
     enableRemoteWriteReceiver: true
-    # At least the Pyrra SLO window (28d), or budgets are computed on partial data.
+    # At least the Pyrra SLO window (28d), or Pyrra computes budgets on partial data.
     retention: 30d
-    # syno-nfs-csi does not enforce the PVC size; this keeps Prometheus off the rest of the NAS.
+    # syno-nfs-csi does not enforce the PVC size. This limit protects the rest of the NAS.
     retentionSize: 35GB
     storageSpec:
       volumeClaimTemplate:
@@ -36,12 +36,12 @@ grafana:
   enabled: true
   replicas: 1
 
-  # The root chown init container breaks the restricted standard; the PVC is already 472-owned.
+  # The root chown init container breaks the restricted standard. The PVC is already 472-owned.
   initChownData:
     enabled: false
 
-  # Installed before startup when the version on the PVC differs, so a failed download or a
-  # version needing a newer Grafana keeps the pod from starting. Bump with the Grafana image.
+  # Grafana installs these before startup when the version on the PVC differs. A failed download
+  # or a version that needs a newer Grafana stops the pod. Bump with the Grafana image.
   plugins:
     - grafana-exploretraces-app@3.0.0 # renovate: custom.grafana-plugins=grafana-exploretraces-app
     - grafana-lokiexplore-app@3.0.0 # renovate: custom.grafana-plugins=grafana-lokiexplore-app
@@ -85,7 +85,7 @@ grafana:
 
   # OIDC client credentials, so they stay out of git. The chart's
   # assertNoLeakedSecrets helper fails the render on a literal client_secret,
-  # so the $__env indirection below is required rather than stylistic.
+  # so the $__env indirection below is necessary, not a style choice.
   envFromSecret: grafana-oidc
 
   # Credentials for the GitHub and Cloudflare data sources, read with $__file below.
@@ -103,11 +103,11 @@ grafana:
     server:
       domain: grafana.local.bigd.no
       # Required. Without it Grafana derives http://grafana.local.bigd.no:3000/
-      # from domain plus http_port and sends that as the OAuth redirect, which
+      # from domain plus http_port and sends that as the OAuth redirect. That URL
       # fails authentik's strict matching. TLS terminates at Traefik; this is
-      # the browser-facing URL, not how the pod is reached.
+      # the browser-facing URL, not the pod address.
       root_url: https://grafana.local.bigd.no
-    # Renovate tracks versions; these would otherwise need egress to grafana.com.
+    # Renovate tracks versions. Without it, these would need egress to grafana.com.
     analytics:
       check_for_updates: false
       check_for_plugin_updates: false
@@ -116,13 +116,13 @@ grafana:
     # data sources) would otherwise update to latest once grafana.com is reachable.
     plugins:
       preinstall_auto_update: false
-    # Avatars are fetched server-side from gravatar.com, which the egress policy blocks.
+    # Grafana fetches avatars server-side from gravatar.com, which the egress policy blocks.
     security:
       disable_gravatar: true
     auth:
-      # Both already default to false. Spelled out because keeping the local
-      # admin login working is a hard requirement, and a later edit flipping
-      # either of these would silently remove the break-glass path.
+      # Both already default to false. Spelled out because the local admin
+      # login must keep working. A later edit that flips either of these
+      # would silently remove the emergency fallback login.
       disable_login_form: false
       oauth_auto_login: false
     auth.generic_oauth:
@@ -130,20 +130,20 @@ grafana:
       name: authentik
       client_id: $__env{GF_OAUTH_CLIENT_ID}
       client_secret: $__env{GF_OAUTH_CLIENT_SECRET}
-      # groups rides on profile; authentik has no groups scope. No
+      # profile includes groups; authentik has no groups scope. No
       # offline_access, since use_refresh_token defaults to false.
       scopes: openid profile email
-      # Slug-less on purpose: authentik mounts authorize/token/userinfo
+      # No slug, intentionally: authentik serves authorize/token/userinfo
       # globally. Only the issuer and discovery document are per-application.
       auth_url: https://auth.local.bigd.no/application/o/authorize/
       token_url: https://auth.local.bigd.no/application/o/token/
       api_url: https://auth.local.bigd.no/application/o/userinfo/
       role_attribute_path: contains(groups[*], 'grafana-admins') && 'GrafanaAdmin' || 'Viewer'
-      # GrafanaAdmin above grants server admin rather than just org admin, but
-      # only because this is set; without it the value degrades to org Admin.
+      # GrafanaAdmin above grants server admin, not only org admin, because
+      # this is set. Without it the value degrades to org Admin.
       allow_assign_grafana_admin: true
-      # false so an SSO user in no group lands as Viewer instead of being
-      # denied login outright.
+      # false so an SSO user in no group gets Viewer. Otherwise Grafana
+      # denies the login.
       role_attribute_strict: false
       allow_sign_up: true
       use_pkce: true
@@ -170,7 +170,7 @@ grafana:
         installationId: $__file{/etc/secrets/github-app/installation-id}
       secureJsonData:
         privateKey: $__file{/etc/secrets/github-app/private-key}
-    # Cloudflare's GraphQL analytics API, queried live by the Cloudflare dashboard.
+    # Cloudflare's GraphQL analytics API. The Cloudflare dashboard queries it live.
     - name: Cloudflare
       type: yesoreyeram-infinity-datasource
       uid: cloudflare
@@ -185,15 +185,15 @@ grafana:
 alertmanager:
   enabled: true
   alertmanagerSpec:
-    # HA: 2 replicas form a gossip cluster (the operator wires --cluster.peer
-    # automatically) so alerting survives a pod/node loss. Each replica gets its
+    # HA: 2 replicas form a gossip cluster (the operator sets --cluster.peer
+    # automatically), so alerting survives a pod or node loss. Each replica gets its
     # own NFS PVC via the volumeClaimTemplate below.
     replicas: 2
     retention: 120h
     # Silence and alert links in notifications point here.
     externalUrl: https://alertmanager.local.bigd.no
     # Mount the ExternalSecret with the Discord webhook so the URL is not in git.
-    # The secret key 'url' is then read via api_url_file (see alertmanager.config below).
+    # api_url_file then reads the secret key 'url' (see alertmanager.config below).
     secrets:
       - alertmanager-discord-webhook
       - alertmanager-heartbeat
@@ -219,30 +219,28 @@ alertmanager:
       group_interval: 5m
       repeat_interval: 12h
       routes:
-        # The always-firing Watchdog goes to the Cloudflare watchdog Worker every 5 min;
-        # the Worker alerts Discord when it stops. Keep this route first.
+        # The always-firing Watchdog goes to the Cloudflare watchdog Worker every 5 min.
+        # The Worker alerts Discord when it stops. Keep this route first.
         - matchers:
             - alertname = "Watchdog"
           receiver: heartbeat
           group_wait: 0s
           group_interval: 1m
           repeat_interval: 5m
-        # reelsmith runs unattended with nobody else watching it, and its
-        # warning-tier alerts (queue starved, backup stale, a post stuck) are
-        # the whole point of gateway/monitoring.yaml: the failure mode they
-        # catch never shows up as a restart or a 500. Dropped at warning like
-        # every other app's, they are silent by construction, which is how
-        # ReelsmithQueueStarved and ReelsmithPostStuck both sat firing for
-        # days unseen. Route the namespace ahead of the severity filter below.
+        # reelsmith runs unattended. Its warning-tier alerts (queue starved, backup
+        # stale, a post stuck) are the purpose of gateway/monitoring.yaml: the
+        # failure mode they catch never shows as a restart or a 500. Dropped at
+        # warning like every other app's, they would stay silent. Route the
+        # namespace ahead of the severity filter below.
         - matchers:
             - namespace = "reelsmith"
           receiver: discord
-        # Proxmox and DSM notifications are one-shot events pushed by their
-        # webhooks, so they "resolve" when the push expires, not when anything is fixed.
+        # Proxmox and DSM notifications are one-shot events from their webhooks. They
+        # "resolve" when the push expires, not when a problem is fixed.
         - matchers:
             - namespace =~ "proxmox|synology"
           receiver: discord-event
-        # Only critical alerts reach Discord; everything else is dropped.
+        # Only critical alerts reach Discord. Alertmanager drops everything else.
         - matchers:
             - severity = "critical"
           receiver: discord
@@ -358,8 +356,8 @@ kubeProxy:
 
 defaultRules:
   create: true
-  # Replaced by the KEDA-aware version in homelab-alerts.yaml: KEDA-driven
-  # HPAs sit at max by design.
+  # homelab-alerts.yaml has a KEDA-aware replacement: KEDA-driven
+  # HPAs are at max by design.
   disabled:
     KubeHpaMaxedOut: true
   additionalRuleGroupAnnotations:

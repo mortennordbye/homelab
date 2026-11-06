@@ -1,5 +1,5 @@
-# One endpoint per Proxmox host for node metrics; hyper1 also returns the
-# cluster-wide view (VMs, storage), the others would only repeat it.
+# One endpoint per Proxmox host for node metrics. Only hyper1 also returns the
+# cluster-wide view (VMs, storage). The other hosts would repeat it.
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

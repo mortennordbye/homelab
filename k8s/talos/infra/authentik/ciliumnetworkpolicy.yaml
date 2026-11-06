@@ -7,7 +7,7 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: authentik
   ingress:
-    # Web UI / OIDC endpoints fronted by Traefik.
+    # Web UI and OIDC endpoints. Traefik proxies them.
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": traefik

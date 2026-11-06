@@ -15,7 +15,7 @@ spec:
             "k8s:app.kubernetes.io/name": alloy
       toPorts:
         - ports: [{ port: "3100", protocol: TCP }]
-    # unpoller pushes the UniFi gateway's system log (WAN failures and the like).
+    # unpoller pushes the UniFi gateway's system log (WAN failures and similar events).
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
@@ -59,7 +59,7 @@ spec:
         - kube-apiserver
     # Filesystem storage only; no S3/MinIO egress needed.
 ---
-# Alloy: DaemonSet collecting logs/metrics from every node, pushes to Loki.
+# Alloy: a DaemonSet that collects logs and metrics from every node and pushes them to Loki.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:

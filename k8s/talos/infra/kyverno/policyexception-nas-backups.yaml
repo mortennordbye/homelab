@@ -1,5 +1,5 @@
-# The k8s-backups NFS export only admits root, so the dump jobs and the backup checks that
-# read them run as root with DAC_OVERRIDE, CHOWN or FOWNER; docs/platform/backups/README.md.
+# The k8s-backups NFS export admits only root. The dump jobs, and the backup checks that
+# read them, run as root with DAC_OVERRIDE, CHOWN or FOWNER; docs/platform/backups/README.md.
 # Scoped to the two controls and these images, so anything else the pods break still reports.
 apiVersion: kyverno.io/v2
 kind: PolicyException

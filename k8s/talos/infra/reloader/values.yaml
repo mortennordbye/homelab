@@ -1,5 +1,5 @@
 reloader:
-  # Watch every namespace; restart workloads annotated with
+  # Watch every namespace. Restart workloads annotated with
   # reloader.stakater.com/auto: "true" when their ConfigMap/Secret changes.
   watchGlobally: true
 

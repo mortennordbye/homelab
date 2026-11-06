@@ -1,17 +1,17 @@
 # Kargo project for the reelsmith DM gateway. Single-environment, same shape as
 # logeverylift: one Warehouse feeds one `prod` Stage directly, auto-promoted
 # through promote-via-pr. Flow: reelsmith CI pushes a new gateway image ->
-# Warehouse creates Freight -> Kargo auto-opens a homelab PR -> merging it
+# Warehouse creates Freight -> Kargo opens a homelab PR -> the merge
 # deploys -> the smoke test verifies.
 #
 # The image source and CI live in the separate mortennordbye/reelsmith repo,
-# which also holds the render pipeline. Only the gateway ships as a container,
-# and its build workflow there is path-filtered to gateway/ so a pipeline-only
+# which also holds the render pipeline. Only the gateway ships as a container.
+# Its build workflow there is path-filtered to gateway/, so a pipeline-only
 # commit never produces Freight for a byte-identical image.
 
-# Named `reelsmith-cd` (not `reelsmith`) to avoid colliding with the app
+# Named `reelsmith-cd` (not `reelsmith`) to avoid a collision with the app
 # namespace. The label lets the Project adopt this pre-created namespace
-# instead of racing to create it.
+# instead of a race to create it.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -42,7 +42,7 @@ spec:
 ---
 # Git write credential for Kargo's git-push/PR, using the existing GitHub App
 # `mortennordbye-homelab-deployer`. Same App and Bitwarden keys as the other
-# -cd projects; only the namespace differs, because Kargo cred lookup is
+# -cd projects. Only the namespace differs, because Kargo cred lookup is
 # per-Project.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
@@ -102,15 +102,15 @@ spec:
   subscriptions:
     - image:
         repoURL: ghcr.io/mortennordbye/reelsmith-gateway
-        # reelsmith CI tags every gateway build 0.0.<run_number>; SemVer picks
+        # reelsmith CI tags every gateway build 0.0.<run_number>. SemVer picks
         # the greatest. strictSemvers keeps the sha-/latest tags out of
         # selection.
         imageSelectionStrategy: SemVer
         strictSemvers: true
         # Ten, not twenty: tags 0.0.1-0.0.12 point at pruned provenance
         # manifests, and discovery fails the entire Warehouse on the first tag
-        # it cannot read. The window only slides away from the broken ones, so
-        # this needs no revisiting.
+        # it cannot read. The window only moves away from the broken ones, so
+        # this needs no later change.
         discoveryLimit: 10
 ---
 # prod verification: a one-shot Job that curls the gateway and fails on any
@@ -167,8 +167,8 @@ spec:
                         https://gate.nordbye.it/healthz
 ---
 # prod: the only Stage. Receives Freight straight from the Warehouse
-# (sources.direct), auto-promoted per ProjectConfig through promote-via-pr,
-# then verified by the smoke test. Merging the PR in GitHub is the deploy gate.
+# (sources.direct), auto-promoted per ProjectConfig through promote-via-pr.
+# The smoke test then verifies it. The PR merge in GitHub is the deploy gate.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:

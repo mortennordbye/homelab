@@ -1,5 +1,5 @@
-# Triggers: DeploymentUnavailable — an image that never pulls keeps available
-# replicas at 0; fires after `for: 5m`.
+# Triggers: DeploymentUnavailable. An image that never pulls keeps available
+# replicas at 0. Fires after `for: 5m`.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

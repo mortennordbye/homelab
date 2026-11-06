@@ -1,13 +1,13 @@
 # PR-based variant of promote-to-argocd, used by every prod Stage: pushes the
-# bump to a generated branch, opens a homelab PR, and blocks until it merges
-# before syncing Argo CD.
+# bump to a generated branch, opens a homelab PR, and waits for the merge
+# before it syncs Argo CD.
 #
 # Every step that reaches GitHub or Argo CD carries a retry.errorThreshold:
-# Kargo's default of 1 means no retries, and a failed Promotion is terminal —
-# the Stage sits on the old Freight until someone promotes by hand.
+# Kargo's default of 1 means no retries, and a failed Promotion is terminal.
+# The Stage stays on the old Freight until someone promotes by hand.
 #
 # The GitHub App needs Pull requests: read/write in addition to Contents:
-# read/write, or git-open-pr fails. desiredRevision is deliberately NOT pinned
+# read/write, or git-open-pr fails. desiredRevision is intentionally NOT pinned
 # on argocd-update: prod tracks shared main HEAD, and a fixed revision reports
 # the Stage perpetually Unhealthy on the next commit.
 apiVersion: kargo.akuity.io/v1alpha1
@@ -20,8 +20,8 @@ spec:
     - name: appPath      # kustomization dir, e.g. k8s/talos/apps/portfolio
     - name: imageRepo    # GHCR repo the Warehouse subscribes to
     - name: argocdApp    # Argo CD Application to sync, e.g. portfolio
-    # PromQL returning the app's lowest error budget left (0..1). `none` skips the
-    # gate; an empty value would make the var required on every Stage.
+    # PromQL that returns the app's lowest remaining error budget (0..1). `none` skips
+    # the gate. An empty value would make the var required on every Stage.
     - name: budgetQuery
       value: none
   steps:
@@ -49,12 +49,12 @@ spec:
       config:
         path: ./repo
         message: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
-    # No-op promotions: git-commit auto-skips when there is nothing to commit,
+    # No-op promotions: git-commit skips itself when there is nothing to commit,
     # so status('commit') == 'Skipped' gates push/open-pr/wait-pr (no orphan
-    # promotion branch). argocd-update/wait stay unguarded so the promotion
-    # still ends green by confirming prod Healthy. Use status(), not
-    # task.outputs guards — those evaluate unreliably and leaked a branch per
-    # no-op retry; status() also resolves with the plain step alias.
+    # promotion branch). argocd-update/wait stay unguarded, so the promotion
+    # still ends green when it confirms prod Healthy. Use status(), not
+    # task.outputs guards: those evaluate unreliably and leak a branch per
+    # no-op retry. status() also resolves with the plain step alias.
     - uses: git-push
       as: push
       retry:
@@ -64,8 +64,8 @@ spec:
         path: ./repo
         generateTargetBranch: true
     # Error budget gate (docs/platform/observability/slos.md). Below 25 % the PR
-    # gets slo/budget-low and kargo-automerge leaves it for a hand merge. Prometheus
-    # unreachable or no data also reads as low, never as a failed promotion.
+    # gets slo/budget-low, and kargo-automerge leaves it for a manual merge. Prometheus
+    # unreachable or no data also counts as low, never as a failed promotion.
     - uses: http
       as: budget
       retry:
@@ -94,7 +94,7 @@ spec:
         targetBranch: main
         title: "chore(${{ vars.appName }}): promote ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}"
         # The kargo-automerge workflow reads `app/<name>` to decide whether
-        # this app is opted into unattended merging, and holds slo/budget-low.
+        # this app allows unattended merging. It holds a PR with slo/budget-low.
         labels:
           - kargo
           - app/${{ vars.appName }}
@@ -103,9 +103,9 @@ spec:
     # Blocks the promotion until the PR is merged in GitHub.
     - uses: git-wait-for-pr
       as: wait-pr
-      # Polls GitHub for as long as the PR is open — hundreds of calls over a
-      # day-long review — so one stray 5xx must not kill the promotion. Five
-      # consecutive failures is GitHub being down; one is weather.
+      # Polls GitHub for as long as the PR is open (hundreds of calls over a
+      # day-long review), so one stray 5xx must not fail the promotion. Five
+      # consecutive failures mean GitHub is down. One failure is noise.
       retry:
         errorThreshold: 5
       if: ${{ status('open-pr') != 'Skipped' }}

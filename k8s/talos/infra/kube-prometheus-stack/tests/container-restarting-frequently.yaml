@@ -1,5 +1,5 @@
-# Triggers: ContainerRestartingFrequently — container exits every 20s so the
-# in-place restart counter climbs; fires after ~5min.
+# Triggers: ContainerRestartingFrequently. The container exits every 20s, so the
+# in-place restart counter grows. Fires after about 5 min.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

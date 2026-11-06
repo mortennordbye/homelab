@@ -4,8 +4,8 @@ metadata:
   name: apps
   namespace: argocd
 spec:
-  # goTemplate is required for templatePatch below. String fields switch to the
-  # {{.path.*}} syntax; every generated Application renders exactly as before.
+  # templatePatch below requires goTemplate. String fields switch to the
+  # {{.path.*}} syntax. Every generated Application renders exactly as before.
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
@@ -51,14 +51,14 @@ spec:
           - ServerSideApply=true
           - RespectIgnoreDifferences=true
   # Authorize Kargo to sync the apps it promotes. templatePatch is a Go-templated
-  # merge patch (a string), so structural conditionals are valid here in a way
-  # they are not inside the parsed `template` above. Onboarding a new Kargo app is
-  # a one-word addition to the list below: its prod app "<app>", stage app
+  # merge patch (a string), so structural conditionals are valid here. They are
+  # not valid inside the parsed `template` above. To onboard a new Kargo app, add
+  # one word to the list below: its prod app "<app>", stage app
   # "<app>-stage" and demo app "<app>-demo" get authorized-stage <app>-cd:prod /
-  # <app>-cd:stage / <app>-cd:demo. A suffix an app doesn't use matches no
-  # directory, so it renders nothing; every non-Kargo app matches nothing at all.
-  # Apps holding a CloudNativePG Cluster need server-side diff: the client-side
-  # diff reports the webhook-defaulted Cluster as OutOfSync and self-heal loops.
+  # <app>-cd:stage / <app>-cd:demo. A suffix an app does not use matches no
+  # directory, so it renders nothing. Every non-Kargo app matches nothing at all.
+  # Apps that hold a CloudNativePG Cluster need server-side diff: the client-side
+  # diff reports the webhook-defaulted Cluster as OutOfSync, and self-heal loops.
   templatePatch: |
     {{- $base := .path.basename }}
     {{- $stage := "" }}

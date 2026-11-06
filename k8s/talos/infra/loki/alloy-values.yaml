@@ -235,7 +235,7 @@ alloy:
   mounts:
     # Essential for Kubernetes log collection
     varlog: true
-    # Talos uses containerd; this ensures Alloy can reach the symlinks
+    # Talos uses containerd. Alloy needs this mount to follow the log symlinks.
     dockercontainers: true
 
 configReloader:
@@ -247,13 +247,13 @@ configReloader:
       memory: 96Mi
 
 controller:
-  # Ensure an agent runs on every node
+  # Run one agent on every node.
   type: 'daemonset'
 
 serviceAccount:
-  # RBAC is needed to let Alloy talk to the K8s API for pod discovery
+  # Alloy needs RBAC to query the K8s API for pod discovery.
   create: true
 
-# Enable the ServiceMonitor so you can see Alloy's own metrics in your Grafana
+# Enable the ServiceMonitor so Prometheus scrapes Alloy's own metrics.
 serviceMonitor:
   enabled: true

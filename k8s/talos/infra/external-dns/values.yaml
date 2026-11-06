@@ -13,27 +13,27 @@ env:
 sources:
   - gateway-httproute
 
-# Manage only the public zone; nordbye.it / logeverylift.com records stay hand-maintained.
+# Manage only the public zone. The nordbye.it / logeverylift.com records are kept by hand.
 domainFilters:
   - bigd.no
 
-# Never publish internal split-horizon hostnames, even if a route slips the gateway filter.
+# Never publish internal split-horizon hostnames, even if a route passes the gateway filter.
 excludeDomains:
   - local.bigd.no
 
-# Start conservative: create/update records, never delete. Switch to "sync" once trusted.
+# Create and update records, never delete. Switch to "sync" when we trust the setup.
 policy: upsert-only
 
 # Ownership tracking. txtPrefix templates the record type so the TXT never
-# collides with a CNAME. The trailing dot matters: without it the zone apex
-# maps to a sibling of the zone (cname-bigd.no), which the Cloudflare provider
-# silently drops, so the apex can never be owned. With the dot it maps inside
-# the zone (extdns-cname.bigd.no).
+# collides with a CNAME. The trailing dot is required. Without it the zone apex
+# maps to a sibling of the zone (cname-bigd.no). The Cloudflare provider drops
+# that record without an error, so the apex can never be owned. With the dot it
+# maps inside the zone (extdns-cname.bigd.no).
 registry: txt
 txtOwnerId: genesis
 txtPrefix: "extdns-%{record_type}."
 
-# v0.21 default is external-dns.kubernetes.io/; pinned so the gateway target annotation always matches.
+# The v0.21 default is external-dns.kubernetes.io/. Pinned, so the gateway target annotation always matches.
 annotationPrefix: external-dns.kubernetes.io/
 
 extraArgs:

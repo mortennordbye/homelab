@@ -1,6 +1,6 @@
 deploymentMode: SingleBinary
 
-# Pod-level for server and worker; the image runs as uid 1000.
+# Pod-level for server and worker. The image runs as uid 1000.
 global:
   securityContext:
     runAsNonRoot: true

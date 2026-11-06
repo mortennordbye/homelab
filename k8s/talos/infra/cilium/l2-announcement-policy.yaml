@@ -4,7 +4,7 @@ metadata:
   name: default-l2-policy
   namespace: kube-system
 spec:
-  # Services with a vip label are announced by the policies below only.
+  # Only the policies below announce Services with a vip label.
   serviceSelector:
     matchExpressions:
       - key: network.nordbye.it/vip

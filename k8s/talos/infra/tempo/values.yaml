@@ -10,7 +10,7 @@ tempo:
         http:
           endpoint: "0.0.0.0:4318"
   # local-blocks answers TraceQL metrics (rate(), histograms), which Grafana's Traces
-  # Drilldown needs; without a generator those queries fail with "empty ring".
+  # Drilldown needs. Without a generator those queries fail with "empty ring".
   metricsGenerator:
     enabled: true
     # Nothing is written while local-blocks is the only processor. span-metrics or
@@ -26,8 +26,8 @@ tempo:
       path: /var/tempo/generator/wal
     traces_storage:
       path: /var/tempo/generator/traces
-  # TraceQL metrics refuse a range over 3h by default, which errors every panel on the
-  # logeverylift Traces dashboard. Wider than retention so any picker range answers.
+  # By default TraceQL metrics refuse a range over 3h, and every panel on the
+  # logeverylift Traces dashboard then errors. Wider than retention, so any picker range answers.
   queryFrontend:
     metrics:
       max_duration: 168h
@@ -41,8 +41,8 @@ tempo:
       cpu: 100m
       memory: 768Mi
     limits:
-      # The generator's local blocks hold a steady few hundred MiB, and a trace search or
-      # WAL replay adds 500Mi or more on top.
+      # The generator's local blocks hold a few hundred MiB at all times. A trace search or
+      # WAL replay adds 500Mi or more.
       memory: 2Gi
   securityContext:
     allowPrivilegeEscalation: false
