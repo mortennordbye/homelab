@@ -2,7 +2,7 @@
 
 GitHub Actions in [`.github/workflows/`](../../../.github/workflows/) build images, gate
 pull requests and publish the README cards and the docs site. None of them touch the
-cluster or run `terraform plan`: images reach the cluster through Kargo
+cluster or run `terraform plan`. Images reach the cluster through Kargo
 ([`kargo.md`](kargo.md)) and manifests through Argo CD ([`argocd.md`](argocd.md)).
 
 ## Workflows
@@ -29,31 +29,31 @@ cluster or run `terraform plan`: images reach the cluster through Kargo
 [![Morten, Renovate and the sync-certs workflow open PRs that pass the PR checks into main, Kargo's prod promotion PRs are merged by kargo-automerge, and a push to main starts Argo CD syncing, render-assets committing SVGs back and then starting the docs site build, the docs site build, and the portfolio and blog image builds that feed Kargo](../../assets/diagrams/delivery-ci.svg)](../../assets/diagrams/delivery-ci.svg)
 
 Two workflows change `main`. `render-assets` commits as `GitHub Actions` straight
-to `main` and only when the output changed.
+to `main`, and only when the output changed.
 `kargo-automerge` merges Kargo's promotion PRs. `sync-certs` and Renovate open PRs
 but never merge them. `lighthouse` and the two
 `readme-cards` jobs force-push a single commit to their own data branch
-(`keep_history: false`). This repo's README embeds the star history and status cards
-from `stars-data` and `status-data` over `raw.githubusercontent.com`; `lighthouse.json`
-feeds the Lighthouse card on the GitHub profile README.
+(`keep_history: false`). The README of this repo embeds the star history and status
+cards from `stars-data` and `status-data` over `raw.githubusercontent.com`.
+`lighthouse.json` feeds the Lighthouse card on the GitHub profile README.
 
-The build workflows only push images. The tag in the manifests is written by Kargo,
-and the `0.0.<run>` tag is what its Warehouses select.
+The build workflows only push images. Kargo writes the tag in the manifests, and its
+Warehouses select the `0.0.<run>` tag.
 
 ## Conventions
 
 Every action is pinned to a commit SHA with the version in a comment. Workflows default
 to `permissions: contents: read` (`kargo-automerge` and `reminders` to none) and widen per
 job. Most jobs that push, publish or call external services check
-`github.repository_owner == 'mortennordbye'` so forks skip them; `lighthouse`,
-the `readme-cards` stars job and the docs deploy do not, and `kargo-automerge` instead requires the PR
-branch to come from this repo.
+`github.repository_owner == 'mortennordbye'`, so forks skip them. `lighthouse`, the
+`readme-cards` stars job and the docs deploy do not check it. `kargo-automerge` instead
+requires that the PR branch comes from this repo.
 
-Pushes to `main` from the build workflows, renders, docs, IndexNow and automerge queue and
-never cancel a run in progress, so nothing is killed between building and pushing. PR runs,
-scans and the data-branch jobs cancel the superseded run.
+Pushes to `main` from the build workflows, renders, docs, IndexNow and automerge queue.
+They never cancel a run in progress, so nothing is killed between the build and the
+push. PR runs, scans and the data-branch jobs cancel the superseded run.
 
-`ci-terraform` holds no credentials: `init` runs with `-backend=false`, so it never
+`ci-terraform` holds no credentials. `init` runs with `-backend=false`, so it never
 reads state. Plans and applies stay local.
 
 ## Secrets
@@ -65,5 +65,5 @@ reads state. Plans and applies stay local.
 | `BW_ACCESS_TOKEN` | `reminders.yml`, reads the Discord webhook from Bitwarden |
 | `KARGO_AUTOMERGE_APPS` (variable) | `kargo-automerge.yaml`, comma separated app names |
 
-The IndexNow keys in `indexnow.yaml` are public by design: the endpoint verifies a
-submission by fetching the same key from the site.
+The IndexNow keys in `indexnow.yaml` are public by design. The endpoint verifies a
+submission when it fetches the same key from the site.

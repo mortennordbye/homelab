@@ -1,9 +1,9 @@
 # KEDA scale to zero
 
 KEDA scales app Deployments on schedules and on HTTP traffic. The KEDA HTTP add-on
-puts an interceptor proxy in front of idle apps: Traefik sends their traffic to the
-interceptor instead of the app Service, the interceptor holds the request, KEDA scales
-the Deployment from zero, and the interceptor forwards the request once a pod is ready.
+puts an interceptor proxy in front of idle apps. Traefik sends their traffic to the
+interceptor instead of the app Service. The interceptor holds the request, KEDA scales
+the Deployment from zero, and the interceptor forwards the request when a pod is ready.
 
 ## Install
 
@@ -16,15 +16,15 @@ Two Argo CD Applications from the `infra` ApplicationSet, both in namespace `ked
 
 The `keda` Application owns the `keda` namespace
 ([`namespace.yaml`](../../../k8s/talos/infra/keda/namespace.yaml)). The add-on deploys
-into it and must not declare its own Namespace: two Applications claiming the same
-resource fight over its ownership, the same rule loki and tempo follow for `monitoring`.
+into it and must not declare its own Namespace. Two Applications that claim the same
+resource fight over its ownership. loki and tempo follow the same rule for `monitoring`.
 
 The add-on directory also carries:
 
 - [`referencegrant.yaml`](../../../k8s/talos/infra/keda-http-add-on/referencegrant.yaml),
   which lets HTTPRoutes in the listed app namespaces reference a Service in `keda`.
 - [`servicemonitor.yaml`](../../../k8s/talos/infra/keda-http-add-on/servicemonitor.yaml),
-  which scrapes the add-on's external scaler.
+  which scrapes the external scaler of the add-on.
 
 The chart's own ScaledObject scales the interceptor (`keda-add-ons-http-interceptor`
 in `keda`) between the min and max in the values file.
@@ -35,23 +35,23 @@ in `keda`) between the min and max in the values file.
 
 - The app's HTTPRoute keeps its hostname and filters, but its `backendRef` is the
   Service `keda-add-ons-http-interceptor-proxy` in namespace `keda`, port `8080`.
-  Middlewares such as Authentik forward auth run at Traefik first, so only requests
-  that pass them reach the interceptor and wake the pod
+  Middlewares such as Authentik forward auth run at Traefik first. Only requests that
+  pass them reach the interceptor and wake the pod
   ([`homepage/httproute.yaml`](../../../k8s/talos/apps/homepage/httproute.yaml)).
-- The interceptor picks the target by the request's `Host` header. The app's
+- The interceptor picks the target by the `Host` header of the request. The app's
   InterceptorRoute lists that host under `spec.rules[].hosts` and names the app Service
   and port under `spec.target`.
-- The app's ScaledObject has an `external-push` trigger pointing at
+- The app's ScaledObject has an `external-push` trigger that points at
   `keda-add-ons-http-external-scaler.keda:9090` with `interceptorRoute: <name>`. The
-  external scaler reports pending and in-flight requests for that route to KEDA, which
+  external scaler reports pending and in-flight requests for that route to KEDA. KEDA
   scales the Deployment. Every route uses a concurrency target of 100.
 - The app's CiliumNetworkPolicy allows ingress on the container port from pods in
   `keda` labelled `app.kubernetes.io/component: interceptor` and
   `app.kubernetes.io/part-of: keda-add-ons-http`.
 
 Argo CD ignores `/spec/replicas` on every Deployment in the `apps` ApplicationSet
-([`apps.yaml`](../../../k8s/talos/infra/argocd/apps.yaml)), so a `replicas:` value in a
-manifest does not fight KEDA.
+([`apps.yaml`](../../../k8s/talos/infra/argocd/apps.yaml)). A `replicas:` value in a
+manifest therefore does not fight KEDA.
 
 ## Apps
 
@@ -69,13 +69,13 @@ manifest does not fight KEDA.
 | portfolio | `portfolio` | none | 1 / 3 | cron |
 | blog | `blog` | none | 1 / 3 | cron |
 
-The first five are on `traefik-gateway-public`; headroom, open-webui and the two stage
+The first five are on `traefik-gateway-public`. headroom, open-webui and the two stage
 apps are on `traefik-gateway-private`. Each app's files are `scaledobject.yaml` and,
 for the HTTP-triggered ones, `interceptorroute.yaml` under `k8s/talos/apps/<app>/`.
 
 portfolio and blog prod do not go through the interceptor. Their ScaledObjects
 ([`portfolio/scaledobject.yaml`](../../../k8s/talos/apps/portfolio/scaledobject.yaml))
-only use cron: 3 replicas from 07:00 to 23:00 Europe/Oslo, 1 outside it.
+only use cron: 3 replicas from 07:00 to 23:00 Europe/Oslo, 1 outside that window.
 
 ## Cron warm plus HTTP wake
 
@@ -96,12 +96,13 @@ triggers:
       interceptorRoute: omni-tools
 ```
 
-KEDA scales to the highest value any trigger asks for. From 07:00 to 23:00 Oslo time
-the cron holds one replica, so the app never cold-starts during the day. Outside that
-window only the HTTP trigger counts: the app sits at zero and the first request wakes
-it. `cooldownPeriod: 300` keeps a woken pod for five minutes after the last request.
+KEDA scales to the highest value that any trigger asks for. From 07:00 to 23:00 Oslo
+time the cron holds one replica, so the app never cold-starts during the day. Outside
+that window only the HTTP trigger counts. The app stays at zero, and the first request
+wakes it. `cooldownPeriod: 300` keeps a woken pod for five minutes after the last
+request.
 
-The stage apps and ollama have only the HTTP trigger and sit at zero until used.
+The stage apps and ollama have only the HTTP trigger. They stay at zero until used.
 
 ## Waking ollama from open-webui
 
@@ -111,18 +112,18 @@ ollama has no HTTPRoute. open-webui calls it in-cluster, and a direct call to
 [![open-webui calls the ollama-wake ExternalName Service, which resolves to the interceptor, whose InterceptorRoute targets ollama](../../assets/diagrams/delivery-keda-ollama.svg)](../../assets/diagrams/delivery-keda-ollama.svg)
 
 - [`open-webui/ollama-wake.yaml`](../../../k8s/talos/apps/open-webui/ollama-wake.yaml)
-  is an `ExternalName` Service named `ollama-wake` in `open-webui` that resolves to
+  is an `ExternalName` Service named `ollama-wake` in `open-webui`. It resolves to
   `keda-add-ons-http-interceptor-proxy.keda.svc.cluster.local`.
 - open-webui sets `OLLAMA_BASE_URL` to `http://ollama-wake:8080`
-  ([`deployment.yaml`](../../../k8s/talos/apps/open-webui/deployment.yaml)), so its
-  requests reach the interceptor with `Host: ollama-wake`.
+  ([`deployment.yaml`](../../../k8s/talos/apps/open-webui/deployment.yaml)). Its
+  requests therefore reach the interceptor with `Host: ollama-wake`.
 - [`ollama/interceptorroute.yaml`](../../../k8s/talos/apps/ollama/interceptorroute.yaml)
   matches the host `ollama-wake` and targets `ollama-service:11434`.
 
-The same pattern works for any in-cluster caller that should wake a scaled-to-zero
+The same pattern works for any in-cluster caller that must wake a scaled-to-zero
 backend: an ExternalName alias in the caller's namespace and an InterceptorRoute on
-the alias name. No ReferenceGrant is needed, since no HTTPRoute is involved. The
-backend's network policy must admit the interceptor; ollama's
+the alias name. No ReferenceGrant is needed, because no HTTPRoute is involved. The
+network policy of the backend must admit the interceptor. ollama's
 ([`ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/ollama/ciliumnetworkpolicy.yaml))
 allows port 11434 from the whole cluster.
 
@@ -132,13 +133,13 @@ Built from omni-tools. The app already has a Deployment, Service, HTTPRoute and
 CiliumNetworkPolicy under `k8s/talos/apps/<app>/`.
 
 1. Add `interceptorroute.yaml`: copy
-   [`omni-tools/interceptorroute.yaml`](../../../k8s/talos/apps/omni-tools/interceptorroute.yaml),
-   set the namespace, `spec.target.service` and `port` to the app Service, and
+   [`omni-tools/interceptorroute.yaml`](../../../k8s/talos/apps/omni-tools/interceptorroute.yaml).
+   Set the namespace, `spec.target.service` and `port` to the app Service. Set
    `spec.rules[].hosts` to the exact hostname in the HTTPRoute.
 2. Add `scaledobject.yaml`: copy
-   [`omni-tools/scaledobject.yaml`](../../../k8s/talos/apps/omni-tools/scaledobject.yaml),
-   set `scaleTargetRef.name` to the Deployment and `interceptorRoute` to the
-   InterceptorRoute's name. Drop the cron trigger if the app may sit at zero all day.
+   [`omni-tools/scaledobject.yaml`](../../../k8s/talos/apps/omni-tools/scaledobject.yaml).
+   Set `scaleTargetRef.name` to the Deployment and `interceptorRoute` to the name of
+   the InterceptorRoute. Drop the cron trigger if the app may stay at zero all day.
 3. In `httproute.yaml`, replace the app Service in `backendRefs` with
    `keda-add-ons-http-interceptor-proxy`, namespace `keda`, port `8080`
    ([`omni-tools/httproute.yaml`](../../../k8s/talos/apps/omni-tools/httproute.yaml)).
@@ -149,7 +150,7 @@ CiliumNetworkPolicy under `k8s/talos/apps/<app>/`.
 5. Add both new files to the app's `kustomization.yaml`.
 6. Add the app namespace to the `from` list in
    [`referencegrant.yaml`](../../../k8s/talos/infra/keda-http-add-on/referencegrant.yaml).
-   Without it the HTTPRoute's cross-namespace backendRef is not permitted and
+   Without it, the cross-namespace backendRef of the HTTPRoute is not permitted, and
    Traefik does not route the host.
 
 Verify after Argo CD syncs:
@@ -159,16 +160,16 @@ kubectl -n <ns> get scaledobject,interceptorroute
 kubectl -n <ns> get deploy <app> -w   # 0 at night, 1 after a request
 ```
 
-`kubectl get scaledobject -A` should list the app with `READY True` and its triggers.
+`kubectl get scaledobject -A` must list the app with `READY True` and its triggers.
 `ACTIVE` is `True` while a trigger wants replicas, for example inside the cron window.
 
 ## Gotchas
 
-The InterceptorRoute host and the HTTPRoute hostname must match exactly. A request
-whose `Host` matches no InterceptorRoute is not forwarded anywhere, even though
-Traefik routed it to the interceptor.
+The InterceptorRoute host and the HTTPRoute hostname must match exactly. The
+interceptor does not forward a request whose `Host` matches no InterceptorRoute, even
+when Traefik routed it to the interceptor.
 
-The network policy rule is easy to miss: without it the interceptor can wake the pod
+The network policy rule is easy to miss. Without it, the interceptor can wake the pod,
 but Cilium drops the request it forwards.
 
 portfolio and blog prod keep `minReplicaCount: 1` and bypass the interceptor, so the
