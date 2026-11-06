@@ -15,7 +15,7 @@ resources:
 - middleware-authentik.yaml
 - ciliumnetworkpolicy.yaml
 - monitoring.yaml
-# newTag is rewritten by Kargo's kustomize-set-image promotion; it overrides
+# Kargo's kustomize-set-image promotion rewrites newTag. It overrides
 # the inline tag in deployment.yaml.
 images:
 - name: ghcr.io/mortennordbye/reelsmith-gateway

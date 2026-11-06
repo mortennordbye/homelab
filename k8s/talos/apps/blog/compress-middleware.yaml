@@ -5,8 +5,8 @@ metadata:
   namespace: blog
 spec:
   # Edge compression for the Hugo/nginx blog. Traefik negotiates br/zstd/gzip
-  # from Accept-Encoding; encodings order wins over the client's q-values so
-  # brotli leads. includedContentTypes limits work to compressible text.
+  # from Accept-Encoding. The encodings order wins over the client's q-values, so
+  # brotli comes first. includedContentTypes limits the work to compressible text.
   compress:
     encodings:
       - br

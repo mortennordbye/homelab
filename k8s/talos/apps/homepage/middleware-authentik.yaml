@@ -1,4 +1,4 @@
-# Forward-auth for the dashboard. Lives in this namespace because Traefik
+# Forward-auth for the dashboard. It is in this namespace because Traefik
 # resolves an HTTPRoute ExtensionRef in the route's own namespace.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
@@ -10,6 +10,6 @@ metadata:
 spec:
   forwardAuth:
     address: http://authentik-server.identity.svc.cluster.local/outpost.goauthentik.io/auth/traefik
-    # Off on a public host: a client-supplied X-Forwarded-Host would pick which
+    # Off on a public host: a client-supplied X-Forwarded-Host would select which
     # provider authentik evaluates. Traefik sends its own values instead.
     trustForwardHeader: false

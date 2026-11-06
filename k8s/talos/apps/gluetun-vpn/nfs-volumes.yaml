@@ -1,5 +1,5 @@
 # Static NFS claims: the restricted Pod Security standard forbids inline nfs volumes.
-# Retain, so deleting a claim never touches the folder on the NAS.
+# Retain, so a deleted claim never changes the folder on the NAS.
 apiVersion: v1
 kind: PersistentVolume
 metadata:

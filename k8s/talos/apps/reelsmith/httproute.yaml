@@ -1,10 +1,10 @@
 # Public gateway: Meta must reach /webhook and fetch /media and /covers with a
-# publicly valid certificate. cert-manager and external-dns pick the hostname
-# up from here.
+# publicly valid certificate. cert-manager and external-dns read the hostname
+# from here.
 #
-# Allowlist, not catch-all: anything unlisted 404s at Traefik. /admin lives on
+# Allowlist, not catch-all: Traefik returns 404 for any unlisted path. /admin is on
 # the private gateway (httproute-admin.yaml) and /metrics is in-cluster only.
-# Adding a route to the service means adding it here too.
+# A new route on the service must be added here too.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -40,7 +40,7 @@ spec:
         - path:
             type: PathPrefix
             value: /healthz
-        # Policy pages held on all four platforms' app records; a 404 here
+        # Policy pages listed on all four platforms' app records. A 404 here
         # breaks those registrations.
         #
         # Exact, not PathPrefix: a "/" prefix matches every path and would put
@@ -55,7 +55,7 @@ spec:
             type: Exact
             value: /terms
         # TikTok OAuth redirect. The portal only accepts https redirect URIs,
-        # so the consent trip cannot use a loopback listener; the page prints
+        # so the consent trip cannot use a loopback listener. The page prints
         # the code for scripts/tiktok_authorise.py.
         - path:
             type: Exact

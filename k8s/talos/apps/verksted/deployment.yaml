@@ -18,7 +18,7 @@ spec:
       labels:
         app: verksted-app
     spec:
-      # The projected token is what agent sessions run kubectl with; see rbac.yaml.
+      # Agent sessions run kubectl with the projected token; see rbac.yaml.
       serviceAccountName: verksted
       containers:
         - name: verksted
@@ -36,23 +36,23 @@ spec:
             # Persist settings on the PVC (agent env vars set via the UI).
             - name: SETTINGS_FILE
               value: /data/settings.json
-            # Deliberately off the PVC it backs up; /mnt/backups is the NAS
+            # Kept off the PVC it backs up: /mnt/backups is the NAS
             # share, which has its own backups.
             - name: VK_BACKUP_DIR
               value: /mnt/backups
             # The documents the assistant may read: the whole NAS share, mounted
-            # read-only below. The text it extracts is written beside it on the
-            # PVC (DOCS_INDEX_DIR), never onto the share.
+            # read-only below. The assistant writes the text it extracts to the
+            # PVC (DOCS_INDEX_DIR), never to the share.
             - name: DOCS_DIR
               value: /mnt/shared
             # VK_AGENT_USER=vk-agent is off: the Synology share refuses uid
-            # 1001 whatever the file modes say (root is not squashed, so root
-            # works). It needs the share to grant that uid first. The repos and
-            # HOME are already owned by 1001 from the one boot it was on.
-          # Ready means tmux answers and the sessions directory takes a write;
-          # liveness stays on /api/health, since a restart ends every session
-          # and does not fix either. timeoutSeconds above the 1s default: a
-          # failed readiness check pulls the pod from the Service, which drops
+            # 1001 regardless of the file modes (root is not squashed, so root
+            # works). The share must grant that uid first. uid 1001 already
+            # owns the repos and HOME from the one boot it was on.
+          # Ready means tmux answers and the sessions directory accepts a write.
+          # Liveness stays on /api/health, since a restart ends every session
+          # and does not fix either. timeoutSeconds is above the 1s default: a
+          # failed readiness check removes the pod from the Service, which drops
           # every open terminal websocket.
           readinessProbe:
             httpGet:
@@ -62,10 +62,10 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
-          # Holds the liveness probe off until the server first answers. The
+          # Delays the liveness probe until the server first answers. The
           # boot that turns VK_AGENT_USER on chowns every repo on NFS before it
-          # listens, which is minutes, and the liveness window alone killed it
-          # partway through on every attempt. 30 minutes for that one boot.
+          # listens. That takes minutes, and the liveness window alone killed
+          # it before it finished, on every attempt. 30 minutes for that one boot.
           startupProbe:
             httpGet:
               path: /api/health
@@ -73,9 +73,9 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 180
-          # Deliberately hard to trip: a restart kills the tmux server and every
+          # Hard to fail by design: a restart kills the tmux server and every
           # agent session. /api/health is a constant with no disk behind it, and
-          # the long window keeps NFS stalls and CPU throttling from firing it.
+          # the long window stops NFS stalls and CPU throttling from failing it.
           livenessProbe:
             httpGet:
               path: /api/health
@@ -84,8 +84,8 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 6
-          # Sized for agent sessions (CLIs, headless chromium, dev servers);
-          # the limit has to clear the reelsmith nightly render peak.
+          # Sized for agent sessions (CLIs, headless chromium, dev servers).
+          # The limit must be above the reelsmith nightly render peak.
           resources:
             requests:
               cpu: "1"
@@ -94,7 +94,7 @@ spec:
               cpu: "6"
               memory: 10Gi
           # Still root: the backend starts every agent process as vk-agent,
-          # which takes root. What it may not do is gain more than it has.
+          # which needs root. It may not gain more privileges than it has.
           securityContext:
             allowPrivilegeEscalation: false
             seccompProfile:
@@ -103,35 +103,35 @@ spec:
             - name: data
               mountPath: /data
             # The half of reelsmith that is not in git (editorial profile, voice
-            # reference, history stores) — not reconstructible, so it lives on
-            # the NAS, not the PVC. subPath scopes to this folder only.
+            # reference, history stores). It cannot be rebuilt, so it is on
+            # the NAS, not the PVC. subPath limits the mount to this folder.
             - name: shared-data
               mountPath: /mnt/reelsmith
               subPath: media/reelsmith
-            # Nightly volume export target, off the PVC on purpose; subPath
-            # scopes to this folder only.
+            # Nightly volume export target, kept off the PVC. subPath
+            # limits the mount to this folder.
             - name: shared-data
               mountPath: /mnt/backups
               subPath: backups/verksted
             # The same share again, whole and read-only, for reading documents.
-            # readOnly is on the mount rather than the volume because the two
-            # mounts above still write; the kernel enforces it, so a delete
+            # readOnly is on the mount, not the volume, because the two
+            # mounts above still write. The kernel enforces it, so a delete
             # under here fails with EROFS whatever an agent session tries. The
             # container is unprivileged and cannot remount it, and dind does
-            # not mount it at all, so nothing in the pod can reach the share
-            # writably through this path.
+            # not mount it at all, so nothing in the pod can write to the share
+            # through this path.
             - name: shared-data
               mountPath: /mnt/shared
               readOnly: true
-        # Docker daemon for the agent sessions. Privileged is inherent to dind;
-        # shares the pod netns so the app reaches it at localhost:2375.
+        # Docker daemon for the agent sessions. dind needs privileged. It
+        # shares the pod netns, so the app reaches it at localhost:2375.
         - name: dind
           image: docker:29-dind
           # No explicit --host: with TLS off dind already binds tcp://0.0.0.0:2375,
           # and adding -H on 2375 makes two listeners and a crash-loop. The
           # CiliumNetworkPolicy blocks 2375 from other pods.
           env:
-            # Plain tcp on 2375, pod-local only — no TLS cert dance.
+            # Plain tcp on 2375, pod-local only; no TLS certificates.
             - name: DOCKER_TLS_CERTDIR
               value: ""
           securityContext:

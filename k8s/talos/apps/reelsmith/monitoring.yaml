@@ -1,5 +1,5 @@
-# Scrape the gateway and alert on the ways it goes quiet without crashing:
-# none of these show up as a restart or a 500, so the generic workload alerts
+# Scrape the gateway and alert on the ways it stops working without a crash:
+# none of these appear as a restart or a 500, so the generic workload alerts
 # in kube-prometheus-stack miss all of them.
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -27,8 +27,8 @@ metadata:
   name: reelsmith-alerts
   namespace: reelsmith
   labels:
-    # Matches the Prometheus ruleSelector; its ruleNamespaceSelector is empty,
-    # so an app-local rule is picked up like one in monitoring/.
+    # Matches the Prometheus ruleSelector. Its ruleNamespaceSelector is empty,
+    # so Prometheus loads an app-local rule like one in monitoring/.
     release: kube-prometheus-stack
   annotations:
     argocd.argoproj.io/sync-wave: "2"
@@ -36,8 +36,8 @@ spec:
   groups:
     - name: reelsmith.gateway
       rules:
-        # The refresher tries daily from 15 days out. An expired token cannot
-        # be refreshed, only re-authorised by hand in a browser.
+        # The refresher tries daily from 15 days before expiry. An expired token
+        # cannot be refreshed; a person must re-authorise it in a browser.
         - alert: ReelsmithTokenExpiring
           expr: reelsmith_token_days_left < 10
           for: 1h
@@ -92,7 +92,7 @@ spec:
             description: |
               A stalled scheduler misses publish slots silently, and a missed slot is not retried later.
 
-        # Everything is healthy and there is simply nothing to post — the one
+        # Everything is healthy and there is nothing to post: the one
         # failure no other alert can see.
         - alert: ReelsmithQueueStarved
           expr: increase(reelsmith_slots_starved_total[6h]) > 0
@@ -121,8 +121,8 @@ spec:
               Usually a full state volume. The copies live beside the database and the newest 14 are kept.
               Check: kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i backup
 
-        # The copy that survives losing the state volume. Same shape as the
-        # rule above; a mount that went away shows here and nowhere else.
+        # The copy that survives the loss of the state volume. Same shape as the
+        # rule above. A lost mount shows here and nowhere else.
         - alert: ReelsmithOffsiteBackupStale
           expr: |
             (time() - reelsmith_backup_offsite_last_success_timestamp > 86400)
@@ -195,7 +195,7 @@ spec:
         # the row in `claimed`: no failure is counted and the row never reaches
         # `failed`, so neither alert above sees it. CLAIM_STALE_AFTER (1h) is
         # far beyond one upload, so any non-zero value is an abandoned claim.
-        # Deliberately not self-healed: Meta may have accepted the post, and
+        # Not self-healed, by design: Meta may have accepted the post, and
         # only the account can say.
         - alert: ReelsmithClaimAbandoned
           expr: reelsmith_stale_claims > 0

@@ -6,12 +6,12 @@ metadata:
 spec:
   # The distroless Node runtime serves text assets uncompressed. Traefik
   # negotiates br/gzip/zstd from Accept-Encoding and compresses at the edge.
-  # includedContentTypes limits work to compressible text so already-compressed
-  # images and woff2 fonts aren't re-compressed for no gain.
+  # includedContentTypes limits the work to compressible text, so Traefik does
+  # not compress images and woff2 fonts a second time.
   compress:
-    # Traefik selects by this order, not the client's q-values. Browsers send
-    # "gzip, deflate, br, zstd"; without this it defaults to gzip. Brotli is the
-    # smallest for our HTML/JS and universally supported, so it leads.
+    # Traefik selects by this order, not by the client's q-values. Browsers send
+    # "gzip, deflate, br, zstd"; without this list Traefik defaults to gzip. Brotli
+    # is the smallest for our HTML/JS and all browsers support it, so it is first.
     encodings:
       - br
       - zstd

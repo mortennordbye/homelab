@@ -1,5 +1,5 @@
-# Hugging Face cache (Parakeet, Whisper, Pocket TTS) and the speech cache. Downloaded and rendered again
-# on an empty volume, so not backed up.
+# Hugging Face cache (Parakeet, Whisper, Pocket TTS) and the speech cache. The engine downloads and renders
+# them again on an empty volume, so they are not backed up.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

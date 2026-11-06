@@ -4,7 +4,7 @@ metadata:
   name: omni-tools
   namespace: omni-tools
   annotations:
-    # Static SPA, no auth, so the edge can front it and cache it.
+    # Static SPA, no auth, so the edge can proxy it and cache it.
     external-dns.kubernetes.io/cloudflare-proxied: "true"
 spec:
   parentRefs:

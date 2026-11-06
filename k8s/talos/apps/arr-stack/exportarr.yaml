@@ -461,9 +461,9 @@ spec:
     matchLabels:
       app: exportarr-bazarr
   endpoints:
-    # Bazarr's collector crawls the whole library each scrape (slow on large
-    # libraries), so give it a long interval and matching scrape timeout to
-    # avoid the scrape timing out and marking the target down.
+    # Bazarr's collector reads the whole library on each scrape (slow on large
+    # libraries). A long interval and a matching scrape timeout stop the
+    # scrape from timing out and marking the target down.
     - port: metrics
       path: /metrics
       interval: 2m
@@ -569,9 +569,9 @@ spec:
     matchLabels:
       app: exportarr-bazarr-4k
   endpoints:
-    # Bazarr's collector crawls the whole library each scrape (slow on large
-    # libraries), so give it a long interval and matching scrape timeout to
-    # avoid the scrape timing out and marking the target down.
+    # Bazarr's collector reads the whole library on each scrape (slow on large
+    # libraries). A long interval and a matching scrape timeout stop the
+    # scrape from timing out and marking the target down.
     - port: metrics
       path: /metrics
       interval: 2m
@@ -632,8 +632,8 @@ spec:
                 - ALL
           args:
             - prowlarr
-            # Pull historical indexer stats so query/grab metrics populate
-            # immediately instead of only counting activity after startup.
+            # Fetch historical indexer stats, so query/grab metrics are populated
+            # at once instead of only counting activity after startup.
             - --backfill
           env:
             - name: PORT

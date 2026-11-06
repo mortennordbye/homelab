@@ -11,8 +11,8 @@ resources:
 - service.yaml
 - ciliumnetworkpolicy.yaml
 # Public read-only demo of headroom (DEMO_MODE=1, see deployment.yaml).
-# newTag is owned by Kargo: the headroom-cd `demo` Stage rewrites it and pushes
-# to main. Don't hand-edit it.
+# Kargo owns newTag: the headroom-cd `demo` Stage rewrites it and pushes
+# to main. Do not edit it by hand.
 images:
 - name: ghcr.io/mortennordbye/headroom
   newTag: 0.0.1005

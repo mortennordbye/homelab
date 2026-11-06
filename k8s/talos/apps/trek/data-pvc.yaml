@@ -1,4 +1,4 @@
-# SQLite lives in /app/data, so block storage rather than NFS.
+# SQLite writes to /app/data, so use block storage, not NFS.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

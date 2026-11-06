@@ -16,7 +16,7 @@ spec:
         - ports:
             - port: "32400"
               protocol: TCP
-    # Tautulli/Seerr (intra-ns) + Sonarr/Radarr (arr-stack) library refresh; innestemme searches
+    # Tautulli/Seerr (intra-ns) + Sonarr/Radarr (arr-stack) library refresh. innestemme searches
     # for "play <title> on Plex".
     - fromEndpoints:
         - matchLabels:

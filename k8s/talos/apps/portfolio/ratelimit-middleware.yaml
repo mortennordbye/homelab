@@ -6,8 +6,8 @@ metadata:
 spec:
   # Token bucket keyed on the client IP Cloudflare observed (depth: 1 = the
   # rightmost X-Forwarded-For entry; keying the remote address would bucket a
-  # whole POP together). Sized well above a browser's parallel asset fetch, and
-  # each Traefik replica holds its own bucket, so the effective ceiling is up
+  # whole POP together). Sized well above a browser's parallel asset fetch.
+  # Each Traefik replica holds its own bucket, so the effective ceiling is up
   # to 3x these numbers.
   rateLimit:
     average: 50

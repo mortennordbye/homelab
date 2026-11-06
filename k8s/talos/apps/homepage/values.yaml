@@ -32,7 +32,7 @@ resources:
   limits:
     memory: 512Mi
 
-# The image runs as root unless told otherwise; /app is owned by 1000.
+# The image runs as root by default; uid 1000 owns /app.
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 1000

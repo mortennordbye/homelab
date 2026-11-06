@@ -7,8 +7,8 @@ metadata:
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
-  # One replica: single SQLite writer, singleton poller and scheduler — two
-  # pods would race to reply and to publish. Scaling means Postgres plus
+  # One replica: single SQLite writer, singleton poller and scheduler. Two
+  # pods would race to reply and to publish. Scaling needs Postgres and
   # leader election first.
   replicas: 1
   strategy:
@@ -69,8 +69,8 @@ spec:
             - name: GATEWAY_PUBLIC_BASE_URL
               value: "https://gate.nordbye.it"
             # A second copy of each state backup, off the state volume. The
-            # copies in /state/backups die with the PVC (reclaim policy
-            # Delete); these are on a retained volume on another NAS share.
+            # copies in /state/backups are deleted with the PVC (reclaim policy
+            # Delete). These are on a retained volume on another NAS share.
             - name: GATEWAY_BACKUP_OFFSITE_DIR
               value: /offsite
           envFrom:
@@ -126,8 +126,8 @@ kind: Service
 metadata:
   name: reelsmith-gateway
   namespace: reelsmith
-  # The ServiceMonitor selects by Service labels; without this one Prometheus
-  # creates no target at all — quieter than a target that is down.
+  # The ServiceMonitor selects by Service labels. Without this label Prometheus
+  # creates no target at all, which is quieter than a target that is down.
   labels:
     app: reelsmith-gateway
 spec:

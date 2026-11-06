@@ -6,8 +6,8 @@ metadata:
   labels:
     app: headroom-demo
 spec:
-  # Always on, unlike the private instance: linked from the blog, so no KEDA
-  # scale-to-zero cold start for visitors.
+  # Always on, unlike the private instance: the blog links to it, so visitors
+  # get no KEDA scale-to-zero cold start.
   replicas: 1
   revisionHistoryLimit: 3
   selector:
@@ -29,8 +29,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: headroom
-          # Tag owned by kustomization.yaml (`images.newTag`), rewritten by the
-          # Kargo `demo` Stage; this inline value is only a kubectl-apply fallback.
+          # kustomization.yaml (`images.newTag`) owns the tag, and the Kargo `demo`
+          # Stage rewrites it. This inline value is only a kubectl-apply fallback.
           image: ghcr.io/mortennordbye/headroom:sha-32a1389
           imagePullPolicy: IfNotPresent
           env:
@@ -39,8 +39,8 @@ spec:
             - name: DEMO_MODE
               value: "1"
             # Host-header allowlist (DNS-rebinding guard). The app 403s any host
-            # not listed, which is also why the probes below send an explicit
-            # Host header instead of hitting the pod IP.
+            # not listed. That is also why the probes below send an explicit
+            # Host header instead of the pod IP.
             - name: ALLOWED_HOSTS
               value: "headroom.nordbye.it,localhost,127.0.0.1"
           securityContext:
@@ -52,7 +52,7 @@ spec:
             - name: http
               containerPort: 3001
           volumeMounts:
-            # SQLite needs a writable dir; ephemeral on purpose so every restart
+            # SQLite needs a writable dir. Ephemeral by design, so every restart
             # starts clean.
             - name: data
               mountPath: /data

@@ -11,7 +11,7 @@ spec:
   # At most one replica: a Voice PE streams to one voice assistant at a time.
   replicas: 1
   revisionHistoryLimit: 3
-  # Recreate: RWO PVC, and two pods would fight over the satellite connection.
+  # Recreate: RWO PVC, and two pods would contend for the satellite connection.
   strategy:
     type: Recreate
   selector:
@@ -44,9 +44,9 @@ spec:
               value: /config/config.yaml
             - name: TZ
               value: Europe/Oslo
-            # "Play <title> on Plex": innestemme searches here (VOICE_PLEX_TOKEN in the Secret); the
+            # "Play <title> on Plex": innestemme searches here (VOICE_PLEX_TOKEN in the Secret). The
             # TV's Cast player plays it through Home Assistant's Plex integration. An environment
-            # variable rather than plex-url in the ConfigMap, which images without it would refuse.
+            # variable, not plex-url in the ConfigMap: images without that option would refuse it.
             - name: VOICE_PLEX_URL
               value: http://plex.plex-media-stack.svc.cluster.local:32400
           envFrom:
@@ -57,8 +57,8 @@ spec:
             capabilities:
               drop:
                 - ALL
-          # HTTP only listens once the models are downloaded and warmed, which on an empty
-          # volume is minutes.
+          # HTTP only listens after the models are downloaded and warmed. On an empty
+          # volume that takes minutes.
           startupProbe:
             httpGet:
               path: /healthz

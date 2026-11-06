@@ -4,10 +4,10 @@ metadata:
   name: headroom-demo-compress
   namespace: headroom-demo
 spec:
-  # The app ships a ~3.4 MB precached PWA shell (JS/CSS) and Express serves it
+  # The app has a ~3.4 MB precached PWA shell (JS/CSS), and Express serves it
   # uncompressed, so the edge owns compression. Same shape as portfolio-compress:
-  # brotli first (smallest for JS/HTML), limited to compressible text so fonts
-  # and images aren't re-compressed.
+  # brotli first (smallest for JS/HTML), limited to compressible text, so fonts
+  # and images are not compressed a second time.
   compress:
     encodings:
       - br

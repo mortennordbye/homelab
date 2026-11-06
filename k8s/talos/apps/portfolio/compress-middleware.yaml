@@ -6,9 +6,10 @@ metadata:
 spec:
   # The distroless Node runtime serves text assets uncompressed (Next.js
   # compress is off, so the edge owns compression). Traefik negotiates br/zstd/
-  # gzip from Accept-Encoding. encodings order wins over the client's q-values,
-  # so brotli leads (smallest for the site HTML/JS); includedContentTypes limits
-  # work to compressible text so images and woff2 fonts aren't re-compressed.
+  # gzip from Accept-Encoding. The encodings order wins over the client's
+  # q-values, so brotli comes first (smallest for the site HTML/JS).
+  # includedContentTypes limits the work to compressible text, so images and
+  # woff2 fonts are not compressed a second time.
   compress:
     encodings:
       - br

@@ -13,8 +13,8 @@ spec:
       labels:
         app: portfolio
     spec:
-      # Best-effort spread across hypervisors (zones) so a single host loss
-      # can't take a disproportionate share of replicas. Soft, so rollouts and
+      # Best-effort spread across hypervisors (zones), so the loss of one host
+      # cannot take a disproportionate share of replicas. Soft, so rollouts and
       # constrained scheduling never block.
       affinity:
         podAntiAffinity:
@@ -57,8 +57,8 @@ spec:
             # Path the /api/v1/infra route reads (the status ConfigMap mount).
             - name: STATUS_FILE
               value: /config/status.json
-            # Bearer key that gates the write endpoints. Optional so pods start
-            # before ESO syncs the secret; writes just refuse until it exists.
+            # Bearer key that gates the write endpoints. Optional, so pods start
+            # before ESO syncs the secret. Writes refuse until it exists.
             - name: PORTFOLIO_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -71,7 +71,7 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           volumeMounts:
-            # Next's ISR/fetch cache — the only path the server writes at runtime.
+            # Next's ISR/fetch cache: the only path the server writes at runtime.
             - name: next-cache
               mountPath: /app/.next/cache
             - name: tmp

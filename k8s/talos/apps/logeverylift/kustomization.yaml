@@ -12,8 +12,8 @@ resources:
 - httproute.yaml
 - cloudflare-only-middleware.yaml
 - ciliumnetworkpolicy.yaml
-# newTag via the kustomize-set-image promotion step (Kargo). Overrides the inline
-# tag in app.yaml; the logeverylift-cd Warehouse/promotion rewrites it to 0.0.N.
+# Kargo rewrites newTag in the kustomize-set-image promotion step. It overrides the
+# inline tag in app.yaml. The logeverylift-cd Warehouse/promotion sets it to 0.0.N.
 images:
 - name: ghcr.io/mortennordbye/logeverylift
   newTag: 0.0.474

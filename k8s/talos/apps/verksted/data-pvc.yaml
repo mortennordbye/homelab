@@ -1,7 +1,7 @@
 # Persistent /data: agent repos, session state, per-agent HOME (logins/configs),
-# and settings.json. On Synology NFS so it survives node moves and is easy to
-# back up / inspect. ReadWriteOnce is fine — a single verksted pod owns it (the
-# Deployment uses Recreate, so no two pods contend for the mount).
+# and settings.json. On Synology NFS, so it survives node moves and is easy to
+# back up and inspect. ReadWriteOnce is enough: a single verksted pod owns it (the
+# Deployment uses Recreate, so two pods never contend for the mount).
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

@@ -8,7 +8,7 @@ spec:
     matchLabels:
       app: gluetun
   ingress:
-    # Traefik fronts qbittorrent (8080) and prowlarr (9696) UIs.
+    # Traefik proxies the qbittorrent (8080) and prowlarr (9696) UIs.
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": traefik
@@ -20,7 +20,7 @@ spec:
             - port: "9696"
               protocol: TCP
     # arr-stack pods query prowlarr for indexers (9696) and the qbittorrent
-    # WebUI (8080) — the *arr download client and the qbittorrent exporter.
+    # WebUI (8080): the *arr download client and the qbittorrent exporter.
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": arr-stack
@@ -44,7 +44,7 @@ spec:
             - port: "53"
               protocol: ANY
     # Prowlarr reaches the arr apps and FlareSolverr on the private gateway through the
-    # hostAliases in gluetun.yaml; 8444 is the container port behind 10.3.10.102:443.
+    # hostAliases in gluetun.yaml. 8444 is the container port behind 10.3.10.102:443.
     - toEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": traefik
@@ -54,8 +54,8 @@ spec:
             - port: "8444"
               protocol: TCP
     # VPN tunnel egress to PIA. OpenVPN on UDP 1194/1198/8080; WireGuard on UDP 51820.
-    # All inner traffic (qbittorrent peers, torrent indexers, etc.) is encapsulated
-    # in this tunnel and not visible to Cilium as separate flows.
+    # The tunnel carries all inner traffic (qbittorrent peers, torrent indexers, etc.),
+    # so Cilium does not see it as separate flows.
     - toEntities:
         - world
       toPorts:
