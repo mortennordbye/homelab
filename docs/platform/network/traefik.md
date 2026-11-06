@@ -1,18 +1,19 @@
 # Traefik
 
 Traefik is the only ingress. It runs as three replicas in the `traefik` namespace, one per
-hypervisor (required anti-affinity on `topology.kubernetes.io/zone`), from the Helm chart in
+hypervisor (required anti-affinity on `topology.kubernetes.io/zone`). The Helm chart is in
 [`kustomization.yaml`](../../../k8s/talos/infra/traefik/kustomization.yaml) with
 [`values.yaml`](../../../k8s/talos/infra/traefik/values.yaml). Routes are Gateway API
-`HTTPRoute`s; the Kubernetes CRD provider is on for `Middleware` objects, with
-`allowCrossNamespace: true`. The zero-downtime move from ingress-nginx is written up in
-[Surviving the NGINX Ingress EOL](https://blog.nordbye.it/blog/surviving-nginx-eol/).
+`HTTPRoute`s. The Kubernetes CRD provider is on for `Middleware` objects, with
+`allowCrossNamespace: true`. [Surviving the NGINX Ingress
+EOL](https://blog.nordbye.it/blog/surviving-nginx-eol/) describes the zero-downtime move
+from ingress-nginx.
 
 [![Public requests pass Cloudflare, the UniFi port forward, the public VIP, Traefik and the middlewares to the app; LAN requests use the private VIP](../../assets/diagrams/network-traefik.svg)](../../assets/diagrams/network-traefik.svg)
 
 ## Gateways
 
-Two Gateways share the same pods and are told apart by entrypoint port. Each has its own
+Two Gateways share the same pods. The entrypoint port tells them apart. Each has its own
 LoadBalancer Service with a fixed VIP from the Cilium pool (see [`README.md`](README.md)).
 
 | Gateway | Service and VIP | Listener | Port (Service to pod) | TLS secret in `cert-manager` |
@@ -30,23 +31,23 @@ own Service and Gateway are disabled. The certificates are in
 [`certificates.md`](certificates.md).
 
 The public Gateway carries the label `external-dns: public` and the target annotation
-`ddns.bigd.no`, so external-dns publishes every `bigd.no` hostname routed through it (see
-[`cloudflare.md`](cloudflare.md#bigdno)). The private Gateway gets no DNS from the cluster;
-`local.bigd.no` names are UniFi records ([`dns.md`](dns.md)).
+`ddns.bigd.no`. external-dns therefore publishes every `bigd.no` hostname that routes
+through it (see [`cloudflare.md`](cloudflare.md#bigdno)). The private Gateway gets no DNS
+from the cluster. `local.bigd.no` names are UniFi records ([`dns.md`](dns.md)).
 
-The two VIPs are announced from disjoint node sets, public from the workers and private
-from the control planes ([`cilium.md`](cilium.md#l2-announcements-and-lb-ipam)).
+Disjoint node sets announce the two VIPs: the workers announce the public VIP, and the
+control planes announce the private VIP ([`cilium.md`](cilium.md#l2-announcements-and-lb-ipam)).
 
 The dashboard is at `traefik.local.bigd.no`
 ([`httproute-dashboard.yaml`](../../../k8s/talos/infra/traefik/httproute-dashboard.yaml)).
 
 ## HTTP/3
 
-`websecure` serves HTTP/3 over UDP on the same port. It needs four pieces, and a missing
-one makes h3 fail silently while HTTP/2 keeps working:
+`websecure` serves HTTP/3 over UDP on the same port. It needs four pieces. If one is
+missing, h3 fails silently and HTTP/2 continues to work:
 
-- `http3.advertisedPort: 443` in `values.yaml`. Traefik listens on 8443 and would
-  otherwise advertise `Alt-Svc: h3=":8443"`, which is not reachable from outside.
+- `http3.advertisedPort: 443` in `values.yaml`. Traefik listens on 8443 and, without this
+  setting, advertises `Alt-Svc: h3=":8443"`, which is not reachable from outside.
 - The `websecure-h3` UDP port on `traefik-public`.
 - UDP 8443 in the Traefik
   [`ciliumnetworkpolicy.yaml`](../../../k8s/talos/infra/traefik/ciliumnetworkpolicy.yaml).
@@ -57,17 +58,18 @@ The private gateway serves TCP only.
 
 ## Tracing and metrics
 
-Every request is traced (`sampleRate: 1.0`) and exported over OTLP gRPC to
-`alloy.monitoring:4317`, service name `traefik`. Alloy drops traces of the monitoring UIs and
-blackbox probes, strips per-process, per-connection and client-IP attributes, and forwards
-the rest to Tempo (`k8s/talos/infra/loki/alloy-values.yaml`). Prometheus metrics with entrypoint, router
-and service labels are on port 9100, scraped through the chart's ServiceMonitor. Access
-logs are on. See [`../observability/README.md`](../observability/README.md).
+Traefik traces every request (`sampleRate: 1.0`) and exports the traces over OTLP gRPC to
+`alloy.monitoring:4317`, with the service name `traefik`. Alloy drops the traces of the
+monitoring UIs and the blackbox probes. It strips per-process, per-connection and client-IP
+attributes, and forwards the rest to Tempo (`k8s/talos/infra/loki/alloy-values.yaml`).
+Prometheus metrics with entrypoint, router and service labels are on port 9100, and the
+chart's ServiceMonitor scrapes them. Access logs are on. See
+[`../observability/README.md`](../observability/README.md).
 
 ## Middlewares
 
-Middlewares are Traefik `Middleware` objects in the app's own namespace, attached to an
-HTTPRoute rule as `ExtensionRef` filters. Traefik applies filters in the order listed, so
+Middlewares are Traefik `Middleware` objects in the app's own namespace. An HTTPRoute rule
+attaches them as `ExtensionRef` filters. Traefik applies the filters in the listed order, so
 the allow list goes first and compression last.
 
 | Middleware | Used by | What it does |
@@ -84,32 +86,32 @@ Templates: [`blog/httproute.yaml`](../../../k8s/talos/apps/blog/httproute.yaml) 
 
 Rules that the files depend on:
 
-- `ipAllowList` has no `ipStrategy`. It checks the TCP peer, which is a Cloudflare edge;
-  X-Forwarded-For can be spoofed.
-- `rateLimit` and `inFlightReq` key on `ipStrategy.depth: 1`, the rightmost
-  X-Forwarded-For entry, which is the client Cloudflare saw. That entry is only kept
+- `ipAllowList` has no `ipStrategy`. It checks the TCP peer, which is a Cloudflare edge. A
+  client can spoof X-Forwarded-For.
+- `rateLimit` and `inFlightReq` key on `ipStrategy.depth: 1`. That is the rightmost
+  X-Forwarded-For entry, the client that Cloudflare saw. Traefik keeps that entry only
   because the entrypoints trust the Cloudflare ranges (`forwardedHeaders.trustedIPs`).
 - `inFlightReq` must set `sourceCriterion` explicitly. Its default keys on the request
-  host, which caps the whole site rather than each client.
+  host, which caps the whole site and not each client.
 - Each Traefik replica keeps its own bucket, so the effective limit is up to three times
   the configured value.
 - A forward-auth route needs a separate `/outpost.goauthentik.io/` rule without the auth
-  filter that points at `authentik-server` in `identity`, allowed by a ReferenceGrant in
-  `identity` (for example
+  filter. That rule points at `authentik-server` in `identity`. A ReferenceGrant in
+  `identity` allows it (for example
   [`referencegrant-homepage.yaml`](../../../k8s/talos/infra/authentik/referencegrant-homepage.yaml)).
 - `forwardAuth.trustForwardHeader` stays `false` on public hosts.
 
-`audiobookshelf.bigd.no` is the one public route without `cloudflare-only`: it is DNS-only
+`audiobookshelf.bigd.no` is the one public route without `cloudflare-only`. It is DNS-only
 (see [`cloudflare.md`](cloudflare.md#origin-and-proxying)), so its clients connect directly.
 
 ## Cloudflare ranges
 
-The Cloudflare IP ranges exist in fourteen places that must stay identical:
-`trustedIPs` under `ports.web.forwardedHeaders` in `values.yaml` (reused by `websecure`
+The Cloudflare IP ranges exist in fourteen places, and all copies must be identical:
+`trustedIPs` under `ports.web.forwardedHeaders` in `values.yaml` (`websecure` reuses it
 through the YAML anchor `&cloudflareIPs`), and the `sourceRange` of every
-`cloudflare-only-middleware.yaml`. A range missing from a middleware returns 403 to
-visitors served by that edge; a range missing from `trustedIPs` makes those visitors share
-one rate-limit bucket.
+`cloudflare-only-middleware.yaml`. If a range is missing from a middleware, visitors served
+by that edge get a 403 response. If a range is missing from `trustedIPs`, those visitors
+share one rate-limit bucket.
 
 List every copy:
 
@@ -118,9 +120,10 @@ git ls-files 'k8s/**/cloudflare-only-middleware.yaml'
 grep -rln 'ranges mirror trustedIPs' k8s/
 ```
 
-To update, fetch `https://www.cloudflare.com/ips-v4` and `https://www.cloudflare.com/ips-v6`,
-edit the list under `trustedIPs: &cloudflareIPs` in `values.yaml`, then write the same list
-into every middleware in the same PR. Check that each copy matches:
+To update the ranges, fetch `https://www.cloudflare.com/ips-v4` and
+`https://www.cloudflare.com/ips-v6`. Edit the list under `trustedIPs: &cloudflareIPs` in
+`values.yaml`. Then write the same list into every middleware in the same PR. Check that
+each copy matches:
 
 ```bash
 sed -n '/trustedIPs: &cloudflareIPs/,/expose:/p' k8s/talos/infra/traefik/values.yaml \
@@ -135,15 +138,15 @@ No output means every copy matches. A new public app adds its own copy.
 ## Exposing an app
 
 1. Pick the gateway. Internal apps use `traefik-gateway-private` with a
-   `<name>.local.bigd.no` hostname, and need a UniFi DNS record ([`dns.md`](dns.md)).
+   `<name>.local.bigd.no` hostname. They need a UniFi DNS record ([`dns.md`](dns.md)).
    Public apps use `traefik-gateway-public` with a hostname under `bigd.no`, `nordbye.it`
-   or `logeverylift.com`, the zones that have a certificate on `websecure`.
+   or `logeverylift.com`. Those are the zones that have a certificate on `websecure`.
 2. Write an `HTTPRoute` in the app's namespace with `parentRefs` to that Gateway in
    namespace `traefik`. [`verksted/httproute.yaml`](../../../k8s/talos/apps/verksted/httproute.yaml)
    is the private template.
-3. For a public app, copy a `cloudflare-only-middleware.yaml` into the app, renamed
-   `<app>-cloudflare-only`, and add it as the first filter. A `bigd.no` hostname also
-   sets `external-dns.kubernetes.io/cloudflare-proxied: "true"` on the route;
+3. For a public app, copy a `cloudflare-only-middleware.yaml` into the app and rename it
+   `<app>-cloudflare-only`. Add it as the first filter. A `bigd.no` hostname also
+   sets `external-dns.kubernetes.io/cloudflare-proxied: "true"` on the route.
    [`omni-tools/httproute.yaml`](../../../k8s/talos/apps/omni-tools/httproute.yaml) is the
    template. `nordbye.it` and `logeverylift.com` hostnames are Terraform records, see
    [`cloudflare.md`](cloudflare.md).
@@ -151,10 +154,10 @@ No output means every copy matches. A new public app adds its own copy.
 5. Allow ingress from Traefik in the app's CiliumNetworkPolicy
    ([`cilium.md`](cilium.md#network-policies)).
 6. An app that scales to zero routes to `keda-add-ons-http-interceptor-proxy` in `keda`
-   instead of its own Service, and its namespace must be added to
+   instead of its own Service. Add its namespace to
    [`referencegrant.yaml`](../../../k8s/talos/infra/keda-http-add-on/referencegrant.yaml).
 
-Check the route was accepted:
+Check that the route was accepted:
 
 ```bash
 kubectl -n <ns> get httproute <name> -o jsonpath='{.status.parents[*].conditions}'

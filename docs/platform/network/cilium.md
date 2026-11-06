@@ -1,41 +1,42 @@
 # Cilium
 
-Cilium is the CNI, replaces kube-proxy, announces the LoadBalancer VIPs on L2 and applies
+Cilium is the CNI. It replaces kube-proxy, announces the LoadBalancer VIPs on L2 and applies
 the CiliumNetworkPolicies. It runs in `kube-system` from the Helm chart
 in [`kustomization.yaml`](../../../k8s/talos/infra/cilium/kustomization.yaml) with
 [`values.yaml`](../../../k8s/talos/infra/cilium/values.yaml). Cilium's own Gateway API
-support is off; Traefik handles ingress ([`traefik.md`](traefik.md)).
+support is off. Traefik handles ingress ([`traefik.md`](traefik.md)).
 
 ## Bootstrap
 
 Talos boots with `cni: none` and `proxy.disabled`, so no node becomes Ready until Cilium
-runs. Terraform installs the first release from the same `values.yaml` and then applies the
-IP pool and L2 policies with kubectl
-([`k8s-cilium.tf`](../../../terraform/proxmox/hyper-cluster/k8s/talos/k8s-cilium.tf)). It
-ignores later changes to version and values, and Argo CD owns the release from then on.
-See [`../cluster/talos.md`](../cluster/talos.md).
+runs. Terraform installs the first release from the same `values.yaml`. It then applies the
+IP pool and the L2 policies with kubectl
+([`k8s-cilium.tf`](../../../terraform/proxmox/hyper-cluster/k8s/talos/k8s-cilium.tf)).
+Terraform ignores later changes to the version and the values. Argo CD owns the release from
+then on. See [`../cluster/talos.md`](../cluster/talos.md).
 
 Settings that tie Cilium to Talos:
 
 - `k8sServiceHost: localhost`, `k8sServicePort: 7445`: the API through KubePrism.
 - `ipam.mode: kubernetes`: Talos assigns the node pod CIDRs.
 - `ipv4NativeRoutingCIDR: 10.244.0.0/16` must equal the cluster pod subnet. That is the
-  Talos default; `talos-cluster.tf` does not override it. Native routing is required for
-  the DSR load balancer mode (`loadBalancer.mode: dsr`, `algorithm: maglev`).
-- `bpf.hostLegacyRouting: true`: Talos forwards kube-dns to the host DNS, which breaks
-  without it.
-- `cgroup.autoMount.enabled: false` with `hostRoot: /sys/fs/cgroup`: reuse the Talos mount.
-- The agent's capability list leaves out `SYS_MODULE`; Talos does not let workloads load
+  Talos default, and `talos-cluster.tf` does not override it. The DSR load balancer mode
+  (`loadBalancer.mode: dsr`, `algorithm: maglev`) needs native routing.
+- `bpf.hostLegacyRouting: true`: Talos forwards kube-dns to the host DNS. That forwarding
+  breaks without this setting.
+- `cgroup.autoMount.enabled: false` with `hostRoot: /sys/fs/cgroup`: Cilium reuses the Talos
+  mount.
+- The agent's capability list leaves out `SYS_MODULE`. Talos does not let workloads load
   kernel modules.
 - The operator tolerates every taint (`operator.tolerations: [{operator: Exists}]`). Nodes
-  stay NotReady until Cilium runs, so the operator has to schedule on NotReady nodes during
+  stay NotReady until Cilium runs, so the operator must schedule on NotReady nodes during
   bootstrap. It runs two replicas with a PDB.
 
 ## L2 announcements and LB IPAM
 
-`CiliumLoadBalancerIPPool` `default-pool` hands out `10.3.10.100/29`
-([`loadbalancer-ippool.yaml`](../../../k8s/talos/infra/cilium/loadbalancer-ippool.yaml)). The
-assigned VIPs are listed in [`README.md`](README.md). Services pin their address with the
+`CiliumLoadBalancerIPPool` `default-pool` assigns addresses from `10.3.10.100/29`
+([`loadbalancer-ippool.yaml`](../../../k8s/talos/infra/cilium/loadbalancer-ippool.yaml)).
+[`README.md`](README.md) lists the assigned VIPs. A Service pins its address with the
 `lbipam.cilium.io/ips` annotation.
 
 Three `CiliumL2AnnouncementPolicy` objects
@@ -50,43 +51,43 @@ decide which nodes answer ARP for a VIP:
 
 [![Each VIP from default-pool and the nodes that announce it](../../assets/diagrams/network-cilium-l2.svg)](../../assets/diagrams/network-cilium-l2.svg)
 
-The Traefik VIPs get disjoint node sets so one bad node cannot take both gateways down. A
-new LoadBalancer Service with no label falls under the default policy.
+The Traefik VIPs get disjoint node sets, so one bad node cannot stop both gateways. The
+default policy covers a new LoadBalancer Service with no label.
 
-After any change that rolls the agent DaemonSet, check the BPF LB map on each node, see
+After a change that rolls the agent DaemonSet, check the BPF LB map on each node. See
 [`../observability/incidents.md`](../observability/incidents.md).
 
 ## Hubble
 
 Hubble, the relay and the UI are on. The UI is at `hubble.local.bigd.no` on the private
 gateway ([`httproute-hubble.yaml`](../../../k8s/talos/infra/cilium/httproute-hubble.yaml)).
-Hubble metrics, including policy verdicts per workload and namespace, go to Prometheus on
-port 9965; agent, operator and Envoy metrics are on 9962, 9963 and 9964.
+Hubble metrics go to Prometheus on port 9965, and they include policy verdicts per workload
+and namespace. The agent, operator and Envoy metrics are on 9962, 9963 and 9964.
 
-Hubble's TLS certificates are issued in-cluster by certgen (`hubble.tls.auto.method:
-cronJob`), not by Helm, which would mint a new CA on every render and rotate it under the
-agents on each Argo CD sync. Leaves are valid for 365 days (`certValidityDuration`) and
-reissued by the cron schedule `0 0 1 */4 *`. The leaf lifetime must end before the CA's
-(`tls.ca`, three years) or certgen refuses to issue.
+certgen issues Hubble's TLS certificates in the cluster (`hubble.tls.auto.method:
+cronJob`). Helm does not issue them: Helm would mint a new CA on every render and rotate it
+under the agents on each Argo CD sync. Leaves are valid for 365 days
+(`certValidityDuration`). The cron schedule `0 0 1 */4 *` reissues them. The leaf lifetime
+must end before the CA's (`tls.ca`, three years), or certgen refuses to issue.
 
 ## Network policies
 
 Every app namespace except `home-assistant`, and most infra namespaces, has a
 `ciliumnetworkpolicy.yaml`. List them with `kubectl get ciliumnetworkpolicy -A`.
-Policies are enforced (`policyAuditMode: false`). Drops show as `DROPPED` verdicts in Hubble
-and in `hubble_policy_verdicts_total{action="dropped"}`. `policyAuditMode` is a single
-agent-wide setting with no per-namespace toggle; turning it back on relaxes every policy at
-once.
+Cilium enforces the policies (`policyAuditMode: false`). Drops show as `DROPPED` verdicts in
+Hubble and in `hubble_policy_verdicts_total{action="dropped"}`. `policyAuditMode` is a single
+agent-wide setting with no per-namespace toggle. If you turn it back on, it relaxes every
+policy at once.
 
-How the policies were rolled out from audit mode to enforced, with the Hubble workflow, is
-written up in [Rolling out Cilium network policies](https://blog.nordbye.it/blog/cilium-network-policy-rollout/).
+[Rolling out Cilium network policies](https://blog.nordbye.it/blog/cilium-network-policy-rollout/)
+describes how the policies went from audit mode to enforced, with the Hubble workflow.
 
-Right after a node reboots, a pod's first connection to a `toFQDNs` name can be dropped
-before Cilium has seen the DNS answer. The retry passes; an app that does not retry needs a
+Right after a node reboots, Cilium can drop a pod's first connection to a `toFQDNs` name,
+before Cilium has seen the DNS answer. The retry passes. An app that does not retry needs a
 restart.
 
-Cilium default-denies a direction only once a policy has a rule for it. An ingress-only
-policy leaves egress open.
+Cilium denies a direction by default only when a policy has a rule for that direction. An
+ingress-only policy leaves egress open.
 
 [![Ingress and egress a typical app policy allows, logged by Hubble](../../assets/diagrams/network-cilium-policy.svg)](../../assets/diagrams/network-cilium-policy.svg)
 
@@ -105,26 +106,26 @@ A new app's policy, copied from the one closest to it:
             protocol: TCP
   ```
 
-- Ingress from the KEDA interceptor as well if the app scales to zero, and always
+- Ingress from the KEDA interceptor too, if the app scales to zero. Always
   `fromEntities: [host, health]` for probes.
   [`omni-tools/ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/omni-tools/ciliumnetworkpolicy.yaml)
   has all three.
-- No egress rules if the app needs broad outbound access, as
+- No egress rules if the app needs broad outbound access, as in
   [`verksted/ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/verksted/ciliumnetworkpolicy.yaml).
-- For restricted egress, allow DNS to `kube-dns` with an L7 `dns` rule and then
+- For restricted egress, allow DNS to `kube-dns` with an L7 `dns` rule. Then add
   `toFQDNs` for the external names.
   [`external-dns/ciliumnetworkpolicy.yaml`](../../../k8s/talos/infra/external-dns/ciliumnetworkpolicy.yaml)
-  is the template. Without the `rules.dns` block Cilium never learns the addresses behind a
+  is the template. Without the `rules.dns` block, Cilium never learns the addresses behind a
   name, and the `toFQDNs` rule matches nothing.
 - Prometheus scrapes come from pods labelled `app.kubernetes.io/name: prometheus` in
   `monitoring`.
 
-Check a new policy by looking for dropped flows involving the app, in Hubble
-(`hubble observe --verdict DROPPED` in a Cilium agent pod) or with this query in Prometheus:
+To check a new policy, look for dropped flows that involve the app. Use Hubble
+(`hubble observe --verdict DROPPED` in a Cilium agent pod) or this query in Prometheus:
 
 ```promql
 sum by (source, destination, direction) (increase(hubble_policy_verdicts_total{action="dropped", destination_namespace="<ns>"}[1h]))
 ```
 
-In that metric `destination` is the pod the policy applies to and `source` is the peer, in
+In that metric, `destination` is the pod the policy applies to, and `source` is the peer, in
 both directions.
