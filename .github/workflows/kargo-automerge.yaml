@@ -1,11 +1,11 @@
 # Merges Kargo's promotion PRs for the apps named in the KARGO_AUTOMERGE_APPS
-# repository variable. For those apps the PR is a record rather than a review:
-# the build was already vetted in the app's own repo and the promotion still
-# has to pass its smoke test afterwards.
+# repository variable. For those apps the PR is a record, not a review: the
+# app's own repo already checked the build, and the promotion still has to
+# pass its smoke test afterwards.
 #
-# Kill switch: drop an app from the KARGO_AUTOMERGE_APPS Actions variable (or
-# empty it) and the next promotion PR waits for a human. Kargo opens the PR and
-# blocks on the merge either way, so nothing is lost.
+# To stop automerge, remove an app from the KARGO_AUTOMERGE_APPS Actions
+# variable (or empty it). The next promotion PR then waits for a human. Kargo
+# opens the PR and blocks on the merge either way, so nothing is lost.
 name: Kargo auto-merge
 
 on:
@@ -16,8 +16,8 @@ on:
 
 permissions: {}
 
-# Serialised per PR so the three `labeled` events do not race each other into
-# the same merge.
+# Serialised per PR, so the three `labeled` events do not race into the same
+# merge.
 concurrency:
   group: kargo-automerge-${{ github.event.pull_request.number }}
   cancel-in-progress: false
@@ -68,7 +68,7 @@ jobs:
             exit 0
           fi
           # GitHub computes mergeability asynchronously and reports UNKNOWN
-          # until it finishes, which `gh pr merge` treats as a hard failure.
+          # until it finishes. `gh pr merge` treats UNKNOWN as a hard failure.
           for _ in 1 2 3 4 5 6; do
             state=$(gh pr view "$PR" --json mergeable --jq .mergeable)
             [ "$state" = UNKNOWN ] || break

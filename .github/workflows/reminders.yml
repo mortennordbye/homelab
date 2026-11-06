@@ -1,8 +1,8 @@
 name: "Reminders (≈30 days)"
 
-# One workflow for all three monthly Discord reminders. They were three near
-# identical files; only the day, the wording, and the colour ever differed.
-# The schedule that fired is matched back to a reminder via github.event.schedule,
+# One workflow for all three monthly Discord reminders. Only the day, the
+# wording and the colour differ between them.
+# The job matches the schedule that fired to a reminder via github.event.schedule,
 # so the cron strings below must stay distinct and must match the case block.
 
 on:
@@ -38,8 +38,8 @@ jobs:
           SCHEDULE: ${{ github.event.schedule }}
           DISPATCH: ${{ inputs.reminder }}
         run: |
-          # A dispatch names the reminder outright; a scheduled run is identified
-          # by the cron that fired.
+          # A dispatch names the reminder directly. The cron that fired identifies
+          # a scheduled run.
           case "${DISPATCH:-$SCHEDULE}" in
             kubernetes | "0 16 1 * *") key=kubernetes ;;
             backup | "0 16 8 * *") key=backup ;;
@@ -87,8 +87,8 @@ jobs:
               ;;
           esac
 
-          # jq builds the body so the emoji, newlines, and parentheses in the task
-          # lists are escaped properly rather than hand quoted into JSON.
+          # jq builds the body and escapes the emoji, newlines and parentheses in
+          # the task lists correctly. Hand quoting into JSON does not.
           payload=$(jq -n \
             --arg title "$title" \
             --arg description "$description" \

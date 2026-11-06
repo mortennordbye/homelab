@@ -2,9 +2,9 @@
 #
 # reelsmith-stale-claims.sh — list the queue rows behind ReelsmithClaimAbandoned.
 #
-# Read-only: opens the gateway's SQLite with mode=ro, so it is safe while the
-# gateway is running and never changes a row. Resolving a claim stays a manual
-# decision in the admin panel (https://reelsmith.local.bigd.no/admin/).
+# Read-only: the script opens the gateway's SQLite with mode=ro. It is safe
+# while the gateway runs and never changes a row. You resolve a claim manually
+# in the admin panel (https://reelsmith.local.bigd.no/admin/).
 #
 set -euo pipefail
 

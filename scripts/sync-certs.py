@@ -1,7 +1,7 @@
 """Rebuild portfolio/src/content/certs.json from Credly and the Microsoft Learn transcript.
 
-Both sources are public. Any fetch or parse failure exits non-zero before the file
-is touched, so an outage on either side never drops certs from the site.
+Both sources are public. A fetch or parse failure exits non-zero before the
+script writes the file, so an outage on either side never drops certs from the site.
 """
 
 import json
@@ -14,8 +14,8 @@ CREDLY = "https://www.credly.com/users/morten-victor-nordbye/badges.json"
 LEARN_TRANSCRIPT = "https://learn.microsoft.com/en-us/users/mortenvictornordbye-8246/transcript/dr5zjaxjo8qy1zn"
 LEARN_API = "https://learn.microsoft.com/api/profiles/transcript/share/dr5zjaxjo8qy1zn?locale=en-us"
 LEARN_SHARE = "https://learn.microsoft.com/api/credentials/share/en-us/MortenVictorNordbye-8246"
-# The transcript lacks the credential ids Learn's per-cert pages need. Add a new cert's id from its
-# share link on the Learn profile; until then it links to the transcript.
+# The transcript lacks the credential ids that Learn's per-cert pages need. Add a new cert's id from
+# its share link on the Learn profile. Until then the cert links to the transcript.
 LEARN_IDS = {
     "Microsoft Certified: DevOps Engineer Expert": "F8616ED44F1AA2F4",
     "Microsoft Certified: Azure Administrator Associate": "9AC5167520292789",

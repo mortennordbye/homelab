@@ -2,7 +2,7 @@ name: Render Assets
 
 # Re-renders every docs/assets/diagrams/*.d2 to SVG + PNG and re-crops
 # docs/assets/logo/source.jpg to the shipped PNG whenever a source changes, and
-# commits the result back — so the committed images never drift from source.
+# commits the result back, so the committed images never drift from source.
 
 on:
   push:
@@ -16,8 +16,8 @@ on:
 permissions:
   contents: read
 
-# Commits rendered assets back to main; queue rather than cancel so a run is
-# never killed between rendering and pushing.
+# Commits rendered assets back to main. Queue instead of cancel, so a run is
+# never killed between the render and the push.
 concurrency:
   group: render-assets
   cancel-in-progress: false
@@ -69,7 +69,7 @@ jobs:
       - name: Crop the logo to a 512 round mark
         # Square crop around the fruit, then a circular mask: the full frame is
         # unreadable at the 128px the README renders it at, and the round
-        # silhouette is what makes it read as a mark rather than a photo.
+        # silhouette makes it look like a mark, not a photo.
         run: |
           convert docs/assets/logo/source.jpg -crop 460x460+280+300 +repage -resize 512x512 \
             \( +clone -alpha transparent -fill white -draw "circle 256,256 256,4" \) \
