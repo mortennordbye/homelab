@@ -3,9 +3,9 @@ name: Lighthouse
 # Audits the live public sites with Lighthouse on real GitHub runners (not the
 # qemu-emulated local runs, which throttle CPU and inflate perf metrics).
 # Median of 3 runs per URL. Assertions gate the trustworthy categories (SEO,
-# accessibility, best-practices) and treat performance as a warning, since it
-# varies run-to-run and the 3D globe keeps it borderline. Reports upload to
-# Lighthouse CI's temporary public storage — the run log links each one.
+# accessibility, best-practices) and treat performance as a warning, because it
+# varies between runs and the 3D globe keeps it borderline. Reports upload to
+# Lighthouse CI's temporary public storage. The run log links each one.
 
 on:
   workflow_dispatch:

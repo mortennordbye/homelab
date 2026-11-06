@@ -20,10 +20,10 @@ on:
 permissions:
   contents: read
 
-# PRs cancel a superseded run. Main queues and never cancels, which could tear a
-# half-finished push. Kargo (not this workflow) owns the manifest write and
-# promotion; the same image is promoted stage -> prod, so there is no
-# per-environment build.
+# PRs cancel a superseded run. Main queues and never cancels, because a cancel
+# could break a half-finished push. Kargo (not this workflow) owns the manifest
+# write and promotion. Kargo promotes the same image stage -> prod, so there is
+# no per-environment build.
 concurrency:
   group: build-blog-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

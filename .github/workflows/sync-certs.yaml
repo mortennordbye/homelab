@@ -2,8 +2,8 @@ name: Sync certs
 
 # Rebuilds portfolio/src/content/certs.json from Credly and the Microsoft Learn
 # transcript and opens a PR when the list changed. See docs/apps/portfolio/certs.md.
-# A PR opened with GITHUB_TOKEN does not trigger the portfolio CI; the image is
-# built on merge as usual.
+# A PR opened with GITHUB_TOKEN does not trigger the portfolio CI. The merge
+# builds the image as usual.
 
 on:
   workflow_dispatch:

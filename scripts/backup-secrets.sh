@@ -4,15 +4,15 @@
 # them to the NAS over SMB.
 #
 # These files hold real secrets and unversioned work (kubeconfigs, tfvars,
-# drafts, …). They're deliberately git-ignored, so a lost laptop loses them.
-# This bundles the files listed in the repo's backup sources into a timestamped
-# .zip, copies it to an SMB share on the NAS (one subfolder per repo), keeps the
-# newest $KEEP snapshots, and unmounts the share. Plain zip — Synology File
-# Station browses it inline, unlike a .tar.gz.
+# drafts, …). Git ignores them on purpose, so a lost laptop loses them.
+# This script bundles the files listed in the repo's backup sources into a
+# timestamped .zip, copies it to an SMB share on the NAS (one subfolder per
+# repo), keeps the newest $KEEP snapshots, and unmounts the share. The archive
+# is a plain zip. Synology File Station browses a zip inline, not a .tar.gz.
 #
-# Two backup sources are read and merged (either may be absent): a block between
-# the "# backup:start" / "# backup:end" markers in the repo's .gitignore, and a
-# standalone .backup-manifest. Duplicate paths across the two are collapsed.
+# The script reads and merges two backup sources (either may be absent): a block
+# between the "# backup:start" / "# backup:end" markers in the repo's .gitignore
+# and a standalone .backup-manifest. A path listed in both becomes one entry.
 #
 # Only file PATHS live in the repo (both sources) — never their contents.
 #
@@ -32,7 +32,7 @@
 #   scripts/backup-secrets.sh --help     # show usage
 #
 # Backup sources (repo-relative paths, one per line; # comments and blank lines
-# ignored; globs allowed, no spaces in paths). Both are read and merged:
+# ignored; globs allowed, no spaces in paths). The script reads and merges both:
 #   - a marker block in .gitignore, so a listed path is git-ignored AND backed up:
 #       # backup:start
 #       path/to/secret.file
@@ -48,9 +48,10 @@
 #   GITIGNORE_FILE   file holding the block   (default <repo-root>/.gitignore)
 #   KEEP             snapshots to retain      (0 = keep all, default 14)
 #
-# Auth: always prompts for the SMB username and password (mount_smbfs asks for
-# the password itself — no sudo, nothing stored). The NAS needs SMB enabled and
-# the share accessible to that user. Or mount it in Finder and pass NAS_DIR.
+# Auth: the script always prompts for the SMB username and password. mount_smbfs
+# asks for the password itself: no sudo, nothing stored. The NAS needs SMB
+# enabled and the share accessible to that user. Or mount the share in Finder
+# and pass NAS_DIR.
 #
 # Restore:
 #   cp <share>/.../<repo>/<file>.zip .
@@ -64,7 +65,7 @@ NAS_BACKUP_ROOT="${NAS_BACKUP_ROOT:-documents/IT/Repo-Hidden-Files-Backups}"
 NAS_DIR="${NAS_DIR:-}"
 KEEP="${KEEP:-14}"
 
-# Lines between these two markers in .gitignore are treated as backup paths.
+# The lines between these two markers in .gitignore are the backup paths.
 BACKUP_BEGIN='# backup:start'
 BACKUP_END='# backup:end'
 
@@ -120,9 +121,9 @@ collect_patterns() {
 }
 
 # Merge both sources: present[] = files that exist, missing[] = listed but
-# absent. Paths appearing in both sources are collapsed to one entry. Dedup uses
-# space-delimited string sets (bash 3.2 has no associative arrays); safe because
-# backup paths may not contain spaces.
+# absent. A path listed in both sources becomes one entry. Dedup uses
+# space-delimited string sets (bash 3.2 has no associative arrays). This is safe
+# because backup paths may not contain spaces.
 present=()
 missing=()
 seen_present=" "
@@ -164,8 +165,8 @@ TMP="$(mktemp -d)"
 MNT=""
 MOUNTED=false
 cleanup() {
-  # Always close down a mount we opened — plain umount can fail if the share is
-  # briefly busy, so force-unmount as a fallback to avoid leaving it behind.
+  # Always unmount a share this script mounted. A plain umount can fail while
+  # the share is busy, so a forced unmount is the fallback.
   if $MOUNTED; then
     umount "$MNT" 2>/dev/null || diskutil unmount force "$MNT" >/dev/null 2>&1 || true
   fi
@@ -176,7 +177,7 @@ trap cleanup EXIT
 
 log "Bundling ${#present[@]} files → $ARCHIVE"
 for f in "${present[@]}"; do printf '  \033[0;32m•\033[0m %s\n' "$f"; done
-# Paths are repo-relative (we cd'd to the repo root), so the zip restores into
+# Paths are repo-relative (the cwd is the repo root), so the zip restores into
 # the same tree on extract.
 zip -q "$TMP/$ARCHIVE" "${present[@]}"
 log "Archive size: $(du -h "$TMP/$ARCHIVE" | cut -f1)"
@@ -195,9 +196,9 @@ if [[ -n "$NAS_DIR" ]]; then
 else
   NAS_USER=""
   while [[ -z "$NAS_USER" ]]; do read -r -p "NAS username: " NAS_USER </dev/tty; done
-  # macOS refuses to mount the same SMB share twice ("File exists"). If it's
-  # already mounted (Finder, or a prior run), reuse it instead of failing — and
-  # don't unmount it on exit, since we didn't open it.
+  # macOS refuses to mount the same SMB share twice ("File exists"). If the
+  # share is already mounted (Finder, or a prior run), reuse it. Do not unmount
+  # it on exit, because this script did not open it.
   existing="$(/sbin/mount | awk -v sh="/$NAS_SHARE" '/\(smbfs/ && $1 ~ sh"$" {print $3; exit}')"
   if [[ -n "$existing" ]]; then
     log "//$NAS_HOST/$NAS_SHARE already mounted at $existing — reusing it"
@@ -219,8 +220,8 @@ mkdir -p "$DEST"
 log "Copying → $DEST/$ARCHIVE"
 cp "$TMP/$ARCHIVE" "$DEST/"
 
-# Read the zip back from the NAS and CRC-test every entry — catches truncated
-# SMB writes before we trust the backup.
+# Read the zip back from the NAS and CRC-test every entry. This catches a
+# truncated SMB write before the run reports success.
 unzip -tqq "$DEST/$ARCHIVE" >/dev/null 2>&1 \
   || die "verify failed: the copy on the NAS is unreadable or corrupt"
 dst_n="$(zipinfo -1 "$DEST/$ARCHIVE" 2>/dev/null | grep -cv '/$' || true)"

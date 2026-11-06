@@ -20,10 +20,10 @@ on:
 permissions:
   contents: read
 
-# PRs cancel a superseded run. Main queues and never cancels, which could tear a
-# half-finished push. Kargo (not this workflow) owns the manifest write and
-# promotion; the same image is promoted stage -> prod, so there is no
-# per-environment build.
+# PRs cancel a superseded run. Main queues and never cancels, because a cancel
+# could break a half-finished push. Kargo (not this workflow) owns the manifest
+# write and promotion. Kargo promotes the same image stage -> prod, so there is
+# no per-environment build.
 concurrency:
   group: build-portfolio-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -102,8 +102,8 @@ jobs:
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
       # The site renders this manifest (desk monitor). The build context is
-      # ./portfolio, so copy it in fresh here rather than trusting the copy in
-      # git — what ships is always the manifest actually deployed.
+      # ./portfolio, so copy the file in fresh here and do not trust the copy in
+      # git. The image then always ships the deployed manifest.
       - name: Sync deployment manifest into the build context
         run: cp k8s/talos/apps/portfolio/deployment.yaml portfolio/src/content/k8s/deployment.yaml
 
@@ -126,7 +126,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.context.outputs.TAG }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:0.0.${{ github.run_number }}
 
-      # Straight after the push: the Kargo Warehouse polls every minute, and a Pod started
+      # Immediately after the push: the Kargo Warehouse polls every minute, and a Pod started
       # from an image with no attestation fails verify-first-party-images.
       - name: Attest build provenance
         if: env.PUSH == 'true'

@@ -19,8 +19,8 @@ on:
       - "scripts/docs_site_hooks.py"
       - "scripts/docs-requirements.txt"
       - ".github/workflows/docs.yaml"
-  # A push made with GITHUB_TOKEN starts no workflow, so without this a .d2-only change
-  # deploys before render-assets has committed the SVG, and the site keeps the old picture.
+  # A push made with GITHUB_TOKEN starts no workflow. Without this trigger, a .d2-only
+  # change deploys before render-assets commits the SVG, and the site keeps the old picture.
   workflow_run:
     workflows: ["Render Assets"]
     branches: [main]

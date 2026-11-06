@@ -1,9 +1,9 @@
 """ProperDocs hooks: the home page, nav icons, and links that leave the site pointed at GitHub.
 
-The docs link freely to code (`../../../terraform/...`), to folders, and to the
-backlog, none of which are pages on the site. Rewriting them keeps them working
-on docs.nordbye.it while `properdocs build --strict` still fails on a broken link
-between pages.
+The docs link to code (`../../../terraform/...`), to folders, and to the
+backlog. None of these are pages on the site. The rewrite keeps those links
+working on docs.nordbye.it, and `properdocs build --strict` still fails on a
+broken link between pages.
 """
 
 import os
@@ -16,7 +16,7 @@ REPO = "https://github.com/mortennordbye/homelab"
 LINK = re.compile(r"(\]\()([^)\s#]+)(#[^)\s]*)?(\))")
 
 # Set here, not in front matter, because GitHub renders front matter as a table.
-# A new page without an entry just shows without an icon.
+# A new page without an entry shows without an icon.
 ICONS = {
     "apps/media-stack/README.md": "material/television-play",
     "apps/portfolio/README.md": "material/briefcase",
@@ -62,7 +62,7 @@ ICONS = {
 }
 
 
-# docs/ holds folders only, so the root page is generated; its body is overrides/home.html.
+# docs/ holds folders only, so this hook generates the root page. Its body is overrides/home.html.
 HOME = """---
 title: How the homelab is built and run
 template: home.html
@@ -103,8 +103,8 @@ def first_paragraph(markdown):
 
 
 def last_commit_date(path):
-    # The sitemap lastmod otherwise falls back to the build date on every page.
-    # Needs full history in CI (fetch-depth: 0); without git it keeps the build date.
+    # Without this, the sitemap lastmod is the build date on every page.
+    # CI needs full history (fetch-depth: 0). Without git the page keeps the build date.
     try:
         out = subprocess.run(
             ["git", "log", "-1", "--format=%cs", "--", path],

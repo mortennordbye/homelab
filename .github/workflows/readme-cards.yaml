@@ -7,8 +7,8 @@ name: README cards
 on:
   workflow_dispatch:
   schedule:
-    # GitHub proxies README images through camo, so the cards land a few
-    # minutes behind this run; each stamps its own reading time.
+    # GitHub proxies README images through camo, so the cards appear a few
+    # minutes after this run. Each card stamps its own reading time.
     - cron: "*/15 * * * *"
 
 permissions:
@@ -19,11 +19,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # The status-publisher CronJob writes the facts to a ConfigMap the portfolio
-  # serves at /api/v1/infra; this job reads that public endpoint. The cluster
-  # never needs a GitHub credential this way, and nothing extra is exposed
-  # inbound. When the endpoint doesn't answer, the card says so instead of
-  # redrawing the last good numbers.
+  # The status-publisher CronJob writes the facts to a ConfigMap that the
+  # portfolio serves at /api/v1/infra. This job reads that public endpoint, so
+  # the cluster never needs a GitHub credential and nothing extra is exposed
+  # inbound. When the endpoint does not answer, the card says so and does not
+  # redraw the last good numbers.
   status:
     if: github.repository_owner == 'mortennordbye'
     runs-on: ubuntu-latest
@@ -45,9 +45,9 @@ jobs:
             exit 0
           fi
 
-          # No answer, or an answer the renderer can't use. Carry the last
-          # published reading forward marked as stale rather than failing the
-          # run: a card that admits the cluster is unreachable is the point.
+          # No answer, or an answer the renderer cannot use. Carry the last
+          # published reading forward, marked as stale, and do not fail the
+          # run: a card that shows the cluster is unreachable is the point.
           echo "::warning::$STATUS_URL did not answer with a usable payload"
           curl -sf --max-time 20 "$PREVIOUS" -o prev.json || echo '{}' > prev.json
           jq '{
@@ -74,9 +74,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Third parties can no longer read GitHub star data on our behalf, but this
-  # repo's own GITHUB_TOKEN can: collect the timestamps, bucket by day, render
-  # both themes.
+  # Third parties can no longer read GitHub star data for us, but this repo's
+  # own GITHUB_TOKEN can. Collect the timestamps, bucket by day, render both
+  # themes.
   stars:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -103,8 +103,8 @@ jobs:
 
       - name: Build stars JSON
         run: |
-          # Empty means the query failed or paginated to nothing; publishing
-          # that would blank the card, so fail instead and keep the last file.
+          # Empty means the query failed or paginated to nothing. An empty file
+          # would blank the card, so fail and keep the last file.
           test -s starred.txt
           mkdir -p dist
           cut -c1-10 starred.txt | jq -R . | jq -s \

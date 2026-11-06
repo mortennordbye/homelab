@@ -1,10 +1,10 @@
 name: CI Terraform
 
-# Format and validate every Terraform root. Deliberately credential-free:
+# Format and validate every Terraform root. The workflow has no credentials:
 # init runs with -backend=false, so no cloud auth, no state access and
-# nothing for a fork PR to steal. Plans and applies stay local -- the
-# Proxmox and UniFi APIs are LAN-only, and handing CI the state backend
-# would expose every root's state to a leaked workflow credential.
+# nothing for a fork PR to steal. Plans and applies stay local. The Proxmox
+# and UniFi APIs are LAN-only, and a state backend in CI would expose every
+# root's state to a leaked workflow credential.
 on:
   pull_request:
     branches:
@@ -40,9 +40,9 @@ jobs:
       - name: Format check
         run: terraform fmt -check -recursive -diff terraform/
 
-      # Roots are discovered rather than listed so a new root is covered the
-      # commit it lands. validate catches bad references and provider schema
-      # mismatches, which is most of what a local run catches before plan.
+      # The step discovers roots instead of listing them, so a new root is
+      # covered from its first commit. validate catches bad references and
+      # provider schema mismatches, most of what a local run finds before plan.
       - name: Validate all roots
         run: |
           set -euo pipefail
