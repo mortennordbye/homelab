@@ -1,10 +1,10 @@
 # Restoring from backup
 
-How to get each layer in [`README.md`](README.md) back.
+How to restore each layer in [`README.md`](README.md).
 
-Everything lives on the Synology share `k8s-backups` (`nas.local.bigd.no:/volume1/k8s-backups`).
-If a backup file itself is damaged or deleted, restore it from a share snapshot first
-(Snapshot Replication > Snapshots > `k8s-backups` > Browse), or from the Hyper Backup copy.
+Everything is on the Synology share `k8s-backups` (`nas.local.bigd.no:/volume1/k8s-backups`).
+If a backup file itself is damaged or deleted, first restore it from a share snapshot
+(Snapshot Replication > Snapshots > `k8s-backups` > Browse) or from the Hyper Backup copy.
 
 | Layer | Folder | Secret needed |
 |---|---|---|
@@ -16,12 +16,12 @@ If a backup file itself is damaged or deleted, restore it from a share snapshot 
 
 ## App volume (VolSync)
 
-Restores a PVC in place from its restic repository. The repository Secret
+This restores a PVC in place from its restic repository. The repository Secret
 `<pvc>-restic` already exists in the app's namespace.
 
-1. Scale the app to zero so nothing writes to the volume:
-   `kubectl -n <ns> scale deploy/<app> --replicas=0` (for a KEDA app, pause the
-   ScaledObject first with the `autoscaling.keda.sh/paused: "true"` annotation).
+1. Scale the app to zero so that nothing writes to the volume:
+   `kubectl -n <ns> scale deploy/<app> --replicas=0`. For a KEDA app, first pause the
+   ScaledObject with the `autoscaling.keda.sh/paused: "true"` annotation.
 2. Apply a ReplicationDestination that writes into the existing PVC:
 
    ```yaml
@@ -58,18 +58,18 @@ Restores a PVC in place from its restic repository. The repository Secret
                path: /volume1/k8s-backups/volsync
    ```
 
-3. Wait for `kubectl -n <ns> get replicationdestination <pvc>-restore` to show a
-   `lastSyncTime`, then delete the ReplicationDestination and scale the app back up.
-4. Sonarr, Radarr, Radarr 4K and Prowlarr: if the restored database misbehaves, restore the
-   newest zip from `/config/Backups/scheduled` through System > Backup in the app.
+3. Wait until `kubectl -n <ns> get replicationdestination <pvc>-restore` shows a
+   `lastSyncTime`. Then delete the ReplicationDestination and scale the app back up.
+4. Sonarr, Radarr, Radarr 4K and Prowlarr: if the restored database does not work correctly,
+   restore the newest zip from `/config/Backups/scheduled` through System > Backup in the app.
 
-Direct restore overwrites files but does not delete ones that are not in the backup.
-For a clean restore, restore into a new PVC and point the Deployment at it instead.
+Direct restore overwrites files, but it does not delete files that are not in the backup.
+For a clean restore, restore into a new PVC and point the Deployment at that PVC instead.
 
 ## Postgres
 
 Dumps are `pg_dump --format=custom`. Restore with `pg_restore` from a pod that mounts the
-dump volume and carries the label the database's network policy admits; Cilium drops
+dump volume and carries the label that the database's network policy admits. Cilium drops
 connections from any other pod.
 
 | Database | Namespace | Dump PVC | Image | Host / user / db | Label the policy admits |
@@ -80,8 +80,8 @@ connections from any other pod.
 1. Scale the app (not the database) to zero.
 2. Start a pod in the namespace with the label from the table, the dump PVC mounted
    read-only at `/backup`, and `PGHOST`, `PGUSER`, `PGDATABASE` and `PGPASSWORD`
-   (from `logeverylift-db-app/password` or `authentik-secrets/postgres-password`),
-   modelled on the CronJob in `db-backup.yaml`.
+   (from `logeverylift-db-app/password` or `authentik-secrets/postgres-password`).
+   Use the CronJob in `db-backup.yaml` as the model.
 3. In that pod:
 
    ```sh
@@ -91,18 +91,18 @@ connections from any other pod.
 
 4. Delete the pod and scale the app back up.
 
-To inspect a dump without touching the live database, restore it into a throwaway
+To inspect a dump without a change to the live database, restore it into a temporary
 Postgres of the same major version instead.
 
 ### Point in time (logeverylift)
 
 `logeverylift-db` can be restored to any moment since its oldest base backup in Garage
-(30 days), from the base backups and WAL. Recovery always builds a new Cluster; it never
+(30 days), from the base backups and WAL. Recovery always builds a new Cluster. It never
 rewinds the running one.
 
 1. Pick the target in UTC, before the damage (`2026-11-02T08:15:00Z`).
-2. Add a Cluster with a new name to `k8s/talos/apps/logeverylift/`, the same spec as
-   `logeverylift-db` but bootstrapped from the archive, and merge it:
+2. Add a Cluster with a new name to `k8s/talos/apps/logeverylift/`. Give it the same spec as
+   `logeverylift-db`, but bootstrap it from the archive. Merge it:
 
    ```yaml
    bootstrap:
@@ -119,20 +119,20 @@ rewinds the running one.
            serverName: logeverylift-db
    ```
 
-   Leave `plugins` out (or give it a new `serverName`), so the restored Cluster never
+   Leave `plugins` out, or give it a new `serverName`, so that the restored Cluster never
    archives into the source's prefix. Omit `recoveryTarget` to replay all archived WAL.
-3. When it is healthy, check the data with `psql` in its `-1` pod, then point the app's
-   `DATABASE_URL` at the new Cluster's `-app` Secret (or dump from it into the live one
-   for a partial repair).
+3. When it is healthy, check the data with `psql` in its `-1` pod. Then point the app's
+   `DATABASE_URL` at the new Cluster's `-app` Secret. For a partial repair, dump from the
+   new Cluster into the live one instead.
 
-If Garage itself is gone, restore `garage-data` from VolSync first
+If Garage itself is lost, first restore `garage-data` from VolSync
 ([`../data/cloudnative-pg.md`](../data/cloudnative-pg.md#restoring-garage-itself)).
 
 ## etcd
 
-Only for losing etcd quorum (two of three control planes gone, or corrupted data).
+Only for a lost etcd quorum (two of three control planes gone, or corrupted data).
 A single failed control plane is replaced, not restored. Follow the Talos disaster
-recovery guide (https://docs.siderolabs.com/talos/v1.13/build-and-extend-talos/cluster-operations-and-maintenance/disaster-recovery),
+recovery guide (https://docs.siderolabs.com/talos/v1.13/build-and-extend-talos/cluster-operations-and-maintenance/disaster-recovery)
 with a snapshot from the NAS:
 
 ```sh
@@ -143,31 +143,32 @@ docker run --rm -v "$PWD":/w gcr.io/etcd-development/etcd:v3.6.14 etcdutl snapsh
 talosctl -n <cp-ip> bootstrap --recover-from=./db.snapshot
 ```
 
-These snapshots come from `talosctl etcd snapshot` and carry their integrity hash, so
-`--recover-skip-hash-check` is not needed (it is only for a raw copy of the data dir).
+These snapshots come from `talosctl etcd snapshot` and carry their integrity hash.
+`--recover-skip-hash-check` is therefore not needed. That flag is only for a raw copy of
+the data dir.
 
 ## Home Assistant
 
-In HA: Settings > System > Backups, pick a backup stored on `k8s_backups`, Restore. On a
-fresh HA OS install, choose "Restore from backup" during onboarding and upload the `.tar`
+In HA: Settings > System > Backups, select a backup stored on `k8s_backups`, Restore. On a
+new HA OS install, select "Restore from backup" during onboarding and upload the `.tar`
 from `k8s-backups/home-assistant/`. Both ask for the backup encryption key from
 Bitwarden.
 
 ## Reelsmith
 
 Reelsmith is not in VolSync. The gateway writes SQLite `VACUUM INTO` copies of its database to
-`/state/backups` on the state PVC (newest 14 kept) and to the retained offsite volume, which is on
-the `shared-data` share rather than `k8s-backups`: on the NAS at
+`/state/backups` on the state PVC (newest 14 kept) and to the retained offsite volume. The
+offsite volume is on the `shared-data` share, not on `k8s-backups`: on the NAS at
 `/volume1/shared-data/media/reelsmith/gateway-backups` (PVC `reelsmith-offsite-backups`, mounted
-at `/offsite`). Use `/state/backups` if the state volume still exists, the offsite copy if it does
-not. The cover images in `/state/covers` are not in these copies; if the claim was deleted, the
-driver's `archived-` directory under `/volume1/k8s-volumes/talos` still holds them
+at `/offsite`). Use `/state/backups` if the state volume still exists. Use the offsite copy if it
+does not. The cover images in `/state/covers` are not in these copies. If the claim was deleted,
+the driver's `archived-` directory under `/volume1/k8s-volumes/talos` still holds them
 (see [storage](../storage/README.md#deleting-a-pvc)). See the
 [reelsmith page](../../apps/reelsmith/README.md).
 
 1. Scale the gateway to zero: `kubectl -n reelsmith scale deploy/reelsmith-gateway --replicas=0`.
-   ArgoCD ignores `replicas`, so this holds. If the state PVC was lost, let ArgoCD recreate it
-   first; it comes back empty.
+   ArgoCD ignores `replicas`, so the scale stays at zero. If the state PVC was lost, let ArgoCD
+   recreate it first. It comes back empty.
 2. Start a pod that mounts both claims. The namespace enforces Pod Security `restricted`:
 
    ```yaml
@@ -207,7 +208,7 @@ driver's `archived-` directory under `/volume1/k8s-volumes/talos` still holds th
            claimName: reelsmith-offsite-backups
    ```
 
-3. In that pod, move the live database aside with its WAL files and copy a backup in its place:
+3. In that pod, move the live database and its WAL files out of the way, then copy a backup into its place:
 
    ```sh
    ls -lt /state/backups /offsite | head          # pick one
@@ -217,8 +218,8 @@ driver's `archived-` directory under `/volume1/k8s-volumes/talos` still holds th
    ```
 
 4. Delete the pod and scale the gateway back to 1. Check `/healthz` and the queue at
-   `https://reelsmith.local.bigd.no/admin/` before the next slot: rows the backup shows as
-   `claimed` or queued may already have been published after it was taken.
+   `https://reelsmith.local.bigd.no/admin/` before the next slot. Rows that the backup shows as
+   `claimed` or queued may already have been published after the backup was taken.
 
 ## Testing
 

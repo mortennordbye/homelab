@@ -1,8 +1,8 @@
 # Backups
 
-Everything except the laptop-only files lands on the Synology share `k8s-backups`
+Everything except the laptop-only files is written to the Synology share `k8s-backups`
 (`nas.local.bigd.no:/volume1/k8s-backups`, Volume 1). Restores are in
-[`restore.md`](restore.md); the Proxmox Backup Server itself (datastore, identities,
+[`restore.md`](restore.md). The Proxmox Backup Server itself (datastore, identities,
 notifications) is in [`pbs.md`](pbs.md).
 
 ## Layers
@@ -23,12 +23,12 @@ notifications) is in [`pbs.md`](pbs.md).
 | Whole VMs | Proxmox backup job to PBS | 03:00 | 1 daily, 1 weekly, 1 monthly | PBS datastore on `pve-backup` | `terraform/proxmox/hyper-cluster/datacenter/backup.tf` |
 | Laptop-only files | zip of the gitignored paths in `.backup-manifest` and the `.gitignore` backup block, over SMB | by hand | 14 | `shared-data` share, `documents/IT/Repo-Hidden-Files-Backups/Homelab/` | `scripts/backup-secrets.sh` |
 
-The laptop-only files are what Git never holds: the Terraform stacks' `terraform.tfvars`
-and the state `backend.conf`, the Talos `kubeconfig`,
+The laptop-only files are the files that Git never holds: the Terraform stacks'
+`terraform.tfvars` and the state `backend.conf`, the Talos `kubeconfig`,
 `talosconfig` and `controlplane.yaml`, and a few gitignored working docs
-([`../cluster/terraform.md`](../cluster/terraform.md)). The script prompts for the NAS
-login, reads the zip back to verify it, and keeps the newest 14; restore is `unzip` at the
-repo root. Nothing checks how old the newest zip is.
+([`../cluster/terraform.md`](../cluster/terraform.md)). The script asks for the NAS
+login, reads the zip back to verify it, and keeps the newest 14 zips. To restore, run
+`unzip` at the repo root. Nothing checks the age of the newest zip.
 
 ## Coverage
 
@@ -56,26 +56,26 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
   `VolSyncBackupStale` (a source behind schedule for 6 h), `PostgresBaseBackupStale` (no
   CloudNativePG base backup for 26 h) and `PostgresWalArchivingFailing`. DSM failures (Hyper Backup,
   snapshots) arrive as `SynologyNotification` and by email.
-- Backups made outside the cluster only report failures, so daily checks in
-  `k8s/talos/infra/backup-check/` look for the newest one at 09:00 and fail past 26 h;
-  `BackupJobStale` covers them. `pbs-backup-check` reads the Proxmox vzdump task logs
-  and fails for any guest the job includes that no task finished in the last 26 h
+- Backups made outside the cluster report failures only. Daily checks in
+  `k8s/talos/infra/backup-check/` look for the newest backup at 09:00 and fail when it is
+  older than 26 h. `BackupJobStale` covers them. `pbs-backup-check` reads the Proxmox
+  vzdump task logs. It fails for any guest in the job with no task finished in the last 26 h
   (the monitoring token may not list PBS backups directly). It also fails when a VM disk
-  is stuck as a pending delete, the state a Proxmox-CSI detach leaves when it loses the VM
-  config lock, and prints the `qm set <vmid> --delete <disk>` that clears it once QEMU no
-  longer has the device. `ha-backup-check` looks for a
+  is stuck as a pending delete. A Proxmox-CSI detach leaves that state when it loses the VM
+  config lock. The check prints the `qm set <vmid> --delete <disk>` that clears it once QEMU
+  no longer has the device. `ha-backup-check` looks for a
   fresh `.tar` in `home-assistant/`. `volsync-backup-check` fails for any repository under
-  `volsync/` with no snapshot file from the last 26 h, whatever stopped it, so a repository left
-  behind by a removed app has to be deleted or archived. Hyper Backup and the DSM snapshots
-  have no staleness check.
+  `volsync/` with no snapshot file from the last 26 h, whatever the cause. A repository left
+  behind by a removed app therefore has to be deleted or archived. Hyper Backup and the DSM
+  snapshots have no staleness check.
 - `restore-test` runs on the 1st of each month at 10:00: `restic check` with 5 % of the
   data read on every VolSync repository, a full restore of `mealie/data-pvc`, and the
   newest logeverylift and Authentik dumps loaded into a scratch Postgres. It reads the
   NAS only. `RestoreTestFailed` alerts when a run does not pass.
 - `logeverylift-db-restore-test` (namespace `logeverylift`) runs on the 1st of each month
-  at 10:30: it recovers a throwaway one-instance Cluster from Garage to an hour earlier,
+  at 10:30 and recovers a temporary one-instance Cluster from Garage to one hour earlier,
   counts tables and rows, and deletes the Cluster. `RestoreTestFailed` covers it too.
-- If the whole homelab goes quiet, the Cloudflare watchdog reports the missing
+- If nothing in the homelab reports, the Cloudflare watchdog reports the missing
   Alertmanager heartbeat to Discord (`docs/platform/observability/README.md`).
 - By hand:
 
@@ -91,7 +91,7 @@ flaresolverr, reelsmith (keeps its own copies), the media itself.
 ## Configured outside Git
 
 The `synology-community/synology` Terraform provider has no resources for shares, NFS
-rules, snapshots or Hyper Backup, so these are set by hand in DSM and recorded here.
+rules, snapshots or Hyper Backup. These are set by hand in DSM and recorded here.
 
 | Where | Setting |
 |---|---|
@@ -104,18 +104,18 @@ rules, snapshots or Hyper Backup, so these are set by hand in DSM and recorded h
 
 ## Constraints
 
-- Only root can read or write `k8s-backups`: with No mapping the client uid reaches the
-  share ACL unchanged, and the ACL denies every other uid, the folders' owner 1026
-  included. The etcd and Postgres dump jobs and the `backup-check` jobs therefore run as root,
-  exempt from `pod-security-restricted` through
-  `k8s/talos/infra/kyverno/policyexception-nas-backups.yaml`.
-- `trigger.manual` on a ReplicationSource replaces its schedule, and neither `VolSyncBackupStale` nor
-  ArgoCD notices; only `volsync-backup-check` does, up to a day and a half later. After a test run,
-  remove the field and check that `nextSyncTime` is set.
-- VolSync needs the VolumeSnapshot CRDs installed (`k8s/talos/infra/crds`) even with
-  `copyMethod: Direct`; no snapshot controller runs.
-- Each namespace with a VolSync source carries `volsync.backube/privileged-movers: "true"`;
-  the NFS export writes as root only. That namespace also has to be listed in the
-  `volsync-movers-root` exception in `k8s/talos/infra/kyverno/policyexception-nas-backups.yaml`,
-  and each source and restore sets `moverSecurityContext` (seccomp only) and `moverResources`.
-  `runAsUser` stays unset: a non-root mover cannot write its repository.
+- Only root can read or write `k8s-backups`. With No mapping, the client uid reaches the
+  share ACL unchanged, and the ACL denies every other uid, the folders' owner 1026 included.
+  The etcd and Postgres dump jobs and the `backup-check` jobs therefore run as root.
+  `k8s/talos/infra/kyverno/policyexception-nas-backups.yaml` exempts them from
+  `pod-security-restricted`.
+- `trigger.manual` on a ReplicationSource replaces its schedule. Neither `VolSyncBackupStale` nor
+  ArgoCD notices this. Only `volsync-backup-check` does, up to a day and a half later. After a
+  test run, remove the field and check that `nextSyncTime` is set.
+- VolSync needs the VolumeSnapshot CRDs installed (`k8s/talos/infra/crds`), even with
+  `copyMethod: Direct`. No snapshot controller runs.
+- Each namespace with a VolSync source carries `volsync.backube/privileged-movers: "true"`,
+  because the NFS export accepts writes from root only. That namespace also has to be in the
+  `volsync-movers-root` exception in `k8s/talos/infra/kyverno/policyexception-nas-backups.yaml`.
+  Each source and restore sets `moverSecurityContext` (seccomp only) and `moverResources`.
+  `runAsUser` stays unset: a non-root mover cannot write to its repository.
