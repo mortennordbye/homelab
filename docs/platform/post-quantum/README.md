@@ -1,9 +1,9 @@
 # Post-quantum readiness
 
-A large enough quantum computer running Shor's algorithm breaks RSA and elliptic-curve
-cryptography, which is what TLS and SSH use to agree on keys and to sign certificates. No
-such machine exists yet. The risk today is "harvest now, decrypt later": traffic recorded now
-can be decrypted once one does. Key exchange is what has to move first, because a recorded
+A large enough quantum computer that runs Shor's algorithm breaks RSA and elliptic-curve
+cryptography. TLS and SSH use these to agree on keys and to sign certificates. No such
+machine exists yet. The risk today is "harvest now, decrypt later": traffic recorded now
+can be decrypted when one does. Key exchange has to move first, because a recorded
 session stays recorded. Signatures only need to be safe at the moment they are checked.
 
 This area holds two things:
@@ -16,7 +16,7 @@ This area holds two things:
 ## Crypto inventory
 
 Hybrid key exchange (`X25519MLKEM768` for TLS, `mlkem768x25519-sha256` or
-`sntrup761x25519-sha512` for SSH) combines a classical curve with a post-quantum one, so the
+`sntrup761x25519-sha512` for SSH) combines a classical curve with a post-quantum one. The
 session is safe if either holds.
 
 | Path | Key exchange | Quantum-safe | Certificate signature |
@@ -32,22 +32,22 @@ session is safe if either holds.
 | SSH to Proxmox and PBS | mlkem768x25519 / sntrup761x25519 | yes, with the client fix below | |
 | SSH to the Synology | curve25519 | no | |
 
-Everything written in Go (Traefik, Talos, the Kubernetes API, etcd) and Cloudflare negotiates
+Everything written in Go (Traefik, Talos, the Kubernetes API, etcd) and Cloudflare negotiate
 the hybrid group by default. None of it needed a config change.
 
 The gaps:
 
 - PBS runs on Debian 12 (OpenSSL 3.0, OpenSSH 9.2), which has no ML-KEM. PBS 4 on Debian 13
   does.
-- The Synology ships its own OpenSSH 8.2 and TLS stack, so it waits on the vendor.
+- The Synology ships its own OpenSSH 8.2 and TLS stack, so the fix depends on the vendor.
 - No public CA issues post-quantum (ML-DSA) certificates yet, so every signature column stays
   classical. That is the less urgent half.
 
 ## The macOS SSH trap
 
-macOS ships `/etc/ssh/crypto.conf`, which includes `crypto/apple.conf` and sets
+macOS ships `/etc/ssh/crypto.conf`. It includes `crypto/apple.conf`, which sets
 `KexAlgorithms ^ecdh-sha2-nistp256`. The `^` moves NIST P-256 to the front, so every session
-from a Mac uses a classical key exchange even when both ends support ML-KEM. The homelab
+from a Mac uses a classical key exchange, even when both ends support ML-KEM. The homelab
 host blocks in `~/.ssh/config` put the hybrid algorithms back in front:
 
 ```
@@ -70,5 +70,5 @@ support. SSH:
 ssh -v <host> exit 2>&1 | grep "kex: algorithm"
 ```
 
-The installed blackbox exporter reports the TLS version and cipher but not the negotiated
-group, so it cannot watch this yet.
+The installed blackbox exporter reports the TLS version and cipher, but not the negotiated
+group. It cannot watch this yet.

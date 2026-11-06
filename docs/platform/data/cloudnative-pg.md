@@ -1,22 +1,22 @@
 # CloudNativePG and Garage
 
-The CloudNativePG operator runs Postgres as `Cluster` resources, and Garage is the
-in-cluster S3 store their base backups and WAL archive go to.
+The CloudNativePG operator runs Postgres as `Cluster` resources. Garage is the in-cluster
+S3 store for their base backups and WAL archive.
 
 ## Operator
 
 `k8s/talos/infra/cloudnative-pg/` renders two charts into `cnpg-system`:
 
-- `cloudnative-pg`: the operator and its CRDs (`postgresql.cnpg.io`). Its own metrics
-  are scraped through the chart's PodMonitor.
+- `cloudnative-pg`: the operator and its CRDs (`postgresql.cnpg.io`). The chart's
+  PodMonitor scrapes the operator's own metrics.
 - `plugin-barman-cloud`: the Barman Cloud plugin and its `ObjectStore` CRD
   (`barmancloud.cnpg.io`). It must run in the operator's namespace. It gets its TLS
-  certificates from a self-signed cert-manager `Issuer` the chart creates, and it adds
-  a sidecar to every instance pod of a `Cluster` that names it under `plugins`; that
-  sidecar is what writes to S3.
+  certificates from a self-signed cert-manager `Issuer` that the chart creates. It adds
+  a sidecar to every instance pod of a `Cluster` that names it under `plugins`. That
+  sidecar writes to S3.
 
 Both pin their image tag to the chart's `appVersion`, so a chart bump is the image bump.
-CRD changes ride along through `includeCRDs`.
+CRD changes arrive with the chart through `includeCRDs`.
 
 ## Garage
 
@@ -29,20 +29,20 @@ path-style addressing.
 | `garage-data` | `syno-nfs-csi` | object blocks under `data/`, metadata snapshots under `meta-snapshots/` |
 | `garage-meta` | `proxmox-local` | the live LMDB metadata |
 
-LMDB corrupts on NFS, so the metadata lives on block storage and Garage snapshots it to
-the NAS volume every hour. `garage-data` sits on the `k8s-volumes` share, which has no
-snapshots or offsite copy, so VolSync backs it up nightly at 01:50 with restic into
-`k8s-backups/volsync/garage/garage-data`, which the NAS snapshots and Hyper Backup cover
-([`../backups/README.md`](../backups/README.md)). `garage-meta` is not backed up: a live
-LMDB copy can be torn, and the hourly snapshots in `garage-data` replace it.
+LMDB corrupts on NFS, so the metadata lives on block storage. Garage snapshots it to the
+NAS volume every hour. `garage-data` is on the `k8s-volumes` share, which has no snapshots
+or offsite copy. VolSync therefore backs it up nightly at 01:50 with restic into
+`k8s-backups/volsync/garage/garage-data`. The NAS snapshots and Hyper Backup cover that
+path ([`../backups/README.md`](../backups/README.md)). `garage-meta` is not backed up: a
+live LMDB copy can be torn, and the hourly snapshots in `garage-data` replace it.
 
 The pod runs as uid 1000 with `fsGroup: 1000`. The NFS driver's `File` fsGroupPolicy
-lets kubelet hand the fresh, root-only NAS directory to that group on first mount
+lets kubelet give the fresh, root-only NAS directory to that group on first mount
 ([`../storage/README.md`](../storage/README.md#synology-nfs)).
 
-The network policy admits S3 only from CloudNativePG pods (any pod labelled
-`cnpg.io/cluster`, which covers recovery jobs) in the namespaces listed there. A new database namespace
-has to be added to it.
+The network policy admits S3 only from CloudNativePG pods in the namespaces listed there.
+A CloudNativePG pod is any pod labelled `cnpg.io/cluster`, which covers recovery jobs.
+Add each new database namespace to it.
 
 ### Secrets
 
@@ -67,7 +67,7 @@ garage layout apply --version 1
 garage status
 ```
 
-Then per database, a bucket and a key imported from Bitwarden, so the ID and secret
+Then, per database, create a bucket and import a key from Bitwarden. The ID and secret
 never pass through the terminal:
 
 ```bash
@@ -84,9 +84,9 @@ garage bucket allow --read --write --owner cnpg-logeverylift --key logeverylift
 
 ### Emptying a server's prefix
 
-A new Cluster refuses to archive into a prefix that already holds WAL, so a Cluster
-recreated under the same `serverName` (after a failed cutover, say) needs its old
-prefix removed first. Garage has no CLI for objects; use any S3 client through a
+A new Cluster refuses to archive into a prefix that already holds WAL. A Cluster
+recreated under the same `serverName`, for example after a failed cutover, needs its old
+prefix removed first. Garage has no CLI for objects. Use any S3 client through a
 port-forward, which the network policy admits as host traffic:
 
 ```bash
@@ -103,9 +103,9 @@ docker run --rm \
 ### Restoring Garage itself
 
 If `garage-meta` is lost, point `metadata_dir` at a copy of the newest directory under
-`meta-snapshots/` (or restore the PVC and copy it in), start Garage, and the objects on
+`meta-snapshots/`, or restore the PVC and copy it in. Then start Garage. The objects on
 the NAS are readable again. If `garage-data` is lost, restore it from VolSync first
-([`../backups/restore.md`](../backups/restore.md)), then the metadata from the
+([`../backups/restore.md`](../backups/restore.md)). Then restore the metadata from the
 snapshot inside it. Objects written after that snapshot are not in its index, so a
-restore from the nightly copy can lose up to an hour of WAL; the nightly `pg_dump` is
+restore from the nightly copy can lose up to an hour of WAL. The nightly `pg_dump` is
 the fallback.
