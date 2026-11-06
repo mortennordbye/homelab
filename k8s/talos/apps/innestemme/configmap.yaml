@@ -1,5 +1,5 @@
-# voice-engine settings; every key is a `voice-engine --help` option. Secrets and the street address
-# come from innestemme-secret as environment variables, which win over this file.
+# voice-engine settings. Every key is a `voice-engine --help` option. Secrets and the street address
+# come from innestemme-secret as environment variables, which override this file.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -16,15 +16,15 @@ data:
     # Match the CPU limit in deployment.yaml.
     threads: 6
     wake-name: Jarvis
-    # English answers in a butler's words: "As you wish, sir." Female voices get "ma'am", told apart
-    # by how the wake word sounds (a 30 MB model in /models/speaker); a voice it is unsure of gets neither.
+    # English answers in a butler's words: "As you wish, sir." Female voices get "ma'am", identified
+    # by the sound of the wake word (a 30 MB model in /models/speaker). An uncertain voice gets neither.
     honorific: sir
     honorific-female: ma'am
     home: Oslo
     norwegian: false
     # English speech from Kokoro inside the engine (sherpa-onnx, the f32 v1.0 model in /models/hub).
-    # Fixed sentences are rendered ahead and kept, in a folder of its own (kokoro-onnx-am_onyx), so
-    # only sentences with live data are synthesized.
+    # The engine renders fixed sentences ahead and keeps them in their own folder (kokoro-onnx-am_onyx).
+    # It only synthesizes sentences with live data.
     english-tts: kokoro-onnx
     speech-cache: /models/speech-cache
     kokoro-voice: am_onyx
@@ -39,11 +39,11 @@ data:
     # The kitchen's Hue plug feeds a bench light with a touch sensor: whatever turns the plug off cuts
     # the power for a few seconds and turns it back on, so the light is off and its sensor still works.
     power-cycle: [light.kjokken]
-    # "Initiate lockdown": the music's volume while it lasts, or louder if it already was; "stand down"
-    # puts the old one back.
+    # "Initiate lockdown": the music's volume while it lasts, or louder if it already was. "Stand down"
+    # restores the old volume.
     lockdown-volume: 85
-    # Shopping list items under their Norwegian names; an item said by itself after an add is heard
-    # again by Whisper small in Norwegian (about 380 MB in /models/hub, about 0.5 GB of memory).
+    # Shopping list items under their Norwegian names. Whisper small in Norwegian hears an item again
+    # when it is said by itself after an add (about 380 MB in /models/hub, about 0.5 GB of memory).
     norwegian-groceries: true
     # "Party mode": every Hue light follows the music through the bridge's Entertainment API.
     hue-bridge: 10.3.10.16
@@ -53,7 +53,7 @@ data:
     # The engine sets these on the device: Home Assistant's wake word selects go through the disabled
     # Assist satellite entity and never reach it.
     satellite-wake-words: [Hey Jarvis]
-    # The wake word is detected here (openWakeWord, downloaded to /models on first start) on the
+    # The engine detects the wake word here (openWakeWord, downloaded to /models on first start) on the
     # device's continuous stream: the innestemme firmware with "Wake word in innestemme" on. The
     # device's own Hey Jarvis model scored a real voice at 0.84-0.86 against its 0.83 cutoff; this
     # one scores it at 0.9-0.99. 0.65 keeps the TV out (it reached 0.67 once).

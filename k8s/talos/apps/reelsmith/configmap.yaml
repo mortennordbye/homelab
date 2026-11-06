@@ -12,11 +12,11 @@ data:
   GATEWAY_SCHEDULER_ENABLED: "true"
 
   # One slot per line: HH:MM [zone] [jitter=N] account=<id>. A line that does
-  # not parse fails startup on purpose; removing an account's last line removes
-  # its slots. account= must be named on every line — an unattributed line with
-  # multiple accounts registered freezes the whole config sweep (see F0 in the
+  # not parse fails startup by design. Removing an account's last line removes
+  # its slots. account= must be set on every line: a line without it, with
+  # multiple accounts registered, freezes the whole config sweep (see F0 in the
   # reelsmith repo's docs/multi-destination-audit.md). Jitter is derived from
-  # slot+date, not rolled at runtime, so a restart cannot double-publish.
+  # slot+date, not drawn at runtime, so a restart cannot double-publish.
   # The Facebook id is the Page id from GET /me/accounts, not the number in the
   # Page's profile URL.
   # Two slots a day per platform since 2026-09-10, restoring cadence without
@@ -26,15 +26,15 @@ data:
   # and 6%. The cut on 2026-08-27 kept only the first and dropped both others,
   # including the one that was nearly as good. Per-post views did not improve
   # afterwards: 132 median on three-post days against 126 on one-post days over
-  # 93 posts, so the cut removed two thirds of the volume and bought nothing.
+  # 93 posts, so the cut removed two thirds of the volume and gained nothing.
   #
   # 12:10 Oslo is the 10:00 UTC group above. The evening slot stays gone. Two
-  # populated slots also restore `--cohorts slot`, which has been unable to
-  # answer anything since 11 of 13 posts landed in a single slot.
+  # populated slots also restore `--cohorts slot`, which could not
+  # answer anything after 11 of 13 posts fell in a single slot.
   #
   # One line per identity per time. A brand covers every destination it holds,
-  # so registering a fourth platform needs no edit here, and a brand matching
-  # no account freezes the sweep rather than deleting slots. One a day for the
+  # so a fourth platform registration needs no edit here. A brand that matches
+  # no account freezes the sweep instead of deleting slots. One a day for the
   # second identity, which has one episode and no measured cadence yet.
   GATEWAY_SLOTS: |
     08:10 Europe/Oslo jitter=15 brand=thenightlybuild
@@ -45,21 +45,21 @@ data:
   GATEWAY_DEFAULT_TIMEZONE: "Europe/Oslo"
   GATEWAY_DEFAULT_JITTER_MINUTES: "15"
 
-  # Set explicitly so the behaviour is chosen rather than discovered; the
+  # Set explicitly, so the behaviour is chosen, not discovered. The
   # gateway warns if a returned status ever differs.
   GATEWAY_YOUTUBE_PRIVACY_STATUS: "public"
 
   # The /admin control panel, authenticated by authentik forward-auth only.
-  # Trusting the proxy means the app checks nothing itself: /admin must never
-  # be routed anywhere but the private gateway (httproute-admin.yaml), and the
+  # Trusting the proxy means the app checks nothing itself. /admin must only
+  # be routed to the private gateway (httproute-admin.yaml), and the
   # network policy must keep port 8000 closed to other pods.
   GATEWAY_ADMIN_ENABLED: "true"
   GATEWAY_ADMIN_TRUST_PROXY_AUTH: "true"
 
-  # Gates the token refresher, the insights sweep and publishing — TikTok has
-  # daily background loops of its own, unlike YouTube where nothing runs
-  # unless a slot fires. A queued TikTok row hitting a slot with this off
-  # fails rather than retries.
+  # Gates the token refresher, the insights sweep and publishing. TikTok has
+  # daily background loops of its own, unlike YouTube, where nothing runs
+  # unless a slot fires. A queued TikTok row that reaches a slot with this off
+  # fails and does not retry.
   GATEWAY_TIKTOK_ENABLED: "true"
 
   # Off until TikTok's audit passes: an unaudited client can only Direct Post

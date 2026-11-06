@@ -6,8 +6,8 @@ metadata:
 spec:
   parentRefs:
     # Public gateway: external-dns publishes the hostname below as a CNAME to the
-    # DDNS record, and the existing *.nordbye.it certificate already covers it —
-    # so no DNS or cert-manager change is needed for this app.
+    # DDNS record, and the existing *.nordbye.it certificate already covers it.
+    # This app needs no DNS or cert-manager change.
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: traefik-gateway-public
@@ -31,7 +31,7 @@ spec:
             kind: Middleware
             name: headroom-demo-compress
       backendRefs:
-        # Straight to the service — no KEDA interceptor, because this app never
+        # Directly to the service, with no KEDA interceptor: this app never
         # scales to zero.
         - group: ""
           kind: Service

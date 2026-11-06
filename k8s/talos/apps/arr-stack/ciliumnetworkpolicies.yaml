@@ -92,7 +92,7 @@ spec:
     matchLabels:
       app: flaresolverr
   ingress:
-    # Reached by *arr apps inside this namespace, and by Prowlarr through the private
+    # *arr apps in this namespace reach it directly; Prowlarr comes through the private
     # gateway (flaresolverr.local.bigd.no), so Traefik is the peer it sees.
     - fromEndpoints:
         - matchLabels:

@@ -12,8 +12,8 @@ resources:
 - service.yaml
 - httproute.yaml
 - ciliumnetworkpolicy.yaml
-# newTag via the kustomize-set-image promotion step (Kargo). Overrides the inline
-# tag in deployment.yaml; the verksted-cd Warehouse/promotion rewrites it to 0.0.N.
+# Kargo rewrites newTag in the kustomize-set-image promotion step. It overrides the
+# inline tag in deployment.yaml. The verksted-cd Warehouse/promotion sets it to 0.0.N.
 images:
 - name: ghcr.io/mortennordbye/verksted
   newTag: 0.0.1793951764

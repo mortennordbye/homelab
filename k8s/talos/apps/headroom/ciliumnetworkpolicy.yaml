@@ -16,8 +16,8 @@ spec:
         - ports:
             - port: "3001"
               protocol: TCP
-    # Requests now flow Traefik -> KEDA HTTP interceptor -> headroom, so the
-    # interceptor needs to reach the pod (also the path that wakes it from zero).
+    # Requests flow Traefik -> KEDA HTTP interceptor -> headroom, so the
+    # interceptor must reach the pod. This is also the path that wakes it from zero.
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": keda

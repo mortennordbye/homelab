@@ -9,8 +9,8 @@ spec:
   minReplicaCount: 0
   maxReplicaCount: 1
   cooldownPeriod: 300
-  # Cron keeps 1 replica warm through the day (07:00-23:00 Oslo) so the app
-  # doesn't cold-start on every visit; at night it scales to zero and the HTTP
+  # Cron keeps 1 replica warm through the day (07:00-23:00 Oslo), so the app
+  # does not cold-start on every visit. At night it scales to zero, and the HTTP
   # trigger wakes it on demand. KEDA scales to the max of the two triggers.
   triggers:
     - type: cron

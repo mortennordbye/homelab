@@ -1,6 +1,6 @@
 # The gateway's SQLite file and the cover images it serves to Meta.
-# SQLite runs in WAL mode: WAL on NFS is the thing to suspect if locking ever
-# misbehaves, and the fix is a journal-mode change in gateway/db.py, not a
+# SQLite runs in WAL mode. If locking ever fails, suspect WAL on NFS first.
+# The fix is a journal-mode change in gateway/db.py, not a
 # storage migration.
 apiVersion: v1
 kind: PersistentVolumeClaim

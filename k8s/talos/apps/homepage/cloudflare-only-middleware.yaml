@@ -4,7 +4,7 @@ metadata:
   name: homepage-cloudflare-only
   namespace: homepage
 spec:
-  # Cloudflare edges only; ranges mirror trustedIPs in infra/traefik/values.yaml.
+  # Cloudflare edges only. The ranges match trustedIPs in infra/traefik/values.yaml.
   ipAllowList:
     # No ipStrategy: X-Forwarded-For is spoofable.
     sourceRange:

@@ -12,8 +12,8 @@ resources:
 - service.yaml
 - ciliumnetworkpolicy.yaml
 - scaledobject.yaml
-# newTag via the kustomize-set-image promotion step (Kargo). Overrides the inline
-# tag in deployment.yaml; the headroom-cd Warehouse/promotion rewrites it to 0.0.N.
+# Kargo rewrites newTag in the kustomize-set-image promotion step. It overrides the
+# inline tag in deployment.yaml. The headroom-cd Warehouse/promotion sets it to 0.0.N.
 images:
 - name: ghcr.io/mortennordbye/headroom
   newTag: 0.0.1005

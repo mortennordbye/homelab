@@ -70,7 +70,7 @@ data:
     prefs="/config/Library/Application Support/Plex Media Server/Preferences.xml"
     url="https://10.3.10.103:32400"
 
-    # First boot: Plex has not written its preferences yet; the next start applies.
+    # First boot: Plex has not written its preferences yet. The next start applies them.
     [ -f "$prefs" ] || exit 0
 
     owner=$(stat -c %u:%g "$prefs")
@@ -100,8 +100,8 @@ spec:
         app: plex
     spec:
       # Pinned to the node with the Intel iGPU passed through, for QuickSync transcoding.
-      # The plex-config PV carries its own nodeAffinity for zone hyper1, which the scheduler
-      # enforces separately, so that constraint does not need repeating here.
+      # The plex-config PV has its own nodeAffinity for zone hyper1. The scheduler
+      # enforces it separately, so this file does not repeat that constraint.
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

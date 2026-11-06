@@ -15,8 +15,8 @@ spec:
       labels:
         app.kubernetes.io/name: blog
     spec:
-      # Best-effort spread across hypervisors (zones) so a single host loss
-      # can't take a disproportionate share of replicas. Soft, so rollouts and
+      # Best-effort spread across hypervisors (zones), so the loss of one host
+      # cannot take a disproportionate share of replicas. Soft, so rollouts and
       # constrained scheduling never block.
       affinity:
         podAntiAffinity:

@@ -42,8 +42,8 @@ spec:
             capabilities: { drop: ["ALL"] }
             seccompProfile: { type: RuntimeDefault }
           env:
-            # Path the /api/v1/infra route reads (the status ConfigMap mount);
-            # without it stage falls back to the build-time snapshot and
+            # Path the /api/v1/infra route reads (the status ConfigMap mount).
+            # Without it, stage uses the build-time snapshot and
             # reports "stale" for ever.
             - name: STATUS_FILE
               value: /config/status.json
@@ -53,7 +53,7 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           volumeMounts:
-            # Next's ISR/fetch cache — the only path the server writes at runtime.
+            # Next's ISR/fetch cache: the only path the server writes at runtime.
             - name: next-cache
               mountPath: /app/.next/cache
             - name: tmp

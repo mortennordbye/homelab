@@ -28,7 +28,7 @@ spec:
                     values:
                       - hyper1
       # DNS goes through the VPN, which cannot resolve local.bigd.no. Prowlarr reaches
-      # the arr apps and FlareSolverr through these; follow the gateway VIP if it moves.
+      # the arr apps and FlareSolverr through these. Update them if the gateway VIP moves.
       hostAliases:
         - ip: "10.3.10.102"
           hostnames:
@@ -114,7 +114,7 @@ spec:
               mountPath: /config
             - name: torrents
               mountPath: /torrents
-          # The working set includes file cache from seeding; a tight limit makes the kernel thrash it.
+          # The working set includes file cache from seeding. A tight limit makes the kernel thrash it.
           resources:
             requests:
               cpu: 100m

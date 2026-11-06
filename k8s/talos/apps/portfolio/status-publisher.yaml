@@ -1,8 +1,8 @@
-# Publishes cluster facts to the portfolio-status ConfigMap every five minutes;
-# the site's /api/v1/infra route and the README status card read it, so the
+# Publishes cluster facts to the portfolio-status ConfigMap every five minutes.
+# The site's /api/v1/infra route and the README status card read it, so the
 # payload is cluster-wide and public. Prometheus-sourced fields fall back to
-# null instead of failing the run. The ConfigMap is created by the CronJob, not
-# Git — no tracking label, so ArgoCD prune never touches it.
+# null instead of failing the run. The CronJob creates the ConfigMap, not
+# Git: no tracking label, so ArgoCD prune never touches it.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -56,8 +56,8 @@ metadata:
   name: status-publisher
   namespace: portfolio
 rules:
-  # create cannot be restricted by resourceName (the name doesn't exist yet);
-  # the rest is pinned to the one ConfigMap this job owns.
+  # resourceName cannot restrict create (the name does not exist yet).
+  # The rest is pinned to the one ConfigMap this job owns.
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["create"]
@@ -73,8 +73,8 @@ metadata:
   name: status-publisher
   namespace: stage-portfolio
 rules:
-  # create cannot be restricted by resourceName (the name doesn't exist yet);
-  # the rest is pinned to the one ConfigMap this job owns.
+  # resourceName cannot restrict create (the name does not exist yet).
+  # The rest is pinned to the one ConfigMap this job owns.
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["create"]
@@ -190,7 +190,7 @@ spec:
                   LAST_AT=$(jq -r '.status.operationState.finishedAt // empty' /tmp/last.json)
 
                   # Per-application rows. The room's desk monitor and its
-                  # shell both draw this list; without it they fall back to the
+                  # shell both draw this list. Without it they fall back to the
                   # root rollup and say so.
                   APP_LIST=$(jq -c '[.items[] | {
                     name: .metadata.name,
@@ -207,7 +207,7 @@ spec:
                   BUILD=$(jq -r '.spec.template.spec.containers[0].image | split(":") | last' /tmp/deploy.json)
                   DEPLOYED_AT=$(jq -r '[.status.conditions[] | select(.type=="Progressing")][0].lastUpdateTime // empty' /tmp/deploy.json)
 
-                  # Sleepers are the deployments KEDA may take to zero; deriving
+                  # Sleepers are the deployments KEDA may scale to zero. Deriving
                   # them from ScaledObjects keeps parked apps out of the count.
                   kubectl get scaledobjects -A -o json > /tmp/so.json
                   kubectl get deployments -A -o json > /tmp/deploys.json
@@ -426,8 +426,8 @@ spec:
                     --from-file=status.json=/tmp/status.json \
                     --dry-run=client -o yaml | kubectl apply -f -
 
-                  # ConfigMaps can't be mounted across namespaces, so stage gets
-                  # a second write. Tolerated on failure: stage must never fail
+                  # A ConfigMap cannot be mounted across namespaces, so stage gets
+                  # a second write. A failure is tolerated: stage must never fail
                   # the run that prod depends on.
                   kubectl create configmap portfolio-status -n stage-portfolio \
                     --from-file=status.json=/tmp/status.json \
@@ -453,8 +453,8 @@ spec:
                   cpu: 200m
                   memory: 128Mi
           # Image volumes: only the two binaries reach the pod, not a toolbox image's
-          # extras. trivy-operator scans container images, so kubectl's own CVEs don't
-          # show on the dashboard; Renovate keeps the tag current.
+          # extras. trivy-operator scans container images, so kubectl's own CVEs do not
+          # show on the dashboard. Renovate keeps the tag current.
           volumes:
             - name: tmp
               emptyDir: {}

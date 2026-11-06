@@ -1,5 +1,5 @@
 # Ingress-only policy: lock inbound to the private gateway, leave egress open.
-# verksted legitimately needs broad egress — agent sessions clone repos, hit
+# verksted needs broad egress: agent sessions clone repos, call
 # package registries and LLM APIs, and the dind sidecar pulls images. Cilium only
 # default-denies a direction once a rule for that direction exists, so declaring
 # no egress rule keeps egress unrestricted (matches the other apps here).

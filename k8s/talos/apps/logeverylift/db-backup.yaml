@@ -65,7 +65,7 @@ spec:
               # Same major as the server: pg_dump refuses a newer server.
               image: postgres:18-alpine
               env:
-                # The primary: a dump on a standby can be cancelled by replay conflicts.
+                # The primary: replay conflicts can cancel a dump on a standby.
                 - name: PGHOST
                   value: logeverylift-db-rw
                 - name: PGUSER

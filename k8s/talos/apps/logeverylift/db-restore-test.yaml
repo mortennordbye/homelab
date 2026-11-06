@@ -14,7 +14,7 @@ metadata:
   name: logeverylift-db-restore-runner
   namespace: logeverylift
 rules:
-  # create cannot be restricted by resourceName; the rest is pinned to the throwaway.
+  # resourceName cannot restrict create. The rest is pinned to the throwaway.
   - apiGroups: ["postgresql.cnpg.io"]
     resources: ["clusters"]
     verbs: ["create"]

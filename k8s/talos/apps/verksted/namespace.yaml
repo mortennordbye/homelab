@@ -3,8 +3,8 @@ kind: Namespace
 metadata:
   name: verksted
   # verksted runs a privileged docker:dind sidecar (see deployment.yaml), so the
-  # namespace must allow privileged Pods. This is the accepted tradeoff for giving
-  # agent sessions a real Docker daemon; Falco will flag the privileged container.
+  # namespace must allow privileged Pods. This is the accepted tradeoff for a
+  # real Docker daemon in agent sessions. Falco will flag the privileged container.
   labels:
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged

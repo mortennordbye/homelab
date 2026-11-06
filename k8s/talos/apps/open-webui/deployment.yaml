@@ -22,8 +22,8 @@ spec:
         runAsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
-      # Startup copies the frontend's assets into static/, which is root-owned in
-      # the image; seed a writable copy so the copy succeeds and nothing is lost.
+      # Startup copies the frontend's assets into static/, which root owns in
+      # the image. Seed a writable copy so the copy succeeds and nothing is lost.
       initContainers:
         - name: seed-static
           image: ghcr.io/open-webui/open-webui:v0.10.2
@@ -64,8 +64,8 @@ spec:
               value: "http://ollama-wake:8080"
             - name: WEBUI_AUTH
               value: "true"
-            # The default key file sits in the root-owned app dir, and would not
-            # survive a restart anyway.
+            # The default key file is in the root-owned app dir, and it would not
+            # survive a restart.
             - name: WEBUI_SECRET_KEY_FILE
               value: /app/backend/data/.webui_secret_key
             - name: HOME

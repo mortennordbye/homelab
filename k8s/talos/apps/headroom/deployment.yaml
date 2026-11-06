@@ -15,8 +15,8 @@ spec:
       labels:
         app: headroom
     spec:
-      # SQLite opens /data/database.sqlite; the files on the NFS PVC are owned by
-      # 1000, so runAsUser and the volume's owner must stay the same uid.
+      # SQLite opens /data/database.sqlite. uid 1000 owns the files on the NFS PVC,
+      # so runAsUser and the volume's owner must stay the same uid.
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -27,12 +27,12 @@ spec:
           type: RuntimeDefault
       containers:
         - name: headroom
-          # Kargo sets the tag through kustomization.yaml `images:`; this inline value is only a kubectl-apply fallback.
+          # Kargo sets the tag through kustomization.yaml `images:`. This inline value is only a kubectl-apply fallback.
           image: ghcr.io/mortennordbye/headroom:sha-32a1389
           imagePullPolicy: IfNotPresent
           env:
-            # Host-header allowlist (DNS-rebinding guard); defaults to loopback
-            # only, so the served hostname must be listed or the app 403s.
+            # Host-header allowlist (DNS-rebinding guard). The default is loopback
+            # only, so the served hostname must be listed or the app returns 403.
             - name: ALLOWED_HOSTS
               value: "headroom.local.bigd.no,localhost,127.0.0.1"
           securityContext:

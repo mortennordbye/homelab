@@ -1,6 +1,6 @@
 # Nightly restic backup of this namespace's app volumes to the NAS
 # (docs/platform/backups/README.md). Every repository shares one password, volsync-restic-password
-# in Bitwarden; without it none of them can be restored.
+# in Bitwarden. Without it, no repository can be restored.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -43,7 +43,7 @@ spec:
     repository: verksted-data-restic
     copyMethod: Direct
     pruneIntervalDays: 7
-    # Bump to clear a lock a mover killed mid-run left behind; forget fails until it is gone.
+    # Increment to clear a stale lock from a mover killed mid-run. forget fails until the lock is gone.
     unlock: "1"
     retain:
       daily: 14

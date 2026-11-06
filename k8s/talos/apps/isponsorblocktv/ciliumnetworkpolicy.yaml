@@ -1,4 +1,4 @@
-# Nothing connects in; the app only dials YouTube's lounge API and SponsorBlock.
+# Nothing connects in. The app only calls YouTube's lounge API and SponsorBlock.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:

@@ -24,7 +24,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: logeverylift-app
-          # Kargo sets the tag through kustomization.yaml `images:`; this inline value is only a kubectl-apply fallback.
+          # Kargo sets the tag through kustomization.yaml `images:`. This inline value is only a kubectl-apply fallback.
           image: ghcr.io/mortennordbye/logeverylift:sha-43378df
           imagePullPolicy: IfNotPresent
           securityContext:

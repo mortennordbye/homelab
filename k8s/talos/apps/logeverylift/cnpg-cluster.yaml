@@ -17,7 +17,7 @@ spec:
     # No CPU limit: CFS throttling stalls request handling in 100ms steps.
     limits:
       memory: 512Mi
-  # Bootstrap runs once; changing it later does nothing to a running cluster.
+  # Bootstrap runs once. A later change does nothing to a running cluster.
   bootstrap:
     initdb:
       database: logeverylift_db
@@ -33,7 +33,7 @@ spec:
         barmanObjectName: garage
         serverName: logeverylift-db
 ---
-# Per-table stats for the Grafana Postgres dashboard; CNPG's default queries stop at
+# Per-table stats for the Grafana Postgres dashboard. CNPG's default queries stop at
 # the database level.
 apiVersion: v1
 kind: ConfigMap

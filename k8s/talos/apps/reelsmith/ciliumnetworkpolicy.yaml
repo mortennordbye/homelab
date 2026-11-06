@@ -1,6 +1,6 @@
 # Ingress from Traefik only, egress pinned to the publishing APIs: this pod is
 # internet-reachable and holds tokens with publish and DM rights, so a
-# compromised process must not be able to point them anywhere else.
+# compromised process must not be able to send them anywhere else.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
@@ -23,8 +23,8 @@ spec:
     - fromEntities:
         - host
         - health
-    # Prometheus, for /metrics. Without this the scrape is dropped and the
-    # only symptom is a target sitting at "down".
+    # Prometheus, for /metrics. Without this the policy drops the scrape, and the
+    # only symptom is a target at "down".
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
@@ -45,7 +45,7 @@ spec:
             dns:
               - matchPattern: "*"
     # Every host the gateway calls. TikTok returns its upload host per request,
-    # hence the pattern.
+    # so a pattern is needed.
     - toFQDNs:
         - matchName: "graph.instagram.com"
         - matchName: "graph.facebook.com"

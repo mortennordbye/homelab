@@ -38,8 +38,8 @@ spec:
         - name: trek
           image: mauriceboe/trek:5.1.0
           imagePullPolicy: IfNotPresent
-          # The image entrypoint chowns as root and drops to node via gosu, which
-          # fails as non-root; this is its final exec, so check it on upgrades.
+          # The image entrypoint chowns as root and switches to node with gosu. That
+          # fails as non-root. This command is its final exec; check it on upgrades.
           workingDir: /app/server
           command:
             - dumb-init

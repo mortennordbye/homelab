@@ -9,7 +9,7 @@ spec:
       app: headroom-demo
   ingress:
     # Only Traefik may reach the pod. No KEDA interceptor rule here (unlike the
-    # private headroom): this app never scales to zero, so traffic goes straight
+    # private headroom): this app never scales to zero, so traffic goes directly
     # from the gateway to the service.
     - fromEndpoints:
         - matchLabels:
@@ -24,7 +24,7 @@ spec:
         - host
         - health
   # Egress allowlisted (deny-by-default) because this pod is internet-reachable.
-  # api.enablebanking.com is deliberately absent: the demo can never reach a
+  # api.enablebanking.com is absent by design: the demo can never reach a
   # bank even if the demo-mode gate regressed.
   egress:
     # DNS to CoreDNS. Required for the toFQDNs rules below to resolve.

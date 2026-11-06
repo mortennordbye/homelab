@@ -1,6 +1,6 @@
-# Cluster read access for the agent sessions in this pod. Think blast radius
-# before widening: the token is inherited by every LLM-driven shell session.
-# Reads are cluster-wide; the single write verb is `create` on Kargo Promotions.
+# Cluster read access for the agent sessions in this pod. Consider the impact
+# before you widen it: every LLM-driven shell session inherits the token.
+# Reads are cluster-wide. The single write verb is `create` on Kargo Promotions.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
