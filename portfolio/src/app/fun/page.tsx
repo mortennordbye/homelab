@@ -12,6 +12,7 @@ import type { Metadata } from "next";
 import { getAllWork } from "@/lib/work";
 import { certs, education, experience } from "@/content/resume";
 import { site } from "@/content/site";
+import { projectRepos } from "@/content/repos";
 import type { CareerData, ShelfData } from "@/components/fun/shelf";
 import { sourceExcerpt } from "@/lib/source-excerpt";
 import FunRoomClient from "./FunRoomClient";
@@ -91,6 +92,16 @@ export default function FunPage() {
         <ul>
           {shelf.certs.map((c) => (
             <li key={c.title}>{`${c.title} — ${c.issuer}, ${c.date}`}</li>
+          ))}
+        </ul>
+
+        <h2>Projects on the wall shelf</h2>
+        <ul>
+          {projectRepos.map((p) => (
+            <li key={p.name}>
+              <a href={`https://github.com/${site.github}/${p.name}`}>{p.name}</a>
+              {` — ${p.about} Shown as ${p.object}.`}
+            </li>
           ))}
         </ul>
 

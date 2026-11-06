@@ -80,6 +80,8 @@ All under `portfolio/src/`.
 | `components/fun/WallCertificates.tsx` | Certificates standing on wall boards by the desk. |
 | `components/fun/Objects.tsx` | The note on the fridge door, contact card, gym bag, career album, service leaflets. Nothing in here hangs on a wall; see the file header. |
 | `components/fun/Abacus.tsx` | The skills, counted on an abacus on the dining table. |
+| `components/fun/RepoShelf.tsx` | The projects: a wall-hung shelf of 4 x 3 compartments beside the blog covers, one object per repo in `content/repos.ts` `projectRepos`. Builds the repo card and runs the objects' loops. |
+| `components/fun/repo-objects/` | One small hand-built object per repo, each with its own loop. `shared.tsx` holds the shared materials and `useTick`; `index.ts` maps repo names to objects. |
 | `components/fun/PrintedPosts.tsx` | The newest blog covers, framed together on the wall. Lays itself out from `/api/v1/blog`. |
 | `components/fun/Printer.tsx` | The CV printer: a screen on the lid toggles the CV customizer's flags, and printing downloads the matching PDF while a sheet carrying its page one (`preview` in `cv-manifest.json`, rendered by Ghostscript in the Dockerfile's `pdfbuild` stage) feeds out. |
 | `components/fun/Touch.tsx` | Phone controls. `TouchLook` (inside the Canvas and inside `InteractionProvider`) does drag-to-look and tap-to-activate; `TouchStick` is the DOM walk stick. |
@@ -89,7 +91,7 @@ All under `portfolio/src/`.
 | `components/fun/Desktop.tsx` | The landscape desk monitor as a GNOME-style desktop: Files, a browser with mock Argo CD and Grafana, Room controls, a text editor with real source from this repo, Mines and Snake. |
 | `components/fun/Screen.tsx` | Monitor mesh and DOM panel mount. `Screen` is one panel; `Dashboard` is the television carrying six at once; `PanelCard` is the chrome both share. |
 | `components/fun/Panels.tsx` | Content of the live infra panels. Authored at one size (640x376); the television scales them down, so there is no second "small" variant to keep in step. |
-| `components/fun/feed.ts` | `/api/v1/infra` polling and staleness rules, and `useRepos`. |
+| `components/fun/feed.ts` | `/api/v1/infra` polling and staleness rules, `useRepos` and `useProjectRepos`. |
 | `components/fun/interaction.tsx` | Look-at-and-press: raycast registry, `Interactive` wrapper. |
 | `components/fun/StaticMerge.tsx` | Wraps `Room`: after mount, draws the static meshes as one mesh per material and hides the originals. `NO_MERGE` is the opt-out. |
 | `components/fun/Hud.tsx` | Aiming dot, look-at prompt, keybinds, `InfoPanel` sheet. |
@@ -122,7 +124,9 @@ no API route for room content. Do not add one.
 
 Live data is different. `feed.ts` polls `/api/v1/infra` every 60s. It uses the same snapshot and
 staleness rules as `LiveStatus` on `/infrastructure`. It also holds `useRepos`, which the
-desktop's Files app reads. `PrintedPosts` fetches `/api/v1/blog` once when the room loads,
+desktop's Files app reads, and `useProjectRepos`, which the repo shelf reads. Both share one
+request to `/api/v1/github`. That route makes one GitHub list request an hour and returns the
+pinned repos (`repos`) and the shelf's projects (`projects`). `PrintedPosts` fetches `/api/v1/blog` once when the room loads,
 because the covers must be in place before a visitor walks up to the wall.
 
 Locally, `compose.yaml` sets `STATUS_FILE=/app/dev/status.json`. Then `/api/v1/infra` takes the
@@ -217,6 +221,17 @@ the room.
 Nothing to do here. Publish the post. The framed covers pick it up from the RSS feed on the next
 load. Hugo emits the cover as `<media:content>`, and `/api/v1/blog` reads it.
 
+### A new repository
+
+Add it to `projectRepos` in `content/repos.ts`, in shelf order. Build its object in
+`components/fun/repo-objects/` and add it to `REPO_OBJECTS` in `index.ts`. A repo without an
+object gets a plain box. The shelf holds 12. See the BACKLOG entry "Fun room: the repo shelf
+holds 12 projects and no more".
+
+An object stands on its compartment floor at the origin, +z towards the room, inside 0.19
+wide, 0.22 tall and 0.16 deep. It uses the materials in `shared.tsx` and nothing else. Its loop
+goes in `useTick`, computed from the clock, so the shelf can stop it and pose it still.
+
 ### A new case study, certification or social link
 
 Nothing to do in the room's code. Add the item to `src/content/work/*.mdx`, `resume.ts` or
@@ -310,6 +325,24 @@ screen, and back out when you leave. It serves the shell on the desk and the pri
 would take the camera in the middle of the move and snap it to eye height. The `settling` flag
 gives the focus a window that nothing else may touch. The return pose is captured, not
 recomputed. A move to a "sensible" spot would relocate the visitor without their notice.
+
+### The repo shelf
+
+The objects show that a project runs, not what it outputs. So the brand rules on motion apply
+to each loop:
+
+- No counting numbers, and no text that appears letter by letter or scrambles. The tram blind
+  rolls a whole line; the typewriter's sheet is printed before it feeds.
+- No beams and no glow. The lighthouse lamp is an emissive part behind a turning shutter, not
+  a light. A new light would recompile every material in the room.
+- No green. The desk monitors already hold the one green point on this wall.
+- One `useFrame` in `RepoShelf` runs every loop, and only while the shelf front can be seen
+  (`useSeen`). Reduced motion poses every object at one still frame. Pick that frame so
+  nothing hangs in mid-air.
+- The crosshair target is a fixed invisible face across each opening, never the moving part.
+- Moving parts carry `NO_MERGE`; everything else in an object joins the static merge.
+  Repeated parts (grains, cards, keys) are one instanced mesh each.
+- The paper labels are tinted down. Untinted paper this close to the hall lamp blooms.
 
 ### Screens and DOM layers
 

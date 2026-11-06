@@ -8,6 +8,7 @@ import {
   Calendar,
   CircleDot,
   Eye,
+  FolderGit2,
   HardDrive,
   MemoryStick,
   Mountain,
@@ -38,6 +39,7 @@ import {
   Shapes,
   ShieldCheck,
   Sparkles,
+  Star,
   Triangle,
   User,
   Wind,
@@ -84,6 +86,7 @@ const KICKERS: [RegExp, LucideIcon][] = [
   [/now playing/i, Music],
   [/services/i, Sparkles],
   [/outside work/i, Mountain],
+  [/open source/i, FolderGit2],
 ];
 
 /** Every card gets one; an unmatched kicker falls back to a plain tag. */
@@ -104,6 +107,8 @@ const ROWS: [RegExp, LucideIcon][] = [
   [/proof/i, BadgeCheck],
   [/speaker/i, Speaker],
   [/framework/i, CodeXml],
+  [/^language$/i, CodeXml],
+  [/^stars$/i, Star],
   [/^3d$/i, Box],
   [/helpers/i, Wrench],
   [/models/i, Shapes],
