@@ -1,8 +1,8 @@
 # Terraform
 
-Terraform manages what sits around the cluster: Proxmox, the Talos VMs, PBS, the Tailscale
+Terraform manages what is around the cluster: Proxmox, the Talos VMs, PBS, the Tailscale
 router, UniFi and Cloudflare. Each stack is its own root with its own state, run by hand
-from a laptop. Argo CD takes over once the Talos stack has installed it.
+from a laptop. Argo CD takes over after the Talos stack has installed it.
 
 ## Stacks
 
@@ -20,9 +20,9 @@ from a laptop. Argo CD takes over once the Talos stack has installed it.
 | [`cloudflare/nordbye-it`](../../../terraform/cloudflare/nordbye-it/README.md), [`bigd-no`](../../../terraform/cloudflare/bigd-no/README.md), [`logeverylift-com`](../../../terraform/cloudflare/logeverylift-com/README.md) | the three public zones ([`cloudflare.md`](../network/cloudflare.md)) | `cloudflare/<stack>.tfstate` |
 | [`cloudflare/watchdog`](../../../terraform/cloudflare/watchdog/README.md) | the watchdog Worker | `cloudflare/watchdog.tfstate` |
 
-The Proxmox tokens the Proxmox and PBS stacks log in with, and the order to apply
-`pbs` and `datacenter` in, are created by hand in
-[`BOOTSTRAP.md`](../../../terraform/proxmox/BOOTSTRAP.md).
+The Proxmox and PBS stacks log in with Proxmox tokens that are created by hand.
+[`BOOTSTRAP.md`](../../../terraform/proxmox/BOOTSTRAP.md) has the steps and the order to
+apply `pbs` and `datacenter` in.
 
 ## State backend
 
@@ -30,19 +30,19 @@ State lives in Azure: resource group `rg-tfstate-homelab`, storage account
 `sttfstatemvnhomelab`, container `tfstate`, with blob versioning on
 ([`main.tf`](../../../terraform/azure/state/main.tf)). Every other root names these in a
 `backend "azurerm"` block with its own `key`. `azure/state` stores its own state in the
-same container through an empty `backend "azurerm" {}` filled from a gitignored
-`backend.conf` ([`version.tf`](../../../terraform/azure/state/version.tf)); its README has
-the two-stage bootstrap.
+same container. It uses an empty `backend "azurerm" {}` that a gitignored `backend.conf`
+fills ([`version.tf`](../../../terraform/azure/state/version.tf)). Its README has the
+two-stage bootstrap.
 
-The backend blocks carry no credentials, so the `azurerm` backend authenticates with
-whatever Azure CLI login the shell has; the `azurerm` provider in `azure/state` sets
-`use_cli = true` for the same reason. That login (`az login`, in the
-[`azure/state` README](../../../terraform/azure/state/README.md)) is done by hand before
-running Terraform; nothing in the repo automates it.
+The backend blocks carry no credentials, so the `azurerm` backend authenticates with the
+Azure CLI login the shell has. The `azurerm` provider in `azure/state` sets `use_cli = true`
+for the same reason. That login (`az login`, in the
+[`azure/state` README](../../../terraform/azure/state/README.md)) is done by hand before you
+run Terraform. Nothing in the repo automates it.
 
 ## Local files
 
-Git holds a `terraform.tfvars.example` for every stack but `azure/state`; the real values are gitignored
+Git holds a `terraform.tfvars.example` for every stack but `azure/state`. The real values are gitignored
 (`*.tfvars`, `backend.conf`, `kubeconfig`, `talosconfig` in
 [`.gitignore`](../../../.gitignore)) and exist only on the laptop that runs Terraform.
 
@@ -64,9 +64,9 @@ turns the stack's `talos_secrets` output into a talosctl secrets bundle.
 ## Backing up the local files
 
 [`scripts/backup-secrets.sh`](../../../scripts/backup-secrets.sh) zips the paths listed in
-[`.backup-manifest`](../../../.backup-manifest) and between the `# backup:start` and
-`# backup:end` markers in `.gitignore`, and copies the zip over SMB to the NAS share
-`shared-data` under `documents/IT/Repo-Hidden-Files-Backups/Homelab/`, keeping the newest
+[`.backup-manifest`](../../../.backup-manifest) and the paths between the `# backup:start`
+and `# backup:end` markers in `.gitignore`. It copies the zip over SMB to the NAS share
+`shared-data` under `documents/IT/Repo-Hidden-Files-Backups/Homelab/` and keeps the newest
 14. Only paths are in the repo, never contents. The manifest lists the Talos `kubeconfig`,
 `talosconfig` and `controlplane.yaml`, every stack's `terraform.tfvars`, and
 `azure/state/backend.conf`. A new stack's gitignored files need a line there.
@@ -77,13 +77,13 @@ scripts/backup-secrets.sh --dry-run   # build the zip locally, no upload
 scripts/backup-secrets.sh             # prompts for the NAS login, uploads, verifies
 ```
 
-Restore is `unzip <file>.zip` at the repo root. Where it sits among the other backups:
+Restore is `unzip <file>.zip` at the repo root. Where it fits among the other backups:
 [`../backups/README.md`](../backups/README.md).
 
 ## CI
 
 [`ci-terraform.yaml`](../../../.github/workflows/ci-terraform.yaml) runs on pull requests
-and pushes to `main` that touch `terraform/`: `terraform fmt -check -recursive`, then
+and pushes to `main` that touch `terraform/`. It runs `terraform fmt -check -recursive`, then
 `init -backend=false` and `validate` in every directory that holds a `.tf` file, so a new
-root is covered without editing the workflow. It has no credentials and never reads state;
-`plan` and `apply` stay on the laptop, since the Proxmox and UniFi APIs are LAN-only.
+root is covered without a change to the workflow. It has no credentials and never reads
+state. `plan` and `apply` stay on the laptop, because the Proxmox and UniFi APIs are LAN-only.
