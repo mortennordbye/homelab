@@ -159,7 +159,7 @@ Ask only what cannot be decided automatically:
    URL as a manual step. Never ship both (duplicate update PRs).
 5. **Stale bot?** (strict only) — opt-in even then; auto-closing issues is hostile as a
    default.
-6. **Auto-merge Dependabot patch/minor updates?** (strict only) — safe only because the
+6. **Auto-merge Dependabot updates?** (strict only) — safe only because the
    strict ruleset gates merges on required status checks; see the workflow in Phase 3.
    `--auto` only completes once *all* required approvals are in, so it merges hands-free
    only when the review count is 0 (solo). On a team repo (1+ reviews) the PR still parks
@@ -865,35 +865,63 @@ jobs:
       - uses: actions/dependency-review-action@v5.0.0
 ```
 
-- **`.github/workflows/dependabot-automerge.yml`** (strict profile, opt-in from Phase 1)
-  — auto-merges Dependabot patch/minor PRs once required checks pass. Safe ONLY when the
-  ruleset requires status checks and repo auto-merge is enabled (Phase 5); with no
-  required checks, `--auto` merges immediately and unverified — never generate this in
-  the light profile:
+- **`.github/workflows/dependabot-automerge.yml`** and **`dependabot-ci-failed.yml`**
+  (strict profile, opt-in from Phase 1) — callers of the shared workflows in
+  `mortennordbye/.github` (policy in its README). Safe ONLY when the ruleset requires
+  status checks and repo auto-merge is enabled (Phase 5); with no required checks,
+  `--auto` merges immediately and unverified — never generate these in the light
+  profile. Every ecosystem in `dependabot.yml` needs a group named `security` with
+  `applies-to: security-updates`: the workflow reads that name. `allow-major: true` for a
+  quiet repo, `false` for one the user works in daily. Pin the `uses:` ref to the SHA of
+  the latest tag in `mortennordbye/.github`. List the repo's PR workflows by `name:` in
+  `workflows:`.
 
 ```yaml
-name: Dependabot Auto-merge
+name: Dependabot auto-merge
 
 on: pull_request
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
-  automerge:
-    if: github.actor == 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    steps:
-      - id: metadata
-        uses: dependabot/fetch-metadata@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - if: contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)
-        run: gh pr merge --auto --squash "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  auto-merge:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: mortennordbye/.github/.github/workflows/dependabot-automerge.yml@<sha> # v1
+    with:
+      allow-major: true
+    secrets: inherit
+```
+
+```yaml
+name: Dependabot CI failed
+
+on:
+  workflow_run:
+    workflows: [CI, Dependency Review]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  flag:
+    permissions:
+      pull-requests: write
+    uses: mortennordbye/.github/.github/workflows/dependabot-ci-failed.yml@<sha> # v1
+```
+
+  The merge runs as the `mortennordbye-automation` GitHub App, so push workflows on the
+  default branch run for a merged update. It is installed on all repositories. In Phase 5,
+  set its two secrets in the Dependabot secret store, from bws (`secrets` skill), without
+  printing them:
+
+```bash
+export BWS_ACCESS_TOKEN=$(bws-token)
+bws secret get 46be076a-88d4-4aee-814d-b4fa014b969d | jq -r .value | gh secret set RELEASE_APP_CLIENT_ID --app dependabot -R <owner>/<repo>
+bws secret get 2deae694-846b-4a0b-845b-b4fa014ba5fb | jq -r .value | gh secret set RELEASE_APP_PRIVATE_KEY --app dependabot -R <owner>/<repo>
 ```
 
 - **Docker build & publish job** — only if a `Dockerfile` exists. Not a separate
