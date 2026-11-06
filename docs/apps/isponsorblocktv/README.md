@@ -1,9 +1,9 @@
 # iSponsorBlockTV
 
 [iSponsorBlockTV](https://github.com/dmunozv04/iSponsorBlockTV) joins the YouTube app on a TV
-as a remote, the same way a phone does when it casts, and skips
+as a remote, the same way a phone does when it casts. It skips
 [SponsorBlock](https://sponsor.ajay.app/) segments, mutes ads and presses "Skip Ad". It talks
-only to YouTube's lounge API and the SponsorBlock API, so it needs no route, no Service and no
+only to YouTube's lounge API and the SponsorBlock API. So it needs no route, no Service and no
 LAN access to the TV. The manifests live in
 [`k8s/talos/apps/isponsorblocktv/`](../../../k8s/talos/apps/isponsorblocktv/kustomization.yaml).
 
@@ -16,14 +16,14 @@ LAN access to the TV. The manifests live in
 | Skipped | `sponsor`, `selfpromo`, `interaction`; ads muted and skipped |
 | Backup | none: everything is in the manifests and Bitwarden |
 
-With an empty device list the app exits, so the pod crash-loops until at least one screen is
+With an empty device list the app exits. The pod crash-loops until at least one screen is
 paired.
 
 ## Pair a screen
 
 Pairing turns a short-lived TV code into a permanent `screen_id`. The setup wizard in the
-image (`--setup-cli`) writes into a volume this deployment does not have, so pair by calling
-the same endpoint it does.
+image (`--setup-cli`) writes into a volume that this deployment does not have. Pair by calling
+the same endpoint that the wizard calls.
 
 1. On the TV: YouTube, Settings, Link with TV code. The code is valid for a few minutes.
 2. Exchange it for a screen ID:
@@ -48,6 +48,6 @@ the same endpoint it does.
      force-sync=$(date +%s) --overwrite
    ```
 
-The log shows `Refreshed auth` per device, and `Connected to device` once YouTube is open on
-the TV. YouTube revokes screen IDs from time to time; when a device stops reconnecting, pair it
+The log shows `Refreshed auth` per device, and `Connected to device` when YouTube is open on
+the TV. YouTube revokes screen IDs from time to time. When a device stops reconnecting, pair it
 again.
