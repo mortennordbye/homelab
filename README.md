@@ -12,9 +12,9 @@
 
 [![License](https://img.shields.io/github/license/mortennordbye/homelab?style=flat-square&labelColor=0f1410&color=378144)](LICENSE) [![Last Commit](https://img.shields.io/github/last-commit/mortennordbye/homelab?style=flat-square&labelColor=0f1410&color=378144)](https://github.com/mortennordbye/homelab/commits/main) [![Issues](https://img.shields.io/github/issues/mortennordbye/homelab?style=flat-square&labelColor=0f1410&color=378144)](https://github.com/mortennordbye/homelab/issues) [![Stars](https://img.shields.io/github/stars/mortennordbye/homelab?style=flat-square&labelColor=0f1410&color=378144)](https://github.com/mortennordbye/homelab/stargazers)
 
-My personal lab environment for experimenting with infrastructure and hosting self-hosted services. Professionally, I work with these technologies daily, but the homelab gives me freedom to explore ideas and patterns that don't always fit production constraints. This is where curiosity meets practicality, testing new tools, solving real problems at home, and yes, occasionally breaking things in the pursuit of learning.
+This is my personal lab for infrastructure experiments and self-hosted services. I work with these technologies every day at work. The homelab gives me the freedom to test ideas and patterns that do not always fit production constraints. Here I test new tools, solve real problems at home, and yes, sometimes break things to learn.
 
-The repository is public by design. Transparency keeps me honest about following best practices, even when it's just for fun.
+The repository is public by design. Transparency keeps me honest about best practices, also when the work is only for fun.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/mortennordbye/homelab/status-data/status-dark.svg" />
@@ -31,13 +31,13 @@ The repository is public by design. Transparency keeps me honest about following
 
 [![Read the docs at docs.nordbye.it](https://img.shields.io/badge/Read_the_docs-docs.nordbye.it-378144?style=for-the-badge&logo=materialformkdocs&logoColor=white&labelColor=0f1410)](https://docs.nordbye.it)
 
-Everything in this repo is documented at [docs.nordbye.it](https://docs.nordbye.it): how the parts fit together, and how to operate or rebuild each one.
+Everything in this repo is documented at [docs.nordbye.it](https://docs.nordbye.it). The docs describe how the parts connect, and how to operate or rebuild each one.
 
 - [Architecture](https://docs.nordbye.it/architecture/): what runs where and how the parts depend on each other
 - Platform: [cluster](https://docs.nordbye.it/platform/cluster/), [network](https://docs.nordbye.it/platform/network/), [storage](https://docs.nordbye.it/platform/storage/), [identity](https://docs.nordbye.it/platform/identity/), [delivery](https://docs.nordbye.it/platform/delivery/), [backups](https://docs.nordbye.it/platform/backups/), [data](https://docs.nordbye.it/platform/data/), [observability](https://docs.nordbye.it/platform/observability/), [secrets](https://docs.nordbye.it/platform/secrets/)
 - Apps that need more than their manifests: [media stack](https://docs.nordbye.it/apps/media-stack/), [portfolio](https://docs.nordbye.it/apps/portfolio/), [reelsmith](https://docs.nordbye.it/apps/reelsmith/), [verksted](https://docs.nordbye.it/apps/verksted/)
 
-The site is built from [`docs/`](docs/architecture/README.md) on every push to `main`, so it always matches this repo.
+Every push to `main` builds the site from [`docs/`](docs/architecture/README.md). The site always matches this repo.
 
 ---
 
@@ -60,13 +60,13 @@ Longer write-ups of things built in this repo, on [blog.nordbye.it](https://blog
 
 [![Portfolio](https://img.shields.io/badge/Portfolio-nordbye.it-378144?style=flat-square&logo=googlechrome&logoColor=white&labelColor=0f1410)](https://nordbye.it) [![Blog](https://img.shields.io/badge/Blog-blog.nordbye.it-378144?style=flat-square&logo=hugo&logoColor=white&labelColor=0f1410)](https://blog.nordbye.it) [![Docs](https://img.shields.io/badge/Docs-docs.nordbye.it-378144?style=flat-square&logo=materialformkdocs&logoColor=white&labelColor=0f1410)](https://docs.nordbye.it) [![LinkedIn](https://img.shields.io/badge/LinkedIn-morten--victor--nordbye-378144?style=flat-square&logo=linkedin&logoColor=white&labelColor=0f1410)](https://www.linkedin.com/in/morten-victor-nordbye/) [![GitHub](https://img.shields.io/badge/GitHub-mortennordbye-378144?style=flat-square&logo=github&logoColor=white&labelColor=0f1410)](https://github.com/mortennordbye)
 
-Feel free to send me a DM, open a pull request, or steal code from here. The goal is to learn and make connections.
+Send me a DM, open a pull request, or copy code from here. The goal is to learn and to make connections.
 
 ---
 
 ## How It Works
 
-Terraform builds the Talos VMs on Proxmox. Everything after that arrives through git.
+Terraform builds the Talos VMs on Proxmox. Everything after that comes through git.
 
 ```
 push to main
@@ -78,7 +78,7 @@ push to main
          └─ KEDA lets idle apps drop to zero; the HTTP interceptor wakes them on the first request
 ```
 
-Argo CD runs two ApplicationSets in `k8s/talos/infra/argocd/` that generate one Application per directory, so a new workload is a new directory.
+Argo CD runs two ApplicationSets in `k8s/talos/infra/argocd/`. They generate one Application per directory. A new workload is a new directory.
 
 ---
 
@@ -164,11 +164,11 @@ homelab
 
 ### Container Vulnerability Scanning
 
-Automated vulnerability scanning runs weekly and on every Dockerfile change using Trivy. Scans detect CRITICAL and HIGH severity vulnerabilities in both blog and portfolio containers, with results automatically uploaded to GitHub Security tab for tracking and remediation.
+Trivy scans the containers every week and on every Dockerfile change. The scans detect CRITICAL and HIGH severity vulnerabilities in the blog and portfolio containers. The workflow uploads the results to the GitHub Security tab for tracking and remediation.
 
 ### Runtime Security
 
-[Falco](https://falco.org/) runs as a DaemonSet on every node, detecting anomalous activity at the syscall level through a modern eBPF probe (the Talos-safe driver — no kernel module). Detections are routed to Discord via Falcosidekick, false positives are tuned out using the upstream rules' own template macros (keeping signal high), and Falco metrics feed a Grafana dashboard for at-a-glance security visibility.
+[Falco](https://falco.org/) runs as a DaemonSet on every node. It detects anomalous activity at the syscall level through a modern eBPF probe. This is the Talos-safe driver, with no kernel module. Falcosidekick routes the detections to Discord. The upstream rules' own template macros tune out false positives, so the signal stays high. Falco metrics feed a Grafana dashboard for a quick view of security.
 
 ---
 
