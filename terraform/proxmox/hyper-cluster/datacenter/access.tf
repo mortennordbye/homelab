@@ -1,7 +1,7 @@
 # The Proxmox CSI driver's identity. Every proxmox-local PVC in the cluster is
 # attached through it. Its API token lives in the cluster, not here.
-# terraform-prov@pve is deliberately not managed: a bad apply could remove the
-# access this stack runs with.
+# terraform-prov@pve is not managed here: a bad apply could remove the access
+# this stack runs with.
 resource "proxmox_virtual_environment_user" "kubernetes_csi" {
   user_id         = "kubernetes-csi@pve"
   enabled         = true

@@ -10,13 +10,13 @@ resource "proxmox_storage_nfs" "nfs_vmstore" {
 }
 
 # Backups go to PBS as pve@pbs!hyper-cluster (see ../../pbs). PBS refuses a
-# backup into a group owned by another auth ID, so changing username means
-# handing the existing groups over first (../../BOOTSTRAP.md).
+# backup into a group owned by another auth ID. Before you change username,
+# hand the existing groups over to the new ID (../../BOOTSTRAP.md).
 #
-# username and password force replacement in bpg/proxmox, and the recreate
-# connects to PBS, so a slow or unreachable PBS leaves no storage at all.
-# The password is only used at creation: a rotated token is applied with an
-# in-place edit of the storage (Datacenter → Storage → pbs), not here.
+# username and password force replacement in bpg/proxmox. The recreate connects
+# to PBS, so a slow or unreachable PBS leaves no storage at all. The password is
+# used only at creation. Apply a rotated token with an in-place edit of the
+# storage (Datacenter → Storage → pbs), not here.
 resource "proxmox_storage_pbs" "pbs" {
   id          = "pbs"
   server      = "pbs.local.bigd.no"

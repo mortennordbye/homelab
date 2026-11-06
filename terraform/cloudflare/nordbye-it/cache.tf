@@ -1,15 +1,15 @@
-# Cloudflare only caches by file extension without a rule, so HTML — the slow
-# request from the residential origin — needs this rule to be cached.
+# Without a rule, Cloudflare caches by file extension only. HTML is the slow
+# request from the residential origin, so it needs this rule to be cached.
 #
-# browser_ttl is deliberately absent: the zone default only applies where the
-# origin sets no max-age (HTML alone), so assets keep what the origin sent.
+# browser_ttl is absent on purpose. The zone default applies only where the
+# origin sets no max-age (HTML alone), so assets keep the value the origin sent.
 #
 # /api/ is excluded so nordbye.it/api/v1/infra (README status card) stays fresh.
 #
 # /_next/ is excluded because override_origin applies to every matched
-# response: it would re-fetch year-immutable fingerprinted assets on the short
-# TTL and, worse, pin a superseded build's 404s at the edge. Left alone,
-# Cloudflare respects the origin's immutable and no-store headers there.
+# response. It would re-fetch the immutable fingerprinted assets on the short
+# TTL, and it would pin a superseded build's 404s at the edge. Without the
+# rule, Cloudflare respects the origin's immutable and no-store headers there.
 resource "cloudflare_ruleset" "cache" {
   zone_id     = data.cloudflare_zone.this.zone_id
   name        = "default"

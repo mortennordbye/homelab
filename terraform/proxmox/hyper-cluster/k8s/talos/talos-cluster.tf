@@ -5,8 +5,8 @@ locals {
   kubernetes_endpoint    = coalesce(var.cluster_vip, local.first_control_plane_ip)
 }
 
-# Machine configs render the Kubernetes components at kubernetes_config_contract, so a
-# contract left behind the running version downgrades the control plane on the next apply.
+# Machine configs render the Kubernetes components at kubernetes_config_contract. A
+# contract below the running version downgrades the control plane on the next apply.
 check "kubernetes_config_contract_current" {
   assert {
     condition     = var.kubernetes_config_contract == var.kubernetes_version
@@ -18,8 +18,8 @@ resource "talos_machine_secrets" "cluster" {
   talos_version = var.talos_secrets_contract
 
   # These secrets are the cluster CA, etcd certs and service account keys. Replacing them is
-  # unrecoverable without the recovery flow in the README. prevent_destroy turns any plan that
-  # would replace them into a loud error instead of a silent rebuild.
+  # unrecoverable without the recovery flow in the README. prevent_destroy makes any plan that
+  # would replace them fail with an error instead of a silent rebuild.
   lifecycle {
     prevent_destroy = true
   }
@@ -27,11 +27,11 @@ resource "talos_machine_secrets" "cluster" {
 
 # Custom image with Intel microcode, QEMU guest agent and Intel GPU drivers.
 #
-# i915 is only actually used by genesis-worker-01, which has the hyper1 iGPU passed through for
-# Plex QuickSync, but the schematic is fleet-wide. It is harmless on nodes without a GPU, and
-# keeping one schematic avoids a second image to track. Note that changing this list changes the
-# schematic ID, which machine.install.image references, so every node's config picks up the new
-# image and installs it at its next upgrade.
+# Only genesis-worker-01 uses i915: it has the hyper1 iGPU passed through for Plex QuickSync.
+# The schematic is still fleet-wide. i915 is harmless on nodes without a GPU, and one schematic
+# means one image to track. A change to this list changes the schematic ID, which
+# machine.install.image references, so every node's config gets the new image and installs it
+# at its next upgrade.
 resource "talos_image_factory_schematic" "this" {
   schematic = yamlencode({
     customization = {
@@ -76,9 +76,9 @@ data "talos_machine_configuration" "controlplane" {
   config_patches = [
     yamlencode({
       machine = {
-        # Pin the installer explicitly: left unset, the provider fills it from its own build
-        # version (drifting on every provider bump) and points at the plain installer, which
-        # would drop the schematic's extensions on a reinstall from config.
+        # Pin the installer. When unset, the provider fills it from its own build version, which
+        # drifts on every provider bump, and points at the plain installer. That installer drops
+        # the schematic's extensions on a reinstall from config.
         install = {
           image = "factory.talos.dev/installer/${talos_image_factory_schematic.this.id}:${var.talos_version}"
         }
@@ -97,9 +97,8 @@ data "talos_machine_configuration" "controlplane" {
             } : null
           }]
         }
-        # The GPU label is derived from pci_mapping so the capability is declared in the same
-        # place as the hardware. Workloads that need QuickSync select on the label rather than
-        # pinning to a hostname.
+        # The GPU label comes from pci_mapping, so the capability is declared in the same place
+        # as the hardware. Workloads that need QuickSync select on the label, not on a hostname.
         nodeLabels = merge(
           {
             "topology.kubernetes.io/region" = var.proxmox_cluster_name
@@ -152,9 +151,9 @@ data "talos_machine_configuration" "worker" {
   config_patches = [
     yamlencode({
       machine = {
-        # Pin the installer explicitly: left unset, the provider fills it from its own build
-        # version (drifting on every provider bump) and points at the plain installer, which
-        # would drop the schematic's extensions on a reinstall from config.
+        # Pin the installer. When unset, the provider fills it from its own build version, which
+        # drifts on every provider bump, and points at the plain installer. That installer drops
+        # the schematic's extensions on a reinstall from config.
         install = {
           image = "factory.talos.dev/installer/${talos_image_factory_schematic.this.id}:${var.talos_version}"
         }
@@ -170,9 +169,8 @@ data "talos_machine_configuration" "worker" {
             dhcp = false
           }]
         }
-        # The GPU label is derived from pci_mapping so the capability is declared in the same
-        # place as the hardware. Workloads that need QuickSync select on the label rather than
-        # pinning to a hostname.
+        # The GPU label comes from pci_mapping, so the capability is declared in the same place
+        # as the hardware. Workloads that need QuickSync select on the label, not on a hostname.
         nodeLabels = merge(
           {
             "topology.kubernetes.io/region" = var.proxmox_cluster_name
@@ -180,7 +178,7 @@ data "talos_machine_configuration" "worker" {
           },
           each.value.pci_mapping != null ? { "hardware.nordbye.it/gpu" = "intel-quicksync" } : {}
         )
-        # Talos defaults (384Mi reserved, evict at 100Mi) let pods starve machined and wedge
+        # Talos defaults (384Mi reserved, evict at 100Mi) let pods starve machined and hang
         # the node. A partial evictionHard map zeroes the omitted thresholds, so list all five.
         kubelet = {
           extraConfig = {
@@ -272,8 +270,8 @@ resource "talos_cluster_kubeconfig" "cluster" {
   node                 = local.first_control_plane_ip
   client_configuration = talos_machine_secrets.cluster.client_configuration
 
-  # The client certificate is only reissued on an apply; the 720h default window is easy to
-  # miss on a cluster that can sit untouched for months, so widen it to 90 days.
+  # Only an apply reissues the client certificate. The 720h default can expire unnoticed on a
+  # cluster that nobody touches for months, so widen it to 90 days.
   certificate_renewal_duration = "2160h"
 
   timeouts = {

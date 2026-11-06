@@ -1,12 +1,12 @@
-# Owns the ENTIRE tailnet policy file. Edits made in the admin console will be
-# overwritten on the next apply; change policy here instead.
+# Owns the ENTIRE tailnet policy file. The next apply overwrites any edit made
+# in the admin console. Change the policy here instead.
 resource "tailscale_acl" "tailnet" {
   acl = jsonencode({
     tagOwners = {
       "tag:subnet-router" = ["autogroup:admin"]
     }
 
-    # Routes the subnet router advertises come up approved, no console click.
+    # Routes the subnet router advertises are auto-approved; no console click.
     autoApprovers = {
       routes = {
         for route in var.advertised_routes : route => ["tag:subnet-router"]

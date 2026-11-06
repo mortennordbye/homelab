@@ -1,7 +1,7 @@
-# CPU temperatures and NVMe health for Prometheus: the Proxmox API has neither, so
-# each host runs node-exporter (hwmon collector) on :9100, plus the collectors
-# package's nvme and smartmon timers writing to its textfile directory. Scraped by
-# k8s/talos/infra/pve-exporter.
+# CPU temperatures and NVMe health for Prometheus. The Proxmox API has neither,
+# so each host runs node-exporter (hwmon collector) on :9100. The collectors
+# package's nvme and smartmon timers write to its textfile directory.
+# k8s/talos/infra/pve-exporter scrapes it.
 # Runs once per host; bump the trigger to reinstall.
 resource "terraform_data" "node_exporter" {
   for_each = local.nodes

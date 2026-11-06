@@ -1,5 +1,5 @@
 locals {
-  # Proxmox boots on the performance governor, which holds the T-series CPUs at
+  # Proxmox boots on the performance governor. That holds the T-series CPUs at
   # turbo under light load and keeps the fans loud. EPP needs powersave first.
   cpu_powersave_unit = <<-EOT
     [Unit]

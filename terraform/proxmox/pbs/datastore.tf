@@ -4,9 +4,9 @@ locals {
 
 # The datastore on the Synology NFS share 10.3.10.10:/volume1/pve-backup,
 # mounted at /mnt/synology. Only its schedules and notification mode are
-# managed; the path is fixed at creation. Garbage collection refuses to run if
-# anything in that path is unreadable by the backup user, so nothing but PBS
-# may write there: never point a Proxmox VE storage at this share.
+# managed here; the path is fixed at creation. Garbage collection refuses to
+# run if the backup user cannot read any file in that path, so only PBS may
+# write there. Never point a Proxmox VE storage at this share.
 resource "restapi_object" "datastore" {
   path         = "/config/datastore"
   id_attribute = "name"

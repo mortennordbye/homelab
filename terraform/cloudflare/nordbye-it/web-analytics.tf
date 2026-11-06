@@ -1,12 +1,12 @@
 # Adopted, not created: removing a resource here deletes the site and its history.
 #
-# The beacon tag is in each site's own source — portfolio/src/app/layout.tsx and
-# blog/config/_default/params.toml — so auto_install stays off, or the edge
-# injects a second copy and double-counts every view.
+# The beacon tag is in each site's own source (portfolio/src/app/layout.tsx and
+# blog/config/_default/params.toml), so auto_install stays off. With it on, the
+# edge injects a second copy and counts every view twice.
 #
 # Declare each site exactly as it already is. Cloudflare builds the zone binding
-# only at creation, so blog cannot be moved from host to zone_tag without a
-# recreate that mints a new site_token, and an omitted host is sent as null,
+# only at creation, so a move of blog from host to zone_tag needs a recreate,
+# and the recreate mints a new site_token. An omitted host is sent as null,
 # which wipes the site's name.
 
 resource "cloudflare_web_analytics_site" "portfolio" {

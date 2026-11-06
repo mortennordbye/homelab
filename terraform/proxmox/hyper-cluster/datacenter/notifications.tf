@@ -1,15 +1,15 @@
-# Proxmox notifications: errors (failed backups, replication, fencing) are
-# posted to Alertmanager, which routes namespace="proxmox" to Discord. The
-# built-in mail target and default-matcher are left as they are.
+# Proxmox notifications: Proxmox posts errors (failed backups, replication,
+# fencing) to Alertmanager, which routes namespace="proxmox" to Discord. The
+# built-in mail target and default-matcher stay as they are.
 #
 # Plain REST calls because bpg/proxmox has no notifications resources yet
 # (bpg/terraform-provider-proxmox#2863). Proxmox wraps every response in
 # {"data": ...}, so objects are read back through the list endpoint.
 
 locals {
-  # Handlebars, rendered by Proxmox per notification. The Proxmox message is
-  # left out of the alert: a backup's carries the whole job log, which can
-  # exceed Discord's limit and get the post rejected.
+  # Handlebars, rendered by Proxmox per notification. The alert leaves out the
+  # Proxmox message: a backup's message carries the whole job log, which can
+  # exceed Discord's limit, and Discord then rejects the post.
   alertmanager_webhook_body = <<-EOT
     [{"labels":{"alertname":"ProxmoxNotification","severity":"critical","namespace":"proxmox","node":"{{ fields.hostname }}","pve_severity":"{{ severity }}"},"annotations":{"summary":"{{ escape title }}","description":"Details in Datacenter → Tasks on {{ fields.hostname }}, or the notification mail."}}]
   EOT

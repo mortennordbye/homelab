@@ -4,9 +4,9 @@
 provider "restapi" {
   uri      = "${trimsuffix(var.pbs_endpoint, "/")}/api2/json"
   insecure = var.pbs_insecure
-  # PBS answers slowly while garbage collection saturates the NFS share; the
-  # provider's default gives up mid-write and leaves objects created but
-  # untracked.
+  # PBS answers slowly while garbage collection saturates the NFS share. With
+  # the provider's default timeout, a write stops early and leaves objects
+  # created but untracked.
   timeout = 120
   headers = {
     Authorization = "PBSAPIToken=${var.pbs_api_token}"

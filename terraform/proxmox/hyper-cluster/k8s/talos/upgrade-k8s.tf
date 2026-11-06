@@ -22,10 +22,10 @@ resource "null_resource" "upgrade_kubernetes" {
         sleep 120
       fi
 
-      # Address a fixed control plane, never the VIP: patching the node that holds the VIP
-      # re-elects it and talosctl blocks forever on the dead socket. Nothing reboots during
-      # this step, so a direct node address stays reachable. The health gates in
-      # upgrade-talos.tf are the opposite case and do want the VIP.
+      # Address a fixed control plane node, never the VIP. A patch to the node that holds the
+      # VIP triggers a re-election, and talosctl then blocks forever on the dead socket. Nothing
+      # reboots during this step, so a direct node address stays reachable. The health gates in
+      # upgrade-talos.tf are the opposite case: they need the VIP.
       talosctl upgrade-k8s \
         --endpoints ${values(local.control_plane_nodes)[0].ip} \
         --nodes ${values(local.control_plane_nodes)[0].ip} \

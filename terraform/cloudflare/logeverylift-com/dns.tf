@@ -12,8 +12,8 @@ resource "cloudflare_dns_record" "apex" {
   ttl     = 1
 }
 
-# The HTTPRoute only serves the apex, so www would 404 on its own. The redirect
-# ruleset sends it to the apex before it ever reaches the cluster.
+# The HTTPRoute serves only the apex, so www alone would return 404. The
+# redirect ruleset sends it to the apex before it reaches the cluster.
 resource "cloudflare_dns_record" "www" {
   zone_id = data.cloudflare_zone.this.zone_id
   name    = "www.${var.zone_name}"
@@ -31,9 +31,9 @@ resource "cloudflare_dns_record" "spf" {
   ttl     = 1
 }
 
-# p=none is deliberate. The domain receives through Cloudflare Email Routing,
-# which forwards, and forwarded mail routinely fails SPF alignment. Monitor
-# first; tighten to quarantine once it is clear nothing legitimate is affected.
+# p=none is intended. The domain receives mail through Cloudflare Email
+# Routing, which forwards it, and forwarded mail often fails SPF alignment.
+# Monitor first. Tighten to quarantine when no legitimate mail is affected.
 resource "cloudflare_dns_record" "dmarc" {
   zone_id = data.cloudflare_zone.this.zone_id
   name    = "_dmarc.${var.zone_name}"

@@ -13,7 +13,7 @@ terraform {
   #  path = "terraform.tfstate"
   #}
 
-  # Stage 2: After storage resources are created, comment out 'local' backend above,
-  # uncomment this block, and run: terraform init -migrate-state -backend-config=backend.conf
+  # Stage 2: After the storage resources exist, comment out the 'local' backend above.
+  # Uncomment this block, then run: terraform init -migrate-state -backend-config=backend.conf
   backend "azurerm" {}
 }

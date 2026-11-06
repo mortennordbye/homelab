@@ -1,13 +1,13 @@
-# The identity Proxmox VE backs up as, pve@pbs with its token hyper-cluster.
-# Both are created by ../BOOTSTRAP.md, like every credential: PBS shows a token
-# secret only once, in the create response. This file grants what they may do.
+# The identity Proxmox VE backs up as: pve@pbs with its token hyper-cluster.
+# ../BOOTSTRAP.md creates both, like every credential, because PBS shows a token
+# secret only once, in the create response. This file grants their rights.
 # DatastorePowerUser, not DatastoreBackup: the backup job also prunes.
 
 # A token's effective rights are the intersection of its own ACL and its
 # user's, so both need the role. PBS has one /access/acl endpoint and no
-# per-entry path, which restapi_object cannot track, so each entry is set with
-# an idempotent PUT that re-runs whenever the entry changes. Drift made by hand
-# is not detected, and removing an entry from here does not revoke it.
+# per-entry path, which restapi_object cannot track. An idempotent PUT sets
+# each entry and re-runs whenever the entry changes. Manual drift is not
+# detected, and removal of an entry from here does not revoke it.
 resource "terraform_data" "pve_acl" {
   for_each = toset(["pve@pbs", "pve@pbs!hyper-cluster"])
 

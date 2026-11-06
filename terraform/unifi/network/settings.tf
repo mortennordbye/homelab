@@ -1,9 +1,9 @@
 # Site-level settings. The provider writes only the sections declared here and
 # leaves the rest of the site untouched.
 #
-# usg stays in the console: the provider rebuilds it from scratch and always
+# usg stays in the console: the provider rebuilds the whole section and always
 # sends gateway fields it does not model (mdns_enabled, lldp_enable_all, the
-# DHCP relay servers), so declaring it would switch those off.
+# DHCP relay servers), so a declaration here would switch those off.
 resource "unifi_setting" "site" {
   # 578 is Norway; it decides which Wi-Fi channels and transmit powers are legal.
   country = {
@@ -78,7 +78,7 @@ resource "unifi_setting" "site" {
     }
   }
 
-  # Ad blocking and DNS filtering are not modelled by the provider and stay as
+  # The provider does not model ad blocking and DNS filtering, so they stay as
   # set in the console; a partial write leaves them in place.
   ips = {
     ips_mode                                = "ids"
