@@ -1,7 +1,7 @@
 # Kargo app promotion
 
 Kargo promotes container images into the cluster on top of Argo CD. CI only builds
-and pushes the image; Kargo notices the new tag, rewrites `newTag` in the app's
+and pushes the image. Kargo notices the new tag, rewrites `newTag` in the app's
 kustomization, commits it to this repo and syncs the Argo CD Application. Every
 app that ships its own image runs through it.
 
@@ -10,8 +10,8 @@ app that ships its own image runs through it.
 ## Pipelines
 
 Each app has a Warehouse that watches one GHCR repo and auto-promotes new Freight
-into its first Stage. A second Stage only receives Freight that passed the first
-one's smoke test.
+into its first Stage. A second Stage only receives Freight that passed the smoke
+test of the first one.
 
 | App | Image | Stages | Smoke test |
 | --- | --- | --- | --- |
@@ -23,14 +23,15 @@ one's smoke test.
 | reelsmith | `ghcr.io/mortennordbye/reelsmith-gateway` | prod | `https://gate.nordbye.it/healthz` |
 | innestemme | `ghcr.io/mortennordbye/innestemme` | prod | `http://innestemme.innestemme.svc.cluster.local:9090/healthz` |
 
-Every `stage` and `demo` Stage uses `promote-to-argocd`; every `prod` Stage uses
-`promote-via-pr`, except innestemme's, which uses `promote-to-argocd` too: a voice
-assistant in one living room, whose own CI is the gate, deployed on every build. The smoke tests are AnalysisTemplates in each `<app>.yaml` that
-run a curl Job; the ones on `*.local.bigd.no` and on `nordbye.it`, `blog.nordbye.it`
-and `logeverylift.com` pass `-k`, the headroom demo and reelsmith ones verify TLS, and innestemme's is plain HTTP
-on its in-cluster Service.
+Every `stage` and `demo` Stage uses `promote-to-argocd`. Every `prod` Stage uses
+`promote-via-pr`, except innestemme's, which uses `promote-to-argocd` too. innestemme
+is a voice assistant in one living room. Its own CI is the gate, and every build is
+deployed. The smoke tests are AnalysisTemplates in each `<app>.yaml` that run a curl
+Job. The ones on `*.local.bigd.no` and on `nordbye.it`, `blog.nordbye.it` and
+`logeverylift.com` pass `-k`. The headroom demo and reelsmith ones verify TLS.
+innestemme's is plain HTTP on its in-cluster Service.
 portfolio and blog prod also purge the Cloudflare cache for `nordbye.it` after
-the sync, using the `cloudflare-api-token` ExternalSecret in their Project.
+the sync. They use the `cloudflare-api-token` ExternalSecret in their Project.
 
 ## Promotion tasks
 
@@ -41,21 +42,22 @@ only supply the vars `appName`, `appPath`, `imageRepo` and `argocdApp`.
 kustomize-set-image, git-commit, git-push to `main`, argocd-update, argocd-wait.
 
 `promote-via-pr` (`clusterpromotiontask-pr.yaml`) pushes the bump to a generated
-`kargo/promotion/...` branch, opens a homelab PR, and blocks in git-wait-for-pr until
-it is merged, then runs argocd-update and argocd-wait. Merging the PR is the deploy
-gate.
+`kargo/promotion/...` branch and opens a homelab PR. It blocks in git-wait-for-pr until
+the PR is merged. Then it runs argocd-update and argocd-wait. The merge of the PR is
+the deploy gate.
 
-Before opening the PR, an `http` step queries Prometheus with the Stage's optional
-`budgetQuery` var, the app's lowest error budget left. The PR gets `slo/budget-ok`, or
-`slo/budget-low` below 25 %, with no data or with Prometheus unreachable;
-`kargo-automerge.yaml` does not merge a `slo/budget-low` PR. Stages without the var
-(apps with no SLO) get `slo/none`. Portfolio, blog and logeverylift prod set it; the
-policy is in [slos.md](../observability/slos.md#error-budget-policy).
+Before it opens the PR, an `http` step queries Prometheus with the Stage's optional
+`budgetQuery` var. The query returns the lowest error budget the app has left. The PR
+gets `slo/budget-ok`, or `slo/budget-low` when the budget is below 25 %, when there is
+no data, or when Prometheus is unreachable. `kargo-automerge.yaml` does not merge a
+`slo/budget-low` PR. Stages without the var (apps with no SLO) get `slo/none`.
+Portfolio, blog and logeverylift prod set it. The policy is in
+[slos.md](../observability/slos.md#error-budget-policy).
 
-argocd-wait blocks until the Application is Synced and Healthy. `desiredRevision` is
-not pinned on argocd-update: apps track shared `main` HEAD, and a pinned revision
-reports the Stage Unhealthy as soon as any other commit lands. The smoke test is the
-real verification.
+argocd-wait blocks until the Application is Synced and Healthy. argocd-update does not
+pin `desiredRevision`. Apps track the shared `main` HEAD, and a pinned revision reports
+the Stage Unhealthy as soon as any other commit is pushed. The smoke test is the real
+verification.
 
 ## Facts
 
@@ -84,18 +86,20 @@ real verification.
 
 ## Operate
 
-Deploying to prod is automatic up to the gate: merge the PR Kargo opens
-(`chore(<app>): promote <tag> to prod`). Nothing reaches prod without that merge.
+A deploy to prod is automatic up to the gate. The gate is the PR that Kargo opens
+(`chore(<app>): promote <tag> to prod`). Merge it. Nothing reaches prod without that
+merge.
 
-Apps listed in the `KARGO_AUTOMERGE_APPS` repository variable skip the click:
-`kargo-automerge.yaml` squash-merges their promotion PR once it carries the
-`app/<name>` label, unless it also carries `slo/budget-low`. Check the current list with `gh variable get KARGO_AUTOMERGE_APPS`.
-Editing the variable (Settings, Secrets and variables, Actions) is the kill switch,
-per app or for all of them, with no commit. Kargo still opens the PR and waits on it,
-so removing an app just puts a human back in front of the merge.
+Apps listed in the `KARGO_AUTOMERGE_APPS` repository variable skip the manual merge.
+`kargo-automerge.yaml` squash-merges their promotion PR when it carries the
+`app/<name>` label and does not carry `slo/budget-low`. Check the current list with
+`gh variable get KARGO_AUTOMERGE_APPS`. An edit of the variable (Settings, Secrets and
+variables, Actions) is the kill switch, per app or for all of them, with no commit.
+Kargo still opens the PR and waits on it. When you remove an app, a human is back in
+front of the merge.
 
-A build is triggered by a push under the app's path (in-repo apps) or to the app
-repo's `main` (external apps). Inspect a pipeline with
+A push under the app's path (in-repo apps) or to the app repo's `main` (external apps)
+triggers a build. Inspect a pipeline with
 `kubectl -n <app>-cd get warehouse,stage,freight,promotion`.
 
 ## Onboard an app
@@ -118,37 +122,37 @@ External-repo app with a single prod Stage, like logeverylift:
    auto-promoted `prod` Stage on `promote-via-pr`, one smoke AnalysisTemplate on the
    app's URL. Register it in `kargo-projects/kustomization.yaml` and add `<app>` to
    the `apps.yaml` list.
-3. In the app repo's build workflow, push
+3. In the build workflow of the app repo, push
    `type=raw,value=0.0.${{ github.run_number }},enable={{is_default_branch}}`.
 
-The Warehouse has no Freight until the first `0.0.<n>` build, so merge order does not
-matter. For the git credential, copy the ExternalSecret from an existing Project:
-same Bitwarden keys and the same `conversionStrategy`, `decodingStrategy` and
-`metadataPolicy` fields, only the `namespace` changes to `<app>-cd`.
+The Warehouse has no Freight until the first `0.0.<n>` build, so the merge order does
+not matter. For the git credential, copy the ExternalSecret from an existing Project:
+the same Bitwarden keys and the same `conversionStrategy`, `decodingStrategy` and
+`metadataPolicy` fields. Only the `namespace` changes, to `<app>-cd`.
 
 ## Gotchas
 
-Inside a ClusterPromotionTask, one step references another's output as
-`task.outputs['<alias>']`, not `outputs.<alias>`. Task steps are inflated with a
-prefix at Promotion time, so plain `outputs.*` resolves to nil: git-open-pr then gets
-an empty branch and the bump strands on an orphan branch while the promotion reports
+Inside a ClusterPromotionTask, one step references the output of another step as
+`task.outputs['<alias>']`, not `outputs.<alias>`. Kargo inflates task steps with a
+prefix at Promotion time, so plain `outputs.*` resolves to nil. git-open-pr then gets
+an empty branch. The bump is left on an orphan branch, and the promotion reports
 Succeeded.
 
-The no-op guard keys on the commit step's status, not on a branch or an output.
-git-commit is skipped when there is nothing to commit, and push, open-pr and wait-pr
+The no-op guard keys on the status of the commit step, not on a branch or an output.
+Kargo skips git-commit when there is nothing to commit. push, open-pr and wait-pr
 carry `if: ${{ status('commit') != 'Skipped' }}`. argocd-update and argocd-wait stay
-unguarded so a no-op re-promotion still ends green.
+unguarded, so a no-op re-promotion still ends green.
 
 A Warehouse polls at the greater of its `spec.interval` and the controller's
-`minReconciliationInterval`, which `k8s/talos/infra/kargo/values.yaml` sets to `1m0s`.
-Lowering a Warehouse below that needs both changed.
+`minReconciliationInterval`. `k8s/talos/infra/kargo/values.yaml` sets the latter to
+`1m0s`. To set a Warehouse below that, change both.
 
-Commit authorship is set on git-clone. Unset, Kargo authors as
+Commit authorship is set on git-clone. When it is not set, Kargo authors as
 `Kargo <no-reply@kargo.io>` and GitHub adds a `Co-authored-by:` trailer to the squash
-commit. git-commit's own `author` field is deprecated.
+commit. The `author` field of git-commit is deprecated.
 
 The GitHub App needs Pull requests read/write as well as Contents read/write, or
-git-open-pr fails. The credential takes the Installation ID, not the App ID; a wrong
+git-open-pr fails. The credential takes the Installation ID, not the App ID. A wrong
 value makes git-push fail with a 404 on the installation token call.
 
 The `<app>-stage` overlay directory deploys to namespace `stage-<app>`. Every stage
@@ -156,9 +160,9 @@ manifest declares that namespace explicitly, and that wins over the ApplicationS
 
 ESO remoteRefs and Warehouses must spell out defaulted fields
 (`conversionStrategy`, `decodingStrategy`, `metadataPolicy`; `strictSemvers`,
-`interval`, `discoveryLimit`), or Argo CD reports them OutOfSync forever.
+`interval`, `discoveryLimit`). If they do not, Argo CD reports them OutOfSync forever.
 
-Per-app annotations in the `apps` ApplicationSet go in `templatePatch`, since an
-inline `{{if}}` in the parsed `template` is invalid YAML. Check the output offline with
-`argocd appset generate --core -n argocd <file>` after swapping the git generator for
+Per-app annotations in the `apps` ApplicationSet go in `templatePatch`. An inline
+`{{if}}` in the parsed `template` is invalid YAML. Check the output offline with
+`argocd appset generate --core -n argocd <file>` after you swap the git generator for
 a `list` generator.
