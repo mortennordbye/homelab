@@ -1,9 +1,9 @@
 # Reelsmith
 
 The reelsmith gateway publishes short videos to Instagram, Facebook, YouTube and TikTok on a
-schedule, answers comments with DMs, and serves the files Meta fetches while it creates a post.
+schedule. It answers comments with DMs. It serves the files that Meta fetches while it creates a post.
 A render pipeline on [verksted](../verksted/README.md) produces the videos each night and hands them to the gateway over
-`/api`. Only the gateway runs here; its source, CI and the render pipeline live in the separate
+`/api`. Only the gateway runs here. Its source, CI and the render pipeline live in the separate
 `mortennordbye/reelsmith` repo. The manifests are in
 [`k8s/talos/apps/reelsmith/`](../../../k8s/talos/apps/reelsmith/kustomization.yaml).
 
@@ -24,23 +24,23 @@ A render pipeline on [verksted](../verksted/README.md) produces the videos each 
 ## Deployment
 
 Kargo project `reelsmith-cd` promotes new gateway images straight to prod through a pull
-request against this repo, then curls `https://gate.nordbye.it/healthz` as the smoke test
+request against this repo. It then curls `https://gate.nordbye.it/healthz` as the smoke test
 ([`kargo-projects/reelsmith.yaml`](../../../k8s/talos/infra/kargo-projects/reelsmith.yaml),
 [kargo.md](../../platform/delivery/kargo.md)). Nothing deploys until that PR is merged. The inline
-tag in [`deployment.yaml`](../../../k8s/talos/apps/reelsmith/deployment.yaml) is only a fallback;
-the `images:` block wins.
+tag in [`deployment.yaml`](../../../k8s/talos/apps/reelsmith/deployment.yaml) is only a fallback.
+The `images:` block wins.
 
 The pod runs as uid 10001 with a read-only root filesystem and a writable `/tmp` emptyDir.
 Reloader restarts it when `reelsmith-config` or `reelsmith-secret` changes.
 
-It stays at one replica. SQLite has a single writer, and the comment poller and the scheduler are
-singletons, so two pods would both reply and both publish. `Recreate` keeps a rollout from running
+It stays at one replica. SQLite has a single writer. The comment poller and the scheduler are
+singletons, so two pods would both reply and both publish. `Recreate` stops a rollout from running
 two pods for a moment. Scaling out needs Postgres and leader election first.
 
 ## Exposure
 
 [`httproute.yaml`](../../../k8s/talos/apps/reelsmith/httproute.yaml) serves `gate.nordbye.it` on
-the public gateway as an allowlist; any other path is a 404 at Traefik.
+the public gateway as an allowlist. Any other path is a 404 at Traefik.
 
 | Path | Match | Used by |
 |---|---|---|
@@ -54,24 +54,24 @@ the public gateway as an allowlist; any other path is a 404 at Traefik.
 `/`, `/privacy` and `/terms` must stay `Exact`. A `/` prefix would match every path and put
 `/admin` and `/metrics` on the internet. A new route in the app needs a line here too. The
 `reelsmith-cloudflare-only` middleware admits only Cloudflare's ranges, the same list as
-`trustedIPs` in [`traefik/values.yaml`](../../../k8s/talos/infra/traefik/values.yaml), and uses
-no `ipStrategy` because `X-Forwarded-For` can be spoofed. DNS for `gate` is in
+`trustedIPs` in [`traefik/values.yaml`](../../../k8s/talos/infra/traefik/values.yaml). It uses
+no `ipStrategy`, because a client can spoof `X-Forwarded-For`. DNS for `gate` is in
 [cloudflare.md](../../platform/network/cloudflare.md).
 
 [`httproute-admin.yaml`](../../../k8s/talos/apps/reelsmith/httproute-admin.yaml) serves
-`reelsmith.local.bigd.no` on the private gateway. `/` redirects to `/admin/` with a 302,
-`/outpost.goauthentik.io/` goes to `authentik-server` in `identity` without auth (a
-ReferenceGrant there allows it), and everything else goes through the `reelsmith-authentik`
+`reelsmith.local.bigd.no` on the private gateway. `/` redirects with a 302 to `/admin/`.
+`/outpost.goauthentik.io/` goes to `authentik-server` in `identity` without auth. A
+ReferenceGrant there allows it. Everything else goes through the `reelsmith-authentik`
 forward-auth middleware. The Authentik side is
 [`reelsmith-blueprint.yaml`](../../../k8s/talos/infra/authentik/reelsmith-blueprint.yaml): a
-`forward_single` proxy provider, and access limited to the group `reelsmith-admins`. Members are
-declared in the blueprint, because reconciliation resets the list.
+`forward_single` proxy provider, with access limited to the group `reelsmith-admins`. The
+blueprint declares the members, because reconciliation resets the list.
 
 [`ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/reelsmith/ciliumnetworkpolicy.yaml) admits
-port 8000 only from Traefik and Prometheus, plus the `host` and `health` entities for probes, and allows egress only to
-CoreDNS and, on port 443, the publishing APIs: the Instagram and Facebook Graph
-hosts, `rupload.facebook.com`, the Google API and OAuth hosts, and `*.tiktokapis.com`
-(TikTok hands out its upload host per request). A new platform in the gateway needs
+port 8000 only from Traefik and Prometheus, plus the `host` and `health` entities for probes. It
+allows egress only to CoreDNS and, on port 443, to the publishing APIs: the Instagram and Facebook
+Graph hosts, `rupload.facebook.com`, the Google API and OAuth hosts, and `*.tiktokapis.com`
+(TikTok assigns its upload host per request). A new platform in the gateway needs
 its host added there.
 
 ## Configuration
@@ -79,47 +79,47 @@ its host added there.
 Schedule and feature flags are in
 [`configmap.yaml`](../../../k8s/talos/apps/reelsmith/configmap.yaml).
 
-- `GATEWAY_SCHEDULER_ENABLED` is the master switch. Off, the gateway still answers comments but
-  never publishes.
-- `GATEWAY_SLOTS` holds one slot per line, `HH:MM [zone] [jitter=N]` plus the identity it posts
-  for (`account=<id>` or `brand=<name>`). Every line must name its identity: an unattributed line
-  with several accounts registered, or a brand that matches no account, freezes the whole
-  config sweep. A line that does not parse fails startup. Removing an account's last line removes
-  its slots. Jitter is derived from slot and date, so a restart cannot publish twice.
+- `GATEWAY_SCHEDULER_ENABLED` is the master switch. When it is off, the gateway still answers
+  comments but never publishes.
+- `GATEWAY_SLOTS` holds one slot per line: `HH:MM [zone] [jitter=N]` plus the identity it posts
+  for (`account=<id>` or `brand=<name>`). Every line must name its identity. A line without an
+  identity when several accounts are registered, or a brand that matches no account, freezes the
+  whole config sweep. A line that does not parse fails startup. Removing an account's last line
+  removes its slots. The jitter derives from slot and date, so a restart cannot publish twice.
 - The Facebook id is the Page id from `GET /me/accounts`, not the number in the Page's URL.
 - `GATEWAY_ADMIN_TRUST_PROXY_AUTH: "true"` means the app checks nothing itself on `/admin`.
-  Authentik on the private route is the only lock, so `/admin` must never be routed through any
-  other gateway, and the network policy must keep port 8000 closed to other pods.
-- `GATEWAY_TIKTOK_ENABLED` also gates the TikTok token refresher and insights loops. With it off,
-  a queued TikTok post fails at its slot instead of retrying.
-- `GATEWAY_TIKTOK_PRIVACY_LEVEL` must be one of the options TikTok's `creator_info` returns, or
-  posts fail with `privacy_level_option_mismatch`. `GATEWAY_TIKTOK_DIRECT_POST` stays `false` while
-  the TikTok client is unaudited.
+  Authentik on the private route is the only lock. Never route `/admin` through any other
+  gateway. The network policy must keep port 8000 closed to other pods.
+- `GATEWAY_TIKTOK_ENABLED` also gates the TikTok token refresher and insights loops. When it is
+  off, a queued TikTok post fails at its slot and does not retry.
+- `GATEWAY_TIKTOK_PRIVACY_LEVEL` must be one of the options that TikTok's `creator_info` returns.
+  Otherwise posts fail with `privacy_level_option_mismatch`. `GATEWAY_TIKTOK_DIRECT_POST` stays
+  `false` while the TikTok client is unaudited.
 
 `reelsmith-secret` carries `GATEWAY_APP_SECRET` (signs Meta webhook deliveries),
 `GATEWAY_VERIFY_TOKEN` (must match the value in the Meta dashboard) and `GATEWAY_API_TOKEN` (the
-render pipeline's bearer token). The pod does not start without all three. Replacing the value in
-Bitwarden rolls it within the hour: ESO refreshes hourly and Reloader restarts the pod.
+render pipeline's bearer token). The pod does not start without all three. A new value in
+Bitwarden rolls out within the hour: ESO refreshes hourly and Reloader restarts the pod.
 
 ## State and backups
 
 The SQLite database and the cover images are on `reelsmith-state`, a dynamic `syno-nfs-csi` PVC
-with reclaim policy `Delete`. SQLite runs in WAL mode; if locking misbehaves on NFS, the fix is
-the journal mode in the gateway's `gateway/db.py`, not a storage migration.
+with reclaim policy `Delete`. SQLite runs in WAL mode. If locking does not work correctly on NFS,
+the fix is the journal mode in the gateway's `gateway/db.py`, not a storage migration.
 
 Reelsmith is not in VolSync. The gateway backs up its own database with `VACUUM INTO`:
 
-- `/state/backups` on the state volume, the newest 14 kept. These go with the PVC: the driver
-  archives its directory on the NAS rather than deleting it, but a recreated claim starts empty
+- `/state/backups` on the state volume, the newest 14 kept. These go with the PVC. The driver
+  archives its directory on the NAS and does not delete it, but a recreated claim starts empty
   (see [storage](../../platform/storage/README.md#deleting-a-pvc)).
 - `/offsite`, a second copy on the statically bound PV `reelsmith-offsite-backups`
   (`nas.local.bigd.no:/volume1/shared-data/media/reelsmith`, reclaim `Retain`), mounted with
   `subPath: gateway-backups`. On the NAS they are in
   `/volume1/shared-data/media/reelsmith/gateway-backups`.
 
-The offsite volume is a PV and PVC, not an inline `nfs` volume, because the namespace enforces
-Pod Security `restricted`, which rejects inline NFS volumes. The subPath keeps the render
-pipeline's files beside it on the share out of the pod.
+The offsite volume is a PV and PVC, not an inline `nfs` volume. The namespace enforces Pod
+Security `restricted`, which rejects inline NFS volumes. The subPath keeps the render pipeline's
+files, which sit beside it on the share, out of the pod.
 
 The answered-comments record in the database cannot be rebuilt from anywhere else. Restore steps
 are in [restore.md](../../platform/backups/restore.md#reelsmith).
@@ -146,26 +146,27 @@ kubectl -n reelsmith logs deploy/reelsmith-gateway | grep -i token   # or backup
 
 ## Failed and abandoned posts
 
-Neither state is self-healed, because the platform may already have accepted the post. A
+The gateway heals neither state itself, because the platform may already have accepted the post. A
 publish that failed after the container was created, or a process that died between container
 creation and publish, can leave a live Reel behind a row that looks unfinished.
 
-1. List the claimed rows (read-only, opens the database with `mode=ro`, safe while the gateway
-   runs): [`scripts/reelsmith-stale-claims.sh`](../../../scripts/reelsmith-stale-claims.sh).
+1. List the claimed rows with
+   [`scripts/reelsmith-stale-claims.sh`](../../../scripts/reelsmith-stale-claims.sh). It is
+   read-only: it opens the database with `mode=ro` and is safe while the gateway runs.
 2. Check the account for the post.
 3. Resolve the row in the panel at `https://reelsmith.local.bigd.no/admin/`. Re-arming a row whose
-   post already went live publishes it twice.
+   post is already live publishes it twice.
 
-A claimed row keeps its media exempt from the retention sweep until it is resolved. A `failed`
+The retention sweep does not touch the media of a claimed row until the row is resolved. A `failed`
 row with "no video file" means the retention sweep deleted a queued file.
 
 ## Traps
 
 - The Service carries the label `app: reelsmith-gateway` for the ServiceMonitor. Without it
   Prometheus creates no target at all.
-- The network policy's Prometheus ingress rule is what lets `/metrics` be scraped; without it the
+- The network policy's Prometheus ingress rule lets Prometheus scrape `/metrics`. Without it the
   target shows as down.
 - `GATEWAY_PUBLIC_BASE_URL` is the external `https://gate.nordbye.it`, because Meta fetches covers
   from it.
-- The Kargo Warehouse keeps `discoveryLimit: 10`; old tags point at pruned manifests and a larger
+- The Kargo Warehouse keeps `discoveryLimit: 10`. Old tags point at pruned manifests, so a larger
   window fails discovery.
