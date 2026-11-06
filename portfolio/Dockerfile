@@ -2,7 +2,7 @@
 
 # ---- Stage 1: generate LaTeX sources from src/content ----
 # Runs scripts/build-cv.ts (TypeScript). Output goes into latex/.
-FROM node:24-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS texgen
+FROM node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8 AS texgen
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -45,7 +45,7 @@ RUN for f in output/cv-*.pdf; do \
     done
 
 # ---- Stage 3: build the Next.js server bundle ----
-FROM node:24-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS build
+FROM node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8 AS build
 WORKDIR /app
 
 # Install deps with cache-friendly two-step copy
@@ -78,7 +78,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
 # Merges host public/ with the built CV artifacts for compose.yaml's one-shot
 # service, so the dev server serves the real CV without writing to the host.
 # Skipped automatically when CI targets the runtime image.
-FROM alpine@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS cv-bundle
+FROM alpine@sha256:3f4d6b32e26703c6082839234f43769d5046b3ac7c910033911d1e71d8cd630a AS cv-bundle
 WORKDIR /staging
 COPY public/ ./
 COPY --from=pdfbuild /work/latex/output/resume.pdf ./resume.pdf
