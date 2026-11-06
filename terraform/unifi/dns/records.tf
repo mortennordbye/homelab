@@ -1,14 +1,14 @@
 # Split-horizon DNS for local.bigd.no, served by the UniFi gateway's resolver.
 #
-# This zone is deliberately not in Cloudflare and not managed by external-dns -
+# This zone is not in Cloudflare, and external-dns does not manage it:
 # k8s/talos/infra/external-dns/values.yaml lists local.bigd.no under
-# excludeDomains so an internal hostname can never leak into the public zone.
-# Adding an app therefore means adding an alias below, not annotating a route.
+# excludeDomains, so an internal hostname can never leak into the public zone.
+# To add an app, add an alias below. Do not annotate a route.
 #
-# Scope is user-defined records only. The console's "Default Policies" entries
-# are generated from DHCP fixed-IP reservations and absent from the API;
-# declaring them here would create a second record shadowing each one. Change
-# those in the DHCP reservation instead.
+# Scope is user-defined records only. The console generates its "Default
+# Policies" entries from DHCP fixed-IP reservations, and the API does not list
+# them. A declaration here would create a second record that shadows each one.
+# Change those in the DHCP reservation instead.
 
 locals {
   private_gateway = "traefik-gateway-private.${var.domain}"
@@ -57,10 +57,10 @@ locals {
   ]
 }
 
-# ttl is left unset on purpose. The controller stores "Auto" as 0, which the
-# provider maps to a null TTL, so setting anything here would show as a change
-# against every existing record. site and enabled are Optional+Computed and
-# likewise settle on the controller's own values.
+# ttl is left unset on purpose. The controller stores "Auto" as 0, and the
+# provider maps that to a null TTL, so any value here would show as a change on
+# every existing record. site and enabled are Optional+Computed and also take
+# the controller's own values.
 resource "unifi_dns_record" "vip" {
   for_each = local.vips
 

@@ -1,6 +1,6 @@
-# Full (Strict) rather than Full: the origin serves a Let's Encrypt certificate
-# covering logeverylift.com and *.logeverylift.com, so Cloudflare can validate it
-# instead of accepting anything.
+# Full (Strict), not Full. The origin serves a Let's Encrypt certificate for
+# logeverylift.com and *.logeverylift.com, so Cloudflare validates it instead of
+# accepting any certificate.
 resource "cloudflare_zone_setting" "ssl" {
   zone_id    = data.cloudflare_zone.this.zone_id
   setting_id = "ssl"
@@ -21,15 +21,15 @@ resource "cloudflare_zone_setting" "always_online" {
   value      = "off"
 }
 
-# No cache rule in this zone, so this only reaches responses the origin leaves
-# without a max-age.
+# This zone has no cache rule, so this setting applies only to responses that
+# the origin sends without a max-age.
 resource "cloudflare_zone_setting" "browser_cache_ttl" {
   zone_id    = data.cloudflare_zone.this.zone_id
   setting_id = "browser_cache_ttl"
   value      = 14400
 }
 
-# Cloudflare's default, declared so a dashboard change shows up as drift.
+# Cloudflare's default. Declared so that a dashboard change shows as drift.
 resource "cloudflare_zone_setting" "min_tls_version" {
   zone_id    = data.cloudflare_zone.this.zone_id
   setting_id = "min_tls_version"

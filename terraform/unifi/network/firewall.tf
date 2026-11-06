@@ -1,15 +1,16 @@
 # User-defined zone policies. The controller's predefined policies (the
-# Block All defaults between zones) are not managed here; every policy below is
-# a hole punched through one of them, so each should name one host and port.
+# Block All defaults between zones) are not managed here. Every policy below
+# opens one hole in one of them, so each must name one host and port.
 #
-# The provider cannot set `index`: a new policy is appended to its zone pair and
-# reordering happens in the console only. Allow-only policies make order moot.
+# The provider cannot set `index`: a new policy is appended to its zone pair,
+# and only the console can reorder them. Order does not matter for allow-only
+# policies.
 
 locals {
   home_assistant = "10.3.10.15"
 
   # Cilium LB-IPAM VIP from k8s/talos/apps/plex-media-stack/plex.yaml. The WAN
-  # port forward for 32400 lands here too, so hairpinned traffic matches.
+  # port forward for 32400 also targets this VIP, so hairpinned traffic matches.
   plex = "10.3.10.103"
 
   # Cilium LB-IPAM VIP from k8s/talos/apps/innestemme/service.yaml.
@@ -33,8 +34,8 @@ data "unifi_firewall_zone" "hotspot" {
   name = "Hotspot"
 }
 
-# Home Assistant dials out to ESPHome (6053), Hue, Sonos and the rest, so the
-# trusted side reaches IoT freely and IoT only ever answers.
+# Home Assistant connects out to ESPHome (6053), Hue, Sonos and the rest, so
+# the trusted side reaches IoT freely and IoT only answers.
 resource "unifi_firewall_policy" "trusted_to_iot" {
   name                 = "Allow Internal to Unsecure Zone"
   action               = "ALLOW"

@@ -8,8 +8,8 @@ data "cloudflare_zone" "this" {
   }
 }
 
-# The webhook Alertmanager posts to, stored with /slack appended; the Worker posts
-# Discord's own format, so the suffix is removed.
+# The webhook Alertmanager posts to, stored with /slack appended. The Worker
+# posts Discord's own format, so the suffix is removed.
 data "bitwarden-secrets_secret" "discord_webhook" {
   id = "d810abf7-40ad-4b1c-9d30-b44c0108ecad"
 }
@@ -55,9 +55,9 @@ resource "cloudflare_workers_script" "watchdog" {
   ]
 }
 
-# Cron triggers refuse to save until the account has a workers.dev subdomain, and the
-# provider has no resource for it, so it is set with an idempotent PUT. Renaming it
-# here re-runs the PUT; removing it from here does not release the name.
+# Cron triggers refuse to save until the account has a workers.dev subdomain.
+# The provider has no resource for it, so an idempotent PUT sets it. A rename
+# here re-runs the PUT. Removal from here does not release the name.
 resource "terraform_data" "workers_subdomain" {
   input = var.workers_subdomain
 

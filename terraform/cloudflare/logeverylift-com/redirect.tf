@@ -1,6 +1,6 @@
-# www exists only to not be a dead hostname. Redirecting at the edge keeps the
-# app on one canonical host, which avoids serving the same pages on two
-# hostnames, and means the cluster never sees the request.
+# www exists only so that the hostname is not dead. The redirect at the edge
+# keeps the app on one canonical host, so the same pages are not served on two
+# hostnames, and the cluster never sees the request.
 resource "cloudflare_ruleset" "redirect" {
   zone_id     = data.cloudflare_zone.this.zone_id
   name        = "default"

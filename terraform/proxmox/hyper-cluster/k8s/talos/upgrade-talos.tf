@@ -1,16 +1,16 @@
 # Sequential upgrade: ctrl-1 → ctrl-2 → ctrl-3 → worker-1 → worker-2 → worker-3
 #
-# Each node is its own resource so a failure part way through is resumable. Terraform records
-# which nodes completed and a re-apply picks up from the failed one rather than re-upgrading
-# nodes that already succeeded.
+# Each node is its own resource, so the sequence can resume after a failure. Terraform records
+# which nodes completed, and a re-apply continues from the failed node. Nodes that already
+# succeeded are not upgraded again.
 
 locals {
   talos_upgrade_endpoints = join(",", [for n in local.control_plane_nodes : n.ip])
   talos_installer_image   = "factory.talos.dev/installer/${talos_image_factory_schematic.this.id}:${var.talos_version}"
 
-  # Health gate run between nodes. Addresses the VIP rather than a fixed node so it keeps working
-  # while the node that previously held the VIP is rebooting. Replaces a blind `sleep`, which
-  # returned 0 unconditionally and so masked a failed upgrade from Terraform.
+  # Health gate between nodes. It addresses the VIP, not a fixed node, so it keeps working while
+  # the node that held the VIP reboots. A plain `sleep` would return 0 in every case and hide a
+  # failed upgrade from Terraform.
   talos_health_gate = <<-EOT
     talosctl --talosconfig=./talosconfig health \
       --endpoints ${local.kubernetes_endpoint} \

@@ -10,8 +10,8 @@ resource "unifi_device" "gateway" {
   }
 }
 
-# Ports declared here are merged into the switch's overrides; undeclared ports
-# keep their console settings, and dropping a block does not reset its port.
+# Ports declared here are merged into the switch's overrides. Undeclared ports
+# keep their console settings, and removal of a block does not reset its port.
 resource "unifi_device" "usw_lite_8" {
   name = "USW-Lite-8-PoE"
   mac  = "9c:05:d6:f4:d5:40"

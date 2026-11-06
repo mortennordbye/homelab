@@ -17,8 +17,8 @@ resource "proxmox_virtual_environment_time" "node" {
   time_zone = "Europe/Oslo"
 }
 
-# No subscription: the community repo on, both enterprise repos off, or apt
-# update fails with a 401 on every node.
+# No subscription: keep the community repo on and both enterprise repos off, or
+# apt update fails with a 401 on every node.
 resource "proxmox_apt_standard_repository" "no_subscription" {
   for_each = local.nodes
 

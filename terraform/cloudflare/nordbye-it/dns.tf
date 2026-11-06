@@ -1,8 +1,8 @@
 # Proxied records must carry ttl = 1 (automatic); Cloudflare rejects any other
 # value on them.
 #
-# _acme-challenge.nordbye.it is deliberately absent. cert-manager creates and
-# deletes it during every DNS-01 issuance, so managing it here would fight
+# _acme-challenge.nordbye.it is absent on purpose. cert-manager creates and
+# deletes it during every DNS-01 issuance, so a record here would block
 # certificate renewal.
 #
 # TXT content carries its own escaped quotes: the API stores and returns TXT
@@ -15,8 +15,9 @@
 # ignored.
 #
 # Proxied, so the residential IP never appears in public DNS. Cross-zone CNAME
-# chains onto it are fine — both zones are on the same account. The UniFi DDNS
-# client (inadyn) never sends the proxied flag, so it survives address updates.
+# chains onto it work because both zones are on the same account. The UniFi
+# DDNS client (inadyn) never sends the proxied flag, so it survives address
+# updates.
 resource "cloudflare_dns_record" "ddns" {
   zone_id = data.cloudflare_zone.this.zone_id
   name    = "ddns.${var.zone_name}"
@@ -62,9 +63,9 @@ resource "cloudflare_dns_record" "www" {
 # --- Apps -----------------------------------------------------------------
 
 # gate serves reelsmith (behind Authentik), headroom serves headroom-demo.
-# Proxied, but deliberately left out of var.proxied_hostnames so the cache rule
-# never touches their HTML: caching an authenticated or stateful response at a
-# shared edge can serve one visitor's page to another.
+# Proxied, but kept out of var.proxied_hostnames so the cache rule never touches
+# their HTML. A cached authenticated or stateful response at a shared edge can
+# serve one visitor's page to another.
 #
 # The resource name stays "direct"; renaming would destroy and recreate live
 # DNS records.
@@ -135,8 +136,8 @@ resource "cloudflare_dns_record" "google_verification_2" {
 }
 
 # TikTok domain verification for the reelsmith gateway's Content Posting API
-# app: media pulls and the app's policy/terms/website URLs all depend on it.
-# Deleting this stops TikTok publishing.
+# app. Media pulls and the app's policy, terms and website URLs depend on it.
+# Deleting this record stops TikTok publishing.
 resource "cloudflare_dns_record" "tiktok_verification_gate" {
   zone_id = data.cloudflare_zone.this.zone_id
   name    = "gate.${var.zone_name}"
@@ -156,7 +157,7 @@ resource "cloudflare_dns_record" "asuid" {
 
 # --- GitHub Pages -----------------------------------------------------------
 
-# Unproxied: GitHub has to see its own IPs to issue the Let's Encrypt cert for the
+# Unproxied: GitHub must see its own IPs to issue the Let's Encrypt cert for the
 # custom domain. .github/workflows/docs.yaml publishes the site.
 resource "cloudflare_dns_record" "docs" {
   zone_id = data.cloudflare_zone.this.zone_id
