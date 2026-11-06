@@ -1,10 +1,10 @@
 # Kargo project for the headroom app. The public read-only demo (DEMO_MODE=1,
 # no real data) is the canary: `demo` deploys and smoke-tests each build, and
-# only Freight that passes becomes available to `prod`, the private instance,
-# gated by a PR merge. The demo never exercises the write path, so prod keeps
+# only Freight that passes becomes available to `prod`, the private instance.
+# A PR merge gates prod. The demo never uses the write path, so prod keeps
 # its own smoke test. Image source and CI live in mortennordbye/headroom.
 
-# Named `headroom-cd` (not `headroom`) to avoid colliding with the app namespace.
+# Named `headroom-cd` (not `headroom`) to avoid a collision with the app namespace.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -21,10 +21,10 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 ---
-# Both stages auto-promote. `demo` pushes straight to main (it is a demo — no
-# review gate buys anything, and a fast public canary is the point). `prod`
+# Both stages auto-promote. `demo` pushes straight to main: it is a demo, a
+# review gate adds nothing, and a fast public canary is the goal. `prod`
 # auto-promotes only Freight that already passed `demo`, and does so via
-# promote-via-pr, so merging that PR stays the gate on the private instance.
+# promote-via-pr, so the merge of that PR stays the gate on the private instance.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ProjectConfig
 metadata:
@@ -41,7 +41,7 @@ spec:
 ---
 # Git write credential for Kargo's git-push/PR, using the existing GitHub App
 # `mortennordbye-homelab-deployer`. Same App and Bitwarden keys as the other
-# projects; only the namespace differs (Kargo cred lookup is per-Project).
+# projects. Only the namespace differs (Kargo cred lookup is per-Project).
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -100,24 +100,24 @@ spec:
   subscriptions:
     - image:
         repoURL: ghcr.io/mortennordbye/headroom
-        # headroom CI tags every build 0.0.<run_number>; SemVer picks the
+        # headroom CI tags every build 0.0.<run_number>. SemVer picks the
         # greatest. strictSemvers keeps the git-SHA/latest tags out of selection.
         imageSelectionStrategy: SemVer
         strictSemvers: true
         discoveryLimit: 20
 ---
-# demo verification. More than a liveness curl: because this instance is exposed
-# to the internet, the smoke test asserts the properties that make that safe, so
-# a build which regresses them fails here and never becomes eligible for prod.
+# demo verification. More than a liveness curl: this instance is exposed to the
+# internet, so the smoke test asserts the properties that make that safe. A
+# build that regresses them fails here and never becomes eligible for prod.
 #   1. the app shell serves at all
 #   2. the instance really is in demo mode (an image built without DEMO_MODE
 #      support would silently ignore the env var and serve a writable app)
-#   3. writes are actually refused
-#   4. the bank namespace is actually closed — those routes reach Enable Banking
+#   3. the app refuses writes
+#   4. the bank namespace is closed: those routes reach Enable Banking
 #      on the app's own credentials, so they must never answer here
 # Public URL with a real Let's Encrypt cert, so no -k (portfolio's prod smoke
-# test hits nordbye.it the same way). No cold start to wait out: the demo runs a
-# fixed replica.
+# test reaches nordbye.it the same way). No cold start to wait for: the demo
+# runs a fixed replica.
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -183,7 +183,7 @@ spec:
 # prod verification: a one-shot Job that curls the app URL and fails on any
 # non-2xx. headroom is on the private gateway with an internal cert, so use the
 # internal hostname and -k. headroom scales to zero (KEDA), so the request also
-# wakes it; the higher retry count covers the cold start.
+# wakes it. The higher retry count covers the cold start.
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -271,9 +271,9 @@ spec:
             name: promote-to-argocd
             kind: ClusterPromotionTask
 ---
-# prod: the private instance, holding real financial data. Receives only
-# Freight already verified in `demo`; promote-via-pr keeps the PR merge as the
-# deploy gate on top of the demo canary.
+# prod: the private instance, which holds real financial data. Receives only
+# Freight already verified in `demo`. promote-via-pr keeps the PR merge as the
+# deploy gate after the demo canary.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:

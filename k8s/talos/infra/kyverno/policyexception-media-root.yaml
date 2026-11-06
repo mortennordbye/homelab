@@ -1,5 +1,5 @@
-# The linuxserver and tdarr images start s6 as root and drop to PUID; started as non-root,
-# s6 cannot set the group list and the app never runs. gluetun needs root for the tunnel.
+# The linuxserver and tdarr images start s6 as root and drop to PUID. When started as
+# non-root, s6 cannot set the group list and the app never runs. gluetun needs root for the tunnel.
 # Scoped to the two controls and these images, so anything else the pods break still reports.
 apiVersion: kyverno.io/v2
 kind: PolicyException

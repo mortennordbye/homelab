@@ -1,4 +1,4 @@
-# Reloader: watches ConfigMaps/Secrets and patches workloads to roll them.
+# Reloader: watches ConfigMaps/Secrets and patches workloads to restart them.
 # Egress to DNS + API server; ingress only for the metrics scrape.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy

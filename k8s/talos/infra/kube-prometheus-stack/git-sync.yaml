@@ -1,5 +1,5 @@
-# Git Sync: registers grafana/ in this repo as a Grafana repository, so dashboards saved in
-# the UI open a PR and merged dashboards appear in Grafana. See
+# Git Sync: registers grafana/ in this repo as a Grafana repository. A dashboard saved in
+# the UI opens a PR. A merged dashboard appears in Grafana. See
 # docs/platform/observability/README.md#git-sync.
 apiVersion: batch/v1
 kind: Job
@@ -7,7 +7,7 @@ metadata:
   name: grafana-git-sync
   namespace: monitoring
   annotations:
-    # After Grafana is healthy, and again on every sync: this Job owns both resources.
+    # Runs after Grafana is healthy, and again on every sync. This Job owns both resources.
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
@@ -39,7 +39,7 @@ spec:
               auth="$(cat /admin/admin-user):$(cat /admin/admin-password)"
               key=$(base64 -w 0 /github-app/private-key)
 
-              # POST, and on 409 (exists) merge-patch the same body.
+              # POST the body. On 409 (exists), merge-patch the same body.
               apply() {
                 code=$(curl -s -o /tmp/out -w '%{http_code}' -u "$auth" -H 'Content-Type: application/json' \
                   -X POST "$api/$1" --data-binary @/tmp/body)

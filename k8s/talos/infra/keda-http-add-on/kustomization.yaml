@@ -3,8 +3,8 @@ kind: Kustomization
 
 namespace: keda
 
-# The `keda` namespace is owned by the core `keda` Application — do not recreate
-# it here (same pattern as loki/tempo into `monitoring`).
+# The core `keda` Application owns the `keda` namespace. Do not create it here
+# again (same pattern as loki/tempo into `monitoring`).
 resources:
   - referencegrant.yaml
   - servicemonitor.yaml

@@ -1,6 +1,6 @@
 # Backups made outside the cluster only report failures, so a job that stops running
-# stays silent. These checks fail when the newest backup is older than 26 h (and the PBS
-# check also on a VM disk stuck as a pending delete), and BackupJobStale alerts on any
+# stays silent. These checks fail when the newest backup is older than 26 h. The PBS
+# check also fails on a VM disk stuck as a pending delete. BackupJobStale alerts on any
 # *-backup-check that has not succeeded.
 apiVersion: batch/v1
 kind: CronJob
@@ -56,7 +56,7 @@ spec:
                       sys.exit("no Proxmox host answered")
 
                   # PVEAuditor cannot list the backups on the pbs storage, so read the vzdump
-                  # task log instead: a guest counts once a task finished its backup.
+                  # task log instead. A guest counts when a task has finished its backup.
                   done = set()
                   for node in get("/cluster/resources?type=node"):
                       if node["status"] != "online":
@@ -79,7 +79,7 @@ spec:
                       print(f"{'STALE' if g in stale else 'ok   '} {g['vmid']} {g.get('name', '')}")
 
                   # A Proxmox-CSI detach that loses the config lock leaves the disk as a pending
-                  # delete; every vzdump of that VM then fails with "drive-scsiN not found".
+                  # delete. Every vzdump of that VM then fails with "drive-scsiN not found".
                   pending = [(g, x["key"]) for g in guests if g["type"] == "qemu"
                              for x in get(f"/nodes/{g['node']}/qemu/{g['vmid']}/pending")
                              if x.get("delete") and re.match(r"(scsi|virtio|sata)\d+$", x["key"])]

@@ -2,8 +2,8 @@ global:
   leaderElection:
     namespace: cert-manager
 installCRDs: true
-# HA: 2 replicas (active + standby via leader election) with a PDB so node
-# drains keep at least one controller, webhook, and cainjector available.
+# HA: 2 replicas (active + standby via leader election) and a PDB. A node
+# drain then keeps at least one controller, webhook and cainjector available.
 replicaCount: 2
 podDisruptionBudget:
   enabled: true
@@ -14,8 +14,8 @@ resources:
     memory: 96Mi
   limits:
     memory: 256Mi
-# Soft spread the 2 replicas across hypervisors (zones); preferred so it never
-# blocks scheduling or rollouts.
+# Spread the 2 replicas across hypervisors (zones). Preferred, not required, so
+# it never blocks scheduling or rollouts.
 affinity:
   podAntiAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:

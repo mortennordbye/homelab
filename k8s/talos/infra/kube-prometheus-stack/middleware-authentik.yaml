@@ -1,6 +1,6 @@
 # Forward-auth for the Alertmanager UI and API. Lives in this namespace because Traefik
 # resolves an HTTPRoute ExtensionRef in the route's own namespace. Alertmanager has no auth of
-# its own, so this is the only lock on silences.
+# its own, so this is the only protection for the silences.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -11,8 +11,8 @@ metadata:
 spec:
   forwardAuth:
     address: http://authentik-server.identity.svc.cluster.local/outpost.goauthentik.io/auth/traefik
-    # Safe: the only path to this middleware is the private gateway, which overwrites the
-    # X-Forwarded-* headers authentik builds the post-login redirect from.
+    # Safe: the private gateway is the only path to this middleware. It overwrites the
+    # X-Forwarded-* headers that authentik uses for the post-login redirect.
     trustForwardHeader: true
     authResponseHeaders:
       - X-authentik-username

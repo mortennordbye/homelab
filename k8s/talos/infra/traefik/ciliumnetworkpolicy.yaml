@@ -33,7 +33,7 @@ spec:
               protocol: TCP
             - port: "8444"
               protocol: TCP
-    # Dashboard / metrics endpoint scraped by Prometheus.
+    # Dashboard and metrics endpoint. Prometheus scrapes it.
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
@@ -53,7 +53,7 @@ spec:
               protocol: ANY
     # Backends + Kubernetes API. cluster entity already covers all pods, host,
     # remote-node, and kube-apiserver, so this single line is enough. Audit mode
-    # will reveal the actual destination set if a tighter rule is wanted later.
+    # will show the actual destination set if a tighter rule is needed later.
     - toEntities:
         - cluster
     # Home Assistant runs outside the cluster (Endpoints home-assistant/home-assistant).

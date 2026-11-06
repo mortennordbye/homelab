@@ -1,6 +1,6 @@
-# Forward-auth in front of the public dashboard at hub.bigd.no. Homepage
-# speaks no OIDC, so this is a proxy provider in forward_single mode, which is
-# why its HTTPRoute carries an unauthenticated /outpost.goauthentik.io/ rule.
+# Forward-auth for the public dashboard at hub.bigd.no. Homepage
+# has no OIDC support, so this is a proxy provider in forward_single mode.
+# That is why its HTTPRoute has an unauthenticated /outpost.goauthentik.io/ rule.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -40,7 +40,7 @@ data:
           mode: forward_single
           # How long the outpost's cookie for this host lasts before it
           # re-checks authentik. The re-check is silent while the authentik
-          # session (days=30, login-flow-blueprint.yaml) is alive.
+          # session (days=30, login-flow-blueprint.yaml) is valid.
           access_token_validity: hours=24
           authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
@@ -59,8 +59,8 @@ data:
           meta_launch_url: https://hub.bigd.no/
           policy_engine_mode: any
 
-      # Without a binding, an application is reachable by every authenticated
-      # user.
+      # Without a binding, every authenticated user can reach the
+      # application.
       - model: authentik_policies.policybinding
         id: binding-homepage
         state: present

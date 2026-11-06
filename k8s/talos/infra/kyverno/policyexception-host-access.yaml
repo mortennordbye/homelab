@@ -48,7 +48,7 @@ spec:
       images:
         - docker:*-dind
 ---
-# The backend starts every agent process as vk-agent, which takes root, and the
+# The backend starts every agent process as vk-agent, which needs root. The
 # Docker-in-Docker sidecar runs privileged. A non-root app image would shrink this.
 apiVersion: kyverno.io/v2
 kind: PolicyException

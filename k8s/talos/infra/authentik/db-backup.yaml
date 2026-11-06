@@ -1,5 +1,5 @@
-# Nightly pg_dump to the NAS, 30 days kept (docs/platform/backups/README.md). The instance label
-# is what the authentik CiliumNetworkPolicy admits to postgres; without it the dump
+# Nightly pg_dump to the NAS, 30 days kept (docs/platform/backups/README.md). The authentik
+# CiliumNetworkPolicy admits only this instance label to postgres. Without it the dump
 # cannot connect.
 apiVersion: v1
 kind: PersistentVolume
@@ -10,7 +10,7 @@ spec:
     storage: 5Gi
   accessModes:
     - ReadWriteOnce
-  # Retain: deleting the claim must never take the dumps with it.
+  # Retain: a deleted claim must never delete the dumps.
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   claimRef:

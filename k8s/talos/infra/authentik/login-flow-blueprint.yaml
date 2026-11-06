@@ -1,6 +1,6 @@
 # Username and password on one page for every app behind authentik. The
 # default flow's password stage skips itself once the identification stage has
-# already checked the password, so no binding changes are needed.
+# already checked the password, so the bindings need no change.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -17,9 +17,9 @@ data:
       labels:
         blueprints.goauthentik.io/instantiate: "true"
     entries:
-      # The stage itself is owned by authentik's default blueprint, which
-      # leaves password_stage alone on reconcile. user_fields must be repeated:
-      # the stage is validated whole, and without it the entry fails.
+      # authentik's default blueprint owns the stage itself and leaves
+      # password_stage unchanged on reconcile. user_fields must be repeated:
+      # authentik validates the stage as a whole, and without it the entry fails.
       - model: authentik_stages_identification.identificationstage
         state: present
         identifiers:
@@ -30,8 +30,8 @@ data:
             - username
           password_stage: !Find [authentik_stages_password.passwordstage, [name, default-authentication-password]]
 
-      # authentik's default ends the session when the browser closes, which on
-      # a phone means signing in constantly. MFA below is what makes a long
+      # authentik's default ends the session when the browser closes. On a
+      # phone that means a sign-in at every visit. The MFA below makes a long
       # session acceptable on a public login page.
       - model: authentik_stages_user_login.userloginstage
         state: present
@@ -41,8 +41,8 @@ data:
           session_duration: days=30
 
       # MFA for everyone: authentik is internet-facing at auth.bigd.no. A user
-      # without a device is made to enrol one at next sign-in rather than
-      # skipped, which is authentik's default.
+      # without a device must enrol one at the next sign-in. authentik's
+      # default skips that user.
       - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
         state: present
         identifiers:

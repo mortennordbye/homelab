@@ -4,9 +4,9 @@ metadata:
   name: authentik-cloudflare-only
   namespace: identity
 spec:
-  # Cloudflare edges only; ranges mirror trustedIPs in infra/traefik/values.yaml.
+  # Cloudflare edges only. The ranges copy trustedIPs in infra/traefik/values.yaml.
   ipAllowList:
-    # No ipStrategy: X-Forwarded-For is spoofable.
+    # No ipStrategy: a client can forge X-Forwarded-For.
     sourceRange:
       - 173.245.48.0/20
       - 103.21.244.0/22

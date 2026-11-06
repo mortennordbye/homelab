@@ -1,7 +1,7 @@
 # Exposes the Kargo API + UI at kargo.local.bigd.no via the Traefik private
-# gateway. TLS is terminated at the gateway (*.local.bigd.no); the backend is
+# gateway. The gateway terminates TLS (*.local.bigd.no). The backend is
 # plain HTTP (api.tls.enabled: false in values.yaml), so kargo-api is port 80.
-# Backend is in this same namespace, so no ReferenceGrant is needed.
+# The backend is in this same namespace, so it needs no ReferenceGrant.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:

@@ -1,5 +1,5 @@
-# Talos runs these as static pods from its machine config, which sets their requests but no
-# memory limit; nothing in this repo can change their spec.
+# Talos runs these as static pods from its machine config. That config sets their requests
+# but no memory limit. Nothing in this repo can change their spec.
 apiVersion: kyverno.io/v2
 kind: PolicyException
 metadata:

@@ -32,7 +32,7 @@ spec:
             "k8s:app.kubernetes.io/name": falcosidekick
       toPorts:
         - ports: [{ port: "2801", protocol: TCP }]
-    # falcoctl pulls the ruleset from ghcr.io at startup; without it Falco won't start.
+    # falcoctl gets the ruleset from ghcr.io at startup. Without it Falco cannot start.
     - toEntities:
         - world
       toPorts:

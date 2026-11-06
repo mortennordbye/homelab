@@ -1,7 +1,7 @@
 # Gateway API refuses a cross-namespace backendRef unless the target namespace
-# grants it. Narrow on purpose: only reelsmith HTTPRoutes, only to
-# authentik-server. Without this the route sits at ResolvedRefs=False and the
-# sign-in callback 500s, which reads like an authentik fault.
+# grants it. Narrow intentionally: only reelsmith HTTPRoutes, only to
+# authentik-server. Without this the route stays at ResolvedRefs=False and the
+# sign-in callback 500s, which looks like an authentik fault.
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:

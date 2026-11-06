@@ -52,7 +52,7 @@ spec:
           port: 80
           weight: 1
 ---
-# Proxmox, PBS and DSM post their notifications here; the UI sits behind authentik.
+# Proxmox, PBS and DSM post their notifications here. Authentik protects the UI.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -70,7 +70,7 @@ spec:
     - "alertmanager.local.bigd.no"
   rules:
     # Webhook senders cannot sign in, so POST to the alerts endpoint skips authentik. Exact
-    # path and method beat the "/" rule below; a GET there still needs a sign-in.
+    # path and method win over the "/" rule below. A GET there still needs a sign-in.
     - matches:
         - method: POST
           path:
@@ -82,8 +82,8 @@ spec:
           name: kube-prometheus-stack-alertmanager
           port: 9093
           weight: 1
-    # authentik's callback. Must stay unauthenticated and reach authentik, not Alertmanager,
-    # or the sign-in deadlocks against itself.
+    # authentik's callback. Must stay unauthenticated and go to authentik, not Alertmanager.
+    # Otherwise the sign-in cannot complete.
     - matches:
         - path:
             type: PathPrefix
@@ -96,8 +96,8 @@ spec:
           namespace: identity
           port: 80
           weight: 1
-    # The UI and the rest of the API. Alertmanager has no auth; removing this filter hands
-    # anyone on the LAN the silences.
+    # The UI and the rest of the API. Alertmanager has no auth. Without this filter, anyone
+    # on the LAN can change the silences.
     - matches:
         - path:
             type: PathPrefix

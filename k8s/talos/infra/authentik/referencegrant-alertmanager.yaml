@@ -1,5 +1,5 @@
 # Lets the Alertmanager HTTPRoute send authentik's callback path to authentik-server. Without
-# it the route sits at ResolvedRefs=False and the sign-in callback 500s.
+# it the route stays at ResolvedRefs=False and the sign-in callback 500s.
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:

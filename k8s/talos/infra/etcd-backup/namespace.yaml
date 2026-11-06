@@ -1,5 +1,5 @@
-# baseline, not restricted: the job writes to the NAS as root, the only identity the
-# k8s-backups NFS export lets write without a uid mapping.
+# baseline, not restricted: the job writes to the NAS as root. The k8s-backups NFS
+# export lets no other identity write without a uid mapping.
 apiVersion: v1
 kind: Namespace
 metadata:

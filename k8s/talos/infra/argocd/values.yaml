@@ -25,20 +25,20 @@ configs:
           - ClusterEphemeralReport
         clusters:
           - "*"
-    # The provider is defined declaratively in
-    # k8s/talos/infra/authentik/argocd-blueprint.yaml.
+    # k8s/talos/infra/authentik/argocd-blueprint.yaml defines the provider
+    # declaratively.
     # `url` is intentionally not set here: the chart derives it from
-    # global.domain, and that is what Argo CD builds the redirect URI from
-    # (so server.insecure still yields an https:// callback).
+    # global.domain, and Argo CD builds the redirect URI from that
+    # (so server.insecure still gives an https:// callback).
     oidc.config: |
       name: Authentik
-      # Trailing slash required. The path segment is the authentik *application
-      # slug*, not the provider name. Mismatch here gives "oidc: issuer did not match".
+      # Trailing slash required. The path segment is the authentik application
+      # slug, not the provider name. A mismatch here gives "oidc: issuer did not match".
       issuer: https://auth.local.bigd.no/application/o/argocd/
       clientID: 5dbfc17206b0310cad6e088795218914
       clientSecret: $argocd-oidc:clientSecret
-      # No `groups` scope exists in authentik; the groups claim rides on `profile`.
-      # Requesting it explicitly would return invalid_scope.
+      # authentik has no `groups` scope; the `profile` scope carries the groups claim.
+      # An explicit request for it returns invalid_scope.
       requestedScopes:
         - openid
         - profile
@@ -49,7 +49,7 @@ configs:
           essential: true
   rbac:
     # Authenticated but unmapped SSO users get nothing. The built-in local admin
-    # bypasses RBAC entirely and stays enabled as break-glass.
+    # bypasses RBAC entirely and stays enabled as an emergency fallback.
     policy.default: ""
     scopes: "[groups]"
     policy.csv: |
@@ -63,8 +63,8 @@ server:
       memory: 128Mi
     limits:
       memory: 256Mi
-  # Chart applies soft pod anti-affinity by default (global.affinity), so the
-  # replicas spread across nodes on their own.
+  # The chart applies soft pod anti-affinity by default (global.affinity), so the
+  # replicas spread across nodes automatically.
   pdb:
     enabled: true
     maxUnavailable: 1
@@ -116,7 +116,7 @@ notifications:
   templates:
     template.app-sync-succeeded: |
       # Grafana renders the annotation text as sanitized HTML, so the app, the commit and
-      # the "(#123)" squash-merge suffix become links once the marker is clicked.
+      # the "(#123)" squash-merge suffix become links when the user clicks the marker.
       message: |
         {{- $rev := .app.status.operationState.syncResult.revision -}}
         {{- $repo := .app.spec.source.repoURL | trimSuffix ".git" -}}

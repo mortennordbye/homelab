@@ -16,8 +16,8 @@ resources:
   limits:
     memory: 128Mi
 
-# The image's built-in snmp.yml (modules incl. synology) plus the SNMPv3 auth,
-# which lives in a Secret so the credentials stay out of Git.
+# The image's built-in snmp.yml (modules incl. synology) plus the SNMPv3 auth.
+# The auth is in a Secret, so the credentials stay out of Git.
 extraArgs:
   - --config.file=/etc/snmp_exporter/snmp.yml
   - --config.file=/run/secrets/snmp-exporter/auth.yml

@@ -25,7 +25,7 @@ def day_prices(day):
 
 def current_price():
     now = dt.datetime.now(dt.timezone.utc)
-    # Files are per Norwegian calendar day, which straddles two UTC dates.
+    # One file covers one Norwegian calendar day, which spans two UTC dates.
     for day in (now.date(), now.date() + dt.timedelta(days=1), now.date() - dt.timedelta(days=1)):
         try:
             prices = day_prices(day)

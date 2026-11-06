@@ -1,7 +1,7 @@
-# Forward-auth in front of the Alertmanager UI. Alertmanager speaks no OIDC and has no auth of
-# its own, so this proxy provider is the only lock on silences. forward_single keeps the
-# callback on alertmanager.local.bigd.no, which is why its HTTPRoute has an unauthenticated
-# /outpost.goauthentik.io/ rule.
+# Forward-auth for the Alertmanager UI. Alertmanager has no OIDC support and no auth of
+# its own, so this proxy provider is the only protection for silences. forward_single
+# keeps the callback on alertmanager.local.bigd.no. That is why its HTTPRoute has an
+# unauthenticated /outpost.goauthentik.io/ rule.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -36,7 +36,7 @@ data:
           name: alertmanager
         attrs:
           name: alertmanager
-          # The browser-facing origin; authentik builds the callback redirect from it.
+          # The browser-facing origin. authentik builds the callback redirect from it.
           external_host: https://alertmanager.local.bigd.no
           mode: forward_single
           access_token_validity: hours=24

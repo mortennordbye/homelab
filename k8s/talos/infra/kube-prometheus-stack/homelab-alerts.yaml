@@ -22,8 +22,8 @@ spec:
         # Container restarted more than 3 times inside a 15-minute window.
         # Catches early flapping before CrashLoopBackOff (upstream
         # KubePodCrashLooping fires only after 15 min sustained).
-        # `kubectl delete pod` does NOT trigger this — only in-pod container
-        # restarts (e.g. container exits, kubelet restarts in place) do.
+        # `kubectl delete pod` does NOT trigger this. Only in-pod container
+        # restarts (the container exits, the kubelet restarts it in place) do.
         - alert: ContainerRestartingFrequently
           expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
           for: 2m
@@ -56,7 +56,7 @@ spec:
         # A container stuck in CrashLoopBackOff for 10 min. Unlike
         # DeploymentUnavailable, this fires even when a rolling update keeps the
         # old pod serving while the new revision crash-loops. max_over_time
-        # smooths the gaps while the kubelet is mid-restart-attempt; a single
+        # smooths the gaps while the kubelet attempts a restart. A single
         # crash that recovers never reaches `for: 10m`.
         - alert: PodCrashLooping
           expr: max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"}[5m]) == 1
@@ -71,9 +71,9 @@ spec:
               Check: kubectl -n {{ $labels.namespace }} logs {{ $labels.pod }} -c {{ $labels.container }} --previous
 
         # Any container whose last termination was OOMKilled within the last 10 min.
-        # last_terminated_reason is a persistent gauge (stays 1 forever after an OOM),
-        # so we AND it with a recency check on last_terminated_timestamp to ensure the
-        # alert auto-clears once the OOMs stop happening.
+        # last_terminated_reason is a persistent gauge (stays 1 forever after an OOM).
+        # The AND with a recency check on last_terminated_timestamp makes the
+        # alert clear when the OOMs stop.
         - alert: ContainerOOMKilled
           expr: |
             kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1
@@ -105,7 +105,7 @@ spec:
               ArgoCD application `{{ $labels.name }}` (project `{{ $labels.project }}`, dest `{{ $labels.dest_namespace }}`) has been in health_status `{{ $labels.health_status }}` / sync_status `{{ $labels.sync_status }}` for over 15 minutes.
               Check: kubectl -n argocd describe application {{ $labels.name }}
 
-        # ArgoCD app stuck out-of-sync / unable to render manifests for >20 min.
+        # ArgoCD app out of sync or unable to render manifests for >20 min.
         # Health-based ArgoCDAppDegraded misses this: a ComparisonError shows as
         # sync_status "Unknown" while health stays "Healthy". 20m avoids firing
         # on normal in-progress syncs.
@@ -136,8 +136,8 @@ spec:
               Check: kubectl -n {{ $labels.namespace }} describe externalsecret {{ $labels.name }}
 
         # Any cert-manager certificate within 7 days of expiry.
-        # cert-manager normally auto-renews — if this fires the DNS-01 / HTTP-01
-        # challenge is failing silently.
+        # cert-manager normally renews automatically. If this fires, the DNS-01 or
+        # HTTP-01 challenge fails silently.
         - alert: CertificateExpiringSoon
           expr: certmanager_certificate_expiration_timestamp_seconds - time() < 7 * 24 * 3600
           for: 1h
@@ -152,9 +152,9 @@ spec:
               Check: kubectl -n {{ $labels.namespace }} describe certificate {{ $labels.name }}
 
         # KEDA-aware replacement for the upstream KubeHpaMaxedOut (disabled in
-        # values.yaml defaultRules): KEDA-driven HPAs sit "at max" by design, so
-        # keda-hpa-* is excluded while genuine CPU/memory HPAs stay covered.
-        # Expr mirrors the upstream rule verbatim.
+        # values.yaml defaultRules): KEDA-driven HPAs are "at max" by design, so
+        # the rule excludes keda-hpa-* and keeps genuine CPU/memory HPAs covered.
+        # Expr copies the upstream rule verbatim.
         - alert: KubeHpaMaxedOut
           expr: |
             (
@@ -176,7 +176,7 @@ spec:
               HPA `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` has been at max replicas for over 15 minutes and cannot scale higher to meet demand. (KEDA-driven HPAs are excluded — their max is set by schedule/trigger, not load.)
               Check: kubectl -n {{ $labels.namespace }} describe hpa {{ $labels.horizontalpodautoscaler }}
 
-        # The free-space floor keeps a fresh volume being filled by a restore or migration quiet.
+        # The free-space floor keeps a fresh volume quiet while a restore or migration fills it.
         - alert: PersistentVolumeFillingUp
           expr: |
             predict_linear(kubelet_volume_stats_available_bytes{job="kubelet"}[6h], 4 * 86400) < 0
@@ -268,7 +268,7 @@ spec:
     - name: homelab.backup
       rules:
         # Covers etcd-backup, every *-db-backup and every *-backup-check CronJob. The second branch catches a
-        # job that has been scheduled but never succeeded, which has no
+        # job that was scheduled but never succeeded. Such a job has no
         # last_successful_time yet.
         - alert: BackupJobStale
           expr: |
@@ -288,7 +288,7 @@ spec:
               CronJob `{{ $labels.namespace }}/{{ $labels.cronjob }}` has not completed a backup in over 26 hours.
               Check: kubectl -n {{ $labels.namespace }} get jobs,pods and the failed pod's logs.
 
-        # Nightly ScheduledBackup; 26 h leaves room for one slow run.
+        # Nightly ScheduledBackup. 26 h allows one slow run.
         - alert: PostgresBaseBackupStale
           expr: time() - max by (namespace) (barman_cloud_cloudnative_pg_io_last_available_backup_timestamp) > 26 * 3600
           for: 1h
@@ -338,9 +338,9 @@ spec:
 
     - name: homelab.data
       rules:
-        # Warning, not critical: when the database is down the logeverylift user journey
-        # and public-site probe already page; this names the cause.
-        # absent(): a primary that is down stops reporting rather than reporting 0.
+        # Warning, not critical: when the database is down, the logeverylift user journey
+        # and public-site probe already page. This alert names the cause.
+        # absent(): a primary that is down stops reporting. It does not report 0.
         - alert: PostgresDown
           expr: absent(cnpg_pg_replication_in_recovery{namespace="logeverylift"} == 0)
           for: 5m
@@ -355,7 +355,7 @@ spec:
               Check: kubectl -n logeverylift get cluster logeverylift-db and the instance pods' postgres logs.
 
         # Critical: WAL that cannot be archived stays on the instance volume until it
-        # fills and the primary stops, and point-in-time restore has a gap.
+        # fills and the primary stops. Point-in-time restore then has a gap.
         - alert: PostgresWalArchivingFailing
           expr: cnpg_pg_stat_archiver_last_failed_time > cnpg_pg_stat_archiver_last_archived_time
           for: 15m
@@ -370,9 +370,9 @@ spec:
 
     - name: homelab.network
       rules:
-        # Fires only when every internet target fails, so one site being down is not an
-        # outage. Discord is unreachable during the outage itself; Alertmanager retries
-        # and the message lands once the line is back, carrying the start time.
+        # Fires only when every internet target fails. One site that is down is not an
+        # outage. Discord is unreachable during the outage itself. Alertmanager retries,
+        # and the message arrives with the start time when the line is back.
         - alert: InternetDown
           expr: max(probe_success{job="internet"}) == 0
           for: 1m
@@ -445,8 +445,8 @@ spec:
 
     - name: homelab.nas
       rules:
-        # diskStatus and diskHealthStatus are 1 when normal; anything else is a
-        # disk DSM itself considers failing, crashed or uninitialised.
+        # diskStatus and diskHealthStatus are 1 when normal. Any other value is a
+        # disk that DSM itself reports as failing, crashed or uninitialised.
         - alert: NasDiskUnhealthy
           expr: (diskStatus{job="snmp-exporter"} != 1) or (diskHealthStatus{job="snmp-exporter"} != 1)
           for: 10m
@@ -516,7 +516,7 @@ spec:
             description: |
               The Proxmox cluster reports {{ $labels.id }} offline for 5 minutes; its Talos VMs are down with it.
 
-        # Shared storages (pbs, nfs-vmstore) report once per host; the max keeps one alert each.
+        # Shared storages (pbs, nfs-vmstore) report once per host. The max keeps one alert each.
         - alert: ProxmoxStorageAlmostFull
           expr: max by (id) (pve_disk_usage_bytes{id=~"storage/.*"} / pve_disk_size_bytes) > 0.85
           for: 30m
@@ -551,7 +551,7 @@ spec:
               Prometheus has not reached the Proxmox API for 30 minutes, so the Proxmox alerts are blind.
               Check: kubectl -n monitoring logs deploy/pve-exporter
 
-        # coretemp reports the package and each core; the i5-11400T throttles at 100 °C.
+        # coretemp reports the package and each core. The i5-11400T throttles at 100 °C.
         - alert: ProxmoxHostHot
           expr: max by (instance) (node_hwmon_temp_celsius{job="proxmox-node-exporter", chip=~"platform_coretemp.*"}) > 90
           for: 10m

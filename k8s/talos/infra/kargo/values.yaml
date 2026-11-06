@@ -1,9 +1,9 @@
-# Kargo chart values. Admin credentials are NOT inlined here; the chart reads
-# them from the pre-existing Secret named below (synced by ESO in
-# kargo-api-secret.yaml), which must hold ADMIN_ACCOUNT_PASSWORD_HASH and
+# Kargo chart values. Admin credentials are NOT inlined here. The chart reads
+# them from the pre-existing Secret named below (ESO syncs it from
+# kargo-api-secret.yaml). The Secret must hold ADMIN_ACCOUNT_PASSWORD_HASH and
 # ADMIN_ACCOUNT_TOKEN_SIGNING_KEY.
 global:
-  # Container-level, applied to every Kargo workload; the image runs as uid 65532.
+  # Container-level, applied to every Kargo workload. The image runs as uid 65532.
   securityContext:
     runAsNonRoot: true
     allowPrivilegeEscalation: false
@@ -22,38 +22,38 @@ api:
       memory: 48Mi
     limits:
       memory: 192Mi
-  # Where the UI/API is actually reached. Kargo builds the "View in Kargo UI"
-  # link in every promotion PR body from this host; unset it defaults to
+  # The host that serves the UI/API. Kargo builds the "View in Kargo UI"
+  # link in every promotion PR body from this host. Unset, it defaults to
   # `localhost` and the PR links point nowhere.
   host: kargo.local.bigd.no
-  # The API is fronted by the Traefik private gateway, which terminates TLS for
+  # The Traefik private gateway proxies the API and terminates TLS for
   # *.local.bigd.no. Serve plain HTTP in-pod so the gateway can route to it
   # (kargo-api Service becomes port 80 instead of 443). terminatedUpstream forces
   # the generated URLs to https (the gateway serves https) even though the pod
-  # itself listens on plain HTTP — it is the one tls.* field honoured when
+  # itself listens on plain HTTP. It is the one tls.* field that applies when
   # enabled is false.
   tls:
     enabled: false
     terminatedUpstream: true
-  # SSO via authentik. The admin account stays enabled (chart default) as
-  # break-glass: an authentik outage must not lock us out of promotions.
+  # SSO via authentik. The admin account stays enabled (chart default) as an
+  # emergency fallback: an authentik outage must not block promotions.
   oidc:
     enabled: true
-    # Trailing slash is load-bearing; it must match authentik's advertised
-    # issuer exactly or OIDC discovery fails. The path segment is the
+    # The trailing slash is required. The value must match authentik's advertised
+    # issuer exactly, or OIDC discovery fails. The path segment is the
     # authentik application slug.
     issuerURL: https://auth.local.bigd.no/application/o/kargo/
     # Public PKCE client, so this is not a credential.
     clientID: kargo
     # Must be explicitly emptied. The chart default is ["groups"], and authentik
-    # has no groups scope, so the default returns invalid_scope. openid, profile
-    # and email are always sent regardless, and profile is what carries groups.
+    # has no groups scope, so the default returns invalid_scope. Kargo always sends
+    # openid, profile and email, and profile carries groups.
     additionalScopes: []
     usernameClaim: email
     admins:
-      # Rendered onto the chart's kargo-admin ServiceAccount as
+      # The chart renders this onto the kargo-admin ServiceAccount as
       # rbac.kargo.akuity.io/claims. kargo-admin is cluster-wide across every
-      # Project, which is all a single-operator homelab needs.
+      # Project, which is enough for a single-operator homelab.
       claims:
         groups:
           - kargo-admins
@@ -70,12 +70,12 @@ controller:
   reconcilers:
     warehouses:
       # Kargo polls at the GREATER of this floor and each Warehouse's own
-      # spec.interval; the 5m0s chart default would clamp the 1m the Warehouses
+      # spec.interval. The 5m0s chart default would override the 1m the Warehouses
       # declare.
       minReconciliationInterval: "1m0s"
   argocd:
-    # Reconciliation is Argo CD selfHeal (no argocd-update step); the
-    # integration only surfaces app health/sync in the Kargo UI.
+    # Reconciliation is Argo CD selfHeal (no argocd-update step). The
+    # integration only shows app health/sync in the Kargo UI.
     integrationEnabled: true
     namespace: argocd
 

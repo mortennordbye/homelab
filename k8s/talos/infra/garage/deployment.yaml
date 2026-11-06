@@ -21,8 +21,8 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
-        # A fresh syno-nfs-csi directory is root-only; the driver's File
-        # fsGroupPolicy has kubelet hand the mount root to this group.
+        # A new syno-nfs-csi directory is root-only. The driver's File
+        # fsGroupPolicy makes kubelet chown the mount root to this group.
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:

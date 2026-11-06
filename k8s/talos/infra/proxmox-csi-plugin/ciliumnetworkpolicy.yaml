@@ -25,7 +25,7 @@ spec:
     # Kubernetes API server for CSI registration and volume operations.
     - toEntities:
         - kube-apiserver
-    # Proxmox API on the LAN. Endpoint lives in a sealed secret; audit mode will reveal the actual IP set.
+    # Proxmox API on the LAN. The endpoint is in a sealed secret. Audit mode shows the actual IP set.
     - toEntities:
         - world
       toPorts:

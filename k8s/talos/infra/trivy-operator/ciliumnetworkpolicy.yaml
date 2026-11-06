@@ -30,7 +30,7 @@ spec:
               protocol: ANY
     - toEntities:
         - kube-apiserver
-    # The operator holds off scanning until trivy-server answers its health check.
+    # The operator does not scan until trivy-server answers its health check.
     - toEndpoints:
         - matchLabels:
             app.kubernetes.io/name: trivy-server
@@ -79,8 +79,8 @@ spec:
             - port: "443"
               protocol: TCP
 ---
-# Scan jobs pull image layers straight from each workload's registry (and its CDN
-# redirects), so they need any HTTPS host rather than an FQDN list.
+# Scan jobs pull image layers directly from each workload's registry (and its CDN
+# redirects). They need any HTTPS host, not an FQDN list.
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:

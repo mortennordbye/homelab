@@ -35,8 +35,8 @@ opencost:
       namespace: monitoring
       additionalLabels:
         release: kube-prometheus-stack
-      # Talos nodes have no providerID, and OpenCost skips a node's price without this
-      # label, which leaves idle cost at zero.
+      # Talos nodes have no providerID. Without this label OpenCost skips the node's
+      # price, and idle cost stays at zero.
       metricRelabelings:
         # Spelled out: the API server defaults it, and Argo CD would see drift.
         - action: replace

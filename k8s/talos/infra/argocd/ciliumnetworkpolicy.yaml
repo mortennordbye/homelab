@@ -8,7 +8,7 @@ spec:
     matchLabels:
       "k8s:io.kubernetes.pod.namespace": argocd
   ingress:
-    # Traefik fronts the argocd-server UI.
+    # Traefik proxies the argocd-server UI.
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": traefik
@@ -18,7 +18,7 @@ spec:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": monitoring
             "k8s:app.kubernetes.io/name": prometheus
-    # Internal: argocd components talk to each other (redis, server, repo-server, controller).
+    # Internal: argocd components reach each other (redis, server, repo-server, controller).
     - fromEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": argocd

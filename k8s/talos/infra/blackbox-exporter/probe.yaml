@@ -1,4 +1,4 @@
-# Checks the internet from inside the LAN every 15s; feeds InternetDown in
+# Checks the internet from inside the LAN every 15s. Feeds InternetDown in
 # homelab-alerts.yaml and keeps a latency history to show the ISP.
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
@@ -18,8 +18,8 @@ spec:
         - https://www.google.com/generate_204
         - https://cloudflare.com/cdn-cgi/trace
 ---
-# The public entry points, requested through public DNS and Cloudflare, so a site that is
-# up in the cluster but unreachable from outside still fails.
+# The public entry points, requested through public DNS and Cloudflare. A site that is
+# up in the cluster but unreachable from outside then still fails.
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
@@ -41,9 +41,9 @@ spec:
         - https://auth.bigd.no
         - https://hub.bigd.no
 ---
-# Private-gateway hosts, through the gateway's DNS and Traefik, so a broken route or certificate
-# fails even while the pods are healthy. KEDA scale-to-zero hosts stay out: a probe would keep
-# them awake.
+# Private-gateway hosts, through the gateway's DNS and Traefik. A broken route or certificate
+# then fails even while the pods are healthy. KEDA scale-to-zero hosts stay out: a probe would
+# keep them awake.
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:

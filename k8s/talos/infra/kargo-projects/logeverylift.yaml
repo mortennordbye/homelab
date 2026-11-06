@@ -1,14 +1,14 @@
 # Kargo project for the logeverylift app. Unlike portfolio/blog this app is
 # single-environment (no stage overlay): one Warehouse feeds one `prod` Stage
 # directly, auto-promoted through promote-via-pr. Flow: logeverylift CI pushes a
-# new image -> Warehouse creates Freight -> Kargo auto-opens a homelab PR ->
-# merging it deploys prod -> the smoke test verifies. The image source and CI
-# live in the separate mortennordbye/logeverylift repo; only the deploy manifests
+# new image -> Warehouse creates Freight -> Kargo opens a homelab PR ->
+# the merge deploys prod -> the smoke test verifies. The image source and CI
+# live in the separate mortennordbye/logeverylift repo. Only the deploy manifests
 # and this pipeline live here.
 
-# Named `logeverylift-cd` (not `logeverylift`) to avoid colliding with the app
+# Named `logeverylift-cd` (not `logeverylift`) to avoid a collision with the app
 # namespace. The label lets the Project adopt this pre-created namespace
-# instead of racing to create it.
+# instead of a race to create it.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -25,9 +25,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 ---
-# Single Stage, so the whole pipeline is one auto-promotion: a new Freight is
-# auto-promoted to `prod` via promote-via-pr, which opens a homelab PR and blocks
-# on the merge. Merging the PR in GitHub is the only human gate.
+# Single Stage, so the whole pipeline is one auto-promotion: Kargo promotes new
+# Freight to `prod` via promote-via-pr, which opens a homelab PR and waits for
+# the merge. The PR merge in GitHub is the only human gate.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ProjectConfig
 metadata:
@@ -42,7 +42,7 @@ spec:
 ---
 # Git write credential for Kargo's git-push/PR, using the existing GitHub App
 # `mortennordbye-homelab-deployer`. Same App and Bitwarden keys as portfolio-cd
-# and blog-cd; only the namespace differs (Kargo cred lookup is per-Project). The
+# and blog-cd. Only the namespace differs (Kargo cred lookup is per-Project). The
 # App needs Contents + Pull requests read/write (promote-via-pr opens a PR).
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
@@ -102,19 +102,19 @@ spec:
   subscriptions:
     - image:
         repoURL: ghcr.io/mortennordbye/logeverylift
-        # logeverylift CI tags every build 0.0.<run_number>; SemVer picks the
+        # logeverylift CI tags every build 0.0.<run_number>. SemVer picks the
         # greatest. strictSemvers keeps the git-SHA/latest tags out of selection.
         imageSelectionStrategy: SemVer
         strictSemvers: true
         discoveryLimit: 20
 ---
 # prod verification: a one-shot Job that curls the app URL and fails on any
-# non-2xx. No KEDA (stays warm); the retries cover the rolling pod.
+# non-2xx. No KEDA (stays warm). The retries cover the rolling pod.
 #
 # Must be the public hostname: the HTTPRoute answers for logeverylift.com
 # alone, so the old internal name 404s at Traefik. -L because / redirects to
-# /login for anyone without a session and -f treats a 307 as success — without
-# it the check asserts nothing beyond "Traefik routed somewhere".
+# /login for anyone without a session, and -f treats a 307 as success. Without
+# -L the check asserts nothing beyond "Traefik routed somewhere".
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -164,8 +164,8 @@ spec:
                         https://logeverylift.com/
 ---
 # prod: the only Stage. Receives Freight straight from the Warehouse
-# (sources.direct), auto-promoted per ProjectConfig through promote-via-pr, then
-# verified by the smoke test. promote-via-pr opens a homelab PR and waits for the
+# (sources.direct), auto-promoted per ProjectConfig through promote-via-pr. The
+# smoke test then verifies it. promote-via-pr opens a homelab PR and waits for the
 # merge, so the PR review is the deploy gate.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage

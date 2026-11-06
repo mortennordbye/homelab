@@ -1,6 +1,6 @@
-# Nightly restic backup of garage-data to the NAS backup share, which is snapshotted
-# and copied offsite (docs/platform/backups/README.md). garage-meta is left out on
-# purpose: a live LMDB copy can be torn, and its hourly snapshots live in garage-data.
+# Nightly restic backup of garage-data to the NAS backup share. The NAS snapshots that
+# share and copies it offsite (docs/platform/backups/README.md). garage-meta is excluded:
+# a live LMDB copy can be torn, and its hourly snapshots are in garage-data.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
