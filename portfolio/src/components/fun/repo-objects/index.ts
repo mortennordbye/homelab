@@ -1,30 +1,30 @@
 import type { ComponentType } from "react";
-import { CardIndex } from "./CardIndex";
-import { CopyingPress } from "./CopyingPress";
-import { FilmReels } from "./FilmReels";
-import { HomelabRack } from "./HomelabRack";
-import { Lighthouse } from "./Lighthouse";
-import { PhoneVise } from "./PhoneVise";
-import { Radio } from "./Radio";
-import { RouteBlind } from "./RouteBlind";
-import { Sieve } from "./Sieve";
-import { Strongbox } from "./Strongbox";
-import { TrainingLog } from "./TrainingLog";
-import { Typewriter } from "./Typewriter";
+import { AgenticDr } from "./AgenticDr";
+import { Headroom } from "./Headroom";
+import { Homelab } from "./Homelab";
+import { Innestemme } from "./Innestemme";
+import { LawlessWaf } from "./LawlessWaf";
+import { LogEveryLift } from "./LogEveryLift";
+import { Northlight } from "./Northlight";
+import { OpenSelf } from "./OpenSelf";
+import { OpenVita } from "./OpenVita";
+import { Reelsmith } from "./Reelsmith";
+import { RuterCli } from "./RuterCli";
+import { Verksted } from "./Verksted";
 
-/** Repo name to the object that stands for it. A name missing here gets the
- *  plain box in `RepoShelf`. */
+/** Repo name to the object that stands for it: the repo's icon, made physical.
+ *  A name missing here gets the plain box in `RepoShelf`. */
 export const REPO_OBJECTS: Record<string, ComponentType> = {
-  homelab: HomelabRack,
-  "lawless-waf": Sieve,
-  "agentic-dr": CopyingPress,
-  verksted: PhoneVise,
-  headroom: Strongbox,
-  logeverylift: TrainingLog,
-  "ruter-cli": RouteBlind,
-  innestemme: Radio,
-  openself: CardIndex,
-  openvita: Typewriter,
-  northlight: Lighthouse,
-  reelsmith: FilmReels,
+  homelab: Homelab,
+  "lawless-waf": LawlessWaf,
+  "agentic-dr": AgenticDr,
+  verksted: Verksted,
+  headroom: Headroom,
+  logeverylift: LogEveryLift,
+  "ruter-cli": RuterCli,
+  innestemme: Innestemme,
+  openself: OpenSelf,
+  openvita: OpenVita,
+  northlight: Northlight,
+  reelsmith: Reelsmith,
 };

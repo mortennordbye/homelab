@@ -21,19 +21,20 @@ export type ProjectRepo = {
 /**
  * Every repo that is a project rather than a script, in /fun shelf order: top
  * row left to right, then down. Each name needs an object in
- * `components/fun/repo-objects/`, or it gets a plain box. The shelf holds 12.
+ * `components/fun/repo-objects/` (the repo's icon, made physical), or it gets
+ * a plain box. The shelf holds 12.
  */
 export const projectRepos: readonly ProjectRepo[] = [
-  { name: "homelab", object: "a three-node rack", about: "GitOps homelab on Talos Kubernetes, Argo CD and Terraform." },
-  { name: "lawless-waf", object: "a brass sieve", about: "Tunes Azure WAF false positives without Log Analytics prices." },
-  { name: "agentic-dr", object: "a letter-copying press", about: "Generates disaster-recovery infrastructure from production IaC on demand." },
-  { name: "verksted", object: "a phone in a vise", about: "A self-hosted workbench for driving coding agents from a phone." },
-  { name: "headroom", object: "a strongbox", about: "Self-hosted personal finance: budgets, assets, investments and loans." },
-  { name: "logeverylift", object: "a training log", about: "Mobile-first workout tracking PWA." },
-  { name: "ruter-cli", object: "a tram destination blind", about: "Terminal departure board for Norwegian public transport." },
-  { name: "innestemme", object: "a radio", about: "Local voice assistant in Rust that replaces Home Assistant's Assist." },
-  { name: "openself", object: "a card index", about: "An open file format for a person's record." },
-  { name: "openvita", object: "a typewriter", about: "Turns an OpenSelf profile into tailored CVs." },
-  { name: "northlight", object: "a lighthouse", about: "A quiet, readable Hugo theme for technical writing." },
-  { name: "reelsmith", object: "a film rewind bench", about: "Automated short-video pipeline." },
+  { name: "homelab", object: "an apple on its branch", about: "GitOps homelab on Talos Kubernetes, Argo CD and Terraform." },
+  { name: "lawless-waf", object: "a shield in an outlaw hat", about: "Tunes Azure WAF false positives without Log Analytics prices." },
+  { name: "agentic-dr", object: "a failover arc", about: "Generates disaster-recovery infrastructure from production IaC on demand." },
+  { name: "verksted", object: "a pocket workshop", about: "A self-hosted workbench for driving coding agents from a phone." },
+  { name: "headroom", object: "an arrow under the ceiling", about: "Self-hosted personal finance: budgets, assets, investments and loans." },
+  { name: "logeverylift", object: "a 20 kg plate", about: "Mobile-first workout tracking PWA." },
+  { name: "ruter-cli", object: "a runner chasing a tram", about: "Terminal departure board for Norwegian public transport." },
+  { name: "innestemme", object: "a house with a voice", about: "Local voice assistant in Rust that replaces Home Assistant's Assist." },
+  { name: "openself", object: "a fingerprint", about: "An open file format for a person's record." },
+  { name: "openvita", object: "a CV with a fingerprint", about: "Turns an OpenSelf profile into tailored CVs." },
+  { name: "northlight", object: "a north light", about: "A quiet, readable Hugo theme for technical writing." },
+  { name: "reelsmith", object: "a hot play button on an anvil", about: "Automated short-video pipeline." },
 ];

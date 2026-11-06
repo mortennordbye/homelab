@@ -81,7 +81,7 @@ All under `portfolio/src/`.
 | `components/fun/Objects.tsx` | The note on the fridge door, contact card, gym bag, career album, service leaflets. Nothing in here hangs on a wall; see the file header. |
 | `components/fun/Abacus.tsx` | The skills, counted on an abacus on the dining table. |
 | `components/fun/RepoShelf.tsx` | The projects: a wall-hung shelf of 4 x 3 compartments beside the blog covers, one object per repo in `content/repos.ts` `projectRepos`. Builds the repo card and runs the objects' loops. |
-| `components/fun/repo-objects/` | One small hand-built object per repo, each with its own loop. `shared.tsx` holds the shared materials and `useTick`; `index.ts` maps repo names to objects. |
+| `components/fun/repo-objects/` | One object per repo, built from the repo's icon in its colours, each with its own loop. `shared.tsx` holds `paint`, `Plinth`, `useExtrude` and `useTick`; `index.ts` maps repo names to objects. |
 | `components/fun/PrintedPosts.tsx` | The newest blog covers, framed together on the wall. Lays itself out from `/api/v1/blog`. |
 | `components/fun/Printer.tsx` | The CV printer: a screen on the lid toggles the CV customizer's flags, and printing downloads the matching PDF while a sheet carrying its page one (`preview` in `cv-manifest.json`, rendered by Ghostscript in the Dockerfile's `pdfbuild` stage) feeds out. |
 | `components/fun/Touch.tsx` | Phone controls. `TouchLook` (inside the Canvas and inside `InteractionProvider`) does drag-to-look and tap-to-activate; `TouchStick` is the DOM walk stick. |
@@ -223,13 +223,14 @@ load. Hugo emits the cover as `<media:content>`, and `/api/v1/blog` reads it.
 
 ### A new repository
 
-Add it to `projectRepos` in `content/repos.ts`, in shelf order. Build its object in
-`components/fun/repo-objects/` and add it to `REPO_OBJECTS` in `index.ts`. A repo without an
+Add it to `projectRepos` in `content/repos.ts`, in shelf order. Build its object from the
+repo's icon in `components/fun/repo-objects/` and add it to `REPO_OBJECTS` in `index.ts`. A repo without an
 object gets a plain box. The shelf holds 12. See the BACKLOG entry "Fun room: the repo shelf
 holds 12 projects and no more".
 
 An object stands on its compartment floor at the origin, +z towards the room, inside 0.19
-wide, 0.22 tall and 0.16 deep. It uses the materials in `shared.tsx` and nothing else. Its loop
+wide, 0.22 tall and 0.16 deep, on a `Plinth` in the icon's tile colour. Its colours come from
+`paint` in `shared.tsx`. Its loop
 goes in `useTick`, computed from the clock, so the shelf can stop it and pose it still.
 
 ### A new case study, certification or social link
@@ -328,20 +329,23 @@ recomputed. A move to a "sensible" spot would relocate the visitor without their
 
 ### The repo shelf
 
-The objects show that a project runs, not what it outputs. So the brand rules on motion apply
-to each loop:
+Each object is its repo's icon, made physical, in the icon's own colours. It stands on a low
+plinth in the icon's tile colour. This is the one place in the flat where the four-material rule
+and the glow rule do not apply: the owner chose recognisable icons over the room's palette for
+this shelf. See the logbook in `brand/decisions.md`. Everywhere else the rules hold.
 
-- No counting numbers, and no text that appears letter by letter or scrambles. The tram blind
-  rolls a whole line; the typewriter's sheet is printed before it feeds.
-- No beams and no glow. The lighthouse lamp is an emissive part behind a turning shutter, not
-  a light. A new light would recompile every material in the room.
-- No green. The desk monitors already hold the one green point on this wall.
+- An object copies the shape and colours of the icon in the repo (`assets/icon.svg` or the app's
+  own icon). A new repo icon means a new object.
+- Each object runs one short loop that shows the project at work. No counting numbers, and no
+  text that appears letter by letter. The CV lines fill in a whole line at a time.
+- No new lights. A glowing part is an emissive material (`paint(colour, { glow })`), never a
+  `pointLight`: a new light would recompile every material in the room.
 - One `useFrame` in `RepoShelf` runs every loop, and only while the shelf front can be seen
   (`useSeen`). Reduced motion poses every object at one still frame. Pick that frame so
   nothing hangs in mid-air.
 - The crosshair target is a fixed invisible face across each opening, never the moving part.
-- Moving parts carry `NO_MERGE`; everything else in an object joins the static merge.
-  Repeated parts (grains, cards, keys) are one instanced mesh each.
+- Moving parts carry `NO_MERGE`. Colours come from the shared `paint` cache, so equal colours
+  share one material and merge.
 - The paper labels are tinted down. Untinted paper this close to the hall lamp blooms.
 
 ### Screens and DOM layers

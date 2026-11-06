@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { RoundedBox } from "@/components/scene/RoundedBox";
 import { OAK } from "@/components/materials/oak";
-import { PAPER } from "@/components/materials/paper";
 
 /**
  * Shared stock for the repo shelf objects. One instance per material, so
@@ -11,16 +11,13 @@ import { PAPER } from "@/components/materials/paper";
  * every part that does not move.
  *
  * Each object stands on its compartment floor at the origin, +z towards the
- * room, inside 0.19 wide, 0.22 tall and 0.16 deep.
+ * room, inside 0.19 wide, 0.22 tall and 0.16 deep. Objects copy their repo
+ * icon in its own colours (`paint`); the four room materials stay for trim.
  */
 export const M = {
   brass: new THREE.MeshStandardMaterial({ color: "#b98f4e", metalness: 0.8, roughness: 0.35 }),
   dark: new THREE.MeshStandardMaterial({ color: "#1d1712", roughness: 0.8 }),
   oak: new THREE.MeshStandardMaterial({ color: OAK.case, roughness: 0.55 }),
-  paper: new THREE.MeshStandardMaterial({ color: PAPER.sheet, roughness: 0.9 }),
-  ink: new THREE.MeshStandardMaterial({ color: PAPER.ink, roughness: 0.9 }),
-  /** A lamp: emissive on a near-black base, never a light source. */
-  lamp: new THREE.MeshStandardMaterial({ color: "#2a1405", emissive: "#ffcf8a", emissiveIntensity: 1.4 }),
 };
 
 export type Tick = (t: number) => void;
@@ -81,3 +78,60 @@ export function useCanvas(
 }
 
 export const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
+
+const paints = new Map<string, THREE.MeshStandardMaterial>();
+
+/** One shared material per colour and finish. `glow` makes it emissive in its
+ *  own colour, for the parts of an icon that light up. */
+export function paint(color: string, o: { metal?: number; rough?: number; glow?: number } = {}) {
+  const key = `${color}|${o.metal ?? 0}|${o.rough ?? 0.5}|${o.glow ?? 0}`;
+  let m = paints.get(key);
+  if (!m) {
+    m = new THREE.MeshStandardMaterial({
+      color,
+      metalness: o.metal ?? 0,
+      roughness: o.rough ?? 0.5,
+      emissive: o.glow ? color : "#000000",
+      emissiveIntensity: o.glow ?? 0,
+    });
+    paints.set(key, m);
+  }
+  return m;
+}
+
+export const PLINTH = 0.014;
+
+/** The icon's tile, as a low plinth the object stands on. */
+export function Plinth({ color }: { color: string }) {
+  return (
+    <RoundedBox
+      args={[0.17, PLINTH, 0.13]}
+      radius={0.005}
+      smoothness={3}
+      position={[0, PLINTH / 2, 0]}
+      material={paint(color, { rough: 0.35 })}
+    />
+  );
+}
+
+/** An extruded 2D shape, centred on x and standing on y = 0, `depth` thick in z. */
+export function useExtrude(draw: (s: THREE.Shape) => void, depth: number, bevel = 0.002) {
+  const g = useMemo(() => {
+    const shape = new THREE.Shape();
+    draw(shape);
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth,
+      bevelEnabled: bevel > 0,
+      bevelThickness: bevel,
+      bevelSize: bevel,
+      bevelSegments: 2,
+      curveSegments: 16,
+    });
+    geo.translate(0, 0, -depth / 2);
+    return geo;
+    // The outline is a constant of the object.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [depth, bevel]);
+  useEffect(() => () => g.dispose(), [g]);
+  return g;
+}

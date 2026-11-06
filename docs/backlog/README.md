@@ -119,7 +119,7 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Where:** `portfolio/src/components/fun/Bookshelf.tsx` (`ShelvedBooks`), `portfolio/src/components/fun/Hallway.tsx` (`CABINET`), `portfolio/src/components/fun/Room.tsx` (the cabinet group).
 
 ### Fun room: the repo shelf holds 12 projects and no more
-- **What:** The shelf has 4 x 3 compartments and `RepoShelf` draws the first 12 entries of `projectRepos`. A 13th project would be listed in the `/fun` text alternative but never appear in the room. The shelf also adds about 50 draw calls in view, because moving parts cannot join the static merge.
+- **What:** The shelf has 4 x 3 compartments and `RepoShelf` draws the first 12 entries of `projectRepos`. A 13th project would be listed in the `/fun` text alternative but never appear in the room. The shelf also adds about 75 draw calls and 35k triangles in view: moving parts cannot join the static merge, and twelve icon palettes give many distinct materials.
 - **Why deferred:** 12 is what exists today, and the wall between the blog covers and the hall cabinet has no room for a wider shelf.
 - **Unblock:** When a 13th project is added, add a fourth row (the shelf can grow down to the toolbox) or retire an older project from the list. If the draw calls matter, merge each object's moving parts per material inside its own group.
 - **Where:** `portfolio/src/components/fun/RepoShelf.tsx` (`REPO_SHELF`, `COLS`, `ROWS`), `portfolio/src/content/repos.ts` (`projectRepos`).
