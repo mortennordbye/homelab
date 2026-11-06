@@ -118,6 +118,12 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** When a case study is added, pick one option in order of cost: move the album out of the top bay (about three more books), lower the bay pitch to fit a fourth bay, or split the books across both halves and slide the other door open.
 - **Where:** `portfolio/src/components/fun/Bookshelf.tsx` (`ShelvedBooks`), `portfolio/src/components/fun/Hallway.tsx` (`CABINET`), `portfolio/src/components/fun/Room.tsx` (the cabinet group).
 
+### Fun room: the repo shelf holds 12 projects and no more
+- **What:** The shelf has 4 x 3 compartments and `RepoShelf` draws the first 12 entries of `projectRepos`. A 13th project would be listed in the `/fun` text alternative but never appear in the room. The shelf also adds about 50 draw calls in view, because moving parts cannot join the static merge.
+- **Why deferred:** 12 is what exists today, and the wall between the blog covers and the hall cabinet has no room for a wider shelf.
+- **Unblock:** When a 13th project is added, add a fourth row (the shelf can grow down to the toolbox) or retire an older project from the list. If the draw calls matter, merge each object's moving parts per material inside its own group.
+- **Where:** `portfolio/src/components/fun/RepoShelf.tsx` (`REPO_SHELF`, `COLS`, `ROWS`), `portfolio/src/content/repos.ts` (`projectRepos`).
+
 ### Fun room: building the scene still blocks the main thread
 - **What:** On a phone-class profile (4x CPU throttling, 8Mbps, cache disabled) the room still blocks the main thread while it builds behind the loading screen. The longest task is 0.63 to 0.90s (total about 1s). Most of it is the crease pass for the rounded boxes with unique sizes, which the geometry cache in `components/scene/RoundedBox.tsx` cannot share. The composer's programs now go into the parallel compile, and the first composer frame renders behind the loading screen (`compilePost` in `FunRoom.tsx`). That was verified in headless SwiftShader by the time each program links, not timed on a GPU with `KHR_parallel_shader_compile`.
 - **Why deferred:** The crease pass needs a structural change: it must move off the main thread or be precomputed. A timing of the composer change needs a real GPU, which the headless harness does not have.

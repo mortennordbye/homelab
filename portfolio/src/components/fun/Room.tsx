@@ -4,6 +4,7 @@ import { RoundedBox } from "@/components/scene/RoundedBox";
 import * as THREE from "three";
 import { ShelvedBooks } from "./Bookshelf";
 import { PrintedPosts } from "./PrintedPosts";
+import { REPO_SHELF, RepoShelf } from "./RepoShelf";
 import { WallCertificates } from "./WallCertificates";
 import { Abacus } from "./Abacus";
 import { ALCOVE, BENCH_TOP, CABINET, CABINET_AT, Hallway } from "./Hallway";
@@ -1389,6 +1390,13 @@ export function Room({
           ends at plan x 1.47. */}
       <PrintedPosts position={at(1.745, 1.42, FLAT.d - 0.03)} rotation={[0, Math.PI, 0]} onOpen={onOpenCard} />
       <Marker position={at(1.745, 1.94, FLAT.d - 0.12)} />
+      <RepoShelf
+        position={at(REPO_SHELF.x, REPO_SHELF.y, REPO_SHELF.z)}
+        rotation={[0, Math.PI, 0]}
+        oak={oak}
+        onOpen={onOpenCard}
+      />
+      <Marker position={at(REPO_SHELF.x, REPO_SHELF.y + REPO_SHELF.h + 0.1, REPO_SHELF.z - 0.11)} />
       {/* The certificates, on a shelf on the west wall above the desk's end.
           The corner side of the screens has 0.4m of wall, too little for seven.
           Clear of the table, whose far edge is at plan z 4.77. */}

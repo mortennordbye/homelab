@@ -172,6 +172,22 @@ export type Repo = {
   url: string;
 };
 
+type RepoFeed = { repos: Repo[]; projects: Repo[] };
+
+/* One request per page load, shared by every reader in the room. Cleared on
+   failure so a later mount can try again. */
+let repoFeed: Promise<RepoFeed> | null = null;
+function loadRepoFeed(): Promise<RepoFeed> {
+  repoFeed ??= fetch("/api/v1/github")
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+    .then((j: Partial<RepoFeed>) => ({ repos: j.repos ?? [], projects: j.projects ?? [] }))
+    .catch((e: unknown) => {
+      repoFeed = null;
+      throw e;
+    });
+  return repoFeed;
+}
+
 /**
  * The pinned repositories, from `/api/v1/github`. The names live in
  * `content/repos.ts`; everything else on them is live.
@@ -183,10 +199,9 @@ export function useRepos(): Repo[] {
   const [repos, setRepos] = useState<Repo[]>([]);
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/v1/github")
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((j: { repos?: Repo[] }) => {
-        if (!cancelled) setRepos((j.repos ?? []).slice(0, 4));
+    loadRepoFeed()
+      .then((f) => {
+        if (!cancelled) setRepos(f.repos.slice(0, 4));
       })
       .catch(() => {
         if (!cancelled) setRepos([]);
@@ -196,4 +211,30 @@ export function useRepos(): Repo[] {
     };
   }, []);
   return repos;
+}
+
+export type ProjectFeed = {
+  state: "loading" | "ok" | "failed";
+  byName: Map<string, Repo>;
+};
+
+/** The shelf's projects, keyed by lower-case name. Same failure rule as
+ *  `useRepos`: a repo missing here has no live figures, never invented ones. */
+export function useProjectRepos(): ProjectFeed {
+  const [feed, setFeed] = useState<ProjectFeed>({ state: "loading", byName: new Map() });
+  useEffect(() => {
+    let cancelled = false;
+    loadRepoFeed()
+      .then((f) => {
+        if (!cancelled)
+          setFeed({ state: "ok", byName: new Map(f.projects.map((r) => [r.name.toLowerCase(), r])) });
+      })
+      .catch(() => {
+        if (!cancelled) setFeed({ state: "failed", byName: new Map() });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return feed;
 }

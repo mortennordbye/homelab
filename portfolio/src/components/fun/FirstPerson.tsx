@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { SOFA } from "./Furniture";
 import { HALL_SOLIDS } from "./Hallway";
 import { CHAIR_Z, DESK, DESK_D, DESK_X, DESK_Z, LANTERN, ROOM, STOVE, TABLE } from "./Room";
+import { REPO_SHELF } from "./RepoShelf";
 import { MARKS, px, pz, rectBox, wallBoxes, type Box } from "./flat";
 
 export const EYE = 1.66;
@@ -80,6 +81,13 @@ const BLOCKERS: Box[] = [
   // Entré: the built-in run on one side, the shoe bench and the tall cabinet on
   // the other. Taken from the file that draws them rather than measured off it.
   ...HALL_SOLIDS.map(rectBox),
+  // Wall-hung, but its bottom is below head height.
+  {
+    x: px(REPO_SHELF.x),
+    z: pz(REPO_SHELF.z - REPO_SHELF.d / 2),
+    hx: REPO_SHELF.w / 2,
+    hz: REPO_SHELF.d / 2,
+  },
 ];
 
 // 0.60 across rather than 0.68. The flat is a real one and its bedroom is
