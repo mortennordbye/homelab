@@ -23,7 +23,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: bigd
-          image: nginxinc/nginx-unprivileged:1.30-alpine
+          image: nginxinc/nginx-unprivileged:1.31-alpine
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false

@@ -23,7 +23,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: omni-tools
-          image: iib0011/omni-tools:0.6
+          image: iib0011/omni-tools:0.7
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
