@@ -1,7 +1,7 @@
 # Monitoring
 
-How alerts, SLOs, runbooks, incidents and the weekly review fit together is in
-[sre.md](sre.md).
+[sre.md](sre.md) explains how alerts, SLOs, runbooks, incidents and the weekly review fit
+together.
 
 ## Where to look
 
@@ -17,10 +17,11 @@ How alerts, SLOs, runbooks, incidents and the weekly review fit together is in
 | OpenCost, estimated cost per namespace ([costs.md](costs.md)) | https://opencost.local.bigd.no |
 | Discord | `#homelab-alerts` |
 
-Dashboards show live data. The one exception is the Full architecture row, which is labelled as not live.
+Dashboards show live data. The one exception is the Full architecture row. It is labelled as
+not live.
 
-SPOG rows, outside in: the network and hosts first, then the cluster platform, then the apps.
-Every row starts collapsed except Alerts, which sits on top.
+The SPOG rows go from outside in: the network and hosts first, then the cluster platform,
+then the apps. Every row starts collapsed, except Alerts. Alerts is at the top.
 
 | Row | Shows |
 |---|---|
@@ -49,15 +50,16 @@ Every row starts collapsed except Alerts, which sits on top.
 Kubernetes events and live logs are on the separate Homelab-Log-SPOG dashboard. The other
 dashboards from this repo: User journeys, GitHub, Cloudflare, Postgres and logeverylift Traces.
 
-Dashboards from this repo are JSON under [`grafana/`](../../../grafana/README.md), loaded by
-[Git Sync](#git-sync) into Grafana's Homelab folder. Pyrra's sit in SLOs, set by the
-`k8s-sidecar-target-directory` annotation on the ConfigMaps the sidecar loads
-(`k8s/talos/infra/pyrra/values.yaml`). Chart dashboards without it stay at the top level.
+The dashboards from this repo are JSON files under [`grafana/`](../../../grafana/README.md).
+[Git Sync](#git-sync) loads them into Grafana's Homelab folder. Pyrra's dashboards are in
+the SLOs folder. The `k8s-sidecar-target-directory` annotation on the ConfigMaps that the
+sidecar loads sets that folder (`k8s/talos/infra/pyrra/values.yaml`). Chart dashboards
+without the annotation stay at the top level.
 
 Both dashboards draw a vertical line for every Argo CD sync (the "Deploys" annotation, on by
-default), so a change in a graph can be matched to the commit that caused it. Hover the
-line for the app, the short revision and the commit subject. Argo CD notifications writes
-these as Grafana annotations tagged `argocd`
+default). This lets you match a change in a graph to the commit that caused it. Hover the
+line to see the app, the short revision and the commit subject. Argo CD notifications
+writes these lines as Grafana annotations tagged `argocd`
 ([`../delivery/argocd.md`](../delivery/argocd.md#deploy-markers)).
 
 ## Monitoring stack storage
@@ -68,94 +70,99 @@ these as Grafana annotations tagged `argocd`
 | Logs | Loki | 7 days | 20 GiB on `proxmox-local` |
 | Traces | Tempo | 24 hours | 10 GiB on `proxmox-local` |
 
-`kubelet_volume_stats_*` is only right for the two local volumes. On an NFS volume it reports the
-whole NAS share, so the Prometheus, Grafana and Alertmanager volumes all show the same figure.
-The SPOG row reads Prometheus's size from `prometheus_tsdb_storage_blocks_bytes` and
-`prometheus_tsdb_wal_storage_size_bytes` instead. It has no real figure for Grafana or Alertmanager.
+`kubelet_volume_stats_*` is correct only for the two local volumes. On an NFS volume it
+reports the whole NAS share. The Prometheus, Grafana and Alertmanager volumes therefore all
+show the same figure. The SPOG row reads the size of Prometheus from
+`prometheus_tsdb_storage_blocks_bytes` and `prometheus_tsdb_wal_storage_size_bytes` instead.
+It has no real figure for Grafana or Alertmanager.
 
 When metrics grow, start with Metrics by scrape job. For logs, start with Logs by namespace.
 
-Log entries dropped counts lines Loki refused, usually for being past its 24-hour age limit
-(`reject_old_samples_max_age`) after Alloy read them again from a running pod. A small number is expected.
+Log entries dropped counts the lines that Loki refused. The usual cause: Alloy read the lines
+again from a running pod, and they were past the 24-hour age limit
+(`reject_old_samples_max_age`). A small number is expected.
 
 ## GitHub
 
-The GitHub dashboard lists merged and open pull requests and the merges per day for the repo
-picked in its Repository dropdown (default `homelab`). The SPOG also draws a "PR merged"
-annotation for every Homelab merge, so the gap between a merge and its Argo CD deploy marker
-is visible on the same graph. The PR marker shows the title and author; the plugin cannot
-make it a link, so the PR link sits on the deploy marker next to it.
+The GitHub dashboard lists merged and open pull requests, and the merges per day, for the
+repo selected in its Repository dropdown (default `homelab`). The SPOG also draws a "PR
+merged" annotation for every Homelab merge. The gap between a merge and its Argo CD deploy
+marker is then visible on the same graph. The PR marker shows the title and the author. The
+plugin cannot make it a link, so the PR link is on the deploy marker next to it.
 
 Grafana queries the GitHub API on demand with the `grafana-github-datasource` plugin (data
-source uid `github`). Nothing is scraped or stored, so the panels only reach as far back as
-the time range asks for, and each refresh spends GitHub API quota.
+source uid `github`). Nothing is scraped or stored. The panels reach back only as far as the
+time range asks for, and each refresh spends GitHub API quota.
 
-It authenticates as the GitHub App `mortennordbye-homelab-grafana`, installed on all of the
-account's repositories with Metadata read and Contents, Pull requests and Webhooks read and
-write (the write is for [Git Sync](#git-sync); the data source only reads). The App ID, installation ID and private key
-come from Bitwarden through the `grafana-github-app` ExternalSecret and are mounted as files,
-since the PEM is multiline. The Grafana network policy allows egress to `api.github.com`.
+Grafana authenticates as the GitHub App `mortennordbye-homelab-grafana`. The App is
+installed on all of the account's repositories with Metadata read, and Contents, Pull
+requests and Webhooks read and write. The write is for [Git Sync](#git-sync). The data
+source only reads. The App ID, installation ID and private key come from Bitwarden through
+the `grafana-github-app` ExternalSecret. They are mounted as files, because the PEM is
+multiline. The Grafana network policy allows egress to `api.github.com`.
 
 ## Git Sync
 
 Grafana's Git Sync keeps the dashboards under [`grafana/`](../../../grafana/README.md) in this
 repo in a Grafana folder named Homelab. Grafana polls `main` every 60 seconds and loads
-any change. Saving a dashboard in that folder in the UI commits to a new branch and shows a
-link to open the pull request; Grafana doesn't open it itself, and nothing writes to `main` directly (the repository's `workflows` is `branch`
-only). Git Sync registers a repository webhook on create and refuses to start without the
-Webhooks permission, but GitHub can't reach `grafana.local.bigd.no`, so polling is the only
-trigger that lands.
+any change. When you save a dashboard in that folder in the UI, Grafana commits to a new
+branch and shows a link to open the pull request. Grafana does not open the pull request
+itself. Nothing writes to `main` directly: the repository's `workflows` is `branch` only.
+Git Sync registers a repository webhook on create, and it refuses to start without the
+Webhooks permission. GitHub cannot reach `grafana.local.bigd.no`, so polling is the only
+trigger that works.
 
 The `grafana-git-sync` Job (`k8s/talos/infra/kube-prometheus-stack/git-sync.yaml`) is an Argo
 CD PostSync hook. It POSTs two resources to Grafana's `provisioning.grafana.app/v1beta1` API
-as the local admin, and merge-patches them when they already exist:
+as the local admin. When they already exist, it merge-patches them:
 
 | Resource | Name | What it holds |
 |---|---|---|
 | Connection | `homelab-github` | the GitHub App's ID, installation ID and private key, from the `grafana-github-app` secret |
 | Repository | `homelab` | repo URL, branch `main`, path `grafana/`, folder target, branch workflow |
 
-Change either by editing the Job and syncing; an edit in Administration > Provisioning is
-overwritten on the next sync. Argo CD doesn't count a hook as drift, so a commit that only
-changes the Job needs a manual sync before it runs. The Job reaches Grafana on port 3000
-through an ingress rule in the Grafana network policy. Grafana needs egress to both
-`api.github.com` (App tokens, webhook, PRs) and `github.com` (the git clone and fetch).
+To change either resource, edit the Job and sync. The next sync overwrites an edit made in
+Administration > Provisioning. Argo CD does not count a hook as drift. A commit that only
+changes the Job therefore needs a manual sync before it runs. The Job reaches Grafana on
+port 3000 through an ingress rule in the Grafana network policy. Grafana needs egress to
+both `api.github.com` (App tokens, webhook, PRs) and `github.com` (the git clone and fetch).
 
-A Repository caches its installation token for an hour, so after changing the App's
-permissions, delete the Repository in Administration > Provisioning and sync the app to
-recreate it with a fresh token.
+A Repository caches its installation token for an hour. After you change the App's
+permissions, delete the Repository in Administration > Provisioning and sync the app. This
+recreates it with a fresh token.
 
-The chart's and Pyrra's dashboards still come from ConfigMaps through the sidecar and can't
-be saved back to git. A dashboard `uid` must exist in only one of the two; Git Sync won't
-take over a dashboard the sidecar already provisions.
+The chart's and Pyrra's dashboards still come from ConfigMaps through the sidecar. They
+cannot be saved back to git. A dashboard `uid` must exist in only one of the two sources.
+Git Sync does not take over a dashboard that the sidecar already provisions.
 
 ## Cloudflare
 
-The Cloudflare dashboard shows edge traffic for the zone picked in its Zone dropdown:
+The Cloudflare dashboard shows edge traffic for the zone selected in its Zone dropdown:
 requests, bandwidth and visits, cache status, status codes, origin response time for uncached
 requests, top hosts, paths, countries, content types, edge locations and HTTP protocol. Below
-that are Web Analytics for every site with the beacon (visits, page views, Core Web Vitals at
-p75, page load time, top pages, referrers, countries, browsers, devices), the zone's DNS
-queries, the watchdog Worker, and Email Routing.
+that are the Web Analytics for every site with the beacon (visits, page views, Core Web
+Vitals at p75, page load time, top pages, referrers, countries, browsers, devices), the
+zone's DNS queries, the watchdog Worker, and Email Routing.
 
 Grafana queries Cloudflare's GraphQL analytics API live through the Infinity plugin (data
-source uid `cloudflare`). Nothing is stored, so history ends where Cloudflare's does: 31 days
-for traffic and DNS, 184 for Web Analytics. The zones are on the Free plan, which leaves out
-some fields: edge time to first byte, referrer host and ASN on HTTP requests, and firewall
-events. Queries that name one fail with "does not have access to the field". Referrers come
-from Web Analytics instead.
+source uid `cloudflare`). Nothing is stored, so the history ends where Cloudflare's history
+ends: 31 days for traffic and DNS, 184 days for Web Analytics. The zones are on the Free
+plan. That plan leaves out some fields: edge time to first byte, referrer host and ASN on
+HTTP requests, and firewall events. A query that names one of them fails with "does not have
+access to the field". Referrers come from Web Analytics instead.
 
 The data source reads a read-only user token, `homelab-grafana-read`, from the
-`grafana-cloudflare` ExternalSecret, mounted as a file. The Grafana network policy allows
-egress to `api.cloudflare.com`.
+`grafana-cloudflare` ExternalSecret. The token is mounted as a file. The Grafana network
+policy allows egress to `api.cloudflare.com`.
 
 ## Stack
 
 [![Exporters for the cluster, NAS, UniFi, Proxmox hosts, PBS, Postgres, OpenCost and the electricity price feed Prometheus, Alloy ships logs and Traefik traces to Loki and Tempo, and Grafana reads those three plus GitHub, Cloudflare and Argo CD deploy markers directly](../../assets/diagrams/observability-signals.svg)](../../assets/diagrams/observability-signals.svg)
 
-Grafana reads Prometheus, Loki and Tempo as data sources, and GitHub and Cloudflare directly
-([GitHub](#github), [Cloudflare](#cloudflare)). A walkthrough of the stack and the
-SPOG dashboard is in [The observability stack I actually run](https://blog.nordbye.it/blog/observability-stack/).
+Grafana reads Prometheus, Loki and Tempo as data sources. It reads GitHub and Cloudflare
+directly ([GitHub](#github), [Cloudflare](#cloudflare)). The blog post
+[The observability stack I actually run](https://blog.nordbye.it/blog/observability-stack/)
+describes the stack and the SPOG dashboard.
 
 | Component | Role | Retention | Defined in |
 |---|---|---|---|
@@ -168,29 +175,30 @@ SPOG dashboard is in [The observability stack I actually run](https://blog.nordb
 | OpenCost | cost allocation from Prometheus usage, cost UI ([costs.md](costs.md)) | none | `k8s/talos/infra/opencost/` |
 | Falco | runtime security events, modern eBPF driver | none | `k8s/talos/infra/falco/values.yaml` |
 
-Traces take one extra hop: Traefik exports to Alloy, which decides per whole trace what to
-keep and strips noisy attributes before Tempo stores it
+Traces take one extra hop. Traefik exports to Alloy. Alloy decides per whole trace what to
+keep, and strips noisy attributes, before Tempo stores the trace
 ([`../network/traefik.md`](../network/traefik.md#tracing-and-metrics)).
 
-logeverylift continues Traefik's trace from the `traceparent` header: its `@vercel/otel`
+logeverylift continues Traefik's trace from the `traceparent` header. Its `@vercel/otel`
 setup (`src/instrumentation.ts` in the app repo) adds spans for each Next.js route and
-render, outgoing `fetch`, and every Postgres query, and pushes them over OTLP/HTTP to
+render, each outgoing `fetch`, and every Postgres query. It pushes them over OTLP/HTTP to
 `alloy.monitoring:4318` (set by `OTEL_EXPORTER_OTLP_ENDPOINT` in
 `k8s/talos/apps/logeverylift/app.yaml`). Query text keeps its `$n` placeholders, never the
-values. The logeverylift Traces dashboard charts them with TraceQL metrics: request rate,
-latency and failures by route, Postgres queries by statement and the connection pool wait,
-outgoing calls by host, and tables of the slowest and failed requests that open the full
-waterfall. Tempo's generator keeps client spans as well as server spans
-(`filter_server_spans: false` in `k8s/talos/infra/tempo/values.yaml`); without that the
-Postgres and outgoing-call panels stay empty. For anything else, Explore on Tempo with
-`{ resource.service.name = "logeverylift" }`.
+values. The logeverylift Traces dashboard charts the spans with TraceQL metrics: request
+rate, latency and failures by route, Postgres queries by statement and the connection pool
+wait, outgoing calls by host, and tables of the slowest and failed requests. The tables open
+the full waterfall. Tempo's generator keeps client spans as well as server spans
+(`filter_server_spans: false` in `k8s/talos/infra/tempo/values.yaml`). Without that setting,
+the Postgres and outgoing-call panels stay empty. For anything else, use Explore on Tempo
+with `{ resource.service.name = "logeverylift" }`.
 
-An app's spans can reach a different Alloy pod than Traefik's for the same trace, so a
-tail-sampling drop that matches on Traefik's attributes never removes them. The blackbox
-probe of logeverylift.com therefore leaves a small app-only trace every minute; the
-monitoring-UI drop is unaffected, since no instrumented app serves those hosts.
-Traces whose `http.route` is `/api/health` are dropped: the kubelet's readiness and
-liveness probes call it straight on the pod, bypassing Traefik, several times a minute.
+For the same trace, an app's spans can reach a different Alloy pod than Traefik's spans. A
+tail-sampling drop that matches on Traefik's attributes therefore never removes the app's
+spans. For this reason, the blackbox probe of logeverylift.com leaves a small app-only trace
+every minute. The monitoring-UI drop is not affected, because no instrumented app serves
+those hosts. Traces whose `http.route` is `/api/health` are dropped. The kubelet's readiness
+and liveness probes call that route directly on the pod, several times a minute, and bypass
+Traefik.
 
 [![Traefik sends OTLP traces to Alloy, whose tail sampling drops the monitoring UIs and blackbox probes and whose transform strips per-process, per-connection and client-IP attributes, before Tempo stores them for Grafana](../../assets/diagrams/observability-traces.svg)](../../assets/diagrams/observability-traces.svg)
 
@@ -204,27 +212,27 @@ Prometheus rules → Alertmanager → Discord. Routing (`k8s/talos/infra/kube-pr
   Worker every 5 min.
 - `severity=critical` → `discord`, with resolved messages.
 - namespace `proxmox` or `synology` → `discord-event`: one-shot pushes from Proxmox, PBS and
-  DSM, no resolved message (they expire, they do not resolve).
+  DSM, no resolved message. These alerts expire. They do not resolve.
 - namespace `reelsmith` → `discord` at every severity.
 - everything else is dropped.
 
-Falco does not go through Alertmanager: falcosidekick posts to Discord directly at priority
+Falco does not go through Alertmanager. falcosidekick posts to Discord directly at priority
 `notice` and above.
 
-During an internet outage Discord is unreachable; Alertmanager retries and delivers once the
-line is back.
+During an internet outage, Discord is not reachable. Alertmanager retries, and delivers when
+the line is back.
 
 The watchdog Worker (`terraform/cloudflare/watchdog`, served at `watchdog.bigd.no`) runs
 on Cloudflare and posts to the same Discord channel directly, as `[WATCHDOG] DOWN` and
 `[WATCHDOG] UP`:
 
 - no heartbeat for 15 min: the cluster, Prometheus, Alertmanager or the home line is down;
-- a public site failing three one-minute checks in a row, seen from the internet.
+- a public site fails three one-minute checks in a row, as seen from the internet.
 
 To test the heartbeat path without silencing other alerts, add an Alertmanager silence
 on `alertname=Watchdog` for 25 minutes (`amtool silence add alertname=Watchdog
---duration=25m` in the alertmanager container): the Worker posts DOWN about 15 minutes
-after the last heartbeat and UP within minutes of the silence expiring. The Worker's
+--duration=25m` in the alertmanager container). The Worker posts DOWN about 15 minutes
+after the last heartbeat, and UP within minutes after the silence expires. The Worker's
 state is in its KV namespace, keys `heartbeat` and `state:heartbeat`.
 
 Operating notes for the Worker (heartbeat URL rotation, the site list) are in
@@ -232,16 +240,16 @@ Operating notes for the Worker (heartbeat URL rotation, the site list) are in
 
 ## User journeys
 
-The probes above prove a page answers. A user journey proves a person can still use it:
-k6's browser module drives Chromium through the same steps as the app's own e2e suite, so a
-broken sign-in, a page that no longer renders or a write that stops saving fails while every
-probe stays green.
+The probes above prove that a page answers. A user journey proves that a person can still
+use it. k6's browser module drives Chromium through the same steps as the app's own e2e
+suite. A broken sign-in, a page that no longer renders, or a write that stops saving then
+fails the journey while every probe stays green.
 
 The logeverylift journey runs every 10 minutes from `k8s/talos/infra/synthetics/` as the
-user `synthetic@nordbye.it`, through public DNS and Cloudflare like a visitor. Each step is a
-k6 check, written to Prometheus as `k6_checks_rate{journey, check}` (1 pass, 0 fail), next to
-the run time and Core Web Vitals per page (`k6_browser_web_vital_*`). The dashboard User
-journeys shows the last result per step and the history.
+user `synthetic@nordbye.it`. It goes through public DNS and Cloudflare, like a visitor. Each
+step is a k6 check, written to Prometheus as `k6_checks_rate{journey, check}` (1 pass, 0
+fail). The run time and the Core Web Vitals per page (`k6_browser_web_vital_*`) are written
+next to it. The dashboard User journeys shows the last result per step and the history.
 
 | Step | Proves |
 |---|---|
@@ -253,20 +261,21 @@ journeys shows the last result per step and the history.
 | `unlog-set` | tapping again saves the undo, so the run leaves no data |
 
 The synthetic user needs an active program whose first exercise has sets (program "Synthetic
-check", imported from the Programs screen) and the onboarding tutorial dismissed, or the
-tutorial covers every page. It lives in prod data: rename or delete its program and the
-journey fails at `open-workout`.
+check", imported from the Programs screen). It also needs the onboarding tutorial dismissed,
+or the tutorial covers every page. The user lives in prod data. If you rename or delete its
+program, the journey fails at `open-workout`.
 
-logeverylift allows 10 sign-ins per 15 minutes per client IP, and the journey reaches it
-from the home line through Cloudflare, so it shares that budget with everyone at home. A
-run uses one; running it by hand in a loop locks the household out for 15 minutes. A failed run
-that stopped between the two taps leaves the set logged; the next run un-logs it first.
+logeverylift allows 10 sign-ins per 15 minutes per client IP. The journey reaches it from
+the home line through Cloudflare, so it shares that budget with everyone at home. A run uses
+one sign-in. If you run it by hand in a loop, it locks the household out for 15 minutes. A
+failed run that stopped between the two taps leaves the set logged. The next run un-logs it
+first.
 
-To add a journey, add a script under `scripts/`, a CronJob that runs it, and keep the
-`journey` tag unique; the alert rules cover every journey by label.
+To add a journey, add a script under `scripts/` and a CronJob that runs it, and keep the
+`journey` tag unique. The alert rules cover every journey by label.
 
 `kube-prometheus-stack/tests/user-journey-failing.yaml` runs the journey with a wrong
-password under its own tag and fires `UserJourneyFailing` in about 20 minutes, end to end.
+password under its own tag. It fires `UserJourneyFailing` in about 20 minutes, end to end.
 
 ## Sources
 
@@ -292,16 +301,16 @@ password under its own tag and fires `UserJourneyFailing` in about 20 minutes, e
 
 ## Alerts
 
-Every rule links to its section in [runbooks.md](runbooks.md); postmortems go in
+Every rule links to its section in [runbooks.md](runbooks.md). Postmortems go in
 [incidents.md](incidents.md).
 
-Rules live in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`, except reelsmith's,
-which live in `k8s/talos/apps/reelsmith/monitoring.yaml` and reach Discord at every severity.
-Everywhere else only critical reaches Discord.
+Rules live in `k8s/talos/infra/kube-prometheus-stack/homelab-alerts.yaml`. The exception is
+reelsmith's rules. They live in `k8s/talos/apps/reelsmith/monitoring.yaml` and reach Discord
+at every severity. Everywhere else, only critical reaches Discord.
 
-The chart's own default rules also load, and their critical ones reach Discord like any
-other. The etcd and Alertmanager groups link to one runbook section each
-([etcd](runbooks.md#etcd), [Alertmanager](runbooks.md#alertmanager)); the other groups
+The chart's own default rules also load. Their critical rules reach Discord like any other.
+The etcd and Alertmanager groups link to one runbook section each
+([etcd](runbooks.md#etcd), [Alertmanager](runbooks.md#alertmanager)). The other groups
 keep the chart's upstream runbook links.
 
 | Alert | Fires when | Severity |
@@ -338,48 +347,48 @@ keep the chart's upstream runbook links.
 
 ## Falco
 
-Falco runs as a DaemonSet on all six nodes with the `modern_ebpf` driver, the only one
-that works on Talos since it needs no kernel headers
+Falco runs as a DaemonSet on all six nodes with the `modern_ebpf` driver. That driver is the
+only one that works on Talos, because it needs no kernel headers
 ([`values.yaml`](../../../k8s/talos/infra/falco/values.yaml), chart `falco` 9.1.0 in
 [`kustomization.yaml`](../../../k8s/talos/infra/falco/kustomization.yaml)). The only event
-source is syscalls; no plugins are loaded, so there is no Kubernetes audit log source.
+source is syscalls. No plugins are loaded, so there is no Kubernetes audit log source.
 
 Rules come from two places:
 
-- the upstream stable ruleset, `falco-rules:5`, which falcoctl pulls from ghcr.io in an
-  init container and a sidecar re-checks every 168 h (chart defaults). Falco does not start
-  without it, which is why its CiliumNetworkPolicy allows egress to the world on 443;
+- the upstream stable ruleset, `falco-rules:5`. falcoctl pulls it from ghcr.io in an init
+  container, and a sidecar re-checks it every 168 h (chart defaults). Falco does not start
+  without it. This is why its CiliumNetworkPolicy allows egress to the world on 443;
 - `customRules.tuning.yaml` in `values.yaml`, rendered into a ConfigMap. Reloader restarts
   the DaemonSet when it changes.
 
-Events go to falcosidekick (two replicas), which posts to Discord at priority `notice` and
+Events go to falcosidekick (two replicas). It posts to Discord at priority `notice` and
 above. The webhook URL comes from the ExternalSecret `falco-falcosidekick-discord`
-([`falcosidekick-discord-secret.yaml`](../../../k8s/talos/infra/falco/falcosidekick-discord-secret.yaml)),
-and a kustomize patch puts the Reloader annotation on the falcosidekick Deployment so a new
-URL is picked up. The web UI is off. Falco emits its own metrics on a 15 min stats
+([`falcosidekick-discord-secret.yaml`](../../../k8s/talos/infra/falco/falcosidekick-discord-secret.yaml)).
+A kustomize patch puts the Reloader annotation on the falcosidekick Deployment, so that it
+picks up a new URL. The web UI is off. Falco emits its own metrics on a 15 min stats
 interval and exposes them to Prometheus through a ServiceMonitor.
 
 ### Writing an exemption
 
-Tune through the hooks the upstream rules already consume, never by copying and editing an
-upstream rule, so a ruleset update keeps the change:
+Tune through the hooks that the upstream rules already consume, so that a ruleset update
+keeps the change. Never copy and edit an upstream rule. The hooks are:
 
-- a macro the rule references (`known_drop_and_execute_activities`,
+- a macro that the rule references (`known_drop_and_execute_activities`,
   `user_known_stand_streams_redirect_activities`, `allowed_clear_log_files`), overridden
   with `condition: replace`;
-- a list the rule references (`known_drop_and_execute_containers`,
+- a list that the rule references (`known_drop_and_execute_containers`,
   `read_sensitive_file_images`), extended with `items: append`;
-- the rule itself with `condition: append` and an `and not (...)` clause, when the only
-  hook is a list matched on something too broad, such as a bare process name.
+- the rule itself, with `condition: append` and an `and not (...)` clause. Use this when
+  the only hook is a list matched on something too broad, such as a bare process name.
 
-Scope every exemption to the process, image and path that cause it, so the same behaviour
-elsewhere still alerts. `replace` on a macro drops whatever upstream put in it, so the new
-condition has to carry the full intent.
+Scope every exemption to the process, image and path that cause it. The same behaviour
+elsewhere then still alerts. `replace` on a macro drops everything that upstream put in it.
+The new condition must therefore carry the full intent.
 
-Some containers show up as a generic upstream image. The verksted dind sidecar is seen as
-`docker.io/library/docker`, so its exemptions go through the `verksted_dind` macro, which
-also pins `k8s.ns.name=verksted`. An exemption on that image without the namespace would
-exempt every `docker` container in the cluster.
+Some containers appear as a generic upstream image. Falco sees the verksted dind sidecar as
+`docker.io/library/docker`. Its exemptions therefore go through the `verksted_dind` macro,
+which also pins `k8s.ns.name=verksted`. An exemption on that image without the namespace
+would exempt every `docker` container in the cluster.
 
 ### Expected noise
 
@@ -394,11 +403,11 @@ The current exemptions cover:
 | clear log files | `containerd` in the verksted dind sidecar, under its own snapshot root only |
 | packet socket in a container | `cilium-agent` in the Cilium image; `dockerd` in the verksted dind sidecar |
 
-verksted is exempted at the image level because its sessions run arbitrary code as root;
-the rules that watch the container boundary (escape, kernel module load, `release_agent`,
-debugfs) stay armed for it. The verksted namespace runs a privileged dind container; the
+verksted is exempted at the image level, because its sessions run arbitrary code as root.
+The rules that watch the container boundary (escape, kernel module load, `release_agent`,
+debugfs) stay armed for it. The verksted namespace runs a privileged dind container. The
 comment in its [`namespace.yaml`](../../../k8s/talos/apps/verksted/namespace.yaml) says
-Falco will flag it, and no exemption targets it. See
+that Falco will flag it. No exemption targets it. See
 [`../../apps/verksted/README.md`](../../apps/verksted/README.md).
 
 ## Configured outside Git
@@ -416,13 +425,14 @@ Falco will flag it, and no exemption targets it. See
 
 ## Constraints
 
-- CoreDNS forwards to the node resolver, which is the gateway `10.3.10.1`, so trouble on the
-  gateway or ISP DNS also breaks in-cluster name resolution for external names.
-  This is deliberate: a public fallback would answer `local.bigd.no` with NXDOMAIN and skip the
-  gateway's filtering, and CoreDNS spreads queries across upstreams unless told otherwise.
+- CoreDNS forwards to the node resolver, which is the gateway `10.3.10.1`. A fault on the
+  gateway or the ISP DNS therefore also breaks in-cluster name resolution for external names.
+  This is deliberate. A public fallback would answer `local.bigd.no` with NXDOMAIN and skip
+  the gateway's filtering, and CoreDNS spreads queries across upstreams unless told otherwise.
 - Grafana's app plugins (the Drilldown apps and Advisor) are pinned under `grafana.plugins`
-  in `k8s/talos/infra/kube-prometheus-stack/values.yaml` and bumped by Renovate through
-  the `custom.grafana-plugins` datasource. A pinned version not yet on Grafana's volume is
-  downloaded from grafana.com before startup, so a failed download, or a version that needs a
-  newer Grafana, keeps the pod from starting; roll the plugin back or bump the image with it.
-  `preinstall_auto_update` is off, so nothing else Grafana preinstalls updates on its own.
+  in `k8s/talos/infra/kube-prometheus-stack/values.yaml`. Renovate bumps them through the
+  `custom.grafana-plugins` datasource. Grafana downloads a pinned version that is not yet on
+  its volume from grafana.com before startup. A failed download, or a version that needs a
+  newer Grafana, therefore stops the pod from starting. Roll the plugin back, or bump the
+  image with it. `preinstall_auto_update` is off, so nothing else that Grafana preinstalls
+  updates on its own.

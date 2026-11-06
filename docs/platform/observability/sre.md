@@ -1,7 +1,8 @@
 # Reliability practice
 
-How the homelab is kept running: what is measured, what pages, what to do when something
-pages, and how a week is reviewed. Each piece has its own page; this one shows how they fit.
+This page describes how the homelab stays up: what is measured, what pages, what to do when
+something pages, and how a week is reviewed. Each piece has its own page. This page shows
+how they fit together.
 
 [![Signals and Pyrra rules feed Prometheus; critical alerts page Discord and lead to a runbook and a fix in Git, warnings go to the weekly review, and postmortem actions and review tuning also land as Git changes that Argo CD syncs with a deploy marker](../../assets/diagrams/sre-loop.svg)](../../assets/diagrams/sre-loop.svg)
 
@@ -18,24 +19,26 @@ pages, and how a week is reviewed. Each piece has its own page; this one shows h
 
 ## What pages
 
-An alert is `critical`, and so reaches Discord, only when someone has to act within hours:
-something users can see is down, data is at risk, or a safety net (backups, the alerting
-path itself) has stopped. Everything else is `warning`: recorded in Prometheus, never sent,
-and read in the weekly review. A false positive is fixed by tuning the rule or its upstream
-macro, not by raising the threshold until it is quiet.
+An alert is `critical` only when someone has to act within hours. Only this severity reaches
+Discord. The cases are: something that users can see is down, data is at risk, or a safety
+net has stopped (backups, or the alerting path itself). Everything else is `warning`.
+Prometheus records a warning, never sends it, and the weekly review reads it. Fix a false
+positive by tuning the rule or its upstream macro. Do not raise the threshold until the
+alert is quiet.
 
-A new alert needs a section in [runbooks.md](runbooks.md), a `runbook_url` pointing at it,
+A new alert needs a section in [runbooks.md](runbooks.md), a `runbook_url` that points to it,
 and a row in the alert table in [README.md](README.md#alerts).
 
 ## When something pages
 
 1. Open the runbook link in the Discord message and follow it.
-2. Mitigate before diagnosing. For a bad release, revert the promotion commit or roll the
-   app's image back in Git and let Argo CD sync; a restart is fine when the runbook says so.
-3. On Homelab-SPOG, look for a deploy marker shortly before the first symptom. Hovering it
-   names the app and the commit.
+2. Mitigate first, then diagnose. For a bad release, revert the promotion commit or roll
+   back the app's image in Git, and let Argo CD sync. A restart is acceptable when the
+   runbook says so.
+3. On Homelab-SPOG, look for a deploy marker a short time before the first symptom. Hover
+   it to see the app and the commit.
 4. If the event meets the criteria in [incidents.md](incidents.md), write the postmortem
-   there, ending with actions that make the next occurrence shorter or impossible.
+   there. End it with actions that make the next occurrence shorter or impossible.
 
 ## Weekly review
 
@@ -53,7 +56,8 @@ Fifteen minutes, once a week. The queries run in Grafana's Explore against Prome
 
 ## Memory limits
 
-Set a container's memory limit from its 7-day peak working set plus room for its own spikes,
-not from its idle use. Query engines spike well above their steady state: a heavy Grafana
-dashboard adds over 100Mi, and a Tempo search 500Mi or more. The request matches the steady
-working set, so the scheduler places the pod on a node that really has the memory.
+Set a container's memory limit from its 7-day peak working set, plus room for its own
+spikes. Do not set it from its idle use. Query engines spike far above their steady state: a
+heavy Grafana dashboard adds more than 100Mi, and a Tempo search adds 500Mi or more. The
+request matches the steady working set, so the scheduler places the pod on a node that has
+the memory.
