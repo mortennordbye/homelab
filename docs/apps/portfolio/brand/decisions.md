@@ -640,6 +640,12 @@ the one action that matters on a screen. The toggles are brass.
 
 ## Logbook
 
+**2026-11-06.** The repo shelf in `/fun` breaks §2 on purpose. Its twelve objects first
+followed the four materials and read as a row of brass curios nobody could match to a project.
+The owner chose the icons' own colours instead: each object is its repo's icon made physical,
+with emissive parts where the icon glows. The exception covers that shelf only. The rules for
+it are in `fun-room.md` under "The repo shelf".
+
 **2026-08-29.** The cabinet's selection cue. A 3 cm nudge towards the camera was
 the whole answer to "which one did I press", and at the distance that object is
 framed from, it is invisible; the chips above the render carry the state, but
