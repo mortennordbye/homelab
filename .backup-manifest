@@ -33,7 +33,7 @@ terraform/cloudflare/watchdog/terraform.tfvars
 terraform/unifi/dns/terraform.tfvars
 terraform/unifi/network/terraform.tfvars
 
-# Local device API access (key itself lives in the macOS Keychain, not here)
+# Local device API access (key itself lives in Bitwarden Secrets Manager, not here)
 hue.env
 
 # Local AI work and design studies. One line per depth: globs match files only

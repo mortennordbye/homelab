@@ -171,11 +171,11 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 
 ## Secrets
 
-### Laptop keys still in the macOS Keychain
-- **What:** move the keys that agents read on a workstation from the Keychain into the Bitwarden `Homelab` project, read through `bws-token`. The keys: the Hue bridge key (`hue.env`), the Home Assistant token (`ha-api` skill, item `home-assistant-mcp`), and the Quafu token (item `quafu`).
-- **Why deferred:** the agent token and `bws-token` shipped first. The Hue key has no Keychain item on the current Mac, so it must be paired again, not copied.
-- **Unblock:** for Hue, a press of the bridge link button while the create command in `docs/platform/secrets/README.md#device-credentials` runs. Copy HA and Quafu from the Keychain on a machine that still has them, or create new ones.
-- **Where:** `hue.env` (gitignored), `ai/skills/ha-api/ha-get`, `ai/skills/ha-api/SKILL.md`, `docs/platform/post-quantum/shor.md`, `docs/platform/secrets/README.md`.
+### Hue bridge key has no Secrets Manager item
+- **What:** pair a new Hue bridge key into the Bitwarden `Homelab` project and put its UUID in `hue.env`. The Home Assistant and Quafu tokens already moved.
+- **Why deferred:** the current Mac has no Keychain item for the Hue key, so it cannot be copied. A new key needs a press of the bridge link button.
+- **Unblock:** press the round link button while the create command in `docs/platform/secrets/README.md#device-credentials` runs.
+- **Where:** `hue.env` (gitignored), `docs/platform/secrets/README.md`.
 
 ## Cluster / infra
 

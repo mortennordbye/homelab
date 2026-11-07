@@ -64,7 +64,7 @@ the circuit as the chip transpiled it.
 
 The hardware is [Quafu](https://quafu.baqis.ac.cn), the quantum cloud of the Beijing Academy
 of Quantum Information Sciences. Sign-up needs an email and a phone number. A Norwegian
-number works. The API token is in the macOS Keychain as service `quafu`. The Makefile passes
+number works. The API token is the Secrets Manager item `laptop-quafu-api-token`. The Makefile passes
 it to the container as `QUAFU_TOKEN`.
 
 A free account can submit only to ScQ-P5 (5 qubits) and the ScQ-Sim10 simulator. It gets
