@@ -49,10 +49,9 @@ spec:
     - name: github
       cosign:
         keyless:
+          # One identity only: Kyverno rejects a list with "multiple identities are not supported".
           identities:
-            - subject: https://github.com/mortennordbye/homelab/.github/workflows/build-portfolio.yaml@refs/heads/main
-              issuer: https://token.actions.githubusercontent.com
-            - subject: https://github.com/mortennordbye/homelab/.github/workflows/build-blog.yaml@refs/heads/main
+            - subjectRegExp: ^https://github\.com/mortennordbye/homelab/\.github/workflows/build-(portfolio|blog)\.yaml@refs/heads/main$
               issuer: https://token.actions.githubusercontent.com
         ctlog:
           url: https://rekor.sigstore.dev
