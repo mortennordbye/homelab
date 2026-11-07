@@ -715,7 +715,7 @@ export function HouseDevices({ onInspect }: { onInspect: (hw: Inspected) => void
         </Spot>
       </Inspectable>
       <Inspectable hw={located(HOUSE.climate, "Bedroom, over the bed")} onInspect={onInspect}>
-        <Spot position={at(4.45, 1.5, 2.695)} rotation={[0, Math.PI, 0]} hit={[0.07, 0.07, 0.03]}>
+        <Spot position={at(5.0, 0.9, 2.695)} rotation={[0, Math.PI, 0]} hit={[0.07, 0.07, 0.03]}>
           <AqaraClimate position={ORIGIN} />
         </Spot>
       </Inspectable>
