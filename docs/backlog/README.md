@@ -216,8 +216,8 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 
 ### Kubernetes 1.37 on Genesis
 - **What:** Genesis runs Talos v1.14.1 with Kubernetes v1.36.5. Talos 1.14 supports Kubernetes up to 1.37, so only the Kubernetes target remains to raise, with the two-phase flow.
-- **Why deferred:** The released Cilium (1.20.2, tested to 1.36; 1.37 only on 1.21 pre-releases), cert-manager (v1.21.2) and Argo CD (3.5.3) do not support Kubernetes 1.37 yet. KEDA 2.20.2 is tested only to 1.35, and 2.21.0 is out and not checked yet.
-- **Unblock:** once Cilium 1.21 is GA and cert-manager and Argo CD list 1.37, bump those first, then raise `kubernetes_version`. That round probably also needs the `talos_config_contract` entry above and the talos provider at 0.12.0. Follow `docs/platform/cluster/talos-upgrade.md`.
+- **Why deferred:** Cilium supports 1.37 only on 1.21 pre-releases, and cert-manager 1.21 lists Kubernetes 1.33 to 1.36. Argo CD 3.6 tests on 1.37. Check the KEDA 2.21 test matrix in the same round.
+- **Unblock:** once Cilium 1.21 is GA and a cert-manager release lists 1.37, bump those and Argo CD to 3.6 first, then raise `kubernetes_version`. That round probably also needs the `talos_config_contract` entry above and the talos provider at 0.12.0. Follow `docs/platform/cluster/talos-upgrade.md`.
 - **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/{terraform.tfvars,upgrade-k8s.tf}`, `k8s/talos/infra/{cilium,cert-manager,argocd,keda}/`, `docs/platform/cluster/talos-upgrade.md`.
 
 ### UniFi gateway settings (`usg`) are still console-only
