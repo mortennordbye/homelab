@@ -12,7 +12,7 @@ install and the policies live in
 | `pod-security-baseline` | Enforce | the baseline Pod Security Standard: no privileged containers, host namespaces or hostPath |
 | `pod-security-restricted` | Enforce | the restricted Pod Security Standard: non-root, no privilege escalation, capabilities dropped, `RuntimeDefault` seccomp |
 | `require-requests-limits` | Enforce | every container sets CPU and memory requests and a memory limit |
-| `verify-first-party-images` | Audit, `stage-portfolio` only | the portfolio image has SLSA provenance signed by its build workflow |
+| `verify-first-party-images` | Audit, portfolio and blog, stage and prod | the portfolio and blog images have SLSA provenance signed by their build workflow |
 
 The Pod rules also cover Deployments, StatefulSets, DaemonSets, Jobs and CronJobs through
 Kyverno's autogen. Both Pod Security policies skip `kube-system`, `falco`,
@@ -52,10 +52,10 @@ spec, volumes included.
 
 ## Image provenance
 
-[![build-portfolio pushes the image to GHCR and signs provenance and an SBOM through Sigstore; Kargo and Argo CD promote the tag; a new Pod goes through the API server to verify-first-party-images, which reads the attestations from GHCR and writes pass or fail to a PolicyReport that reaches the SPOG dashboard through Policy Reporter and Prometheus](../../assets/diagrams/policy-provenance.svg)](../../assets/diagrams/policy-provenance.svg)
+[![build-portfolio or build-blog pushes the image to GHCR and signs provenance through Sigstore; Kargo and Argo CD promote the tag; a new Pod goes through the API server to verify-first-party-images, which reads the attestations from GHCR and writes pass or fail to a PolicyReport that reaches the SPOG dashboard through Policy Reporter and Prometheus](../../assets/diagrams/policy-provenance.svg)](../../assets/diagrams/policy-provenance.svg)
 
 `build-portfolio.yaml` attests SLSA provenance and an SPDX SBOM for each image it pushes.
-It uses `actions/attest` through Sigstore's public instance. The attestations are stored
+`build-blog.yaml` attests SLSA provenance only. Both use `actions/attest` through Sigstore's public instance. The attestations are stored
 in GHCR next to the image, under the `sha256-<digest>` fallback tag, because GHCR has no
 referrers API. Check one by hand:
 

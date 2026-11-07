@@ -17,8 +17,14 @@ spec:
     timeoutSeconds: 15
   matchConstraints:
     namespaceSelector:
-      matchLabels:
-        kubernetes.io/metadata.name: stage-portfolio
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - portfolio
+            - stage-portfolio
+            - blog
+            - stage-blog
     resourceRules:
       - apiGroups:
           - ""
@@ -30,6 +36,7 @@ spec:
           - pods
   matchImageReferences:
     - glob: ghcr.io/mortennordbye/homelab/portfolio*
+    - glob: ghcr.io/mortennordbye/homelab/blog*
   validationConfigurations:
     mutateDigest: false
     verifyDigest: false
@@ -44,6 +51,8 @@ spec:
         keyless:
           identities:
             - subject: https://github.com/mortennordbye/homelab/.github/workflows/build-portfolio.yaml@refs/heads/main
+              issuer: https://token.actions.githubusercontent.com
+            - subject: https://github.com/mortennordbye/homelab/.github/workflows/build-blog.yaml@refs/heads/main
               issuer: https://token.actions.githubusercontent.com
         ctlog:
           url: https://rekor.sigstore.dev

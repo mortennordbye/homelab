@@ -30,11 +30,11 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** a smart plug or meter on the three hosts, read for one week that includes night transcodes. The formula is in `docs/platform/observability/costs.md`.
 - **Where:** `k8s/talos/infra/opencost/values.yaml` (`customPricing`), `docs/platform/observability/costs.md`.
 
-### Image provenance beyond the stage portfolio
-- **What:** `verify-first-party-images` audits one image in one namespace. Extend attestation to the blog, headroom, innestemme, logeverylift, reelsmith and verksted builds. Widen the policy to prod and to those images, with each repo's workflow as an identity. Then decide on `Deny`.
-- **Why deferred:** each matched Pod takes 4 to 5 seconds to verify. That is about 5 of the 26 seconds of a stage wake from zero, and whether KEDA apps can accept that is a decision. Prod needs an attested image first, and portfolio's prod promotions wait on a manual merge.
-- **Unblock:** merge a portfolio prod promotion at or after 0.0.743. Add the attest steps from `build-portfolio.yaml` to the other builds. Decide `Deny` per app. Before `Deny`, test what a GHCR or Sigstore outage does to a wake.
-- **Where:** `k8s/talos/infra/kyverno/policies/verify-first-party-images.yaml`, `.github/workflows/build-portfolio.yaml`, `.github/workflows/build-blog.yaml`, each app repo's build workflow, `docs/platform/policy/README.md`.
+### Image provenance beyond the portfolio and blog
+- **What:** `verify-first-party-images` audits the portfolio and blog images in stage and prod. Extend attestation to the headroom, innestemme, logeverylift, reelsmith and verksted builds, widen the policy to them with each repo's workflow as an identity, then decide on `Deny`.
+- **Why deferred:** each matched Pod takes 4 to 5 seconds to verify, about 5 of the 26 seconds of a wake from zero. Whether a KEDA app accepts that under `Deny` is a decision per app. reelsmith turns provenance off on purpose, because its GHCR prune deletes untagged versions and the attestation with them.
+- **Unblock:** add the attest step from `build-blog.yaml` to each app repo's build. For reelsmith, first teach the prune to keep attestations. Decide `Deny` per app. Before `Deny`, test what a GHCR or Sigstore outage does to a wake.
+- **Where:** `k8s/talos/infra/kyverno/policies/verify-first-party-images.yaml`, each app repo's build workflow, `docs/platform/policy/README.md`.
 
 ### Rootless images for the media stack
 - **What:** replace the linuxserver images (sonarr, radarr, radarr-4k, bazarr, bazarr-4k, plex, tautulli, and qBittorrent and Prowlarr in the gluetun pod) with images that start as non-root, then drop them from `policyexception-media-root.yaml`.
