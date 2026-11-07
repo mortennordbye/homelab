@@ -1,4 +1,4 @@
-# How a portfolio image gets signed and verified. See platform/policy/README.md.
+# How a portfolio or blog image gets signed and verified. See platform/policy/README.md.
 direction: down
 vars: {
   di: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg
@@ -22,12 +22,12 @@ classes: {
 
 (** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
 
-build: "build-portfolio\npushes the image, attests\nprovenance and an SBOM" {class: card; icon: ${ify}/logos/github-actions.svg}
+build: "build-portfolio, build-blog\npush the image, attest\nprovenance (and an SBOM)" {class: card; icon: ${ify}/logos/github-actions.svg}
 sigstore: "Sigstore public instance\nsigning certificate,\ntransparency log" {class: card; icon: ${ify}/tabler/certificate.svg?color=%23a1ada3&height=64}
 ghcr: "GHCR\nimage, plus attestations under\nthe sha256-<digest> tag" {class: card; icon: ${di}/github-light.svg}
 kargo: "Kargo and Argo CD\npromote and sync the tag" {class: card; icon: ${di}/argo-cd.svg}
 api: "API server\nnew Pod" {class: card; icon: ${k8s}/pod.svg}
-policy: "verify-first-party-images\nAudit, stage-portfolio only" {class: card; icon: ${kyverno}}
+policy: "verify-first-party-images\nAudit, portfolio and blog" {class: card; icon: ${kyverno}}
 report: "PolicyReport" {class: card; icon: ${k8s}/crd.svg}
 grafana: "Grafana SPOG\nPolicy (Kyverno) row" {class: card; icon: ${di}/grafana.svg}
 
