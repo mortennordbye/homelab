@@ -7,7 +7,8 @@
 # container reaches LM Studio at host.docker.internal:1234 (provided by
 # Docker Desktop for Mac automatically).
 
-FROM python:3.15-slim@sha256:e97b88e416c3c01eb427b21fd8cd3ebf006e6ee38afcfcc3cae1c54ee2ab0a75
+# 3.14: onnxruntime (pulled in by chromadb) has no cp315 wheels.
+FROM python:3.14-slim@sha256:af8a5aa14780025dbfbcfbc81bd8a91ebd87711dd5b0f48ed71090949dd7cb1d
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

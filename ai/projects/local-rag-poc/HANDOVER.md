@@ -17,7 +17,7 @@ A 100% local, offline hybrid-retrieval RAG POC for legal contracts and technical
 | **Chroma store** | Persisted at `./local_poc_db` with `.doc_fingerprint` sidecar. Auto-rebuilds when the corpus fingerprint (name + size + mtime) changes. |
 | **Prompt** | Strict (no outside knowledge, exact refusal string) but permits cross-source synthesis. Includes a baked-in `Document inventory:` block listing every file in the corpus. |
 | **TOP_K** | 6 per retriever. Bumped from 4 in Iteration 13 for broader queries. |
-| **Tests / eval** | Manual only. No `make eval`. This is the largest gap — see "Recommended next iteration" below. |
+| **Tests / eval** | `make eval`: document-level precision@k on 20 labelled questions plus 4 refusals (`evals/`). BM25 baseline mean P@6 = 0.500. Vector and hybrid baselines need LM Studio. |
 
 ## What just worked, what just failed
 
@@ -46,77 +46,13 @@ Last test session (Iteration 14 in `BUILD-JOURNAL.md`):
 
 **Recommendation: do (1).** It fixes retrieval AND attribution with a single change. ~20 lines in `load_and_chunk()`. (2) is a partial fix.
 
-**Caveat.** Before implementing (1), set up the eval harness (next section). Without it you don't know whether (1) regresses the queries that currently work.
-
-## Recommended next iteration — eval harness
-
-This is the BACKLOG item that has been pending since Iteration 0 and is now the bottleneck for every further change. Without measurement, fixes are guesses.
-
-**Minimum viable scope.**
-
-1. Create `evals/qa_pairs.jsonl` with 15–25 labelled questions against the 4-fixture corpus. Mix:
-   - Single-doc focused (e.g. `q: "Polaris late-payment rate?"`, `expected_contains: ["11.00%"]`).
-   - Cross-doc enumeration (e.g. `q: "list each customer with their currency"`, `expected_contains: ["FjordTech", "NOK", "Skyfall", "EUR", "Polaris", "NOK", "Havblikk", "USD"]`).
-   - Cross-doc comparison (e.g. `q: "which contract has the strictest SLA?"`, `expected_contains: ["Polaris", "99.95"]`).
-   - Out-of-corpus refusals (e.g. `q: "capital of Madagascar?"`, `expected_exact: "I do not have enough information in the provided documents to answer this."`).
-2. Add `evals/run_eval.py` that loops the QA pairs through the existing `qa` chain and scores hits.
-3. Add `make eval` target. Print per-question pass/fail and overall score.
-4. Run on the current state to establish a baseline. Save the baseline as a comment in the eval script.
-5. Then implement the chunk-context fix above. Re-run. Confirm score went up, not down.
-
-**Avoid scope creep.** Don't reach for LLM-as-judge or precision@k in the first cut. Substring/regex matching against `expected_contains` is enough to detect regressions and progress.
-
-**Where it lives.** `ai/projects/local-rag-poc/evals/`. Update docs/backlog/README.md when delivered.
-
-## BACKLOG snapshot (priority order)
-
-1. **Eval harness** (above). Blocks everything else from being measurable.
-2. **Chunk-context fix.** Resolves Iteration 14 Query 4. Cheap once eval exists.
-3. **Larger-model A/B.** `gpt-oss-20b` is already on disk — `setup-lmstudio.sh` has the swap-in instructions at the top. Likely fixes some "too literal" failures without prompt acrobatics. One-line config swap once eval exists.
-4. **Real-document corpus.** Fixtures are deliberately distinct; real corpora are more uniform → harder retrieval. Eval would surface this immediately.
-5. **Streaming responses / web UI / FastAPI wrapper.** None of this is in scope until quality is measured.
-6. **Cluster deployment.** If/when this graduates: manifests under `k8s/talos/apps/local-rag/`, LM Studio dependency replaced by an in-cluster runtime (Ollama or vLLM under `ai/local-llm/stacks/`). See repo `CLAUDE.md` for cluster conventions.
-
-## File map (operational)
-
-| File | Purpose | Touch when |
-|---|---|---|
-| `main.py` | Pipeline + REPL. Heavily commented. | Changing retrieval, chunking, prompt, or interaction. |
-| `requirements.txt` | Pinned LangChain stack. Pin the leaves you import; let the resolver pick transitives. | Adding a new langchain-* package. |
-| `Dockerfile` | `python:3.12-slim` + reqs + `main.py`. | New system deps, base image bump. |
-| `Makefile` | All commands. | New workflow target. |
-| `setup-lmstudio.sh` | Declarative LM Studio bootstrap. 3-tier download fallback. | Swapping models, adding a new runtime. |
-| `scripts/generate-samples.py` | Reportlab generator. `VARIANT` dataclass at top is the source of truth. | Adding/editing fixture contracts. |
-| `contracts/contract_*.pdf` | Committed fixtures. | Regenerate via `make sample` after editing the generator. |
-| `.env.example` | All env knobs. Copy to `.env` for local overrides. | New env-tunable. |
-| `.gitignore` | Tight scoping — `!contracts/contract_*.pdf` exception only. | Adding new tracked files in normally-ignored locations. |
-| `README.md` | User-facing docs. | User-visible behaviour or workflow change. |
-| `BUILD-JOURNAL.md` | Iteration narrative — blog material. | Major iteration completes; add new section, don't rewrite. |
-| `HANDOVER.md` (this file) | Operational handoff. | After a significant change — update "Current state" and "Open issue" sections. Don't grow other sections unless the project's shape changes. |
-
-## Conventions to follow
-
-- **Containerize everything runnable.** No native pip/node on the laptop. `make` targets wrap Docker.
-- **LM Studio runs natively on the host.** Container reaches it via `host.docker.internal:1234`. This is the one documented exception to the containerize rule.
-- **Heavily comment the WHY, not the WHAT.** Comments in `main.py` and `setup-lmstudio.sh` should explain *why* a particular flag or call exists, especially when it's a workaround. Don't restate code.
-- **Idempotent setup.** Every step in `setup-lmstudio.sh` checks before doing. Re-running must be a no-op. Same for any future eval/ingestion scripts.
-- **Pin leaves, not transitives.** See `requirements.txt` lessons (Iter 5 in journal). When pip resolves a conflict, prefer dropping the over-pin to forcing the version.
-- **Strict prompt clauses are load-bearing.** Don't loosen the "no outside knowledge" / "exact refusal string" parts. The synthesis permission added in Iter 12 is the one degree of freedom; everything else stays strict.
-- **Match repo style.** This project lives in a Homelab repo with a `CLAUDE.md` at root. Read it before making structural changes (kubernetes manifests, secrets, GitOps assumptions).
-
-## Common pitfalls (and the journal section that explains them)
-
-- **`lms get` 404s on mixed-case HF paths.** Not your typo — known CLI bug. The script's tier-3 HF curl fallback handles it. *(Journal: Iteration 4.)*
-- **Pip resolver conflicts on pinned langchain-* versions.** Don't pin transitives. *(Journal: Iteration 5.)*
-- **Refusal happens even when the answer is in the retrieved chunks.** Likely the prompt forbidding synthesis, or `RetrievalQA` stripping `source` metadata. Both fixed in Iter 12 — don't reintroduce. *(Journal: Iteration 12.)*
-- **Cross-document targeted queries fail despite the answer being in the corpus.** Document-level context loss — the chunk doesn't repeat the customer name. *(Journal: Iteration 14, also "Open issue" above.)*
-- **Editing `main.py` while a `make run` is in flight.** The Docker run mounts the source folder; the script runs once and exits. Edits don't hot-reload — re-run.
+**Caveat.** Run `make eval` for each `MODE` before and after (1). The single-document questions name the customer, so a working fix raises their precision.
 
 ## Pointers
 
 - **`README.md`** — user-facing usage, model recommendations, run modes, example questions.
 - **`BUILD-JOURNAL.md`** — chronological narrative of every iteration with what-we-saw / why / what-we-did / takeaway. Blog material.
-- **`docs/backlog/README.md`** (the repo-wide backlog, not this folder) — cross-project deferred work; the `AI / RAG POC` section refers to the eval harness item.
+- **`docs/backlog/README.md`** (the repo-wide backlog, not this folder) — cross-project deferred work.
 - **`CLAUDE.md`** (repo root) — repo-wide guidelines: containerization, GitOps, manifest conventions, secrets via ExternalSecrets.
 - **`/Users/morten.victor.nordbye/.claude/projects/-Users-morten-victor-nordbye-Documents-github-Homelab/memory/`** — persistent memory across sessions. Includes preferences like "no native node tooling" and "screenshots → .screenshots/".
 

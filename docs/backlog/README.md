@@ -48,14 +48,6 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** a Kyverno release that announces `ClusterPolicy` removal or ships a Pod Security equivalent for `ValidatingPolicy`. The Kyverno CLI (`kyverno apply`) checks the rewritten policies against rendered manifests.
 - **Where:** `k8s/talos/infra/kyverno/policies/`, `k8s/talos/infra/kyverno/policyexception-monitoring.yaml`.
 
-## AI / RAG POC
-
-### Eval harness
-- **What:** Add a small labelled QA set against the committed fixture corpus (the four `contract_<slug>.pdf` files) and a `make eval` target that scores precision@k.
-- **Why deferred:** Pipeline shape, multi-document loading and the refusal prompt are validated against the fixtures in interactive runs. Quality measurement is the next layer. It needs a labelled set and a metric choice (precision@k or LLM-as-judge), and that decision did not fit in the middle of the POC.
-- **Unblock:** Write 15–25 QA pairs against the four fixtures: single-doc and cross-doc questions, plus some out-of-corpus refusals. Pick the metric. Wire `make eval` to the existing chain.
-- **Where:** `ai/projects/local-rag-poc/main.py`, `ai/projects/local-rag-poc/Makefile`, plus a new `ai/projects/local-rag-poc/evals/` directory.
-
 ## Infrastructure page
 
 ### Second consumer for the cluster status card
