@@ -239,6 +239,12 @@
       "allowedVersions": "<3.15"
     },
     {
+      "description": "quantum/shor stays on Python 3.12: on 3.13 a pyquafu dependency builds from source.",
+      "matchFileNames": ["quantum/shor/Dockerfile"],
+      "matchPackageNames": ["python"],
+      "allowedVersions": "<3.13"
+    },
+    {
       "description": "Docs site toolchain: the Python packages and interpreter behind the ProperDocs build. The docs workflow builds with --strict on the PR, so a bump that breaks the site fails CI instead of merging.",
       "matchFileNames": ["scripts/docs-requirements.txt", ".github/workflows/docs.yaml"],
       "matchDatasources": ["pypi", "python-version"],

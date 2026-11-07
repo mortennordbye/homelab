@@ -11,7 +11,7 @@ make hardware BACKEND=ScQ-P5    # submit, poll until both tasks complete
 ```
 
 Everything runs in a `linux/amd64` container because pyquafu has no arm64 Linux wheel.
-The API token is read from the macOS Keychain (`security add-generic-password -s quafu ...`)
+The API token is read from the Secrets Manager item `laptop-quafu-api-token` through `bws-token`
 and passed to the container as `QUAFU_TOKEN`; it is never written to disk.
 
 `make hardware` saves the task ids in `results/pending-<backend>.json` before polling, so an

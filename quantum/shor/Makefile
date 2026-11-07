@@ -1,6 +1,6 @@
 IMAGE := quafu-shor
 RUN := docker run --rm --platform linux/amd64 -v "$(CURDIR):/work"
-TOKEN := QUAFU_TOKEN="$$(security find-generic-password -s quafu -w)"
+TOKEN := QUAFU_TOKEN="$$(BWS_ACCESS_TOKEN=$$(bws-token) bws secret get 48a4423f-ad2b-4f13-8cbc-b4fb00b8ca1f --output json | jq -r .value)"
 
 .PHONY: image sim backends hardware
 image:
