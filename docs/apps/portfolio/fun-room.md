@@ -489,9 +489,10 @@ pickable through its side.
 Set `castShadow={false}` on anything small inside furniture. The main light is a point light, so
 its shadow map is a cube, and every caster renders six extra times.
 
-Rounded boxes come from `components/scene/RoundedBox.tsx`, never from drei. drei re-runs the
-crease pass on every instance as it mounts, and that was most of the freeze while the room
-builds. The local one builds each size once and shares it.
+Rounded boxes come from `components/scene/RoundedBox.tsx`, never from drei. drei extrudes
+the box and re-runs the crease pass on every instance as it mounts. The local one builds the
+grid directly on the rounded surface, runs the crease pass on the indexed grid, and builds
+each size once. The crease pass stays: it gives the large wood tops their soft highlight.
 
 Profile before you fix. Bisect with the component removed (verify that it is gone). N8AO is the
 dominant post cost. It stays, because it is what makes objects look like they rest on things.
