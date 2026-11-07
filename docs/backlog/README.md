@@ -116,11 +116,11 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** When a 13th project is added, add a fourth row (the shelf can grow down to the toolbox) or retire an older project from the list. If the draw calls matter, merge each object's moving parts per material inside its own group.
 - **Where:** `portfolio/src/components/fun/RepoShelf.tsx` (`REPO_SHELF`, `COLS`, `ROWS`), `portfolio/src/content/repos.ts` (`projectRepos`).
 
-### Fun room: building the scene still blocks the main thread
-- **What:** On a phone-class profile (4x CPU throttling, 8Mbps, cache disabled) the room still blocks the main thread while it builds behind the loading screen. The longest task is 0.63 to 0.90s (total about 1s). Most of it is the crease pass for the rounded boxes with unique sizes, which the geometry cache in `components/scene/RoundedBox.tsx` cannot share. The composer's programs now go into the parallel compile, and the first composer frame renders behind the loading screen (`compilePost` in `FunRoom.tsx`). That was verified in headless SwiftShader by the time each program links, not timed on a GPU with `KHR_parallel_shader_compile`.
-- **Why deferred:** The crease pass needs a structural change: it must move off the main thread or be precomputed. A timing of the composer change needs a real GPU, which the headless harness does not have.
-- **Unblock:** Compute the rounded-box normals analytically instead of with `toCreasedNormals`, or build the geometries in a worker. Measure with long tasks split at the first WebGL draw, under the profile above, in a browser with a real GPU. Check that the first frame after `SceneReady` no longer carries a long task.
-- **Where:** `portfolio/src/components/scene/RoundedBox.tsx`, `portfolio/src/components/fun/FunRoom.tsx` (`SceneReady`, `compilePost`).
+### Fun room: the composer compile is not timed on a real GPU
+- **What:** the composer's programs go into the parallel compile, and the first composer frame renders behind the loading screen (`compilePost` in `FunRoom.tsx`). That was verified in headless SwiftShader by the time each program links, not timed on a GPU with `KHR_parallel_shader_compile`.
+- **Why deferred:** the headless harness has no real GPU, and SwiftShader long tasks are dominated by software rendering.
+- **Unblock:** on a phone-class profile (4x CPU throttling, 8Mbps, cache disabled) in a browser with a real GPU, record long tasks split at the first WebGL draw. Check that the first frame after `SceneReady` no longer carries a long task.
+- **Where:** `portfolio/src/components/fun/FunRoom.tsx` (`SceneReady`, `compilePost`).
 
 ### Fun room: assets are served from the home uplink
 - **What:** A cold `/fun` is about 2MB compressed against the production build, 1.2MB of it JavaScript. The cluster serves it with no CDN in front (Cloudflare is DNS only). Every megabyte is home-uplink bandwidth per cold visitor. Touch visitors are asked before the download, and machines without WebGL download none of it, but neither is a fix.
