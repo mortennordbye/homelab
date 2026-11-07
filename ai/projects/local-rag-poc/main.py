@@ -40,9 +40,9 @@ from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader
 from langchain_community.retrievers import BM25Retriever
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
-from langchain.retrievers import EnsembleRetriever
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+from langchain_classic.retrievers import EnsembleRetriever
+from langchain_classic.chains import RetrievalQA
+from langchain_core.prompts import PromptTemplate
 
 
 # =============================================================================
@@ -109,7 +109,7 @@ BANNER = """\
 --------------------------------------------------------------------------------
  Caveat: a local 7B-13B GGUF model is materially weaker than gpt-4-class
  models at multi-step legal reasoning and citation tracing. Throughput is
- single-process. No eval harness, no observability — yet.
+ single-process. No observability — yet.
 
  Why local anyway: legal/technical corpora often forbid third-party
  inference providers. Sovereignty + zero marginal cost + air-gapped > raw

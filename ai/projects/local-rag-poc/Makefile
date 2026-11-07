@@ -7,7 +7,7 @@
 IMAGE := local-rag-poc:dev
 WEB_PORT ?= 8000
 
-.PHONY: lm-setup lm-status lm-stop sample build run shell up web web-shell clean
+.PHONY: lm-setup lm-status lm-stop sample build run eval shell up web web-shell clean
 
 # Declaratively download + load the two required LM Studio models and start
 # the local server. Idempotent — safe to re-run. See setup-lmstudio.sh for
@@ -59,6 +59,17 @@ run: build
 		-e MODE \
 		-v "$(PWD)":/app \
 		$(IMAGE)
+
+# Score retrieval precision@k on evals/qa.json, then check that out-of-corpus
+# questions are refused. MODE picks the retriever; SKIP_LLM=1 skips the refusals.
+eval: build
+	docker run --rm \
+		--add-host=host.docker.internal:host-gateway \
+		-e MODE \
+		-e SKIP_LLM \
+		-v "$(PWD)":/app \
+		$(IMAGE) \
+		python -m evals.run
 
 # Interactive shell — handy for poking at the chunks or trying alt queries.
 shell: build

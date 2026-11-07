@@ -9,7 +9,7 @@ Before you run this, know what you're trading off vs. managed services (OpenAI +
 - **Quality ceiling.** A 7B–13B GGUF model in LM Studio is materially weaker than `gpt-4`-class models at multi-step legal reasoning, citation tracing, and edge-case extraction in technical specs. Expect more "I do not have enough information…" refusals and more shallow answers than a managed model would produce on the same chunks.
 - **Throughput.** LM Studio is single-process. One query at a time. Indexing a few thousand documents will take hours, not minutes.
 - **Operational toil.** You own GGUF quant selection, RAM/GPU pressure, Chroma persistence corruption, and BM25 index rebuilds on every cold start (BM25 is in-memory, not persisted). Managed services hide all of this.
-- **Hybrid retrieval isn't free.** A 50/50 ensemble is a guess. Without an eval harness you can't tell whether BM25 helps or hurts on your specific corpus.
+- **Hybrid retrieval isn't free.** A 50/50 ensemble is a guess. `make eval` measures retrieval precision on the fixtures; on your own corpus you need your own labelled questions.
 - **No observability.** No usage metrics, no eval scores, no drift detection. You'll add this yourself.
 
 ## Why local is still the right call here
@@ -190,9 +190,20 @@ A few quick sanity checks against the four committed fixtures:
 5. **Refusal.** `What is the capital of Madagascar?` → the exact refusal string `I do not have enough information in the provided documents to answer this.` If you get "Antananarivo", the prompt is leaking.
 6. **Persistence + rebuild.** Re-run with the same fixtures: startup line says `Reusing existing Chroma store at ./local_poc_db (fingerprint match)` and skips embedding. Add or remove a document, re-run: startup line changes to `Document set changed — rebuilding Chroma store at ./local_poc_db` and re-embeds.
 
+## Evaluation
+
+`evals/qa.json` holds 24 labelled questions against the four fixtures: 15 single-document, 5 cross-document and 4 out-of-corpus. Each answerable question lists the contracts that hold the answer.
+
+```bash
+make eval                         # hybrid retriever, then the refusal check
+MODE=bm25 make eval               # pick the retriever: vector | bm25 | hybrid
+MODE=bm25 SKIP_LLM=1 make eval    # retrieval only, no LM Studio needed
+```
+
+The score is document-level precision@k: the share of the top `TOP_K` chunks that come from a contract the question is about, averaged over the answerable questions. The refusal check asks the 4 out-of-corpus questions through the full chain and fails if any answer is not the refusal string. BM25 alone scores a mean P@6 of 0.500.
+
 ## What's deliberately out of scope (see `docs/backlog/README.md`)
 
-- Eval harness with a labelled QA set and a `make eval` target.
 - Multi-document corpus loader (walks a directory instead of one file).
 - Streaming responses, web UI, FastAPI wrapper.
 - Cluster deployment — if this graduates, manifests land in `k8s/talos/apps/local-rag/` and LM Studio is replaced by an in-cluster runtime (Ollama or vLLM under `ai/local-llm/stacks/`).
@@ -204,7 +215,8 @@ A few quick sanity checks against the four committed fixtures:
 | `main.py` | The sequential pipeline (load → chunk → ensemble → QA → query). Heavily commented. |
 | `requirements.txt` | Pinned LangChain + Chroma + BM25 + parsers. |
 | `Dockerfile` | `python:3.12-slim` image used by the Makefile. |
-| `Makefile` | `make run`, `make shell`, `make clean`, plus `make lm-setup` / `lm-status` / `lm-stop`. |
+| `Makefile` | `make run`, `make eval`, `make shell`, `make clean`, plus `make lm-setup` / `lm-status` / `lm-stop`. |
+| `evals/` | The labelled QA set (`qa.json`) and the scorer (`run.py`) behind `make eval`. |
 | `setup-lmstudio.sh` | Declarative LM Studio bootstrap — downloads, loads, and serves the two required models. Idempotent. |
 | `scripts/generate-samples.py` | reportlab-based generator that writes one PDF per `VARIANT` into `contracts/` (currently four fictional Norwegian Master Services Agreements with deliberately distinct payment terms, error-code namespaces, SLAs, and jurisdictions). |
 | `contracts/contract_*.pdf` | The generated fixtures themselves — ship with the repo via the `!contracts/contract_*.pdf` exception in `.gitignore`. Drop your own `.pdf`/`.docx` next to them; they'll be picked up by the loader but stay out of git. |
