@@ -220,12 +220,6 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** once Cilium 1.21 is GA and cert-manager and Argo CD list 1.37, bump those first, then raise `kubernetes_version`. That round probably also needs the `talos_config_contract` entry above and the talos provider at 0.12.0. Follow `docs/platform/cluster/talos-upgrade.md`.
 - **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/{terraform.tfvars,upgrade-k8s.tf}`, `k8s/talos/infra/{cilium,cert-manager,argocd,keda}/`, `docs/platform/cluster/talos-upgrade.md`.
 
-### UniFi gateway settings (`usg`) are still console-only
-- **What:** every `unifi_setting` section is in `terraform/unifi/network/settings.tf` except `usg`: conntrack timeouts, the ALG modules, UPnP, redirects and the DNS verification servers.
-- **Why deferred:** the provider (0.56.1) builds `usg` from its model alone, and go-unifi always sends fields that the provider does not model (`mdns_enabled`, `lldp_enable_all`, `dhcpd_use_dnsmasq`, the DHCP relay servers). A declared section would write `false` into them and could turn off mDNS across VLANs.
-- **Unblock:** a provider release that reads the live `usg` section before it writes, as it does for `mgmt` and `igmp_snooping`, or that models those fields. Then declare `usg` with the live values from `/proxy/network/api/s/default/get/setting` and diff the section before and after the first apply.
-- **Where:** `terraform/unifi/network/settings.tf`, provider `ubiquiti-community/unifi` (`unifi/setting_resource.go`, the `USG` branch of `Update`).
-
 ### Proxmox-CSI detach can leave a VM disk as a pending delete
 - **What:** when a PVC moves off a VM while the config of that VM is locked (reboot, backup), the CSI unplug succeeds in QEMU, but the config write times out (`can't lock file '/var/lock/qemu-server/lock-<vmid>.conf'`). The disk stays in the config as a pending delete. Every vzdump of that VM fails with `Device 'drive-scsiN' not found` until someone runs `qm set <vmid> --delete scsiN`. `pbs-backup-check` fails on it and prints that command. The root cause is still in the plugin.
 - **Why deferred:** the fix belongs upstream (retry the config write on a lock timeout), and the manual clear takes one minute after the check flags it.
