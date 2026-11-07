@@ -146,7 +146,7 @@ spec:
                     type: RuntimeDefault
                 containers:
                   - name: smoke
-                    image: curlimages/curl:8.22.0
+                    image: curlimages/curl:8.23.0
                     securityContext:
                       allowPrivilegeEscalation: false
                       capabilities:
@@ -212,7 +212,7 @@ spec:
                     type: RuntimeDefault
                 containers:
                   - name: smoke
-                    image: curlimages/curl:8.22.0
+                    image: curlimages/curl:8.23.0
                     securityContext:
                       allowPrivilegeEscalation: false
                       capabilities:
