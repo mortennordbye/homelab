@@ -221,7 +221,55 @@ the driver's `archived-` directory under `/volume1/k8s-volumes/talos` still hold
    `https://reelsmith.local.bigd.no/admin/` before the next slot. Rows that the backup shows as
    `claimed` or queued may already have been published after the backup was taken.
 
+## Loss of the NAS
+
+Use this procedure when the NAS and its local snapshots are gone. The only remaining copy
+of `k8s-backups` is the Hyper Backup copy on Google Drive, up to one day old.
+
+Lost with the NAS and not restorable: the media, the PBS datastore with the whole-VM
+backups, and everything on `shared-data` that has no other copy. Terraform rebuilds the
+VMs, and the Talos VMs and `proxmox-local` volumes stay on the Proxmox hosts.
+
+Have these ready before you start:
+
+| Item | Where |
+|---|---|
+| Hyper Backup encryption key | Must be a copy outside the NAS. Without it the Google Drive copy cannot be read |
+| Google account that holds the copy | Bitwarden vault |
+| `volsync-restic-password` | Bitwarden, Homelab project |
+| Home Assistant backup encryption key | Bitwarden |
+| Terraform and Talos local files | The laptop. The zip on `shared-data` is lost with the NAS |
+
+1. Install the replacement NAS with the same address, `10.3.10.10`, so that
+   `nas.local.bigd.no` and every PV stay valid.
+2. Create the shares `k8s-volumes` and `shared-data`, and `k8s-backups` with the settings in
+   [Configured outside Git](README.md#configured-outside-git). Add the NFS rules. Create the
+   folder `talos` in `k8s-volumes`.
+3. Install Hyper Backup, connect the Google Drive task, enter the encryption key and
+   restore `k8s-backups`. Check that `etcd/`, `postgres/` and `volsync/` are present.
+4. Create the folder of every dynamic volume under `/volume1/k8s-volumes/talos`. A mount
+   fails when its folder does not exist. This command prints the list:
+
+   ```sh
+   kubectl get pv -o json | jq -r '.items[] | select(.spec.storageClassName == "syno-nfs-csi") | .spec.csi.volumeAttributes.subDir'
+   ```
+
+5. Create the target folders of the static PVs in the
+   [storage table](../storage/README.md#static-nfs-volumes).
+6. Restart the pods that hang on the old mounts. If a pod stays in `ContainerCreating`,
+   reboot its node from Proxmox.
+7. Restore the data in this order, because later steps depend on earlier ones:
+   1. Authentik database, so that sign-in works ([Postgres](#postgres)).
+   2. `garage/garage-data`, because it holds the logeverylift WAL and base backups
+      ([App volume](#app-volume-volsync)).
+   3. logeverylift, from Garage ([Point in time](#point-in-time-logeverylift)).
+   4. Every other volume in [Coverage](README.md#coverage).
+8. Rebuild PBS with `terraform/proxmox/pbs`. Its old backups do not come back.
+9. Point Home Assistant at the `k8s_backups` network storage again.
+10. Let the nightly jobs run, then check the `Backups` row in the SPOG.
+
 ## Testing
 
 `restore-test` in `k8s/talos/infra/backup-check/` tests VolSync and Postgres every month.
 etcd recovery and the Home Assistant restore are tested by hand, about once a year.
+The [NAS loss](#loss-of-the-nas) procedure and a restore from Google Drive have not been tested.
