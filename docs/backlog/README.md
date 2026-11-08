@@ -16,6 +16,12 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** delete the folders in DSM File Station. They hold only test copies.
 - **Where:** DSM, share `k8s-volumes`, folder `talos`.
 
+### NAS-loss recovery is not proven
+- **What:** five gaps remain. Confirm a copy of the Hyper Backup key outside the NAS. Restore one VolSync repository from Google Drive to prove that the copy can be read. Add a staleness check for Hyper Backup. Get the laptop-only zip offsite, because `shared-data` is not in the Hyper Backup task. Decide on a UPS for the NAS: the docs record none, and the SNMP exporter collects no UPS data.
+- **Why deferred:** each gap needs the owner: DSM access, the key, or a purchase. The runbook shipped first.
+- **Unblock:** the owner confirms the key and the UPS, and runs one test restore from DSM. A staleness check needs a DSM API credential in Bitwarden.
+- **Where:** `docs/platform/backups/restore.md`, `docs/platform/backups/README.md`, `k8s/talos/infra/backup-check/`, `scripts/backup-secrets.sh`, DSM Hyper Backup.
+
 ### Grafana Git Sync down until 13.3.1
 - **What:** upgrade Grafana to 13.3.1, remove the temporary dashboard copies, and check that Git Sync restores them. GitHub rejects the `nanogit/0` User-Agent. Grafana reports this as `secure.token: not authorized` and skips the sync, so changes under `grafana/` do not reach Grafana.
 - **Why deferred:** the fix is not released. Until then the 7 dashboards are imported through the API into the `homelab-temp` folder. They do not follow `main` and cannot save back to git.
