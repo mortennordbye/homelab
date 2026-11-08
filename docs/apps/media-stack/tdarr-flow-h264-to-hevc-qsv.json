@@ -27,7 +27,7 @@
       "id": "codec",
       "position": {
         "x": 400,
-        "y": 100
+        "y": 300
       },
       "inputsDB": {
         "codec": "h264"
@@ -41,7 +41,7 @@
       "id": "skip",
       "position": {
         "x": 400,
-        "y": 200
+        "y": 100
       },
       "inputsDB": {
         "code": "module.exports = async (args) => {\n  const fs = require('fs');\n  const file = args.inputFileObj._id;\n  const nlink = fs.statSync(file).nlink;\n  const remux = /remux/i.test(file);\n  args.jobLog(`links=${nlink} remux=${remux}`);\n  // A second link means a seeding torrent shares this inode; re-encoding would split it into two copies.\n  const skip = nlink > 1 || remux;\n  return { outputFileObj: args.inputFileObj, outputNumber: skip ? 2 : 1, variables: args.variables };\n};\n"
@@ -55,7 +55,7 @@
       "id": "start",
       "position": {
         "x": 400,
-        "y": 300
+        "y": 400
       }
     },
     {
@@ -66,7 +66,7 @@
       "id": "enc",
       "position": {
         "x": 400,
-        "y": 400
+        "y": 500
       },
       "inputsDB": {
         "outputCodec": "hevc",
@@ -88,7 +88,7 @@
       "id": "exec",
       "position": {
         "x": 400,
-        "y": 500
+        "y": 600
       }
     },
     {
@@ -99,7 +99,7 @@
       "id": "ratio",
       "position": {
         "x": 400,
-        "y": 700
+        "y": 800
       },
       "inputsDB": {
         "greaterThan": "0",
@@ -114,7 +114,7 @@
       "id": "replace",
       "position": {
         "x": 400,
-        "y": 800
+        "y": 900
       }
     },
     {
@@ -125,7 +125,7 @@
       "id": "duration",
       "position": {
         "x": 400,
-        "y": 600
+        "y": 700
       },
       "inputsDB": {
         "greaterThan": "99.5",
@@ -140,35 +140,54 @@
       "id": "keep",
       "position": {
         "x": 650,
-        "y": 800
+        "y": 900
       },
       "inputsDB": {
         "source": "originalFile"
       }
+    },
+    {
+      "name": "English audio first",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "id": "eng",
+      "position": {
+        "x": 400,
+        "y": 200
+      },
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const { spawnSync } = require('child_process');\n  const path = require('path');\n  const file = args.inputFileObj;\n  const pass = { outputFileObj: file, outputNumber: 1, variables: args.variables };\n  if (path.extname(file._id).toLowerCase() !== '.mkv') return pass;\n  const audio = file.ffProbeData.streams.filter((s) => s.codec_type === 'audio');\n  // Commentary and audio-description tracks are often tagged eng; they must not become the default.\n  const usable = (s) => {\n    const d = s.disposition || {};\n    const title = ((s.tags && s.tags.title) || '').toLowerCase();\n    return !d.comment && !d.visual_impaired && !/commentary|descriptive|description/.test(title);\n  };\n  const isEnglish = (s) => ['eng', 'en'].includes(((s.tags && s.tags.language) || '').toLowerCase());\n  const target = audio.findIndex((s) => isEnglish(s) && usable(s));\n  const defaults = audio.flatMap((s, i) => ((s.disposition || {}).default ? [i] : []));\n  if (target < 0 || (target === 0 && defaults.length === 1 && defaults[0] === 0)) return pass;\n  const others = audio.map((_, i) => i).filter((i) => i !== target);\n  // A default subtitle in another language would show on screen over the English audio.\n  const subs = file.ffProbeData.streams.filter((s) => s.codec_type === 'subtitle');\n  const clearSubs = subs.flatMap((s, i) => ((s.disposition || {}).default && !isEnglish(s) ? [`-disposition:s:${i}`, '-default'] : []));\n  const out = path.join(args.workDir, `${path.parse(file._id).name}.mkv`);\n  const cmd = ['-y', '-nostdin', '-v', 'error', '-i', file._id, '-map', '0:v', '-map', `0:a:${target}`,\n    ...others.flatMap((i) => ['-map', `0:a:${i}`]),\n    '-map', '0:s?', '-map', '0:d?', '-map', '0:t?', '-c', 'copy', '-map_metadata', '0', '-map_chapters', '0',\n    '-disposition:a:0', '+default',\n    ...others.flatMap((_, i) => [`-disposition:a:${i + 1}`, '-default']), ...clearSubs, out];\n  args.jobLog(`english audio ${target} moved to first`);\n  const run = spawnSync(args.ffmpegPath, cmd, { encoding: 'utf8' });\n  if (run.status !== 0) throw new Error(`ffmpeg failed: ${run.stderr}`);\n  return { outputFileObj: { _id: out }, outputNumber: 2, variables: args.variables };\n};\n"
+      }
+    },
+    {
+      "name": "Same duration after audio reorder",
+      "sourceRepo": "Community",
+      "pluginName": "compareFileDurationRatio",
+      "version": "1.0.0",
+      "id": "engDur",
+      "position": {
+        "x": 650,
+        "y": 200
+      },
+      "inputsDB": {
+        "greaterThan": "99.5",
+        "lessThan": "100.5"
+      }
+    },
+    {
+      "name": "Replace with reordered file",
+      "sourceRepo": "Community",
+      "pluginName": "replaceOriginalFile",
+      "version": "1.0.0",
+      "id": "engReplace",
+      "position": {
+        "x": 650,
+        "y": 300
+      }
     }
   ],
   "flowEdges": [
-    {
-      "source": "in",
-      "sourceHandle": "1",
-      "target": "codec",
-      "targetHandle": null,
-      "id": "e1"
-    },
-    {
-      "source": "codec",
-      "sourceHandle": "1",
-      "target": "skip",
-      "targetHandle": null,
-      "id": "e2"
-    },
-    {
-      "source": "skip",
-      "sourceHandle": "1",
-      "target": "start",
-      "targetHandle": null,
-      "id": "e3"
-    },
     {
       "source": "start",
       "sourceHandle": "1",
@@ -210,6 +229,55 @@
       "target": "keep",
       "targetHandle": null,
       "id": "e9"
+    },
+    {
+      "source": "in",
+      "sourceHandle": "1",
+      "target": "skip",
+      "targetHandle": null,
+      "id": "e10"
+    },
+    {
+      "source": "skip",
+      "sourceHandle": "1",
+      "target": "eng",
+      "targetHandle": null,
+      "id": "e11"
+    },
+    {
+      "source": "eng",
+      "sourceHandle": "1",
+      "target": "codec",
+      "targetHandle": null,
+      "id": "e12"
+    },
+    {
+      "source": "eng",
+      "sourceHandle": "2",
+      "target": "engDur",
+      "targetHandle": null,
+      "id": "e13"
+    },
+    {
+      "source": "engDur",
+      "sourceHandle": "1",
+      "target": "engReplace",
+      "targetHandle": null,
+      "id": "e14"
+    },
+    {
+      "source": "engReplace",
+      "sourceHandle": "1",
+      "target": "codec",
+      "targetHandle": null,
+      "id": "e15"
+    },
+    {
+      "source": "codec",
+      "sourceHandle": "1",
+      "target": "start",
+      "targetHandle": null,
+      "id": "e16"
     }
   ]
 }
