@@ -5,6 +5,7 @@ namespace: synthetics
 
 resources:
   - namespace.yaml
+  - ciliumnetworkpolicy.yaml
   - externalsecret.yaml
   - cronjob.yaml
 

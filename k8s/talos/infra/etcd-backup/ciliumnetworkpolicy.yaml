@@ -1,0 +1,18 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: etcd-backup
+spec:
+  endpointSelector: {}
+  ingress:
+    - fromEntities:
+        - host
+        - health
+  egress:
+    # talosctl calls the Talos API on the node the pod runs on.
+    - toEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "50000"
+              protocol: TCP

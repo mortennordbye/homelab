@@ -5,6 +5,7 @@ namespace: backup-check
 
 resources:
   - namespace.yaml
+  - ciliumnetworkpolicy.yaml
   - externalsecrets.yaml
   - nfs-volumes.yaml
   - freshness.yaml
