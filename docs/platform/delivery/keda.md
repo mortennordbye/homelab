@@ -57,7 +57,7 @@ manifest therefore does not fight KEDA.
 
 | App | Namespace | Host | Min / max | Triggers |
 | --- | --- | --- | --- | --- |
-| audiobookshelf | `audiobookshelf` | `audiobookshelf.bigd.no` | 0 / 1 | cron, HTTP |
+| audiobookshelf | `audiobookshelf` | `audiobookshelf.local.bigd.no` | 0 / 1 | cron, HTTP |
 | homepage | `homepage` | `hub.bigd.no` | 0 / 1 | cron, HTTP |
 | omni-tools | `omni-tools` | `omni-tools.bigd.no` | 0 / 1 | cron, HTTP |
 | trek | `trek` | `trek.bigd.no` | 0 / 1 | cron, HTTP |

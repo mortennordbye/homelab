@@ -101,9 +101,6 @@ Rules that the files depend on:
   [`referencegrant-homepage.yaml`](../../../k8s/talos/infra/authentik/referencegrant-homepage.yaml)).
 - `forwardAuth.trustForwardHeader` stays `false` on public hosts.
 
-`audiobookshelf.bigd.no` is the one public route without `cloudflare-only`. It is DNS-only
-(see [`cloudflare.md`](cloudflare.md#origin-and-proxying)), so its clients connect directly.
-
 ## Cloudflare ranges
 
 The Cloudflare IP ranges exist in fourteen places, and all copies must be identical:

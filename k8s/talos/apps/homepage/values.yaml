@@ -136,7 +136,7 @@ config:
               key: "{{HOMEPAGE_VAR_OVERSEERR_API_KEY}}"
         - Audiobookshelf:
             icon: audiobookshelf.png
-            href: https://audiobookshelf.bigd.no
+            href: https://audiobookshelf.local.bigd.no
             description: Audiobook library
         - Omni Tools:
             icon: https://omni-tools.bigd.no/favicon.svg
@@ -185,8 +185,7 @@ config:
             description: Public demo with fictional data
         - Mealie:
             icon: mealie.png
-            href: https://mealie.bigd.no
-            siteMonitor: https://mealie.bigd.no
+            href: https://mealie.local.bigd.no
             description: Recipe manager and meal planner
         - Verksted:
             icon: mdi-wrench

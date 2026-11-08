@@ -44,7 +44,7 @@ spec:
             - name: TZ
               value: Europe/Oslo
             - name: BASE_URL
-              value: https://mealie.bigd.no
+              value: https://mealie.local.bigd.no
             - name: DB_ENGINE
               value: sqlite
             - name: ALLOW_SIGNUP

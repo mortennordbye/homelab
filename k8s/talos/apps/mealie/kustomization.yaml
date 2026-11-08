@@ -11,5 +11,4 @@ resources:
   - deployment.yaml
   - service.yaml
   - httproute.yaml
-  - cloudflare-only-middleware.yaml
   - ciliumnetworkpolicy.yaml
