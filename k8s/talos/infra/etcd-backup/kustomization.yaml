@@ -5,6 +5,7 @@ namespace: etcd-backup
 
 resources:
   - namespace.yaml
+  - ciliumnetworkpolicy.yaml
   - talos-serviceaccount.yaml
   - storage.yaml
   - cronjob.yaml
