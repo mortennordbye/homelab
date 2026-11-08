@@ -3,18 +3,14 @@ kind: HTTPRoute
 metadata:
   name: audiobookshelf
   namespace: audiobookshelf
-  annotations:
-    # Must stay unproxied. Cloudflare's terms exclude serving audio through the
-    # CDN outside Enterprise, and this route streams it.
-    external-dns.kubernetes.io/cloudflare-proxied: "false"
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: traefik-gateway-public
+      name: traefik-gateway-private
       namespace: traefik
   hostnames:
-    - audiobookshelf.bigd.no
+    - audiobookshelf.local.bigd.no
   rules:
     - backendRefs:
         # Route through the KEDA HTTP interceptor so audiobookshelf wakes from zero.

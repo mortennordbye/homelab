@@ -9,7 +9,7 @@ spec:
     port: 80
   rules:
     - hosts:
-        - audiobookshelf.bigd.no
+        - audiobookshelf.local.bigd.no
   scalingMetric:
     concurrency:
       targetValue: 100

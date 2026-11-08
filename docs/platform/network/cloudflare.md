@@ -28,11 +28,8 @@ zones are on the same account.
 zone. The DDNS client never sends the proxied flag, so the flag survives updates.
 
 `ddns.bigd.no` stays DNS-only. A proxied record would route every hostname that points
-at it through the edge, the audio of audiobookshelf included. The Cloudflare terms do
-not permit that outside Enterprise. The record therefore publishes the residential
-address. For the same reason the route of audiobookshelf pins
-`external-dns.kubernetes.io/cloudflare-proxied: "false"`. Plex is not in DNS at
-all. It is a TCPRoute on port 32400 and sends the address to plex.tv directly.
+at it through the edge. The record therefore publishes the residential address. Plex is
+not in DNS at all. It is a TCPRoute on port 32400 and sends the address to plex.tv directly.
 
 ## Zone settings
 

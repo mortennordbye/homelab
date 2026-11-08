@@ -27,6 +27,7 @@ locals {
   aliases = [
     "alertmanager",
     "argocd",
+    "audiobookshelf",
     "auth",
     "bazarr",
     "bazarr-4k",
@@ -39,6 +40,7 @@ locals {
     "hubble",
     "jarvis",
     "kargo",
+    "mealie",
     "open-webui",
     "opencost",
     "portfolio-stage",

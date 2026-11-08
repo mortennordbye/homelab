@@ -179,8 +179,8 @@ Other apps, one directory each under `k8s/talos/apps/`:
   unreadable.
 - home-assistant: no pod. A Service with hand-written Endpoints points at the HA mini PC,
   `10.3.10.15:8123`, behind `ha.local.bigd.no`.
-- audiobookshelf: `audiobookshelf.bigd.no` must stay unproxied in Cloudflare, because it
-  streams audio ([`../platform/network/cloudflare.md`](../platform/network/cloudflare.md)).
+- audiobookshelf: `audiobookshelf.local.bigd.no`, private gateway. Reach it from outside
+  through remote access.
 - ollama and open-webui: local LLM chat on `open-webui.local.bigd.no`. ollama is pinned to
   the `hyper3` zone. open-webui reaches it through the `ollama-wake` Service, so its
   requests wake ollama from zero. The model cache is not backed up.
@@ -189,7 +189,7 @@ Other apps, one directory each under `k8s/talos/apps/`:
   UniFi firewall policy lets the device reach that VIP. Its skills page is on
   `jarvis.local.bigd.no`
   ([`../apps/innestemme/README.md`](../apps/innestemme/README.md)).
-- mealie: recipe manager on `mealie.bigd.no`, SQLite, sign-up off.
+- mealie: recipe manager on `mealie.local.bigd.no`, private gateway, SQLite, sign-up off.
 - homepage: the hub on `hub.bigd.no`, behind Authentik forward-auth.
 - bigd: the static `bigd.no` landing page. nginx serves `index.html` from a ConfigMap.
 - omni-tools: a stateless browser tool collection on `omni-tools.bigd.no`.
