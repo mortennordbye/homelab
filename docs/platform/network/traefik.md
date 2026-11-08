@@ -144,7 +144,7 @@ No output means every copy matches. A new public app adds its own copy.
 3. For a public app, copy a `cloudflare-only-middleware.yaml` into the app and rename it
    `<app>-cloudflare-only`. Add it as the first filter. A `bigd.no` hostname also
    sets `external-dns.kubernetes.io/cloudflare-proxied: "true"` on the route.
-   [`omni-tools/httproute.yaml`](../../../k8s/talos/apps/omni-tools/httproute.yaml) is the
+   [`kro/rgd-static-site.yaml`](../../../k8s/talos/infra/kro/rgd-static-site.yaml) is the
    template. `nordbye.it` and `logeverylift.com` hostnames are Terraform records, see
    [`cloudflare.md`](cloudflare.md).
 4. Add rate-limit, in-flight or compress middlewares as the site needs, in the order above.

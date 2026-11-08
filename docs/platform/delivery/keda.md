@@ -80,7 +80,7 @@ only use cron: 3 replicas from 07:00 to 23:00 Europe/Oslo, 1 outside that window
 ## Cron warm plus HTTP wake
 
 Most HTTP-triggered apps carry two triggers
-([`omni-tools/scaledobject.yaml`](../../../k8s/talos/apps/omni-tools/scaledobject.yaml)):
+([`kro/rgd-static-site.yaml`](../../../k8s/talos/infra/kro/rgd-static-site.yaml)):
 
 ```yaml
 triggers:
@@ -129,24 +129,26 @@ allows port 11434 from the whole cluster.
 
 ## Onboard an app
 
-Built from omni-tools. The app already has a Deployment, Service, HTTPRoute and
-CiliumNetworkPolicy under `k8s/talos/apps/<app>/`.
+The app already has a Deployment, Service, HTTPRoute and CiliumNetworkPolicy under
+`k8s/talos/apps/<app>/`. The templates below are in the `StaticSite` definition. Replace
+each `${...}` value with the value for the app. A new nginx site can use a `StaticSite`
+instance instead ([`kro.md`](kro.md)).
 
 1. Add `interceptorroute.yaml`: copy
-   [`omni-tools/interceptorroute.yaml`](../../../k8s/talos/apps/omni-tools/interceptorroute.yaml).
+   [`kro/rgd-static-site.yaml`](../../../k8s/talos/infra/kro/rgd-static-site.yaml).
    Set the namespace, `spec.target.service` and `port` to the app Service. Set
    `spec.rules[].hosts` to the exact hostname in the HTTPRoute.
 2. Add `scaledobject.yaml`: copy
-   [`omni-tools/scaledobject.yaml`](../../../k8s/talos/apps/omni-tools/scaledobject.yaml).
+   [`kro/rgd-static-site.yaml`](../../../k8s/talos/infra/kro/rgd-static-site.yaml).
    Set `scaleTargetRef.name` to the Deployment and `interceptorRoute` to the name of
    the InterceptorRoute. Drop the cron trigger if the app may stay at zero all day.
 3. In `httproute.yaml`, replace the app Service in `backendRefs` with
    `keda-add-ons-http-interceptor-proxy`, namespace `keda`, port `8080`
-   ([`omni-tools/httproute.yaml`](../../../k8s/talos/apps/omni-tools/httproute.yaml)).
+   ([`kro/rgd-static-site.yaml`](../../../k8s/talos/infra/kro/rgd-static-site.yaml)).
    Keep the hostnames and filters.
 4. In `ciliumnetworkpolicy.yaml`, add an ingress rule from the interceptor pods on the
    container port
-   ([`omni-tools/ciliumnetworkpolicy.yaml`](../../../k8s/talos/apps/omni-tools/ciliumnetworkpolicy.yaml)).
+   ([`kro/rgd-static-site.yaml`](../../../k8s/talos/infra/kro/rgd-static-site.yaml)).
 5. Add both new files to the app's `kustomization.yaml`.
 6. Add the app namespace to the `from` list in
    [`referencegrant.yaml`](../../../k8s/talos/infra/keda-http-add-on/referencegrant.yaml).

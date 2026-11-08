@@ -1,0 +1,8 @@
+apiVersion: kro.run/v1alpha1
+kind: StaticSite
+metadata:
+  name: omni-tools
+  namespace: omni-tools
+spec:
+  image: iib0011/omni-tools:0.7
+  host: omni-tools.bigd.no
