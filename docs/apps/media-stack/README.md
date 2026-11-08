@@ -136,7 +136,7 @@ Do not add these rules:
 - An `upgrade` key with a score cutoff in the Recyclarr config. Almost every file
   scores 0 today, so a large part of the library would download again.
 
-Check a release: `POST /api/v3/parse?title=<release name>` on Sonarr or Radarr
+Check a release: `GET /api/v3/parse?title=<release name>` on Sonarr or Radarr
 returns its custom formats and score.
 
 ## Radarr 4K
