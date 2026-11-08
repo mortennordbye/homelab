@@ -1,0 +1,56 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kro:controller:static-site
+  labels:
+    rbac.kro.run/aggregate-to-controller: "true"
+rules:
+  - apiGroups:
+      - kro.run
+    resources:
+      - staticsites
+      - staticsites/status
+      - staticsites/finalizers
+    verbs: &manage
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs: *manage
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs: *manage
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - httproutes
+    verbs: *manage
+  - apiGroups:
+      - traefik.io
+    resources:
+      - middlewares
+    verbs: *manage
+  - apiGroups:
+      - http.keda.sh
+    resources:
+      - interceptorroutes
+    verbs: *manage
+  - apiGroups:
+      - keda.sh
+    resources:
+      - scaledobjects
+    verbs: *manage
+  - apiGroups:
+      - cilium.io
+    resources:
+      - ciliumnetworkpolicies
+    verbs: *manage

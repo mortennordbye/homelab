@@ -1,0 +1,230 @@
+apiVersion: kro.run/v1alpha1
+kind: ResourceGraphDefinition
+metadata:
+  name: static-site
+spec:
+  schema:
+    apiVersion: v1alpha1
+    kind: StaticSite
+    spec:
+      image: string | required=true
+      host: string | required=true
+  resources:
+    - id: deployment
+      template:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: ${schema.metadata.name}
+          labels:
+            app: ${schema.metadata.name}
+        # No spec.replicas: KEDA owns it.
+        spec:
+          revisionHistoryLimit: 3
+          selector:
+            matchLabels:
+              app: ${schema.metadata.name}
+          template:
+            metadata:
+              labels:
+                app: ${schema.metadata.name}
+            spec:
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 101
+                runAsGroup: 101
+                seccompProfile:
+                  type: RuntimeDefault
+              containers:
+                - name: ${schema.metadata.name}
+                  image: ${schema.spec.image}
+                  imagePullPolicy: IfNotPresent
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                        - ALL
+                  # nginx writes its pid and cache into root-owned paths in the image.
+                  volumeMounts:
+                    - name: cache
+                      mountPath: /var/cache/nginx
+                    - name: run
+                      mountPath: /run
+                  ports:
+                    - containerPort: 80
+                  resources:
+                    requests:
+                      cpu: 10m
+                      memory: 32Mi
+                    limits:
+                      cpu: 100m
+                      memory: 128Mi
+                  readinessProbe:
+                    httpGet:
+                      path: /
+                      port: 80
+                    periodSeconds: 15
+                  livenessProbe:
+                    httpGet:
+                      path: /
+                      port: 80
+                    periodSeconds: 20
+                    failureThreshold: 3
+              volumes:
+                - name: cache
+                  emptyDir: {}
+                - name: run
+                  emptyDir: {}
+    - id: service
+      template:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: ${schema.metadata.name}-service
+        spec:
+          selector:
+            app: ${schema.metadata.name}
+          ports:
+            - protocol: TCP
+              port: 80
+              targetPort: 80
+    - id: middleware
+      template:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        metadata:
+          name: ${schema.metadata.name}-cloudflare-only
+        spec:
+          # Cloudflare edges only. The ranges match trustedIPs in infra/traefik/values.yaml.
+          ipAllowList:
+            # No ipStrategy: X-Forwarded-For is spoofable.
+            sourceRange:
+              - 173.245.48.0/20
+              - 103.21.244.0/22
+              - 103.22.200.0/22
+              - 103.31.4.0/22
+              - 141.101.64.0/18
+              - 108.162.192.0/18
+              - 190.93.240.0/20
+              - 188.114.96.0/20
+              - 197.234.240.0/22
+              - 198.41.128.0/17
+              - 162.158.0.0/15
+              - 104.16.0.0/13
+              - 104.24.0.0/14
+              - 172.64.0.0/13
+              - 131.0.72.0/22
+              - 2400:cb00::/32
+              - 2606:4700::/32
+              - 2803:f800::/32
+              - 2405:b500::/32
+              - 2405:8100::/32
+              - 2a06:98c0::/29
+              - 2c0f:f248::/32
+    - id: route
+      template:
+        apiVersion: gateway.networking.k8s.io/v1
+        kind: HTTPRoute
+        metadata:
+          name: ${schema.metadata.name}
+          annotations:
+            # Static SPA, no auth, so the edge can proxy it and cache it.
+            external-dns.kubernetes.io/cloudflare-proxied: "true"
+        spec:
+          parentRefs:
+            - group: gateway.networking.k8s.io
+              kind: Gateway
+              name: traefik-gateway-public
+              namespace: traefik
+          hostnames:
+            - ${schema.spec.host}
+          rules:
+            - filters:
+                - type: ExtensionRef
+                  extensionRef:
+                    group: traefik.io
+                    kind: Middleware
+                    name: ${middleware.metadata.name}
+              backendRefs:
+                - group: ""
+                  kind: Service
+                  name: keda-add-ons-http-interceptor-proxy
+                  namespace: keda
+                  port: 8080
+                  weight: 1
+              matches:
+                - path:
+                    type: PathPrefix
+                    value: /
+    - id: interceptorRoute
+      template:
+        apiVersion: http.keda.sh/v1beta1
+        kind: InterceptorRoute
+        metadata:
+          name: ${schema.metadata.name}
+        spec:
+          target:
+            service: ${service.metadata.name}
+            port: 80
+          rules:
+            - hosts:
+                - ${schema.spec.host}
+          scalingMetric:
+            concurrency:
+              targetValue: 100
+    - id: scaledObject
+      template:
+        apiVersion: keda.sh/v1alpha1
+        kind: ScaledObject
+        metadata:
+          name: ${schema.metadata.name}
+        spec:
+          scaleTargetRef:
+            name: ${deployment.metadata.name}
+          minReplicaCount: 0
+          maxReplicaCount: 1
+          cooldownPeriod: 300
+          # Warm through the day, scale to zero at night. KEDA scales to the max
+          # of the two triggers, so the HTTP trigger still wakes it on demand.
+          triggers:
+            - type: cron
+              metadata:
+                timezone: Europe/Oslo
+                start: "0 7 * * *"
+                end: "0 23 * * *"
+                desiredReplicas: "1"
+            - type: external-push
+              metadata:
+                scalerAddress: keda-add-ons-http-external-scaler.keda:9090
+                interceptorRoute: ${interceptorRoute.metadata.name}
+    - id: networkPolicy
+      template:
+        apiVersion: cilium.io/v2
+        kind: CiliumNetworkPolicy
+        metadata:
+          name: ${schema.metadata.name}-policy
+        spec:
+          endpointSelector:
+            matchLabels:
+              app: ${schema.metadata.name}
+          ingress:
+            - fromEndpoints:
+                - matchLabels:
+                    "k8s:io.kubernetes.pod.namespace": traefik
+                    "k8s:app.kubernetes.io/instance": traefik-traefik
+              toPorts:
+                - ports:
+                    - port: "80"
+                      protocol: TCP
+            - fromEndpoints:
+                - matchLabels:
+                    "k8s:io.kubernetes.pod.namespace": keda
+                    "k8s:app.kubernetes.io/component": interceptor
+                    "k8s:app.kubernetes.io/part-of": keda-add-ons-http
+              toPorts:
+                - ports:
+                    - port: "80"
+                      protocol: TCP
+            - fromEntities:
+                - host
+                - health

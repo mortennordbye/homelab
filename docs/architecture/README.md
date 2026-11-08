@@ -62,6 +62,8 @@ the code is correct and this file gets a fix.
   builds and pushes tags ([`../platform/delivery/ci.md`](../platform/delivery/ci.md)).
 - KEDA with the HTTP add-on scales idle apps to zero. The interceptor wakes them
   ([`../platform/delivery/keda.md`](../platform/delivery/keda.md)).
+- kro turns a ResourceGraphDefinition into a new Kubernetes kind. One object of that kind
+  creates a group of objects ([`../platform/delivery/kro.md`](../platform/delivery/kro.md)).
 - GitHub Pages publishes `docs/` to https://docs.nordbye.it
   (`.github/workflows/docs.yaml`). The backlog stays in the repo only.
 - Renovate proposes chart, image and provider bumps. It does not propose Postgres major

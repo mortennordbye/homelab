@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kro
+
+resources:
+  - namespace.yaml
+  - ciliumnetworkpolicy.yaml
+  - clusterrole-static-site.yaml
+  - rgd-static-site.yaml
+
+helmCharts:
+  - name: kro
+    repo: oci://registry.k8s.io/kro/charts
+    version: 0.9.4
+    releaseName: kro
+    namespace: kro
+    includeCRDs: true
+    valuesFile: values.yaml
