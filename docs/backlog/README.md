@@ -10,6 +10,12 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** a decision on whether live volumes need point-in-time protection in addition to the nightly VolSync copies. A migration to a new share also needs a maintenance window.
 - **Where:** DSM Snapshot Replication and Shared Folder settings. Record the result in `docs/platform/backups/README.md` under "Configured outside Git".
 
+### Leftover restore-test folders on k8s-volumes
+- **What:** delete the folders that four released test volumes left on the NAS: `mealie/policy-restore-check`, `mealie/volsync-dst-policy-restore-check-cache`, `logeverylift/logeverylift-db-restore-test-1`, and their `archived-*` copies, under `/volume1/k8s-volumes/talos`.
+- **Why deferred:** the CSI delete failed because the archive path already existed. The PV objects are gone, but no agent tool mounts the share root.
+- **Unblock:** delete the folders in DSM File Station. They hold only test copies.
+- **Where:** DSM, share `k8s-volumes`, folder `talos`.
+
 ### Grafana Git Sync down until 13.3.1
 - **What:** upgrade Grafana to 13.3.1, remove the temporary dashboard copies, and check that Git Sync restores them. GitHub rejects the `nanogit/0` User-Agent. Grafana reports this as `secure.token: not authorized` and skips the sync, so changes under `grafana/` do not reach Grafana.
 - **Why deferred:** the fix is not released. Until then the 7 dashboards are imported through the API into the `homelab-temp` folder. They do not follow `main` and cannot save back to git.

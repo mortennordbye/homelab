@@ -30,6 +30,8 @@ jobs:
       contents: write # Needed to commit the re-rendered assets
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
 
       - name: Install image tools
         run: |
@@ -83,7 +85,12 @@ jobs:
             git config --global user.email "actions@github.com"
             git add docs/assets/diagrams/*.svg docs/assets/diagrams/*.png docs/assets/logo/logo.png
             git commit -m "chore(assets): re-render from source"
-            git push origin HEAD:main
+            # main can move while the job renders.
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push origin HEAD:main && exit 0
+              sleep 10
+            done
+            exit 1
           else
             echo "Assets already up to date — nothing to commit."
           fi
