@@ -15,6 +15,7 @@ resources:
   - cleanuparr.yaml
   - flaresolverr.yaml
   - unpackerr.yaml
+  - recyclarr.yaml
   - exportarr.yaml
   - qbittorrent-exporter.yaml
   - httproutes.yaml

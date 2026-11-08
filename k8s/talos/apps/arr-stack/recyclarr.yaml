@@ -1,0 +1,201 @@
+# Release filters for Sonarr and Radarr. Radarr 4K is managed by hand.
+# Rules and traps: docs/apps/media-stack/README.md
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: recyclarr-config
+  namespace: arr-stack
+data:
+  # Instance names must be unique across services, or Recyclarr skips all and exits 0.
+  # No upgrade or qualities keys: Recyclarr leaves what is omitted, so no file is ever replaced.
+  # min_format_score -5000: MULTi (-2000) stays a last resort, the -10000 blocks still reject.
+  # No x265 penalty: Tdarr makes the library HEVC on purpose.
+  # No "Language: Not Original": Sonarr lists some Norwegian shows as English.
+  recyclarr.yml: |
+    sonarr:
+      sonarr:
+        base_url: http://sonarr:8989
+        api_key: !env_var SONARR_APIKEY
+        quality_profiles:
+          - name: HD - 720p/1080p
+            min_format_score: -5000
+          - name: Any
+            min_format_score: -5000
+        custom_formats:
+          - trash_ids:
+              - 9c11cd3f07101cdba90a2d81cf0e56b4 # LQ
+              - e2315f990da2e2cbfc9fa5b7a6fcfe48 # LQ (Release Title)
+              - 85c61753df5da1fb2aab6f2a47426b09 # BR-DISK
+              - fbcb31d8dabd2a319072b84fc0b7249c # Extras
+              - 32b367365729d530ca1c124a0b180c64 # Bad Dual Groups
+              - 23297a736ca77c0fc8e70f8edd7ee56c # Upscaled
+              - e6258996055b9fbab7e9cb2f75819294 # WEB Tier 01
+              - 58790d4e2fdcd9733aa7ae68ba2bb503 # WEB Tier 02
+              - d84935abd3f8556dcd51d4f27e22d0a6 # WEB Tier 03
+              - d0c516558625b04b363fa6c5c2c7cfd4 # WEB Scene
+              - d6819cba26b1a6508138d25fb5e32293 # HD Bluray Tier 01
+              - c2216b7b8aa545dc1ce8388c618f8d57 # HD Bluray Tier 02
+            assign_scores_to:
+              - name: HD - 720p/1080p
+              - name: Any
+          - trash_ids:
+              - 7ba05c6e0e14e793538174c679126996 # MULTi
+            assign_scores_to:
+              - name: HD - 720p/1080p
+                score: -2000
+              - name: Any
+                score: -2000
+          # Above the 100 gap between WEB tiers, so one source for a whole season wins.
+          - trash_ids:
+              - 3bc5f395426614e155e585a2f056cdf1 # Season Pack
+            assign_scores_to:
+              - name: HD - 720p/1080p
+                score: 150
+              - name: Any
+                score: 150
+
+    radarr:
+      radarr:
+        base_url: http://radarr:7878
+        api_key: !env_var RADARR_APIKEY
+        quality_profiles:
+          - name: HD - 720p/1080p
+            min_format_score: -5000
+        custom_formats:
+          - trash_ids:
+              - 90a6f9a284dff5103f6346090e6280c8 # LQ
+              - e204b80c87be9497a8a6eaff48f72905 # LQ (Release Title)
+              - ed38b889b31be83fda192888e2286d83 # BR-DISK
+              - 0a3f082873eb454bde444150b70253cc # Extras
+              - b8cd450cbfa689c0259a01d9e29ba3d6 # 3D
+              - b6832f586342ef70d9c128d40c07b872 # Bad Dual Groups
+              - bfd8eb01832d646a0a89c4deb46f8564 # Upscaled
+              - c20f169ef63c5f40c2def54abaf4438e # WEB Tier 01
+              - 403816d65392c79236dcb6dd591aeda4 # WEB Tier 02
+              - af94e0fe497124d1f9ce732069ec8c3b # WEB Tier 03
+              - ed27ebfef2f323e964fb1f61391bcb35 # HD Bluray Tier 01
+              - c20c8647f2746a1f4c4262b0fbbeeeae # HD Bluray Tier 02
+              - 5608c71bcebba0a5e666223bae8c9227 # HD Bluray Tier 03
+            assign_scores_to:
+              - name: HD - 720p/1080p
+          - trash_ids:
+              - 4b900e171accbfb172729b63323ea8ca # MULTi
+            assign_scores_to:
+              - name: HD - 720p/1080p
+                score: -2000
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: recyclarr
+  namespace: arr-stack
+spec:
+  schedule: "30 4 * * *"
+  timeZone: Europe/Oslo
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 900
+      template:
+        metadata:
+          labels:
+            app: recyclarr
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: recyclarr
+              image: ghcr.io/recyclarr/recyclarr:8.8.1
+              args:
+                - sync
+              env:
+                - name: SONARR_APIKEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: exportarr-api-keys
+                      key: SONARR_APIKEY
+                - name: RADARR_APIKEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: exportarr-api-keys
+                      key: RADARR_APIKEY
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                - name: recyclarr-config
+                  mountPath: /config/recyclarr.yml
+                  subPath: recyclarr.yml
+          volumes:
+            - name: config
+              emptyDir: {}
+            - name: recyclarr-config
+              configMap:
+                name: recyclarr-config
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: recyclarr-policy
+  namespace: arr-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: recyclarr
+  ingress:
+    - fromEntities:
+        - host
+        - health
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
+    - toEndpoints:
+        - matchLabels:
+            app: sonarr
+      toPorts:
+        - ports:
+            - port: "8989"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app: radarr
+      toPorts:
+        - ports:
+            - port: "7878"
+              protocol: TCP
+    # Recyclarr clones the TRaSH guide and its templates on every run.
+    - toFQDNs:
+        - matchName: github.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
