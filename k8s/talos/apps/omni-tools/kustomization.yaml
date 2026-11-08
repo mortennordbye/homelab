@@ -5,11 +5,5 @@ commonAnnotations:
   argocd.argoproj.io/sync-wave: "0"
 
 resources:
-  - deployment.yaml
-  - service.yaml
-  - httproute.yaml
-  - cloudflare-only-middleware.yaml
   - namespace.yaml
-  - ciliumnetworkpolicy.yaml
-  - interceptorroute.yaml
-  - scaledobject.yaml
+  - staticsite.yaml

@@ -194,7 +194,8 @@ Other apps, one directory each under `k8s/talos/apps/`:
 - mealie: recipe manager on `mealie.local.bigd.no`, private gateway, SQLite, sign-up off.
 - homepage: the hub on `hub.bigd.no`, behind Authentik forward-auth.
 - bigd: the static `bigd.no` landing page. nginx serves `index.html` from a ConfigMap.
-- omni-tools: a stateless browser tool collection on `omni-tools.bigd.no`.
+- omni-tools: a stateless browser tool collection on `omni-tools.bigd.no`. It is a kro
+  `StaticSite` instance, so kro owns its objects and Argo CD owns only the instance.
 - isponsorblocktv: skips sponsor segments and ads in the YouTube app on the TVs through
   YouTube's lounge API. It has no route and no volume. The paired screens live in
   Bitwarden ([`../apps/isponsorblocktv/README.md`](../apps/isponsorblocktv/README.md)).

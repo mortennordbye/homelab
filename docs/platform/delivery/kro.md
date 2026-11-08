@@ -17,7 +17,15 @@ creates. kro generates the CRD and reconciles the instances.
 | `StaticSite` | [`rgd-static-site.yaml`](../../../k8s/talos/infra/kro/rgd-static-site.yaml) | Deployment, Service, Cloudflare-only Middleware, public HTTPRoute, KEDA InterceptorRoute and ScaledObject, CiliumNetworkPolicy |
 
 `StaticSite` fits an nginx image that listens on port 80 as UID 101. An instance sets
-`image` and `host`.
+`image` and `host`. [`omni-tools`](../../../k8s/talos/apps/omni-tools/staticsite.yaml) is
+the example. A new instance also needs its namespace in the KEDA
+[`referencegrant.yaml`](../../../k8s/talos/infra/keda-http-add-on/referencegrant.yaml).
+
+## Move an app to an instance
+
+kro adopts objects that already exist with the same names. Argo CD then prunes those
+objects, because they left Git, and kro creates them again. Expect about 30 seconds of
+downtime and a new Service cluster IP.
 
 ## Add a kind
 
