@@ -110,6 +110,35 @@ Check: `stoppedUP` or `missingFiles` in qBittorrent's torrent list should be emp
   `Backups`. The nightly VolSync copy of `/config` carries these zips. A restore
   starts from the newest zip, not from the live database (`docs/platform/backups/README.md`).
 
+## Release filters
+
+The goal is media that plays correctly, not the highest quality tier. Recyclarr
+(`k8s/talos/apps/arr-stack/recyclarr.yaml`) runs every night. It syncs TRaSH custom
+formats and scores into the `HD - 720p/1080p` profile in Sonarr and Radarr, and into
+the `Any` profile in Sonarr. Radarr 4K is not managed.
+
+| Score | Custom formats | Effect |
+| ----- | -------------- | ------ |
+| -10000 | LQ, LQ (Release Title), BR-DISK, Extras, Bad Dual Groups, Upscaled, 3D (Radarr only) | The release is rejected |
+| -2000 | MULTi | The release is grabbed only when nothing else exists. These releases often have a foreign first audio track |
+| TRaSH default | WEB Tier 01 to 03, WEB Scene, HD Bluray tiers | Good groups win inside one quality |
+| 150 | Season Pack (Sonarr) | One source for a whole season wins, so the audio does not change between episodes |
+
+Minimum custom format score is -5000. Scores decide only new grabs. Upgrades stay off
+in these profiles, so a filter change replaces no file. Existing bad files need a
+manual search.
+
+Do not add these rules:
+
+- A penalty on x265. Tdarr makes the library HEVC on purpose.
+- "Language: Not Original". Sonarr lists some Norwegian shows as English, and the
+  rule would reject their Norwegian releases.
+- An `upgrade` key with a score cutoff in the Recyclarr config. Almost every file
+  scores 0 today, so a large part of the library would download again.
+
+Check a release: `POST /api/v3/parse?title=<release name>` on Sonarr or Radarr
+returns its custom formats and score.
+
 ## Radarr 4K
 
 `https://radarr-4k.local.bigd.no` is a second Radarr for films kept in 4K. A 4K film
