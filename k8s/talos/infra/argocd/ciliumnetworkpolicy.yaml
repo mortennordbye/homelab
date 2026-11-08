@@ -53,6 +53,10 @@ spec:
         - matchName: "external-secrets.io"
         - matchName: "charts.goauthentik.io"
         - matchName: "charts.jetstack.io"
+        # registry.k8s.io redirects manifests to pkg.dev and blobs to its CDN.
+        - matchName: "registry.k8s.io"
+        - matchName: "cdn.registry.k8s.io"
+        - matchPattern: "*.pkg.dev"
         - matchName: "helm.cilium.io"
       toPorts:
         - ports:

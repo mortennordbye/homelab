@@ -1,0 +1,12 @@
+# Aggregation, not the chart default of cluster-wide "*". Every kind that a
+# definition creates needs a rule in clusterrole-static-site.yaml.
+rbac:
+  mode: aggregation
+
+deployment:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
