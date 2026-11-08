@@ -224,13 +224,17 @@ The node uses the iGPU through Quick Sync, shared with Plex (see
 
 Flow `h264ToHevcQsv`, stored in `tdarr-flow-h264-to-hevc-qsv.json` next to this file:
 
-1. Only H.264 video continues.
-2. Skip files with more than one link (still seeding) and anything with `remux` in
+1. Skip files with more than one link (still seeding) and anything with `remux` in
    the path.
-3. Encode video to HEVC with QSV, preset slow, quality 23, audio and subtitles copied.
-4. Stop with an error if the new file's duration is not within 0.5 percent of the
+2. In an MKV with a usable English track, make that track the first audio track and
+   the default. Commentary and audio-description tracks do not count. Clear the default
+   flag on subtitles in other languages. All streams are copied, so quality does not
+   change. Stop with an error if the duration changes by more than 0.5 percent.
+3. Only H.264 video continues.
+4. Encode video to HEVC with QSV, preset slow, quality 23, audio and subtitles copied.
+5. Stop with an error if the new file's duration is not within 0.5 percent of the
    original's. This catches a truncated or broken encode.
-5. Replace the original only when the new file is under 85 percent of the old size.
+6. Replace the original only when the new file is under 85 percent of the old size.
    Otherwise switch back to the original and end without an error. There is no lower
    size bound. QSV quality 23 gives 6 to 20 percent on clean H.264 WEB-DL and
    Bluray sources at 42 to 50 dB PSNR. The duration check is what guards against
