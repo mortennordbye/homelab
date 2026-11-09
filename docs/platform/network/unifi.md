@@ -122,13 +122,11 @@ the daily speedtest and the management settings.
   therefore keep their console values. This is why IPS ad blocking, DNS filtering
   and the SSH credentials under `mgmt` stay out of the repo and are not reset.
 - A declared section must list every field that the provider models. Unset fields
-  are sent as `false` or empty, not skipped. `mgmt`,
+  are sent as `false` or empty, not skipped. `mgmt`, `usg`, `ips`,
   `igmp_snooping` and `radius` are the exception. The provider reads the live
   section first and overlays only the declared fields.
-- `usg` (conntrack timeouts, ALG modules, UPnP, mDNS) is not declared. The
-  provider rebuilds it from scratch and always sends fields that it does not model,
-  `mdns_enabled` and `lldp_enable_all` included. A declared section would
-  switch them off.
+- `usg` leaves out the conntrack timeouts. With `timeout_setting_preference =
+  "auto"` the controller computes them.
 
 ## Rebuilding state
 
@@ -141,6 +139,5 @@ file.
 
 ## Not managed here
 
-The gateway settings in the `usg` section (see above), the mDNS reflector,
-Teleport, the predefined zones and their default policies, admin accounts and
-backups.
+The mDNS reflector, Teleport, the predefined zones and their default policies,
+admin accounts and backups.
