@@ -64,7 +64,7 @@ import { Body } from "./Body";
 import { Painting } from "./Paintings";
 import { HeldRemote, ThrownRemote, type RemotePlace } from "./HeldRemote";
 import { Kbd } from "@/components/primitives/Kbd";
-import { EXTRA_CHANNELS } from "./TvChannels";
+import { EXTRA_CHANNELS, TALK_SRC } from "./TvChannels";
 import { FakeCrash } from "./FakeCrash";
 import { LeaderLabel } from "./LeaderLabel";
 import { SleepOverlay, useSleep } from "./Sleep";
@@ -129,10 +129,18 @@ if (WEBGL_OK && !window.matchMedia("(pointer: coarse)").matches) {
 // Everything cluster-shaped goes on the television. FEED STATUS gets no
 // screen: the HUD chip already carries live/stale/snapshot everywhere.
 const WALL_PANELS = PANELS.filter((p) => p.id !== "feed");
-/** Every panel at once, then one channel per panel. */
-const TV_CHANNELS = WALL_PANELS.length + 1 + EXTRA_CHANNELS.length;
 /** The Snake channel, the one the P key starts a game on. */
 const SNAKE_CHANNEL = WALL_PANELS.length + 1 + EXTRA_CHANNELS.findIndex((c) => c.id === "snake");
+/** The talk deck. Last of all, so a cycle that ends before it never shows it. */
+const TALK_CHANNEL = WALL_PANELS.length + 1 + EXTRA_CHANNELS.findIndex((c) => c.id === "talk");
+
+/** The remote's next channel. With ?talk the deck comes straight after all panels. */
+function channelAfter(c: number, talk: boolean) {
+  if (!talk) return (c + 1) % TALK_CHANNEL;
+  if (c === 0) return TALK_CHANNEL;
+  if (c === TALK_CHANNEL) return 1;
+  return (c + 1) % TALK_CHANNEL;
+}
 
 /** What the remote would switch to, for its prompt. */
 function channelName(c: number) {
@@ -187,6 +195,39 @@ function ScreenWall({
         />
       </Interactive>
     </>
+  );
+}
+
+/**
+ * The talk deck over the whole room. The deck posts `talk-exit` on Esc; the
+ * room ends the talk on that, or when fullscreen goes by any other way.
+ */
+function TalkOverlay({ onExit }: { onExit: () => void }) {
+  const frame = useRef<HTMLIFrameElement>(null);
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin === window.location.origin && e.data?.type === "talk-exit") onExit();
+    };
+    const onFullscreen = () => {
+      if (!document.fullscreenElement) onExit();
+    };
+    window.addEventListener("message", onMessage);
+    document.addEventListener("fullscreenchange", onFullscreen);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      document.removeEventListener("fullscreenchange", onFullscreen);
+    };
+  }, [onExit]);
+  return (
+    <div className="fixed inset-0 z-[220] bg-[#131322]">
+      <iframe
+        ref={frame}
+        src={`${TALK_SRC}#1`}
+        title="Bygg i det åpne"
+        className="h-full w-full border-0"
+        onLoad={() => frame.current?.contentWindow?.focus()}
+      />
+    </div>
   );
 }
 
@@ -953,6 +994,10 @@ function Scene({
     next: () => void;
     playingSnake: boolean;
     setPlayingSnake: (v: boolean) => void;
+    /** Opened with ?talk: the deck channel is in the cycle. */
+    talk: boolean;
+    presenting: boolean;
+    present: () => void;
   };
   /** The TV remote: in hand, where it was put down, and the two moves. */
   remoteHand: {
@@ -987,9 +1032,9 @@ function Scene({
   const [settling, setSettling] = useState(false);
 
   const { holdingRemote, remotePlace, pickUpRemote, putDownRemote, thrown, throwRemote, landRemote } = remoteHand;
-  const { channel: tvChannel, next: nextChannel, playingSnake, setPlayingSnake } = tv;
+  const { channel: tvChannel, next: nextChannel, playingSnake, setPlayingSnake, talk, presenting, present } = tv;
 
-  const upNext = (tvChannel + 1) % TV_CHANNELS;
+  const upNext = channelAfter(tvChannel, talk);
   const remoteDetail = `to ch ${upNext + 1} · ${channelName(upNext)}`;
   const stopSnake = useCallback(() => setPlayingSnake(false), [setPlayingSnake]);
   /* P starts Snake while its channel is up and the remote is in hand. */
@@ -1002,6 +1047,16 @@ function Scene({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [holdingRemote, tvChannel, playingSnake, setPlayingSnake]);
+  /* P opens the deck while its channel is up and the remote is in hand. */
+  useEffect(() => {
+    if (!holdingRemote || tvChannel !== TALK_CHANNEL || presenting) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (isTyping(e.target) || e.code !== "KeyP") return;
+      present();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [holdingRemote, tvChannel, presenting, present]);
   const { camera } = useThree();
   /* drei's Html portals into events.connected, which r3f sets only after the
      first commit. A screen mounted before that re-roots mid-commit and can
@@ -1254,8 +1309,11 @@ export default function FunRoom({
   );
   const [prompt, setPrompt] = useState<Prompt>(null);
   const [caption, setCaption] = useState<string | null>(null);
+  /* Safe to read window here; see `coarse` below. */
+  const [talk] = useState(() => new URLSearchParams(window.location.search).has("talk"));
   const [tvChannel, setTvChannel] = useState(0);
-  const nextChannel = useCallback(() => setTvChannel((c) => (c + 1) % TV_CHANNELS), []);
+  const nextChannel = useCallback(() => setTvChannel((c) => channelAfter(c, talk)), [talk]);
+  const [presenting, setPresenting] = useState(false);
   const [playingSnake, setPlayingSnake] = useState(false);
   const [holdingRemote, setHoldingRemote] = useState(false);
   const [remotePlace, setRemotePlace] = useState<RemotePlace | null>(null);
@@ -1316,7 +1374,25 @@ export default function FunRoom({
      Without this, WASD still walks you across the room while a card is open
      or you are typing at the terminal — the pointer is released but the key
      handlers are on window and do not know that. */
-  const paused = card !== null || terminalActive || introOpen || playingSnake || watching || printerOpen || desktopActive;
+  const paused = card !== null || terminalActive || introOpen || playingSnake || watching || printerOpen || desktopActive || presenting;
+
+  /* Fullscreen must be asked for inside the P keypress, while it still carries
+     user activation. The keyboard lock lets Esc reach the deck instead of only
+     leaving fullscreen; where it is missing, leaving fullscreen ends the talk. */
+  const present = useCallback(() => {
+    controlsRef.current?.unlock();
+    setPresenting(true);
+    document.documentElement
+      .requestFullscreen?.()
+      .then(() => (navigator as Navigator & { keyboard?: { lock: (k: string[]) => Promise<void> } }).keyboard?.lock(["Escape"]))
+      .catch(() => {});
+  }, []);
+  /* Leaves the lock to the next click, like every Esc exit. */
+  const endTalk = useCallback(() => {
+    setPresenting(false);
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (!coarse) setFreeLook(true);
+  }, [coarse]);
 
   /* Opening a card releases the pointer, because the card is a DOM panel and
      the visitor needs a cursor to click its link. Closing it hands the pointer
@@ -1688,7 +1764,7 @@ export default function FunRoom({
             onTerminalExit={exitTerminal}
             onCrash={crash}
             remoteHand={{ holdingRemote, remotePlace, pickUpRemote, putDownRemote, thrown, throwRemote, landRemote }}
-            tv={{ channel: tvChannel, next: nextChannel, playingSnake, setPlayingSnake }}
+            tv={{ channel: tvChannel, next: nextChannel, playingSnake, setPlayingSnake, talk, presenting, present }}
             paused={paused}
             lights={lights}
             onToggleLight={toggleLight}
@@ -1798,8 +1874,15 @@ export default function FunRoom({
               <Kbd className={KEY}>P</Kbd> {playingSnake ? "playing · esc leaves" : "play snake"}
             </span>
           )}
+          {tvChannel === TALK_CHANNEL && (
+            <span className="flex items-center gap-2">
+              <Kbd className={KEY}>P</Kbd> present · esc leaves
+            </span>
+          )}
         </div>
       )}
+
+      {presenting && <TalkOverlay onExit={endTalk} />}
 
       {/* Stays mounted and fades rather than unmounting, so the room is already
           rendering behind it as it goes. pointer-events-none throughout, which

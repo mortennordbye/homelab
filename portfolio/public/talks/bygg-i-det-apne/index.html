@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Bygg i det åpne</title>
+<link rel="icon" href="img/nimtech-mark.svg">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root {
+  --coral: #FE947C;
+  --peach: #EDA595;
+  --indigo: #6966DA;
+  --navy: #131322;
+  --navy-dark: #252446;
+  --navy-mid: #1D1D33;
+  --bg-950: #141422;
+  --bg-900: #1F1F30;
+  --bg-800: #303042;
+  --bg-700: #454558;
+  --gray-500: #7E7E94;
+  --gray-400: #A5A5B8;
+  --gray-300: #CDCDD9;
+  --white: #FFFFFF;
+  --soft: #EFEFFF;
+  --light-bg: #F3F3FA;
+  --head: "Titillium Web", system-ui, sans-serif;
+  --body: "Work Sans", system-ui, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #0b0b16; overflow: hidden; }
+body { font-family: var(--body); color: var(--white); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+
+#viewport { position: fixed; inset: 0; }
+#stage { width: 1920px; height: 1080px; position: absolute; left: 50%; top: 50%; transform-origin: center center; }
+
+.slide {
+  position: absolute; inset: 0; display: none; overflow: hidden;
+  background: var(--navy); padding: 120px 140px 110px;
+}
+.slide.active { display: flex; flex-direction: column; }
+.slide.light { background: var(--white); color: var(--navy); }
+
+/* Chrome on every slide: logo bottom left, counter bottom right */
+.slide::after {
+  content: attr(data-n);
+  position: absolute; right: 140px; bottom: 48px;
+  font: 500 22px var(--body); color: var(--gray-500); letter-spacing: .04em;
+}
+.brand {
+  position: absolute; left: 140px; bottom: 44px;
+  display: flex; align-items: center; gap: 14px;
+  font: 600 30px var(--head); color: var(--white); letter-spacing: .01em;
+}
+.brand img { height: 30px; }
+.slide.light .brand { color: var(--navy); }
+.slide.light .kicker { color: var(--indigo); }
+
+.bar { width: 96px; height: 8px; border-radius: 4px; background: var(--coral); margin-bottom: 40px; flex: none; }
+.kicker { font: 600 24px var(--body); color: var(--coral); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 18px; }
+h1 { font: 600 112px/1.05 var(--head); letter-spacing: -.01em; }
+h2 { font: 600 76px/1.1 var(--head); letter-spacing: -.005em; margin-bottom: 28px; }
+h3 { font: 600 38px/1.2 var(--head); margin-bottom: 10px; }
+.lead { font: 400 38px/1.45 var(--body); color: var(--gray-300); max-width: 1400px; }
+.slide.light .lead { color: var(--bg-700); }
+p, li { font-size: 30px; line-height: 1.5; }
+.muted { color: var(--gray-400); }
+.slide.light .muted { color: var(--gray-500); }
+em { font-style: normal; color: var(--coral); }
+.slide.light em { color: #C2553C; }
+code { font-family: var(--mono); font-size: .88em; background: var(--bg-800); padding: 2px 10px; border-radius: 6px; color: var(--soft); }
+.slide.light code { background: var(--soft); color: var(--navy); }
+
+.grow { flex: 1; min-height: 0; }
+.row { display: flex; gap: 40px; }
+.grid { display: grid; gap: 32px; }
+.g2 { grid-template-columns: 1fr 1fr; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+
+.card {
+  background: var(--navy-dark); border-radius: 20px; padding: 40px 44px;
+  border: 1px solid rgba(255,255,255,.06);
+}
+.slide.light .card { background: var(--light-bg); border-color: transparent; }
+.card p { color: var(--gray-300); font-size: 27px; }
+.slide.light .card p { color: var(--bg-700); }
+.card .tag { display: inline-block; margin-bottom: 18px; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 22px; border-radius: 999px; font: 500 22px var(--body);
+  background: rgba(254,148,124,.16); color: var(--coral);
+}
+.chip.indigo { background: rgba(105,102,218,.22); color: #A9A7F0; }
+.chip.gray { background: var(--bg-800); color: var(--gray-300); }
+.slide.light .chip { color: #B4492F; }
+.slide.light .chip.indigo { background: var(--soft); color: var(--indigo); }
+
+.links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 28px; }
+.link {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 16px 28px; border-radius: 12px; text-decoration: none;
+  font: 600 25px var(--body); background: var(--coral); color: var(--navy);
+}
+.link::after { content: "↗"; font-weight: 600; }
+.link.ghost { background: transparent; color: var(--white); border: 2px solid var(--bg-700); }
+.link:hover { filter: brightness(1.08); }
+.link.ghost:hover { border-color: var(--coral); color: var(--coral); }
+.slide.light .link.ghost { color: var(--navy); border-color: var(--gray-300); }
+
+.stat { padding: 34px 38px; }
+.stat b { display: block; font: 600 88px/1 var(--head); color: var(--white); margin-bottom: 12px; }
+.stat span { font-size: 25px; color: var(--gray-400); }
+
+ul.plain { list-style: none; }
+ul.plain li { position: relative; padding-left: 40px; margin-bottom: 18px; }
+ul.plain li::before { content: ""; position: absolute; left: 0; top: 18px; width: 16px; height: 16px; border-radius: 50%; background: var(--coral); }
+ul.plain.no li::before { background: transparent; border: 3px solid #F87171; }
+
+.diagram {
+  background: var(--light-bg); border-radius: 20px; padding: 24px; overflow-y: auto;
+  scrollbar-width: thin;
+}
+.diagram img { width: 100%; display: block; }
+
+.compact .card {
+  display: grid; grid-template-columns: 1fr auto; column-gap: 24px; padding: 32px 40px;
+  grid-template-areas: "tag links" "title links" "text text";
+}
+.compact .card .tag { grid-area: tag; justify-self: start; margin-bottom: 12px; }
+.compact .card h3 { grid-area: title; }
+.compact .card p { grid-area: text; font-size: 25px; margin-top: 6px; }
+.compact .card .links { grid-area: links; margin-top: 0; align-self: start; flex-wrap: nowrap; }
+.compact .link { padding: 12px 22px; font-size: 22px; }
+
+/* Network map: dark diagram, framed to match its own background */
+.netmap { flex: 1; min-height: 0; display: flex; justify-content: center; margin-top: 8px; }
+.netmap a { display: block; cursor: zoom-in; height: 100%; aspect-ratio: 7368 / 5776; background: #121612; border-radius: 16px; border: 1px solid var(--bg-800); overflow: hidden; }
+.netmap img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.slide.tight { padding-top: 80px; }
+.slide.tight h2 { margin-bottom: 0; font-size: 60px; }
+
+button.link { border-radius: 12px; cursor: pointer; }
+button.link::after { content: "⤢"; }
+
+/* In-deck zoom viewer */
+#zoom { position: fixed; inset: 0; z-index: 20; background: #121612; display: none; overflow: hidden; cursor: grab; touch-action: none; }
+#zoom.open { display: block; }
+#zoom.drag { cursor: grabbing; }
+#zoom img { position: absolute; left: 0; top: 0; transform-origin: 0 0; user-select: none; -webkit-user-drag: none; max-width: none; }
+#zoom-bar { position: fixed; right: 20px; top: 16px; z-index: 21; display: none; gap: 8px; }
+#zoom.open + #zoom-bar { display: flex; }
+#zoom-bar button { font: 600 16px var(--body); color: var(--white); background: rgba(19,19,34,.9); border: 1px solid var(--bg-700); border-radius: 10px; padding: 8px 14px; cursor: pointer; }
+#zoom-bar button:hover { border-color: var(--coral); color: var(--coral); }
+
+/* Title slide */
+.title-slide { justify-content: center; }
+.title-slide .who { margin-top: 64px; display: flex; align-items: center; gap: 28px; }
+.avatar { width: 92px; height: 92px; border-radius: 50%; background: var(--indigo); display: grid; place-items: center; font: 600 38px var(--head); }
+.who b { display: block; font: 600 36px var(--head); }
+.who span { font-size: 26px; color: var(--gray-400); }
+.mark-bg { position: absolute; right: -120px; top: 120px; width: 900px; opacity: .06; }
+
+/* Dependency figure: labels sit in image pixel coordinates (385 x 489) */
+.dep { position: relative; height: 100%; display: flex; justify-content: center; }
+.dep-fig { position: relative; height: 640px; aspect-ratio: 385 / 489; background: #fff; border-radius: 16px; flex: none; }
+.dep-fig img { width: 100%; height: 100%; display: block; border-radius: 16px; }
+.dep-fig span {
+  position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
+  font: 600 17px var(--body); color: var(--navy); line-height: 1.1; text-align: center;
+}
+.dep-fig .top { font: 600 21px var(--head); }
+.dep-fig .callout {
+  transform: translate(0, -50%); text-align: left; color: var(--white);
+  font-size: 22px; line-height: 1.3;
+}
+.dep-fig .callout b { color: var(--coral); font-size: 26px; }
+.credit { position: absolute; bottom: -38px; left: 0; font-size: 17px; color: var(--gray-500); }
+
+/* Timeline of incidents */
+.incident { border-left: 6px solid var(--coral); }
+.incident .year { font: 600 64px/1 var(--head); color: var(--coral); margin-bottom: 14px; }
+
+/* Notes */
+.notes { display: none; }
+#notes {
+  position: fixed; left: 0; right: 0; bottom: 0; max-height: 34vh; overflow: auto;
+  background: rgba(19,19,34,.97); border-top: 3px solid var(--coral);
+  padding: 20px 32px 28px; font: 400 19px/1.55 var(--body); color: var(--gray-300);
+  display: none; z-index: 10;
+}
+#notes.open { display: block; }
+#notes h4 { font: 600 15px var(--body); color: var(--coral); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 8px; }
+#notes ul { padding-left: 22px; }
+#help {
+  position: fixed; right: 16px; top: 12px; font: 500 13px var(--body); color: var(--bg-700);
+  z-index: 11; transition: opacity .4s;
+}
+#progress { position: fixed; left: 0; top: 0; height: 4px; background: var(--coral); transition: width .25s; z-index: 11; }
+
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  html, body { overflow: visible; height: auto; background: none; }
+  #viewport { position: static; display: block; }
+  #stage { transform: none !important; position: static; width: auto; height: auto; }
+  .slide { display: flex !important; flex-direction: column; position: relative; width: 1920px; height: 1080px; page-break-after: always; break-after: page; }
+  .diagram { overflow: hidden; }
+  #notes, #help, #progress { display: none !important; }
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div id="help">← → bla · F fullskjerm · N notater · Z zoom</div>
+<div id="viewport"><div id="stage">
+
+<!-- 1 -->
+<section class="slide title-slide">
+  <img class="mark-bg" src="img/nimtech-mark.svg" alt="">
+  <div class="kicker">Lunch &amp; Learn · 20. november</div>
+  <div class="bar"></div>
+  <h1>Bygg i det åpne</h1>
+  <p class="lead" style="margin-top:28px">Hvorfor alt jeg lager er offentlig, og hva det har lært meg.</p>
+  <div class="who">
+    <div class="avatar">MV</div>
+    <div><b>Morten Victor Nordbye</b><span>Senior Platform Engineer</span></div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Del to etter Nima sin presentasjon om datasenteret i kjelleren.</li>
+      <li>Plan: litt om åpen kildekode først. Så viser jeg ekte ting: repoet, dokumentasjonen, bloggen og sideprosjektene.</li>
+      <li>Få lysbilder, mye demo. Spør underveis.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Først: grunnlaget</div>
+  <h2>Hva er åpen kildekode?</h2>
+  <p class="lead">Kildekode som alle kan <em>lese</em>, <em>endre</em> og <em>dele videre</em>. Lisensen bestemmer reglene.</p>
+  <div class="grid g3 grow" style="margin-top:56px; align-content:start">
+    <div class="card"><span class="chip tag">MIT · Apache 2.0</span><h3>Tillatende</h3><p>Bruk koden til hva du vil, også i lukkede produkter. Behold lisensteksten.</p></div>
+    <div class="card"><span class="chip indigo tag">GPL · AGPL</span><h3>Gjensidig</h3><p>Endrer du og distribuerer, må endringene dine også være åpne.</p></div>
+    <div class="card"><span class="chip gray tag">BSL · SSPL</span><h3>Kildetilgjengelig</h3><p>Du kan lese koden, men bruken er begrenset. Ikke åpen kildekode etter OSI-definisjonen.</p></div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Åpen kildekode er ikke "gratis programvare". Det er en lisens med rettigheter og plikter.</li>
+      <li>Kildetilgjengelig er viktig å kjenne til: Terraform (BSL) førte til OpenTofu, Redis til Valkey. Fellesskapet forker når lisensen lukkes.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Verden kjører på det</div>
+  <h2>Alt står på åpen kildekode</h2>
+  <div class="row grow" style="margin-top:20px">
+    <div style="flex:1.05">
+      <ul class="plain">
+        <li><b>Linux</b> <span class="muted">alle de 500 raskeste superdatamaskinene, nesten all sky, Android</span></li>
+        <li><b>OpenSSL og OpenSSH</b> <span class="muted">krypterer det meste av trafikken på nettet</span></li>
+        <li><b>curl</b> <span class="muted">over 20 milliarder installasjoner: biler, TV-er, telefoner</span></li>
+        <li><b>Kubernetes</b> <span class="muted">plattformen vi bygger for kundene</span></li>
+        <li><b>PostgreSQL, Git, Python</b> <span class="muted">databasen, versjonskontrollen, språket</span></li>
+      </ul>
+      <p class="muted" style="margin-top:20px">Mye av dette vedlikeholdes av noen få frivillige.</p>
+    </div>
+    <div style="flex:.95">
+      <div class="dep">
+        <div class="dep-fig" style="margin-right:220px">
+          <img src="img/dependency.png" alt="Et tårn av klosser som hviler på én tynn kloss nederst">
+          <span class="top" style="left:34.3%; top:9.8%">Alt vi bygger i dag</span>
+          <span style="left:21.3%; top:58.3%">Nettlesere,<br>apper, sky</span>
+          <span style="left:46.2%; top:58.7%">Kubernetes</span>
+          <span style="left:46.2%; top:66.1%">PostgreSQL</span>
+          <span style="left:34.0%; top:74.8%">Linux-kjernen</span>
+          <span style="left:20.8%; top:83.6%; background:#fff; padding:1px 6px; border:2px solid #333; border-radius:8px; font-size:15px">OpenSSL</span>
+          <span style="left:34.0%; top:90.2%">Git</span>
+          <span style="left:35.3%; top:94.3%">GCC og glibc</span>
+          <span class="callout" style="left:104%; top:76%"><b>FFmpeg</b><br>video i nesten alt:<br>YouTube, VLC, Chrome<br><span style="position:static;transform:none;color:var(--gray-400);font-weight:400">og curl, xz-utils ...</span></span>
+          <div class="credit">Etter xkcd.com/2347, CC BY-NC 2.5</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Linux har kjørt 100 % av TOP500 siden november 2017.</li>
+      <li>curl-prosjektet anslår over 20 milliarder installasjoner. Daniel Stenberg har vedlikeholdt det siden 1998.</li>
+      <li>Tegningen er xkcd 2347. Pilen peker på FFmpeg: biblioteket som spiller av og konverterer video i YouTube, VLC, Chrome og de fleste strømmetjenester. Et lite team av frivillige.</li>
+      <li>Samme mønster: curl, xz-utils, OpenSSL. Neste lysbilde viser hva som skjer når en av dem svikter.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Kritisk, og skjørt</div>
+  <h2>Når én kloss svikter</h2>
+  <div class="grid g3" style="margin-top:28px">
+    <div class="card incident"><div class="year">2014</div><h3>Heartbleed</h3><p>En feil i OpenSSL lekket minne fra servere over hele verden. Prosjektet hadde under to fulltidsutviklere.</p></div>
+    <div class="card incident"><div class="year">2021</div><h3>Log4Shell</h3><p>Et loggbibliotek i Java ga fjernkjøring av kode. Det lå inne i nesten alle Java-systemer.</p></div>
+    <div class="card incident"><div class="year">2024</div><h3>xz-utils</h3><p>En angriper brukte to år på å vinne tillit som vedlikeholder, og la inn en bakdør i SSH-kjeden.</p></div>
+  </div>
+  <p class="lead" style="margin-top:56px">Åpen kode er grunnen til at alle tre ble <em>funnet</em> og <em>rettet</em> raskt. xz ble oppdaget av én utvikler som la merke til at SSH brukte 500 ms for lenge.</p>
+  <aside class="notes">
+    <ul>
+      <li>Heartbleed (april 2014) ga oss Core Infrastructure Initiative, i dag OpenSSF.</li>
+      <li>Log4Shell (desember 2021): mange visste ikke engang at de brukte log4j. Derfor SBOM og avhengighetsskanning.</li>
+      <li>xz (mars 2024): Andres Freund hos Microsoft fant den ved en tilfeldighet. Den ble stoppet før stabile distribusjoner tok den inn.</li>
+      <li>Poenget: åpenhet gir ikke sikkerhet alene, men den gjør at noen kan se.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 5 -->
+<section class="slide light">
+  <div class="bar"></div>
+  <div class="kicker">Derfor</div>
+  <h2>Jeg bygger også i det åpne</h2>
+  <p class="lead">Når fremmede kan lese hver eneste commit, endrer det hvordan du jobber.</p>
+  <div class="grid g3" style="margin-top:56px">
+    <div class="card"><span class="chip tag">01</span><h3>Bedre kode</h3><p>Ingen snarveier du skammer deg over. Små, lesbare endringer med en grunn.</p></div>
+    <div class="card"><span class="chip indigo tag">02</span><h3>Bedre dokumentasjon</h3><p>Skriv for en som aldri har sett oppsettet. Den personen er ofte deg selv om et halvt år.</p></div>
+    <div class="card"><span class="chip gray tag">03</span><h3>Sikkerhet fra første linje</h3><p>Du kan ikke "fikse det senere" når alt er offentlig fra første commit.</p></div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Dette er de tre påstandene fra invitasjonen. Resten av tiden viser jeg bevis for dem.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Demo 1 · Homelab</div>
+  <h2>Hele hjemmedatasenteret som kode</h2>
+  <div class="grid g4" style="margin-top:24px">
+    <div class="card stat"><b>323</b><span>stjerner på GitHub</span></div>
+    <div class="card stat"><b>4 187</b><span>commits</span></div>
+    <div class="card stat"><b>2 170</b><span>pull requests</span></div>
+    <div class="card stat"><b>0</b><span>hemmeligheter i Git</span></div>
+    <div class="card stat"><b>3</b><span>Proxmox-noder</span></div>
+    <div class="card stat"><b>6</b><span>Talos-VM-er i Kubernetes</span></div>
+    <div class="card stat"><b>23</b><span>apper</span></div>
+    <div class="card stat"><b>39</b><span>plattformtjenester</span></div>
+  </div>
+  <div class="links">
+    <a class="link" href="https://github.com/mortennordbye/homelab" target="_blank">github.com/mortennordbye/homelab</a>
+    <a class="link ghost" href="https://github.com/mortennordbye/homelab/tree/main/k8s/talos" target="_blank">k8s/talos</a>
+    <a class="link ghost" href="https://github.com/mortennordbye/homelab/tree/main/terraform" target="_blank">terraform</a>
+    <a class="link ghost" href="https://github.com/mortennordbye/homelab/pulls?q=is%3Apr+is%3Amerged" target="_blank">Merged PRs</a>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Vis README-en først, så mappetreet: <code>k8s/talos/apps</code> og <code>k8s/talos/infra</code>, én mappe per app.</li>
+      <li>Terraform lager VM-ene på Proxmox. Talos er operativsystemet. Argo CD tar resten.</li>
+      <li>Hver endring er en PR, også mine egne. Vis en tilfeldig merged PR med CI-sjekkene.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Demo 1 · Arkitektur</div>
+  <div class="row grow">
+    <div style="flex:1">
+      <h2>Fra internett til NAS</h2>
+      <ul class="plain">
+        <li>Cloudflare og Traefik foran, Gateway API</li>
+        <li>Cilium som nettverk, lastbalanserer og brannmur</li>
+        <li>Talos Kubernetes på tre Proxmox-noder</li>
+        <li>Synology NAS for data, Proxmox Backup Server</li>
+        <li>Azure for Terraform-state</li>
+      </ul>
+      <div class="links">
+        <a class="link" href="https://docs.nordbye.it/architecture/" target="_blank">Arkitekturspesifikasjonen</a>
+      </div>
+    </div>
+    <div class="diagram" style="flex:.8"><img src="img/architecture-layers.svg" alt="Lagene i homelab, fra internett ned til NAS"></div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Diagrammet til høyre kan rulles. Det er D2-kode i repoet, rendret av CI.</li>
+      <li>Spesifikasjonen beskriver bare nå-tilstanden. Historikken ligger i Git.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 7b -->
+<section class="slide tight">
+  <div class="row" style="align-items:flex-end; justify-content:space-between">
+    <div>
+      <div class="kicker">Demo 1 · Nettverket</div>
+      <h2>Hvem snakker med hvem</h2>
+    </div>
+    <div class="links" style="margin-top:0">
+      <button class="link ghost zoom-open" data-src="img/network-flow.svg">Åpne i full størrelse</button>
+      <a class="link ghost" href="https://github.com/mortennordbye/homelab/blob/main/docs/assets/diagrams/network-flow.d2" target="_blank">D2-kilden</a>
+    </div>
+  </div>
+  <div class="netmap"><a class="zoom-open" data-src="img/network-flow.svg"><img src="img/network-flow.png" alt="Nettverkskart for homelab: internett, Cloudflare, nettverkskant, GitOps, ingress, apper, lagring og fysiske verter"></a></div>
+  <aside class="notes">
+    <ul>
+      <li>Les ovenfra: internett, Cloudflare, UniFi-kanten, så Traefik og Cilium i clusteret.</li>
+      <li>Høyre side er kontrollplanet: GitHub, Bitwarden og GHCR inn til Argo CD og Kargo. Stiplet linje er styring, hel linje er trafikk.</li>
+      <li>Nederst: lagring på Synology og de tre Proxmox-nodene.</li>
+      <li>Klikk på bildet (eller Z) for å åpne det i full størrelse. Rull for å zoome, dra for å flytte, Esc for å lukke.</li>
+      <li>Diagrammet er D2-kode i repoet. CI rendrer det på nytt ved hver endring.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 8 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Demo 1 · Levering</div>
+  <h2>Push til main er den eneste veien inn</h2>
+  <div class="grid g4" style="margin-top:24px">
+    <div class="card"><span class="chip tag">GitOps</span><h3>Argo CD</h3><p>To ApplicationSets lager én Application per mappe. Manuelle endringer blir rullet tilbake.</p></div>
+    <div class="card"><span class="chip indigo tag">Promotering</span><h3>Kargo</h3><p>Nye image-tagger går stage, så prod. Hver prod-endring er en pull request.</p></div>
+    <div class="card"><span class="chip gray tag">Avhengigheter</span><h3>Renovate</h3><p>Foreslår nye versjoner av charts, images og providers som PR-er.</p></div>
+    <div class="card"><span class="chip tag">Kostnad</span><h3>KEDA</h3><p>Apper uten trafikk skalerer til null og våkner på første forespørsel.</p></div>
+  </div>
+  <div class="links">
+    <a class="link" href="https://docs.nordbye.it/platform/delivery/kargo/" target="_blank">Kargo-flyten</a>
+    <a class="link ghost" href="https://github.com/mortennordbye/homelab/pulls?q=is%3Apr+promote" target="_blank">Promoterings-PR-er</a>
+    <a class="link ghost" href="https://github.com/mortennordbye/homelab/pulls?q=is%3Apr+chore%28deps%29" target="_blank">Renovate-PR-er</a>
+    <a class="link ghost" href="https://github.com/mortennordbye/homelab/actions" target="_blank">Actions</a>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Vis en promoterings-PR fra Kargo: diffen er én linje i <code>kustomization.yaml</code>.</li>
+      <li>Vis Actions-fanen: bygg, sårbarhetsskanning, docs, Lighthouse, Scorecard.</li>
+      <li>Det samme mønsteret bruker vi hos kunder. Her kan jeg prøve nye ting uten risiko.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 9 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Demo 1 · Sikkerhet</div>
+  <div class="row grow">
+    <div style="flex:1.1">
+      <h2>Offentlig, men ikke åpent</h2>
+      <ul class="plain">
+        <li><b>Ingen hemmeligheter i Git.</b> <span class="muted">Bitwarden Secrets Manager og External Secrets Operator. Repoet har bare ID-er.</span></li>
+        <li><b>Kyverno</b> <span class="muted">krever låste image-tagger, Pod Security og ressursgrenser</span></li>
+        <li><b>Cilium-policyer</b> <span class="muted">i alle app-navnerom. Det som ikke er tillatt, blir stoppet.</span></li>
+        <li><b>Falco og Trivy</b> <span class="muted">for kjøretid og sårbarheter</span></li>
+        <li><b>OpenSSF Scorecard</b> <span class="muted">måler repoet offentlig</span></li>
+      </ul>
+      <div class="links">
+        <a class="link" href="https://docs.nordbye.it/platform/secrets/" target="_blank">Hemmeligheter</a>
+        <a class="link ghost" href="https://scorecard.dev/viewer/?uri=github.com/mortennordbye/homelab" target="_blank">Scorecard</a>
+        <a class="link ghost" href="https://docs.nordbye.it/platform/post-quantum/" target="_blank">Post-kvante</a>
+      </div>
+    </div>
+    <div class="diagram" style="flex:.75"><img src="img/secrets-flow.svg" alt="Flyten for hemmeligheter fra Bitwarden til pod"></div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Vis en <code>ExternalSecret</code> i repoet: bare en UUID, aldri verdien.</li>
+      <li>AI-agenter har egen token med tilgang til ett prosjekt, og leser aldri det personlige hvelvet.</li>
+      <li>Post-kvante: en oversikt over hvilke tjenester som allerede bruker ML-KEM.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 10 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Demo 2 · Dokumentasjon og blogg</div>
+  <h2>Dokumentasjon er en del av produktet</h2>
+  <div class="grid g2 grow" style="margin-top:20px">
+    <div class="card">
+      <span class="chip tag">docs.nordbye.it</span>
+      <h3>Bygges fra repoet</h3>
+      <p>Bygget feiler hvis en lenke er brutt. Diagrammer er kode (D2). Alt skrives i forenklet teknisk engelsk (STE).</p>
+      <div class="links"><a class="link" href="https://docs.nordbye.it/" target="_blank">docs.nordbye.it</a></div>
+    </div>
+    <div class="card">
+      <span class="chip indigo tag">blog.nordbye.it</span>
+      <h3>Det jeg lærte, skrevet ut</h3>
+      <p>Lengre tekster om det som var vanskelig. Eget Hugo-tema, også åpen kildekode.</p>
+      <div class="links">
+        <a class="link" href="https://blog.nordbye.it/" target="_blank">Bloggen</a>
+        <a class="link ghost" href="https://blog.nordbye.it/blog/cilium-network-policy-rollout/" target="_blank">Cilium-policyer</a>
+        <a class="link ghost" href="https://blog.nordbye.it/blog/observability-stack/" target="_blank">Observability</a>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Vis en runbook, f.eks. gjenoppretting av backup. Skrevet slik at noen andre kan følge den kl. 03.</li>
+      <li>Bloggposten om Cilium: hvordan rulle ut nettverkspolicyer uten å ta ned alt. Direkte relevant for kundeprosjekter.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 11 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Demo 3 · Sideprosjekter</div>
+  <h2>Apper jeg har bygd og drifter</h2>
+  <div class="grid g2 compact" style="margin-top:20px">
+    <div class="card"><span class="chip tag">TypeScript · 11 ★</span><h3>headroom</h3><p>Personlig økonomi: budsjett, eiendeler, investeringer og lånemodeller. Selvhostet, SQLite.</p>
+      <div class="links"><a class="link" href="https://headroom.nordbye.it" target="_blank">Live demo</a><a class="link ghost" href="https://github.com/mortennordbye/headroom" target="_blank">Repo</a></div></div>
+    <div class="card"><span class="chip tag">Next.js · PostgreSQL</span><h3>logeverylift</h3><p>Treningslogg som PWA, laget for mobil. Kjører i clusteret med CloudNativePG.</p>
+      <div class="links"><a class="link" href="https://logeverylift.com" target="_blank">logeverylift.com</a><a class="link ghost" href="https://github.com/mortennordbye/logeverylift" target="_blank">Repo</a></div></div>
+    <div class="card"><span class="chip indigo tag">Rust</span><h3>innestemme</h3><p>Lokal stemmeassistent: Whisper, en liten lokal LLM og tekst-til-tale. Ingen data forlater huset.</p>
+      <div class="links"><a class="link ghost" href="https://github.com/mortennordbye/innestemme" target="_blank">Repo</a></div></div>
+    <div class="card"><span class="chip indigo tag">TypeScript</span><h3>verksted</h3><p>Arbeidsbenk for kodeagenter fra mobilen: tmux, terminal, filer, Git og CI i én container.</p>
+      <div class="links"><a class="link ghost" href="https://github.com/mortennordbye/verksted" target="_blank">Repo</a></div></div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>headroom: åpne demoen og vis lånemodellen. Mest stjerner av sideprosjektene.</li>
+      <li>logeverylift: ekte brukere, ekte database, samme leveringsflyt som homelab.</li>
+      <li>innestemme: erstatter Home Assistant sin Assist, alt lokalt.</li>
+      <li>verksted: slik jeg jobber med Claude Code fra telefonen.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 12 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Demo 3 · Verktøy fra jobben</div>
+  <h2>Problemer jeg møtte hos kunder</h2>
+  <div class="grid g2 grow" style="margin-top:20px">
+    <div class="card"><span class="chip tag">Python · Azure · 5 ★</span><h3>lawless-waf</h3><p>Finjuster falske positiver i Azure WAF uten å betale for Log Analytics. En liten web-app og et lokalt API.</p>
+      <div class="links"><a class="link" href="https://blog.nordbye.it/blog/lawless-waf/" target="_blank">Bloggposten</a><a class="link ghost" href="https://github.com/mortennordbye/lawless-waf" target="_blank">Repo</a></div></div>
+    <div class="card"><span class="chip indigo tag">IaC · DR</span><h3>agentic-dr</h3><p>Lag et katastrofemiljø på forespørsel fra produksjonens egen IaC, i stedet for en kopi som glir fra hverandre.</p>
+      <div class="links"><a class="link" href="https://mortennordbye.github.io/agentic-dr/" target="_blank">Prosjektsiden</a><a class="link ghost" href="https://github.com/mortennordbye/agentic-dr" target="_blank">Repo</a></div></div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Ingen kundedata, ingen kundenavn. Problemet er generelt, løsningen er min.</li>
+      <li>lawless-waf: Log Analytics-kostnaden for WAF-logger blir fort høy. Dette leser loggene billigere.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 13 -->
+<section class="slide">
+  <div class="bar"></div>
+  <div class="kicker">Demo 3 · Åpne formater og småting</div>
+  <h2>Små prosjekter, samme regler</h2>
+  <div class="grid g2 compact" style="margin-top:20px">
+    <div class="card"><span class="chip tag">Python · age</span><h3>OpenSelf og OpenVita</h3><p>Et åpent filformat for CV og profil. Profilen min ligger i et offentlig repo, men kryptert.</p>
+      <div class="links"><a class="link" href="https://mortennordbye.github.io/openself/" target="_blank">OpenSelf</a><a class="link ghost" href="https://github.com/mortennordbye/my-openself" target="_blank">Kryptert profil</a></div></div>
+    <div class="card"><span class="chip indigo tag">Hugo</span><h3>northlight</h3><p>Et rolig, lesbart tema for teknisk skriving. Bloggen min kjører på det.</p>
+      <div class="links"><a class="link" href="https://mortennordbye.github.io/northlight/" target="_blank">Demo</a></div></div>
+    <div class="card"><span class="chip indigo tag">Rust</span><h3>ruter-cli</h3><p>Avgangstavle for kollektivtrafikk i terminalen, med Entur sitt API.</p>
+      <div class="links"><a class="link ghost" href="https://github.com/mortennordbye/ruter-cli" target="_blank">Repo</a></div></div>
+    <div class="card"><span class="chip gray tag">Lua</span><h3>dotfiles</h3><p>Neovim- og Ghostty-oppsettet mitt. Det er lov å stjele.</p>
+      <div class="links"><a class="link ghost" href="https://github.com/mortennordbye/dotfiles" target="_blank">Repo</a></div></div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>OpenSelf er det beste eksempelet på grensen: repoet er offentlig, innholdet er det ikke.</li>
+      <li>ruter-cli: kjør den live i terminalen hvis det er tid.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 14 -->
+<section class="slide light">
+  <div class="bar"></div>
+  <div class="kicker">Ærlig talt</div>
+  <h2>Hva det koster, og hva som aldri deles</h2>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card">
+      <h3>Det koster</h3>
+      <ul class="plain" style="margin-top:20px">
+        <li>Tid. Dokumentasjon og ryddige PR-er tar lengre tid.</li>
+        <li>Git glemmer ingenting. En lekket nøkkel må roteres, ikke slettes.</li>
+        <li>Fremmede leser og kommenterer. Det er poenget, men det krever noe.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Deles aldri</h3>
+      <ul class="plain no" style="margin-top:20px">
+        <li>Hemmeligheter, nøkler og tokens</li>
+        <li>Kundedata, kundenavn og arbeidsgivers kode</li>
+        <li>Detaljer som gjør hjemmenettet sårbart</li>
+        <li>Personopplysninger, også mine egne</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Hvis en hemmelighet havner i Git: den er kompromittert i det øyeblikket du pusher. Roter først, rydd historikken etterpå.</li>
+      <li>Push protection og secret scanning på GitHub er skrudd på.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- 15 -->
+<section class="slide title-slide">
+  <img class="mark-bg" src="img/nimtech-mark.svg" alt="">
+  <div class="bar"></div>
+  <h1>Spørsmål?</h1>
+  <p class="lead" style="margin-top:28px">Alt jeg har vist ligger åpent. Ta en kopi, åpne en issue, send en PR.</p>
+  <div class="links" style="margin-top:48px">
+    <a class="link" href="https://github.com/mortennordbye/homelab" target="_blank">github.com/mortennordbye/homelab</a>
+    <a class="link ghost" href="https://docs.nordbye.it/" target="_blank">docs.nordbye.it</a>
+    <a class="link ghost" href="https://blog.nordbye.it/" target="_blank">blog.nordbye.it</a>
+    <a class="link ghost" href="https://nordbye.it/" target="_blank">nordbye.it</a>
+  </div>
+  <aside class="notes">
+    <ul>
+      <li>Utfordring: start ett lite ting i det åpne denne måneden. En dotfiles-repo holder.</li>
+    </ul>
+  </aside>
+</section>
+
+</div></div>
+<div id="notes"></div>
+<div id="zoom"><img alt=""></div>
+<div id="zoom-bar"><button data-z="in">+</button><button data-z="out">−</button><button data-z="fit">Tilpass</button><button data-z="close">Lukk (Esc)</button></div>
+
+<script>
+(() => {
+  const slides = [...document.querySelectorAll('.slide')];
+  const stage = document.getElementById('stage');
+  const notes = document.getElementById('notes');
+  const progress = document.getElementById('progress');
+  const help = document.getElementById('help');
+  let i = 0;
+  /* Inside the /fun room the room owns fullscreen, and Esc hands control back to it. */
+  const embedded = window.parent !== window;
+  const leave = () => window.parent.postMessage({ type: 'talk-exit' }, location.origin);
+  if (embedded) help.remove();
+
+  slides.forEach((s, n) => {
+    s.dataset.n = `${n + 1} / ${slides.length}`;
+    const brand = document.createElement('div');
+    brand.className = 'brand';
+    brand.innerHTML = `<img src="img/nimtech-mark${s.classList.contains('light') ? '-navy' : ''}.svg" alt="">nimtech`;
+    s.appendChild(brand);
+  });
+
+  function fit() {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+  }
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    const src = slides[i].querySelector('.notes');
+    notes.innerHTML = `<h4>Notater · ${i + 1}</h4>` + (src ? src.innerHTML : '<p>Ingen notater.</p>');
+    progress.style.width = `${((i + 1) / slides.length) * 100}%`;
+    history.replaceState(null, '', `#${i + 1}`);
+  }
+
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (zoomOpen()) {
+      if (k === 'Escape' || k === 'z' || k === 'Z') closeZoom();
+      else if (k === '+' || k === '=') zoomBy(1.25);
+      else if (k === '-') zoomBy(0.8);
+      else if (k === '0') fitZoom();
+      e.preventDefault();
+      return;
+    }
+    if (k === 'Escape' && embedded) { leave(); return; }
+    if (k === 'z' || k === 'Z') {
+      const t = slides[i].querySelector('.zoom-open');
+      if (t) openZoom(t.dataset.src);
+      return;
+    }
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(k)) { e.preventDefault(); show(i + 1); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); show(i - 1); }
+    else if (k === 'Home') show(0);
+    else if (k === 'End') show(slides.length - 1);
+    else if (k === 'n' || k === 'N') notes.classList.toggle('open');
+    else if ((k === 'f' || k === 'F') && !embedded) {
+      document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    }
+  });
+
+  // Zoom viewer: pan and zoom one image without leaving the deck
+  const zoom = document.getElementById('zoom');
+  const zimg = zoom.querySelector('img');
+  let z = { s: 1, x: 0, y: 0 }, drag = null;
+  const zoomOpen = () => zoom.classList.contains('open');
+  const apply = () => { zimg.style.transform = `translate(${z.x}px, ${z.y}px) scale(${z.s})`; };
+  function fitZoom() {
+    const w = zimg.naturalWidth, h = zimg.naturalHeight;
+    z.s = Math.min(innerWidth / w, innerHeight / h);
+    z.x = (innerWidth - w * z.s) / 2; z.y = (innerHeight - h * z.s) / 2; apply();
+  }
+  function zoomBy(f, cx = innerWidth / 2, cy = innerHeight / 2) {
+    const ns = Math.min(Math.max(z.s * f, 0.05), 20);
+    z.x = cx - (cx - z.x) * (ns / z.s); z.y = cy - (cy - z.y) * (ns / z.s); z.s = ns; apply();
+  }
+  function openZoom(src) {
+    zoom.classList.add('open');
+    if (zimg.getAttribute('src') !== src) { zimg.onload = fitZoom; zimg.src = src; } else fitZoom();
+  }
+  function closeZoom() { zoom.classList.remove('open'); }
+  document.querySelectorAll('.zoom-open').forEach(el => el.addEventListener('click', () => openZoom(el.dataset.src)));
+  document.getElementById('zoom-bar').addEventListener('click', e => {
+    const a = e.target.dataset.z;
+    if (a === 'in') zoomBy(1.25); else if (a === 'out') zoomBy(0.8);
+    else if (a === 'fit') fitZoom(); else if (a === 'close') closeZoom();
+  });
+  zoom.addEventListener('wheel', e => { e.preventDefault(); zoomBy(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY); }, { passive: false });
+  zoom.addEventListener('pointerdown', e => { drag = { x: e.clientX - z.x, y: e.clientY - z.y }; zoom.classList.add('drag'); zoom.setPointerCapture(e.pointerId); });
+  zoom.addEventListener('pointermove', e => { if (drag) { z.x = e.clientX - drag.x; z.y = e.clientY - drag.y; apply(); } });
+  zoom.addEventListener('pointerup', () => { drag = null; zoom.classList.remove('drag'); });
+  zoom.addEventListener('dblclick', e => zoomBy(2, e.clientX, e.clientY));
+
+  addEventListener('resize', () => { fit(); if (zoomOpen()) fitZoom(); });
+  addEventListener('hashchange', () => show(parseInt(location.hash.slice(1), 10) - 1 || 0));
+  if (!embedded) setTimeout(() => { help.style.opacity = 0; }, 5000);
+  fit();
+  show(parseInt(location.hash.slice(1), 10) - 1 || 0);
+})();
+</script>
+</body>
+</html>

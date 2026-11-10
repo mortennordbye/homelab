@@ -10,6 +10,7 @@ import {
   ScreensaverChannel,
   SlowTvChannel,
   SnakeChannel,
+  TalkChannel,
 } from "./TvChannels";
 
 // The DOM panel is authored at a fixed pixel size and mapped onto the screen
@@ -295,6 +296,7 @@ export function Dashboard({
                 {extra.id === "snake" && (
                   <SnakeChannel area={area} playing={playingSnake} onExit={onSnakeExit} />
                 )}
+                {extra.id === "talk" && <TalkChannel area={area} />}
               </div>
             ) : solo ? (
               <div

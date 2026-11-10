@@ -10,7 +10,12 @@ export const EXTRA_CHANNELS = [
   { id: "slowtv", title: "SAKTE-TV" },
   { id: "dvd", title: "SCREENSAVER" },
   { id: "snake", title: "SNAKE" },
+  /* Last on purpose: without ?talk the remote's cycle stops before it. */
+  { id: "talk", title: "FOREDRAG" },
 ] as const;
+
+/** The talk deck, a static page under public/talks. */
+export const TALK_SRC = "/talks/bygg-i-det-apne/index.html";
 
 export type ExtraId = (typeof EXTRA_CHANNELS)[number]["id"];
 
@@ -418,6 +423,27 @@ export function SnakeChannel({
           <div className="mt-3 text-[24px] text-[#8a9a8d]">best {best}</div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------
+   Foredrag: the talk deck's title slide, live. P opens it full screen.
+   ------------------------------------------------------------------------- */
+
+export function TalkChannel({ area }: { area: Area }) {
+  return (
+    <div className="relative" style={{ width: area.w, height: area.h, background: "#131322" }}>
+      <iframe
+        src={`${TALK_SRC}#1`}
+        title="Bygg i det åpne"
+        tabIndex={-1}
+        className="absolute inset-0 h-full w-full border-0"
+        style={{ pointerEvents: "none" }}
+      />
+      <div className="absolute inset-x-0 bottom-3 text-center font-mono text-[22px] text-[#cdcdd9]">
+        hold the remote, press <span className="text-[#fe947c]">P</span> to present
+      </div>
     </div>
   );
 }

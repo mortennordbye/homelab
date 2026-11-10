@@ -29,6 +29,14 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: security },
       {
+        // Must stay after the rule above: the last match wins, and the /fun TV frames the talks.
+        source: "/talks/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "X-Robots-Tag", value: "noindex" },
+        ],
+      },
+      {
         // Long-cache immutable build assets. gltf/bin must stay in the list
         // or the fun room's models fall back to the edge's short default.
         source:

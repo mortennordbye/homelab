@@ -458,6 +458,14 @@ Snake. Each one only animates while it is on. P starts Snake while its channel i
 remote is in hand. Snake pauses the room and takes every key until Esc. The best score lives in
 the visitor's own localStorage.
 
+The last extra channel, FOREDRAG, is a talk deck. It is in the cycle only when the room opens
+with `?talk`, and then it comes straight after "all panels". The deck is a static page in
+`public/talks/bygg-i-det-apne/`. The TV shows it in an iframe. P opens it over the whole room
+(`TalkOverlay`) and asks for fullscreen inside the keypress, because fullscreen needs user
+activation. Chrome then locks Esc to the page, and the deck posts `talk-exit` to end the talk.
+Other browsers end the talk when fullscreen ends. `next.config.ts` relaxes `X-Frame-Options` to
+`SAMEORIGIN` for `/talks/` only, and marks it `noindex`.
+
 The washing machine has Maxwell the cat in it (`DancingCat` in `Cat.tsx`). He dances on the drum
 floor while the door is open. `Door` reports open and shut through `onToggle` for that. He is
 fetched the first time the door opens, never with the room. His group is `NO_MERGE`. Otherwise
