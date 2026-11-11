@@ -16,4 +16,4 @@ resources:
 # inline tag in deployment.yaml. The headroom-cd Warehouse/promotion sets it to 0.0.N.
 images:
 - name: ghcr.io/mortennordbye/headroom
-  newTag: 0.0.1015
+  newTag: 0.0.1024
