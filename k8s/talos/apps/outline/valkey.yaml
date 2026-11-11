@@ -1,0 +1,72 @@
+# Queues and collaboration pub/sub only. Outline keeps nothing here that it cannot
+# rebuild, so there is no persistence.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: outline-valkey
+  namespace: outline
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: outline-valkey
+  template:
+    metadata:
+      labels:
+        app: outline-valkey
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: valkey
+          image: valkey/valkey:9.0.7-alpine
+          args:
+            - --save
+            - ""
+            - --appendonly
+            - "no"
+          ports:
+            - name: redis
+              containerPort: 6379
+          readinessProbe:
+            tcpSocket:
+              port: redis
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: outline-valkey
+  namespace: outline
+spec:
+  selector:
+    app: outline-valkey
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis

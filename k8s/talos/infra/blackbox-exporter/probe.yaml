@@ -65,6 +65,7 @@ spec:
         - https://bazarr.local.bigd.no
         - https://bazarr-4k.local.bigd.no
         - https://cleanuparr.local.bigd.no
+        - https://docs.local.bigd.no/_health
         - https://flaresolverr.local.bigd.no
         - https://grafana.local.bigd.no
         - https://ha.local.bigd.no

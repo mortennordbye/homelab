@@ -1,0 +1,78 @@
+# Ingress only. Egress stays open: Outline calls authentik on the private gateway
+# for the OIDC token exchange.
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: outline-app-policy
+  namespace: outline
+spec:
+  endpointSelector:
+    matchLabels:
+      app: outline
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: outline-valkey-policy
+  namespace: outline
+spec:
+  endpointSelector:
+    matchLabels:
+      app: outline-valkey
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": outline
+            app: outline
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: outline-db-policy
+  namespace: outline
+spec:
+  endpointSelector:
+    matchLabels:
+      cnpg.io/cluster: outline-db
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": outline
+            app: outline
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": outline
+            app: postgres-backup
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": cnpg-system
+            app.kubernetes.io/name: cloudnative-pg
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health

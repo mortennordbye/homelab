@@ -1,0 +1,68 @@
+# Nightly restic backup of this namespace's app volumes to the NAS
+# (docs/platform/backups/README.md). Every repository shares one password, volsync-restic-password
+# in Bitwarden. Without it, no repository can be restored.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: outline-data-restic
+  namespace: outline
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: outline-data-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        RESTIC_REPOSITORY: /mnt/repo/outline/outline-data
+        RESTIC_PASSWORD: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: "9facc77a-55f0-4901-a05c-b4d101256b09"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: outline-data
+  namespace: outline
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  sourcePVC: outline-data
+  trigger:
+    schedule: "55 1 * * *"
+  restic:
+    repository: outline-data-restic
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    # Increment to clear a stale lock from a mover killed mid-run. forget fails until the lock is gone.
+    unlock: "1"
+    retain:
+      daily: 14
+      weekly: 8
+      monthly: 6
+    cacheStorageClassName: syno-nfs-csi
+    cacheCapacity: 2Gi
+    moverSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    moverResources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
+    moverVolumes:
+      - mountPath: repo
+        volumeSource:
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/k8s-backups/volsync

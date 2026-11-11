@@ -106,6 +106,8 @@ Storage classes and CSI drivers: [`../platform/storage/README.md`](../platform/s
 - Postgres 18 for logeverylift is the CloudNativePG Cluster `logeverylift-db`: a
   primary and a standby, each on an NFS PVC. WAL and nightly base backups go to Garage
   ([`../platform/data/postgres.md`](../platform/data/postgres.md)).
+- Outline has its own CloudNativePG Cluster `outline-db`: one instance, no WAL archive,
+  a nightly `pg_dump` to the NAS.
 - The CloudNativePG operator (`cnpg-system`) with its Barman Cloud plugin, and a
   single-node Garage (`garage`) as the S3 target for base backups and WAL. Garage keeps
   its data on NFS and its LMDB metadata on `proxmox-local`, snapshotted to NFS
@@ -157,7 +159,7 @@ metrics-server (`k8s/talos/infra/metrics-server`) serves the resource metrics AP
 
 ## Workloads
 
-23 Argo CD Applications live under `k8s/talos/apps/`, one per directory. These groups
+24 Argo CD Applications live under `k8s/talos/apps/`, one per directory. These groups
 have apps that depend on each other:
 
 - Media: requests, downloads behind a VPN, Plex, subtitles and re-encoding, with a
@@ -192,6 +194,9 @@ Other apps, one directory each under `k8s/talos/apps/`:
   `jarvis.local.bigd.no`
   ([`../apps/innestemme/README.md`](../apps/innestemme/README.md)).
 - mealie: recipe manager on `mealie.local.bigd.no`, private gateway, SQLite, sign-up off.
+- outline: notes wiki on `docs.local.bigd.no`, private gateway. Sign-in is Authentik
+  OIDC only, limited to the `outline-users` group. Postgres in `outline-db`, Valkey with no
+  persistence, attachments on an NFS PVC. Its MCP endpoint is `/mcp`.
 - homepage: the hub on `hub.bigd.no`, behind Authentik forward-auth.
 - bigd: the static `bigd.no` landing page. nginx serves `index.html` from a ConfigMap.
 - omni-tools: a stateless browser tool collection on `omni-tools.bigd.no`. It is a kro

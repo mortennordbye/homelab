@@ -25,6 +25,7 @@ blueprints:
     - authentik-blueprint-argocd
     - authentik-blueprint-kargo
     - authentik-blueprint-grafana
+    - authentik-blueprint-outline
     - authentik-blueprint-reelsmith
     - authentik-blueprint-login-flow
     - authentik-blueprint-homepage

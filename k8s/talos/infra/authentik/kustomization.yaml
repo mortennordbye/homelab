@@ -12,6 +12,7 @@ resources:
   - argocd-blueprint.yaml
   - kargo-blueprint.yaml
   - grafana-blueprint.yaml
+  - outline-blueprint.yaml
   - reelsmith-blueprint.yaml
   - login-flow-blueprint.yaml
   - homepage-blueprint.yaml

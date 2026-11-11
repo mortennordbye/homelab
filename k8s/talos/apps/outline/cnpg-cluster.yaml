@@ -1,0 +1,26 @@
+# Outline's Postgres. docs/platform/data/cloudnative-pg.md
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: outline-db
+  namespace: outline
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6-minimal-trixie # renovate: docker=ghcr.io/cloudnative-pg/postgresql
+  storage:
+    storageClass: syno-nfs-csi
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    # No CPU limit: CFS throttling stalls request handling in 100ms steps.
+    limits:
+      memory: 512Mi
+  # Bootstrap runs once. A later change does nothing to a running cluster.
+  bootstrap:
+    initdb:
+      database: outline
+      owner: outline
