@@ -38,6 +38,15 @@ spec:
             - Job
             - CronJob
           namespaces:
+            - outline
+          names:
+            - outline-db-backup*
+      - resources:
+          kinds:
+            - Pod
+            - Job
+            - CronJob
+          namespaces:
             - etcd-backup
           names:
             - etcd-backup*
@@ -91,6 +100,7 @@ spec:
             - mealie
             - monitoring
             - open-webui
+            - outline
             - plex-media-stack
             - trek
             - verksted

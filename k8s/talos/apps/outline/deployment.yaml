@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: outline
+  namespace: outline
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  # Recreate: RWO PVC, two pods can't both mount the attachments volume.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: outline
+  template:
+    metadata:
+      labels:
+        app: outline
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        # A fresh syno-nfs-csi claim is root-only. kubelet's chown on first mount opens it to the app.
+        fsGroup: 1001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: outline
+          image: outlinewiki/outline:1.12.0
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: outline-secret
+          env:
+            - name: URL
+              value: https://docs.local.bigd.no
+            - name: PORT
+              value: "3000"
+            - name: WEB_CONCURRENCY
+              value: "1"
+            # Traefik terminates TLS. Outline must not redirect on its own.
+            - name: FORCE_HTTPS
+              value: "false"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: outline-db-app
+                  key: uri
+            - name: PGSSLMODE
+              value: disable
+            - name: REDIS_URL
+              value: redis://outline-valkey:6379
+            - name: FILE_STORAGE
+              value: local
+            - name: FILE_STORAGE_LOCAL_ROOT_DIR
+              value: /var/lib/outline/data
+            # Authorize, token and userinfo are global in authentik. Only the
+            # end-session path carries the application slug.
+            - name: OIDC_AUTH_URI
+              value: https://auth.local.bigd.no/application/o/authorize/
+            - name: OIDC_TOKEN_URI
+              value: https://auth.local.bigd.no/application/o/token/
+            - name: OIDC_USERINFO_URI
+              value: https://auth.local.bigd.no/application/o/userinfo/
+            - name: OIDC_LOGOUT_URI
+              value: https://auth.local.bigd.no/application/o/outline/end-session/
+            - name: OIDC_DISPLAY_NAME
+              value: Authentik
+            - name: OIDC_USERNAME_CLAIM
+              value: preferred_username
+            - name: OIDC_SCOPES
+              value: openid profile email
+            - name: ENABLE_UPDATES
+              value: "false"
+            - name: DEFAULT_LANGUAGE
+              value: en_US
+          startupProbe:
+            httpGet:
+              path: /_health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /_health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /_health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              memory: 1536Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/outline/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: outline-data

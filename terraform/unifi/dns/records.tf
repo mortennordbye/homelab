@@ -33,6 +33,7 @@ locals {
     "bazarr-4k",
     "blog-stage",
     "cleanuparr",
+    "docs",
     "flaresolverr",
     "grafana",
     "ha",

@@ -42,6 +42,7 @@ Traefik asks Authentik's embedded outpost before each request reaches them.
 | Argo CD | OIDC, confidential | `argocd.local.bigd.no` | `argocd-admins` (mapped to `role:admin`) | [`argocd/values.yaml`](../../../k8s/talos/infra/argocd/values.yaml), [`argocd-oidc-secret.yaml`](../../../k8s/talos/infra/argocd/argocd-oidc-secret.yaml) |
 | Kargo | OIDC, public PKCE | `kargo.local.bigd.no` | `kargo-admins` | [`kargo/values.yaml`](../../../k8s/talos/infra/kargo/values.yaml) |
 | Grafana | OIDC, confidential | `grafana.local.bigd.no` | `grafana-admins` (GrafanaAdmin, everyone else Viewer) | [`kube-prometheus-stack/values.yaml`](../../../k8s/talos/infra/kube-prometheus-stack/values.yaml), [`grafana-oidc-secret.yaml`](../../../k8s/talos/infra/kube-prometheus-stack/grafana-oidc-secret.yaml) |
+| Outline | OIDC, confidential | `docs.local.bigd.no` | `outline-users` (policy binding) | [`outline/deployment.yaml`](../../../k8s/talos/apps/outline/deployment.yaml), [`outline/externalsecret.yaml`](../../../k8s/talos/apps/outline/externalsecret.yaml) |
 | reelsmith control panel | forward-auth | `reelsmith.local.bigd.no` | `reelsmith-admins` (policy binding) | [`httproute-admin.yaml`](../../../k8s/talos/apps/reelsmith/httproute-admin.yaml), [`middleware-authentik.yaml`](../../../k8s/talos/apps/reelsmith/middleware-authentik.yaml) |
 | homepage | forward-auth | `hub.bigd.no` | `homepage-users` (policy binding) | [`httproute.yaml`](../../../k8s/talos/apps/homepage/httproute.yaml), [`middleware-authentik.yaml`](../../../k8s/talos/apps/homepage/middleware-authentik.yaml) |
 | Alertmanager | forward-auth, except webhook `POST /api/v2/alerts` | `alertmanager.local.bigd.no` | `alertmanager-admins` (policy binding) | [`httproutes.yaml`](../../../k8s/talos/infra/kube-prometheus-stack/httproutes.yaml), [`middleware-authentik.yaml`](../../../k8s/talos/infra/kube-prometheus-stack/middleware-authentik.yaml) |
@@ -64,6 +65,7 @@ Deployments.
 | `authentik-blueprint-argocd` | [`argocd-blueprint.yaml`](../../../k8s/talos/infra/authentik/argocd-blueprint.yaml) | group `argocd-admins`, confidential OAuth2 provider `argocd`, application slug `argocd` |
 | `authentik-blueprint-kargo` | [`kargo-blueprint.yaml`](../../../k8s/talos/infra/authentik/kargo-blueprint.yaml) | group `kargo-admins`, public OAuth2 provider with `client_id: kargo`, application slug `kargo` |
 | `authentik-blueprint-grafana` | [`grafana-blueprint.yaml`](../../../k8s/talos/infra/authentik/grafana-blueprint.yaml) | group `grafana-admins`, confidential OAuth2 provider `grafana` (authorization code only, no refresh token), application slug `grafana` |
+| `authentik-blueprint-outline` | [`outline-blueprint.yaml`](../../../k8s/talos/infra/authentik/outline-blueprint.yaml) | group `outline-users`, confidential OAuth2 provider `outline`, application slug `outline`, policy binding to the group |
 | `authentik-blueprint-reelsmith` | [`reelsmith-blueprint.yaml`](../../../k8s/talos/infra/authentik/reelsmith-blueprint.yaml) | group `reelsmith-admins`, proxy provider `reelsmith` for `https://reelsmith.local.bigd.no`, application, policy binding to the group |
 | `authentik-blueprint-login-flow` | [`login-flow-blueprint.yaml`](../../../k8s/talos/infra/authentik/login-flow-blueprint.yaml) | username (or email) and password on one page, 30-day sessions, MFA for everyone with TOTP or WebAuthn enrolment forced at next sign-in |
 | `authentik-blueprint-homepage` | [`homepage-blueprint.yaml`](../../../k8s/talos/infra/authentik/homepage-blueprint.yaml) | group `homepage-users`, proxy provider `homepage` for `https://hub.bigd.no`, application, policy binding to the group |
@@ -75,8 +77,8 @@ Rules that apply to all of them:
 - The blueprint declares group membership. Every group holds `akadmin`. Reconciliation
   resets the list, so a member added in the UI is removed again. Add members in the
   blueprint.
-- An application without a policy binding is open to every authenticated user. The two
-  forward-auth apps carry a binding to their group.
+- An application without a policy binding is open to every authenticated user. The
+  forward-auth apps and Outline carry a binding to their group.
 - OAuth2 providers set `grant_types` explicitly. If the field is empty, Authentik rejects
   every grant.
 - Scope mappings are found by their `managed` identifier. Authentik has no `groups` scope.
@@ -131,6 +133,7 @@ reads Bitwarden into the `authentik-secrets` Secret through the
 | `postgres-password` | server, worker, the chart's Postgres and the backup CronJob |
 | `ARGOCD_OIDC_CLIENT_ID`, `ARGOCD_OIDC_CLIENT_SECRET` | `argocd-blueprint.yaml` |
 | `GRAFANA_OIDC_CLIENT_ID`, `GRAFANA_OIDC_CLIENT_SECRET` | `grafana-blueprint.yaml` |
+| `OUTLINE_OIDC_CLIENT_ID`, `OUTLINE_OIDC_CLIENT_SECRET` | `outline-blueprint.yaml` |
 
 The chart loads the whole Secret into the pods with `envFrom`. The blueprints read the
 client credentials with `!Env NAME`. There is no `!Env` default on purpose: a missing

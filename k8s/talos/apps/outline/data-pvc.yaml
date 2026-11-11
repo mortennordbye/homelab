@@ -1,0 +1,15 @@
+# Attachments and images (FILE_STORAGE=local).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: outline-data
+  namespace: outline
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: syno-nfs-csi
+  resources:
+    requests:
+      storage: 10Gi

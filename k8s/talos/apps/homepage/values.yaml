@@ -187,6 +187,11 @@ config:
             icon: mealie.png
             href: https://mealie.local.bigd.no
             description: Recipe manager and meal planner
+        - Outline:
+            icon: outline.png
+            href: https://docs.local.bigd.no
+            siteMonitor: https://docs.local.bigd.no/_health
+            description: Personal notes and wiki
         - Verksted:
             icon: mdi-wrench
             href: https://verksted.local.bigd.no
