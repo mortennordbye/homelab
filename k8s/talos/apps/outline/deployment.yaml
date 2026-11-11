@@ -60,6 +60,9 @@ spec:
               value: local
             - name: FILE_STORAGE_LOCAL_ROOT_DIR
               value: /var/lib/outline/data
+            # Also caps imports. The 1 MB default rejects a normal photo.
+            - name: FILE_STORAGE_UPLOAD_MAX_SIZE
+              value: "262144000"
             # Authorize, token and userinfo are global in authentik. Only the
             # end-session path carries the application slug.
             - name: OIDC_AUTH_URI
