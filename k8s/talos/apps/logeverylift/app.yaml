@@ -90,6 +90,11 @@ spec:
                 secretKeyRef:
                   name: logeverylift-secret
                   key: NEXT_PRIVATE_SERVER_ACTIONS_ENCRYPTION_KEY
+            - name: GARMIN_KEY_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: logeverylift-secret
+                  key: GARMIN_KEY_ENCRYPTION_KEY
           readinessProbe:
             httpGet:
               path: /api/health
