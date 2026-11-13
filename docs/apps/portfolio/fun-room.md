@@ -117,8 +117,9 @@ against the dev server, and never on a port that served an older build.
 ## How data reaches the room
 
 The page is a Server Component, so it can read content from disk. It then hands plain data to
-the client: `ShelfData`, built from `getAllWork()`, and `CareerData`, from `resume.ts`. There is
-no API route for room content. Do not add one.
+the client: `ShelfData`, built from `getAllWork()`, `CareerData`, from `resume.ts`, and
+`SourceExcerpt`, a copy of the portfolio `deployment.yaml` from `src/lib/source-excerpt.ts`.
+There is no API route for room content. Do not add one.
 
 [![Content flowing from the server page through FunRoomClient into the room components](../../assets/diagrams/portfolio-fun-room-data.svg)](../../assets/diagrams/portfolio-fun-room-data.svg)
 
