@@ -15,3 +15,7 @@ spec:
       port: 9090
       targetPort: http
       protocol: TCP
+    - name: wyoming
+      port: 10300
+      targetPort: wyoming
+      protocol: TCP

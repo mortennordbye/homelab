@@ -18,6 +18,9 @@ spec:
         - ports:
             - port: "9090"
               protocol: TCP
+            # Home Assistant's Wyoming integration; transcribing and speaking change nothing in the house.
+            - port: "10300"
+              protocol: TCP
     - fromEntities:
         - host
         - health
