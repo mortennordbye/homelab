@@ -35,9 +35,9 @@ Talos cluster, storage and the smart home.
 | Gold dashed card | A part that is not on the main path, for example the Tailscale VM. |
 
 The groups go from the outside in, top to bottom: external services, GitOps, the network
-edge, ingress, the workloads, storage, and at the bottom the physical hosts. A line that
-points up is control or telemetry that goes back out, for example a Kargo pull request to
-GitHub or the Alertmanager heartbeat to Cloudflare.
+edge, ingress, the workloads, storage, and at the bottom the physical hosts. Every line
+points down. Flows that go back up, such as Kargo pull requests to GitHub or the scrapes of
+the hosts, are not drawn, so the lines stay readable. The area docs describe them.
 
 The diagram does not show IP addresses, VLANs or ports. Those are in the area docs, so each
 value is written once. Use the table below to go from a group to its docs.

@@ -245,10 +245,6 @@ net -> obs: traces, metrics
 media -> pia: VPN tunnel
 sites -> youtube: iSponsorBlockTV
 sites -> data: SQL
-sec -> data: Authentik DB
-sec -> obs: PolicyReports, CVEs
-edge <- obs: UniFi metrics
-obs -> hw: PVE, PBS, SNMP scrape
 ai -> home: Innestemme actions
 home -> smart: Zigbee, BLE, Wi-Fi
 
@@ -257,10 +253,6 @@ github -> ops: sync main {style.stroke-dash: 4}
 ghcr -> ops: new tags {style.stroke-dash: 4}
 bitwarden -> ops: secrets {style.stroke-dash: 4}
 ops -> net: deploys, Secrets, scaling {style.stroke-dash: 4}
-github <- ops: prod promotion PRs {style.stroke-dash: 4}
-ops <- obs: SLO budgets {style.stroke-dash: 4}
-github <- obs: PRs, dashboard Git Sync {style.stroke-dash: 4}
-cloudflare <- obs: heartbeat, analytics {style.stroke-dash: 4}
 net -> letsencrypt: ACME {style.stroke-dash: 4}
 obs -> discord: critical alerts {style.stroke-dash: 4}
 sec -> discord: Falco events {style.stroke-dash: 4}
