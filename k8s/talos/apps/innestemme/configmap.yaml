@@ -13,6 +13,9 @@ data:
     metrics-bind: 0.0.0.0:9090
     # A page with everything the assistant understands, on the same port: http://10.3.10.99:9090/
     web: true
+    # Home Assistant's Assist hears and speaks through the engine: its Wyoming integration points at
+    # the VIP's 10300. No authentication, so the port stays on the trusted LAN.
+    wyoming-bind: 0.0.0.0:10300
     # Match the CPU limit in deployment.yaml.
     threads: 6
     wake-name: Jarvis

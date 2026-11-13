@@ -13,7 +13,7 @@ The manifests live in
 |---|---|
 | Namespace | `innestemme` |
 | VIP | `10.3.10.99:9090`: spoken answers, `/metrics`, and the skills page at `/`, which is also at `https://jarvis.local.bigd.no` through the private gateway |
-| Phone and Assist | the `innestemme` integration (Marketplace, custom repository `mortennordbye/innestemme`) is a conversation agent that sends each request to `POST /api/ask` with the `ask-token` (Secrets Manager `innestemme-ask-token`, env `VOICE_ASK_TOKEN`); the preferred Assist pipeline "Jarvis" uses it with faster-whisper and Piper `en_GB-alan-medium`, so the HA app's Assist button talks to Jarvis for every user. It is set up with `http://10.3.10.99:9090`: Home Assistant does not resolve `local.bigd.no` |
+| Phone and Assist | the `innestemme` integration (Marketplace, custom repository `mortennordbye/innestemme`) is a conversation agent that sends each request to `POST /api/ask` with the `ask-token` (Secrets Manager `innestemme-ask-token`, env `VOICE_ASK_TOKEN`); the preferred Assist pipeline "Jarvis" uses it as the agent and the engine's own Wyoming engines (`wyoming-bind`, VIP port 10300) for speech to text and text to speech, so the HA app's Assist button hears and speaks like the Voice PE, for every user. It is set up with `http://10.3.10.99:9090`: Home Assistant does not resolve `local.bigd.no` |
 | Device | Voice PE "Home Assistant Voice 0a1f4d", `10.3.20.67` on IoT, area Living Room |
 | Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.50; "Hey Jarvis" over an answer interrupts it |
 | Voice | Kokoro inside the engine (sherpa-onnx), voice `am_onyx`; rendered speech kept in `/models/speech-cache` |

@@ -39,6 +39,8 @@ spec:
           ports:
             - name: http
               containerPort: 9090
+            - name: wyoming
+              containerPort: 10300
           env:
             - name: VOICE_CONFIG
               value: /config/config.yaml
