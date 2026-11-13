@@ -10,6 +10,9 @@ the code is correct and this file gets a fix.
 
 [![Layers of the homelab, from the internet down to the Synology NAS](../assets/diagrams/architecture-layers.svg)](../assets/diagrams/architecture-layers.svg)
 
+The overview and the network flow of the whole homelab, and how to read and change them:
+[`diagrams.md`](diagrams.md).
+
 ## Physical and virtual
 
 - Three Lenovo nodes run Proxmox VE: `hyper1`, `hyper2`, `hyper3`. The datacenter and

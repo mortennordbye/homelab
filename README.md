@@ -16,6 +16,10 @@ This is my personal lab for infrastructure experiments and self-hosted services.
 
 The repository is public by design. Transparency keeps me honest about best practices, also when the work is only for fun.
 
+[![Network & Service Flow](docs/assets/diagrams/network-flow.png)](docs/assets/diagrams/network-flow.png?raw=1)
+
+**Click to open the full-size image.** Which services talk to each other and how traffic flows through the homelab. Rendered by the [pipeline](.github/workflows/render-assets.yaml) from [this file](docs/assets/diagrams/network-flow.d2) on every push. [How to read it](https://docs.nordbye.it/architecture/diagrams/).
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/mortennordbye/homelab/status-data/status-dark.svg" />
   <img alt="Live cluster status: applications synced and healthy, nodes ready, pods running, critical alerts, CPU and memory in use, which apps are asleep, and 30-day availability" src="https://raw.githubusercontent.com/mortennordbye/homelab/status-data/status.svg" width="840" />
@@ -87,14 +91,6 @@ Argo CD runs two ApplicationSets in `k8s/talos/infra/argocd/`. They generate one
 [![Homelab Overview](docs/assets/diagrams/homelab-overview.png)](docs/assets/diagrams/homelab-overview.png?raw=1)
 
 > **Click to open the full-size image.** A map of the whole homelab — how the hardware, cluster and services fit together. Auto-generated through the [pipeline](.github/workflows/render-assets.yaml) from [this file](docs/assets/diagrams/homelab-overview.d2).
-
----
-
-## Network & Service Flow
-
-[![Network & Service Flow](docs/assets/diagrams/network-flow.png)](docs/assets/diagrams/network-flow.png?raw=1)
-
-> **Click to open the full-size image.** Shows which services talk to each other and how traffic flows through the cluster. Auto-generated through the [pipeline](.github/workflows/render-assets.yaml) from [this file](docs/assets/diagrams/network-flow.d2).
 
 ---
 
