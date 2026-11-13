@@ -131,6 +131,36 @@ Rules that keep the layout readable:
 A new app on a gateway also gets a card in both maps. The checklist for that is in
 [`ai/skills/expose-app/SKILL.md`](../../ai/skills/expose-app/SKILL.md).
 
+## Let an AI agent draft the diagram
+
+An AI coding agent is good at this work. It can read every manifest, Helm values file and
+Terraform stack in a repo in minutes. It then lists each component and each connection
+between them, and writes the result as D2 text. A person needs hours to do the same audit by
+hand, and usually misses a part.
+
+I use this method in my homelab and in my professional work as a platform engineer. In both
+places the agent finds the parts that the diagram does not show yet. The person checks the
+result.
+
+1. Give the agent the folders that describe the system, for example `k8s/` and `terraform/`.
+   Also give it one existing `.d2` file as an example of the style.
+2. Ask it for a list first: the parts that run but are not in the diagram, and the parts in
+   the diagram that no longer run. Read the list before the agent edits.
+3. Let the agent edit the `.d2` file and render it with `make diagram`.
+4. Open the image and check it. An agent reads the code, not the live system. A part that is
+   in the repo but switched off can still show on the diagram.
+
+A prompt that works:
+
+```text
+Read k8s/ and terraform/. List every service, operator and external
+dependency that is not in docs/assets/diagrams/network-flow.d2, and every
+card in that file that has no code behind it. Do not edit yet.
+```
+
+Do not give the agent secrets or a kubeconfig with write access. It needs read access to the
+repo only.
+
 ## Use the setup in your own repo
 
 You need three things:
