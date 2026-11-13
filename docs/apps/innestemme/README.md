@@ -13,6 +13,7 @@ The manifests live in
 |---|---|
 | Namespace | `innestemme` |
 | VIP | `10.3.10.99:9090`: spoken answers, `/metrics`, and the skills page at `/`, which is also at `https://jarvis.local.bigd.no` through the private gateway |
+| Phone | `POST https://jarvis.local.bigd.no/api/ask?q=...` with `Authorization: Bearer <ask-token>` (Secrets Manager `innestemme-ask-token`, env `VOICE_ASK_TOKEN`): the iPhone shortcut "Jarvis" sends a dictated request and speaks the answer; LAN or Tailscale only |
 | Device | Voice PE "Home Assistant Voice 0a1f4d", `10.3.20.67` on IoT, area Living Room |
 | Answers | announced on the living room Sonos, `media_player.living_room`, at volume 0.50; "Hey Jarvis" over an answer interrupts it |
 | Voice | Kokoro inside the engine (sherpa-onnx), voice `am_onyx`; rendered speech kept in `/models/speech-cache` |
