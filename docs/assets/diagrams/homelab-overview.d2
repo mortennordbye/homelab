@@ -13,6 +13,7 @@ vars: {
   pyrra: https://raw.githubusercontent.com/pyrra-dev/pyrra/main/ui/public/logo192.png
   volsync: https://raw.githubusercontent.com/backube/volsync/main/docs/media/volsync.svg
   dipng: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
 }
 
 style.fill: "#0f1410"
@@ -35,10 +36,14 @@ classes: {
 (** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
 
 internet: Internet {class: card; icon: ${ify}/tabler/world.svg?color=%23a1ada3&height=64}
-cloudflare: "Cloudflare\npublic DNS, proxy" {class: card; icon: ${di}/cloudflare.svg}
+cloudflare: "Cloudflare\npublic DNS, proxy,\nwatchdog Worker" {class: card; icon: ${di}/cloudflare.svg}
 github: "GitHub\nrepo, CI, GHCR" {class: card; icon: ${di}/github-light.svg}
 bitwarden: "Bitwarden\nSecrets Manager" {class: card; icon: ${di}/bitwarden.svg}
 discord: "Discord\nalerts" {class: card; icon: ${di}/discord.svg}
+letsencrypt: Let's Encrypt {class: card; icon: ${di}/lets-encrypt.svg}
+pia: PIA VPN {class: card; icon: ${di}/private-internet-access.svg}
+youtube: "YouTube lounge,\nSponsorBlock APIs" {class: card; icon: ${di}/youtube.svg}
+azure: "Azure\nTerraform state" {class: card; icon: ${di}/azure.svg}
 
 edge: Network edge {
   class: group
@@ -84,7 +89,7 @@ k8s: Genesis, Talos Kubernetes {
 
   platform: Platform {
     class: subgroup
-    grid-rows: 6
+    grid-rows: 7
     grid-gap: 16
     grid-columns: 6
     argocd: Argo CD {class: card; icon: ${di}/argo-cd.svg}
@@ -93,12 +98,16 @@ k8s: Genesis, Talos Kubernetes {
     keda: KEDA {class: card; icon: ${di}/keda.svg}
     kedahttp: "KEDA HTTP\nwake from zero" {class: card; icon: ${di}/keda.svg}
     reloader: Reloader {class: card; icon: ${di}/reloader.svg}
+    kro: "kro\nStaticSite kind" {class: card; icon: ${k8s}/crd.svg}
     traefik: Traefik {class: card; icon: ${di}/traefik.svg}
-    cilium: Cilium {class: card; icon: ${di}/cilium.svg}
+    cilium: "Cilium\n+ Hubble" {class: card; icon: ${di}/cilium.svg}
+    coredns: CoreDNS {class: card; icon: ${di}/coredns.svg}
     cert: cert-manager {class: card; icon: ${di}/cert-manager.svg}
     externaldns: external-dns {class: card; icon: ${di}/kubernetes.svg}
-    authentik: Authentik {class: card; icon: ${di}/authentik.svg}
+    authentik: "Authentik\n+ Postgres" {class: card; icon: ${di}/authentik.svg}
     eso: External Secrets {class: card; icon: ${eso}}
+    cnpg: "CloudNativePG\n+ Barman Cloud" {class: card; icon: ${sh}/cloudnativepg.svg}
+    garage: "Garage\nS3 backup target" {class: card; icon: ${di}/garage.svg}
     prometheus: Prometheus {class: card; icon: ${di}/prometheus.svg}
     alertmanager: Alertmanager {class: card; icon: ${di}/alertmanager.svg}
     grafana: Grafana {class: card; icon: ${di}/grafana.svg}
@@ -109,9 +118,12 @@ k8s: Genesis, Talos Kubernetes {
     opencost: "OpenCost\nestimated cost per namespace" {class: card; icon: ${ify}/tabler/pig-money.svg?color=%23a1ada3&height=64}
     blackbox: "blackbox\nprobes" {class: card; icon: ${di}/prometheus.svg}
     synthetics: "k6\nsynthetics" {class: card; icon: ${ify}/simple-icons/k6.svg?color=%237d64ff&height=64}
-    exporters: "exporters\nPVE, SNMP, UniFi" {class: card; icon: ${di}/prometheus.svg}
-    falco: Falco {class: card; icon: ${falco}}
+    exporters: "exporters\nPVE, PBS, SNMP, UniFi" {class: card; icon: ${di}/prometheus.svg}
+    electricity: "electricity-price\nNO1 spot price" {class: card; icon: ${ify}/tabler/bolt.svg?color=%23a1ada3&height=64}
+    falco: "Falco\n+ falcosidekick" {class: card; icon: ${falco}}
     kyverno: "Kyverno\nadmission policies" {class: card; icon: ${kyverno}}
+    policyreporter: Policy Reporter {class: card; icon: ${kyverno}}
+    trivy: "trivy-operator\nCVE scans" {class: card; icon: ${ify}/simple-icons/trivy.svg?color=%231904da&height=64}
     metrics: metrics-server {class: card; icon: ${di}/kubernetes.svg}
     pcsi: Proxmox CSI {class: card; icon: ${di}/proxmox-light.svg}
     nfscsi: NFS CSI {class: card; icon: ${di}/synology.svg}
@@ -123,14 +135,14 @@ k8s: Genesis, Talos Kubernetes {
 
   apps: Applications {
     class: subgroup
-    grid-rows: 3
+    grid-rows: 4
     grid-gap: 16
     grid-columns: 6
     portfolio: "Portfolio\nstage + prod" {class: card; icon: ${di}/nextjs-light.svg}
     blog: "Blog\nstage + prod" {class: card; icon: ${di}/hugo.svg}
     bigd: "bigd.no\nlanding page" {class: card; icon: ${di}/nginx.svg}
     logeverylift: LogEveryLift {class: card; icon: ${ify}/tabler/barbell.svg?color=%23a1ada3&height=64}
-    postgres: "Postgres 18\nLogEveryLift" {class: card; icon: ${di}/postgresql.svg}
+    postgres: "Postgres 18\nlogeverylift-db" {class: card; icon: ${di}/postgresql.svg}
     headroom: "Headroom\n+ demo" {class: card; icon: ${ify}/tabler/wallet.svg?color=%23a1ada3&height=64}
     reelsmith: Reelsmith {class: card; icon: ${ify}/tabler/movie.svg?color=%23a1ada3&height=64}
     verksted: Verksted {class: card; icon: ${ify}/tabler/terminal-2.svg?color=%23a1ada3&height=64}
@@ -139,16 +151,19 @@ k8s: Genesis, Talos Kubernetes {
     homepage: Homepage {class: card; icon: ${sh}/homepage.svg}
     mealie: Mealie {class: card; icon: ${di}/mealie.svg}
     outline: Outline {class: card; icon: ${di}/outline-light.svg}
+    outlinedb: "Postgres 18\noutline-db" {class: card; icon: ${di}/postgresql.svg}
+    valkey: "Valkey\nOutline cache" {class: card; icon: ${di}/valkey.svg}
     abs: Audiobookshelf {class: card; icon: ${di}/audiobookshelf.svg}
-    omnitools: Omni-Tools {class: card; icon: ${ify}/tabler/tools.svg?color=%23a1ada3&height=64}
+    omnitools: "Omni-Tools\nkro StaticSite" {class: card; icon: ${ify}/tabler/tools.svg?color=%23a1ada3&height=64}
     openwebui: Open WebUI {class: card; icon: ${di}/open-webui-light.svg}
     ollama: Ollama {class: card; icon: ${ify}/simple-icons/ollama.svg?color=%23e9ebe9&height=64}
+    isponsorblocktv: "iSponsorBlockTV\nTV ad skip" {class: card; icon: ${di}/sponsorblock.svg}
     ha: "Home Assistant\ningress only" {class: card; icon: ${di}/home-assistant.svg}
   }
 
   media: Media {
     class: subgroup
-    grid-rows: 2
+    grid-rows: 3
     grid-gap: 16
     grid-columns: 6
     plex: Plex {class: card; icon: ${di}/plex.svg}
@@ -158,11 +173,14 @@ k8s: Genesis, Talos Kubernetes {
     radarr: "Radarr\n+ 4K" {class: card; icon: ${di}/radarr.svg}
     bazarr: "Bazarr\n+ 4K" {class: card; icon: ${di}/bazarr.svg}
     prowlarr: Prowlarr {class: card; icon: ${di}/prowlarr.svg}
+    flaresolverr: FlareSolverr {class: card; icon: ${di}/flaresolverr.svg}
     qbit: qBittorrent {class: card; icon: ${di}/qbittorrent.svg}
     gluetun: Gluetun VPN {class: card; icon: ${di}/gluetun.svg}
-    tdarr: Tdarr {class: card; icon: ${di}/tdarr.svg}
+    tdarr: "Tdarr\nQuick Sync" {class: card; icon: ${di}/tdarr.svg}
     unpackerr: Unpackerr {class: card; icon: ${dipng}/unpackerr.png}
     cleanuparr: Cleanuparr {class: card; icon: ${dipng}/cleanuparr.png}
+    recyclarr: Recyclarr {class: card; icon: ${di}/recyclarr.svg}
+    mexporters: "exporters\nexportarr, qBittorrent" {class: card; icon: ${di}/prometheus.svg}
   }
 }
 
@@ -170,9 +188,10 @@ storage: Storage {
   class: group
   grid-rows: 1
   grid-gap: 16
-  grid-columns: 2
-  nfs: "Synology NFS\nsyno-nfs-csi" {class: card; icon: ${di}/synology.svg}
+  grid-columns: 3
+  nfs: "Synology NFS\nsyno-nfs-csi, -scratch" {class: card; icon: ${di}/synology.svg}
   csi: "Proxmox CSI\nproxmox-local" {class: card; icon: ${di}/proxmox-light.svg}
+  pbs: "Proxmox Backup Server\nVM backups" {class: card; icon: ${di}/proxmox-backup-server.svg}
 }
 
 smart: Smart home {
@@ -194,5 +213,10 @@ hosts -> k8s: Talos VMs
 github -> k8s: GitOps {style.stroke-dash: 4}
 bitwarden -> k8s: secrets {style.stroke-dash: 4}
 k8s -> discord: alerts {style.stroke-dash: 4}
+k8s -> letsencrypt: ACME {style.stroke-dash: 4}
+k8s -> pia: VPN tunnel
+k8s -> youtube: iSponsorBlockTV
+azure -> hosts: Terraform state {style.stroke-dash: 4}
 k8s -> storage: volumes
 hosts -> smart: Home Assistant
+k8s -> smart: Innestemme, Voice PE

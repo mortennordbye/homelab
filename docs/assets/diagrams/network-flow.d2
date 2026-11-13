@@ -2,6 +2,7 @@
 # Colours are the docs site palette (assets/stylesheets/theme.css).
 # Solid edges carry requests or data; dashed edges are control: deploys, secrets, DNS, alerts.
 # Edges stay between groups: an edge into a grid cell drops ELK layering and flattens the sheet.
+# An edge to a higher layer is written `upper <- lower`: `lower -> upper` flips the ELK layers.
 # Generic icons come from Iconify with the colour set in the URL, since D2 cannot recolour them.
 direction: down
 vars: {
@@ -15,6 +16,7 @@ vars: {
   kargo: https://raw.githubusercontent.com/akuity/kargo/main/ui/public/kargo-logo-head-only.png
   pyrra: https://raw.githubusercontent.com/pyrra-dev/pyrra/main/ui/public/logo192.png
   volsync: https://raw.githubusercontent.com/backube/volsync/main/docs/media/volsync.svg
+  k8s: https://raw.githubusercontent.com/kubernetes/community/master/icons/svg/resources/unlabeled
 }
 
 style.fill: "#0f1410"
@@ -38,15 +40,17 @@ classes: {
 }
 
 (** -> **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
+(** <- **)[*].style: {stroke: "#65a16e"; font-color: "#a1ada3"; font-size: 14}
 
 internet: Internet {class: card; icon: ${ify}/tabler/world.svg?color=%23a1ada3&height=64}
 github: "GitHub\nrepo, CI" {class: card; icon: ${di}/github-light.svg}
 ghcr: "GHCR\nimages" {class: card; icon: ${di}/github-light.svg}
 bitwarden: "Bitwarden\nSecrets Manager" {class: card; icon: ${di}/bitwarden.svg}
-cloudflare: "Cloudflare\nDNS, proxy" {class: card; icon: ${di}/cloudflare.svg}
+cloudflare: "Cloudflare\nDNS, proxy, watchdog" {class: card; icon: ${di}/cloudflare.svg}
 letsencrypt: Let's Encrypt {class: card; icon: ${di}/lets-encrypt.svg}
 discord: Discord {class: card; icon: ${di}/discord.svg}
 pia: PIA VPN {class: card; icon: ${di}/private-internet-access.svg}
+youtube: "YouTube lounge,\nSponsorBlock APIs" {class: card; icon: ${di}/youtube.svg}
 
 edge: Network edge {
   class: group
@@ -65,7 +69,7 @@ net: Ingress and cluster networking {
   grid-columns: 3
   grid-gap: 16
   traefik: "Traefik\npublic + private gateway" {class: card; icon: ${di}/traefik.svg}
-  cilium: "Cilium\nCNI, L2 VIPs" {class: card; icon: ${di}/cilium.svg}
+  cilium: "Cilium\nCNI, L2 VIPs, Hubble" {class: card; icon: ${di}/cilium.svg}
   cert: cert-manager {class: card; icon: ${di}/cert-manager.svg}
   externaldns: external-dns {class: card; icon: ${di}/kubernetes.svg}
   coredns: CoreDNS {class: card; icon: ${di}/coredns.svg}
@@ -74,7 +78,7 @@ net: Ingress and cluster networking {
 
 ops: GitOps and config {
   class: group
-  grid-rows: 2
+  grid-rows: 3
   grid-columns: 3
   grid-gap: 16
   argocd: Argo CD {class: card; icon: ${di}/argo-cd.svg}
@@ -83,6 +87,7 @@ ops: GitOps and config {
   keda: KEDA {class: card; icon: ${di}/keda.svg}
   eso: External Secrets {class: card; icon: ${eso}}
   reloader: Reloader {class: card; icon: ${di}/reloader.svg}
+  kro: "kro\nStaticSite kind" {class: card; icon: ${k8s}/crd.svg}
 }
 
 sites: Sites and own apps {
@@ -94,7 +99,6 @@ sites: Sites and own apps {
   blog: "Blog\nstage + prod" {class: card; icon: ${di}/hugo.svg}
   bigd: bigd.no {class: card; icon: ${di}/nginx.svg}
   logeverylift: LogEveryLift {class: card; icon: ${ify}/tabler/barbell.svg?color=%23a1ada3&height=64}
-  postgres: Postgres 18 {class: card; icon: ${di}/postgresql.svg}
   headroom: "Headroom\n+ demo" {class: card; icon: ${ify}/tabler/wallet.svg?color=%23a1ada3&height=64}
   reelsmith: Reelsmith {class: card; icon: ${ify}/tabler/movie.svg?color=%23a1ada3&height=64}
   verksted: Verksted {class: card; icon: ${ify}/tabler/terminal-2.svg?color=%23a1ada3&height=64}
@@ -103,7 +107,21 @@ sites: Sites and own apps {
   mealie: Mealie {class: card; icon: ${di}/mealie.svg}
   outline: Outline {class: card; icon: ${di}/outline-light.svg}
   abs: Audiobookshelf {class: card; icon: ${di}/audiobookshelf.svg}
-  omnitools: Omni-Tools {class: card; icon: ${ify}/tabler/tools.svg?color=%23a1ada3&height=64}
+  omnitools: "Omni-Tools\nkro StaticSite" {class: card; icon: ${ify}/tabler/tools.svg?color=%23a1ada3&height=64}
+  isponsorblocktv: "iSponsorBlockTV\nno route" {class: card; icon: ${di}/sponsorblock.svg}
+}
+
+data: Databases and object storage {
+  class: group
+  grid-rows: 2
+  grid-columns: 3
+  grid-gap: 16
+  cnpg: "CloudNativePG\n+ Barman Cloud" {class: card; icon: ${sh}/cloudnativepg.svg}
+  lelpg: "Postgres 18\nlogeverylift-db" {class: card; icon: ${di}/postgresql.svg}
+  outlinepg: "Postgres 18\noutline-db" {class: card; icon: ${di}/postgresql.svg}
+  authpg: "Postgres\nAuthentik" {class: card; icon: ${di}/postgresql.svg}
+  valkey: "Valkey\nOutline, no persistence" {class: card; icon: ${di}/valkey.svg}
+  garage: "Garage S3\nWAL, base backups" {class: card; icon: ${di}/garage.svg}
 }
 
 media: Media {
@@ -124,6 +142,8 @@ media: Media {
   unpackerr: Unpackerr {class: card; icon: ${dipng}/unpackerr.png}
   cleanuparr: Cleanuparr {class: card; icon: ${dipng}/cleanuparr.png}
   tdarr: "Tdarr\nQuick Sync" {class: card; icon: ${di}/tdarr.svg}
+  recyclarr: Recyclarr {class: card; icon: ${di}/recyclarr.svg}
+  mexporters: "exporters\nexportarr, qBittorrent" {class: card; icon: ${di}/prometheus.svg}
 }
 
 ai: AI {
@@ -138,7 +158,7 @@ ai: AI {
 
 obs: Observability {
   class: group
-  grid-rows: 2
+  grid-rows: 3
   grid-columns: 5
   grid-gap: 16
   alloy: "Alloy\nlogs, traces" {class: card; icon: ${di}/alloy.svg}
@@ -152,17 +172,22 @@ obs: Observability {
   blackbox: "blackbox\nprobes" {class: card; icon: ${di}/prometheus.svg}
   synthetics: "k6\nsynthetics" {class: card; icon: ${ify}/simple-icons/k6.svg?color=%237d64ff&height=64}
   metrics: metrics-server {class: card; icon: ${di}/kubernetes.svg}
+  exporters: "exporters\nPVE, PBS, SNMP, UniFi" {class: card; icon: ${di}/prometheus.svg}
+  nodeexp: "node-exporter\nnodes and hosts" {class: card; icon: ${di}/prometheus.svg}
+  electricity: "electricity-price\nNO1 spot price" {class: card; icon: ${ify}/tabler/bolt.svg?color=%23a1ada3&height=64}
 }
 
-sec: Security {
+sec: Security and policy {
   class: group
-  grid-rows: 1
+  grid-rows: 2
   grid-columns: 4
   grid-gap: 16
   authentik: Authentik {class: card; icon: ${di}/authentik.svg}
   falco: Falco {class: card; icon: ${falco}}
   sidekick: Falcosidekick {class: card; icon: ${falco}}
   kyverno: "Kyverno\nadmission policies" {class: card; icon: ${kyverno}}
+  policyreporter: Policy Reporter {class: card; icon: ${kyverno}}
+  trivy: "trivy-operator\nCVE scans" {class: card; icon: ${ify}/simple-icons/trivy.svg?color=%231904da&height=64}
 }
 
 home: Home Assistant box {
@@ -218,6 +243,12 @@ net -> media: routes
 net -> ai: routes, wake from zero
 net -> obs: traces, metrics
 media -> pia: VPN tunnel
+sites -> youtube: iSponsorBlockTV
+sites -> data: SQL
+sec -> data: Authentik DB
+sec -> obs: PolicyReports, CVEs
+edge <- obs: UniFi metrics
+obs -> hw: PVE, PBS, SNMP scrape
 ai -> home: Innestemme actions
 home -> smart: Zigbee, BLE, Wi-Fi
 
@@ -226,11 +257,16 @@ github -> ops: sync main {style.stroke-dash: 4}
 ghcr -> ops: new tags {style.stroke-dash: 4}
 bitwarden -> ops: secrets {style.stroke-dash: 4}
 ops -> net: deploys, Secrets, scaling {style.stroke-dash: 4}
+github <- ops: prod promotion PRs {style.stroke-dash: 4}
+ops <- obs: SLO budgets {style.stroke-dash: 4}
+github <- obs: PRs, dashboard Git Sync {style.stroke-dash: 4}
+cloudflare <- obs: heartbeat, analytics {style.stroke-dash: 4}
 net -> letsencrypt: ACME {style.stroke-dash: 4}
 obs -> discord: critical alerts {style.stroke-dash: 4}
 sec -> discord: Falco events {style.stroke-dash: 4}
 
 sites -> store: volumes
+data -> store: NFS volumes, dumps
 media -> store: media library
 ai -> store: models
 store -> hw: NFS, block disks, backups
