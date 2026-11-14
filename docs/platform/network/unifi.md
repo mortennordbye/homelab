@@ -34,10 +34,20 @@ The cluster, NAS and PBS connect through the switch.
 ## Reservations
 
 `clients.tf` holds the fixed IPs: NAS `.10`, PBS `.11`, hyper1-3 `.12`-`.14`,
-Home Assistant `.15`, Hue Bridge Pro `.16`, Talos control plane `.31`-`.33` and
-workers `.34`-`.36`, all on Trusted, plus the Bluetooth proxy on IoT
+Home Assistant `.15`, Hue Bridge Pro `.16`, MacBook Pro `.20` (Wi-Fi), Talos
+control plane `.31`-`.33` and workers `.34`-`.36`, all on Trusted, plus the Bluetooth proxy on IoT
 (`10.3.20.39`). Each Trusted reservation also sets `local_dns_record`. The
 generated `<name>.local.bigd.no` records in the console come from that field.
+
+The DHCP pool covers the reserved addresses, but the gateway never leases a reserved
+address to a different MAC. A new fixed IP is therefore a reservation here, not a
+manual address on the device. A manual address in the pool can collide with a
+lease.
+
+The MacBook Pro reservation uses the hardware Wi-Fi MAC. On the Mac, set
+System Settings > Wi-Fi > Eden-Trusted > Details > Private Wi-Fi address to
+Off. With a private address the gateway sees a different MAC, and the Mac gets a
+normal lease instead of `.20`.
 
 ## Firewall
 
