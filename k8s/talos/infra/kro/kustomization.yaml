@@ -12,7 +12,7 @@ resources:
 helmCharts:
   - name: kro
     repo: oci://registry.k8s.io/kro/charts
-    version: 0.9.4
+    version: 0.10.0
     releaseName: kro
     namespace: kro
     includeCRDs: true
