@@ -1,7 +1,7 @@
 # --- Stage 1: Build the Site ---
 # Pinned to the version Northlight is tested against (HUGO_IMAGE in its
 # Makefile); the theme declares min_version = 0.164.0.
-FROM ghcr.io/gohugoio/hugo:v0.169.0@sha256:a146e0639230bbc73358e6563240f0a6103466f0390b80a457c775068ec802a9 AS builder
+FROM ghcr.io/gohugoio/hugo:v0.170.0@sha256:90663d477d1fe08c85643d5752bbf1f4e6391e83f95f85e9942b702649d16cb2 AS builder
 
 # The image runs as uid 1000; the build writes to /src and /target, both owned by
 # root after COPY.
