@@ -86,5 +86,4 @@ livenessprobe:
 options:
   enableCapacity: true
 
-# Increase log verbosity for troubleshooting (default: 5, max: 10)
-logVerbosityLevel: 10
+logVerbosityLevel: 5
