@@ -44,10 +44,13 @@ address to a different MAC. A new fixed IP is therefore a reservation here, not 
 manual address on the device. A manual address in the pool can collide with a
 lease.
 
-The MacBook Pro reservation uses the hardware Wi-Fi MAC. On the Mac, set
-System Settings > Wi-Fi > Eden-Trusted > Details > Private Wi-Fi address to
-Off. With a private address the gateway sees a different MAC, and the Mac gets a
-normal lease instead of `.20`.
+The MacBook Pro reservation uses the fixed private Wi-Fi MAC of the Mac on
+Eden-Trusted, not the hardware MAC. Keep System Settings > Wi-Fi > Eden-Trusted >
+Details > Private Wi-Fi address on Fixed. The Mac keeps that MAC on this network
+and still uses other private MACs on other networks. Off or Rotating changes the
+MAC, and the Mac then gets a normal lease instead of `.20`. If the network is
+forgotten and joined again, macOS can make a new fixed MAC. Then copy the new
+Wi-Fi address from the same window into `clients.tf`.
 
 ## Firewall
 
