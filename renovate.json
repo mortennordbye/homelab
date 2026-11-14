@@ -189,6 +189,13 @@
       "addLabels": ["k8s-infra"]
     },
     {
+      "description": "OCI Helm charts often ship without a created timestamp, and timestamp-required then holds them, and their whole group, pending forever. Unknown age counts as old enough.",
+      "matchManagers": ["kustomize"],
+      "matchDepTypes": ["HelmChart"],
+      "matchDatasources": ["docker"],
+      "minimumReleaseAgeBehaviour": "timestamp-optional"
+    },
+    {
       "description": "Grafana plugins installed by the kube-prometheus-stack values: one PR, so they don't each hold an open-PR slot.",
       "matchDatasources": ["custom.grafana-plugins"],
       "matchUpdateTypes": ["minor", "patch"],
