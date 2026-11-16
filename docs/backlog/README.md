@@ -60,6 +60,12 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** a Kyverno release that announces `ClusterPolicy` removal or ships a Pod Security equivalent for `ValidatingPolicy`. The Kyverno CLI (`kyverno apply`) checks the rewritten policies against rendered manifests.
 - **Where:** `k8s/talos/infra/kyverno/policies/`, `k8s/talos/infra/kyverno/policyexception-monitoring.yaml`.
 
+### Docs site off Material for MkDocs before 5 May 2027
+- **What:** move the docs site from the Material for MkDocs theme to Zensical, its successor. Material reaches end of life on 5 May 2027 and gets only critical and security fixes until then.
+- **Why deferred:** Zensical 0.1.1 does not run MkDocs hooks and ignores the `hooks:` setting without a warning. A trial build with `properdocs.yml` kept the theme, `theme.css`, the `overrides/` templates and search. It lost everything `docs_site_hooks.py` does: the home page, `robots.txt`, the GitHub rewrite of links to code outside `docs/` (17 strict failures), the nav icons, the page descriptions and the sitemap `lastmod` from git.
+- **Unblock:** the Zensical module system ([ZAP-007](https://zensical.org/spark/proposals/zap-007-module-system/)) or another way to run the hook logic. Check the [plugin compatibility page](https://zensical.org/compatibility/plugins/) in early 2027. If hooks are still missing then, move the hook logic into a pre-build script that writes a copy of `docs/`, and accept the build date as `lastmod` or add a post-build step. Test with `zensical build --strict` against the existing config.
+- **Where:** `properdocs.yml`, `scripts/docs_site_hooks.py`, `scripts/docs-requirements.txt`, `overrides/`, `.github/workflows/docs.yaml`, the `docs` target in `Makefile`.
+
 ## Infrastructure page
 
 ### Second consumer for the cluster status card
