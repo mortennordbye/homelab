@@ -62,7 +62,7 @@ spec:
   templatePatch: |
     {{- $base := .path.basename }}
     {{- $stage := "" }}
-    {{- range $app := list "portfolio" "blog" "logeverylift" "headroom" "verksted" "reelsmith" "innestemme" }}
+    {{- range $app := list "portfolio" "blog" "logeverylift" "headroom" "verksted" "reelsmith" "innestemme" "linkgraph" }}
     {{- if eq $base $app }}{{ $stage = printf "%s-cd:prod" $app }}
     {{- else if eq $base (printf "%s-stage" $app) }}{{ $stage = printf "%s-cd:stage" $app }}
     {{- else if eq $base (printf "%s-demo" $app) }}{{ $stage = printf "%s-cd:demo" $app }}

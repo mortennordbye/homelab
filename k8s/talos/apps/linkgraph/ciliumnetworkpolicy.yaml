@@ -1,0 +1,48 @@
+# Ingress from Traefik only. Egress is DNS plus https to public addresses, for "Fetch logos":
+# it calls brreg, Wikidata, DuckDuckGo icons and each company's own website, so the hosts cannot
+# be pinned with toFQDNs. Private ranges are excluded as a second guard next to the app's own
+# SSRF check (linkgraph/siteicons.py).
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: linkgraph-policy
+  namespace: linkgraph
+spec:
+  endpointSelector:
+    matchLabels:
+      app: linkgraph
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "8765"
+              protocol: TCP
+    # kubelet probes and the health checker.
+    - fromEntities:
+        - host
+        - health
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 100.64.0.0/10
+            - 169.254.0.0/16
+            - 127.0.0.0/8
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

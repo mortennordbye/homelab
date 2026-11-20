@@ -39,7 +39,7 @@ Everything in this repo is documented at [docs.nordbye.it](https://docs.nordbye.
 
 - [Architecture](https://docs.nordbye.it/architecture/): what runs where and how the parts depend on each other
 - Platform: [cluster](https://docs.nordbye.it/platform/cluster/), [network](https://docs.nordbye.it/platform/network/), [storage](https://docs.nordbye.it/platform/storage/), [identity](https://docs.nordbye.it/platform/identity/), [delivery](https://docs.nordbye.it/platform/delivery/), [backups](https://docs.nordbye.it/platform/backups/), [data](https://docs.nordbye.it/platform/data/), [observability](https://docs.nordbye.it/platform/observability/), [secrets](https://docs.nordbye.it/platform/secrets/)
-- Apps that need more than their manifests: [media stack](https://docs.nordbye.it/apps/media-stack/), [portfolio](https://docs.nordbye.it/apps/portfolio/), [reelsmith](https://docs.nordbye.it/apps/reelsmith/), [verksted](https://docs.nordbye.it/apps/verksted/)
+- Apps that need more than their manifests: [media stack](https://docs.nordbye.it/apps/media-stack/), [portfolio](https://docs.nordbye.it/apps/portfolio/), [linkgraph](https://docs.nordbye.it/apps/linkgraph/), [reelsmith](https://docs.nordbye.it/apps/reelsmith/), [verksted](https://docs.nordbye.it/apps/verksted/)
 
 Every push to `main` builds the site from [`docs/`](docs/architecture/README.md). The site always matches this repo.
 
@@ -144,7 +144,7 @@ homelab
 
 | Category | Components |
 | --- | --- |
-| GitOps | [Argo CD](https://argoproj.github.io/cd/) (ApplicationSets), [Kargo](https://kargo.io/) (stage to prod promotion for blog, headroom, logeverylift, portfolio, reelsmith and verksted), [Argo Rollouts](https://argoproj.github.io/rollouts/) (installed, no workload uses it yet) |
+| GitOps | [Argo CD](https://argoproj.github.io/cd/) (ApplicationSets), [Kargo](https://kargo.io/) (stage to prod promotion for blog, headroom, linkgraph, logeverylift, portfolio, reelsmith and verksted), [Argo Rollouts](https://argoproj.github.io/rollouts/) (installed, no workload uses it yet) |
 | Networking | [Cilium](https://cilium.io/) (CNI, eBPF, L2 announcements and LB IPAM), [Traefik](https://traefik.io/) via [Gateway API](https://gateway-api.sigs.k8s.io/), [external-dns](https://github.com/kubernetes-sigs/external-dns) (Cloudflare) |
 | Security | [Falco](https://falco.org/) (runtime, modern eBPF probe), [Authentik](https://goauthentik.io/) (SSO), [cert-manager](https://cert-manager.io/), [External Secrets Operator](https://external-secrets.io/) (Bitwarden Secrets Manager, [pattern](docs/platform/secrets/README.md)) |
 | Observability | [Prometheus and Alertmanager](https://prometheus.io/), [Grafana](https://grafana.com/), [Loki](https://grafana.com/oss/loki/) (logs), [Tempo](https://grafana.com/oss/tempo/) (traces), [Alloy](https://grafana.com/oss/alloy/) (log shipping, trace filtering), [Pyrra](https://github.com/pyrra-dev/pyrra) (SLOs and error budgets), [metrics-server](https://github.com/kubernetes-sigs/metrics-server) |
@@ -254,6 +254,7 @@ A few other things I build and self-host outside this repo:
 | [**logeverylift**](https://github.com/mortennordbye/logeverylift) | Mobile-first workout tracking PWA | Next.js 16, PostgreSQL 18, Drizzle |
 | [**lawless-waf**](https://github.com/mortennordbye/lawless-waf) | Tune Azure WAF false positives without paying Log Analytics prices | Python, React, Terraform |
 | [**headroom**](https://github.com/mortennordbye/headroom) | Self-hosted personal finance tracker for budgets, assets, investments, and loan modeling | TypeScript, SQLite, Docker |
+| [**linkgraph**](https://github.com/mortennordbye/linkgraph) | Who you know where, and warm paths into any company, from your LinkedIn export | Python, FastAPI, vanilla JS |
 
 ---
 
