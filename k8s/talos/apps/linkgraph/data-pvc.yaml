@@ -1,0 +1,14 @@
+# Imported LinkedIn exports, linkgraph-notes.json (the user's statuses and notes) and the logo
+# cache. The image holds code only.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: linkgraph-data-pvc
+  namespace: linkgraph
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: syno-nfs-csi
+  resources:
+    requests:
+      storage: 5Gi

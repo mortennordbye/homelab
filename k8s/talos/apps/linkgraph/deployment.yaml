@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: linkgraph
+  namespace: linkgraph
+  labels:
+    app: linkgraph
+spec:
+  revisionHistoryLimit: 3
+  # The data PVC is ReadWriteOnce, and notes are written by one process at a time.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: linkgraph
+  template:
+    metadata:
+      labels:
+        app: linkgraph
+    spec:
+      # uid 1000 owns the files on the NFS PVC. fsGroup lets kubelet clear the share's root-only
+      # mode on first mount, so runAsUser and the volume's owner must stay the same uid.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: linkgraph
+          # Kargo sets the tag through kustomization.yaml `images:`. This inline value is only a kubectl-apply fallback.
+          image: ghcr.io/mortennordbye/linkgraph:0.0.18
+          imagePullPolicy: IfNotPresent
+          env:
+            # Host-header allowlist (DNS-rebinding guard). The default is loopback only, so the
+            # served hostname must be listed or the app returns 400.
+            - name: LINKGRAPH_ALLOWED_HOSTS
+              value: "linkgraph.local.bigd.no"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 8765
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          # An import holds the zip (up to 200 MB) in memory while it is checked and parsed.
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            tcpSocket:
+              port: 8765
+            periodSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: 8765
+            periodSeconds: 20
+            failureThreshold: 3
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: linkgraph-data-pvc

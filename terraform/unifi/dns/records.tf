@@ -41,6 +41,7 @@ locals {
     "hubble",
     "jarvis",
     "kargo",
+    "linkgraph",
     "mealie",
     "open-webui",
     "opencost",

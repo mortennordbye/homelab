@@ -366,7 +366,8 @@
         "ghcr.io/mortennordbye/headroom",
         "ghcr.io/mortennordbye/verksted",
         "ghcr.io/mortennordbye/reelsmith-gateway",
-        "ghcr.io/mortennordbye/logeverylift"
+        "ghcr.io/mortennordbye/logeverylift",
+        "ghcr.io/mortennordbye/linkgraph"
       ],
       "enabled": false
     },
