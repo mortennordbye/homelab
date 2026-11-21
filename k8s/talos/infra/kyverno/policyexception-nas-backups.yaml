@@ -97,6 +97,7 @@ spec:
             - garage
             - gluetun-vpn
             - headroom
+            - innestemme
             - linkgraph
             - mealie
             - monitoring
