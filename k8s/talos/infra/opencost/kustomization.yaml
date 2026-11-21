@@ -10,7 +10,7 @@ resources:
 helmCharts:
   - name: opencost
     repo: https://opencost.github.io/opencost-helm-chart
-    version: 2.5.33
+    version: 2.5.34
     releaseName: opencost
     namespace: monitoring
     valuesFile: values.yaml
