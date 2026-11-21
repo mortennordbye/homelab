@@ -77,3 +77,6 @@ data:
     answer-volume: 0.50
     # Requests no skill handled, for what to build next; also listed on the web page.
     unhandled-log: /models/unhandled.jsonl
+    # Each Voice PE run as a wav for the replay test (innestemme scripts/replay); about 50 MB a week.
+    dump-utterances: /models/recordings
+    dump-keep-days: 7
