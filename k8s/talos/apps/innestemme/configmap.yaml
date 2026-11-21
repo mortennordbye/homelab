@@ -34,6 +34,11 @@ data:
     # Parakeet TDT 0.6B (English only): about 8x faster than whisper-base on a CPU and more accurate on
     # the Voice PE's recordings (innestemme docs/benchmarks.md).
     listener: parakeet
+    # Requests go to the 0.6B v2 as well, not the engine's 110M default: with the 110M, "I'm leaving"
+    # came out as "I'm Leonic" and "lockdown" as "look down", and some clear requests came back empty.
+    # Answers after speech were about 650 ms with either, since drafts are transcribed during the
+    # pause. One model serves the wake word check too, so memory goes down.
+    parakeet-repo: csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
     ha-url: http://home-assistant.home-assistant.svc.cluster.local:8123
     speaker: Living Room
     # "I'm home" / "daddy's home": these lights at any time, and Liked Songs.
