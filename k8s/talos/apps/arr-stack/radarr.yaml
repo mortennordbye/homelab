@@ -55,7 +55,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: radarr
-          image: ghcr.io/linuxserver/radarr:6.2.1
+          image: ghcr.io/linuxserver/radarr:7.0.3
           securityContext:
             allowPrivilegeEscalation: false
           ports:
