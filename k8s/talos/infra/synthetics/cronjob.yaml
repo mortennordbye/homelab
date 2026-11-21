@@ -30,7 +30,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: k6
-              image: docker.io/grafana/k6:2.3.0-with-browser
+              image: docker.io/grafana/k6:2.4.0-with-browser
               args:
                 - run
                 - --out
