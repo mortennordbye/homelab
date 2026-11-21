@@ -1,0 +1,15 @@
+# The Voice PE runs (dump-utterances), the test set for every change to the speech chain
+# (innestemme scripts/testset). Real use cannot be recorded again, so this volume is backed up
+# (volsync.yaml), unlike models-pvc. About 50 MB a week.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: recordings-pvc
+  namespace: innestemme
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: syno-nfs-csi
+  resources:
+    requests:
+      storage: 10Gi
