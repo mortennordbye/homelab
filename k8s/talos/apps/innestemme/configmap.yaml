@@ -25,11 +25,13 @@ data:
     honorific-female: ma'am
     home: Oslo
     norwegian: false
-    # English speech from Kokoro inside the engine (sherpa-onnx, the f32 v1.0 model in /models/hub).
-    # The engine renders fixed sentences ahead and keeps them in their own folder (kokoro-onnx-am_onyx).
-    # It only synthesizes sentences with live data.
-    english-tts: kokoro-onnx
+    # English speech from Phonon 31M inside the engine (int8, model and voice pinned, in /models/hub):
+    # streamed, first sound in about 50 ms on this node, and it says numbers. Voice Hugh, temperature 0.
+    # Fixed sentences are rendered ahead into their own folder (phonon-hugh-t0-int8).
+    # Back to Kokoro: english-tts: kokoro-onnx (its folder kokoro-onnx-am_onyx is kept).
+    english-tts: phonon
     speech-cache: /models/speech-cache
+    phonon-voice: Hugh
     kokoro-voice: am_onyx
     # Parakeet TDT 0.6B (English only): about 8x faster than whisper-base on a CPU and more accurate on
     # the Voice PE's recordings (innestemme docs/benchmarks.md).
