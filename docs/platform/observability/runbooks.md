@@ -472,10 +472,18 @@ Check Storage Manager > HDD/SSD on nas.local.bigd.no and replace the disk.
 
 ### NasRaidDegraded
 
-DSM reports the RAID as not normal.
+DSM reports the RAID as degraded (status 11) or crashed (status 12).
 
 The NAS holds the media, every NFS volume and every backup. First stop all writes to it.
 Then check Storage Manager on nas.local.bigd.no.
+
+### NasRaidBusy
+
+DSM runs a task on the RAID, for example a scheduled data scrub (status 13). This is a
+warning, so it does not reach Discord.
+
+No action. The data is safe. NFS volumes and backups are slower until the task ends.
+Storage Manager on nas.local.bigd.no shows the progress.
 
 ### NasVolumeAlmostFull
 
