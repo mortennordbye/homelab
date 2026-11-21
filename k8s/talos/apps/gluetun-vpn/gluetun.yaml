@@ -136,7 +136,7 @@ spec:
 
         # Prowlarr - indexer manager
         - name: prowlarr
-          image: ghcr.io/linuxserver/prowlarr:2.4.0
+          image: ghcr.io/linuxserver/prowlarr:3.0.2
           securityContext:
             allowPrivilegeEscalation: false
           ports:
