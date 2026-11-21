@@ -5,6 +5,8 @@ commonAnnotations:
 resources:
 - namespace.yaml
 - models-pvc.yaml
+- recordings-pvc.yaml
+- volsync.yaml
 - externalsecret.yaml
 - configmap.yaml
 - deployment.yaml

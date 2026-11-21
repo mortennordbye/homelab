@@ -16,7 +16,7 @@ notifications) is in [`pbs.md`](pbs.md).
 | Authentik DB | `pg_dump --format=custom`, Postgres 17 | 00:50 | 30 days | `postgres/authentik/` | `k8s/talos/infra/authentik/db-backup.yaml` |
 | Outline DB | `pg_dump --format=custom`, Postgres 18 | 00:55 | 30 days | `postgres/outline/` | `k8s/talos/apps/outline/db-backup.yaml` |
 | logeverylift DB, point in time | CloudNativePG base backup and continuous WAL archiving to Garage | base backup 00:15, WAL continuous | 30 days | in `volsync/garage/garage-data/` | `k8s/talos/apps/logeverylift/cnpg-cluster.yaml`, [`../data/cloudnative-pg.md`](../data/cloudnative-pg.md) |
-| App volumes (23) | VolSync restic, `copyMethod: Direct`, one repository per PVC | 01:00 to 01:55 by namespace | 14 daily, 8 weekly, 6 monthly | `volsync/<namespace>/<pvc>/` | `volsync.yaml` in each app, controller `k8s/talos/infra/volsync/` |
+| App volumes (24) | VolSync restic, `copyMethod: Direct`, one repository per PVC | 01:00 to 01:55 by namespace | 14 daily, 8 weekly, 6 monthly | `volsync/<namespace>/<pvc>/` | `volsync.yaml` in each app, controller `k8s/talos/infra/volsync/` |
 | Home Assistant | HA OS automatic backup (encrypted) | 01:30 | 14 | `home-assistant/` | HA UI, Settings > System > Backups |
 | *arr databases | App-native zips inside `/config/Backups` (Sonarr, Radarr, Radarr 4K, Prowlarr) | daily | 14 days | inside the VolSync copy | app UI, see [media stack](../../apps/media-stack/README.md) |
 | Whole share | Btrfs snapshot, immutable 7 days | 02:45 | 30 | `k8s-backups` | DSM Snapshot Replication |
@@ -35,10 +35,10 @@ login, reads the zip back to verify it, and keeps the newest 14 zips. To restore
 
 VolSync covers: arr-stack (sonarr, radarr, radarr-4k, bazarr, bazarr-4k, cleanuparr, tdarr), gluetun-vpn (prowlarr,
 qbittorrent), plex-media-stack (plex, tautulli, seerr), audiobookshelf (config, metadata),
-trek (data, uploads), mealie, open-webui, outline (data), headroom, verksted, monitoring (grafana), garage
+trek (data, uploads), mealie, open-webui, outline (data), headroom, verksted, innestemme (recordings), monitoring (grafana), garage
 (data).
 
-Not backed up by design: Loki, Tempo, Prometheus, Alertmanager, the Ollama model cache,
+Not backed up by design: Loki, Tempo, Prometheus, Alertmanager, the Ollama model cache, innestemme's models,
 flaresolverr, reelsmith (keeps its own copies), the media itself.
 
 ## Secrets needed to restore

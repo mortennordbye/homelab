@@ -90,6 +90,8 @@ spec:
           volumeMounts:
             - name: models
               mountPath: /models
+            - name: recordings
+              mountPath: /recordings
             - name: config
               mountPath: /config
               readOnly: true
@@ -97,6 +99,9 @@ spec:
         - name: models
           persistentVolumeClaim:
             claimName: models-pvc
+        - name: recordings
+          persistentVolumeClaim:
+            claimName: recordings-pvc
         - name: config
           configMap:
             name: innestemme-config
