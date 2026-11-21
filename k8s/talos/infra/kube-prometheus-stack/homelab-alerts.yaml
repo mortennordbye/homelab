@@ -458,16 +458,29 @@ spec:
             description: |
               DSM reports a disk as not normal (status {{ $value }}). Check Storage Manager > HDD/SSD on nas.local.bigd.no.
 
+        # SYNOLOGY-RAID-MIB raidStatus: 1 normal, 11 degraded, 12 crashed. The other
+        # values are DSM tasks such as 13 data scrubbing, which a schedule starts.
         - alert: NasRaidDegraded
-          expr: raidStatus{job="snmp-exporter"} != 1
+          expr: raidStatus{job="snmp-exporter"} == 11 or raidStatus{job="snmp-exporter"} == 12
           for: 10m
           labels:
             severity: critical
           annotations:
             runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#nasraiddegraded
-            summary: 'NAS {{ $labels.raidName }} is not normal'
+            summary: 'NAS {{ $labels.raidName }} is degraded or crashed'
             description: |
-              DSM reports {{ $labels.raidName }} with RAID status {{ $value }} (1 is normal). Check Storage Manager on nas.local.bigd.no before anything else writes to it.
+              DSM reports {{ $labels.raidName }} with RAID status {{ $value }} (11 degraded, 12 crashed). Check Storage Manager on nas.local.bigd.no before anything else writes to it.
+
+        - alert: NasRaidBusy
+          expr: raidStatus{job="snmp-exporter"} != 1 and raidStatus{job="snmp-exporter"} != 11 and raidStatus{job="snmp-exporter"} != 12
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            runbook_url: https://docs.nordbye.it/platform/observability/runbooks/#nasraidbusy
+            summary: 'NAS {{ $labels.raidName }} runs a DSM task'
+            description: |
+              DSM reports {{ $labels.raidName }} with RAID status {{ $value }}, for example 13 data scrubbing. The data is safe. The NAS is slower until the task ends.
 
         - alert: NasVolumeAlmostFull
           expr: 1 - raidFreeSize{raidName="Volume 1"} / raidTotalSize{raidName="Volume 1"} > 0.9
