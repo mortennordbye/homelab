@@ -52,7 +52,13 @@ data:
     norwegian-groceries: true
     # "Party mode": every Hue light follows the music through the bridge's Entertainment API.
     hue-bridge: 10.3.10.16
-    # No llm-url: rules only. Requests they do not understand get the short fallback at once.
+    # No llm-url: the rules take every skill. Open talk they do not understand ("How are you
+    # feeling?") goes to the cluster's Ollama and is spoken a sentence at a time. Gemma 4 E2B gave
+    # the first sentence in 1.2-1.8 s on worker-03; chat-threads is Ollama's CPU limit (more is
+    # throttled to 1.2 tokens/s).
+    chat-url: http://ollama-service.ollama:11434
+    chat-model: gemma4:e2b
+    chat-threads: 4
     # The living room Voice PE; its Assist satellite entity is disabled in Home Assistant.
     satellite: 10.3.20.67:6053
     # The engine sets these on the device: Home Assistant's wake word selects go through the disabled
