@@ -54,10 +54,11 @@ data:
     hue-bridge: 10.3.10.16
     # No llm-url: the rules take every skill. Open talk they do not understand ("How are you
     # feeling?") goes to the cluster's Ollama and is spoken a sentence at a time. Gemma 4 E2B gave
-    # the first sentence in 1.2-1.8 s on worker-03; chat-threads is Ollama's CPU limit (more is
-    # throttled to 1.2 tokens/s).
+    # the first sentence in 1.2-1.8 s on worker-03; its QAT build writes 9.6 tokens/s against 8.7
+    # with the same answers, in 3.5 GB of memory against 6.4. chat-threads is Ollama's CPU limit
+    # (more is throttled to 1.2 tokens/s).
     chat-url: http://ollama-service.ollama:11434
-    chat-model: gemma4:e2b
+    chat-model: gemma4:e2b-it-qat
     chat-threads: 4
     # The living room Voice PE; its Assist satellite entity is disabled in Home Assistant.
     satellite: 10.3.20.67:6053
