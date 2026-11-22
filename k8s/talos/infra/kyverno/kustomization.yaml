@@ -39,7 +39,7 @@ helmCharts:
     includeCRDs: true
     skipTests: true
     namespace: kyverno
-    version: 3.9.2
+    version: 3.10.0
     releaseName: kyverno
     valuesFile: ./values.yaml
   - name: policy-reporter
