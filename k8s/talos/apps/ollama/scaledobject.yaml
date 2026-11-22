@@ -6,7 +6,9 @@ metadata:
 spec:
   scaleTargetRef:
     name: ollama
-  minReplicaCount: 0
+  # Always up: innestemme's open talk reaches the service directly, which wakes nothing, and a
+  # cold start takes over a minute.
+  minReplicaCount: 1
   maxReplicaCount: 1
   cooldownPeriod: 300
   triggers:
