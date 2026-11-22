@@ -45,7 +45,7 @@ jobs:
 
       # Rule config lives in blog/.markdownlint.yaml
       - name: Lint markdown content
-        uses: DavidAnson/markdownlint-cli2-action@696eb3f2509270d7b882d2aa68347bc676e7af34 # v25
+        uses: DavidAnson/markdownlint-cli2-action@3ce8f712b5d8f31acd8e201be6d97e3d2bb23eb7 # v25
         with:
           globs: "blog/content/**/*.md"
 
