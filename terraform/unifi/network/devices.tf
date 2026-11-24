@@ -74,7 +74,7 @@ resource "unifi_device" "u6_plus" {
       name          = "rai0"
       radio         = "na"
       channel       = "108"
-      ht            = 40
+      ht            = 80
       tx_power_mode = "auto"
     },
   ]

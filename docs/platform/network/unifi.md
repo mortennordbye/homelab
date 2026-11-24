@@ -27,7 +27,7 @@ declared but disabled, failover-only.
 | --- | --- | --- |
 | Cloud Gateway Fiber | `10.3.10.1` | router, firewall, resolver for `local.bigd.no` |
 | USW-Lite-8-PoE | `10.3.10.3` | port 6 is "LG TV" with IoT as native network |
-| U6+ | `10.3.10.2` | LED off; 2.4 GHz on channel 13 to stay clear of Zigbee channel 20, 5 GHz on 108 |
+| U6+ | `10.3.10.2` | LED off; 2.4 GHz on channel 13 to stay clear of Zigbee channel 20, 5 GHz on 108 at 80 MHz |
 
 The cluster, NAS and PBS connect through the switch.
 

@@ -236,6 +236,12 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** a provider release that reads the live `usg` section before it writes, as it does for `mgmt` and `igmp_snooping`, or that models those fields. Then declare `usg` with the live values from `/proxy/network/api/s/default/get/setting` and diff the section before and after the first apply.
 - **Where:** `terraform/unifi/network/settings.tf`, provider `ubiquiti-community/unifi` (`unifi/setting_resource.go`, the `USG` branch of `Update`).
 
+### UniFi provider 0.65.0 plan is not safe to apply
+- **What:** under provider 0.65.0 the controller returns UUIDs for networks, WLAN groups and firewall policies, not the old hex IDs. A full `terraform plan` in `terraform/unifi/network` therefore wants to create the 5 firewall policies again (they exist), set the 3 WLANs back to the hex `default_user_group` and `all_aps` IDs in `wifi.tf`, and change `unifi_wan.internet_2`.
+- **Why deferred:** found during the 5 GHz width change, which was applied with `-target=unifi_device.u6_plus` to keep it apart. The rest needs its own plan and apply.
+- **Unblock:** put the UUIDs from `rest/wlanconf` (`usergroup_id`, `ap_group_ids`) into the `wifi.tf` locals. Move the firewall policies to their new IDs with `removed` plus `import` blocks (or `terraform state rm` and import). Check the `internet_2` diff. Apply only when the plan shows no creates and no unexpected changes.
+- **Where:** `terraform/unifi/network/{wifi.tf,firewall.tf,networks.tf}`, `version.tf` (bumped in #2165).
+
 ### Proxmox-CSI detach can leave a VM disk as a pending delete
 - **What:** when a PVC moves off a VM while the config of that VM is locked (reboot, backup), the CSI unplug succeeds in QEMU, but the config write times out (`can't lock file '/var/lock/qemu-server/lock-<vmid>.conf'`). The disk stays in the config as a pending delete. Every vzdump of that VM fails with `Device 'drive-scsiN' not found` until someone runs `qm set <vmid> --delete scsiN`. `pbs-backup-check` fails on it and prints that command. The root cause is still in the plugin.
 - **Why deferred:** the fix belongs upstream (retry the config write on a lock timeout), and the manual clear takes one minute after the check flags it.
