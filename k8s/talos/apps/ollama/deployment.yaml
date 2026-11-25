@@ -8,12 +8,12 @@ metadata:
 spec:
   replicas: 1
   revisionHistoryLimit: 3
-  # The old pod answers until the new one has the chat model in memory.
+  # No surge: the node has no memory for a second pod with the model loaded.
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: ollama
