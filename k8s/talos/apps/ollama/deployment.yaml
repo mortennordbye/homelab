@@ -8,6 +8,12 @@ metadata:
 spec:
   replicas: 1
   revisionHistoryLimit: 3
+  # The old pod answers until the new one has the chat model in memory.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: ollama
@@ -50,7 +56,7 @@ spec:
             - name: OLLAMA_NUM_PARALLEL
               value: "1"
             - name: OLLAMA_KEEP_ALIVE
-              value: "5m"
+              value: "-1"
             # The image's HOME is /root, which uid 1000 cannot enter.
             - name: HOME
               value: /home/ollama
@@ -64,10 +70,23 @@ spec:
             limits:
               cpu: "4"
               memory: 8Gi
+          # A cold load from NFS takes minutes, longer than innestemme waits for an answer.
+          # The model name must match innestemme's chat-model.
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - until ollama list >/dev/null 2>&1; do sleep 1; done; ollama run gemma4:e2b-it-qat hi </dev/null >/dev/null 2>&1 || true
           readinessProbe:
-            tcpSocket:
-              port: 11434
+            exec:
+              command:
+                - sh
+                - -c
+                - ollama ps | grep -q gemma4:e2b-it-qat
             periodSeconds: 15
+            timeoutSeconds: 5
           livenessProbe:
             tcpSocket:
               port: 11434
