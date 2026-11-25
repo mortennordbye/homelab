@@ -33,7 +33,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: ollama
-          image: ollama/ollama:0.40.15
+          image: ollama/ollama:0.40.16
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
