@@ -1,0 +1,14 @@
+---
+import Pagination from "virtual:starlight/components/Pagination";
+const { editUrl } = Astro.locals.starlightRoute;
+const source = editUrl?.href.split("/edit/main/")[1];
+---
+<footer class="eden-footer">
+  <Pagination />
+  {editUrl && (
+    <div class="eden-foot-meta">
+      <a href={editUrl.href}>Edit this page on GitHub</a>
+      <span>{source}</span>
+    </div>
+  )}
+</footer>

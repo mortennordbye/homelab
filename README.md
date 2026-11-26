@@ -33,7 +33,7 @@ The repository is public by design. Transparency keeps me honest about best prac
 
 ## Documentation
 
-[![Read the docs at docs.nordbye.it](https://img.shields.io/badge/Read_the_docs-docs.nordbye.it-378144?style=for-the-badge&logo=materialformkdocs&logoColor=white&labelColor=0f1410)](https://docs.nordbye.it)
+[![Read the docs at docs.nordbye.it](https://img.shields.io/badge/Read_the_docs-docs.nordbye.it-378144?style=for-the-badge&logo=astro&logoColor=white&labelColor=0f1410)](https://docs.nordbye.it)
 
 Everything in this repo is documented at [docs.nordbye.it](https://docs.nordbye.it). The docs describe how the parts connect, and how to operate or rebuild each one.
 
@@ -62,7 +62,7 @@ Longer write-ups of things built in this repo, on [blog.nordbye.it](https://blog
 
 ## Quick Links
 
-[![Portfolio](https://img.shields.io/badge/Portfolio-nordbye.it-378144?style=flat-square&logo=googlechrome&logoColor=white&labelColor=0f1410)](https://nordbye.it) [![Blog](https://img.shields.io/badge/Blog-blog.nordbye.it-378144?style=flat-square&logo=hugo&logoColor=white&labelColor=0f1410)](https://blog.nordbye.it) [![Docs](https://img.shields.io/badge/Docs-docs.nordbye.it-378144?style=flat-square&logo=materialformkdocs&logoColor=white&labelColor=0f1410)](https://docs.nordbye.it) [![LinkedIn](https://img.shields.io/badge/LinkedIn-morten--victor--nordbye-378144?style=flat-square&logo=linkedin&logoColor=white&labelColor=0f1410)](https://www.linkedin.com/in/morten-victor-nordbye/) [![GitHub](https://img.shields.io/badge/GitHub-mortennordbye-378144?style=flat-square&logo=github&logoColor=white&labelColor=0f1410)](https://github.com/mortennordbye)
+[![Portfolio](https://img.shields.io/badge/Portfolio-nordbye.it-378144?style=flat-square&logo=googlechrome&logoColor=white&labelColor=0f1410)](https://nordbye.it) [![Blog](https://img.shields.io/badge/Blog-blog.nordbye.it-378144?style=flat-square&logo=hugo&logoColor=white&labelColor=0f1410)](https://blog.nordbye.it) [![Docs](https://img.shields.io/badge/Docs-docs.nordbye.it-378144?style=flat-square&logo=astro&logoColor=white&labelColor=0f1410)](https://docs.nordbye.it) [![LinkedIn](https://img.shields.io/badge/LinkedIn-morten--victor--nordbye-378144?style=flat-square&logo=linkedin&logoColor=white&labelColor=0f1410)](https://www.linkedin.com/in/morten-victor-nordbye/) [![GitHub](https://img.shields.io/badge/GitHub-mortennordbye-378144?style=flat-square&logo=github&logoColor=white&labelColor=0f1410)](https://github.com/mortennordbye)
 
 Send me a DM, open a pull request, or copy code from here. The goal is to learn and to make connections.
 
@@ -182,7 +182,7 @@ Trivy scans the containers every week and on every Dockerfile change. The scans 
 | [**README Cards**](.github/workflows/readme-cards.yaml)                                 | Every 15 minutes, manual | Redraws the cluster card at the top of this page and the star chart at the foot of it |
 | [**Kargo Automerge**](.github/workflows/kargo-automerge.yaml)                           | Kargo promotion PR                             | Merges promotion PRs for the apps listed in `KARGO_AUTOMERGE_APPS`, where the canary is the real gate |
 | [**Lighthouse**](.github/workflows/lighthouse.yaml)                                     | Mondays 06:00 UTC, manual | Audits the live public sites, median of 3 runs, gating SEO, accessibility and best practices |
-| [**Docs Site**](.github/workflows/docs.yaml)                                           | Push to `main` (`docs/**` and the site config), pull request, manual | Builds `docs/` with ProperDocs in strict mode and publishes it to [docs.nordbye.it](https://docs.nordbye.it) |
+| [**Docs Site**](.github/workflows/docs.yaml)                                           | Push to `main` (`docs/**` and `docs-site/**`), pull request, manual | Builds `docs/` with Starlight, checks every link, and publishes it to [docs.nordbye.it](https://docs.nordbye.it) |
 
 ---
 

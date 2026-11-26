@@ -1,0 +1,242 @@
+/* Eden theme. Values from portfolio/src/styles/tokens.css: green is ink only (links, focus,
+   the current item) and never a fill; surfaces are wood, brass and paper; the light comes
+   from the upper left. Dark only. */
+
+:root {
+  --bg: #0f1410;
+  --bg-2: #090c0a;
+  --surface: #191f1a;
+  --surface-2: #1e251f;
+  --line: #2a382c;
+  --line-2: #3e5542;
+  --fg: #e9ebe9;
+  --fg-2: #a1ada3;
+  --fg-3: #778a7a;
+  --accent: #65a16e;
+  --accent-3: #81b288;
+  --accent-rgb: 101, 161, 110;
+  --wood: #4a3520;
+  --brass: #7f5a2f;
+  --brass-hi: #8a6133;
+  --copper: #c09955;
+  --paper: #e8ddc9;
+  --paper-2: #d9cbb2;
+  --paper-3: #cabb9f;
+  --paper-ink-2: #574733;
+  --lit-edge: rgba(255, 212, 154, 0.11);
+  --lit-edge-soft: rgba(255, 212, 154, 0.055);
+  --dark-edge: rgba(0, 0, 0, 0.55);
+  --cast: 6px 16px 28px -18px rgba(0, 0, 0, 0.95);
+  --cast-tight: 2px 3px 5px -2px rgba(0, 0, 0, 0.85);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --mono: "Fragment Mono", ui-monospace, monospace;
+
+  --sl-font: "Source Serif 4 Variable", Georgia, serif;
+  --sl-font-mono: var(--mono);
+  --sl-color-black: var(--bg);
+  --sl-color-white: var(--fg);
+  --sl-color-gray-1: var(--fg);
+  --sl-color-gray-2: var(--fg-2);
+  --sl-color-gray-3: var(--fg-3);
+  --sl-color-gray-4: var(--line-2);
+  --sl-color-gray-5: var(--line);
+  --sl-color-gray-6: var(--surface);
+  --sl-color-gray-7: var(--bg-2);
+  --sl-color-accent-low: #1c2a1e;
+  --sl-color-accent: var(--accent);
+  --sl-color-accent-high: var(--accent-3);
+  --sl-color-text-accent: var(--accent);
+  --sl-color-bg-nav: rgba(15, 20, 16, 0.72);
+  --sl-color-bg-sidebar: transparent;
+  --sl-color-hairline: var(--line);
+  --sl-color-hairline-light: var(--line);
+  --sl-color-hairline-shade: var(--bg-2);
+  --sl-nav-height: 4rem;
+  --sl-text-body: 1.0625rem;
+  --sl-line-height: 1.7;
+}
+
+::selection { background: var(--accent); color: var(--bg); }
+body { font-optical-sizing: auto; -webkit-font-smoothing: antialiased; }
+
+/* Faint topography at the sides; it fades out behind the text column. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: var(--sl-nav-height) 0 0 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url(/topography.svg) 50% 0 / 1600px auto repeat-y;
+  opacity: 0.5;
+  -webkit-mask: linear-gradient(90deg, #000 0 18%, rgba(0, 0, 0, 0.25) 32% 68%, #000 82%);
+  mask: linear-gradient(90deg, #000 0 18%, rgba(0, 0, 0, 0.25) 32% 68%, #000 82%);
+}
+
+/* ---------- Header ---------- */
+.header {
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-bottom-color: var(--line) !important;
+}
+.eden-header { display: flex; align-items: center; gap: 1.75rem; height: 100%; }
+.eden-brand { display: flex; align-items: center; gap: 0.75rem; color: var(--fg); text-decoration: none; flex: none; }
+.eden-brand img { width: 28px; height: 28px; border-radius: 50%; box-shadow: var(--cast-tight); }
+.eden-brand b { font: 600 1.3rem/1 var(--sl-font); letter-spacing: -0.01em; }
+.eden-brand span { font: 400 0.8rem/1 var(--mono); color: var(--fg-3); margin-left: -0.35rem; }
+.eden-search { flex: 0 1 26rem; }
+.eden-right { margin-left: auto; align-items: center; gap: 1.25rem; }
+.eden-chip {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.7rem; border-radius: 8px;
+  border: 1px solid var(--line-2); color: var(--fg-2); font: 400 0.75rem/1 var(--mono); text-decoration: none;
+}
+.eden-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16); }
+.eden-chip:hover { color: var(--fg); }
+site-search button[data-open-modal] {
+  background: var(--surface); border: 0; border-radius: 10px; height: 2.5rem;
+  box-shadow: inset 1px 1px 0 var(--lit-edge), inset -1px -1px 0 var(--dark-edge);
+  font-family: var(--mono); font-size: 0.8rem; color: var(--fg-3);
+}
+site-search button[data-open-modal]:hover { box-shadow: inset 1px 1px 0 var(--lit-edge), inset -1px -1px 0 var(--dark-edge), 0 0 0 1px var(--line-2); }
+site-search kbd { background: var(--bg-2); border-radius: 6px; font-family: var(--mono); }
+.eden-progress { position: fixed; top: calc(var(--sl-nav-height) - 1px); left: 0; right: 0; height: 2px; z-index: 11; pointer-events: none; }
+.eden-progress i { display: block; height: 100%; width: 0; background: var(--accent); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.6); transition: width 120ms linear; }
+
+/* ---------- Sidebar ---------- */
+.eden-nav { list-style: none; padding: 0; margin: 0; }
+.eden-nav.top-level > li + li { margin-top: 1.6rem; }
+.eden-nav__label { display: block; margin: 0 0 0.6rem 0.6rem; font: 400 0.7rem/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--copper); }
+.eden-nav a, .eden-nav summary {
+  display: flex; align-items: center; gap: 0.7rem; padding: 0.38rem 0.6rem; border-radius: 8px;
+  color: var(--fg-2); font-size: 0.94rem; line-height: 1.35; text-decoration: none; cursor: pointer;
+  transition: color 180ms var(--ease-out), background 180ms var(--ease-out);
+}
+.eden-nav a:hover, .eden-nav summary:hover { color: var(--fg); background: rgba(var(--accent-rgb), 0.05); }
+.eden-nav summary { list-style: none; }
+.eden-nav summary::-webkit-details-marker { display: none; }
+.eden-nav .chev { margin-left: auto; font: 400 1rem/1 var(--sl-font); color: var(--fg-3); transition: transform 220ms var(--ease-out); }
+.eden-nav details[open] > summary .chev { transform: rotate(90deg); color: var(--fg-2); }
+.eden-nav details[open] > summary { color: var(--fg); background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.06), transparent 80%); }
+.eden-nav details > .eden-nav { margin: 0.15rem 0 0.4rem 1.2rem; padding-left: 0.75rem; border-left: 1px solid var(--line); }
+.eden-nav details > .eden-nav a { font-size: 0.9rem; position: relative; }
+.eden-nav a[aria-current="page"] { color: var(--fg); background: var(--surface); box-shadow: inset 1px 1px 0 var(--lit-edge), var(--cast-tight); }
+.eden-nav details > .eden-nav a[aria-current="page"]::before {
+  content: ""; position: absolute; left: calc(-0.75rem - 1px); top: 0.4rem; bottom: 0.4rem; width: 2px; border-radius: 2px; background: var(--accent);
+}
+.mark { width: 22px; height: 22px; flex: none; border-radius: 6px; display: grid; place-items: center; background: var(--bg-2);
+  box-shadow: inset 1px 1px 0 var(--dark-edge), inset -1px -1px 0 var(--lit-edge-soft); }
+.mark img { width: 14px; height: 14px; object-fit: contain; filter: saturate(0.85); transition: filter 180ms, transform 220ms var(--ease-out); }
+.eden-nav a:hover .mark img, .eden-nav summary:hover .mark img, .eden-nav a[aria-current="page"] .mark img { filter: none; transform: scale(1.08); }
+.mark--tile { background: var(--wood); color: var(--fg); font: 600 0.75rem/1 var(--sl-font); box-shadow: inset 1px 1px 0 var(--lit-edge), inset -1px -1px 0 var(--dark-edge); }
+.mark--dim { background: transparent; box-shadow: none; }
+.mark--dim::before { background: var(--fg-3) !important; }
+.mark--icon::before { content: ""; width: 14px; height: 14px; background: var(--copper); -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat; }
+
+/* ---------- Page title ---------- */
+.eden-crumbs { display: flex; gap: 0.6rem; margin-top: 1rem; font: 400 0.7rem/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); }
+.eden-crumbs i { font-style: normal; color: var(--line-2); }
+h1#_top { margin-top: 0.75rem; font-size: clamp(2.4rem, 4vw, 3.35rem); line-height: 1.06; font-weight: 600; letter-spacing: -0.025em; font-variation-settings: "opsz" 60; color: var(--fg); }
+.eden-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.4rem; margin-top: 1.25rem; padding: 0.9rem 0;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font: 400 0.75rem/1 var(--mono); color: var(--fg-3);
+}
+.eden-meta b { color: var(--fg-2); font-weight: 400; }
+.eden-actions { margin-left: auto; display: flex; gap: 0.5rem; }
+.eden-btn {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 8px; border: 0; cursor: pointer;
+  background: var(--surface); color: var(--fg-2); font: 400 0.75rem/1 var(--mono); text-decoration: none;
+  box-shadow: inset 1px 1px 0 var(--lit-edge), inset -1px -1px 0 var(--dark-edge), var(--cast-tight);
+  transition: color 180ms var(--ease-out), transform 180ms var(--ease-out), background 180ms var(--ease-out);
+}
+.eden-btn:hover { color: var(--fg); background: var(--surface-2); transform: translateY(-1px); }
+
+/* ---------- Content ---------- */
+.sl-markdown-content { counter-reset: section; }
+.sl-markdown-content > p:first-child { font-size: 1.2rem; line-height: 1.6; color: var(--fg-2); }
+.sl-markdown-content :is(h2, h3, h4) { color: var(--fg); font-weight: 600; letter-spacing: -0.015em; }
+.sl-markdown-content h2 { font-size: 2rem; font-variation-settings: "opsz" 48; }
+.sl-markdown-content .sl-heading-wrapper.level-h2 { display: flex; align-items: baseline; gap: 1rem; margin-top: 3.5rem; counter-increment: section; }
+.sl-markdown-content .sl-heading-wrapper.level-h2::before {
+  content: counter(section, decimal-leading-zero); transform: translateY(-0.35rem);
+  font: 400 0.8rem/1 var(--mono); letter-spacing: 0.08em; color: var(--copper);
+}
+.sl-markdown-content :not(pre) > code {
+  font-size: 0.8em; color: #dfe3df; background: rgba(233, 235, 233, 0.065); border: 0; padding: 0.12em 0.4em; border-radius: 5px;
+}
+.sl-markdown-content a :not(pre) > code, .sl-markdown-content a > code { background: rgba(var(--accent-rgb), 0.12); color: var(--accent); }
+.sl-markdown-content ul { list-style: none; padding-left: 0; }
+.sl-markdown-content ul > li { position: relative; padding-left: 1.4rem; }
+.sl-markdown-content ul > li::before { content: ""; position: absolute; left: 0.25rem; top: 0.82em; width: 0.45rem; height: 1px; background: var(--copper); }
+
+/* Diagrams lie on a sheet of paper. */
+.sl-markdown-content a:has(> img[src*="/assets/diagrams/"]) {
+  display: block; padding: 1.1rem; border-radius: 10px; background: linear-gradient(160deg, var(--paper), var(--paper-2));
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.5), inset -1px -1px 0 var(--paper-3), var(--cast);
+}
+.sl-markdown-content a:has(> img[src*="/assets/diagrams/"]) img { display: block; width: 100%; border-radius: 3px; }
+
+/* Tables: a wood header in a framed, scrollable well. */
+.sl-markdown-content table {
+  display: block; overflow: auto; border-collapse: separate; border-spacing: 0; border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--line), var(--cast); font-size: 0.85rem;
+}
+.sl-markdown-content th {
+  background: var(--wood); color: var(--fg); text-align: left; padding: 0.75rem 1rem; border: 0; white-space: nowrap;
+  font: 400 0.7rem/1.3 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; box-shadow: inset 0 1px 0 var(--lit-edge);
+}
+.sl-markdown-content td { padding: 0.75rem 1rem; border: 0; border-top: 1px solid var(--line); vertical-align: top; }
+.sl-markdown-content tr:nth-child(2n) { background: transparent; }
+.sl-markdown-content tbody tr:hover { background: rgba(var(--accent-rgb), 0.04); }
+.sl-markdown-content td code { white-space: nowrap; }
+
+/* Code blocks: a sunken well with a brass edge. */
+.expressive-code .frame { box-shadow: inset 3px 0 0 var(--brass), var(--cast-tight) !important; border-radius: 10px; }
+
+/* ---------- Right column ---------- */
+starlight-toc nav h2 { font: 400 0.7rem/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); }
+starlight-toc nav ul ul { border-left: 1px solid var(--line); }
+starlight-toc nav a { color: var(--fg-3); font-size: 0.9rem; border-left: 2px solid transparent; margin-left: -1px; transition: color 180ms; }
+starlight-toc nav a:hover { color: var(--fg); }
+starlight-toc nav a[aria-current="true"] { color: var(--fg); border-left-color: var(--accent); }
+.right-sidebar { border-inline-start: 0 !important; }
+.eden-top { display: flex; gap: 1.4rem; font: 400 0.8rem/1 var(--mono); }
+.eden-top a { color: var(--fg-2); text-decoration: none; }
+.eden-top a:hover { color: var(--fg); }
+.eden-agents {
+  box-sizing: border-box; width: calc(var(--sl-sidebar-width) - 2 * var(--sl-sidebar-pad-x));
+  margin: 1.5rem var(--sl-sidebar-pad-x) 0; padding: 1rem; border-radius: 12px; background: var(--surface);
+  box-shadow: inset 1px 1px 0 var(--lit-edge), inset -1px -1px 0 var(--dark-edge), var(--cast);
+}
+.eden-label { font: 400 0.7rem/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--copper); }
+.eden-agents p { margin: 0.5rem 0 0.75rem; font-size: 0.875rem; line-height: 1.5; color: var(--fg-2); }
+.eden-agents a { display: block; padding: 0.5rem 0; border-top: 1px solid var(--line); font: 400 0.75rem/1 var(--mono); color: var(--fg-2); text-decoration: none; }
+.eden-agents a:hover { color: var(--fg); }
+
+/* ---------- Footer ---------- */
+.eden-footer { margin-top: 4rem; }
+.pagination-links a {
+  border: 0; border-radius: 12px; background: var(--surface); color: var(--fg);
+  box-shadow: inset 1px 1px 0 var(--lit-edge), inset -1px -1px 0 var(--dark-edge), var(--cast);
+  transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out);
+}
+.pagination-links a:hover { transform: translateY(-2px); }
+.pagination-links a span { font: 400 0.7rem/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); }
+.pagination-links .link-title { font: 600 1.15rem/1.3 var(--sl-font); letter-spacing: 0; text-transform: none; color: var(--fg); }
+.eden-foot-meta { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.75rem; font: 400 0.75rem/1 var(--mono); color: var(--fg-3); }
+.eden-foot-meta a { color: var(--fg-3); text-decoration: none; }
+.eden-foot-meta a:hover { color: var(--fg); }
+
+/* ---------- Home (PR 1: the old home page in the new theme) ---------- */
+.eden-home { max-width: 52rem; }
+.eden-home__lede { font-size: 1.2rem; line-height: 1.6; }
+.eden-btn--brass { background: var(--brass); color: var(--fg); padding: 0.8rem 1.2rem; }
+.eden-btn--brass:hover { background: var(--brass-hi); }
+.eden-sheet { display: block; margin: 2.5rem 0; padding: 1rem; border-radius: 10px; background: linear-gradient(160deg, var(--paper), var(--paper-2));
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.5), inset -1px -1px 0 var(--paper-3), var(--cast); }
+.eden-sheet img { display: block; width: 100%; border-radius: 3px; }
+.eden-areas { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 0 2.5rem; }
+.eden-areas li { margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.eden-areas li::before { display: none; }
+.eden-areas a { display: grid; grid-template-columns: auto 1fr; gap: 0.15rem 0.75rem; padding: 0.8rem 0; color: var(--fg-2); text-decoration: none; font-size: 0.85rem; }
+.eden-areas .mark { grid-row: span 2; margin-top: 0.15rem; }
+.eden-areas strong { color: var(--fg); font-size: 1rem; }
+.eden-areas a:hover strong { color: var(--accent); }

@@ -1,0 +1,37 @@
+---
+// sync-docs sets editUrl on every page it writes; only those pages have a .md copy.
+const { entry, lastUpdated, id, editUrl } = Astro.locals.starlightRoute;
+const fromDocs = Boolean(editUrl);
+const slug = id.replace(/\/$/, "");
+// Index pages show their own path; other pages show their folder.
+const isIndex = entry.filePath?.endsWith("/index.md");
+const parts = (isIndex ? slug : slug.split("/").slice(0, -1).join("/")).split("/").filter(Boolean);
+const crumbs = parts.map((p) => p.replace(/-/g, " "));
+const words = (entry.body ?? "").split(/\s+/).length;
+const minutes = Math.max(1, Math.round(words / 220));
+const date = lastUpdated?.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const md = `${Astro.url.pathname.replace(/\/$/, "")}.md`;
+const mdAbs = new URL(md, Astro.site).href;
+const claude = `https://claude.ai/new?q=${encodeURIComponent(`Read ${mdAbs} and answer my questions about it.`)}`;
+---
+{crumbs.length > 0 && <div class="eden-crumbs">{crumbs.map((c, i) => <>{i > 0 && <i>/</i>}<span>{c}</span></>)}</div>}
+<h1 id="_top">{entry.data.title}</h1>
+{fromDocs && <div class="eden-meta">
+  {date && <span>Updated <b>{date}</b></span>}
+  <span><b>{minutes} min</b> read</span>
+  <div class="eden-actions">
+    <button class="eden-btn" type="button" data-copy-md={md}>Copy page</button>
+    <a class="eden-btn" href={md}>.md</a>
+    <a class="eden-btn" href={claude} rel="noopener">Open in Claude</a>
+  </div>
+</div>}
+<script>
+  document.querySelectorAll<HTMLButtonElement>("[data-copy-md]").forEach((b) => {
+    b.addEventListener("click", async () => {
+      const text = await (await fetch(b.dataset.copyMd!)).text();
+      await navigator.clipboard.writeText(text);
+      b.textContent = "Copied";
+      setTimeout(() => (b.textContent = "Copy page"), 1500);
+    });
+  });
+</script>

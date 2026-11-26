@@ -28,10 +28,10 @@ logo: ## Render the repo logo (→ docs/assets/logo/logo.png)
 		pngquant --quality 70-95 --force --output /work/logo.png /tmp/logo-raw.png'
 
 .PHONY: docs
-docs: ## Preview the docs site at http://localhost:8000 (same versions as .github/workflows/docs.yaml)
-	@docker run --rm -it -p 8000:8000 -v "$(CURDIR):/repo" -w /repo python:3.14-slim sh -c '\
-		pip install -q --root-user-action=ignore --require-hashes -r scripts/docs-requirements.txt && \
-		properdocs serve --strict -a 0.0.0.0:8000'
+docs: ## Preview the docs site at http://localhost:4321 (same Node as .github/workflows/docs.yaml)
+	@docker run --rm -it -p 4321:4321 -v "$(CURDIR):/repo" -w /repo/docs-site node:26-alpine sh -c '\
+		apk add -q git && git config --global --add safe.directory /repo && \
+		npm ci --no-audit --no-fund && npm run dev'
 
 .PHONY: help
 help: ## List available targets

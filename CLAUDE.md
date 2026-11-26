@@ -118,10 +118,15 @@ These guidelines are working if: fewer unnecessary changes in diffs, fewer rewri
 ## Docs
 
 `docs/` holds folders only, never loose files. Names are lowercase kebab-case with no
-versions, dates or camelCase. `.github/workflows/docs.yaml` publishes it to
-https://docs.nordbye.it (ProperDocs + Material, config `properdocs.yml`) with `--strict`, so a
-broken link between pages fails the PR. `scripts/docs_site_hooks.py` rewrites links to code
-outside `docs/` to GitHub. `docs/backlog/` is excluded from the site. Preview with `make docs`.
+versions, dates or camelCase. `.github/workflows/docs.yaml` builds it with Starlight (the Astro
+project in `docs-site/`) and publishes it to https://docs.nordbye.it. A broken link between
+pages fails the PR, and so does a docs.nordbye.it link in the repo (alerts, dashboards,
+READMEs) whose page or `#anchor` is gone. `docs-site/scripts/sync-docs.mjs` copies `docs/`
+into the site before each build: the page title comes from the `# ` heading (no front
+matter, GitHub renders it as a table), `README.md` becomes the folder page, and links to
+code outside `docs/` go to GitHub. `docs/backlog/` is excluded from the site. The sidebar
+groups areas by layer in `docs-site/astro.config.mjs`: a new page in an existing folder
+shows up on its own, a new folder needs an entry there. Preview with `make docs`.
 
 ```
 docs/
@@ -232,4 +237,5 @@ tests; everything else is validated by rendering or planning.
 | `portfolio/**`, `blog/**` | `docker build -t portfolio:dev portfolio/` (or `blog:dev blog/`), run it on a local port and load the affected routes plus one unrelated route. Say so when a UI change is not browser-verified. For `portfolio/**`, also `make -C portfolio smoke`. |
 | `terraform/**` | `terraform fmt -check`, `terraform validate`, `terraform -chdir=terraform/proxmox/hyper-cluster/k8s plan` or `-chdir=terraform/azure/state`. Never `apply`. |
 | `.github/workflows/**` | `actionlint` if available, otherwise read the workflow end to end. |
-| `README.md`, `docs/**`, this file | Nothing locally. The docs workflow builds with `--strict` on the PR. |
+| `docs-site/**` | `make docs` and load the affected pages plus one unrelated page. The docs workflow builds and checks links on the PR. |
+| `README.md`, `docs/**`, this file | Nothing locally. The docs workflow builds and checks links on the PR. |

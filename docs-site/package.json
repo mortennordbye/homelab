@@ -1,0 +1,19 @@
+{
+  "name": "eden-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync-docs.mjs",
+    "dev": "node scripts/sync-docs.mjs && (node scripts/sync-docs.mjs --watch & astro dev --host 0.0.0.0)",
+    "build": "node scripts/sync-docs.mjs && astro build",
+    "preview": "astro preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.43.2",
+    "@fontsource-variable/source-serif-4": "5.3.1",
+    "@fontsource/fragment-mono": "5.3.0",
+    "astro": "7.4.13",
+    "sharp": "0.35.5",
+    "starlight-links-validator": "0.27.1"
+  }
+}

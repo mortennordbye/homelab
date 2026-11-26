@@ -1,0 +1,31 @@
+---
+import Search from "virtual:starlight/components/Search";
+import SocialIcons from "virtual:starlight/components/SocialIcons";
+---
+<div class="eden-header">
+  <a class="eden-brand" href="/">
+    <img src="/assets/logo/logo.png" alt="" width="28" height="28" />
+    <b>Eden</b><span>/docs</span>
+  </a>
+  <div class="eden-search"><Search /></div>
+  <div class="eden-right sl-hidden md:sl-flex">
+    <nav class="eden-top">
+      <a href="/platform/cluster/">Platform</a>
+      <a href="/apps/innestemme/">Apps</a>
+      <a href="/architecture/">Spec</a>
+    </nav>
+    <a class="eden-chip" href="/llms.txt">llms.txt</a>
+    <SocialIcons />
+  </div>
+</div>
+<div class="eden-progress" aria-hidden="true"><i></i></div>
+<script>
+  const bar = document.querySelector<HTMLElement>(".eden-progress i");
+  const update = () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    if (bar) bar.style.width = `${max > 0 ? (h.scrollTop / max) * 100 : 0}%`;
+  };
+  addEventListener("scroll", update, { passive: true });
+  update();
+</script>
