@@ -56,7 +56,7 @@ body:has(.eden-landing)::before { display: none; }
 .sec { max-width: 1240px; margin: 0 auto; padding: 5.5rem 1.75rem 0; }
 .sec__hd { margin-bottom: 1.9rem; }
 .sec__hd h2 { margin-top: 0.5rem; font: 600 2.4rem/1.1 var(--sl-font); letter-spacing: -0.02em; color: var(--fg); }
-.grp { margin-top: 2.75rem; }
+.grp { margin-top: 2.75rem; scroll-margin-top: calc(var(--sl-nav-height) + 1.5rem); }
 .grp__hd { display: flex; align-items: baseline; gap: 1rem; padding-bottom: 0.9rem; margin-bottom: 1.1rem; border-bottom: 1px solid var(--line); }
 .grp__hd .label { min-width: 1.9rem; }
 .grp__hd h3 { font: 600 1.5rem/1.2 var(--sl-font); letter-spacing: -0.01em; color: var(--fg); }

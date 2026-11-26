@@ -97,7 +97,7 @@ const unit = (n: number) => (n === 1 ? "page" : "pages");
       </a>
 
       {layers.map((layer) => (
-        <div class="grp">
+        <div class="grp" id={layer.title.toLowerCase()}>
           <div class="grp__hd"><span class="label">{layer.id}</span><h3>{layer.title}</h3><span class="grp__note">{layer.note}</span></div>
           <div class="grid">
             {layer.areas.map((a) => (
@@ -110,7 +110,7 @@ const unit = (n: number) => (n === 1 ? "page" : "pages");
         </div>
       ))}
 
-      <div class="grp">
+      <div class="grp" id="apps">
         <div class="grp__hd"><span class="label">L4</span><h3>Apps</h3><span class="grp__note">What runs on top.</span></div>
         <div class="subhd"><span class="label">Built here</span><span>{own.length} apps, each with its own repo</span></div>
         <div class="grid grid--4">
