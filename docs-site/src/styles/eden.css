@@ -126,9 +126,7 @@ site-search kbd { background: var(--bg-2); border-radius: 6px; font-family: var(
   box-shadow: inset 1px 1px 0 var(--dark-edge), inset -1px -1px 0 var(--lit-edge-soft); }
 .mark img { width: 14px; height: 14px; object-fit: contain; filter: saturate(0.85); transition: filter 180ms, transform 220ms var(--ease-out); }
 .eden-nav a:hover .mark img, .eden-nav summary:hover .mark img, .eden-nav a[aria-current="page"] .mark img { filter: none; transform: scale(1.08); }
-.mark--tile { background: var(--wood); color: var(--fg); font: 600 0.75rem/1 var(--sl-font); box-shadow: inset 1px 1px 0 var(--lit-edge), inset -1px -1px 0 var(--dark-edge); }
-.mark--dim { background: transparent; box-shadow: none; }
-.mark--dim::before { background: var(--fg-3) !important; }
+.mark--app { padding: 0; object-fit: cover; box-shadow: var(--cast-tight); }
 .mark--icon::before { content: ""; width: 14px; height: 14px; background: var(--copper); -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat; }
 
 /* ---------- Page title ---------- */

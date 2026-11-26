@@ -77,16 +77,13 @@ a.card:hover { color: var(--fg-2); transform: translateY(-2px); box-shadow: inse
 .logo { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--bg-2);
   box-shadow: inset 1px 1px 0 var(--dark-edge), inset -1px -1px 0 var(--lit-edge-soft); transition: transform 220ms var(--ease-out); }
 .logo img { width: 24px; height: 24px; object-fit: contain; }
-.logo--sm { width: 30px; height: 30px; border-radius: 8px; }
-.logo--sm img { width: 17px; height: 17px; }
 .logo--icon::before { content: ""; width: 22px; height: 22px; background: var(--copper); -webkit-mask: url(/logos/atom.svg) center / contain no-repeat; mask: url(/logos/atom.svg) center / contain no-repeat; }
 a.card:hover .logo { transform: translateY(-2px); }
 .subhd { display: flex; align-items: baseline; gap: 0.9rem; margin: 0.4rem 0 0.9rem; color: var(--fg-3); font-size: 0.9rem; font-style: italic; }
 .subhd .label { color: var(--fg-2); font-style: normal; }
 .subhd ~ .subhd { margin-top: 1.9rem; }
 .own__hd { display: flex; align-items: center; gap: 0.5rem; }
-.tile { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--wood); color: var(--fg);
-  font: 600 1.3rem/1 var(--sl-font); box-shadow: inset 1px 1px 0 var(--lit-edge), inset -1px -1px 0 var(--dark-edge); }
+.appicon { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; box-shadow: var(--cast-tight); }
 .own__lang { margin-left: auto; font: 400 0.7rem/1 var(--mono); color: var(--fg-3); letter-spacing: 0.04em; }
 .own .d { flex: 1; }
 .own__links { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; padding-top: 0.75rem; border-top: 1px solid var(--line); }

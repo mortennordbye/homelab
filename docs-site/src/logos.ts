@@ -1,21 +1,27 @@
-// Sidebar marks: a tool logo (file in static/logos/), a letter tile for own apps, or a line icon.
-// Keyed by sidebar group label, or by page href for single pages.
-export type Mark = { logo: string } | { tile: string } | { icon: string; dim?: boolean };
+// Sidebar marks: a tool logo (static/logos/), an own app's icon (static/logos/apps/), an image
+// from docs/assets, or a line icon. Never a generic placeholder: a page without its own mark
+// takes its folder's mark.
+export type Mark = { logo: string } | { app: string } | { img: string } | { icon: string };
 
+// Keyed by sidebar group label.
 export const groupMarks: Record<string, Mark> = {
-  Assets: { icon: "atom" },
+  Assets: { img: "/assets/logo/logo.png" },
   Cluster: { logo: "proxmox.svg" },
   Network: { logo: "traefik.svg" },
   Delivery: { logo: "argocd.svg" },
   Data: { logo: "postgres.svg" },
   Observability: { logo: "grafana.svg" },
   Backups: { logo: "volsync.svg" },
-  Portfolio: { tile: "P" },
+  Portfolio: { app: "portfolio.png" },
   "Post quantum": { icon: "atom" },
 };
 
+// Keyed by page href.
 export const pageMarks: Record<string, Mark> = {
   "/architecture/": { logo: "kubernetes.svg" },
+  "/architecture/diagrams/": { logo: "d2.svg" },
+  "/assets/logo/": { img: "/assets/logo/logo.png" },
+  "/assets/social-preview/": { img: "/assets/social-preview/social-preview.png" },
   "/platform/storage/": { logo: "synology.svg" },
   "/platform/identity/": { logo: "authentik.svg" },
   "/platform/secrets/": { logo: "bitwarden.svg" },
@@ -24,26 +30,37 @@ export const pageMarks: Record<string, Mark> = {
   "/platform/cluster/talos/": { logo: "talos.svg" },
   "/platform/cluster/talos-upgrade/": { logo: "talos.svg" },
   "/platform/cluster/terraform/": { logo: "terraform.svg" },
+  "/platform/cluster/gpu-passthrough/": { logo: "intel.svg" },
   "/platform/network/traefik/": { logo: "traefik.svg" },
   "/platform/network/cilium/": { logo: "cilium.svg" },
   "/platform/network/cloudflare/": { logo: "cloudflare.svg" },
   "/platform/network/unifi/": { logo: "unifi.svg" },
+  "/platform/network/dns/": { logo: "unifi.svg" },
+  "/platform/network/certificates/": { logo: "cert-manager.svg" },
   "/platform/network/remote-access/": { logo: "tailscale.svg" },
   "/platform/delivery/argocd/": { logo: "argocd.svg" },
   "/platform/delivery/kargo/": { logo: "kargo.png" },
   "/platform/delivery/ci/": { logo: "github.svg" },
   "/platform/delivery/keda/": { logo: "keda.svg" },
+  "/platform/delivery/kro/": { logo: "kubernetes.svg" },
   "/platform/data/postgres/": { logo: "postgres.svg" },
   "/platform/data/cloudnative-pg/": { logo: "garage.svg" },
   "/platform/observability/runbooks/": { logo: "prometheus.svg" },
+  "/platform/observability/costs/": { logo: "opencost.svg" },
+  "/platform/observability/slos/": { logo: "pyrra.png" },
+  "/platform/observability/incidents/": { logo: "discord.svg" },
+  "/platform/observability/sre/": { logo: "prometheus.svg" },
   "/platform/backups/pbs/": { logo: "pbs.svg" },
-  "/apps/blog/": { tile: "B" },
-  "/apps/headroom/": { tile: "H" },
-  "/apps/innestemme/": { tile: "I" },
-  "/apps/logeverylift/": { tile: "L" },
-  "/apps/linkgraph/": { tile: "L" },
-  "/apps/reelsmith/": { tile: "R" },
-  "/apps/verksted/": { tile: "V" },
+  "/platform/backups/restore/": { logo: "restic.png" },
+  "/apps/blog/": { app: "blog.png" },
+  "/apps/headroom/": { app: "headroom.svg" },
+  "/apps/innestemme/": { app: "innestemme.svg" },
+  "/apps/linkgraph/": { app: "linkgraph.svg" },
+  "/apps/logeverylift/": { app: "logeverylift.svg" },
+  "/apps/reelsmith/": { app: "reelsmith.svg" },
+  "/apps/verksted/": { app: "verksted.svg" },
+  "/apps/portfolio/certs/": { logo: "credly.svg" },
+  "/apps/portfolio/fun-room/": { logo: "threejs.svg" },
   "/apps/media-stack/": { logo: "plex.svg" },
   "/apps/isponsorblocktv/": { logo: "youtube.svg" },
 };

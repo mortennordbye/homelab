@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs>
+ <radialGradient id="room" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#2b4580"/><stop offset=".6" stop-color="#14234a"/><stop offset="1" stop-color="#070d1f"/></radialGradient>
+ <radialGradient id="roomBlue" cx="50%" cy="35%" r="80%"><stop offset="0" stop-color="#2d5bd8"/><stop offset=".65" stop-color="#14306f"/><stop offset="1" stop-color="#081633"/></radialGradient>
+ <linearGradient id="chromeH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b6270"/><stop offset=".3" stop-color="#f6f8fb"/><stop offset=".5" stop-color="#a3aab6"/><stop offset=".78" stop-color="#e4e8ee"/><stop offset="1" stop-color="#555c69"/></linearGradient>
+ <linearGradient id="chromeV" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5b6270"/><stop offset=".3" stop-color="#f6f8fb"/><stop offset=".5" stop-color="#a3aab6"/><stop offset=".78" stop-color="#e4e8ee"/><stop offset="1" stop-color="#555c69"/></linearGradient>
+ <linearGradient id="iron" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0f1012"/><stop offset=".22" stop-color="#4a4d55"/><stop offset=".45" stop-color="#1e1f23"/><stop offset=".85" stop-color="#2d2f35"/><stop offset="1" stop-color="#0c0d0f"/></linearGradient>
+ <linearGradient id="ironTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".18"/><stop offset=".12" stop-color="#ffffff" stop-opacity="0"/><stop offset=".9" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient>
+ <linearGradient id="red" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d1013"/><stop offset=".25" stop-color="#ff8a8d"/><stop offset=".5" stop-color="#e5484d"/><stop offset=".85" stop-color="#e5484d"/><stop offset="1" stop-color="#7d1013"/></linearGradient><linearGradient id="blue" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0c2a7a"/><stop offset=".25" stop-color="#8fb0ff"/><stop offset=".5" stop-color="#2f6bff"/><stop offset=".85" stop-color="#2f6bff"/><stop offset="1" stop-color="#0c2a7a"/></linearGradient><linearGradient id="cyan" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#05506e"/><stop offset=".25" stop-color="#9be4ff"/><stop offset=".5" stop-color="#1fb6ef"/><stop offset=".85" stop-color="#1fb6ef"/><stop offset="1" stop-color="#05506e"/></linearGradient><linearGradient id="green" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b5a33"/><stop offset=".25" stop-color="#9df0c2"/><stop offset=".5" stop-color="#2fcf78"/><stop offset=".85" stop-color="#2fcf78"/><stop offset="1" stop-color="#0b5a33"/></linearGradient><linearGradient id="orange" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7a3008"/><stop offset=".25" stop-color="#ffc29c"/><stop offset=".5" stop-color="#ff7a2f"/><stop offset=".85" stop-color="#ff7a2f"/><stop offset="1" stop-color="#7a3008"/></linearGradient><linearGradient id="yellow" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7a5a00"/><stop offset=".25" stop-color="#fff0a8"/><stop offset=".5" stop-color="#f5c518"/><stop offset=".85" stop-color="#f5c518"/><stop offset="1" stop-color="#7a5a00"/></linearGradient>
+ <radialGradient id="dial" cx="45%" cy="38%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset=".8" stop-color="#e9edf2"/><stop offset="1" stop-color="#c3cad4"/></radialGradient>
+ <radialGradient id="ring" cx="50%" cy="50%" r="50%"><stop offset=".86" stop-color="#3d434e"/><stop offset=".9" stop-color="#f3f5f8"/><stop offset=".95" stop-color="#8a92a0"/><stop offset="1" stop-color="#2b3038"/></radialGradient>
+ <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+ <radialGradient id="plateFace" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="#4b4f58"/><stop offset=".6" stop-color="#22242a"/><stop offset="1" stop-color="#0d0e11"/></radialGradient>
+ <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="12"/></filter>
+ <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter></defs><rect width="512" height="512" fill="url(#room)"/>
+  <defs>
+    <filter id="cast" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .09 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+    <linearGradient id="sleeveG" x1="0" y1="0" x2="0" y2="1" gradientTransform="rotate(-22 .5 .5)"><stop offset="0" stop-color="#5b6270"/><stop offset=".3" stop-color="#f6f8fb"/><stop offset=".55" stop-color="#9aa1ad"/><stop offset=".8" stop-color="#dfe3ea"/><stop offset="1" stop-color="#4b525e"/></linearGradient>
+    <linearGradient id="lip" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a8f99"/><stop offset=".45" stop-color="#2a2c31"/><stop offset="1" stop-color="#121316"/></linearGradient>
+    <radialGradient id="spec" cx="34%" cy="26%" r="50%"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="275" cy="448" rx="175" ry="20" fill="#000" opacity="0.75" filter="url(#blur)"/>
+  <circle cx="278" cy="265" r="172" fill="#060708"/>
+  <path d="M278 93 A172 172 0 0 1 278 437 L256 428 A172 172 0 0 0 256 84Z" fill="#0d0e10"/>
+  <circle cx="256" cy="256" r="172" fill="url(#plateFace)"/>
+  <circle cx="256" cy="256" r="172" fill="#fff" filter="url(#cast)"/>
+  <circle cx="256" cy="256" r="168" fill="none" stroke="url(#lip)" stroke-width="7"/>
+  <circle cx="256" cy="256" r="117" fill="none" stroke="#0a0b0d" stroke-width="7"/><circle cx="256" cy="256" r="113" fill="none" stroke="url(#lip)" stroke-width="3" opacity=".8"/>
+  <g transform="rotate(90 256 256) translate(0 -90)">
+    <rect x="222" y="243" width="68" height="26" rx="13" fill="#040506"/>
+    <rect x="222" y="243" width="68" height="26" rx="13" fill="none" stroke="#1c1e23" stroke-width="3"/>
+    <rect x="226" y="262" width="60" height="5" rx="2.5" fill="#3c4048" opacity=".7"/></g><g transform="rotate(210 256 256) translate(0 -90)">
+    <rect x="222" y="243" width="68" height="26" rx="13" fill="#040506"/>
+    <rect x="222" y="243" width="68" height="26" rx="13" fill="none" stroke="#1c1e23" stroke-width="3"/>
+    <rect x="226" y="262" width="60" height="5" rx="2.5" fill="#3c4048" opacity=".7"/></g><g transform="rotate(330 256 256) translate(0 -90)">
+    <rect x="222" y="243" width="68" height="26" rx="13" fill="#040506"/>
+    <rect x="222" y="243" width="68" height="26" rx="13" fill="none" stroke="#1c1e23" stroke-width="3"/>
+    <rect x="226" y="262" width="60" height="5" rx="2.5" fill="#3c4048" opacity=".7"/></g>
+  <g transform="rotate(-62.4 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">L</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">L</text>
+    <text x="256" y="124" fill="#f2f3f5">L</text></g><g transform="rotate(-52.8 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">O</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">O</text>
+    <text x="256" y="124" fill="#f2f3f5">O</text></g><g transform="rotate(-43.199999999999996 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">G</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">G</text>
+    <text x="256" y="124" fill="#f2f3f5">G</text></g><g transform="rotate(-33.6 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8"> </text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35"> </text>
+    <text x="256" y="124" fill="#f2f3f5"> </text></g><g transform="rotate(-24 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">E</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">E</text>
+    <text x="256" y="124" fill="#f2f3f5">E</text></g><g transform="rotate(-14.399999999999999 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">V</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">V</text>
+    <text x="256" y="124" fill="#f2f3f5">V</text></g><g transform="rotate(-4.8 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">E</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">E</text>
+    <text x="256" y="124" fill="#f2f3f5">E</text></g><g transform="rotate(4.8 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">R</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">R</text>
+    <text x="256" y="124" fill="#f2f3f5">R</text></g><g transform="rotate(14.399999999999999 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">Y</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">Y</text>
+    <text x="256" y="124" fill="#f2f3f5">Y</text></g><g transform="rotate(24 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8"> </text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35"> </text>
+    <text x="256" y="124" fill="#f2f3f5"> </text></g><g transform="rotate(33.6 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">L</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">L</text>
+    <text x="256" y="124" fill="#f2f3f5">L</text></g><g transform="rotate(43.199999999999996 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">I</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">I</text>
+    <text x="256" y="124" fill="#f2f3f5">I</text></g><g transform="rotate(52.8 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">F</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">F</text>
+    <text x="256" y="124" fill="#f2f3f5">F</text></g><g transform="rotate(62.4 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="25" text-anchor="middle">
+    <text x="257.2" y="125.4" fill="#000" opacity=".8">T</text>
+    <text x="255.2" y="123.1" fill="#ffffff" opacity=".35">T</text>
+    <text x="256" y="124" fill="#f2f3f5">T</text></g>
+  <g transform="rotate(22 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="30" text-anchor="middle">
+    <text x="257.2" y="409.2" fill="#000" opacity=".8">2</text>
+    <text x="255.2" y="406.90000000000003" fill="#ffffff" opacity=".35">2</text>
+    <text x="256" y="407.8" fill="#f2f3f5">2</text></g><g transform="rotate(11 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="30" text-anchor="middle">
+    <text x="257.2" y="409.2" fill="#000" opacity=".8">0</text>
+    <text x="255.2" y="406.90000000000003" fill="#ffffff" opacity=".35">0</text>
+    <text x="256" y="407.8" fill="#f2f3f5">0</text></g><g transform="rotate(0 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="30" text-anchor="middle">
+    <text x="257.2" y="409.2" fill="#000" opacity=".8"> </text>
+    <text x="255.2" y="406.90000000000003" fill="#ffffff" opacity=".35"> </text>
+    <text x="256" y="407.8" fill="#f2f3f5"> </text></g><g transform="rotate(-11 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="30" text-anchor="middle">
+    <text x="257.2" y="409.2" fill="#000" opacity=".8">K</text>
+    <text x="255.2" y="406.90000000000003" fill="#ffffff" opacity=".35">K</text>
+    <text x="256" y="407.8" fill="#f2f3f5">K</text></g><g transform="rotate(-22 256 256)" font-family="Helvetica Neue, Helvetica" font-weight="800" font-size="30" text-anchor="middle">
+    <text x="257.2" y="409.2" fill="#000" opacity=".8">G</text>
+    <text x="255.2" y="406.90000000000003" fill="#ffffff" opacity=".35">G</text>
+    <text x="256" y="407.8" fill="#f2f3f5">G</text></g>
+  
+  <circle cx="256" cy="256" r="60" fill="#17191d" stroke="url(#lip)" stroke-width="4"/>
+  <circle cx="256" cy="256" r="171" fill="url(#spec)"/>
+  <circle cx="260" cy="257" r="52" fill="#3a3f48"/><circle cx="255" cy="255" r="52" fill="#4a505b"/>
+    <linearGradient id="collarEnd" gradientUnits="userSpaceOnUse" x1="198" y1="201" x2="302" y2="305">
+      <stop offset="0" stop-color="#f4f6f9"/><stop offset=".45" stop-color="#9aa2ae"/><stop offset=".7" stop-color="#cfd4dc"/><stop offset="1" stop-color="#5d6470"/></linearGradient>
+    <circle cx="250" cy="253" r="52" fill="url(#collarEnd)"/>
+    <circle cx="250" cy="253" r="44.72" fill="none" stroke="#5d6470" stroke-width="1.6" opacity=".55"/><circle cx="250" cy="253" r="33.28" fill="none" stroke="#ffffff" stroke-width="1.6" opacity=".55"/><circle cx="250" cy="253" r="20.8" fill="none" stroke="#5d6470" stroke-width="1.6" opacity=".55"/>
+    <circle cx="250" cy="253" r="50.5" fill="none" stroke="#2f343c" stroke-width="3"/>
+    <circle cx="252" cy="254" r="34" fill="#3a3f48"/><circle cx="246" cy="251.5" r="34" fill="#4a505b"/>
+    <linearGradient id="sleeveEnd" gradientUnits="userSpaceOnUse" x1="206" y1="215" x2="274" y2="283">
+      <stop offset="0" stop-color="#f4f6f9"/><stop offset=".45" stop-color="#9aa2ae"/><stop offset=".7" stop-color="#cfd4dc"/><stop offset="1" stop-color="#5d6470"/></linearGradient>
+    <circle cx="240" cy="249" r="34" fill="url(#sleeveEnd)"/>
+    <circle cx="240" cy="249" r="29.24" fill="none" stroke="#5d6470" stroke-width="1.6" opacity=".55"/><circle cx="240" cy="249" r="21.76" fill="none" stroke="#ffffff" stroke-width="1.6" opacity=".55"/><circle cx="240" cy="249" r="13.600000000000001" fill="none" stroke="#5d6470" stroke-width="1.6" opacity=".55"/>
+    <circle cx="240" cy="249" r="32.5" fill="none" stroke="#2f343c" stroke-width="3"/>
+    <ellipse cx="228" cy="234" rx="12" ry="6" fill="#fff" opacity=".55" filter="url(#soft)"/></svg>

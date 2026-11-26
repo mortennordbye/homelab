@@ -1,0 +1,116 @@
+<!-- verksted D: a phone that opens like a cantilever toolbox, trays fanned out with tools above a tmux screen. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="verksted">
+  <title>verksted</title>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1F2620"/>
+      <stop offset="1" stop-color="#070907"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".09"/>
+      <stop offset=".45" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".22"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="phone" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#262B27"/>
+      <stop offset=".5" stop-color="#4A524C"/>
+      <stop offset="1" stop-color="#181B19"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0F1A12"/>
+      <stop offset="1" stop-color="#050705"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EEF2EF"/>
+      <stop offset=".5" stop-color="#A3ACA5"/>
+      <stop offset="1" stop-color="#4B544E"/>
+    </linearGradient>
+    <linearGradient id="paint" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#61B86F"/>
+      <stop offset=".4" stop-color="#3D954C"/>
+      <stop offset="1" stop-color="#1E5428"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="drop" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#000" flood-opacity=".55"/>
+    </filter>
+    <radialGradient id="halo" cx="256" cy="330" r="230" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#51A45E" stop-opacity=".36"/>
+      <stop offset="1" stop-color="#51A45E" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#tile)"/>
+  <rect width="512" height="512" rx="112" fill="url(#halo)"/>
+  <rect width="512" height="512" rx="112" fill="url(#sheen)"/>
+
+  <!-- cantilever arms -->
+  <g stroke="url(#steel)" stroke-width="14" stroke-linecap="round" filter="url(#drop)">
+    <path d="M150 312 L112 228"/>
+    <path d="M222 312 L184 228"/>
+    <path d="M290 312 L330 166"/>
+    <path d="M362 312 L402 166"/>
+  </g>
+  <g fill="#C9D1CB">
+    <circle cx="150" cy="312" r="7"/><circle cx="222" cy="312" r="7"/>
+    <circle cx="290" cy="312" r="7"/><circle cx="362" cy="312" r="7"/>
+  </g>
+
+  <!-- right tray, high: a wrench -->
+  <mask id="jawD" maskUnits="userSpaceOnUse" x="-300" y="-300" width="600" height="600">
+    <rect x="-300" y="-300" width="600" height="600" fill="#fff"/>
+    <path d="M-11 -48 V0 A11 11 0 0 0 11 0 V-48 Z" fill="#000"/>
+  </mask>
+  <g transform="translate(372 82) rotate(22)" filter="url(#drop)">
+    <g mask="url(#jawD)">
+      <circle r="28" fill="url(#steel)"/>
+      <rect x="-11.0" y="0" width="22" height="110" rx="11.0" fill="url(#steel)"/>
+    </g>
+    <rect x="-5.5" y="34" width="11.0" height="62" rx="5.5" fill="#2A302C" opacity=".3"/>
+  </g>
+  <g filter="url(#drop)">
+    <rect x="278" y="120" width="176" height="62" rx="16" fill="url(#phone)"/>
+    <rect x="278" y="120" width="176" height="8" rx="4" fill="#8EC798" opacity=".75"/>
+    <circle cx="330" cy="160" r="6" fill="#C9D1CB"/><circle cx="402" cy="160" r="6" fill="#C9D1CB"/>
+  </g>
+
+  <!-- left tray, mid: a screwdriver and the cursor -->
+  <g transform="translate(108 196) rotate(-10)" filter="url(#drop)">
+    <rect x="-5" y="-78" width="10" height="44" fill="url(#steel)"/>
+    <path d="M-5 -78 L0 -88 L5 -78 Z" fill="url(#steel)"/>
+    <rect x="-15" y="-40" width="30" height="50" rx="11" fill="#3D954C"/>
+    <rect x="-10" y="-36" width="7" height="40" rx="3.5" fill="#8EC798" opacity=".7"/>
+  </g>
+  <rect x="146" y="156" width="64" height="26" rx="6" fill="#61B86F" filter="url(#glow)"/>
+  <rect x="146" y="156" width="64" height="26" rx="6" fill="#B9E6C0"/>
+  <g filter="url(#drop)">
+    <rect x="58" y="182" width="176" height="62" rx="16" fill="url(#phone)"/>
+    <rect x="58" y="182" width="176" height="8" rx="4" fill="#8EC798" opacity=".75"/>
+    <circle cx="112" cy="222" r="6" fill="#C9D1CB"/><circle cx="184" cy="222" r="6" fill="#C9D1CB"/>
+  </g>
+
+  <!-- the phone: base of the box, screen showing tmux panes -->
+  <g filter="url(#drop)">
+    <rect x="72" y="300" width="368" height="148" rx="34" fill="url(#phone)" stroke="#8A958D" stroke-width="5"/>
+    <rect x="86" y="314" width="340" height="120" rx="22" fill="url(#screen)"/>
+  </g>
+  <g fill="none" stroke="#51A45E" stroke-width="5" opacity=".9">
+    <path d="M262 318 V430 M262 374 H422"/>
+  </g>
+  <g fill="none" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M122 344 L156 372 L122 400" stroke="#61B86F" filter="url(#glow)"/>
+    <path d="M122 344 L156 372 L122 400" stroke="#B9E6C0"/>
+  </g>
+  <rect x="172" y="392" width="44" height="18" rx="4" fill="#B9E6C0"/>
+  <g fill="#8EC798" opacity=".55">
+    <rect x="282" y="334" width="96" height="10" rx="5"/>
+    <rect x="282" y="352" width="60" height="10" rx="5"/>
+    <rect x="282" y="392" width="120" height="10" rx="5"/>
+    <rect x="282" y="410" width="76" height="10" rx="5"/>
+  </g>
+  <rect x="1.5" y="1.5" width="509" height="509" rx="110.5" fill="none" stroke="url(#edge)" stroke-width="3"/>
+</svg>
