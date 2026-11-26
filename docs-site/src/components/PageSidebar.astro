@@ -1,0 +1,14 @@
+---
+import Default from "@astrojs/starlight/components/PageSidebar.astro";
+const md = `${Astro.url.pathname.replace(/\/$/, "")}.md`;
+// sync-docs sets editUrl on every page it writes; only those pages have a .md copy.
+const fromDocs = Boolean(Astro.locals.starlightRoute.editUrl);
+---
+<Default />
+{fromDocs && <div class="eden-agents sl-hidden lg:sl-block">
+  <span class="eden-label">For agents</span>
+  <p>This page as plain Markdown, for any LLM or MCP client.</p>
+  <a href={md}>{md.split("/").pop()}</a>
+  <a href="/llms.txt">llms.txt</a>
+  <a href="/llms-full.txt">llms-full.txt</a>
+</div>}

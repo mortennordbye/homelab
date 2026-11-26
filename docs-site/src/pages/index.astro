@@ -1,0 +1,41 @@
+---
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+
+const areas = [
+  ["/architecture/", "kubernetes.svg", "Architecture", "what runs where and how the parts depend on each other"],
+  ["/platform/cluster/", "proxmox.svg", "Cluster", "Proxmox and Talos, upgrades, GPU passthrough"],
+  ["/platform/network/", "traefik.svg", "Network", "Traefik, Cilium, certificates, DNS, remote access"],
+  ["/platform/delivery/", "argocd.svg", "Delivery", "Argo CD, Kargo, CI, scale to zero"],
+  ["/platform/backups/", "volsync.svg", "Backups", "backup layers, watching them, restores"],
+  ["/platform/data/", "postgres.svg", "Data", "in-cluster Postgres, major upgrades"],
+  ["/platform/observability/", "grafana.svg", "Observability", "monitoring, alerting, incidents"],
+  ["/platform/identity/", "authentik.svg", "Identity", "Authentik SSO, putting an app behind login"],
+  ["/platform/storage/", "synology.svg", "Storage", "storage classes, Proxmox CSI and Synology NFS"],
+  ["/platform/secrets/", "bitwarden.svg", "Secrets", "Bitwarden to cluster secrets"],
+  ["/apps/media-stack/", "plex.svg", "Media stack", "requests, storage, 4K, re-encoding"],
+  ["/apps/portfolio/", null, "Portfolio", "the site, brand decisions, the fun room"],
+];
+---
+<StarlightPage frontmatter={{ title: "How the homelab is built and run", template: "splash", description: "How the Genesis homelab is built and run", tableOfContents: false }} hasSidebar={false}>
+  <div class="eden-home">
+    <p class="eden-label">Eden &middot; homelab</p>
+    <p class="eden-home__lede">
+      Three Proxmox nodes run Genesis, a Talos Kubernetes cluster of six VMs. Terraform builds the machines and Argo CD
+      reconciles everything else from the main branch of <a href="https://github.com/mortennordbye/homelab">mortennordbye/homelab</a>.
+      These pages explain how the parts fit together, and how to operate or rebuild each one.
+    </p>
+    <p><a class="eden-btn eden-btn--brass" href="/architecture/">Read the spec</a></p>
+    <a class="eden-sheet" href="/assets/diagrams/homelab-overview.svg">
+      <img src="/assets/diagrams/homelab-overview.svg" alt="Map of the homelab: network edge, Proxmox hosts, the Genesis cluster with its platform services and apps, smart home and storage" />
+    </a>
+    <h2>Areas</h2>
+    <ul class="eden-areas">
+      {areas.map(([href, logo, title, line]) => (
+        <li><a href={href}>
+          {logo ? <span class="mark"><img src={`/logos/${logo}`} alt="" width="14" height="14" /></span> : <span class="mark mark--tile">{title![0]}</span>}
+          <strong>{title}</strong><span>{line}</span>
+        </a></li>
+      ))}
+    </ul>
+  </div>
+</StarlightPage>
