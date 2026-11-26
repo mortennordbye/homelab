@@ -19,6 +19,13 @@ const LINK = /(\]\()([^)\s#]+)(#[^)\s]*)?(\))/g;
 
 const excluded = (rel) => EXCLUDED.some((p) => rel.startsWith(p));
 
+// Only files git would publish: tracked, or new and not ignored. Ignored files in docs/ are
+// private working notes and must not reach the site, not even a local preview.
+function docsFiles() {
+  const out = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "docs"], { cwd: REPO, encoding: "utf8" });
+  return out.split("\0").filter(Boolean).map((f) => path.join(REPO, f)).filter((f) => fs.existsSync(f));
+}
+
 function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const p = path.join(dir, e.name);
@@ -118,7 +125,7 @@ function sync() {
   const dates = gitDates();
   const sitemap = [];
   let pages = 0;
-  for (const abs of walk(DOCS)) {
+  for (const abs of docsFiles()) {
     const rel = path.relative(DOCS, abs).split(path.sep).join("/");
     if (excluded(rel)) continue;
     if (!rel.endsWith(".md")) {

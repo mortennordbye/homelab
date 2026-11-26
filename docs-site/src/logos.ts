@@ -43,5 +43,4 @@ export const pageMarks: Record<string, Mark> = {
   "/apps/verksted/": { tile: "V" },
   "/apps/media-stack/": { logo: "plex.svg" },
   "/apps/isponsorblocktv/": { logo: "youtube.svg" },
-  "/projects/quantum-pq-homelab/": { icon: "atom" },
 };

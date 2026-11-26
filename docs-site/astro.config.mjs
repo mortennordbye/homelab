@@ -3,13 +3,19 @@ import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 import starlightLinksValidator from "starlight-links-validator";
 
-const DOCS = new URL("../docs/", import.meta.url);
-const pageCount = (dir) => fs.readdirSync(new URL(dir, DOCS), { recursive: true }).filter((f) => f.endsWith(".md")).length;
+// Counts the pages sync-docs wrote (it runs before Astro), not ../docs, which holds ignored files.
+const CONTENT = new URL("./src/content/docs/", import.meta.url);
+const pageCount = (dir) =>
+  fs.existsSync(new URL(dir, CONTENT)) ? fs.readdirSync(new URL(dir, CONTENT), { recursive: true }).filter((f) => f.endsWith(".md")).length : 0;
 
 // One page: a link. More pages: a collapsed group that lists every page in the folder, so a
 // new page shows up without a config change. Its README comes first (sync-docs sets order 0).
-const area = (dir, label) =>
-  pageCount(dir) > 1 ? { label, collapsed: true, items: [{ autogenerate: { directory: dir } }] } : { slug: dir };
+// A folder that is gone (a shipped project) drops out of the sidebar.
+const area = (dir, label) => {
+  const n = pageCount(dir);
+  if (n === 0) return null;
+  return n > 1 ? { label, collapsed: true, items: [{ autogenerate: { directory: dir } }] } : { slug: dir };
+};
 
 // Structure A, by layer. The files in docs/ do not move; only this grouping does.
 const sidebar = [
@@ -51,9 +57,11 @@ const sidebar = [
   },
   {
     label: "Research",
-    items: [area("platform/post-quantum", "Post quantum"), area("projects/quantum-pq-homelab", "Quantum pq homelab")],
+    items: [area("platform/post-quantum", "Post quantum"), { autogenerate: { directory: "projects" } }],
   },
-];
+]
+  .map((group) => ({ ...group, items: group.items.filter(Boolean) }))
+  .filter((group) => group.items.length > 0);
 
 export default defineConfig({
   site: "https://docs.nordbye.it",
