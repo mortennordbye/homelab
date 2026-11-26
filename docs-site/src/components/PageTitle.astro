@@ -14,8 +14,11 @@ const md = `${Astro.url.pathname.replace(/\/$/, "")}.md`;
 const mdAbs = new URL(md, Astro.site).href;
 const claude = `https://claude.ai/new?q=${encodeURIComponent(`Read ${mdAbs} and answer my questions about it.`)}`;
 ---
+{/* The home page has its own hero title. */}
+{Astro.url.pathname !== "/" && <>
 {crumbs.length > 0 && <div class="eden-crumbs">{crumbs.map((c, i) => <>{i > 0 && <i>/</i>}<span>{c}</span></>)}</div>}
 <h1 id="_top">{entry.data.title}</h1>
+</>}
 {fromDocs && <div class="eden-meta">
   {date && <span>Updated <b>{date}</b></span>}
   <span><b>{minutes} min</b> read</span>
