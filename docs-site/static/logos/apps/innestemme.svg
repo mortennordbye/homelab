@@ -1,0 +1,53 @@
+<!-- House that holds a glowing voice orb with a short, quiet waveform. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="innestemme icon: a house holding a glowing voice orb">
+  <title>innestemme</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#18284a"/>
+      <stop offset="1" stop-color="#0b1220"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".09"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#a9c9de"/>
+    </linearGradient>
+    <radialGradient id="room" cx=".5" cy=".62" r=".6">
+      <stop offset="0" stop-color="#18BCF2" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#18BCF2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb" cx=".4" cy=".34" r=".72">
+      <stop offset="0" stop-color="#d9f6ff"/>
+      <stop offset=".35" stop-color="#5fd3fa"/>
+      <stop offset=".75" stop-color="#18BCF2"/>
+      <stop offset="1" stop-color="#0a6ea6"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#000" flood-opacity=".5"/>
+    </filter>
+    <filter id="blur" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <clipPath id="inside">
+      <path d="M128 238 L256 128 L384 238 V394 H128 Z"/>
+    </clipPath>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="112" fill="url(#sheen)"/>
+  <rect x="100" y="100" width="312" height="320" fill="url(#room)" clip-path="url(#inside)"/>
+  <path d="M116 236 L256 116 L396 236 V388 Q396 410 374 410 H138 Q116 410 116 388 Z" fill="none" stroke="url(#wall)" stroke-width="30" stroke-linejoin="round" filter="url(#shadow)"/>
+  <circle cx="256" cy="300" r="86" fill="#18BCF2" opacity=".6" filter="url(#blur)"/>
+  <circle cx="256" cy="300" r="74" fill="url(#orb)"/>
+  <circle cx="256" cy="300" r="72" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3"/>
+  <ellipse cx="232" cy="266" rx="26" ry="14" fill="#fff" opacity=".4" transform="rotate(-30 232 266)"/>
+  <g fill="#ffffff">
+    <rect x="208" y="290" width="12" height="20" rx="6" opacity=".9"/>
+    <rect x="230" y="278" width="12" height="44" rx="6"/>
+    <rect x="252" y="270" width="12" height="60" rx="6"/>
+    <rect x="274" y="278" width="12" height="44" rx="6"/>
+    <rect x="296" y="290" width="12" height="20" rx="6" opacity=".9"/>
+  </g>
+  <rect x="1.5" y="1.5" width="509" height="509" rx="110.5" fill="none" stroke="#fff" stroke-opacity=".1" stroke-width="3"/>
+</svg>

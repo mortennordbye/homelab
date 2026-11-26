@@ -32,16 +32,16 @@ const layers: { id: string; title: string; note: string; areas: Area[] }[] = [
 ];
 const research = area("platform/post-quantum", "Post quantum", "Readiness, and Shor on a real quantum computer.", []);
 
-type App = { name: string; line: string; logo: string; lang: string; docs: string; repo: string; host?: string };
+type App = { name: string; line: string; icon: string; lang: string; docs: string; repo: string; host?: string };
 const own: App[] = [
-  { name: "innestemme", line: "Local voice assistant in Rust. Replaces the Home Assistant Assist pipeline and answers as Jarvis.", logo: "rust.svg", lang: "Rust", docs: "/apps/innestemme/", repo: `${GH}innestemme` },
-  { name: "Headroom", line: "Personal finance tracker for budgets, assets, investments and loans.", logo: "typescript.svg", lang: "TypeScript", docs: "/apps/headroom/", repo: `${GH}headroom`, host: "headroom.nordbye.it" },
-  { name: "logeverylift", line: "Workout tracking app for the phone. Next.js, PostgreSQL and Drizzle.", logo: "nextjs.svg", lang: "TypeScript", docs: "/apps/logeverylift/", repo: `${GH}logeverylift`, host: "logeverylift.com" },
-  { name: "Verksted", line: "Workbench to drive coding agents from a phone: tmux, a web terminal, files, git and CI.", logo: "typescript.svg", lang: "TypeScript", docs: "/apps/verksted/", repo: `${GH}verksted` },
-  { name: "Reelsmith", line: "Short-video pipeline and an Instagram comment-to-DM gateway.", logo: "python.svg", lang: "Python", docs: "/apps/reelsmith/", repo: `${GH}reelsmith`, host: "gate.nordbye.it" },
-  { name: "LinkGraph", line: "Local explorer for a LinkedIn data export. Nothing leaves the machine.", logo: "python.svg", lang: "Python", docs: "/apps/linkgraph/", repo: `${GH}linkgraph` },
-  { name: "Portfolio", line: "The site, its brand decisions and the fun room.", logo: "nextjs.svg", lang: "TypeScript", docs: "/apps/portfolio/", repo: `${GH}homelab/tree/main/portfolio`, host: "nordbye.it" },
-  { name: "Blog", line: "Posts on the homelab, built with Hugo and the Northlight theme.", logo: "hugo.svg", lang: "Hugo", docs: "/apps/blog/", repo: `${GH}homelab/tree/main/blog`, host: "blog.nordbye.it" },
+  { name: "innestemme", line: "Local voice assistant in Rust. Replaces the Home Assistant Assist pipeline and answers as Jarvis.", icon: "innestemme.svg", lang: "Rust", docs: "/apps/innestemme/", repo: `${GH}innestemme` },
+  { name: "Headroom", line: "Personal finance tracker for budgets, assets, investments and loans.", icon: "headroom.svg", lang: "TypeScript", docs: "/apps/headroom/", repo: `${GH}headroom`, host: "headroom.nordbye.it" },
+  { name: "logeverylift", line: "Workout tracking app for the phone. Next.js, PostgreSQL and Drizzle.", icon: "logeverylift.svg", lang: "TypeScript", docs: "/apps/logeverylift/", repo: `${GH}logeverylift`, host: "logeverylift.com" },
+  { name: "Verksted", line: "Workbench to drive coding agents from a phone: tmux, a web terminal, files, git and CI.", icon: "verksted.svg", lang: "TypeScript", docs: "/apps/verksted/", repo: `${GH}verksted` },
+  { name: "Reelsmith", line: "Short-video pipeline and an Instagram comment-to-DM gateway.", icon: "reelsmith.svg", lang: "Python", docs: "/apps/reelsmith/", repo: `${GH}reelsmith`, host: "gate.nordbye.it" },
+  { name: "LinkGraph", line: "Local explorer for a LinkedIn data export. Nothing leaves the machine.", icon: "linkgraph.svg", lang: "Python", docs: "/apps/linkgraph/", repo: `${GH}linkgraph` },
+  { name: "Portfolio", line: "The site, its brand decisions and the fun room.", icon: "portfolio.png", lang: "TypeScript", docs: "/apps/portfolio/", repo: `${GH}homelab/tree/main/portfolio`, host: "nordbye.it" },
+  { name: "Blog", line: "Posts on the homelab, built with Hugo and the Northlight theme.", icon: "blog.png", lang: "Hugo", docs: "/apps/blog/", repo: `${GH}homelab/tree/main/blog`, host: "blog.nordbye.it" },
 ];
 const selfHosted = [
   area("apps/media-stack", "Media stack", "Requests, storage, 4K, re-encoding.", ["plex.svg", "sonarr.svg", "radarr.svg", "jellyseerr.svg"]),
@@ -116,7 +116,7 @@ const unit = (n: number) => (n === 1 ? "page" : "pages");
         <div class="grid grid--4">
           {own.map((app) => (
             <div class="card own">
-              <div class="own__hd"><span class="tile">{app.name[0].toUpperCase()}</span><span class="logo logo--sm"><img src={`/logos/${app.logo}`} alt="" /></span><span class="own__lang">{app.lang}</span></div>
+              <div class="own__hd"><img class="appicon" src={`/logos/apps/${app.icon}`} alt="" width="40" height="40" /><span class="own__lang">{app.lang}</span></div>
               <b>{app.name}</b><span class="d">{app.line}</span>
               <div class="own__links">
                 <a class="ln" href={app.docs}>Docs</a>

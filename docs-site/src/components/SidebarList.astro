@@ -2,11 +2,12 @@
 import type { StarlightRouteData } from "@astrojs/starlight/route-data";
 type SidebarEntry = StarlightRouteData["sidebar"][number];
 import SidebarRestorePoint from "@astrojs/starlight/components/SidebarRestorePoint.astro";
-import { groupMarks, pageMarks } from "../logos";
+import { groupMarks, pageMarks, type Mark as MarkType } from "../logos";
 import Mark from "./Mark.astro";
 
-interface Props { sublist: SidebarEntry[]; nested?: boolean; group?: string }
-const { sublist, nested, group } = Astro.props;
+// inherited: the mark of the enclosing folder, for pages without their own.
+interface Props { sublist: SidebarEntry[]; nested?: boolean; group?: string; inherited?: MarkType }
+const { sublist, nested, group, inherited } = Astro.props;
 
 const hasCurrent = (e: SidebarEntry): boolean => (e.type === "link" ? e.isCurrent : e.entries.some(hasCurrent));
 ---
@@ -15,19 +16,19 @@ const hasCurrent = (e: SidebarEntry): boolean => (e.type === "link" ? e.isCurren
     <li>
       {entry.type === "link" ? (
         <a href={entry.href} aria-current={entry.isCurrent ? "page" : undefined} {...entry.attrs}>
-          <Mark mark={pageMarks[entry.href] ?? { icon: "page", dim: true }} />
+          <Mark mark={pageMarks[entry.href] ?? inherited} />
           {/* A folder's README carries the folder name, which the group row already shows. */}
           <span>{entry.label === group ? "Overview" : entry.label}</span>
         </a>
       ) : nested ? (
         <details open={hasCurrent(entry) || !entry.collapsed}>
           <summary>
-            <Mark mark={groupMarks[entry.label]} />
+            <Mark mark={groupMarks[entry.label] ?? inherited} />
             <span>{entry.label}</span>
             <span class="chev" aria-hidden="true">&rsaquo;</span>
           </summary>
           <SidebarRestorePoint />
-          <Astro.self sublist={entry.entries} nested group={entry.label} />
+          <Astro.self sublist={entry.entries} nested group={entry.label} inherited={groupMarks[entry.label] ?? inherited} />
         </details>
       ) : (
         <div class="eden-nav__group">

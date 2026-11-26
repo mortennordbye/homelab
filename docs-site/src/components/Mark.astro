@@ -4,5 +4,6 @@ interface Props { mark?: Mark }
 const { mark } = Astro.props;
 ---
 {mark && "logo" in mark && <span class="mark"><img src={`/logos/${mark.logo}`} alt="" width="14" height="14" loading="lazy" /></span>}
-{mark && "tile" in mark && <span class="mark mark--tile">{mark.tile}</span>}
-{mark && "icon" in mark && <span class:list={["mark mark--icon", { "mark--dim": mark.dim }]} style={`--i:url(/logos/${mark.icon}.svg)`}></span>}
+{mark && "app" in mark && <img class="mark mark--app" src={`/logos/apps/${mark.app}`} alt="" width="22" height="22" loading="lazy" />}
+{mark && "img" in mark && <img class="mark mark--app" src={mark.img} alt="" width="22" height="22" loading="lazy" />}
+{mark && "icon" in mark && <span class="mark mark--icon" style={`--i:url(/logos/${mark.icon}.svg)`}></span>}

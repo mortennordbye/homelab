@@ -1,0 +1,13 @@
+<!-- linkgraph: a warm path. One glowing route from you (orange) through a contact (gold) to the target (magenta). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="linkgraph: a glowing path from you, through a contact, to a target company">
+  <title>linkgraph</title><defs><linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient><linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="drop" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000" flood-opacity=".5"/></filter>
+<linearGradient id="tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1F2937"/><stop offset="1" stop-color="#030712"/></linearGradient>
+<linearGradient id="route" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#F07A3E"/><stop offset=".5" stop-color="#FFD27A"/><stop offset="1" stop-color="#E0458C"/></linearGradient>
+<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter></defs>
+<rect width="512" height="512" rx="112" fill="url(#tile)"/><rect width="512" height="512" rx="112" fill="url(#sheen)"/>
+<g fill="#fff" fill-opacity=".14"><circle cx="120" cy="140" r="16"/><circle cx="210" cy="96" r="12"/><circle cx="400" cy="300" r="14"/><circle cx="330" cy="420" r="12"/><circle cx="96" cy="300" r="12"/><circle cx="420" cy="200" r="10"/></g>
+<path d="M120 400 C200 400 200 256 256 256 C312 256 312 112 392 112" stroke="url(#route)" stroke-width="44" stroke-linecap="round" fill="none" filter="url(#glow)" opacity=".7"/>
+<path d="M120 400 C200 400 200 256 256 256 C312 256 312 112 392 112" stroke="url(#route)" stroke-width="20" stroke-linecap="round" fill="none"/>
+<g filter="url(#drop)"><circle cx="120" cy="400" r="46" fill="#F07A3E"/><circle cx="256" cy="256" r="36" fill="#FFD27A"/><circle cx="392" cy="112" r="46" fill="#E0458C"/></g>
+<circle cx="106" cy="386" r="13" fill="#fff" fill-opacity=".35"/><circle cx="378" cy="98" r="13" fill="#fff" fill-opacity=".35"/>
+<rect x="1.5" y="1.5" width="509" height="509" rx="110.5" fill="none" stroke="url(#edge)" stroke-width="3"/></svg>
