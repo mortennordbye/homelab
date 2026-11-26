@@ -1,41 +1,206 @@
 ---
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { getCollection } from "astro:content";
+import "../styles/home.css";
 
-const areas = [
-  ["/architecture/", "kubernetes.svg", "Architecture", "what runs where and how the parts depend on each other"],
-  ["/platform/cluster/", "proxmox.svg", "Cluster", "Proxmox and Talos, upgrades, GPU passthrough"],
-  ["/platform/network/", "traefik.svg", "Network", "Traefik, Cilium, certificates, DNS, remote access"],
-  ["/platform/delivery/", "argocd.svg", "Delivery", "Argo CD, Kargo, CI, scale to zero"],
-  ["/platform/backups/", "volsync.svg", "Backups", "backup layers, watching them, restores"],
-  ["/platform/data/", "postgres.svg", "Data", "in-cluster Postgres, major upgrades"],
-  ["/platform/observability/", "grafana.svg", "Observability", "monitoring, alerting, incidents"],
-  ["/platform/identity/", "authentik.svg", "Identity", "Authentik SSO, putting an app behind login"],
-  ["/platform/storage/", "synology.svg", "Storage", "storage classes, Proxmox CSI and Synology NFS"],
-  ["/platform/secrets/", "bitwarden.svg", "Secrets", "Bitwarden to cluster secrets"],
-  ["/apps/media-stack/", "plex.svg", "Media stack", "requests, storage, 4K, re-encoding"],
-  ["/apps/portfolio/", null, "Portfolio", "the site, brand decisions, the fun room"],
+const docs = await getCollection("docs");
+const count = (prefix: string) => docs.filter((d) => d.id === prefix || d.id.startsWith(`${prefix}/`)).length;
+const GH = "https://github.com/mortennordbye/";
+
+type Area = { href: string; title: string; line: string; logos: string[]; pages: number };
+const area = (dir: string, title: string, line: string, logos: string[]): Area => ({ href: `/${dir}/`, title, line, logos, pages: count(dir) });
+
+// Structure A, by layer, as in the sidebar.
+const lead = area("architecture", "Architecture", "The spec: what runs where, and how the parts depend on each other.", ["kubernetes.svg", "talos.svg", "proxmox.svg"]);
+const layers: { id: string; title: string; note: string; areas: Area[] }[] = [
+  { id: "L1", title: "Foundation", note: "The machines and the wires.", areas: [
+    area("platform/cluster", "Cluster", "Proxmox and Talos, upgrades, GPU passthrough.", ["proxmox.svg", "talos.svg", "terraform.svg"]),
+    area("platform/storage", "Storage", "Storage classes, Proxmox CSI and Synology NFS.", ["synology.svg", "proxmox.svg"]),
+    area("platform/network", "Network", "Traefik, Cilium, certificates, DNS, remote access.", ["traefik.svg", "cilium.svg", "cloudflare.svg", "unifi.svg", "tailscale.svg"]),
+  ] },
+  { id: "L2", title: "Platform", note: "What every app gets for free.", areas: [
+    area("platform/delivery", "Delivery", "Argo CD, Kargo, CI, scale to zero.", ["argocd.svg", "kargo.png", "github.svg", "keda.svg"]),
+    area("platform/data", "Data", "In-cluster Postgres, object storage, major upgrades.", ["postgres.svg", "garage.svg"]),
+    area("platform/identity", "Identity", "Authentik SSO, putting an app behind login.", ["authentik.svg"]),
+    area("platform/secrets", "Secrets", "Bitwarden to cluster secrets.", ["bitwarden.svg", "eso.svg"]),
+    area("platform/policy", "Policy", "Kyverno admission rules and Falco runtime alerts.", ["kyverno.webp", "falco.svg"]),
+  ] },
+  { id: "L3", title: "Operations", note: "Keeping it alive.", areas: [
+    area("platform/observability", "Observability", "Monitoring, alerting, SLOs, incidents.", ["grafana.svg", "prometheus.svg", "loki.svg"]),
+    area("platform/backups", "Backups", "Backup layers, watching them, restores.", ["volsync.svg", "pbs.svg", "synology.svg"]),
+  ] },
 ];
+const research = area("platform/post-quantum", "Post quantum", "Readiness, and Shor on a real quantum computer.", []);
+
+type App = { name: string; line: string; logo: string; lang: string; docs: string; repo: string; host?: string };
+const own: App[] = [
+  { name: "innestemme", line: "Local voice assistant in Rust. Replaces the Home Assistant Assist pipeline and answers as Jarvis.", logo: "rust.svg", lang: "Rust", docs: "/apps/innestemme/", repo: `${GH}innestemme` },
+  { name: "Headroom", line: "Personal finance tracker for budgets, assets, investments and loans.", logo: "typescript.svg", lang: "TypeScript", docs: "/apps/headroom/", repo: `${GH}headroom`, host: "headroom.nordbye.it" },
+  { name: "logeverylift", line: "Workout tracking app for the phone. Next.js, PostgreSQL and Drizzle.", logo: "nextjs.svg", lang: "TypeScript", docs: "/apps/logeverylift/", repo: `${GH}logeverylift`, host: "logeverylift.com" },
+  { name: "Verksted", line: "Workbench to drive coding agents from a phone: tmux, a web terminal, files, git and CI.", logo: "typescript.svg", lang: "TypeScript", docs: "/apps/verksted/", repo: `${GH}verksted` },
+  { name: "Reelsmith", line: "Short-video pipeline and an Instagram comment-to-DM gateway.", logo: "python.svg", lang: "Python", docs: "/apps/reelsmith/", repo: `${GH}reelsmith`, host: "gate.nordbye.it" },
+  { name: "LinkGraph", line: "Local explorer for a LinkedIn data export. Nothing leaves the machine.", logo: "python.svg", lang: "Python", docs: "/apps/linkgraph/", repo: `${GH}linkgraph` },
+  { name: "Portfolio", line: "The site, its brand decisions and the fun room.", logo: "nextjs.svg", lang: "TypeScript", docs: "/apps/portfolio/", repo: `${GH}homelab/tree/main/portfolio`, host: "nordbye.it" },
+  { name: "Blog", line: "Posts on the homelab, built with Hugo and the Northlight theme.", logo: "hugo.svg", lang: "Hugo", docs: "/apps/blog/", repo: `${GH}homelab/tree/main/blog`, host: "blog.nordbye.it" },
+];
+const selfHosted = [
+  area("apps/media-stack", "Media stack", "Requests, storage, 4K, re-encoding.", ["plex.svg", "sonarr.svg", "radarr.svg", "jellyseerr.svg"]),
+  area("apps/isponsorblocktv", "iSponsorBlockTV", "Skips sponsor segments and ads in the YouTube app on the TV.", ["youtube.svg"]),
+];
+const alsoRunning = ["home-assistant.svg", "mealie.svg", "audiobookshelf.svg", "outline.svg", "open-webui.svg", "ollama.svg"];
+
+const apple = "M100 62 C 82 48, 40 46, 26 84 C 12 124, 34 186, 70 200 C 84 206, 92 198, 100 198 C 108 198, 116 206, 130 200 C 166 186, 188 124, 174 84 C 160 46, 118 48, 100 62 Z";
+const stem = "M100 62 C 100 46, 104 34, 112 22";
+const leaf = "M106 40 C 118 20, 146 16, 160 22 C 148 40, 124 48, 106 40 Z";
+const unit = (n: number) => (n === 1 ? "page" : "pages");
 ---
-<StarlightPage frontmatter={{ title: "How the homelab is built and run", template: "splash", description: "How the Genesis homelab is built and run", tableOfContents: false }} hasSidebar={false}>
-  <div class="eden-home">
-    <p class="eden-label">Eden &middot; homelab</p>
-    <p class="eden-home__lede">
-      Three Proxmox nodes run Genesis, a Talos Kubernetes cluster of six VMs. Terraform builds the machines and Argo CD
-      reconciles everything else from the main branch of <a href="https://github.com/mortennordbye/homelab">mortennordbye/homelab</a>.
-      These pages explain how the parts fit together, and how to operate or rebuild each one.
-    </p>
-    <p><a class="eden-btn eden-btn--brass" href="/architecture/">Read the spec</a></p>
-    <a class="eden-sheet" href="/assets/diagrams/homelab-overview.svg">
-      <img src="/assets/diagrams/homelab-overview.svg" alt="Map of the homelab: network edge, Proxmox hosts, the Genesis cluster with its platform services and apps, smart home and storage" />
-    </a>
-    <h2>Areas</h2>
-    <ul class="eden-areas">
-      {areas.map(([href, logo, title, line]) => (
-        <li><a href={href}>
-          {logo ? <span class="mark"><img src={`/logos/${logo}`} alt="" width="14" height="14" /></span> : <span class="mark mark--tile">{title![0]}</span>}
-          <strong>{title}</strong><span>{line}</span>
-        </a></li>
+<StarlightPage frontmatter={{ title: "Eden docs", description: "How the Genesis homelab is built and run", template: "splash", tableOfContents: false }} hasSidebar={false}>
+  <div class="eden-landing">
+    <div class="landing-bg" aria-hidden="true"></div>
+
+    <section class="hero">
+      <div class="hero__copy">
+        <svg class="apple-bg" viewBox="0 0 200 220" aria-hidden="true">
+          <path pathLength="1" d={apple} />
+          <path pathLength="1" d={apple} transform="translate(100 128) scale(.8) translate(-100 -128)" />
+          <path pathLength="1" d={apple} transform="translate(100 132) scale(.6) translate(-100 -132)" />
+          <path pathLength="1" d={apple} transform="translate(100 136) scale(.4) translate(-100 -136)" />
+          <path pathLength="1" d={stem} /><path pathLength="1" d={leaf} />
+          <path pathLength="1" d="M108 39 C 126 32, 142 26, 158 23" />
+          <path pathLength="1" class="lit" d="M46 100 C 52 82, 64 72, 80 69" />
+        </svg>
+        <span class="kicker label"><svg class="apple-mk" viewBox="0 0 200 220" aria-hidden="true"><path d={apple} /><path d={stem} /><path d={leaf} /></svg>Eden &middot; homelab &middot; documentation</span>
+        <h1>How Eden is built <em>and run.</em></h1>
+        <p class="lede">Three Proxmox nodes run Genesis, a Talos Kubernetes cluster of six VMs. Terraform builds the machines and Argo CD reconciles the rest from <a href="https://github.com/mortennordbye/homelab">main</a>. These pages explain how the parts fit together, and how to operate or rebuild each one.</p>
+        <div class="cta">
+          <a class="brassbtn" href="/architecture/">Read the spec <span aria-hidden="true">&rarr;</span></a>
+          <a class="textlink" href="https://github.com/mortennordbye/homelab">mortennordbye/homelab</a>
+        </div>
+        <div class="plate">
+          <div><b data-count="3">3</b><span>Proxmox nodes</span></div>
+          <div><b data-count="6">6</b><span>Talos VMs</span></div>
+          <div><b data-count={docs.length}>{docs.length}</b><span>Pages</span></div>
+        </div>
+      </div>
+      <a class="sheet" href="/assets/diagrams/network-flow.svg">
+        <span class="crop"><img src="/assets/diagrams/network-flow.svg" alt="How traffic reaches the cluster: internet, Cloudflare, UniFi, Cilium and Traefik" /></span>
+        <span class="caption"><b>network-flow.d2</b><span>Select for full size</span></span>
+      </a>
+    </section>
+
+    <section class="sec">
+      <div class="sec__hd"><span class="label">01 &middot; Areas</span><h2>Where to start</h2></div>
+
+      <a class="card area area--wide" href={lead.href}>
+        <span class="logos">{lead.logos.map((l) => <span class="logo"><img src={`/logos/${l}`} alt="" /></span>)}</span>
+        <b>{lead.title}</b><span class="d">{lead.line}</span><small>{lead.pages} {unit(lead.pages)}</small>
+      </a>
+
+      {layers.map((layer) => (
+        <div class="grp">
+          <div class="grp__hd"><span class="label">{layer.id}</span><h3>{layer.title}</h3><span class="grp__note">{layer.note}</span></div>
+          <div class="grid">
+            {layer.areas.map((a) => (
+              <a class="card area" href={a.href}>
+                <span class="logos">{a.logos.map((l) => <span class="logo"><img src={`/logos/${l}`} alt="" /></span>)}</span>
+                <b>{a.title}</b><span class="d">{a.line}</span><small>{a.pages} {unit(a.pages)}</small>
+              </a>
+            ))}
+          </div>
+        </div>
       ))}
-    </ul>
+
+      <div class="grp">
+        <div class="grp__hd"><span class="label">L4</span><h3>Apps</h3><span class="grp__note">What runs on top.</span></div>
+        <div class="subhd"><span class="label">Built here</span><span>{own.length} apps, each with its own repo</span></div>
+        <div class="grid grid--4">
+          {own.map((app) => (
+            <div class="card own">
+              <div class="own__hd"><span class="tile">{app.name[0].toUpperCase()}</span><span class="logo logo--sm"><img src={`/logos/${app.logo}`} alt="" /></span><span class="own__lang">{app.lang}</span></div>
+              <b>{app.name}</b><span class="d">{app.line}</span>
+              <div class="own__links">
+                <a class="ln" href={app.docs}>Docs</a>
+                <a class="ln" href={app.repo}>Repo</a>
+                {app.host ? <a class="ln" href={`https://${app.host}`}>{app.host}</a> : <span class="ln ln--none">LAN only</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div class="subhd"><span class="label">Self-hosted</span><span>Open-source apps run as they ship</span></div>
+        <div class="grid">
+          {selfHosted.map((a) => (
+            <a class="card area" href={a.href}>
+              <span class="logos">{a.logos.map((l) => <span class="logo"><img src={`/logos/${l}`} alt="" /></span>)}</span>
+              <b>{a.title}</b><span class="d">{a.line}</span><small>{a.pages} {unit(a.pages)}</small>
+            </a>
+          ))}
+          <div class="card also">
+            <span class="label">Also running</span>
+            <span class="logos">{alsoRunning.map((l) => <span class="logo"><img src={`/logos/${l}`} alt="" /></span>)}</span>
+            <span class="d">Self-hosted apps with no page of their own. Their manifests are in <code>k8s/talos/apps/</code>.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp__hd"><span class="label">L5</span><h3>Research</h3><span class="grp__note">Where the lab looks ahead.</span></div>
+        <div class="grid">
+          <a class="card area" href={research.href}>
+            <span class="logos"><span class="logo logo--icon"></span></span>
+            <b>{research.title}</b><span class="d">{research.line}</span><small>{research.pages} {unit(research.pages)}</small>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="agentband">
+        <div>
+          <span class="label">02 &middot; For agents</span>
+          <h3>Every page is also Markdown.</h3>
+          <p>The build writes an index for language models, the full text in one file, and a <code>.md</code> copy of each page. Any agent can read the docs through a generic MCP server, with nothing to host.</p>
+        </div>
+        <div class="code">
+          <div class="code__bar"><span>shell</span></div>
+<pre><span class="c"># the index and the full text</span>
+curl https://docs.nordbye.it/<span class="p">llms.txt</span>
+curl https://docs.nordbye.it/<span class="p">llms-full.txt</span>
+
+<span class="c"># the docs as an MCP server in Claude Code</span>
+claude mcp add eden-docs -- uvx --from mcpdoc mcpdoc \
+  <span class="f">--urls</span> Eden:https://docs.nordbye.it/llms.txt</pre>
+        </div>
+      </div>
+    </section>
   </div>
 </StarlightPage>
+
+<script>
+  // Calm motion: counters, scroll reveals and typed lines. Nothing runs for reduced motion.
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const root = document.querySelector(".eden-landing")!;
+    root.querySelectorAll(".sec__hd, .grp__hd, .subhd, .area--wide, .agentband, .grid > *").forEach((el) => {
+      el.classList.add("reveal");
+      if (el.parentElement?.classList.contains("grid")) (el as HTMLElement).style.setProperty("--d", `${(Array.from(el.parentElement.children).indexOf(el) % 4) * 90}ms`);
+    });
+    const pre = root.querySelector(".agentband pre");
+    if (pre) {
+      pre.innerHTML = pre.innerHTML.split("\n").map((l, i) => `<span class="ln-t" style="--i:${i}">${l || " "}</span>`).join("\n");
+      pre.closest(".code")!.classList.add("type");
+    }
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
+    root.querySelectorAll(".reveal, .type").forEach((el) => io.observe(el));
+    root.querySelectorAll<HTMLElement>("[data-count]").forEach((b) => {
+      const to = Number(b.dataset.count), steps = 40;
+      let n = 0;
+      b.textContent = "0";
+      setTimeout(() => {
+        const id = setInterval(() => {
+          n++;
+          b.textContent = String(Math.round(to * (1 - Math.pow(1 - n / steps, 3))));
+          if (n >= steps) { clearInterval(id); b.textContent = String(to); }
+        }, 35);
+      }, 950);
+    });
+  }
+</script>

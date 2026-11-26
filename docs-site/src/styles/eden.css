@@ -140,7 +140,7 @@ h1#_top { margin-top: 0.75rem; font-size: clamp(2.4rem, 4vw, 3.35rem); line-heig
   border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font: 400 0.75rem/1 var(--mono); color: var(--fg-3);
 }
 .eden-meta b { color: var(--fg-2); font-weight: 400; }
-.eden-actions { margin-left: auto; display: flex; gap: 0.5rem; }
+.eden-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .eden-btn {
   display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 8px; border: 0; cursor: pointer;
   background: var(--surface); color: var(--fg-2); font: 400 0.75rem/1 var(--mono); text-decoration: none;

@@ -44,8 +44,11 @@ const sidebar = [
   {
     label: "Apps",
     items: [
+      area("apps/blog", "Blog"),
+      area("apps/headroom", "Headroom"),
       area("apps/innestemme", "Innestemme"),
       area("apps/linkgraph", "Linkgraph"),
+      area("apps/logeverylift", "logeverylift"),
       area("apps/portfolio", "Portfolio"),
       area("apps/reelsmith", "Reelsmith"),
       area("apps/verksted", "Verksted"),
