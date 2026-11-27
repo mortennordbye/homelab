@@ -40,6 +40,28 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       initContainers:
+        # The built-in server list goes stale when PIA moves servers, and then no handshake completes.
+        - name: gluetun-servers-update
+          image: qmcgaw/gluetun:v3.41.3
+          args:
+            - update
+            - -enduser
+            - -providers
+            - private internet access
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+          volumeMounts:
+            - name: gluetun-data
+              mountPath: /gluetun
         # Gluetun VPN - runs as sidecar with restartPolicy: Always (K8s 1.29+)
         - name: gluetun
           image: qmcgaw/gluetun:v3.41.3
@@ -90,6 +112,9 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
+          volumeMounts:
+            - name: gluetun-data
+              mountPath: /gluetun
 
       containers:
         # qBittorrent - torrent client
@@ -172,6 +197,8 @@ spec:
             periodSeconds: 10
 
       volumes:
+        - name: gluetun-data
+          emptyDir: {}
         - name: qbittorrent-config
           persistentVolumeClaim:
             claimName: qbittorrent-config
