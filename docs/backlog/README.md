@@ -30,12 +30,6 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 
 ## Platform
 
-### UniFi DNS state does not match the provider IDs
-- **What:** `terraform -chdir=terraform/unifi/dns plan` reports all 36 existing records as deleted and plans to create 37. The records still resolve on 10.3.10.1. The state holds 24-character hex IDs, and a record the provider creates now gets a UUID. The provider seems to read through a newer UniFi API that does not know the old IDs. Move the 36 records to the new IDs: remove them from state and import them with the IDs the provider reads, as in "Rebuilding state" in `docs/platform/network/dns.md`. Then update that section with the new list endpoint.
-- **Why deferred:** found during the qui rollout. `qui` was applied alone with `-target`, so the other 36 entries stayed as they were.
-- **Unblock:** find the API that returns the UUIDs (the Network integration API) and an import plan that reports only imports. Until then, add a new alias only with `-target='unifi_dns_record.alias["<name>"]'`. A full apply creates duplicates.
-- **Where:** `terraform/unifi/dns/`, `docs/platform/network/dns.md`.
-
 ### Non-root image for verksted
 - **What:** replace the `verksted-restricted` exception on the app image with an image that starts as non-root and drops all capabilities. The `docker:*-dind` sidecar keeps its exception.
 - **Why deferred:** the backend starts every agent process as `vk-agent`, which needs root. The change is to how verksted runs agents, in its own repo. The exception let the restricted policy enforce without that change.
