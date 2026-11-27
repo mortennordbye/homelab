@@ -23,7 +23,7 @@ logo: ## Render the repo logo (→ docs/assets/logo/logo.png)
 	@docker run --rm -v "$(CURDIR)/docs/assets/logo:/work" ubuntu:24.04 bash -c '\
 		apt-get update >/dev/null 2>&1 && apt-get install -y imagemagick pngquant >/dev/null 2>&1; \
 		convert /work/source.jpg -crop 460x460+280+300 +repage -resize 512x512 \
-			\( +clone -alpha transparent -fill white -draw "circle 256,256 256,4" \) \
+			\( -size 512x512 xc:black -fill white -draw "circle 256,256 256,4" \) -alpha off \
 			-compose copyopacity -composite png32:/tmp/logo-raw.png; \
 		pngquant --quality 70-95 --force --output /work/logo.png /tmp/logo-raw.png'
 
