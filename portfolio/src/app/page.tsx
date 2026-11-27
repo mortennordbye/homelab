@@ -11,7 +11,7 @@ import type { Metadata } from "next";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  alternates: { canonical: "/", types: { "text/markdown": "/index.md" } },
   openGraph: {
     url: "/",
     title: `${site.firstName} ${site.lastName} — ${site.role}`,

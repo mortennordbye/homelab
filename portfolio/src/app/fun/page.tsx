@@ -9,6 +9,7 @@
 // certifications in src/content/resume. Adding either puts it in the room.
 
 import type { Metadata } from "next";
+import { pageMeta } from "@/content/pages";
 import { getAllWork } from "@/lib/work";
 import { certs, education, experience } from "@/content/resume";
 import { site } from "@/content/site";
@@ -18,10 +19,8 @@ import { sourceExcerpt } from "@/lib/source-excerpt";
 import FunRoomClient from "./FunRoomClient";
 
 export const metadata: Metadata = {
-  title: "The room",
-  description:
-    "An explorable 3D room built from this site's own content: a shelf of case studies, the certifications, the career timeline, and real source code on the desk monitor.",
-  alternates: { canonical: "/fun/" },
+  ...pageMeta.fun,
+  alternates: { canonical: "/fun/", types: { "text/markdown": "/fun.md" } },
   openGraph: {
     url: "/fun/",
     title: "The room",

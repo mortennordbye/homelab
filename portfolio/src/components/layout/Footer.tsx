@@ -21,6 +21,14 @@ const rowLinkClass =
  */
 const COLOPHON: { label: string; value: React.ReactNode }[] = [
   { label: "set in", value: "Source Serif 4 · Fragment Mono" },
+  {
+    label: "designed to",
+    value: (
+      <Link href="/brand" className={rowLinkClass}>
+        the brand spec
+      </Link>
+    ),
+  },
   { label: "built with", value: "Next.js · React · Tailwind · TypeScript" },
   { label: "runs as", value: "distroless Node · non-root · read-only root" },
   {

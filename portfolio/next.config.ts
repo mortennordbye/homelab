@@ -58,6 +58,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Public .md URLs for the Markdown copies in src/app/md (src/lib/markdown.ts).
+  async rewrites() {
+    return [
+      { source: "/index.md", destination: "/md/index" },
+      { source: "/:page(infrastructure|api|fun|brand).md", destination: "/md/:page" },
+      { source: "/work/:slug.md", destination: "/md/work/:slug" },
+    ];
+  },
   // www -> apex.
   async redirects() {
     return [

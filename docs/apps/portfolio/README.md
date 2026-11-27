@@ -13,6 +13,15 @@ propose anything about how the site looks. The LinkedIn banner and its build scr
 The 3D flat at `/fun` has its own guide: [fun-room.md](fun-room.md). The cert list syncs from
 Credly and Microsoft Learn: [certs.md](certs.md).
 
+AI agents get a Markdown copy of every page: `/index.md`, `/work/<slug>.md`,
+`/infrastructure.md`, `/api.md`, `/fun.md` and `/brand.md`. `/llms.txt` lists them and
+`/llms-full.txt` holds all of them in one file. `src/lib/markdown.ts` builds them from the same
+content modules as the pages, so a new case study or page section shows up there without a
+second edit. A new page needs an entry in `getMarkdownPages()` and, for a new top-level path, a
+rewrite in `next.config.ts`. Each copy sends a canonical `Link` header back to its HTML page, and
+each page has a `<link rel="alternate" type="text/markdown">`. `robots.txt` allows search, AI
+answers and AI training (`Content-Signal`). The smoke tests fail when a link in `llms.txt` breaks.
+
 The hero shows stills before or instead of WebGL: `public/images/globe-poster.webp`,
 `globe-poster-mobile.jpg` and `room-poster.jpg`. They are frames of the live scenes. After a
 change to the globe or the room, run `make hero-posters` in `portfolio/` to capture them again.

@@ -2,6 +2,7 @@ import { PortraitCard } from "@/components/PortraitCard";
 import { Reveal } from "@/components/primitives/Reveal";
 import { Section } from "@/components/primitives/Section";
 import { CareerPath } from "@/components/sections/CareerPath";
+import { site } from "@/content/site";
 import { skills } from "@/content/skills";
 import { interests } from "@/content/interests";
 import type { Skill } from "@/content/schemas";
@@ -23,21 +24,11 @@ export function AboutSection() {
       <div className="grid gap-8 md:grid-cols-[300px_1fr] md:items-start md:gap-12">
         <PortraitCard />
         <div className="flex flex-col gap-6">
-          <p className="text-fg-2 leading-relaxed">
-            Skilled ICT Service Operator by trade. Started on the front line in
-            an Operations Centre, monitoring alarms and running incidents
-            across customer environments, then moved into platform and cloud
-            engineering as the workloads followed. Scripting led to automation,
-            automation led to infrastructure as code, and the work shifted from
-            reacting to alerts to building the platforms that produce them.
-          </p>
-          <p className="text-fg-2 leading-relaxed">
-            My work has been Azure platforms for customers across a range of
-            regulated sectors at Basefarm and Orange Business, and now as a
-            Senior Platform Engineer at Nimtech. On the side I run a homelab cluster that doubles as my
-            proving ground for anything I want to try before it touches
-            production.
-          </p>
+          {site.about.map((p) => (
+            <p key={p} className="text-fg-2 leading-relaxed">
+              {p}
+            </p>
+          ))}
         </div>
       </div>
 
