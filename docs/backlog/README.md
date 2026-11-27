@@ -56,9 +56,9 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 
 ### Kyverno ClusterPolicy to ValidatingPolicy
 - **What:** move the four policies from the deprecated `kyverno.io/v1` `ClusterPolicy` to the CEL `ValidatingPolicy`. Move the `kyverno.io/v2` `PolicyException` to the `policies.kyverno.io` one at the same time.
-- **Why deferred:** the Pod Security policies use `validate.podSecurity`, which has no single `ValidatingPolicy` equivalent. Kyverno 1.19 still runs `ClusterPolicy` and only warns.
-- **Unblock:** a Kyverno release that announces `ClusterPolicy` removal or ships a Pod Security equivalent for `ValidatingPolicy`. The Kyverno CLI (`kyverno apply`) checks the rewritten policies against rendered manifests.
-- **Where:** `k8s/talos/infra/kyverno/policies/`, `k8s/talos/infra/kyverno/policyexception-monitoring.yaml`.
+- **Why deferred:** the Pod Security policies use `validate.podSecurity`, which has no single `ValidatingPolicy` equivalent. Kyverno 1.20 (chart 3.10.0) does not enforce `ClusterPolicy` at all, so the chart stays on 3.9.2 until this ships.
+- **Unblock:** the rewritten policies, checked with the Kyverno CLI (`kyverno apply`) against rendered manifests. Then bump the chart to 3.10.0 or later and drop the CRD label patch in `kustomization.yaml`. Remove the Kyverno `allowedVersions` hold in `renovate.json`.
+- **Where:** `k8s/talos/infra/kyverno/policies/`, `k8s/talos/infra/kyverno/policyexception-monitoring.yaml`, `k8s/talos/infra/kyverno/kustomization.yaml`, `renovate.json`.
 
 ## Infrastructure page
 

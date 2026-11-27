@@ -246,6 +246,12 @@
       "allowedVersions": "<3.15"
     },
     {
+      "description": "Kyverno stays below chart 3.10: Kyverno 1.20 does not enforce our kyverno.io ClusterPolicies. See the backlog entry 'Kyverno ClusterPolicy to ValidatingPolicy'.",
+      "matchPackageNames": ["kyverno"],
+      "matchDatasources": ["helm"],
+      "allowedVersions": "<3.10"
+    },
+    {
       "description": "quantum/shor stays on Python 3.12: on 3.13 a pyquafu dependency builds from source.",
       "matchFileNames": ["quantum/shor/Dockerfile"],
       "matchPackageNames": ["python"],
