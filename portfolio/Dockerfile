@@ -90,7 +90,7 @@ COPY --from=texgen /app/public/cv-manifest.json ./cv-manifest.json
 # No shell, runs as nonroot (uid 65532). The only writable path the server
 # needs is .next/cache, mounted as an emptyDir in the Deployment so
 # readOnlyRootFilesystem still holds.
-FROM gcr.io/distroless/nodejs26-debian13@sha256:b462e87a3db156aea160dd8a5306b85d02c3061ca0e3194fe0af81282a830ab0 AS runtime
+FROM gcr.io/distroless/nodejs26-debian13@sha256:13e3ac17e2911d238622fea7808a7a161ba6b33a41e542ded6e399387e1dbc84 AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production \
