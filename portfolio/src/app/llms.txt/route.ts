@@ -1,6 +1,7 @@
 import { site } from "@/content/site";
 import { getAllWork } from "@/lib/work";
 import { certs } from "@/content/resume";
+import { pageMeta } from "@/content/pages";
 
 // Generated, not a static file in public/, so the case-study list cannot drift
 // from src/content/work the way a hand-maintained copy would.
@@ -16,20 +17,24 @@ export function GET() {
 ${site.role} based in ${site.location}. Available for engagements through
 Nimtech. Contact: ${site.email}
 
+Every page has a Markdown copy at the .md link below. All of them in one file: ${site.url}/llms-full.txt
+
 ## Case studies
 
 ${work
   .map(
     (w) =>
-      `- [${w.title}](${site.url}/work/${w.slug}/): ${w.summary} Client: ${w.client}. Period: ${w.period}. Stack: ${w.stack.join(", ")}.`,
+      `- [${w.title}](${site.url}/work/${w.slug}.md): ${w.summary} Client: ${w.client}. Period: ${w.period}. Stack: ${w.stack.join(", ")}.`,
   )
   .join("\n")}
 
 ## Site
 
-- [Portfolio](${site.url}/): background, career timeline, services and contact.
-- [Infrastructure](${site.url}/infrastructure/): the self-hosted Talos Kubernetes cluster this site runs on, its request path and deploy pipeline.
-- [API](${site.url}/api/): public key-free JSON API, documented as OpenAPI 3.1 at ${site.url}/api/v1/openapi.json.
+- [Portfolio](${site.url}/index.md): background, full experience, education, services and contact.
+- [Infrastructure](${site.url}/infrastructure.md): the self-hosted Talos Kubernetes cluster this site runs on, its request path and deploy pipeline.
+- [API](${site.url}/api.md): public key-free JSON API, documented as OpenAPI 3.1 at ${site.url}/api/v1/openapi.json.
+- [The room](${site.url}/fun.md): ${pageMeta.fun.description}
+- [Brand system](${site.url}/brand.md): the colour, type, spacing and imagery rules this site is built to.
 - [Blog](https://blog.nordbye.it/): long-form writing on Kubernetes, infrastructure and homelab engineering.
 
 ## Certifications

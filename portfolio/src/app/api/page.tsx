@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/content/pages";
 import { Section } from "@/components/primitives/Section";
 import { Reveal } from "@/components/primitives/Reveal";
 import {
@@ -12,10 +13,8 @@ import {
 export const metadata: Metadata = {
   // The layout's title template appends the name; repeating it here rendered
   // "API — Morten Nordbye — Morten Victor Nordbye".
-  title: "API",
-  alternates: { canonical: "/api/" },
-  description:
-    "The public JSON API this site serves: endpoints, authentication, caching and example responses.",
+  ...pageMeta.api,
+  alternates: { canonical: "/api/", types: { "text/markdown": "/api.md" } },
 };
 
 function Code({ children }: { children: string }) {

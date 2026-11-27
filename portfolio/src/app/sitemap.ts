@@ -5,9 +5,8 @@ import { getAllWork } from "@/lib/work";
 export const dynamic = "force-static";
 
 // trailingSlash is on, so every entry needs the slash the site actually
-// serves or the sitemap points at a redirect. /brand is deliberately absent:
-// it is noindex, and a sitemap lists only indexable URLs.
-const STATIC_PATHS = ["/fun/", "/api/", "/infrastructure/"] as const;
+// serves or the sitemap points at a redirect.
+const STATIC_PATHS = ["/fun/", "/api/", "/infrastructure/", "/brand/"] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/content/pages";
 import { Section } from "@/components/primitives/Section";
 import { Reveal } from "@/components/primitives/Reveal";
 import { LiveStatus } from "@/components/infrastructure/LiveStatus";
@@ -7,10 +8,8 @@ import { deployPath, platform, requestPath } from "@/content/infrastructure";
 import { readClusterStatus, type ClusterStatus } from "@/lib/cluster-status";
 
 export const metadata: Metadata = {
-  title: "Infrastructure",
-  alternates: { canonical: "/infrastructure/" },
-  description:
-    "This site runs on a self-hosted Talos Kubernetes cluster, reconciled by ArgoCD. The request path, the deploy pipeline, and live cluster status.",
+  ...pageMeta.infrastructure,
+  alternates: { canonical: "/infrastructure/", types: { "text/markdown": "/infrastructure.md" } },
 };
 
 // The block below is captioned as this endpoint's response and says it

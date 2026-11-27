@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/content/pages";
 import { Fragment_Mono, Source_Serif_4 } from "next/font/google";
 import {
   a11y,
@@ -33,14 +34,10 @@ const specimenMono = Fragment_Mono({
   weight: ["400"],
 });
 
-/**
- * Brand system spec. Unlisted: not in the nav, not in the sitemap, noindex.
- * Reachable from the fun-room terminal with `brand`, or directly by URL.
- */
+/** Brand system spec. Linked from the footer colophon, not from the header nav. */
 export const metadata: Metadata = {
-  title: "Brand system",
-  description: "Colour, type, spacing and imagery specification.",
-  robots: { index: false, follow: false },
+  ...pageMeta.brand,
+  alternates: { canonical: "/brand/", types: { "text/markdown": "/brand.md" } },
 };
 
 export default function BrandPage() {

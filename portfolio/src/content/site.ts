@@ -37,6 +37,10 @@ export const site = {
     headline: "I am a Platform Engineer.",
     sub: "Based in Oslo. I build and run Azure infrastructure for customer environments. Azure networking, AKS with GitOps, observability, and the platform pieces that keep a cluster running properly. Open to consulting and platform engagements.",
   },
+  about: [
+    "Skilled ICT Service Operator by trade. Started on the front line in an Operations Centre, monitoring alarms and running incidents across customer environments, then moved into platform and cloud engineering as the workloads followed. Scripting led to automation, automation led to infrastructure as code, and the work shifted from reacting to alerts to building the platforms that produce them.",
+    "My work has been Azure platforms for customers across a range of regulated sectors at Basefarm and Orange Business, and now as a Senior Platform Engineer at Nimtech. On the side I run a homelab cluster that doubles as my proving ground for anything I want to try before it touches production.",
+  ],
   socials: [
     { label: "GitHub", href: "https://github.com/mortennordbye" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/morten-victor-nordbye" },

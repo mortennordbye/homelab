@@ -58,3 +58,15 @@ test("/api/v1/infra serves the snapshot", async ({ request }) => {
     nodes: { ready: expect.any(Number), total: expect.any(Number) },
   });
 });
+
+test("every nordbye.it link in /llms.txt resolves", async ({ request }) => {
+  const res = await request.get("/llms.txt");
+  expect(res.status()).toBe(200);
+  const links = [...(await res.text()).matchAll(/https:\/\/nordbye\.it(\/[^\s)]*[^\s).,])/g)].map((m) => m[1]);
+  expect(links.filter((l) => l.endsWith(".md")).length).toBeGreaterThan(10);
+  for (const path of new Set(links)) {
+    const r = await request.get(path);
+    expect(r.status(), path).toBe(200);
+    if (path.endsWith(".md")) expect(r.headers()["content-type"], path).toContain("text/markdown");
+  }
+});
