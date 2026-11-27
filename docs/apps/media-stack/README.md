@@ -4,7 +4,7 @@
 > Kubernetes. The only things downloaded with it are Linux ISOs and other openly
 > licensed content.
 
-The arr apps, Cleanuparr and Tdarr keep their settings in their own databases on
+The arr apps, Cleanuparr, qui and Tdarr keep their settings in their own databases on
 their config PVCs, not in this repo. This page records the settings that matter.
 With them you can rebuild the apps after a lost volume.
 
@@ -19,6 +19,7 @@ With them you can rebuild the apps after a lost volume.
 | Sonarr | `https://sonarr.local.bigd.no` | `arr-stack` | TV in `/data/series` |
 | Prowlarr | `https://prowlarr.local.bigd.no` | `gluetun-vpn` | Indexers, sidecar in the VPN pod. Its DNS goes through the VPN, so it reaches the arr apps through `hostAliases` |
 | qBittorrent | `https://qbittorrent.local.bigd.no` | `gluetun-vpn` | Downloads, sidecar in the VPN pod |
+| qui | `https://qui.local.bigd.no` | `arr-stack` | Web UI for qBittorrent, through the qBittorrent API |
 | Tdarr | `https://tdarr.local.bigd.no` | `arr-stack` | Re-encodes H.264 to HEVC |
 | Plex | `http://10.3.10.103:32400/web` | `plex-media-stack` | Playback, libraries below |
 
@@ -244,6 +245,16 @@ instance, `bazarr-4k`, built from the same settings.
 
 Delete Private off is the rule that keeps private torrents seeding. Cleanuparr then
 removes only the item from the arr queue and leaves the torrent in qBittorrent.
+
+## qui
+
+`https://qui.local.bigd.no`, admin account in the password manager. qui replaces the
+qBittorrent web UI for daily use. The old UI stays at `qbittorrent.local.bigd.no`.
+
+- Instance qBittorrent at `http://qbittorrent.gluetun-vpn:8080`, with the qBittorrent
+  WebUI login.
+- Self-update is off (`QUI__DISABLE_SELF_UPDATE`). The pinned image tag sets the version.
+- Its database is in `qui-config` and has a nightly VolSync backup.
 
 ## Tdarr
 

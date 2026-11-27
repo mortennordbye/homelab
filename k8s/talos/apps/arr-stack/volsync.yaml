@@ -448,3 +448,67 @@ spec:
           nfs:
             server: nas.local.bigd.no
             path: /volume1/k8s-backups/volsync
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: qui-config-restic
+  namespace: arr-stack
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: qui-config-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        RESTIC_REPOSITORY: /mnt/repo/arr-stack/qui-config
+        RESTIC_PASSWORD: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: "ba639711-53eb-45a2-9f0f-b50f00a41f27"
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: qui-config
+  namespace: arr-stack
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  sourcePVC: qui-config
+  trigger:
+    schedule: "0 1 * * *"
+  restic:
+    repository: qui-config-restic
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 14
+      weekly: 8
+      monthly: 6
+    cacheStorageClassName: syno-nfs-csi
+    cacheCapacity: 2Gi
+    moverSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    moverResources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
+    moverVolumes:
+      - mountPath: repo
+        volumeSource:
+          nfs:
+            server: nas.local.bigd.no
+            path: /volume1/k8s-backups/volsync

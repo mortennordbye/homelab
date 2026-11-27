@@ -13,6 +13,7 @@ resources:
   - bazarr.yaml
   - bazarr-4k.yaml
   - cleanuparr.yaml
+  - qui.yaml
   - flaresolverr.yaml
   - unpackerr.yaml
   - recyclarr.yaml

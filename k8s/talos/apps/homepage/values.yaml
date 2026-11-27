@@ -295,6 +295,11 @@ config:
               url: https://qbittorrent.local.bigd.no
               username: "{{HOMEPAGE_VAR_QBITTORRENT_USERNAME}}"
               password: "{{HOMEPAGE_VAR_QBITTORRENT_PASSWORD}}"
+        - qui:
+            icon: qui.png
+            href: https://qui.local.bigd.no
+            siteMonitor: https://qui.local.bigd.no
+            description: qBittorrent web UI
         - FlareSolverr:
             icon: flaresolverr.png
             href: https://flaresolverr.local.bigd.no

@@ -205,4 +205,29 @@ spec:
           name: tdarr
           port: 8265
           weight: 1
-
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: qui
+  namespace: arr-stack
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: traefik-gateway-private
+      namespace: traefik
+      sectionName: local-bigd-no
+  hostnames:
+    - "qui.local.bigd.no"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: qui
+          port: 7476
+          weight: 1

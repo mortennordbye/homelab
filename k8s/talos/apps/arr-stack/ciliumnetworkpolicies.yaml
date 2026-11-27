@@ -235,4 +235,25 @@ spec:
     - fromEntities:
         - host
         - health
-
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: qui-policy
+  namespace: arr-stack
+spec:
+  endpointSelector:
+    matchLabels:
+      app: qui
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": traefik
+            "k8s:app.kubernetes.io/instance": traefik-traefik
+      toPorts:
+        - ports:
+            - port: "7476"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - health

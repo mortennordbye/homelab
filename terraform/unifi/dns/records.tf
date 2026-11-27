@@ -50,6 +50,7 @@ locals {
     "prowlarr",
     "pyrra",
     "qbittorrent",
+    "qui",
     "radarr",
     "radarr-4k",
     "reelsmith",
