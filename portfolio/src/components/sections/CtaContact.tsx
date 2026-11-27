@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { ArrowRight } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { ContactCard } from "@/components/sections/ContactCard";
 import { site } from "@/content/site";
+import { mcp } from "@/content/api";
 
 export function CtaContact() {
   return (
@@ -34,6 +36,21 @@ export function CtaContact() {
             <Button href={`https://www.linkedin.com/in/${site.linkedin}`} variant="link">
               LinkedIn
             </Button>
+          </div>
+          <div className="mt-10 max-w-xl border-t border-line pt-6">
+            <p className="eyebrow">or ask your AI first</p>
+            <pre className="mt-3 overflow-x-auto rounded-[2px] border border-line bg-bg-2/60 p-4 font-mono text-xs leading-relaxed text-fg-2">
+              <code>{mcp.claudeCommand}</code>
+            </pre>
+            <p className="mt-3 text-sm text-fg-2">
+              It answers from this site.{" "}
+              <Link
+                href="/api/#mcp"
+                className="focus-ring text-fg underline decoration-accent decoration-2 underline-offset-4 hover:text-accent"
+              >
+                Other clients and tools
+              </Link>
+            </p>
           </div>
         </div>
 

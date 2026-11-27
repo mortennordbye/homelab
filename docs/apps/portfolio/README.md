@@ -22,6 +22,15 @@ rewrite in `next.config.ts`. Each copy sends a canonical `Link` header back to i
 each page has a `<link rel="alternate" type="text/markdown">`. `robots.txt` allows search, AI
 answers and AI training (`Content-Signal`). The smoke tests fail when a link in `llms.txt` breaks.
 
+`/mcp` is a read-only MCP server (Streamable HTTP, stateless, no key) built on the official
+TypeScript SDK in `src/app/mcp/route.ts`. Each request builds a new server and transport, so no
+session state lives in the pod. The tools read the Markdown builder, `getAllWork()`, the blog
+feed and the cluster status file. `mcp` in `src/content/api.ts` is the one list of tools: the
+route registers them, and the `/api` sheet, the `/api/v1` index, the Contact section, the footer
+colophon, the room terminal and the Markdown copies all print it. A new tool needs an entry
+there and a `registerTool` call in the route. The path sits behind the same Traefik rate limit as
+the rest of the site.
+
 The hero shows stills before or instead of WebGL: `public/images/globe-poster.webp`,
 `globe-poster-mobile.jpg` and `room-poster.jpg`. They are frames of the live scenes. After a
 change to the globe or the room, run `make hero-posters` in `portfolio/` to capture them again.

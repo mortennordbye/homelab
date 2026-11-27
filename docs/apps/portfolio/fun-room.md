@@ -188,7 +188,8 @@ visitor's eye.
 ### A new terminal command
 
 One `switch` case in `useCommands` in `Terminal.tsx`. `curl` only accepts same-origin `/api/`
-paths. Keep that rule.
+paths. Keep that rule. `mcp <tool> [arg]` is the one command that POSTs: it calls the
+site's own `/mcp` endpoint, so the room demos the real MCP server.
 
 Commands that report cluster state read the `data: PanelProps` that the shell receives. They
 never fetch on their own. Two pollers on their own schedules will disagree at some point, and a

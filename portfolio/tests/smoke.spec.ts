@@ -65,8 +65,28 @@ test("every nordbye.it link in /llms.txt resolves", async ({ request }) => {
   const links = [...(await res.text()).matchAll(/https:\/\/nordbye\.it(\/[^\s)]*[^\s).,])/g)].map((m) => m[1]);
   expect(links.filter((l) => l.endsWith(".md")).length).toBeGreaterThan(10);
   for (const path of new Set(links)) {
+    // POST-only; the /mcp test below covers it.
+    if (path === "/mcp") continue;
     const r = await request.get(path);
     expect(r.status(), path).toBe(200);
     if (path.endsWith(".md")) expect(r.headers()["content-type"], path).toContain("text/markdown");
   }
+});
+
+test("/mcp lists the tools and answers a call", async ({ request }) => {
+  const rpc = (method: string, params?: object) =>
+    request.post("/mcp", {
+      headers: { accept: "application/json, text/event-stream" },
+      data: { jsonrpc: "2.0", id: 1, method, params },
+    });
+  const list = await (await rpc("tools/list")).json();
+  expect(list.result.tools.map((t: { name: string }) => t.name)).toEqual([
+    "get_profile",
+    "list_case_studies",
+    "get_case_study",
+    "search_blog",
+    "cluster_status",
+  ]);
+  const call = await (await rpc("tools/call", { name: "get_case_study", arguments: { slug: "k8s-homelab" } })).json();
+  expect(call.result.content[0].text).toContain("# Kubernetes Home Lab");
 });

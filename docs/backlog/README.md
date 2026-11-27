@@ -171,12 +171,6 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** The first case study that needs a callout. Solve the four tones against `--paper-2` the same way the dark ones were solved against `--bg`. Add them under `.paper-prose` next to the other overrides, not as a prop on the component.
 - **Where:** `portfolio/src/app/globals.css` (`.paper-prose`), `portfolio/src/components/primitives/Callout.tsx`, `portfolio/src/components/work/mdx-components.tsx`.
 
-### Morten MCP server on nordbye.it
-- **What:** A public, read-only MCP endpoint on the portfolio, with tools such as `get_profile`, `list_case_studies`, `get_case_study`, `search_blog` and `cluster_status`, plus a way to show it on the site so visitors can add it to their client. Agreed display: a footer colophon row "askable as: an MCP server" next to "readable as", and an MCP section on the `/api` sheet with the endpoint, a copy-paste install line, the tool list and example questions. The owner also wants it on the front page and in the 3D room; the shape of those two needs a mockup in the PR 2 plan, checked against `docs/apps/portfolio/brand/decisions.md`.
-- **Why deferred:** Agreed as the second PR after the Markdown copies of each page. It needs its own plan page: transport, rate limits, and where and how the site presents it.
-- **Unblock:** Write the plan page. The tools reuse `src/lib/markdown.ts` and the `/api/v1` routes.
-- **Where:** `portfolio/src/app/api/`, `portfolio/src/lib/markdown.ts`, `portfolio/src/content/api.ts`.
-
 ### Cloudflare AI bot settings are not checked
 - **What:** `robots.txt` allows AI crawlers, but Cloudflare AI Crawl Control, "Block AI bots" or Bot Fight Mode can still block verified crawlers at the edge. These settings are not in Terraform, so the repo cannot show their state.
 - **Why deferred:** Only the dashboard shows them, and the owner drives the Cloudflare account.

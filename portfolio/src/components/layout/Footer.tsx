@@ -56,6 +56,14 @@ const COLOPHON: { label: string; value: React.ReactNode }[] = [
       </Link>
     ),
   },
+  {
+    label: "askable as",
+    value: (
+      <Link href="/api/#mcp" className={rowLinkClass}>
+        an MCP server
+      </Link>
+    ),
+  },
 ];
 
 export function Footer() {
