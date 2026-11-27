@@ -172,7 +172,7 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Where:** `portfolio/src/app/globals.css` (`.paper-prose`), `portfolio/src/components/primitives/Callout.tsx`, `portfolio/src/components/work/mdx-components.tsx`.
 
 ### Morten MCP server on nordbye.it
-- **What:** A public, read-only MCP endpoint on the portfolio, with tools such as `get_profile`, `list_case_studies`, `get_case_study`, `search_blog` and `cluster_status`, plus a way to show it on the site so visitors can add it to their client.
+- **What:** A public, read-only MCP endpoint on the portfolio, with tools such as `get_profile`, `list_case_studies`, `get_case_study`, `search_blog` and `cluster_status`, plus a way to show it on the site so visitors can add it to their client. Agreed display: a footer colophon row "askable as: an MCP server" next to "readable as", and an MCP section on the `/api` sheet with the endpoint, a copy-paste install line, the tool list and example questions. The owner also wants it on the front page and in the 3D room; the shape of those two needs a mockup in the PR 2 plan, checked against `docs/apps/portfolio/brand/decisions.md`.
 - **Why deferred:** Agreed as the second PR after the Markdown copies of each page. It needs its own plan page: transport, rate limits, and where and how the site presents it.
 - **Unblock:** Write the plan page. The tools reuse `src/lib/markdown.ts` and the `/api/v1` routes.
 - **Where:** `portfolio/src/app/api/`, `portfolio/src/lib/markdown.ts`, `portfolio/src/content/api.ts`.
