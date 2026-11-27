@@ -71,10 +71,11 @@ jobs:
       - name: Crop the logo to a 512 round mark
         # Square crop around the fruit, then a circular mask: the full frame is
         # unreadable at the 128px the README renders it at, and the round
-        # silhouette makes it look like a mark, not a photo.
+        # silhouette makes it look like a mark, not a photo. Draw the mask on an
+        # opaque canvas: ImageMagick 7 leaks the edge alpha of a cloned mask.
         run: |
           convert docs/assets/logo/source.jpg -crop 460x460+280+300 +repage -resize 512x512 \
-            \( +clone -alpha transparent -fill white -draw "circle 256,256 256,4" \) \
+            \( -size 512x512 xc:black -fill white -draw "circle 256,256 256,4" \) -alpha off \
             -compose copyopacity -composite png32:/tmp/logo-raw.png
           pngquant --quality 70-95 --force --output docs/assets/logo/logo.png /tmp/logo-raw.png
 
