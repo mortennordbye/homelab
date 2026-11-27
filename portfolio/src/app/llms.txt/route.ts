@@ -2,6 +2,7 @@ import { site } from "@/content/site";
 import { getAllWork } from "@/lib/work";
 import { certs } from "@/content/resume";
 import { pageMeta } from "@/content/pages";
+import { mcp } from "@/content/api";
 
 // Generated, not a static file in public/, so the case-study list cannot drift
 // from src/content/work the way a hand-maintained copy would.
@@ -16,6 +17,8 @@ export function GET() {
 
 ${site.role} based in ${site.location}. Available for engagements through
 Nimtech. Contact: ${site.email}
+
+MCP server (read-only, no key): ${mcp.url}. Tools: ${mcp.tools.map((t) => t.name).join(", ")}.
 
 Every page has a Markdown copy at the .md link below. All of them in one file: ${site.url}/llms-full.txt
 

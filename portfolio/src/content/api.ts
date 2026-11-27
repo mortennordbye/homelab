@@ -97,6 +97,7 @@ export const endpoints: readonly Endpoint[] = [
       endpoints: [
         { method: "GET", path: "/api/health", desc: "Liveness probe." },
       ],
+      mcp: { url: "https://nordbye.it/mcp", transport: "streamable-http", tools: ["get_profile"] },
       notes: "Reads are public. Writes require an API key.",
     },
     schema: obj({
@@ -111,6 +112,7 @@ export const endpoints: readonly Endpoint[] = [
           desc: str,
         }),
       ),
+      mcp: obj({ url: uri, transport: str, tools: arr(str) }),
       notes: str,
     }),
   },
@@ -321,6 +323,52 @@ export const endpoints: readonly Endpoint[] = [
   },
 ];
 
+/**
+ * The MCP server at /mcp. The route registers exactly these tools, and the
+ * /api page, the index, the terminal and the Markdown copy list them from here.
+ */
+export const mcp = {
+  url: `${site.url}/mcp`,
+  name: "nordbye",
+  claudeCommand: `claude mcp add --transport http nordbye ${site.url}/mcp`,
+  jsonConfig: `{ "mcpServers": { "nordbye": { "type": "http", "url": "${site.url}/mcp" } } }`,
+  tools: [
+    {
+      name: "get_profile",
+      short: "role, experience, certifications",
+      description:
+        "Morten Victor Nordbye's profile: role, summary, full work experience, education, certifications, skills and contact details.",
+    },
+    {
+      name: "list_case_studies",
+      short: "all case studies, filter by stack",
+      description:
+        "List Morten's case studies with client, period, stack and summary. Optional stack filter, e.g. 'Terraform' or 'Kubernetes'.",
+    },
+    {
+      name: "get_case_study",
+      short: "the full text of one",
+      description: "The full text of one case study, by slug (from list_case_studies).",
+    },
+    {
+      name: "search_blog",
+      short: "posts by topic",
+      description: "Search Morten's blog posts at blog.nordbye.it by title and summary.",
+    },
+    {
+      name: "cluster_status",
+      short: "the live state of the cluster this runs on",
+      description:
+        "Live state of the Talos Kubernetes cluster that serves nordbye.it: nodes, Argo CD sync and health, versions, certificate expiry.",
+    },
+  ],
+  examples: [
+    "Has Morten run AKS in production?",
+    "Which case studies used Terraform?",
+    "Is his cluster healthy right now?",
+  ],
+} as const;
+
 /** The uniform error shape every route returns on failure. */
 export const errorEnvelope = {
   error: { status: 401, message: "missing or invalid API key" },
@@ -343,6 +391,7 @@ export function buildIndex() {
       path: e.path,
       desc: e.summary,
     })),
+    mcp: { url: mcp.url, transport: "streamable-http", tools: mcp.tools.map((t) => t.name) },
     notes: "Reads are public. Writes require an API key.",
   };
 }

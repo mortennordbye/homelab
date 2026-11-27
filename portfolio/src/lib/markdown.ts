@@ -5,7 +5,7 @@ import { services } from "@/content/services";
 import { skills } from "@/content/skills";
 import { interests } from "@/content/interests";
 import { deployPath, platform, requestPath } from "@/content/infrastructure";
-import { apiIntro, endpoints } from "@/content/api";
+import { apiIntro, endpoints, mcp } from "@/content/api";
 import * as brand from "@/content/brand";
 import { getAllWork, type WorkMeta } from "@/lib/work";
 
@@ -86,6 +86,7 @@ ${services
 
 ## Contact
 
+- Ask your AI: MCP server at ${mcp.url}
 - Email: ${site.email}
 - Location: ${site.location}
 ${list(site.socials.map((s) => `${s.label}: ${s.href}`))}
@@ -152,7 +153,23 @@ ${endpoints
       `## ${e.method} ${e.path}\n\n${e.summary}\n\n${e.detail}\n\n- Auth: ${e.auth}\n- Caching: ${e.caching}\n\n\`\`\`sh\n${e.curl}\n\`\`\``,
   )
   .join("\n\n")}
+
+${mcpMarkdown()}
 `;
+}
+
+function mcpMarkdown(): string {
+  return `## MCP server
+
+Read-only, no key. Endpoint: ${mcp.url} (Streamable HTTP).
+
+\`\`\`sh
+${mcp.claudeCommand}
+\`\`\`
+
+Other clients: \`${mcp.jsonConfig}\`
+
+${list(mcp.tools.map((t) => `\`${t.name}\`: ${t.description}`))}`;
 }
 
 function funMarkdown(): string {

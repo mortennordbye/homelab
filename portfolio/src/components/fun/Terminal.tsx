@@ -4,6 +4,7 @@ import { Html } from "@react-three/drei";
 import { RoundedBox } from "@/components/scene/RoundedBox";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { site } from "@/content/site";
+import { mcp } from "@/content/api";
 import { certDaysLeft } from "./feed";
 import { Interactive } from "./interaction";
 import type { PanelProps } from "./Panels";
@@ -76,6 +77,7 @@ function useCommands(
             // second column wraps — see PORTRAIT_PX_W in Screen.tsx.
             "curl <path>         GET an endpoint, e.g. /api/v1/profile",
             "api                 list the public API endpoints",
+            "mcp [tool] [arg]    ask the site's MCP server",
             "kubectl get <kind>  apps, nodes or certs from the feed",
             "clear               clear the screen",
             "exit                step back from the desk",
@@ -144,11 +146,6 @@ function useCommands(
             `site   ${site.url}`,
           );
 
-        /**
-         * Unlisted on purpose. The brand spec is a working document, not a
-         * page anyone browsing the site is meant to land on, so the shell is
-         * the only entrance and the route itself is noindex.
-         */
         case "brand": {
           onOpen(`${site.url}/brand`);
           return out(
@@ -297,6 +294,47 @@ function useCommands(
             ];
           } catch {
             return err(`curl: ${path}: request failed`);
+          }
+        }
+
+        // Calls the real /mcp endpoint, so the room demos the server, not a picture of it.
+        case "mcp": {
+          if (!arg)
+            return out(
+              `${mcp.name} MCP server · read-only · no key`,
+              mcp.url,
+              "",
+              ...mcp.tools.map((t) => `${t.name.padEnd(18)} ${t.short}`),
+              "",
+              "add to claude code:",
+              `  claude mcp add --transport http ${mcp.name} \\`,
+              `    ${mcp.url}`,
+              "try:  mcp list_case_studies Terraform",
+            );
+          const [tool, ...words] = rest;
+          if (!mcp.tools.some((t) => t.name === tool))
+            return err(`mcp: ${tool}: no such tool (type mcp to list them)`);
+          const value = words.join(" ");
+          const keys: Record<string, string> = { list_case_studies: "stack", get_case_study: "slug", search_blog: "query" };
+          const key = keys[tool];
+          const args = key && value ? { [key]: value } : {};
+          try {
+            const res = await fetch("/mcp", {
+              method: "POST",
+              headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+              body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: tool, arguments: args } }),
+            });
+            const body = await res.json();
+            const text: string = body.result?.content?.[0]?.text ?? body.error?.message ?? "no answer";
+            const lines = text.split("\n");
+            return [
+              { kind: "note", text: `→ tools/call ${tool} ${JSON.stringify(args)}` },
+              ...lines.slice(0, 40).map((t) => ({ kind: "out", text: t }) as Line),
+              ...(lines.length > 40 ? [{ kind: "note", text: "… truncated" } as Line] : []),
+              { kind: "note", text: `live from ${mcp.url}` },
+            ];
+          } catch {
+            return err("mcp: request failed");
           }
         }
 
