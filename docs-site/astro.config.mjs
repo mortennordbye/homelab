@@ -72,6 +72,7 @@ export default defineConfig({
     starlight({
       title: "Eden docs",
       description: "How the Genesis homelab is built and run",
+      favicon: "/assets/logo/logo.png",
       head: [
         { tag: "meta", attrs: { property: "og:image", content: "https://docs.nordbye.it/assets/social-preview/social-preview.png" } },
         { tag: "meta", attrs: { name: "twitter:card", content: "summary_large_image" } },
