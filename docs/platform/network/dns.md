@@ -84,8 +84,15 @@ blocked, the developer portal loads but every write fails without an error.
 ## Rebuilding state
 
 `name` forces replacement. An apply into a populated controller without state
-therefore recreates the live records instead of adopting them. If the state is lost,
-list the records and write a temporary `imports.tf`:
+therefore recreates the live records instead of adopting them.
+
+A UniFi Network update can give every record a new `_id` without other changes.
+Network 11 did this: it replaced the 24-character hex IDs with UUIDs. The plan
+then reports every record as deleted and plans to create them all again. Do not
+apply that plan. Save the state with `terraform state pull`, remove the stale
+entries with `terraform state rm`, and import the records again as below.
+
+If the state is lost or stale, list the records and write a temporary `imports.tf`:
 
 ```bash
 curl -sk -H "X-API-KEY: $KEY" \
