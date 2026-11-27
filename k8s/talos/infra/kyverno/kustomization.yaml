@@ -25,6 +25,13 @@ patches:
       - op: add
         path: /metadata/namespace
         value: kyverno
+  # The chart renders these CRDs with an empty label map, which server-side apply drops.
+  - target:
+      kind: CustomResourceDefinition
+      name: ".*\\.policies\\.kyverno\\.io"
+    patch: |
+      - op: remove
+        path: /metadata/labels
 
 helmCharts:
   - name: kyverno
@@ -32,7 +39,7 @@ helmCharts:
     includeCRDs: true
     skipTests: true
     namespace: kyverno
-    version: 3.10.0
+    version: 3.9.2
     releaseName: kyverno
     valuesFile: ./values.yaml
   - name: policy-reporter
