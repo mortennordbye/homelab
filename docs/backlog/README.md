@@ -230,12 +230,6 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** once Cilium 1.21 is GA and a cert-manager release lists 1.37, bump those and Argo CD to 3.6 first, then raise `kubernetes_version`. That round probably also needs the `talos_config_contract` entry above and the talos provider at 0.12.0. Follow `docs/platform/cluster/talos-upgrade.md`.
 - **Where:** `terraform/proxmox/hyper-cluster/k8s/talos/{terraform.tfvars,upgrade-k8s.tf}`, `k8s/talos/infra/{cilium,cert-manager,argocd,keda}/`, `docs/platform/cluster/talos-upgrade.md`.
 
-### UniFi gateway settings (`usg`) are still console-only
-- **What:** every `unifi_setting` section is in `terraform/unifi/network/settings.tf` except `usg`: conntrack timeouts, the ALG modules, UPnP, redirects and the DNS verification servers.
-- **Why deferred:** the provider (0.56.1) builds `usg` from its model alone, and go-unifi always sends fields that the provider does not model (`mdns_enabled`, `lldp_enable_all`, `dhcpd_use_dnsmasq`, the DHCP relay servers). A declared section would write `false` into them and could turn off mDNS across VLANs.
-- **Unblock:** a provider release that reads the live `usg` section before it writes, as it does for `mgmt` and `igmp_snooping`, or that models those fields. Then declare `usg` with the live values from `/proxy/network/api/s/default/get/setting` and diff the section before and after the first apply.
-- **Where:** `terraform/unifi/network/settings.tf`, provider `ubiquiti-community/unifi` (`unifi/setting_resource.go`, the `USG` branch of `Update`).
-
 ### UniFi provider 0.65.0 plan is not safe to apply
 - **What:** under provider 0.65.0 the controller returns UUIDs for networks, WLAN groups and firewall policies, not the old hex IDs. A full `terraform plan` in `terraform/unifi/network` therefore wants to create the 5 firewall policies again (they exist), set the 3 WLANs back to the hex `default_user_group` and `all_aps` IDs in `wifi.tf`, and change `unifi_wan.internet_2`.
 - **Why deferred:** found during the 5 GHz width change, which was applied with `-target=unifi_device.u6_plus` to keep it apart. The rest needs its own plan and apply.

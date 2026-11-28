@@ -1,9 +1,5 @@
 # Site-level settings. The provider writes only the sections declared here and
 # leaves the rest of the site untouched.
-#
-# usg stays in the console: the provider rebuilds the whole section and always
-# sends gateway fields it does not model (mdns_enabled, lldp_enable_all, the
-# DHCP relay servers), so a declaration here would switch those off.
 resource "unifi_setting" "site" {
   # 578 is Norway; it decides which Wi-Fi channels and transmit powers are legal.
   country = {
@@ -128,5 +124,44 @@ resource "unifi_setting" "site" {
       "dark-web-blocker-list",
       "malicious-hosts",
     ]
+  }
+
+  # The conntrack timeouts are left out: with timeout_setting_preference "auto"
+  # the controller computes them, and the provider keeps the live values.
+  usg = {
+    timeout_setting_preference = "auto"
+    mss_clamp                  = "auto"
+    broadcast_ping             = false
+    syn_cookies                = true
+    receive_redirects          = false
+    send_redirects             = true
+    unbind_wan_monitors        = false
+
+    ftp_module  = true
+    gre_module  = true
+    h323_module = true
+    pptp_module = true
+    sip_module  = false
+    tftp_module = true
+
+    upnp = {
+      enabled         = false
+      nat_pmp_enabled = false
+      secure_mode     = false
+      wan_interface   = "WAN"
+    }
+
+    offload = {
+      accounting  = true
+      l2_blocking = true
+      sch         = true
+    }
+
+    dns_verification = {
+      setting_preference   = "auto"
+      domain               = "ui.com"
+      primary_dns_server   = "1.1.1.1"
+      secondary_dns_server = "8.8.8.8"
+    }
   }
 }
