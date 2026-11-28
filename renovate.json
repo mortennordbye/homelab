@@ -79,9 +79,9 @@
       "addLabels": ["helm"]
     },
     {
-      "description": "Helm Networking: traefik, cilium, cert-manager, external-dns, traefik-crds",
+      "description": "Helm Networking: traefik, cilium, cert-manager, external-dns",
       "matchManagers": ["kustomize"],
-      "matchPackageNames": ["traefik", "traefik-crds", "cilium", "cert-manager", "external-dns"],
+      "matchPackageNames": ["traefik", "cilium", "cert-manager", "external-dns"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "Helm Networking",
       "groupSlug": "helm-networking",
