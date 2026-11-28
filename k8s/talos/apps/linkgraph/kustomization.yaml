@@ -14,4 +14,4 @@ resources:
 # inline tag in deployment.yaml. The linkgraph-cd Warehouse/promotion sets it to 0.0.N.
 images:
 - name: ghcr.io/mortennordbye/linkgraph
-  newTag: 0.0.22
+  newTag: 0.0.28
