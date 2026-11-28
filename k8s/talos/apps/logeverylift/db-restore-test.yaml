@@ -79,7 +79,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: restore-test
-              image: docker.io/alpine/k8s:1.37.1
+              image: docker.io/alpine/k8s:1.37.2
               env:
                 - name: HOME
                   value: /tmp
