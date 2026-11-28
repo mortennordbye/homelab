@@ -358,6 +358,12 @@
       "addLabels": ["major-update"]
     },
     {
+      "description": "ai/projects/** are temporary experiments: automerge every update, majors too. Must follow the major-update rule above.",
+      "matchFileNames": ["ai/projects/**"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
       "description": "Postgres majors move with the server's data directory, by hand (docs/platform/data/postgres.md). The dump and restore-test images must stay on the server's major, so a tag bump alone is always wrong.",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["postgres", "docker.io/library/postgres", "ghcr.io/cloudnative-pg/postgresql"],
