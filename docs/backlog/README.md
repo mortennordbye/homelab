@@ -254,6 +254,12 @@ Known gaps that the team agreed to leave for later. Each entry has four parts: *
 - **Unblock:** (1) identify the appliance, connect it again, add `{ mac, ip }` to `local.reservations`; (2) the same for the Voice PE after setup; (3) delete the blob after `unifi/network.tfstate` has been in use for some time; (4) regenerate the key from the console if wanted.
 - **Where:** `terraform/unifi/network/clients.tf`, azurerm container `tfstate` in `sttfstatemvnhomelab`.
 
+### Renovate does not track the Gateway API and traefik.io CRD URLs
+- **What:** `k8s/talos/infra/crds/kustomization.yaml` pins the Gateway API CRDs (v1.7.0) and the traefik.io CRDs (v3.8.0) as raw URLs. Renovate does not see them. The traefik chart is in the automerged "Helm Networking" group, so a chart minor with a new Traefik version can need newer CRDs that nobody bumps.
+- **Why deferred:** found during the Traefik 43 upgrade. The fix is a Renovate config change, outside that upgrade.
+- **Unblock:** a custom regex manager for the two URLs (`github-releases` for kubernetes-sigs/gateway-api and traefik/traefik), or take traefik out of automerge so each bump gets a manual CRD check.
+- **Where:** `k8s/talos/infra/crds/kustomization.yaml`, `k8s/talos/infra/traefik/kustomization.yaml`, `renovate.json` ("Helm Networking").
+
 ## innestemme
 
 ### Voice PE requests in a noisy room end late

@@ -20,10 +20,7 @@ resources:
   - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v8.6.0/client/config/crd/snapshot.storage.k8s.io_volumesnapshotclasses.yaml
   - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v8.6.0/client/config/crd/snapshot.storage.k8s.io_volumesnapshotcontents.yaml
   - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v8.6.0/client/config/crd/snapshot.storage.k8s.io_volumesnapshots.yaml
-
-helmCharts:
-  - name: traefik-crds
-    repo: https://traefik.github.io/charts
-    version: 1.18.0
-    releaseName: traefik-crds
-    valuesFile: traefik-crds-values.yaml
+  # Gateway API and traefik.io CRDs move with the Traefik version in k8s/talos/infra/traefik.
+  # Every CRD stays in this app: one that leaves it is pruned with all its objects.
+  - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.7.0/experimental-install.yaml
+  - https://raw.githubusercontent.com/traefik/traefik/v3.8.0/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
