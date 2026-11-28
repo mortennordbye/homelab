@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: trek
-          image: mauriceboe/trek:5.1.3
+          image: mauriceboe/trek:5.1.4
           imagePullPolicy: IfNotPresent
           # The image entrypoint chowns as root and switches to node with gosu. That
           # fails as non-root. This command is its final exec; check it on upgrades.
